@@ -20,4 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Clerk"
-include(":app")
+include(":source:sdk")
