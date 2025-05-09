@@ -22,6 +22,7 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 lints-compose = "com.slack.lint.compose:compose-lint-checks:1.4.2"
+kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
