@@ -1,37 +1,45 @@
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
+  alias(libs.plugins.android.library)
+  alias(libs.plugins.kotlin.android)
+  id("maven-publish")
 }
 
 android {
-    namespace = "com.clerk"
-    compileSdk = 35
+  namespace = "com.clerk"
+  compileSdk = 35
 
-    defaultConfig {
-        minSdk = 24
+  defaultConfig {
+    minSdk = 24
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
+    consumerProguardFiles("consumer-rules.pro")
+  }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
+  buildTypes {
+    release {
+      isMinifyEnabled = true
+      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+  }
+  publishing {
+    singleVariant("release") {
+      withSourcesJar()
+      withJavadocJar()
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+  }
 }
 
-dependencies {
+afterEvaluate {
+  publishing {
+    publications {
+      register<MavenPublication>("release") {
+        groupId = "com.clerk"
+        artifactId = "clerk-android"
+        version = "0.1.0"
 
+        afterEvaluate { from(components["release"]) }
+      }
+    }
+  }
 }
+
+dependencies {}
