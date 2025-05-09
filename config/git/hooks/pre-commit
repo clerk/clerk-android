@@ -67,10 +67,11 @@ if [[ ! -z ${kotlin_files_list} ]]; then
 
         if [[ $? != 0 ]]; then
             echo -e "${RED}Detekt failed, re-running verbosely. Alternatively, you can run the format command locally" >&2
-            echo -e "Running format command: './config/detekt/detekt-cli --auto-correct --baseline \"${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml\" --config \"${REPO_ROOT_DIR}/config/detekt/detekt.yml\" --build-upon-default-config --input ${kotlin_files_detekt_args}'${NC}" >&2
-            "${REPO_ROOT_DIR}/config/detekt/detekt-cli" --auto-correct \
+            echo -e "Running format command: './config/bin/detekt-cli --auto-correct --baseline \"${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml\" --config \"${REPO_ROOT_DIR}/config/detekt/detekt.yml\" --build-upon-default-config --input ${kotlin_files_detekt_args}'${NC}" >&2
+            "${REPO_ROOT_DIR}/config/bin/detekt-cli" --auto-correct \
                 --baseline "${REPO_ROOT_DIR}/config/detekt/detekt-baseline.xml" \
                 --config "${REPO_ROOT_DIR}/config/detekt/detekt.yml" \
+                --build-upon-default-config \
                 --build-upon-default-config \
                 --input "${kotlin_files_detekt_args}" >&2
             exit $?

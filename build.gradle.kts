@@ -1,5 +1,7 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin
 
 plugins {
   alias(libs.plugins.android.application) apply false
@@ -34,6 +36,11 @@ allprojects {
       endWithNewline()
       targetExclude("**/spotless.gradle")
     }
+    plugins.withType<KotlinBasePlugin>().configureEach {
+      configure<JavaPluginExtension> {
+        toolchain { languageVersion.set(JavaLanguageVersion.of(libs.versions.jvmTarget.get())) }
+      }
+    }
   }
 
   apply(plugin = "io.gitlab.arturbosch.detekt")
@@ -41,4 +48,18 @@ allprojects {
     toolVersion = "1.23.8"
     allRules = true
   }
+  val detektProjectBaseline by
+    tasks.registering(DetektCreateBaselineTask::class) {
+      description = "Overrides current baseline."
+      buildUponDefaultConfig.set(true)
+      ignoreFailures.set(true)
+      parallel.set(true)
+      setSource(files(rootDir))
+      config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+      baseline.set(file("$rootDir/config/detekt/detekt-baseline.xml"))
+      include("**/*.kt")
+      include("**/*.kts")
+      exclude("**/resources/**")
+      exclude("**/build/**")
+    }
 }
