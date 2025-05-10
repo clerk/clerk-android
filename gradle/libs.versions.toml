@@ -30,7 +30,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 lints-compose = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
-kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.5.1"
+kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.6.2"
 kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3"
 
 [plugins]

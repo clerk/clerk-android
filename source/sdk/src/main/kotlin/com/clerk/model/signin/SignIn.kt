@@ -1,5 +1,7 @@
 package com.clerk.model.signin
 
+import com.clerk.factor.Factor
+import com.clerk.model.verification.Verification
 import kotlinx.serialization.Serializable
 
 /**
@@ -92,6 +94,28 @@ data class SignIn(
    */
   val createdSessionId: String? = null,
 ) {
+  /**
+   * An object containing information about the user of the current sign-in. This property is
+   * populated only once an identifier is given to the SignIn object.
+   */
+  @Serializable
+  data class UserData(
+    /** The user's first name. */
+    val firstName: String? = null,
+
+    /** The user's last name. */
+    val lastName: String? = null,
+
+    /** Holds the default avatar or user's uploaded profile image. */
+    val imageUrl: String? = null,
+
+    /**
+     * A boolean to check if the user has uploaded an image or one was copied from OAuth. Returns
+     * false if Clerk is displaying an avatar for the user.
+     */
+    val hasImage: Boolean? = null,
+  )
+
   /** Represents the status of a sign-in process. */
   @Serializable
   enum class Status {
