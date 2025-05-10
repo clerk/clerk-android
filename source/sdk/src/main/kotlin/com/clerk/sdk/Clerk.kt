@@ -1,6 +1,6 @@
 @file:Suppress("TooGenericExceptionCaught", "RethrowCaughtException")
 
-package com.clerk.sdk.clerk
+package com.clerk.sdk
 
 import android.os.Environment
 import com.clerk.sdk.model.environment.InstanceEnvironmentType
@@ -85,8 +85,8 @@ object Clerk {
    * @param publishableKey The publishable key from your Clerk Dashboard, used to connect to Clerk.
    * @param debugMode Enable for additional debugging signals.
    */
-  fun configure(publishableKey: String, debugMode: Boolean = false) {
-    Clerk.publishableKey = publishableKey
-    Clerk.debugMode = debugMode
+  fun initialize(publishableKey: String, debugMode: Boolean = false) {
+    this.publishableKey = publishableKey
+    this.debugMode = debugMode
   }
 }
