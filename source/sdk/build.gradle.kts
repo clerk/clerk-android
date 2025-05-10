@@ -46,6 +46,7 @@ afterEvaluate {
 
 dependencies {
   implementation(libs.androidx.lifecycle)
+  implementation(libs.androidx.lifecycle.process)
   implementation(libs.dagger)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)

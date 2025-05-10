@@ -14,6 +14,7 @@ material = "1.12.0"
 mavenPublish = "0.31.0"
 sortDependencies = "0.14"
 spotless = "7.0.3"
+lifecycleProcess = "2.9.0"
 
 [libraries]
 
@@ -32,6 +33,7 @@ lints-compose = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
 kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.6.2"
 kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3"
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
