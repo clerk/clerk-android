@@ -1,6 +1,6 @@
 package com.clerk.model.signin
 
-import com.clerk.factor.Factor
+import com.clerk.model.factor.Factor
 import com.clerk.model.verification.Verification
 import kotlinx.serialization.Serializable
 

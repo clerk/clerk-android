@@ -1,4 +1,4 @@
-package com.clerk.factor
+package com.clerk.model.factor
 
 import kotlinx.serialization.Serializable
 

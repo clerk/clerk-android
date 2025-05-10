@@ -1,6 +1,6 @@
 package com.clerk.model.verification
 
-import com.clerk.error.ClerkAPIError
+import com.clerk.model.error.ClerkAPIError
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 

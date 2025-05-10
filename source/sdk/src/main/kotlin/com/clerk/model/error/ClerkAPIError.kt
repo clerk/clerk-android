@@ -1,4 +1,4 @@
-package com.clerk.error
+package com.clerk.model.error
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
