@@ -3,11 +3,10 @@ plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.plugin.serialization)
   id("maven-publish")
-  kotlin("kapt")
 }
 
 android {
-  namespace = "com.clerk"
+  namespace = "com.clerk.sdk"
   compileSdk = 35
 
   defaultConfig {
@@ -41,16 +40,21 @@ afterEvaluate {
         afterEvaluate { from(components["release"]) }
       }
     }
+
+    repositories {
+      mavenLocal()
+      maven {
+        name = "clerk-android-maven"
+        url = uri(layout.buildDirectory.dir("repo"))
+      }
+    }
   }
 }
 
 dependencies {
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
-  implementation(libs.dagger)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
-
-  kapt(libs.dagger.compiler)
 }
