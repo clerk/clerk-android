@@ -3,6 +3,7 @@ plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.plugin.serialization)
   id("maven-publish")
+  kotlin("kapt")
 }
 
 android {
@@ -43,4 +44,12 @@ afterEvaluate {
   }
 }
 
-dependencies { implementation(libs.kotlinx.serialization) }
+dependencies {
+  implementation(libs.androidx.lifecycle)
+  implementation(libs.dagger)
+  implementation(libs.kotlinx.coroutines)
+  implementation(libs.kotlinx.datetime)
+  implementation(libs.kotlinx.serialization)
+
+  kapt(libs.dagger.compiler)
+}
