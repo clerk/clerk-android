@@ -1,5 +1,8 @@
 package com.clerk.model.session
 
+import com.clerk.model.token.TokenResource
+import com.clerk.model.user.User
+import com.clerk.model.userdata.PublicUserData
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
