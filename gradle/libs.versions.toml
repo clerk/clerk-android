@@ -2,6 +2,7 @@
 agp = "8.9.2"
 appcompat = "1.7.0"
 coreKtx = "1.16.0"
+dagger = "2.48"
 detekt = "1.23.8"
 dokka = "2.0.0"
 espressoCore = "3.6.1"
@@ -13,15 +14,26 @@ material = "1.12.0"
 mavenPublish = "0.31.0"
 sortDependencies = "0.14"
 spotless = "7.0.3"
+lifecycleProcess = "2.9.0"
 
 [libraries]
+
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.0"
+
+dagger = { group = "com.google.dagger", name = "dagger", version.ref = "dagger" }
+dagger-compiler = { group = "com.google.dagger", name = "dagger-compiler", version.ref = "dagger" }
+
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 lints-compose = "com.slack.lint.compose:compose-lint-checks:1.4.2"
+
+kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
+kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.6.2"
+kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3"
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -32,5 +44,5 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "sortDependencies" }
-spotless = { id = "com.diffplug.spotless", version.ref = "spotless"}
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 
