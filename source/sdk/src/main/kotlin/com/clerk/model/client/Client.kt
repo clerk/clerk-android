@@ -3,7 +3,7 @@ package com.clerk.model.client
 import com.clerk.model.session.Session
 import com.clerk.model.signin.SignIn
 import com.clerk.model.signup.SignUp
-import java.util.Date
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 /**
@@ -32,7 +32,7 @@ data class Client(
   val lastActiveSessionId: String? = null,
 
   /** Timestamp of last update for the client. */
-  val updatedAt: Date,
+  val updatedAt: Instant,
 ) {
   /** A list of active sessions on this client. */
   val activeSessions: List<Session>
