@@ -1,5 +1,7 @@
 package com.clerk.model.signup
 
+import com.clerk.model.verification.Verification
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 

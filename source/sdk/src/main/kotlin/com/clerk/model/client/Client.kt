@@ -1,6 +1,7 @@
 package com.clerk.model.client
 
 import com.clerk.model.signin.SignIn
+import com.clerk.model.signup.SignUp
 import java.util.Date
 import kotlinx.serialization.Serializable
 
