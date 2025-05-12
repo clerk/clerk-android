@@ -5,6 +5,7 @@ import com.clerk.sdk.model.error.ClerkAPIError
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.token.TokenResource
+import com.clerk.sdk.network.encoding.FormEncoded
 import com.slack.eithernet.ApiResult
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
@@ -118,8 +119,7 @@ internal interface ClerkApi {
   @POST("client/sign_ins/{id}/prepare_second_factor")
   suspend fun prepareSecondFactor(
     @Path("id") id: String,
-    // Expecting: Requests.SignIn.PrepareSecondFactorParams
-    @FieldMap fields: Map<String, String>,
+    @FormEncoded params: Requests.SignIn.PrepareFirstFactorParams,
   ): ApiResult<SignIn, ClerkAPIError>
 
   // endregion

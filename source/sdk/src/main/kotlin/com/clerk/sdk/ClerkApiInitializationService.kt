@@ -3,6 +3,7 @@ package com.clerk.sdk
 import com.clerk.sdk.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.sdk.middleware.outgoing.HeaderMiddleware
 import com.clerk.sdk.network.ClerkApiVersion
+import com.clerk.sdk.network.encoding.FormUrlEncodedConverterFactory
 import com.slack.eithernet.ApiResult
 import com.slack.eithernet.integration.retrofit.ApiResultCallAdapterFactory
 import com.slack.eithernet.integration.retrofit.ApiResultConverterFactory
@@ -59,6 +60,7 @@ internal object ClerkApiInitializationService {
       .client(okHttpClient)
       .addConverterFactory(ApiResultConverterFactory)
       .addCallAdapterFactory(ApiResultCallAdapterFactory)
+      .addConverterFactory(FormUrlEncodedConverterFactory())
       .addConverterFactory(Json.asConverterFactory("application/json; charset=utf-8".toMediaType()))
       .build()
   }
