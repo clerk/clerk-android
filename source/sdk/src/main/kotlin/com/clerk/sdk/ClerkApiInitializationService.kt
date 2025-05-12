@@ -41,7 +41,7 @@ internal object ClerkApiInitializationService {
    * Clerk API version from the [ClerkApiVersion] object. This should be changed in the future to
    * tie in [Clerk.version]
    *
-   * Client is broken down into: [com.clerk.sdk.network.client.ClientApi] [CurrentUserApi]
+   * Client is broken down into: [com.clerk.sdk.network.client.ClientApi], [CurrentUserApi], and
    * [EnvironmentApi] (internal only)
    *
    * Each API returns either an [ApiResult] or a [com.clerk.sdk.model.error.ClerkAPIError],

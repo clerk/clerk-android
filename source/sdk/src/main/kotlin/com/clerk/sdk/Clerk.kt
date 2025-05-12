@@ -67,6 +67,8 @@ object Clerk : DefaultLifecycleObserver {
 
   // endregion
 
+  // API access
+
   // region State Properties
 
   /** The Client object for the current device. */
