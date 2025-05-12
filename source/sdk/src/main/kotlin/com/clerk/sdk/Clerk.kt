@@ -7,6 +7,7 @@ import android.util.Base64
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.clerk.sdk.error.ClerkClientError
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.InstanceEnvironmentType
 import com.clerk.sdk.model.session.Session
@@ -30,8 +31,10 @@ object Clerk : DefaultLifecycleObserver {
   var publishableKey: String = ""
     private set(value) {
       field = value
-      require(value.isNotEmpty()) {
-        "The publishableKey cannot be empty. Please check your publishable key. value: $value"
+      if (value.isEmpty()) {
+        throw ClerkClientError(
+          "Clerk loaded without a publishable key. Please call initialize() with a valid publishable key first."
+        )
       }
       extractApiUrl()
     }
@@ -40,22 +43,26 @@ object Clerk : DefaultLifecycleObserver {
   var debugMode: Boolean = false
     private set
 
+  /** The application context. Used to initialize the StorageHelper. */
+  var context: WeakReference<Context>? = null
+    set(value) {
+      field = value
+      value?.get()?.let { context -> StorageHelper.initialize(context) }
+    }
+
   /** Stores the frontend API URL extracted from the publishable key */
   var frontendApiUrl: String = ""
     private set(value) {
       field = value
-      require(value.isNotEmpty()) {
-        "The frontendApiUrl cannot be empty. Please check your publishable key. value: $value"
+
+      // We throw above if the publishable key is empty, so this should never be empty.
+      if (value.isEmpty()) {
+        throw ClerkClientError(
+          "Clerk loaded without a publishable key. Please call initialize() with a valid publishable key first."
+        )
       }
       ClerkService.initializeApi(value)
       value
-    }
-
-  /** The application context. Used to initialize the StorageHelper. */
-  var context: WeakReference<Context>? = null
-    private set(value) {
-      field = value
-      value?.get()?.let { context -> StorageHelper.initialize(context) }
     }
 
   // endregion
@@ -148,16 +155,16 @@ object Clerk : DefaultLifecycleObserver {
 
   /** Extracts and sets the frontend API URL from the publishable key. */
   private fun extractApiUrl() {
-    val liveRegex = "$TOKEN_PREFIX_LIVE(.+)".toRegex()
-    val testRegex = "$TOKEN_PREFIX_TEST(.+)".toRegex()
+    val prefixRemoved =
+      publishableKey
+        .removePrefix(TOKEN_PREFIX_TEST)
+        .removePrefix(TOKEN_PREFIX_LIVE) // Handles both test and live
 
-    val match =
-      liveRegex.find(publishableKey)?.groupValues?.get(1)
-        ?: testRegex.find(publishableKey)?.groupValues?.get(1)
+    val decodedBytes = Base64.decode(prefixRemoved, Base64.DEFAULT)
+    val decodedString = String(decodedBytes)
 
-    match?.let {
-      val apiUrl = Base64.decode(it.toByteArray(), Base64.DEFAULT)
-      frontendApiUrl = "$URL_SSL_PREFIX${apiUrl.dropLast(1)}"
+    if (decodedString.isNotEmpty()) {
+      frontendApiUrl = "$URL_SSL_PREFIX${decodedString.dropLast(1)}"
     }
   }
 

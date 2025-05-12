@@ -46,4 +46,10 @@ dependencies {
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
   implementation(libs.retrofit.kotlinx)
+
+  testImplementation(libs.androidx.arch.test)
+  testImplementation(libs.junit)
+  testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(libs.mockito)
+  testImplementation(libs.robolectric)
 }
