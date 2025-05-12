@@ -2,12 +2,15 @@
 
 package com.clerk.sdk
 
+import android.content.Context
 import android.util.Base64
 import androidx.lifecycle.DefaultLifecycleObserver
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.InstanceEnvironmentType
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.user.User
+import com.clerk.sdk.storage.StorageHelper
+import java.lang.ref.WeakReference
 
 private const val TOKEN_PREFIX_LIVE = "pk_live_"
 private const val TOKEN_PREFIX_TEST = "pk_test_"
@@ -42,6 +45,12 @@ object Clerk : DefaultLifecycleObserver {
       require(value.isNotEmpty()) {
         "The frontendApiUrl cannot be empty. Please check your publishable key. value: $value"
       }
+    }
+
+  var context: WeakReference<Context>? = null
+    private set(value) {
+      field = value
+      value?.get()?.let { context -> StorageHelper.initialize(context) }
     }
 
   // endregion
@@ -100,7 +109,8 @@ object Clerk : DefaultLifecycleObserver {
    * @param publishableKey The publishable key from your Clerk Dashboard, used to connect to Clerk.
    * @param debugMode Enable for additional debugging signals.
    */
-  fun initialize(publishableKey: String, debugMode: Boolean = false) {
+  fun initialize(context: Context, publishableKey: String, debugMode: Boolean = false) {
+    this.context = WeakReference(context)
     this.publishableKey = publishableKey
     this.debugMode = debugMode
   }
