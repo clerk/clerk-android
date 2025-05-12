@@ -45,6 +45,8 @@ object Clerk : DefaultLifecycleObserver {
       require(value.isNotEmpty()) {
         "The frontendApiUrl cannot be empty. Please check your publishable key. value: $value"
       }
+      ClerkService.initializeApi(value)
+      value
     }
 
   var context: WeakReference<Context>? = null

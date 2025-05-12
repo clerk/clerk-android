@@ -7,7 +7,7 @@ import okhttp3.Response
 
 private const val AUTHORIZATION_HEADER = "Authorization"
 
-class DeviceTokenSavingInterceptor : Interceptor {
+class DeviceTokenSavingMiddleware : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val response = chain.proceed(chain.request())
     val deviceToken = response.header(AUTHORIZATION_HEADER)
