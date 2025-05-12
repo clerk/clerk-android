@@ -2,27 +2,70 @@
 
 package com.clerk.sdk
 
-import android.os.Environment
+import android.util.Base64
+import androidx.lifecycle.DefaultLifecycleObserver
+import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.InstanceEnvironmentType
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.user.User
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
-private const val TOKEN_PREFIX = "pk_live_"
+private const val TOKEN_PREFIX_LIVE = "pk_live_"
+private const val TOKEN_PREFIX_TEST = "pk_test_"
+private const val URL_SSL_PREFIX = "https://"
 
 /**
  * This is the main entrypoint class for the clerk package. It contains a number of methods and
  * properties for interacting with the Clerk API.
  */
-object Clerk {
+object Clerk : DefaultLifecycleObserver {
 
-  internal val clerkService = ClerkService()
+  // region Configuration Properties
 
   /** The publishable key from your Clerk Dashboard, used to connect to Clerk. */
   var publishableKey: String = ""
+    private set(value) {
+      field = value
+      require(value.isNotEmpty()) {
+        "The publishableKey cannot be empty. Please check your publishable key. value: $value"
+      }
+      extractApiUrl()
+    }
+
+  /** Enable for additional debugging signals. */
+  var debugMode: Boolean = false
     private set
+
+  /** Stores the frontend API URL extracted from the publishable key */
+  var frontendApiUrl: String = ""
+    private set(value) {
+      field = value
+      require(value.isNotEmpty()) {
+        "The frontendApiUrl cannot be empty. Please check your publishable key. value: $value"
+      }
+    }
+
+  // endregion
+
+  // region State Properties
+
+  /** The Client object for the current device. */
+  var client: Client? = null
+    internal set(value) {
+      field = value
+      value?.id?.let { clientId ->
+        try {
+          // clerkInitializationHelper.saveClientIdToKeychain(clientId)
+        } catch (e: Exception) {
+          if (debugMode) {
+            e.printStackTrace()
+          }
+        }
+      }
+    }
+
+  // endregion
+
+  // region Computed Properties
 
   /**
    * The currently active Session, which is guaranteed to be one of the sessions in Client.sessions.
@@ -38,46 +81,18 @@ object Clerk {
   val user: User?
     get() = session?.user
 
-  /** Enable for additional debugging signals. */
-  var debugMode: Boolean = false
-    private set
-
-  /** The Clerk environment for the instance. */
-  var environment = Environment()
-    private set
-
-  init {
-    // Register lifecycle observer
-
-  }
-
-  /** A getter to see if the Clerk object is ready for use or not. */
-  private val _isLoaded = MutableStateFlow(false)
-  val isLoaded: StateFlow<Boolean> = _isLoaded.asStateFlow()
-
-  /** A getter to see if a Clerk instance is running in production or development mode. */
+  /** Determines the environment type based on the publishable key. */
   val instanceType: InstanceEnvironmentType
     get() =
-      if (publishableKey.startsWith(TOKEN_PREFIX)) {
+      if (publishableKey.startsWith(TOKEN_PREFIX_LIVE)) {
         InstanceEnvironmentType.PRODUCTION
       } else {
         InstanceEnvironmentType.DEVELOPMENT
       }
 
-  /** The Client object for the current device. */
-  var client: com.clerk.sdk.model.client.Client? = null
-    internal set(value) {
-      field = value
-      value?.id?.let { clientId ->
-        try {
-          //          clerkInitializationHelper.saveClientIdToKeychain(clientId)
-        } catch (e: Exception) {
-          if (debugMode) {
-            e.printStackTrace()
-          }
-        }
-      }
-    }
+  // endregion
+
+  // region Public Methods
 
   /**
    * Configures the shared clerk instance.
@@ -89,4 +104,25 @@ object Clerk {
     this.publishableKey = publishableKey
     this.debugMode = debugMode
   }
+
+  // endregion
+
+  // region Private Methods
+
+  /** Extracts and sets the frontend API URL from the publishable key. */
+  private fun extractApiUrl() {
+    val liveRegex = "$TOKEN_PREFIX_LIVE(.+)".toRegex()
+    val testRegex = "$TOKEN_PREFIX_TEST(.+)".toRegex()
+
+    val match =
+      liveRegex.find(publishableKey)?.groupValues?.get(1)
+        ?: testRegex.find(publishableKey)?.groupValues?.get(1)
+
+    match?.let {
+      val apiUrl = Base64.decode(it.toByteArray(), Base64.DEFAULT)
+      frontendApiUrl = "$URL_SSL_PREFIX${apiUrl.dropLast(1)}"
+    }
+  }
+
+  // endregion
 }

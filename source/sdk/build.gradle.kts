@@ -9,18 +9,10 @@ android {
   namespace = "com.clerk.sdk"
   compileSdk = 35
 
-  defaultConfig {
-    minSdk = 24
+  defaultConfig { minSdk = 24 }
 
-    consumerProguardFiles("consumer-rules.pro")
-  }
+  buildTypes { release { isMinifyEnabled = false } }
 
-  buildTypes {
-    release {
-      isMinifyEnabled = false
-      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-    }
-  }
   publishing {
     singleVariant("release") {
       withSourcesJar()
@@ -40,21 +32,18 @@ afterEvaluate {
         afterEvaluate { from(components["release"]) }
       }
     }
-
-    repositories {
-      mavenLocal()
-      maven {
-        name = "clerk-android-maven"
-        url = uri(layout.buildDirectory.dir("repo"))
-      }
-    }
   }
 }
 
 dependencies {
+  implementation(libs.androidx.datastore)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
+  implementation(libs.okhttp)
+  implementation(libs.okhttp.logging)
+  implementation(libs.retrofit)
+  implementation(libs.retrofit.kotlinx)
 }
