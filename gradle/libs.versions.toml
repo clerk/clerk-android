@@ -2,16 +2,19 @@
 agp = "8.9.2"
 appcompat = "1.7.0"
 coreKtx = "1.16.0"
-dagger = "2.48"
+dagger = "2.53.1"
+datastore = "1.0.0"
 detekt = "1.23.8"
 dokka = "2.0.0"
 espressoCore = "3.6.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 jvmTarget = "21"
-kotlin = "2.0.21"
+kotlin = "2.1.0"
 material = "1.12.0"
 mavenPublish = "0.31.0"
+okhttp = "4.12.0"
+retrofit = "2.11.0"
 sortDependencies = "0.14"
 spotless = "7.0.3"
 lifecycleProcess = "2.9.0"
@@ -20,20 +23,28 @@ lifecycleProcess = "2.9.0"
 
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.0"
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 
 dagger = { group = "com.google.dagger", name = "dagger", version.ref = "dagger" }
 dagger-compiler = { group = "com.google.dagger", name = "dagger-compiler", version.ref = "dagger" }
 
-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-lints-compose = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
 kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.6.2"
 kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3"
-androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+
+lints-compose = "com.slack.lint.compose:compose-lint-checks:1.4.2"
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-kotlinx = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

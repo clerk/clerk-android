@@ -3,25 +3,16 @@ plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.plugin.serialization)
   id("maven-publish")
-  kotlin("kapt")
 }
 
 android {
-  namespace = "com.clerk"
+  namespace = "com.clerk.sdk"
   compileSdk = 35
 
-  defaultConfig {
-    minSdk = 24
+  defaultConfig { minSdk = 24 }
 
-    consumerProguardFiles("consumer-rules.pro")
-  }
+  buildTypes { release { isMinifyEnabled = false } }
 
-  buildTypes {
-    release {
-      isMinifyEnabled = true
-      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-    }
-  }
   publishing {
     singleVariant("release") {
       withSourcesJar()
@@ -45,12 +36,14 @@ afterEvaluate {
 }
 
 dependencies {
+  implementation(libs.androidx.datastore)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
-  implementation(libs.dagger)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
-
-  kapt(libs.dagger.compiler)
+  implementation(libs.okhttp)
+  implementation(libs.okhttp.logging)
+  implementation(libs.retrofit)
+  implementation(libs.retrofit.kotlinx)
 }
