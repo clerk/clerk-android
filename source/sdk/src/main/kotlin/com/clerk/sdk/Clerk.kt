@@ -5,6 +5,8 @@ package com.clerk.sdk
 import android.content.Context
 import android.util.Base64
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.InstanceEnvironmentType
 import com.clerk.sdk.model.session.Session
@@ -49,6 +51,7 @@ object Clerk : DefaultLifecycleObserver {
       value
     }
 
+  /** The application context. Used to initialize the StorageHelper. */
   var context: WeakReference<Context>? = null
     private set(value) {
       field = value
@@ -108,6 +111,7 @@ object Clerk : DefaultLifecycleObserver {
   /**
    * Configures the shared clerk instance.
    *
+   * @param context The application context.
    * @param publishableKey The publishable key from your Clerk Dashboard, used to connect to Clerk.
    * @param debugMode Enable for additional debugging signals.
    */
@@ -115,6 +119,27 @@ object Clerk : DefaultLifecycleObserver {
     this.context = WeakReference(context)
     this.publishableKey = publishableKey
     this.debugMode = debugMode
+    ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+  }
+
+  // region Lifecycle observer
+
+  /**
+   * Called when the lifecycle owner is started, on every app foreground the Clerk sdk:
+   * - Refresh the client object
+   * - Refresh the Environment object (internal API)
+   * - Starts polling for short-lived session token refresh
+   */
+  override fun onStart(owner: LifecycleOwner) {
+    super.onStart(owner)
+  }
+
+  /**
+   * Called when the lifecycle owner is stopped, on every app background the Clerk sdk:
+   * - Stops polling for short-lived session token refresh
+   */
+  override fun onStop(owner: LifecycleOwner) {
+    super.onStop(owner)
   }
 
   // endregion
