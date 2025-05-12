@@ -39,6 +39,8 @@ dependencies {
   implementation(libs.androidx.datastore)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
+  implementation(libs.eithernet)
+  implementation(libs.eithernet.retrofit)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
