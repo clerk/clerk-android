@@ -1,11 +1,17 @@
 package com.clerk.sdk.middleware.incoming
 
+import com.clerk.sdk.storage.StorageHelper
+import com.clerk.sdk.storage.StorageKey
 import okhttp3.Interceptor
 import okhttp3.Response
+
+private const val AUTHORIZATION_HEADER = "Authorization"
 
 class DeviceTokenSavingInterceptor : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val response = chain.proceed(chain.request())
+    val deviceToken = response.header(AUTHORIZATION_HEADER)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, deviceToken)
     return response
   }
 }

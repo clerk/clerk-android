@@ -10,6 +10,10 @@ import kotlinx.coroutines.launch
 
 private const val CLERK_PREFERENCES_FILE_NAME = "clerk_preferences"
 
+/**
+ * Helper class to manage secure storage of data. SharedPreferences are used to store data, all keys
+ * are held in the [StorageKey] object.
+ */
 internal object StorageHelper {
 
   private lateinit var secureStorage: SharedPreferences
@@ -22,10 +26,10 @@ internal object StorageHelper {
   }
 
   /** Save value of string type to [secureStorage] */
-  internal fun saveValue(name: String, value: String?) {
+  internal fun saveValue(key: StorageKey, value: String?) {
     if (value.isNullOrEmpty()) {
       with(secureStorage.edit()) {
-        putString(name, null)
+        putString(key.name, null)
         apply()
       }
       return
@@ -33,8 +37,8 @@ internal object StorageHelper {
   }
 
   /** Load value of string type from [secureStorage] */
-  internal fun loadValue(name: String): String? {
-    return secureStorage.getString(name, null)
+  internal fun loadValue(key: StorageKey): String? {
+    return secureStorage.getString(key.name, null)
   }
 
   /** Delete value of string type from [secureStorage] */
@@ -44,4 +48,8 @@ internal object StorageHelper {
       apply()
     }
   }
+}
+
+enum class StorageKey(val key: String) {
+  DEVICE_TOKEN("device_token")
 }
