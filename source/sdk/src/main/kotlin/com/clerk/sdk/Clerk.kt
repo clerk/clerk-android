@@ -61,7 +61,7 @@ object Clerk : DefaultLifecycleObserver {
           "Clerk loaded without a publishable key. Please call initialize() with a valid publishable key first."
         )
       }
-      ClerkService.initializeApi(value)
+      ClerkApiInitializationService.initializeApi(value)
       value
     }
 
