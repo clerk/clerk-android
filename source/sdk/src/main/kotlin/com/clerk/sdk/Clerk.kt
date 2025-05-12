@@ -7,6 +7,7 @@ import android.util.Base64
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.clerk.sdk.error.ClerkClientError
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.InstanceEnvironmentType
 import com.clerk.sdk.model.session.Session
@@ -30,8 +31,10 @@ object Clerk : DefaultLifecycleObserver {
   var publishableKey: String = ""
     private set(value) {
       field = value
-      require(value.isNotEmpty()) {
-        "The publishableKey cannot be empty. Please check your publishable key. value: $value"
+      if (value.isEmpty()) {
+        throw ClerkClientError(
+          "Clerk loaded without a publishable key. Please call initialize() with a valid publishable key first."
+        )
       }
       extractApiUrl()
     }
@@ -44,8 +47,12 @@ object Clerk : DefaultLifecycleObserver {
   var frontendApiUrl: String = ""
     private set(value) {
       field = value
-      require(value.isNotEmpty()) {
-        "The frontendApiUrl cannot be empty. Please check your publishable key. value: $value"
+
+      // We throw above if the publishable key is empty, so this should never be empty.
+      if (value.isEmpty()) {
+        throw ClerkClientError(
+          "Clerk loaded without a publishable key. Please call initialize() with a valid publishable key first."
+        )
       }
       ClerkService.initializeApi(value)
       value
