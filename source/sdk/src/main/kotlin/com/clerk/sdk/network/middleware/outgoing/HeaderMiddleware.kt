@@ -1,4 +1,4 @@
-package com.clerk.sdk.middleware.outgoing
+package com.clerk.sdk.network.middleware.outgoing
 
 import okhttp3.Interceptor
 import okhttp3.Response

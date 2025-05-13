@@ -2,10 +2,10 @@ package com.clerk.sdk.network
 
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.error.ClerkClientError
-import com.clerk.sdk.middleware.incoming.DeviceTokenSavingMiddleware
-import com.clerk.sdk.middleware.outgoing.HeaderMiddleware
-import com.clerk.sdk.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.sdk.network.encoding.FormUrlEncodedConverterFactory
+import com.clerk.sdk.network.middleware.incoming.DeviceTokenSavingMiddleware
+import com.clerk.sdk.network.middleware.outgoing.HeaderMiddleware
+import com.clerk.sdk.network.middleware.outgoing.UrlAppendingMiddleware
 import com.slack.eithernet.integration.retrofit.ApiResultCallAdapterFactory
 import com.slack.eithernet.integration.retrofit.ApiResultConverterFactory
 import kotlinx.serialization.json.Json
