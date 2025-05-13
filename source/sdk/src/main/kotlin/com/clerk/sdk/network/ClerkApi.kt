@@ -4,8 +4,10 @@ import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.error.ClerkAPIError
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
+import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.encoding.FormEncoded
+import com.clerk.sdk.network.requests.Requests
 import com.slack.eithernet.ApiResult
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
@@ -119,8 +121,32 @@ internal interface ClerkApi {
   @POST("client/sign_ins/{id}/prepare_second_factor")
   suspend fun prepareSecondFactor(
     @Path("id") id: String,
-    @FormEncoded params: Requests.SignIn.PrepareFirstFactorParams,
+    @FormEncoded params: Requests.SignIn.PrepareSecondFactorParams,
   ): ApiResult<SignIn, ClerkAPIError>
+
+  // client/sign_ins/{id}/reset_password
+
+  @POST("client/sign_ins/{id}/reset_password")
+  suspend fun resetPassword(
+    @Path("id") id: String,
+    @FormEncoded params: Requests.SignIn.ResetPasswordParams,
+  )
+
+  // endregion
+
+  // region Environment
+
+  // /environment
+  @GET("environment") suspend fun environment(): ApiResult<Envi, ClerkAPIError>
+
+  // region Sign Up
+
+  /**
+   * Sign up a user with the given parameters. NOTE: THIS IS NOT COMPLETE, NEED GUIDANCE ON OAUTH
+   * ENUM
+   */
+  // client/sign_ups
+  @POST("client/sign_ups") suspend fun signUp(): ApiResult<SignUp, ClerkAPIError>
 
   // endregion
 }
