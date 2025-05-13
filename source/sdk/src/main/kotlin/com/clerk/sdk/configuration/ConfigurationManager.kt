@@ -68,12 +68,21 @@ class ConfigurationManager {
       val clientResult = clientDeferred.await()
       val environmentResult = environmentDeferred.await()
 
+      ClerkLog.d("Client result: $clientResult")
+      ClerkLog.d("Environment result: $environmentResult")
       when {
         clientResult is ApiResult.Success && environmentResult is ApiResult.Success -> {
-          callback(ClerkConfigurationState.Configured(environmentResult.value, clientResult.value))
+          clientResult.value.client?.let { client ->
+            callback(
+              ClerkConfigurationState.Configured(
+                environment = environmentResult.value,
+                client = client,
+              )
+            )
+          }
         }
         else -> {
-          ClerkLog.e("Failed to configure Clerk: $clientResult")
+          ClerkLog.e("Failed to configure Clerk: $environmentResult")
         }
       }
     }

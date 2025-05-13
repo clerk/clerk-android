@@ -18,19 +18,19 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 /** Singleton responsible for configuring and exposing the Clerk API service. */
 internal object ClerkApi {
 
-  private var _apiService: ClerkApiService? = null
+  private var _instance: ClerkApiService? = null
 
   /** Exposes the configured Clerk API service or throws if not initialized. */
-  internal val apiService: ClerkApiService
+  internal val instance: ClerkApiService
     get() =
-      _apiService
+      _instance
         ?: throw ClerkClientError(
           "ClerkApi is not configured. Call ClerkApi.configure(baseUrl) first."
         )
 
   /** Initializes the API client with the given [baseUrl]. */
   fun configure(baseUrl: String) {
-    _apiService = buildRetrofit(baseUrl).create(ClerkApiService::class.java)
+    _instance = buildRetrofit(baseUrl).create(ClerkApiService::class.java)
   }
 
   /** Builds and configures the Retrofit instance. */
@@ -52,15 +52,20 @@ internal object ClerkApi {
         }
         .build()
 
+    val json = Json {
+      isLenient = true
+      ignoreUnknownKeys = true
+      coerceInputValues = true
+      explicitNulls = false
+    }
+
     return Retrofit.Builder()
       .baseUrl(urlWithVersion)
       .client(client)
       .addConverterFactory(ApiResultConverterFactory)
       .addCallAdapterFactory(ApiResultCallAdapterFactory)
       .addConverterFactory(FormUrlEncodedConverterFactory())
-      .addConverterFactory(
-        Json.Default.asConverterFactory("application/json; charset=utf-8".toMediaType())
-      )
+      .addConverterFactory(json.asConverterFactory("application/json; charset=utf-8".toMediaType()))
       .build()
   }
 }

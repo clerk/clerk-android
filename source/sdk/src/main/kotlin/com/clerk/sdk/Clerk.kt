@@ -86,7 +86,7 @@ object Clerk : DefaultLifecycleObserver {
           onInitialized(true)
         }
         ClerkConfigurationState.Error -> {
-          ClerkLog.e("Failed to configure Clerk.")
+          ClerkLog.e("Failed to configure Clerk")
           onInitialized(false)
         }
       }

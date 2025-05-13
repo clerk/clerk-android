@@ -1,5 +1,6 @@
 package com.clerk.sdk.model.environment
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** Settings for fraud prevention in the Clerk environment. */
@@ -11,9 +12,9 @@ data class FraudSettings(val native: Native) {
   /** Enum representing the device attestation mode. */
   @Serializable
   enum class DeviceAttestationMode {
-    DISABLED,
-    ONBOARDING,
-    ENFORCED,
-    UNKNOWN,
+    @SerialName("disabled") DISABLED,
+    @SerialName("onboarindg") ONBOARDING,
+    @SerialName("enforced") ENFORCED,
+    @SerialName("unknown") UNKNOWN,
   }
 }

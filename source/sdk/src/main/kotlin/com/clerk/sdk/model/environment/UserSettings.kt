@@ -1,33 +1,34 @@
 package com.clerk.sdk.model.environment
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserSettings(
   val attributes: Map<String, AttributesConfig>,
-  val signUp: SignUp,
+  @SerialName("sign_up") val signUp: SignUp,
   val social: Map<String, SocialConfig>,
   val actions: Actions,
-  val passkeySettings: PasskeySettings?,
+  @SerialName("passkey_settings") val passkeySettings: PasskeySettings?,
 ) {
   @Serializable
   data class AttributesConfig(
     val enabled: Boolean,
     val required: Boolean,
-    val usedForFirstFactor: Boolean,
-    val firstFactors: List<String>?,
-    val usedForSecondFactor: Boolean,
-    val secondFactors: List<String>?,
+    @SerialName("used_for_first_factor") val usedForFirstFactor: Boolean,
+    @SerialName("first_factors") val firstFactors: List<String>?,
+    @SerialName("used_for_second_factor") val usedForSecondFactor: Boolean,
+    @SerialName("second_factors") val secondFactors: List<String>?,
     val verifications: List<String>?,
-    val verifyAtSignUp: Boolean,
+    @SerialName("verify_at_sign_up") val verifyAtSignUp: Boolean,
   )
 
   @Serializable
   data class SignUp(
-    val customActionRequired: Boolean,
+    @SerialName("custom_action_required") val customActionRequired: Boolean,
     val progressive: Boolean,
     val mode: String,
-    val legalConsentEnabled: Boolean,
+    @SerialName("legal_consent_enabled") val legalConsentEnabled: Boolean,
   )
 
   @Serializable
@@ -36,14 +37,20 @@ data class UserSettings(
     val required: Boolean,
     val authenticatable: Boolean,
     val strategy: String,
-    val notSelectable: Boolean,
+    @SerialName("not_selectable") val notSelectable: Boolean,
     val name: String,
-    val logoUrl: String?,
+    @SerialName("logo_url") val logoUrl: String?,
   )
 
   @Serializable
-  data class Actions(var deleteSelf: Boolean = false, var createOrganization: Boolean = false)
+  data class Actions(
+    @SerialName("delete_self") val deleteSelf: Boolean = false,
+    @SerialName("create_organization") val createOrganization: Boolean = false,
+  )
 
   @Serializable
-  data class PasskeySettings(val allowAutofill: Boolean, val showSignInButton: Boolean)
+  data class PasskeySettings(
+    @SerialName("allow_autofill") val allowAutofill: Boolean,
+    @SerialName("show_sign_in_button") val showSignInButton: Boolean,
+  )
 }

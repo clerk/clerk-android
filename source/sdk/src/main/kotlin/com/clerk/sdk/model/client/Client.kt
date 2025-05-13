@@ -1,6 +1,7 @@
 package com.clerk.sdk.model.client
 
 import com.clerk.sdk.model.error.ClerkAPIError
+import com.clerk.sdk.model.response.ApiResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
@@ -42,6 +43,6 @@ data class Client(
     get() = sessions.filter { it.status == Session.SessionStatus.ACTIVE }
 
   companion object {
-    suspend fun get(): ApiResult<Client, ClerkAPIError> = ClerkApi.apiService.client()
+    suspend fun get(): ApiResult<ApiResponse, ClerkAPIError> = ClerkApi.instance.client()
   }
 }

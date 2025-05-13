@@ -1,8 +1,8 @@
 package com.clerk.sdk.network
 
-import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.error.ClerkAPIError
+import com.clerk.sdk.model.response.ApiResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
@@ -35,7 +35,7 @@ internal interface ClerkApiService {
   // region Client
 
   // /client
-  @GET("client") suspend fun client(): ApiResult<Client, ClerkAPIError>
+  @GET("client") suspend fun client(): ApiResult<ApiResponse, ClerkAPIError>
 
   // endregion
 

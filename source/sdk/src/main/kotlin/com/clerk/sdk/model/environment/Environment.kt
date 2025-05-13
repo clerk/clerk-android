@@ -3,16 +3,17 @@ package com.clerk.sdk.model.environment
 import com.clerk.sdk.model.error.ClerkAPIError
 import com.clerk.sdk.network.ClerkApi
 import com.slack.eithernet.ApiResult
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Environment(
-  val authConfig: AuthConfig,
-  val userSettings: UserSettings,
-  val displayConfig: DisplayConfig,
-  val fraudSettings: FraudSettings,
+  @SerialName("auth_config") val authConfig: AuthConfig,
+  @SerialName("display_config") val displayConfig: DisplayConfig,
+  @SerialName("user_settings") val userSettings: UserSettings,
+  @SerialName("fraud_settings") val fraudSettings: FraudSettings,
 ) {
   companion object {
-    suspend fun get(): ApiResult<Environment, ClerkAPIError> = ClerkApi.apiService.environment()
+    suspend fun get(): ApiResult<Environment, ClerkAPIError> = ClerkApi.instance.environment()
   }
 }

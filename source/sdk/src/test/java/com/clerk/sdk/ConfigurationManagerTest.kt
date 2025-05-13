@@ -5,6 +5,7 @@ import com.clerk.sdk.configuration.ClerkConfigurationState
 import com.clerk.sdk.configuration.ConfigurationManager
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
+import com.clerk.sdk.model.response.ApiResponse
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.storage.StorageHelper
 import com.slack.eithernet.ApiResult
@@ -52,6 +53,8 @@ class ConfigurationManagerTest {
 
   @MockK private lateinit var mockClient: Client
 
+  @MockK private lateinit var apiResponse: ApiResponse
+
   @MockK private lateinit var mockEnvironment: Environment
 
   @SpyK private var configManager = ConfigurationManager()
@@ -93,7 +96,7 @@ class ConfigurationManagerTest {
         }
 
       // Mock successful API responses
-      coEvery { Client.get() } returns ApiResult.success(mockClient)
+      coEvery { Client.get() } returns ApiResult.success(apiResponse)
       coEvery { Environment.get() } returns ApiResult.success(mockEnvironment)
 
       // When
@@ -129,7 +132,7 @@ class ConfigurationManagerTest {
         }
 
       // Mock successful API responses
-      coEvery { Client.get() } returns ApiResult.success(mockClient)
+      coEvery { Client.get() } returns ApiResult.success(apiResponse)
       coEvery { Environment.get() } returns ApiResult.success(mockEnvironment)
 
       // When
@@ -158,7 +161,7 @@ class ConfigurationManagerTest {
       mockk<(ClerkConfigurationState) -> Unit> { every { this@mockk.invoke(any()) } just Runs }
 
     // Mock successful API responses
-    coEvery { Client.get() } returns ApiResult.success(mockClient)
+    coEvery { Client.get() } returns ApiResult.success(apiResponse)
     coEvery { Environment.get() } returns ApiResult.success(mockEnvironment)
 
     // When
@@ -209,7 +212,7 @@ class ConfigurationManagerTest {
 
     // Mock API responses - client succeeds, environment fails
     val error = ApiResult.networkFailure(IOException("Network error"))
-    coEvery { Client.get() } returns ApiResult.success(mockClient)
+    coEvery { Client.get() } returns ApiResult.success(apiResponse)
     coEvery { Environment.get() } returns error
 
     // When
