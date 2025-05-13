@@ -6,6 +6,7 @@ dagger = "2.56.2"
 datastore = "1.1.6"
 detekt = "1.23.8"
 dokka = "2.0.0"
+eithernet = "2.0.0"
 espressoCore = "3.6.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -33,6 +34,9 @@ androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-p
 dagger = { group = "com.google.dagger", name = "dagger", version.ref = "dagger" }
 dagger-compiler = { group = "com.google.dagger", name = "dagger-compiler", version.ref = "dagger" }
 
+eithernet = { group = "com.slack.eithernet", name = "eithernet", version.ref = "eithernet" }
+eithernet-retrofit = { group = "com.slack.eithernet", name = "eithernet-integration-retrofit", version.ref = "eithernet" }
+
 junit = "junit:junit:4.13.2"
 
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
@@ -42,6 +46,7 @@ kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
 
 lints-compose = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+mockk = "io.mockk:mockk:1.13.8"
 mockito = "org.mockito:mockito-core:5.17.0"
 
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }

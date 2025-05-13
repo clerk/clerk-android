@@ -1,23 +1,15 @@
-@file:Suppress("TooGenericExceptionCaught", "RethrowCaughtException")
-
 package com.clerk.sdk
 
 import android.content.Context
-import android.util.Base64
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
-import com.clerk.sdk.error.ClerkClientError
+import com.clerk.sdk.configuration.ClerkConfigurationState
+import com.clerk.sdk.configuration.ConfigurationManager
+import com.clerk.sdk.log.ClerkLog
 import com.clerk.sdk.model.client.Client
-import com.clerk.sdk.model.environment.InstanceEnvironmentType
+import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.user.User
-import com.clerk.sdk.storage.StorageHelper
-import java.lang.ref.WeakReference
-
-private const val TOKEN_PREFIX_LIVE = "pk_live_"
-private const val TOKEN_PREFIX_TEST = "pk_test_"
-private const val URL_SSL_PREFIX = "https://"
 
 /**
  * This is the main entrypoint class for the clerk package. It contains a number of methods and
@@ -25,64 +17,23 @@ private const val URL_SSL_PREFIX = "https://"
  */
 object Clerk : DefaultLifecycleObserver {
 
-  // region Configuration Properties
+  internal val configurationManager = ConfigurationManager()
 
-  /** The publishable key from your Clerk Dashboard, used to connect to Clerk. */
-  var publishableKey: String = ""
-    private set(value) {
-      field = value
-      if (value.isEmpty()) {
-        throw ClerkClientError(
-          "Clerk loaded without a publishable key. Please call initialize() with a valid publishable key first."
-        )
-      }
-      extractApiUrl()
-    }
+  // region Configuration Properties
 
   /** Enable for additional debugging signals. */
   var debugMode: Boolean = false
     private set
-
-  /** The application context. Used to initialize the StorageHelper. */
-  var context: WeakReference<Context>? = null
-    set(value) {
-      field = value
-      value?.get()?.let { context -> StorageHelper.initialize(context) }
-    }
-
-  /** Stores the frontend API URL extracted from the publishable key */
-  var frontendApiUrl: String = ""
-    private set(value) {
-      field = value
-
-      // We throw above if the publishable key is empty, so this should never be empty.
-      if (value.isEmpty()) {
-        throw ClerkClientError(
-          "Clerk loaded without a publishable key. Please call initialize() with a valid publishable key first."
-        )
-      }
-      ClerkService.initializeApi(value)
-      value
-    }
 
   // endregion
 
   // region State Properties
 
   /** The Client object for the current device. */
-  var client: Client? = null
-    internal set(value) {
-      field = value
-      value?.id?.let { clientId ->
-        try {
-          // clerkInitializationHelper.saveClientIdToKeychain(clientId)
-        } catch (e: Exception) {
-          if (debugMode) {
-            e.printStackTrace()
-          }
-        }
-      }
-    }
+  internal lateinit var client: Client
+
+  /** The Environment object for the current client */
+  internal lateinit var environment: Environment
 
   // endregion
 
@@ -93,7 +44,7 @@ object Clerk : DefaultLifecycleObserver {
    * If there is no active session, this field will be nil.
    */
   val session: Session?
-    get() = client?.let { c -> c.sessions.firstOrNull { it.id == c.lastActiveSessionId } }
+    get() = client.let { c -> c.sessions.firstOrNull { it.id == c.lastActiveSessionId } }
 
   /**
    * A shortcut to Session.user which holds the currently active User object. If the session is nil,
@@ -101,15 +52,6 @@ object Clerk : DefaultLifecycleObserver {
    */
   val user: User?
     get() = session?.user
-
-  /** Determines the environment type based on the publishable key. */
-  val instanceType: InstanceEnvironmentType
-    get() =
-      if (publishableKey.startsWith(TOKEN_PREFIX_LIVE)) {
-        InstanceEnvironmentType.PRODUCTION
-      } else {
-        InstanceEnvironmentType.DEVELOPMENT
-      }
 
   // endregion
 
@@ -120,13 +62,30 @@ object Clerk : DefaultLifecycleObserver {
    *
    * @param context The application context.
    * @param publishableKey The publishable key from your Clerk Dashboard, used to connect to Clerk.
-   * @param debugMode Enable for additional debugging signals.
+   * @param debugMode Enable for additional logging.
+   * @param onInitialized A callback that is called when the configuration is complete. It returns
+   *   true if the configuration was successful, and false if there was an error.
    */
-  fun initialize(context: Context, publishableKey: String, debugMode: Boolean = false) {
-    this.context = WeakReference(context)
-    this.publishableKey = publishableKey
+  internal fun initialize(
+    context: Context,
+    publishableKey: String,
+    debugMode: Boolean = false,
+    onInitialized: (Boolean) -> Unit = {},
+  ) {
     this.debugMode = debugMode
-    ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+    configurationManager.configure(context, publishableKey) { state ->
+      when (state) {
+        is ClerkConfigurationState.Configured -> {
+          this.client = state.client
+          this.environment = state.environment
+          onInitialized(true)
+        }
+        ClerkConfigurationState.Error -> {
+          ClerkLog.e("Failed to configure Clerk.")
+          onInitialized(false)
+        }
+      }
+    }
   }
 
   // region Lifecycle observer
@@ -151,22 +110,4 @@ object Clerk : DefaultLifecycleObserver {
 
   // endregion
 
-  // region Private Methods
-
-  /** Extracts and sets the frontend API URL from the publishable key. */
-  private fun extractApiUrl() {
-    val prefixRemoved =
-      publishableKey
-        .removePrefix(TOKEN_PREFIX_TEST)
-        .removePrefix(TOKEN_PREFIX_LIVE) // Handles both test and live
-
-    val decodedBytes = Base64.decode(prefixRemoved, Base64.DEFAULT)
-    val decodedString = String(decodedBytes)
-
-    if (decodedString.isNotEmpty()) {
-      frontendApiUrl = "$URL_SSL_PREFIX${decodedString.dropLast(1)}"
-    }
-  }
-
-  // endregion
 }

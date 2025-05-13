@@ -1,8 +1,11 @@
 package com.clerk.sdk.model.client
 
+import com.clerk.sdk.model.error.ClerkAPIError
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
+import com.clerk.sdk.network.ClerkApi
+import com.slack.eithernet.ApiResult
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
@@ -37,4 +40,8 @@ data class Client(
   /** A list of active sessions on this client. */
   val activeSessions: List<Session>
     get() = sessions.filter { it.status == Session.SessionStatus.ACTIVE }
+
+  companion object {
+    suspend fun get(): ApiResult<Client, ClerkAPIError> = ClerkApi.apiService.client()
+  }
 }
