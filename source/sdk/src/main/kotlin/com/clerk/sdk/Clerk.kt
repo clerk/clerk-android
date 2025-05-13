@@ -33,7 +33,7 @@ object Clerk : DefaultLifecycleObserver {
   internal lateinit var client: Client
 
   /** The Environment object for the current client */
-  internal lateinit var environment: Environment
+  private lateinit var environment: Environment
 
   // endregion
 
@@ -66,7 +66,7 @@ object Clerk : DefaultLifecycleObserver {
    * @param onInitialized A callback that is called when the configuration is complete. It returns
    *   true if the configuration was successful, and false if there was an error.
    */
-  internal fun initialize(
+  fun initialize(
     context: Context,
     publishableKey: String,
     debugMode: Boolean = false,
@@ -76,6 +76,11 @@ object Clerk : DefaultLifecycleObserver {
     configurationManager.configure(context, publishableKey) { state ->
       when (state) {
         is ClerkConfigurationState.Configured -> {
+          if (debugMode) {
+            ClerkLog.d(
+              "Clerk configured successfully: client: ${state.client}, environment: ${state.environment}"
+            )
+          }
           this.client = state.client
           this.environment = state.environment
           onInitialized(true)
