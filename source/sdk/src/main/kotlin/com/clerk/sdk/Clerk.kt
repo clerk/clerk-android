@@ -110,7 +110,4 @@ object Clerk : DefaultLifecycleObserver {
 
   // endregion
 
-  // region Private Methods
-
-  // endregion
 }

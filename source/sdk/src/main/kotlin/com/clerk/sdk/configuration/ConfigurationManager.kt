@@ -1,15 +1,12 @@
 package com.clerk.sdk.configuration
 
 import android.content.Context
-import android.util.Base64
-import com.clerk.sdk.error.ClerkClientError
 import com.clerk.sdk.log.ClerkLog
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.storage.StorageHelper
-import com.clerk.sdk.util.TokenConstants.TOKEN_PREFIX_LIVE
-import com.clerk.sdk.util.TokenConstants.TOKEN_PREFIX_TEST
+import com.clerk.sdk.util.PublishableKeyHelper
 import com.slack.eithernet.ApiResult
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CoroutineScope
@@ -17,8 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-
-private const val URL_SSL_PREFIX = "https://"
 
 /**
  * Responsible for managing the configuration of Clerk. This includes initializing the Clerk API,
@@ -62,7 +57,7 @@ class ConfigurationManager {
     StorageHelper.initialize(context)
 
     // Initialize the clerk api
-    val baseUrl = extractApiUrl(publishableKey)
+    val baseUrl = PublishableKeyHelper().extractApiUrl(publishableKey)
     ClerkApi.configure(baseUrl)
 
     // Check if the API is reachable
@@ -81,27 +76,6 @@ class ConfigurationManager {
           ClerkLog.e("Failed to configure Clerk: $clientResult")
         }
       }
-    }
-  }
-
-  /**
-   * Helper function that extracts the API URL from the publishable key. This is used to initialize
-   * the Clerk API and check if the API is reachable. This is done by making a request to the client
-   * and environment endpoints.
-   */
-  private fun extractApiUrl(publishableKey: String): String {
-    val prefixRemoved =
-      publishableKey
-        .removePrefix(TOKEN_PREFIX_TEST)
-        .removePrefix(TOKEN_PREFIX_LIVE) // Handles both test and live
-
-    val decodedBytes = Base64.decode(prefixRemoved, Base64.DEFAULT)
-    val decodedString = String(decodedBytes)
-
-    return if (decodedString.isNotEmpty()) {
-      "$URL_SSL_PREFIX${decodedString.dropLast(1)}"
-    } else {
-      throw ClerkClientError("Invalid publishable key")
     }
   }
 }
