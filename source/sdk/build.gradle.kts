@@ -2,6 +2,7 @@ plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.plugin.serialization)
+  alias(libs.plugins.ksp)
   id("maven-publish")
 }
 
@@ -44,10 +45,12 @@ dependencies {
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
+  implementation(libs.ksp.api)
   implementation(libs.okhttp)
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
   implementation(libs.retrofit.kotlinx)
+  implementation(projects.mapGenerator)
 
   testImplementation(libs.androidx.arch.test)
   testImplementation(libs.junit)
@@ -55,4 +58,6 @@ dependencies {
   testImplementation(libs.mockito)
   testImplementation(libs.mockk)
   testImplementation(libs.robolectric)
+
+  ksp(projects.mapGenerator)
 }
