@@ -1,8 +1,6 @@
 package com.clerk.sdk
 
 import android.content.Context
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import com.clerk.sdk.configuration.ClerkConfigurationState
 import com.clerk.sdk.configuration.ConfigurationManager
 import com.clerk.sdk.log.ClerkLog
@@ -15,7 +13,7 @@ import com.clerk.sdk.model.user.User
  * This is the main entrypoint class for the clerk package. It contains a number of methods and
  * properties for interacting with the Clerk API.
  */
-object Clerk : DefaultLifecycleObserver {
+object Clerk {
 
   internal val configurationManager = ConfigurationManager()
 
@@ -92,27 +90,4 @@ object Clerk : DefaultLifecycleObserver {
       }
     }
   }
-
-  // region Lifecycle observer
-
-  /**
-   * Called when the lifecycle owner is started, on every app foreground the Clerk sdk:
-   * - Refresh the client object
-   * - Refresh the Environment object (internal API)
-   * - Starts polling for short-lived session token refresh
-   */
-  override fun onStart(owner: LifecycleOwner) {
-    super.onStart(owner)
-  }
-
-  /**
-   * Called when the lifecycle owner is stopped, on every app background the Clerk sdk:
-   * - Stops polling for short-lived session token refresh
-   */
-  override fun onStop(owner: LifecycleOwner) {
-    super.onStop(owner)
-  }
-
-  // endregion
-
 }
