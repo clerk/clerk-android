@@ -1,5 +1,7 @@
 package com.clerk.sdk.network.requests
 
+import com.clerk.mapgenerator.annotation.GenerateMap
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** This file contains the data classes for inputs into Clerk API. functions */
@@ -15,6 +17,7 @@ object Requests {
      * form url encoded
      */
     @Serializable
+    @GenerateMap
     data class PrepareFirstFactorParams(
       /**
        * The strategy value depends on the object's identifier value. Each authentication identifier
@@ -45,7 +48,6 @@ object Requests {
     )
 
     /** A parameter object for preparing the second factor verification. */
-    /** A parameter object for preparing the second factor verification. */
     @Serializable
     data class PrepareSecondFactorParams(
       /** The strategy used for second factor verification. */
@@ -74,9 +76,10 @@ object Requests {
      * @param signOutOfOtherSessions Whether to sign out of all other sessions after the password
      */
     @Serializable
+    @GenerateMap
     data class ResetPasswordParams(
       val password: String,
-      val signOutOfOtherSessions: Boolean? = null,
+      @SerialName("sign_out_of_other_sessions") val signOutOfOtherSessions: Boolean? = null,
     )
   }
 }
