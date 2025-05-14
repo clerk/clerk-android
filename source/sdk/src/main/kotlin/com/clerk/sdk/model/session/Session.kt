@@ -4,6 +4,7 @@ import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.model.user.User
 import com.clerk.sdk.model.userdata.PublicUserData
 import kotlinx.datetime.Instant
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -40,19 +41,19 @@ data class Session(
   val status: SessionStatus,
 
   /** The time the session expires and will cease to be active. */
-  val expireAt: Instant,
+  @SerialName("expire_at") val expireAt: Instant,
 
   /** The time when the session was abandoned by the user. */
-  val abandonAt: Instant,
+  @SerialName("abandon_at") val abandonAt: Instant,
 
   /** The time the session was last active on the client. */
-  val lastActiveAt: Instant,
+  @SerialName("last_active_at") val lastActiveAt: Instant,
 
   /** The latest activity associated with the session. */
-  val latestActivity: SessionActivity? = null,
+  @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
 
   /** The last active organization identifier. */
-  val lastActiveOrganizationId: String? = null,
+  @SerialName("last_active_organization_id") val lastActiveOrganizationId: String? = null,
 
   /** The JWT actor for the session. */
   val actor: String? = null,
@@ -61,45 +62,45 @@ data class Session(
   val user: User? = null,
 
   /** Public information about the user that this session belongs to. */
-  val publicUserData: PublicUserData? = null,
+  @SerialName("public_user_data") val publicUserData: PublicUserData? = null,
 
   /** The time the session was created. */
-  val createdAt: Instant,
+  @SerialName("created_at") val createdAt: Instant,
 
   /** The last time the session recorded activity of any kind. */
-  val updatedAt: Instant,
+  @SerialName("updated_at") val updatedAt: Instant,
 
   /** The last active token for the session. */
-  val lastActiveToken: TokenResource? = null,
+  @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
   /** Represents the status of a session. */
   @Serializable
   enum class SessionStatus {
     /** The session was abandoned client-side. */
-    ABANDONED,
+    @SerialName("abandoned") ABANDONED,
 
     /** The session is valid, and all activity is allowed. */
-    ACTIVE,
+    @SerialName("active") ACTIVE,
 
     /** The user signed out of the session, but the Session remains in the Client object. */
-    ENDED,
+    @SerialName("ended") ENDED,
 
     /** The period of allowed activity for this session has passed. */
-    EXPIRED,
+    @SerialName("expired") EXPIRED,
 
     /** The user signed out of the session, and the Session was removed from the Client object. */
-    REMOVED,
+    @SerialName("removed") REMOVED,
 
     /**
      * The session has been replaced by another one, but the Session remains in the Client object.
      */
-    REPLACED,
+    @SerialName("replaced") REPLACED,
 
     /** The application ended the session, and the Session was removed from the Client object. */
-    REVOKED,
+    @SerialName("revoked") REVOKED,
 
     /** Unknown session status. */
-    UNKNOWN,
+    @SerialName("unknown") UNKNOWN,
   }
 }
 
@@ -113,16 +114,16 @@ data class SessionActivity(
   val id: String,
 
   /** The name of the browser from which this session activity occurred. */
-  val browserName: String? = null,
+  @SerialName("browser_name") val browserName: String? = null,
 
   /** The version of the browser from which this session activity occurred. */
-  val browserVersion: String? = null,
+  @SerialName("browser_version") val browserVersion: String? = null,
 
   /** The type of the device which was used in this session activity. */
-  val deviceType: String? = null,
+  @SerialName("device_type") val deviceType: String? = null,
 
   /** The IP address from which this session activity originated. */
-  val ipAddress: String? = null,
+  @SerialName("ip_address") val ipAddress: String? = null,
 
   /** The city from which this session activity occurred. Resolved by IP address geo-location. */
   val city: String? = null,
@@ -133,5 +134,5 @@ data class SessionActivity(
   /**
    * Will be set to true if the session activity came from a mobile device. Set to false otherwise.
    */
-  val isMobile: Boolean? = null,
+  @SerialName("is_mobile") val isMobile: Boolean? = null,
 )
