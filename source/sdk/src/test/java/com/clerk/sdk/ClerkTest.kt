@@ -163,15 +163,4 @@ class ClerkTest {
     // Then
     assertNull(session)
   }
-
-  @Test
-  fun `lifecycle onStart and onStop callbacks do not throw exceptions`() {
-    // Given
-    every { Clerk.onStart(any()) } returns Unit
-    every { Clerk.onStop(any()) } returns Unit
-
-    // When & Then - no exceptions should be thrown
-    Clerk.onStart(mockLifecycleOwner)
-    Clerk.onStop(mockLifecycleOwner)
-  }
 }

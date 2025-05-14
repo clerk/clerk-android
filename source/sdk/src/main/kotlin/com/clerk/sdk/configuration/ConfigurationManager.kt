@@ -2,6 +2,7 @@ package com.clerk.sdk.configuration
 
 import android.content.Context
 import com.clerk.sdk.Clerk
+import com.clerk.sdk.lifecycle.AppLifecycleListener
 import com.clerk.sdk.log.ClerkLog
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
@@ -62,6 +63,19 @@ class ConfigurationManager {
     ClerkApi.configure(baseUrl)
 
     // Check if the API is reachable
+    refreshClientAndEnvironment(callback)
+    AppLifecycleListener.configure { refreshClientAndEnvironment(callback) }
+  }
+
+  /**
+   * Refreshes the client and environment by making asynchronous requests to the Clerk API. This
+   * method uses coroutines to make the requests in parallel and waits for both to complete before
+   * calling the callback with the results.
+   */
+  private fun refreshClientAndEnvironment(callback: (ClerkConfigurationState) -> Unit) {
+    if (Clerk.debugMode) {
+      ClerkLog.d("Refreshing client and environment.")
+    }
     scope.launch(Dispatchers.IO) {
       val clientDeferred = async { Client.get() }
       val environmentDeferred = async { Environment.get() }
@@ -73,7 +87,7 @@ class ConfigurationManager {
         clientResult is ApiResult.Success && environmentResult is ApiResult.Success -> {
           if (Clerk.debugMode) {
             ClerkLog.d("Client result: ${clientResult.value}")
-            ClerkLog.d("Environment result: ${environmentResult.value}")
+            ClerkLog.d("Environment result: $environmentResult.")
           }
           clientResult.value.client?.let { client ->
             callback(
@@ -84,6 +98,7 @@ class ConfigurationManager {
             )
           }
         }
+
         else -> {
           ClerkLog.e("Failed to configure Clerk: $environmentResult, clientResult: $clientResult")
         }
