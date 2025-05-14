@@ -1,6 +1,7 @@
 package com.clerk.sdk.configuration
 
 import android.content.Context
+import com.clerk.sdk.Clerk
 import com.clerk.sdk.log.ClerkLog
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
@@ -68,10 +69,12 @@ class ConfigurationManager {
       val clientResult = clientDeferred.await()
       val environmentResult = environmentDeferred.await()
 
-      ClerkLog.d("Client result: $clientResult")
-      ClerkLog.d("Environment result: $environmentResult")
       when {
         clientResult is ApiResult.Success && environmentResult is ApiResult.Success -> {
+          if (Clerk.debugMode) {
+            ClerkLog.d("Client result: ${clientResult.value}")
+            ClerkLog.d("Environment result: ${environmentResult.value}")
+          }
           clientResult.value.client?.let { client ->
             callback(
               ClerkConfigurationState.Configured(
@@ -82,7 +85,7 @@ class ConfigurationManager {
           }
         }
         else -> {
-          ClerkLog.e("Failed to configure Clerk: $environmentResult")
+          ClerkLog.e("Failed to configure Clerk: $environmentResult, clientResult: $clientResult")
         }
       }
     }

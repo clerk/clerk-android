@@ -1,4 +1,4 @@
-package com.clerk.sdk.middleware.incoming
+package com.clerk.sdk.network.middleware.incoming
 
 import com.clerk.sdk.storage.StorageHelper
 import com.clerk.sdk.storage.StorageKey

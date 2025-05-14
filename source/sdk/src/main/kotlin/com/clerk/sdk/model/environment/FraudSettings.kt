@@ -7,13 +7,16 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FraudSettings(val native: Native) {
   /** Native platform specific fraud prevention settings. */
-  @Serializable data class Native(val deviceAttestationMode: DeviceAttestationMode)
+  @Serializable
+  data class Native(
+    @SerialName("device_attestation_mode") val deviceAttestationMode: DeviceAttestationMode
+  )
 
   /** Enum representing the device attestation mode. */
   @Serializable
   enum class DeviceAttestationMode {
     @SerialName("disabled") DISABLED,
-    @SerialName("onboarindg") ONBOARDING,
+    @SerialName("onboarding") ONBOARDING,
     @SerialName("enforced") ENFORCED,
     @SerialName("unknown") UNKNOWN,
   }
