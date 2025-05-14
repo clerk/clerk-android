@@ -12,6 +12,9 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 jvmTarget = "21"
 kotlin = "2.1.21"
+kotlinCompileTesting = "1.5.0"
+kotlinTestJunit = "2.1.21"
+kotlinTest = "2.1.21"
 ksp = "2.1.21-2.0.1"
 material = "1.12.0"
 mavenPublish = "0.31.0"
@@ -41,6 +44,10 @@ eithernet-retrofit = { group = "com.slack.eithernet", name = "eithernet-integrat
 
 junit = "junit:junit:4.13.2"
 
+kotlin-compile-testing = { module = "com.github.tschuchortdev:kotlin-compile-testing", version.ref = "kotlinCompileTesting" }
+kotlin-compile-testing-ksp = { module = "com.github.tschuchortdev:kotlin-compile-testing-ksp", version.ref = "kotlinCompileTesting" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinTest" }
+kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlinTestJunit" }
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
 kotlinx-coroutines-test = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"
 kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.6.2"

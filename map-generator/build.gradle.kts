@@ -27,4 +27,10 @@ publishing {
 
 kotlin { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21 } }
 
-dependencies { implementation(libs.ksp.api) }
+dependencies {
+  implementation(libs.ksp.api)
+
+  testImplementation(kotlin("test"))
+  testImplementation(libs.junit)
+  testImplementation(libs.mockito)
+}
