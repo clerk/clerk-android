@@ -1,6 +1,6 @@
 package com.clerk.sdk.network.requests
 
-import com.clerk.mapgenerator.annotation.GenerateMap
+import com.clerk.mapgenerator.annotation.AutoMap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -17,7 +17,7 @@ object Requests {
      * form url encoded
      */
     @Serializable
-    @GenerateMap
+    @AutoMap
     data class PrepareFirstFactorParams(
       /**
        * The strategy value depends on the object's identifier value. Each authentication identifier
@@ -76,7 +76,7 @@ object Requests {
      * @param signOutOfOtherSessions Whether to sign out of all other sessions after the password
      */
     @Serializable
-    @GenerateMap
+    @AutoMap
     data class ResetPasswordParams(
       val password: String,
       @SerialName("sign_out_of_other_sessions") val signOutOfOtherSessions: Boolean? = null,

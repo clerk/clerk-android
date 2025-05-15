@@ -40,8 +40,6 @@ dependencies {
   implementation(libs.androidx.datastore)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
-  implementation(libs.eithernet)
-  implementation(libs.eithernet.retrofit)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
@@ -52,6 +50,7 @@ dependencies {
   implementation(libs.retrofit.kotlinx)
   implementation(projects.mapGenerator)
 
+  testImplementation(kotlin("test"))
   testImplementation(libs.androidx.arch.test)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)

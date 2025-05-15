@@ -2,12 +2,9 @@ package com.clerk.sdk.network
 
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.error.ClerkClientError
-import com.clerk.sdk.network.encoding.FormUrlEncodedConverterFactory
 import com.clerk.sdk.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.sdk.network.middleware.outgoing.HeaderMiddleware
 import com.clerk.sdk.network.middleware.outgoing.UrlAppendingMiddleware
-import com.slack.eithernet.integration.retrofit.ApiResultCallAdapterFactory
-import com.slack.eithernet.integration.retrofit.ApiResultConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -62,9 +59,7 @@ internal object ClerkApi {
     return Retrofit.Builder()
       .baseUrl(urlWithVersion)
       .client(client)
-      .addConverterFactory(ApiResultConverterFactory)
-      .addCallAdapterFactory(ApiResultCallAdapterFactory)
-      .addConverterFactory(FormUrlEncodedConverterFactory())
+      .addConverterFactory(ClerkConverterFactory.create(json))
       .addConverterFactory(json.asConverterFactory("application/json; charset=utf-8".toMediaType()))
       .build()
   }

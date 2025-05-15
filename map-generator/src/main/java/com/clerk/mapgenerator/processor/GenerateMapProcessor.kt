@@ -18,7 +18,7 @@ class GenerateMapProcessor(
   private val logger: KSPLogger,
 ) : SymbolProcessor {
   override fun process(resolver: Resolver): List<KSAnnotated> {
-    val symbols = resolver.getSymbolsWithAnnotation("com.clerk.mapgenerator.annotation.GenerateMap")
+    val symbols = resolver.getSymbolsWithAnnotation("com.clerk.mapgenerator.annotation.AutoMap")
     val unprocessed = symbols.filter { !it.validate() }.toList()
 
     symbols
@@ -32,7 +32,7 @@ class GenerateMapProcessor(
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
       super.visitClassDeclaration(classDeclaration, data)
       if (!classDeclaration.isDataClass()) {
-        logger.error("@GenerateMap can only be applied to data classes", classDeclaration)
+        logger.error("@AutoMap can only be applied to data classes", classDeclaration)
         return
       }
 
@@ -82,10 +82,11 @@ class GenerateMapProcessor(
       appendLine("import $importPath")
       appendLine("import kotlinx.serialization.SerialName")
       appendLine()
-      appendLine("fun $nestedPath.toMap(): Map<String, Any?> {")
-      appendLine("    return mapOf(")
+      appendLine("fun $nestedPath.toMap(): Map<String, String> {")
+      appendLine("    val map = mutableMapOf<String, String>()")
 
-      properties.forEachIndexed { index, property ->
+      // Instead of directly creating the map, we'll build it conditionally
+      properties.forEach { property ->
         val propName = property.simpleName.asString()
 
         // Check for @SerialName annotation
@@ -109,15 +110,11 @@ class GenerateMapProcessor(
             propName
           }
 
-        append("        \"$keyName\" to this.$propName")
-        if (index < properties.size - 1) {
-          appendLine(",")
-        } else {
-          appendLine()
-        }
+        // Add null check before adding to map
+        appendLine("    this.$propName?.let { map[\"$keyName\"] = it.toString() }")
       }
 
-      appendLine("    )")
+      appendLine("    return map")
       appendLine("}")
     }
     return content.toByteArray()

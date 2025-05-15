@@ -1,6 +1,7 @@
 package com.clerk.sdk
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.clerk.sdk.configuration.ClerkConfigurationState
 import com.clerk.sdk.configuration.ConfigurationManager
 import com.clerk.sdk.log.ClerkLog
@@ -28,10 +29,15 @@ object Clerk {
   // region State Properties
 
   /** The Client object for the current device. */
-  internal lateinit var client: Client
+  internal var client: Client? = null
+    private set
 
   /** The Environment object for the current client */
   private lateinit var environment: Environment
+
+  @VisibleForTesting
+  val isInitialized: Boolean
+    get() = ::environment.isInitialized
 
   // endregion
 
@@ -42,7 +48,7 @@ object Clerk {
    * If there is no active session, this field will be nil.
    */
   val session: Session?
-    get() = client.let { c -> c.sessions.firstOrNull { it.id == c.lastActiveSessionId } }
+    get() = client.let { c -> c?.sessions?.firstOrNull { it.id == c.lastActiveSessionId } }
 
   /**
    * A shortcut to Session.user which holds the currently active User object. If the session is nil,

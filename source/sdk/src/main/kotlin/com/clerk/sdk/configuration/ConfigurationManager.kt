@@ -6,10 +6,10 @@ import com.clerk.sdk.lifecycle.AppLifecycleListener
 import com.clerk.sdk.log.ClerkLog
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
+import com.clerk.sdk.model.response.ClerkResponse
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.storage.StorageHelper
 import com.clerk.sdk.util.PublishableKeyHelper
-import com.slack.eithernet.ApiResult
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -84,23 +84,24 @@ class ConfigurationManager {
       val environmentResult = environmentDeferred.await()
 
       when {
-        clientResult is ApiResult.Success && environmentResult is ApiResult.Success -> {
+        clientResult is ClerkResponse.Success && environmentResult is ClerkResponse.Success -> {
           if (Clerk.debugMode) {
-            ClerkLog.d("Client result: ${clientResult.value}")
-            ClerkLog.d("Environment result: $environmentResult.")
+            ClerkLog.d("Client result: ${clientResult.data}")
+            ClerkLog.d("Environment result: ${environmentResult.data}")
           }
-          clientResult.value.client?.let { client ->
-            callback(
-              ClerkConfigurationState.Configured(
-                environment = environmentResult.value,
-                client = client,
-              )
+
+          callback(
+            ClerkConfigurationState.Configured(
+              client = clientResult.data.response,
+              environment = environmentResult.data,
             )
-          }
+          )
         }
 
         else -> {
-          ClerkLog.e("Failed to configure Clerk: $environmentResult, clientResult: $clientResult")
+          ClerkLog.e(
+            "Failed to configure Clerk: environment: $environmentResult, clientResult: $clientResult"
+          )
         }
       }
     }
@@ -109,7 +110,8 @@ class ConfigurationManager {
 
 sealed interface ClerkConfigurationState {
 
-  data class Configured(val environment: Environment, val client: Client) : ClerkConfigurationState
+  data class Configured(val environment: Environment, val client: Client?) :
+    ClerkConfigurationState
 
   object Error : ClerkConfigurationState
 }

@@ -1,7 +1,11 @@
 package com.clerk.sdk.model.signup
 
+import com.clerk.mapgenerator.annotation.AutoMap
+import com.clerk.sdk.model.response.ClerkResponse
+import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.verification.Verification
-import kotlinx.datetime.Instant
+import com.clerk.sdk.network.ClerkApi
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
@@ -31,19 +35,19 @@ data class SignUp(
    * An array of all the required fields that need to be supplied and verified in order for this
    * sign-up to be marked as complete and converted into a user.
    */
-  val requiredFields: List<String>,
+  @SerialName("required_fields") val requiredFields: List<String>,
 
   /**
    * An array of all the fields that can be supplied to the sign-up, but their absence does not
    * prevent the sign-up from being marked as complete.
    */
-  val optionalFields: List<String>,
+  @SerialName("optional_fields") val optionalFields: List<String>,
 
   /**
    * An array of all the fields whose values are not supplied yet but they are mandatory in order
    * for a sign-up to be marked as complete.
    */
-  val missingFields: List<String>,
+  @SerialName("missing_fields") val missingFields: List<String>,
 
   /**
    * An array of all the fields whose values have been supplied, but they need additional
@@ -51,7 +55,7 @@ data class SignUp(
    *
    * Examples of such fields are `email_address` and `phone_number`.
    */
-  val unverifiedFields: List<String>,
+  @SerialName("unverified_fields") val unverifiedFields: List<String>,
 
   /** An object that contains information about all the verifications that are in-flight. */
   val verifications: Map<String, Verification?>,
@@ -66,37 +70,31 @@ data class SignUp(
    * The email address supplied to the current sign-up. Only supported if email address is enabled
    * in the instance settings.
    */
-  val emailAddress: String? = null,
+  @SerialName("email_address") val emailAddress: String? = null,
 
   /**
    * The user's phone number in E.164 format. Only supported if phone number is enabled in the
    * instance settings.
    */
-  val phoneNumber: String? = null,
-
-  /**
-   * The Web3 wallet address, made up of 0x + 40 hexadecimal characters. Only supported if Web3
-   * authentication is enabled in the instance settings.
-   */
-  val web3Wallet: String? = null,
+  @SerialName("phone_number") val phoneNumber: String? = null,
 
   /**
    * The value of this attribute is true if a password was supplied to the current sign-up. Only
    * supported if password is enabled in the instance settings.
    */
-  val passwordEnabled: Boolean,
+  @SerialName("password_enabled") val passwordEnabled: Boolean,
 
   /**
    * The first name supplied to the current sign-up. Only supported if name is enabled in the
    * instance settings.
    */
-  val firstName: String? = null,
+  @SerialName("first_name") val firstName: String? = null,
 
   /**
    * The last name supplied to the current sign-up. Only supported if name is enabled in the
    * instance settings.
    */
-  val lastName: String? = null,
+  @SerialName("last_name") val lastName: String? = null,
 
   /**
    * Metadata that can be read and set from the frontend. Once the sign-up is complete, the value of
@@ -104,36 +102,105 @@ data class SignUp(
    * use case for this attribute is to use it to implement custom fields that can be collected
    * during sign-up and will automatically be attached to the created User object.
    */
-  val unsafeMetadata: JsonObject? = null,
+  @SerialName("unsafe_metadata") val unsafeMetadata: JsonObject? = null,
 
   /**
    * The identifier of the newly-created session. This attribute is populated only when the sign-up
    * is complete.
    */
-  val createdSessionId: String? = null,
+  @SerialName("created_session_id") val createdSessionId: String? = null,
 
   /**
    * The identifier of the newly-created user. This attribute is populated only when the sign-up is
    * complete.
    */
-  val createdUserId: String? = null,
+  @SerialName("created_user_id") val createdUserId: String? = null,
 
   /** The date when the sign-up was abandoned by the user. */
-  val abandonAt: Instant,
+  @SerialName("abandoned_at") val abandonedAt: Long? = null,
 ) {
-  /** Represents the status of a sign-up process. */
+  /**
+   * Represents the current status of the sign-up process.
+   *
+   * The Status enum defines the possible states of a sign-up flow. Each state indicates a specific
+   * requirement or completion level in the sign-up process.
+   */
   @Serializable
   enum class Status {
-    /** The sign-up process is complete. */
+    /** The sign-up has been inactive for over 24 hours. */
+    ABANDONED,
+
+    /**
+     * A requirement is unverified or missing from the Email, Phone, Username settings. For example,
+     * in the Clerk Dashboard, the Password setting is required but a password wasn't provided in
+     * the custom flow.
+     */
+    @SerialName("missing_requirements") MISSING_REQUIREMENTS,
+
+    /**
+     * All the required fields have been supplied and verified, so the sign-up is complete and a new
+     * user and a session have been created.
+     */
     COMPLETE,
 
-    /** The sign-up process needs verification. */
-    NEEDS_VERIFICATION,
-
-    /** The sign-up process is missing required fields. */
-    MISSING_FIELDS,
-
-    /** The sign-up process is in an unknown state. */
+    /** The status is unknown. */
     UNKNOWN,
+  }
+
+  /**
+   * Represents the various strategies for initiating a `SignUp` request. This sealed class acts as
+   * a factory for the different combinations of parameters you can send to the create method
+   */
+  sealed class CreateParams {
+
+    /**
+     * Standard sign-up strategy, allowing the user to provide common details such as email,
+     * password, and personal information.
+     *
+     * @param emailAddress The user's email address (optional).
+     * @param password The user's password (optional).
+     * @param firstName The user's first name (optional).
+     * @param lastName The user's last name (optional).
+     * @param username The user's username (optional).
+     * @param phoneNumber The user's phone number (optional).
+     */
+    @AutoMap
+    @Serializable
+    data class Standard(
+      @SerialName("email_address") val emailAddress: String? = null,
+      val password: String? = null,
+      @SerialName("first_name") val firstName: String? = null,
+      @SerialName("last_name") val lastName: String? = null,
+      val username: String? = null,
+      @SerialName("phone_number") val phoneNumber: String? = null,
+    ) : CreateParams()
+
+    /**
+     * The `SignUp` will be created without any parameters.
+     *
+     * This is useful for inspecting a newly created `SignUp` object before deciding on a strategy.
+     */
+    object None : CreateParams()
+  }
+
+  companion object {
+
+    /**
+     * Creates a new sign-up instance using the specified strategy.
+     *
+     * @param createParams The parameters for creating the sign-up. @see [CreateParams] for details.
+     * @see [SignUp] kdoc for more info
+     */
+    suspend fun create(
+      createParams: CreateParams
+    ): ClerkResponse<ClientPiggybackedResponse<SignUp>> {
+      val formMap =
+        if (createParams is CreateParams.Standard) {
+          createParams.toMap()
+        } else {
+          emptyMap()
+        }
+      return ClerkApi.instance.createSignUp(formMap)
+    }
   }
 }

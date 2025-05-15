@@ -1,15 +1,14 @@
 package com.clerk.sdk.network
 
+import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
-import com.clerk.sdk.model.error.ClerkAPIError
-import com.clerk.sdk.model.response.ApiResponse
+import com.clerk.sdk.model.response.ClerkResponse
+import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
-import com.clerk.sdk.network.encoding.FormEncoded
 import com.clerk.sdk.network.requests.Requests
-import com.slack.eithernet.ApiResult
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -21,11 +20,14 @@ import retrofit2.http.Query
 /**
  * ClerkApiService is an interface that defines the API endpoints for the Clerk client.
  *
- * When the endpoints are called they'll come back as an ApiResult, which can be handled:
+ * When the endpoints are called they'll come back as a [ClerkResponse], where the type will either
+ * be the type specified or [com.clerk.sdk.model.error.ClerkErrorResponse] if there was an error.
+ *
+ * To handle the response:
  * ```kotlin
  * when(val result = clientApi.client()) {
- *   is Success ->  result.response // handle success
- *   is Failure -> result.error // handle error, type is ClerkApiError
+ *   is Success ->  result.data // handle success
+ *   is Failure -> result.errorResponse
  * }
  * ```
  */
@@ -35,7 +37,7 @@ internal interface ClerkApiService {
   // region Client
 
   // /client
-  @GET("client") suspend fun client(): ApiResult<ApiResponse, ClerkAPIError>
+  @GET("client") suspend fun client(): ClerkResponse<ClientPiggybackedResponse<Client>>
 
   // endregion
 
@@ -45,26 +47,22 @@ internal interface ClerkApiService {
   @GET("client/device_attestation") suspend fun deviceAttestation()
 
   // /client/device_attestation/challenges
-  @POST("client/device_attestation/challenges")
-  suspend fun challenges(): ApiResult<Unit, ClerkAPIError>
+  @POST("client/device_attestation/challenges") suspend fun challenges(): ClerkResponse<Unit>
 
   // /client/device_attestation/verify
-  @POST("client/device_attestation/verify") suspend fun verify(): ApiResult<Unit, ClerkAPIError>
+  @POST("client/device_attestation/verify") suspend fun verify(): ClerkResponse<Unit>
 
   // endregion
 
   // region Session
 
   // /client/sessions
-  @GET("client/sessions") suspend fun sessions(): ApiResult<Unit, ClerkAPIError>
+  @GET("client/sessions") suspend fun sessions(): ClerkResponse<Unit>
 
   // /client/sessions/{id}/remove
   @FormUrlEncoded
   @POST("client/sessions/{id}/remove")
-  suspend fun remove(
-    @Path("id") id: String,
-    @Field("id") userId: String,
-  ): ApiResult<Session, ClerkAPIError>
+  suspend fun remove(@Path("id") id: String, @Field("id") userId: String): ClerkResponse<Session>
 
   // /client/sessions/{id}/tokens
   @FormUrlEncoded
@@ -72,7 +70,7 @@ internal interface ClerkApiService {
   suspend fun tokens(
     @Path("id") userId: String,
     @Field("id") id: String,
-  ): ApiResult<TokenResource, ClerkAPIError>
+  ): ClerkResponse<TokenResource>
 
   // /client/sessions/{id}/tokens/{template}
   @FormUrlEncoded
@@ -82,32 +80,32 @@ internal interface ClerkApiService {
     @Path("template") templateType: String,
     @Field("id") id: String,
     @Field("template") template: String,
-  ): ApiResult<TokenResource, ClerkAPIError>
+  ): ClerkResponse<TokenResource>
 
   // endregion
 
   // region Sign In
 
   // client/sign_ins
-  @POST("client/sign_ins") suspend fun signIn(): ApiResult<SignIn, ClerkAPIError>
+  @POST("client/sign_ins") suspend fun signIn(): ClerkResponse<SignIn>
 
   // client/sign_ins/{id}
   @GET("client/sign_ins/{id}")
   suspend fun signIn(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
-  ): ApiResult<SignIn, ClerkAPIError>
+  ): ClerkResponse<SignIn>
 
   // client/sign_ins/{id}/attempt_first_factor
   @POST("client/sign_ins/{id}/attempt_first_factor")
-  suspend fun attemptFirstFactor(@Path("id") id: String): ApiResult<SignIn, ClerkAPIError>
+  suspend fun attemptFirstFactor(@Path("id") id: String): ClerkResponse<SignIn>
 
   // clients/sign_ins/{id}/attempt_first_factor
   @POST("client/sign_ins/{id}/attempt_first_factor")
   suspend fun attemptSecondFactor(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
-  ): ApiResult<SignIn, ClerkAPIError>
+  ): ClerkResponse<SignIn>
 
   // client/sign_ins/{id}/prepare_first_factor
   @POST("client/sign_ins/{id}/prepare_first_factor")
@@ -115,38 +113,50 @@ internal interface ClerkApiService {
     @Path("id") id: String,
     // Expecting: Requests.SignIn.PrepareFirstFactorParams
     @FieldMap fields: Map<String, String>,
-  ): ApiResult<SignIn, ClerkAPIError>
+  ): ClerkResponse<SignIn>
 
-  // client/sign_ins/{id}/prepare_second_factor
+  /**
+   * Prepare the second factor for a sign in.
+   *
+   * @param id The session id.
+   * @param params The parameters for the second
+   *   factor. @see [Requests.SignIn.PrepareSecondFactorParams]
+   */
   @POST("client/sign_ins/{id}/prepare_second_factor")
   suspend fun prepareSecondFactor(
     @Path("id") id: String,
-    @FormEncoded params: Requests.SignIn.PrepareSecondFactorParams,
-  ): ApiResult<SignIn, ClerkAPIError>
+    @FieldMap params: Map<String, String>,
+  ): ClerkResponse<SignIn>
 
-  // client/sign_ins/{id}/reset_password
-
+  /**
+   * Reset the password for a sign in.
+   *
+   * The request body should contain the reset password fields as key-value pairs. The expected
+   * input is [Requests.SignIn.ResetPasswordParams].
+   */
   @POST("client/sign_ins/{id}/reset_password")
-  suspend fun resetPassword(
-    @Path("id") id: String,
-    @FormEncoded params: Requests.SignIn.ResetPasswordParams,
-  )
+  suspend fun resetPassword(@Path("id") id: String, @FieldMap fields: Map<String, String>)
 
   // endregion
 
   // region Environment
 
   // /environment
-  @GET("environment") suspend fun environment(): ApiResult<Environment, ClerkAPIError>
+  @GET("environment") suspend fun environment(): ClerkResponse<Environment>
 
   // region Sign Up
 
   /**
-   * Sign up a user with the given parameters. NOTE: THIS IS NOT COMPLETE, NEED GUIDANCE ON OAUTH
-   * ENUM
+   * Create a new sign up request.
+   *
+   * The request body should contain the sign up fields as key-value pairs. The expected input is
+   * [SignUp.CreateParams].
    */
-  // client/sign_ups
-  @POST("client/sign_ups") suspend fun signUp(): ApiResult<SignUp, ClerkAPIError>
+  @FormUrlEncoded
+  @POST("client/sign_ups")
+  suspend fun createSignUp(
+    @FieldMap fields: Map<String, String>
+  ): ClerkResponse<ClientPiggybackedResponse<SignUp>>
 
   // endregion
 }

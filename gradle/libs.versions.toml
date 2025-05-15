@@ -6,7 +6,6 @@ dagger = "2.56.2"
 datastore = "1.1.6"
 detekt = "1.23.8"
 dokka = "2.0.0"
-eithernet = "2.0.0"
 espressoCore = "3.6.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -38,9 +37,6 @@ androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-p
 
 dagger = { group = "com.google.dagger", name = "dagger", version.ref = "dagger" }
 dagger-compiler = { group = "com.google.dagger", name = "dagger-compiler", version.ref = "dagger" }
-
-eithernet = { group = "com.slack.eithernet", name = "eithernet", version.ref = "eithernet" }
-eithernet-retrofit = { group = "com.slack.eithernet", name = "eithernet-integration-retrofit", version.ref = "eithernet" }
 
 junit = "junit:junit:4.13.2"
 
