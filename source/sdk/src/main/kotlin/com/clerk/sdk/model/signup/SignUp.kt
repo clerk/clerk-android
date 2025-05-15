@@ -3,12 +3,10 @@ package com.clerk.sdk.model.signup
 import com.clerk.mapgenerator.annotation.AutoMap
 import com.clerk.sdk.model.response.ClerkResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
-import com.clerk.sdk.model.signup.SignUp.CreateStrategy.Standard
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -149,71 +147,11 @@ data class SignUp(
     UNKNOWN,
   }
 
-  @Serializable
-  data class CreateParams(
-    // The strategy to use for the sign-up flow.
-    val strategy: String? = null,
-
-    // The user's first name. Only supported if name is enabled.
-    @SerialName("first_name") val firstName: String? = null,
-
-    // The user's last name. Only supported if name is enabled.
-    @SerialName("last_name") val lastName: String? = null,
-
-    // The user's password. Only supported if password is enabled.
-    val password: String? = null,
-
-    // The user's email address. Only supported if email address is enabled. Keep in mind that the
-    // email address requires an extra verification process.
-    @SerialName("email_address") val emailAddress: String? = null,
-
-    // The user's phone number in E.164 format. Only supported if phone number is enabled. Keep in
-    // mind that the phone number requires an extra verification process.
-    @SerialName("phone_number") val phoneNumber: String? = null,
-
-    // The user's username. Only supported if usernames are enabled.
-    val username: String? = null,
-
-    // Metadata that can be read and set from the frontend.
-    // Once the sign-up is complete, the value of this field will be automatically copied to the
-    // newly created user's unsafe metadata.
-    // One common use case for this attribute is to use it to implement custom fields that can be
-    // collected during sign-up and will automatically be attached to the created User object.
-    @SerialName("unsafe_metadata") val unsafeMetadata: JsonElement? = null,
-
-    // If strategy is set to 'oauth_{provider}' or 'enterprise_sso', this specifies full URL or path
-    // that the OAuth provider should redirect to after successful authorization on their part.
-    // If strategy is set to 'email_link', this specifies The full URL that the user will be
-    // redirected to when they visit the email link. See the custom flow for implementation details.
-
-    @SerialName("redirect_url") val redirectUrl: String? = null,
-
-    // Required if strategy is set to 'ticket'. The ticket or token generated from the Backend API.
-    val ticket: String? = null,
-
-    // When set to true, the SignUp will attempt to retrieve information from the active SignIn
-    // instance and use it to complete the sign-up process.
-    // This is useful when you want to seamlessly transition a user from a sign-in attempt to a
-    // sign-up attempt.
-    val transfer: Boolean? = null,
-
-    // A boolean indicating whether the user has agreed to the legal compliance documents.
-    @SerialName("legal_accepted") val legalAccepted: Boolean? = null,
-
-    // Optional if strategy is set to 'oauth_{provider}' or 'enterprise_sso'. The value to pass to
-    // the OIDC prompt parameter in the generated OAuth redirect URL.
-    @SerialName("oidc_prompt") val oidcPrompt: String? = null,
-
-    // Optional if strategy is set to 'oauth_<provider>' or 'enterprise_sso'. The value to pass to
-    // the OIDC login_hint parameter in the generated OAuth redirect URL.
-    @SerialName("oidc_login_hint") val oidcLoginHint: String? = null,
-
-    // The ID token from a provider used for authentication (e.g., SignInWithApple).
-    val token: String? = null,
-  )
-
-  /** Represents the various strategies for initiating a `SignUp` request. */
-  sealed class CreateStrategy {
+  /**
+   * Represents the various strategies for initiating a `SignUp` request. This sealed class acts as
+   * a factory for the different combinations of parameters you can send to the create method
+   */
+  sealed class CreateParams {
 
     /**
      * Standard sign-up strategy, allowing the user to provide common details such as email,
@@ -235,23 +173,30 @@ data class SignUp(
       @SerialName("last_name") val lastName: String? = null,
       val username: String? = null,
       @SerialName("phone_number") val phoneNumber: String? = null,
-    ) : CreateStrategy()
+    ) : CreateParams()
 
     /**
      * The `SignUp` will be created without any parameters.
      *
      * This is useful for inspecting a newly created `SignUp` object before deciding on a strategy.
      */
-    object None : CreateStrategy()
+    object None : CreateParams()
   }
 
   companion object {
+
+    /**
+     * Creates a new sign-up instance using the specified strategy.
+     *
+     * @param createParams The parameters for creating the sign-up. @see [CreateParams] for details.
+     * @see [SignUp] kdoc for more info
+     */
     suspend fun create(
-      createStrategy: CreateStrategy
+      createParams: CreateParams
     ): ClerkResponse<ClientPiggybackedResponse<SignUp>> {
       val formMap =
-        if (createStrategy is Standard) {
-          createStrategy.toMap()
+        if (createParams is CreateParams.Standard) {
+          createParams.toMap()
         } else {
           emptyMap()
         }

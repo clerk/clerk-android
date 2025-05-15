@@ -141,8 +141,10 @@ internal interface ClerkApiService {
   // region Sign Up
 
   /**
-   * Sign up a user with the given parameters. NOTE: THIS IS NOT COMPLETE, NEED GUIDANCE ON OAUTH
-   * ENUM
+   * Create a new sign up request.
+   *
+   * The request body should contain the sign up fields as key-value pairs. The expected input is
+   * [SignUp.CreateParams].
    */
   @FormUrlEncoded
   @POST("client/sign_ups")
