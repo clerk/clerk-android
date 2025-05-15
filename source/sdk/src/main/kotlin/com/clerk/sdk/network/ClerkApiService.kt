@@ -8,7 +8,6 @@ import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
-import com.clerk.sdk.network.encoding.FormEncoded
 import com.clerk.sdk.network.requests.Requests
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
@@ -116,20 +115,27 @@ internal interface ClerkApiService {
     @FieldMap fields: Map<String, String>,
   ): ClerkResponse<SignIn>
 
-  // client/sign_ins/{id}/prepare_second_factor
+  /**
+   * Prepare the second factor for a sign in.
+   *
+   * @param id The session id.
+   * @param params The parameters for the second
+   *   factor. @see [Requests.SignIn.PrepareSecondFactorParams]
+   */
   @POST("client/sign_ins/{id}/prepare_second_factor")
   suspend fun prepareSecondFactor(
     @Path("id") id: String,
-    @FormEncoded params: Requests.SignIn.PrepareSecondFactorParams,
+    @FieldMap params: Map<String, String>,
   ): ClerkResponse<SignIn>
 
-  // client/sign_ins/{id}/reset_password
-
+  /**
+   * Reset the password for a sign in.
+   *
+   * The request body should contain the reset password fields as key-value pairs. The expected
+   * input is [Requests.SignIn.ResetPasswordParams].
+   */
   @POST("client/sign_ins/{id}/reset_password")
-  suspend fun resetPassword(
-    @Path("id") id: String,
-    @FormEncoded params: Requests.SignIn.ResetPasswordParams,
-  )
+  suspend fun resetPassword(@Path("id") id: String, @FieldMap fields: Map<String, String>)
 
   // endregion
 

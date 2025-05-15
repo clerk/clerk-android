@@ -2,7 +2,6 @@ package com.clerk.sdk.network
 
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.error.ClerkClientError
-import com.clerk.sdk.network.encoding.FormUrlEncodedConverterFactory
 import com.clerk.sdk.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.sdk.network.middleware.outgoing.HeaderMiddleware
 import com.clerk.sdk.network.middleware.outgoing.UrlAppendingMiddleware
@@ -61,7 +60,6 @@ internal object ClerkApi {
       .baseUrl(urlWithVersion)
       .client(client)
       .addConverterFactory(ClerkConverterFactory.create(json))
-      .addConverterFactory(FormUrlEncodedConverterFactory())
       .addConverterFactory(json.asConverterFactory("application/json; charset=utf-8".toMediaType()))
       .build()
   }
