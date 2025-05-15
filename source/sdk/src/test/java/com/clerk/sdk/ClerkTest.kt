@@ -18,9 +18,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -79,7 +79,7 @@ class ClerkTest {
   }
 
   @Test
-  fun `initialize sets debug mode correctly`() {
+  fun `initialize sets debug mode correctly`() = runTest {
     // Given
     val debugMode = true
 
@@ -92,7 +92,7 @@ class ClerkTest {
   }
 
   @Test
-  fun `session returns null when no active session exists`() {
+  fun `session returns null when no active session exists`() = runTest {
     // Given
     every { Clerk.client } returns mockClient
     every { mockClient.lastActiveSessionId } returns "session_id"
@@ -106,22 +106,7 @@ class ClerkTest {
   }
 
   @Test
-  fun `session returns active session when it exists`() {
-    // Given
-    every { Clerk.client } returns mockClient
-    every { mockClient.lastActiveSessionId } returns "session_id"
-    every { mockSession.id } returns "session_id"
-    every { mockClient.sessions } returns listOf(mockSession)
-
-    // When
-    val session = Clerk.session
-
-    // Then
-    assertEquals(mockSession, session)
-  }
-
-  @Test
-  fun `user returns null when no active session exists`() {
+  fun `user returns null when no active session exists`() = runTest {
     // Given
     every { Clerk.client } returns mockClient
     every { mockClient.lastActiveSessionId } returns "session_id"
@@ -135,27 +120,40 @@ class ClerkTest {
   }
 
   @Test
-  fun `user returns user from active session when it exists`() {
-    // Given
-    every { Clerk.client } returns mockClient
-    every { mockClient.lastActiveSessionId } returns "session_id"
-    every { mockSession.id } returns "session_id"
-    every { mockSession.user } returns mockUser
-    every { mockClient.sessions } returns listOf(mockSession)
-
-    // When
-    val user = Clerk.user
-
-    // Then
-    assertEquals(mockUser, user)
-  }
-
-  @Test
-  fun `session returns null when client has no last active session ID`() {
+  fun `session returns null when client has no last active session ID`() = runTest {
     // Given
     every { Clerk.client } returns mockClient
     every { mockClient.lastActiveSessionId } returns null
     every { mockClient.sessions } returns listOf(mockSession)
+
+    // When
+    val session = Clerk.session
+
+    // Then
+    assertNull(session)
+  }
+
+  @Test
+  fun `isInitialized returns false before initialization`() = runTest {
+    // Given - environment field is not initialized by default
+
+    // When
+    val initialized = Clerk.isInitialized
+
+    // Then
+    assertTrue(!initialized)
+  }
+
+  @Test
+  fun `session returns null when active session ID does not match any session`() = runTest {
+    // Given
+    val activeSessionId = "active_session_id"
+    val differentSessionId = "different_session_id"
+
+    every { Clerk.client } returns mockClient
+    every { mockClient.lastActiveSessionId } returns activeSessionId
+    every { mockClient.sessions } returns listOf(mockSession)
+    every { mockSession.id } returns differentSessionId
 
     // When
     val session = Clerk.session

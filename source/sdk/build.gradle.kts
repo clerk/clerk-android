@@ -50,6 +50,7 @@ dependencies {
   implementation(libs.retrofit.kotlinx)
   implementation(projects.mapGenerator)
 
+  testImplementation(kotlin("test"))
   testImplementation(libs.androidx.arch.test)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
