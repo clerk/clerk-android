@@ -93,8 +93,8 @@ class GenerateMapProcessor(
         val serialNameAnnotation =
           property.annotations.find {
             it.shortName.asString() == "SerialName" &&
-                    it.annotationType.resolve().declaration.qualifiedName?.asString() ==
-                    "kotlinx.serialization.SerialName"
+              it.annotationType.resolve().declaration.qualifiedName?.asString() ==
+                "kotlinx.serialization.SerialName"
           }
 
         val keyName =
