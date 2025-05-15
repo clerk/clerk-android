@@ -26,4 +26,4 @@ data class Error(
   /** Additional information about the error. */
 )
 
-@Serializable data class Meta(val client: Client)
+@Serializable data class Meta(val client: Client? = null)

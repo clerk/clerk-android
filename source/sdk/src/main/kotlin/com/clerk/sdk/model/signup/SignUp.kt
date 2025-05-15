@@ -1,7 +1,7 @@
 package com.clerk.sdk.model.signup
 
 import com.clerk.mapgenerator.annotation.AutoMap
-import com.clerk.sdk.model.error.ClerkErrorResponse
+import com.clerk.sdk.model.response.ClerkResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.signup.SignUp.CreateStrategy.Standard
 import com.clerk.sdk.model.verification.Verification
@@ -121,18 +121,6 @@ data class SignUp(
   /** The date when the sign-up was abandoned by the user. */
   @SerialName("abandoned_at") val abandonedAt: Long? = null,
 ) {
-  companion object {
-    suspend fun create(createStrategy: CreateStrategy): ClerkResponse<ClientPiggybackedResponse> {
-      val formMap =
-        if (createStrategy is Standard) {
-          createStrategy.toMap()
-        } else {
-          emptyMap()
-        }
-      return ClerkApi.instance.createSignUp(formMap)
-    }
-  }
-
   /**
    * Represents the current status of the sign-up process.
    *
@@ -256,13 +244,16 @@ data class SignUp(
      */
     object None : CreateStrategy()
   }
-}
 
-@Serializable
-public sealed class ClerkResponse<out T> {
-
-  @Serializable public data class Success<out T>(val value: T) : ClerkResponse<T>()
-
-  @Serializable
-  public data class Error(val exception: ClerkErrorResponse) : ClerkResponse<Nothing>()
+  companion object {
+    suspend fun create(createStrategy: CreateStrategy): ClerkResponse<ClientPiggybackedResponse> {
+      val formMap =
+        if (createStrategy is Standard) {
+          createStrategy.toMap()
+        } else {
+          emptyMap()
+        }
+      return ClerkApi.instance.createSignUp(formMap)
+    }
+  }
 }

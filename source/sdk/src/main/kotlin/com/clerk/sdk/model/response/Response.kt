@@ -4,6 +4,17 @@ import com.clerk.sdk.model.client.Client
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Represents a response from the Clerk API that includes a client object.
+ *
+ * Clerk has a concept of "piggybacking" a client object on top of the response. This means that the
+ * response can contain additional information about the client, such as its ID, sessions, and
+ * authentication status.
+ *
+ * @property response The response object containing the main data.
+ * @property client The client object associated with the response, if available.
+ * @see
+ */
 @Serializable
 data class ClientPiggybackedResponse(
   @SerialName("response") val response: Response,

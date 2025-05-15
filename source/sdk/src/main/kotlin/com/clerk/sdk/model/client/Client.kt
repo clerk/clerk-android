@@ -1,12 +1,11 @@
 package com.clerk.sdk.model.client
 
-import com.clerk.sdk.model.error.ClerkErrorResponse
+import com.clerk.sdk.model.response.ClerkResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.network.ClerkApi
-import com.slack.eithernet.ApiResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -40,7 +39,7 @@ data class Client(
 ) {
 
   companion object {
-    suspend fun get(): ApiResult<ClientPiggybackedResponse, ClerkErrorResponse> =
-      ClerkApi.instance.client()
+    /** Fetches the current client object from the Clerk API. */
+    suspend fun get(): ClerkResponse<ClientPiggybackedResponse> = ClerkApi.instance.client()
   }
 }

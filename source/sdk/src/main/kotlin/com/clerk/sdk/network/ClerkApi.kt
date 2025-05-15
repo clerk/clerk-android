@@ -62,6 +62,7 @@ internal object ClerkApi {
     return Retrofit.Builder()
       .baseUrl(urlWithVersion)
       .client(client)
+      .addConverterFactory(ClerkConverterFactory.create(json))
       .addConverterFactory(ApiResultConverterFactory)
       .addCallAdapterFactory(ApiResultCallAdapterFactory)
       .addConverterFactory(FormUrlEncodedConverterFactory())

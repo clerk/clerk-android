@@ -2,10 +2,10 @@ package com.clerk.sdk.network
 
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.error.ClerkErrorResponse
+import com.clerk.sdk.model.response.ClerkResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
-import com.clerk.sdk.model.signup.ClerkResponse
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.encoding.FormEncoded
 import com.clerk.sdk.network.requests.Requests
@@ -37,7 +37,7 @@ internal interface ClerkApiService {
   // region Client
 
   // /client
-  @GET("client") suspend fun client(): ApiResult<ClientPiggybackedResponse, ClerkErrorResponse>
+  @GET("client") suspend fun client(): ClerkResponse<ClientPiggybackedResponse>
 
   // endregion
 
@@ -140,7 +140,7 @@ internal interface ClerkApiService {
   // region Environment
 
   // /environment
-  @GET("environment") suspend fun environment(): ApiResult<Environment, ClerkErrorResponse>
+  @GET("environment") suspend fun environment(): ClerkResponse<Environment>
 
   // region Sign Up
 
