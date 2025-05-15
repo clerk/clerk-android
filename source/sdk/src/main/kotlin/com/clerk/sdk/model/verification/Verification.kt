@@ -1,6 +1,6 @@
 package com.clerk.sdk.model.verification
 
-import com.clerk.sdk.model.error.ClerkAPIError
+import com.clerk.sdk.model.error.Error
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
@@ -16,7 +16,7 @@ data class Verification(
   /** The time the verification will expire at. */
   val expireAt: Instant? = null,
   /** The last error the verification attempt ran into. */
-  val error: ClerkAPIError? = null,
+  val error: Error? = null,
   /** The redirect URL for an external verification. */
   val externalVerificationRedirectUrl: String? = null,
   /** The nonce pertaining to the verification. */

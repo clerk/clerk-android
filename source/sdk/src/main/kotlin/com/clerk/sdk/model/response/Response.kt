@@ -5,13 +5,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ApiResponse(
-  @SerialName("response") val clientResponse: ClientResponse,
+data class ClientPiggybackedResponse(
+  @SerialName("response") val response: Response,
   val client: Client? = null,
 )
 
 @Serializable
-data class ClientResponse(
+data class Response(
   @SerialName("object") val objectType: String,
   val id: String,
   val sessions: List<String> = emptyList(),
@@ -19,7 +19,7 @@ data class ClientResponse(
   @SerialName("sign_up") val signUp: String? = null,
   @SerialName("last_active_session_id") val lastActiveSessionId: String? = null,
   @SerialName("cookie_expires_at") val cookieExpiresAt: Long? = null,
-  @SerialName("captcha_bypass") val captchaBypass: Boolean,
-  @SerialName("created_at") val createdAt: Long,
-  @SerialName("updated_at") val updatedAt: Long,
+  @SerialName("captcha_bypass") val captchaBypass: Boolean? = null,
+  @SerialName("created_at") val createdAt: Long? = null,
+  @SerialName("updated_at") val updatedAt: Long? = null,
 )

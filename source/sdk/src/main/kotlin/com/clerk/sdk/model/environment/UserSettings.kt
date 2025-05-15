@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class UserSettings(
   val attributes: Map<String, AttributesConfig>,
-  @SerialName("sign_up") val signUp: SignUp,
+  @SerialName("sign_up") val signUp: SignUpUserSettings,
   val social: Map<String, SocialConfig>,
   val actions: Actions,
   @SerialName("passkey_settings") val passkeySettings: PasskeySettings?,
@@ -24,7 +24,8 @@ data class UserSettings(
   )
 
   @Serializable
-  data class SignUp(
+
+  data class SignUpUserSettings(
     @SerialName("custom_action_required") val customActionRequired: Boolean,
     val progressive: Boolean,
     val mode: String,

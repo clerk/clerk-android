@@ -1,13 +1,13 @@
 package com.clerk.sdk.model.client
 
-import com.clerk.sdk.model.error.ClerkAPIError
-import com.clerk.sdk.model.response.ApiResponse
+import com.clerk.sdk.model.error.ClerkErrorResponse
+import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.network.ClerkApi
 import com.slack.eithernet.ApiResult
-import kotlinx.datetime.Instant
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -24,25 +24,23 @@ data class Client(
   val id: String,
 
   /** The current sign in attempt, or null if there is none. */
-  val signIn: SignIn? = null,
+  @SerialName("sign_in") val signIn: SignIn? = null,
 
   /** The current sign up attempt, or null if there is none. */
-  val signUp: SignUp? = null,
+  @SerialName("sign_up") val signUp: SignUp? = null,
 
   /** A list of sessions that have been created on this client. */
   val sessions: List<Session>,
 
   /** The ID of the last active Session on this client. */
-  val lastActiveSessionId: String? = null,
+  @SerialName("last_active_session_id") val lastActiveSessionId: String? = null,
 
   /** Timestamp of last update for the client. */
-  val updatedAt: Instant,
+  @SerialName("updated_at") val updatedAt: Long,
 ) {
-  /** A list of active sessions on this client. */
-  val activeSessions: List<Session>
-    get() = sessions.filter { it.status == Session.SessionStatus.ACTIVE }
 
   companion object {
-    suspend fun get(): ApiResult<ApiResponse, ClerkAPIError> = ClerkApi.instance.client()
+    suspend fun get(): ApiResult<ClientPiggybackedResponse, ClerkErrorResponse> =
+      ClerkApi.instance.client()
   }
 }

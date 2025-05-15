@@ -1,6 +1,6 @@
 package com.clerk.sdk.model.environment
 
-import com.clerk.sdk.model.error.ClerkAPIError
+import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.network.ClerkApi
 import com.slack.eithernet.ApiResult
 import kotlinx.serialization.SerialName
@@ -14,6 +14,6 @@ data class Environment(
   @SerialName("fraud_settings") val fraudSettings: FraudSettings,
 ) {
   companion object {
-    suspend fun get(): ApiResult<Environment, ClerkAPIError> = ClerkApi.instance.environment()
+    suspend fun get(): ApiResult<Environment, ClerkErrorResponse> = ClerkApi.instance.environment()
   }
 }
