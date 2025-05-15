@@ -1,10 +1,12 @@
 package com.clerk.sdk.network
 
+import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.response.ClerkResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
+import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.encoding.FormEncoded
 import com.clerk.sdk.network.requests.Requests
@@ -36,7 +38,7 @@ internal interface ClerkApiService {
   // region Client
 
   // /client
-  @GET("client") suspend fun client(): ClerkResponse<ClientPiggybackedResponse>
+  @GET("client") suspend fun client(): ClerkResponse<ClientPiggybackedResponse<Client>>
 
   // endregion
 
@@ -145,8 +147,8 @@ internal interface ClerkApiService {
   @FormUrlEncoded
   @POST("client/sign_ups")
   suspend fun createSignUp(
-    @FieldMap(encoded = false) fields: Map<String, String>
-  ): ClerkResponse<ClientPiggybackedResponse>
+    @FieldMap fields: Map<String, String>
+  ): ClerkResponse<ClientPiggybackedResponse<SignUp>>
 
   // endregion
 }

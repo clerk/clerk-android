@@ -18,7 +18,7 @@ import retrofit2.http.FormUrlEncoded
  *
  * @see FormEncoded
  */
-class FormUrlEncodedConverterFactory : Converter.Factory() {
+internal class FormUrlEncodedConverterFactory : Converter.Factory() {
   override fun requestBodyConverter(
     type: Type,
     parameterAnnotations: Array<Annotation>,
@@ -34,7 +34,7 @@ class FormUrlEncodedConverterFactory : Converter.Factory() {
   }
 }
 
-fun Any.toFormMap(): Map<String, String> {
+internal fun Any.toFormMap(): Map<String, String> {
   val json = Json { encodeDefaults = false }
   val jsonString = json.encodeToString(this)
   val map = json.decodeFromString<Map<String, JsonElement>>(jsonString)

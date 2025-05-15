@@ -246,7 +246,9 @@ data class SignUp(
   }
 
   companion object {
-    suspend fun create(createStrategy: CreateStrategy): ClerkResponse<ClientPiggybackedResponse> {
+    suspend fun create(
+      createStrategy: CreateStrategy
+    ): ClerkResponse<ClientPiggybackedResponse<SignUp>> {
       val formMap =
         if (createStrategy is Standard) {
           createStrategy.toMap()

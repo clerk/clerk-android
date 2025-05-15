@@ -92,7 +92,7 @@ class ConfigurationManager {
 
           callback(
             ClerkConfigurationState.Configured(
-              client = clientResult.data.client,
+              client = clientResult.data.response,
               environment = environmentResult.data,
             )
           )

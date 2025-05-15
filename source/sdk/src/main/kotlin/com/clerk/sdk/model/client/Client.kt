@@ -40,6 +40,6 @@ data class Client(
 
   companion object {
     /** Fetches the current client object from the Clerk API. */
-    suspend fun get(): ClerkResponse<ClientPiggybackedResponse> = ClerkApi.instance.client()
+    suspend fun get(): ClerkResponse<ClientPiggybackedResponse<Client>> = ClerkApi.instance.client()
   }
 }

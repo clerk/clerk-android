@@ -16,8 +16,8 @@ import kotlinx.serialization.Serializable
  * @see
  */
 @Serializable
-data class ClientPiggybackedResponse(
-  @SerialName("response") val response: Response,
+data class ClientPiggybackedResponse<T>(
+  @SerialName("response") val response: T,
   val client: Client? = null,
 )
 
