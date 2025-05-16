@@ -30,7 +30,6 @@ object Clerk {
 
   /** The Client object for the current device. */
   internal var client: Client? = null
-    private set
 
   /** The Environment object for the current client */
   private lateinit var environment: Environment
