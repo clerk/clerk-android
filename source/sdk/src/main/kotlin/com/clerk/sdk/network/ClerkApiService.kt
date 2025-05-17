@@ -41,47 +41,39 @@ internal interface ClerkApiService {
 
   // region Client
 
-  // /client
-  @GET("client")
+  @GET(Paths.ClientPath.CLIENT)
   suspend fun client(): ApiResult<ClientPiggybackedResponse<Client>, ClerkErrorResponse>
 
   // endregion
 
   // region Device Attestation
 
-  // /client/device_attestation
-  @GET("client/device_attestation") suspend fun deviceAttestation()
+  @GET(Paths.ClientPath.DeviceAttestation.DEVICE_ATTESTATION) suspend fun deviceAttestation()
 
-  // /client/device_attestation/challenges
-  @POST("client/device_attestation/challenges") suspend fun challenges(): ClerkResponse<Unit>
+  @POST(Paths.ClientPath.DeviceAttestation.CHALLENGES) suspend fun challenges(): ClerkResponse<Unit>
 
-  // /client/device_attestation/verify
-  @POST("client/device_attestation/verify") suspend fun verify(): ClerkResponse<Unit>
+  @POST(Paths.ClientPath.DeviceAttestation.VERIFY) suspend fun verify(): ClerkResponse<Unit>
 
   // endregion
 
   // region Session
 
-  // /client/sessions
-  @GET("client/sessions") suspend fun sessions(): ClerkResponse<Unit>
+  @GET(Paths.ClientPath.Sessions.SESSIONS) suspend fun sessions(): ClerkResponse<Unit>
 
-  // /client/sessions/{id}/remove
   @FormUrlEncoded
-  @POST("client/sessions/{id}/remove")
+  @POST(Paths.ClientPath.Sessions.WithId.REMOVE)
   suspend fun remove(@Path("id") id: String, @Field("id") userId: String): ClerkResponse<Session>
 
-  // /client/sessions/{id}/tokens
   @FormUrlEncoded
-  @POST("client/sessions/{id}/tokens")
+  @POST(Paths.ClientPath.Sessions.WithId.TOKENS)
   suspend fun tokens(
     @Path("id") userId: String,
     @Field("id") id: String,
   ): ApiResult<TokenResource, ClerkErrorResponse>
 
-  // /client/sessions/{id}/tokens/{template}
   @FormUrlEncoded
-  @POST("client/sessions/{id}/tokens/{template}")
-  suspend fun tokens(
+  @POST(Paths.ClientPath.Sessions.WithId.TEMPLATE)
+  suspend fun tokensTemplate(
     @Path("id") userId: String,
     @Path("template") templateType: String,
     @Field("id") id: String,
@@ -92,32 +84,27 @@ internal interface ClerkApiService {
 
   // region Sign In
 
-  // client/sign_ins
-  @POST("client/sign_ins") suspend fun signIn(): ApiResult<SignIn, ClerkErrorResponse>
+  @POST(Paths.ClientPath.SignIns.SIGN_INS)
+  suspend fun signIn(): ApiResult<SignIn, ClerkErrorResponse>
 
-  // client/sign_ins/{id}
-  @GET("client/sign_ins/{id}")
+  @GET(Paths.ClientPath.SignIns.WithId.SIGN_INS_WITH_ID)
   suspend fun signIn(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
   ): ApiResult<SignIn, ClerkErrorResponse>
 
-  // client/sign_ins/{id}/attempt_first_factor
-  @POST("client/sign_ins/{id}/attempt_first_factor")
+  @POST(Paths.ClientPath.SignIns.WithId.ATTEMPT_FIRST_FACTOR)
   suspend fun attemptFirstFactor(@Path("id") id: String): ApiResult<SignIn, ClerkErrorResponse>
 
-  // clients/sign_ins/{id}/attempt_first_factor
-  @POST("client/sign_ins/{id}/attempt_first_factor")
+  @POST(Paths.ClientPath.SignIns.WithId.ATTEMPT_FIRST_FACTOR)
   suspend fun attemptSecondFactor(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
   ): ApiResult<SignIn, ClerkErrorResponse>
 
-  // client/sign_ins/{id}/prepare_first_factor
-  @POST("client/sign_ins/{id}/prepare_first_factor")
+  @POST(Paths.ClientPath.SignIns.WithId.PREPARE_FIRST_FACTOR)
   suspend fun prepareFirstFactor(
     @Path("id") id: String,
-    // Expecting: Requests.SignIn.PrepareFirstFactorParams
     @FieldMap fields: Map<String, String>,
   ): ApiResult<SignIn, ClerkErrorResponse>
 
@@ -128,7 +115,7 @@ internal interface ClerkApiService {
    * @param params The parameters for the second
    *   factor. @see [Requests.SignIn.PrepareSecondFactorParams]
    */
-  @POST("client/sign_ins/{id}/prepare_second_factor")
+  @POST(Paths.ClientPath.SignIns.WithId.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
     @Path("id") id: String,
     @FieldMap params: Map<String, String>,
@@ -140,7 +127,7 @@ internal interface ClerkApiService {
    * The request body should contain the reset password fields as key-value pairs. The expected
    * input is [Requests.SignIn.ResetPasswordParams].
    */
-  @POST("client/sign_ins/{id}/reset_password")
+  @POST(Paths.ClientPath.SignIns.WithId.RESET_PASSWORD)
   suspend fun resetPassword(@Path("id") id: String, @FieldMap fields: Map<String, String>)
 
   // endregion
@@ -148,7 +135,7 @@ internal interface ClerkApiService {
   // region Environment
 
   // /environment
-  @GET("environment") suspend fun environment(): ApiResult<Environment, ClerkErrorResponse>
+  @GET(Paths.ENVIRONMENT) suspend fun environment(): ApiResult<Environment, ClerkErrorResponse>
 
   // region Sign Up
 
