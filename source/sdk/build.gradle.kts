@@ -37,12 +37,9 @@ afterEvaluate {
 }
 
 dependencies {
-  api(libs.eithernet)
-
   implementation(libs.androidx.datastore)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
-  implementation(libs.eithernet.retrofit)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
@@ -51,6 +48,7 @@ dependencies {
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
   implementation(libs.retrofit.kotlinx)
+  implementation(projects.clerkSerializer)
   implementation(projects.mapGenerator)
 
   testImplementation(libs.androidx.arch.test)
