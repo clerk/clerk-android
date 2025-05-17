@@ -1,13 +1,13 @@
 package com.clerk.sdk.network
 
+import com.cerk.clerkserializer.ClerkApiResultCallAdapterFactory
+import com.cerk.clerkserializer.ClerkApiResultConverterFactory
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.error.ClerkClientError
 import com.clerk.sdk.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.sdk.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.sdk.network.middleware.outgoing.HeaderMiddleware
 import com.clerk.sdk.network.middleware.outgoing.UrlAppendingMiddleware
-import com.slack.eithernet.integration.retrofit.ApiResultCallAdapterFactory
-import com.slack.eithernet.integration.retrofit.ApiResultConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -63,8 +63,8 @@ internal object ClerkApi {
     return Retrofit.Builder()
       .baseUrl(urlWithVersion)
       .client(client)
-      .addCallAdapterFactory(ApiResultCallAdapterFactory)
-      .addConverterFactory(ApiResultConverterFactory)
+      .addCallAdapterFactory(ClerkApiResultCallAdapterFactory)
+      .addConverterFactory(ClerkApiResultConverterFactory)
       .addConverterFactory(json.asConverterFactory("application/json; charset=utf-8".toMediaType()))
       .build()
   }

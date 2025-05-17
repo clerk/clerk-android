@@ -1,5 +1,6 @@
 package com.clerk.sdk.model.signup
 
+import com.cerk.clerkserializer.ClerkApiResult
 import com.clerk.mapgenerator.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
@@ -7,7 +8,6 @@ import com.clerk.sdk.model.signup.SignUp.CreateParams
 import com.clerk.sdk.model.signup.SignUp.PrepareVerificationParams
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
-import com.slack.eithernet.ApiResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -256,7 +256,7 @@ data class SignUp(
      */
     suspend fun create(
       createParams: CreateParams
-    ): ApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+    ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
       val formMap =
         if (createParams is CreateParams.Standard) {
           createParams.toMap()
@@ -271,7 +271,7 @@ data class SignUp(
 
 suspend fun SignUp.update(
   updateParams: UpdateParams
-): ApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   val formMap =
     if (updateParams is CreateParams.Standard) {
       updateParams.toMap()
@@ -301,13 +301,13 @@ suspend fun SignUp.update(
  */
 suspend fun SignUp.prepareVerification(
   prepareVerificationParams: PrepareVerificationParams
-): ApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   return ClerkApi.instance.prepareSignUpVerification(this.id, prepareVerificationParams.strategy)
 }
 
 suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
-): ApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,
     strategy = params.params.strategy,

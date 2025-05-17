@@ -1,6 +1,8 @@
 package com.clerk.sdk.configuration
 
 import android.content.Context
+import com.cerk.clerkserializer.ClerkApiResult
+import com.cerk.clerkserializer.fold
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.lifecycle.AppLifecycleListener
 import com.clerk.sdk.log.ClerkLog
@@ -9,8 +11,6 @@ import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.storage.StorageHelper
 import com.clerk.sdk.util.PublishableKeyHelper
-import com.slack.eithernet.ApiResult
-import com.slack.eithernet.fold
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -93,7 +93,7 @@ class ConfigurationManager {
         onFailure = { ClerkLog.e("Error getting environment: $it") },
       )
 
-      if (clientResult is ApiResult.Success && environmentResult is ApiResult.Success) {
+      if (clientResult is ClerkApiResult.Success && environmentResult is ClerkApiResult.Success) {
         ClerkLog.d(
           "Client and environment refreshed successfully. client: ${clientResult.value}," +
             " environment: ${environmentResult.value}"
