@@ -9,6 +9,7 @@ import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
+import com.clerk.sdk.network.paths.Paths
 import com.clerk.sdk.network.requests.Requests
 import com.slack.eithernet.ApiResult
 import com.slack.eithernet.DecodeErrorBody
@@ -195,18 +196,4 @@ internal interface ClerkApiService {
   ): ApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
   // endregion
-}
-
-internal object Paths {
-  internal object SignUpPath {
-    const val SIGN_UP = "client/sign_ups"
-
-    internal object WithId {
-      private const val SIGN_UP_WITH_ID = "client/sign_ups{id}"
-
-      const val PREPARE_VERIFICATION = "${SIGN_UP_WITH_ID}/prepare_verification"
-
-      const val ATTEMPT_VERIFICATION = "${SIGN_UP_WITH_ID}/attempt_verification"
-    }
-  }
 }
