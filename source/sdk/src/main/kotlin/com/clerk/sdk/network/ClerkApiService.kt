@@ -4,11 +4,13 @@ import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClerkResponse
+import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.requests.Requests
+import com.slack.eithernet.ApiResult
 import com.slack.eithernet.DecodeErrorBody
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
@@ -39,7 +41,8 @@ internal interface ClerkApiService {
   // region Client
 
   // /client
-  @GET("client") suspend fun client(): ClerkApiResult<Client, ClerkErrorResponse>
+  @GET("client")
+  suspend fun client(): ApiResult<ClientPiggybackedResponse<Client>, ClerkErrorResponse>
 
   // endregion
 
@@ -72,7 +75,7 @@ internal interface ClerkApiService {
   suspend fun tokens(
     @Path("id") userId: String,
     @Field("id") id: String,
-  ): ClerkApiResult<TokenResource, ClerkErrorResponse>
+  ): ApiResult<TokenResource, ClerkErrorResponse>
 
   // /client/sessions/{id}/tokens/{template}
   @FormUrlEncoded
@@ -82,32 +85,32 @@ internal interface ClerkApiService {
     @Path("template") templateType: String,
     @Field("id") id: String,
     @Field("template") template: String,
-  ): ClerkApiResult<TokenResource, ClerkErrorResponse>
+  ): ApiResult<TokenResource, ClerkErrorResponse>
 
   // endregion
 
   // region Sign In
 
   // client/sign_ins
-  @POST("client/sign_ins") suspend fun signIn(): ClerkApiResult<SignIn, ClerkErrorResponse>
+  @POST("client/sign_ins") suspend fun signIn(): ApiResult<SignIn, ClerkErrorResponse>
 
   // client/sign_ins/{id}
   @GET("client/sign_ins/{id}")
   suspend fun signIn(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ApiResult<SignIn, ClerkErrorResponse>
 
   // client/sign_ins/{id}/attempt_first_factor
   @POST("client/sign_ins/{id}/attempt_first_factor")
-  suspend fun attemptFirstFactor(@Path("id") id: String): ClerkApiResult<SignIn, ClerkErrorResponse>
+  suspend fun attemptFirstFactor(@Path("id") id: String): ApiResult<SignIn, ClerkErrorResponse>
 
   // clients/sign_ins/{id}/attempt_first_factor
   @POST("client/sign_ins/{id}/attempt_first_factor")
   suspend fun attemptSecondFactor(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ApiResult<SignIn, ClerkErrorResponse>
 
   // client/sign_ins/{id}/prepare_first_factor
   @POST("client/sign_ins/{id}/prepare_first_factor")
@@ -115,7 +118,7 @@ internal interface ClerkApiService {
     @Path("id") id: String,
     // Expecting: Requests.SignIn.PrepareFirstFactorParams
     @FieldMap fields: Map<String, String>,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ApiResult<SignIn, ClerkErrorResponse>
 
   /**
    * Prepare the second factor for a sign in.
@@ -128,7 +131,7 @@ internal interface ClerkApiService {
   suspend fun prepareSecondFactor(
     @Path("id") id: String,
     @FieldMap params: Map<String, String>,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ApiResult<SignIn, ClerkErrorResponse>
 
   /**
    * Reset the password for a sign in.
@@ -144,7 +147,7 @@ internal interface ClerkApiService {
   // region Environment
 
   // /environment
-  @GET("environment") suspend fun environment(): ClerkApiResult<Environment, ClerkErrorResponse>
+  @GET("environment") suspend fun environment(): ApiResult<Environment, ClerkErrorResponse>
 
   // region Sign Up
 
@@ -158,7 +161,7 @@ internal interface ClerkApiService {
   @POST(Paths.SignUpPath.SIGN_UP)
   suspend fun createSignUp(
     @FieldMap fields: Map<String, String>
-  ): ClerkApiResult<SignUp, ClerkErrorResponse>
+  ): ApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
   /**
    * Update an ongoing sign up request.
@@ -171,7 +174,7 @@ internal interface ClerkApiService {
   suspend fun updateSignUp(
     @Field("id") id: String,
     @FieldMap fields: Map<String, String>,
-  ): ClerkApiResult<SignUp, ClerkErrorResponse>
+  ): ApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
   /** @see [prepareSignUpVerification] */
   @DecodeErrorBody
@@ -180,7 +183,7 @@ internal interface ClerkApiService {
   suspend fun prepareSignUpVerification(
     @Path("id") signUpId: String,
     @Field("strategy") strategy: String,
-  ): ClerkApiResult<SignUp, ClerkErrorResponse>
+  ): ApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
   /** @see [attemptSignUpVerification] */
   @FormUrlEncoded
@@ -189,7 +192,7 @@ internal interface ClerkApiService {
     @Path("id") signUpId: String,
     @Field("strategy") strategy: String,
     @Field("code") code: String,
-  ): ClerkApiResult<SignUp, ClerkErrorResponse>
+  ): ApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
   // endregion
 }

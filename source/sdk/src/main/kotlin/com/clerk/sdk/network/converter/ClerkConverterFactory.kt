@@ -1,6 +1,8 @@
-package com.clerk.sdk.network
+package com.clerk.sdk.network.converter
 
 import com.clerk.sdk.model.error.ClerkErrorResponse
+import com.clerk.sdk.model.error.Error
+import com.clerk.sdk.model.error.Meta
 import com.clerk.sdk.model.response.ClerkResponse
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -84,13 +86,9 @@ class ClerkResponseConverter(private val json: Json, private val successType: Ty
     return ClerkErrorResponse(
       errors =
         listOf(
-          com.clerk.sdk.model.error.Error(
-            message = "Failed to parse response",
-            longMessage = message,
-            code = "parsing_error",
-          )
+          Error(message = "Failed to parse response", longMessage = message, code = "parsing_error")
         ),
-      meta = com.clerk.sdk.model.error.Meta(client = null),
+      meta = Meta(client = null),
       clerkTraceId = "",
     )
   }

@@ -7,9 +7,10 @@ import com.clerk.sdk.log.ClerkLog
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.network.ClerkApi
-import com.clerk.sdk.network.ClerkApiResult
 import com.clerk.sdk.storage.StorageHelper
 import com.clerk.sdk.util.PublishableKeyHelper
+import com.slack.eithernet.ApiResult
+import com.slack.eithernet.fold
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -85,22 +86,22 @@ class ConfigurationManager {
 
       clientResult.fold(
         onSuccess = { ClerkLog.d("Client result: $it") },
-        onError = { ClerkLog.e("Error getting client: $it") },
+        onFailure = { ClerkLog.e("Error getting client: $it") },
       )
       environmentResult.fold(
         onSuccess = { ClerkLog.d("Environment result: $it") },
-        onError = { ClerkLog.e("Error getting environment: $it") },
+        onFailure = { ClerkLog.e("Error getting environment: $it") },
       )
 
-      if (clientResult is ClerkApiResult.Success && environmentResult is ClerkApiResult.Success) {
+      if (clientResult is ApiResult.Success && environmentResult is ApiResult.Success) {
         ClerkLog.d(
-          "Client and environment refreshed successfully. client: ${clientResult.data}," +
-            " environment: ${environmentResult.data}"
+          "Client and environment refreshed successfully. client: ${clientResult.value}," +
+            " environment: ${environmentResult.value}"
         )
         callback(
           ClerkConfigurationState.Success(
-            client = clientResult.data,
-            environment = environmentResult.data,
+            client = clientResult.value.response,
+            environment = environmentResult.value,
           )
         )
       } else {
