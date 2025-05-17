@@ -1,11 +1,11 @@
 package com.clerk.sdk.model.client
 
-import com.clerk.sdk.model.response.ClerkResponse
-import com.clerk.sdk.model.response.ClientPiggybackedResponse
+import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.network.ClerkApi
+import com.clerk.sdk.network.ClerkApiResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Client(
   /** Unique identifier for this client. */
-  val id: String,
+  val id: String? = null,
 
   /** The current sign in attempt, or null if there is none. */
   @SerialName("sign_in") val signIn: SignIn? = null,
@@ -29,17 +29,17 @@ data class Client(
   @SerialName("sign_up") val signUp: SignUp? = null,
 
   /** A list of sessions that have been created on this client. */
-  val sessions: List<Session>,
+  val sessions: List<Session> = emptyList(),
 
   /** The ID of the last active Session on this client. */
   @SerialName("last_active_session_id") val lastActiveSessionId: String? = null,
 
   /** Timestamp of last update for the client. */
-  @SerialName("updated_at") val updatedAt: Long,
+  @SerialName("updated_at") val updatedAt: Long? = null,
 ) {
 
   companion object {
     /** Fetches the current client object from the Clerk API. */
-    suspend fun get(): ClerkResponse<ClientPiggybackedResponse<Client>> = ClerkApi.instance.client()
+    suspend fun get(): ClerkApiResult<Client, ClerkErrorResponse> = ClerkApi.instance.client()
   }
 }

@@ -78,7 +78,7 @@ object Clerk {
     this.debugMode = debugMode
     configurationManager.configure(context, publishableKey) { state ->
       when (state) {
-        is ClerkConfigurationState.Configured -> {
+        is ClerkConfigurationState.Success -> {
           if (debugMode) {
             ClerkLog.d(
               "Clerk configured successfully: client: ${state.client}, environment: ${state.environment}"

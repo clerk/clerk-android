@@ -6,8 +6,8 @@ import com.clerk.sdk.lifecycle.AppLifecycleListener
 import com.clerk.sdk.log.ClerkLog
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
-import com.clerk.sdk.model.response.ClerkResponse
 import com.clerk.sdk.network.ClerkApi
+import com.clerk.sdk.network.ClerkApiResult
 import com.clerk.sdk.storage.StorageHelper
 import com.clerk.sdk.util.PublishableKeyHelper
 import java.lang.ref.WeakReference
@@ -83,26 +83,31 @@ class ConfigurationManager {
       val clientResult = clientDeferred.await()
       val environmentResult = environmentDeferred.await()
 
-      when {
-        clientResult is ClerkResponse.Success && environmentResult is ClerkResponse.Success -> {
-          if (Clerk.debugMode) {
-            ClerkLog.d("Client result: ${clientResult.data}")
-            ClerkLog.d("Environment result: ${environmentResult.data}")
-          }
+      clientResult.fold(
+        onSuccess = { ClerkLog.d("Client result: $it") },
+        onError = { ClerkLog.e("Error getting client: $it") },
+      )
+      environmentResult.fold(
+        onSuccess = { ClerkLog.d("Environment result: $it") },
+        onError = { ClerkLog.e("Error getting environment: $it") },
+      )
 
-          callback(
-            ClerkConfigurationState.Configured(
-              client = clientResult.data.response,
-              environment = environmentResult.data,
-            )
+      if (clientResult is ClerkApiResult.Success && environmentResult is ClerkApiResult.Success) {
+        ClerkLog.d(
+          "Client and environment refreshed successfully. client: ${clientResult.data}," +
+            " environment: ${environmentResult.data}"
+        )
+        callback(
+          ClerkConfigurationState.Success(
+            client = clientResult.data,
+            environment = environmentResult.data,
           )
-        }
+        )
+      } else {
 
-        else -> {
-          ClerkLog.e(
-            "Failed to configure Clerk: environment: $environmentResult, clientResult: $clientResult"
-          )
-        }
+        ClerkLog.e(
+          "Error refreshing client and environment. client: $clientResult, environment: $environmentResult}"
+        )
       }
     }
   }
@@ -110,8 +115,7 @@ class ConfigurationManager {
 
 sealed interface ClerkConfigurationState {
 
-  data class Configured(val environment: Environment, val client: Client?) :
-    ClerkConfigurationState
+  data class Success(val environment: Environment, val client: Client?) : ClerkConfigurationState
 
   object Error : ClerkConfigurationState
 }
