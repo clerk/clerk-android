@@ -57,7 +57,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 mockk = "io.mockk:mockk:1.14.2"
 mockito = "org.mockito:mockito-core:5.17.0"
 
-okio = "com.squareup.okio:okio:3.9.0"
+okio = "com.squareup.okio:okio:3.11.0"
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 
