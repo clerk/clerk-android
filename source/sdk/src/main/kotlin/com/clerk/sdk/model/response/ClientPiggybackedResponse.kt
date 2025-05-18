@@ -11,26 +11,12 @@ import kotlinx.serialization.Serializable
  * response can contain additional information about the client, such as its ID, sessions, and
  * authentication status.
  *
- * @property response The response object containing the main data.
+ * @property response The actual response data from the Clerk API. It will be of type T, which can
+ *   be any type that is serializable.
  * @property client The client object associated with the response, if available.
- * @see
  */
 @Serializable
 data class ClientPiggybackedResponse<T>(
   @SerialName("response") val response: T,
   val client: Client? = null,
-)
-
-@Serializable
-data class Response(
-  @SerialName("object") val objectType: String,
-  val id: String,
-  val sessions: List<String> = emptyList(),
-  @SerialName("sign_in") val signIn: String? = null,
-  @SerialName("sign_up") val signUp: String? = null,
-  @SerialName("last_active_session_id") val lastActiveSessionId: String? = null,
-  @SerialName("cookie_expires_at") val cookieExpiresAt: Long? = null,
-  @SerialName("captcha_bypass") val captchaBypass: Boolean? = null,
-  @SerialName("created_at") val createdAt: Long? = null,
-  @SerialName("updated_at") val updatedAt: Long? = null,
 )

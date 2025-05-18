@@ -30,7 +30,6 @@ object Clerk {
 
   /** The Client object for the current device. */
   internal var client: Client? = null
-    private set
 
   /** The Environment object for the current client */
   private lateinit var environment: Environment
@@ -79,7 +78,7 @@ object Clerk {
     this.debugMode = debugMode
     configurationManager.configure(context, publishableKey) { state ->
       when (state) {
-        is ClerkConfigurationState.Configured -> {
+        is ClerkConfigurationState.Success -> {
           if (debugMode) {
             ClerkLog.d(
               "Clerk configured successfully: client: ${state.client}, environment: ${state.environment}"

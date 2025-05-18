@@ -15,12 +15,46 @@ java {
 
 publishing {
   publications {
-    register<MavenPublication>("mapGenerator") {
+    register<MavenPublication>("auto-map") {
       groupId = "com.clerk"
-      artifactId = "map-generator"
+      artifactId = "auto-map"
       version = "0.1.0"
 
       from(components["java"])
+
+      pom {
+        name = "Auto Map"
+        description = "A library for generating maps using KSP."
+        url.set("https://github.com/clerk/clerk-android")
+
+        scm {
+          connection.set("scm:git@github.com:clerk/clerk-android.git")
+          developerConnection.set("scm:git@github.com:clerk/clerk-android.git")
+          url.set("https://github.com/clerk/clerk-android")
+        }
+        licenses {
+          license {
+            name.set("MIT License")
+            url.set("https://opensource.org/licenses/MIT")
+          }
+
+          developers {
+            developer {
+              id.set("clerk")
+              name.set("Clerk")
+              email.set("support@clerk.dev")
+            }
+          }
+        }
+      }
+    }
+  }
+  repositories {
+    maven {
+      credentials {
+        username = "AWLQyWkv"
+        password = "sMf3qSD1/KUwVAo0C2nhpFcbPuw7Knw8ZqzImCYS4ygT"
+      }
     }
   }
 }

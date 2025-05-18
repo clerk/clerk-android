@@ -25,3 +25,5 @@ dependencyResolutionManagement {
 rootProject.name = "Clerk"
 
 include(":source:sdk", "map-generator")
+
+include(":clerk-serializer")

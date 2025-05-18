@@ -17,7 +17,7 @@ android {
   publishing {
     singleVariant("release") {
       withSourcesJar()
-      withJavadocJar()
+      //      withJavadocJar()
     }
   }
 }
@@ -30,13 +30,17 @@ afterEvaluate {
         artifactId = "clerk-android"
         version = "0.1.0"
 
-        afterEvaluate { from(components["release"]) }
+        from(components["release"])
+
+        // Don't try to manually modify the POM - let Gradle handle it
       }
     }
   }
 }
 
 dependencies {
+  api(projects.clerkSerializer)
+
   implementation(libs.androidx.datastore)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
@@ -50,7 +54,6 @@ dependencies {
   implementation(libs.retrofit.kotlinx)
   implementation(projects.mapGenerator)
 
-  testImplementation(kotlin("test"))
   testImplementation(libs.androidx.arch.test)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)

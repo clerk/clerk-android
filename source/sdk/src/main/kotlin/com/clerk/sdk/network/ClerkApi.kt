@@ -1,7 +1,10 @@
 package com.clerk.sdk.network
 
+import com.clerk.clerkserializer.ClerkApiResultCallAdapterFactory
+import com.clerk.clerkserializer.ClerkApiResultConverterFactory
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.error.ClerkClientError
+import com.clerk.sdk.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.sdk.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.sdk.network.middleware.outgoing.HeaderMiddleware
 import com.clerk.sdk.network.middleware.outgoing.UrlAppendingMiddleware
@@ -14,6 +17,13 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 /** Singleton responsible for configuring and exposing the Clerk API service. */
 internal object ClerkApi {
+
+  private val json = Json {
+    isLenient = true
+    ignoreUnknownKeys = true
+    coerceInputValues = true
+    explicitNulls = false
+  }
 
   private var _instance: ClerkApiService? = null
 
@@ -37,6 +47,7 @@ internal object ClerkApi {
     val client =
       OkHttpClient.Builder()
         .apply {
+          addInterceptor(ClientSyncingMiddleware(json = json))
           addInterceptor(HeaderMiddleware())
           addInterceptor(DeviceTokenSavingMiddleware())
           addInterceptor(UrlAppendingMiddleware())
@@ -49,17 +60,11 @@ internal object ClerkApi {
         }
         .build()
 
-    val json = Json {
-      isLenient = true
-      ignoreUnknownKeys = true
-      coerceInputValues = true
-      explicitNulls = false
-    }
-
     return Retrofit.Builder()
       .baseUrl(urlWithVersion)
       .client(client)
-      .addConverterFactory(ClerkConverterFactory.create(json))
+      .addCallAdapterFactory(ClerkApiResultCallAdapterFactory)
+      .addConverterFactory(ClerkApiResultConverterFactory)
       .addConverterFactory(json.asConverterFactory("application/json; charset=utf-8".toMediaType()))
       .build()
   }

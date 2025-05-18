@@ -6,6 +6,7 @@ dagger = "2.56.2"
 datastore = "1.1.6"
 detekt = "1.23.8"
 dokka = "2.0.0"
+eithernet = "2.0.0"
 espressoCore = "3.6.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -56,13 +57,18 @@ material = { group = "com.google.android.material", name = "material", version.r
 mockk = "io.mockk:mockk:1.14.2"
 mockito = "org.mockito:mockito-core:5.17.0"
 
+okio = "com.squareup.okio:okio:3.9.0"
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-kotlinx = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
+retrofit-converterScalars = { module = "com.squareup.retrofit2:converter-scalars", version.ref = "retrofit" }
 
 robolectric = "org.robolectric:robolectric:4.14.1"
+
+statelyCollections = "co.touchlab:stately-concurrent-collections:2.0.7"
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
