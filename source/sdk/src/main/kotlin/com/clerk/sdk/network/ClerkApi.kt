@@ -1,7 +1,7 @@
 package com.clerk.sdk.network
 
-import com.cerk.clerkserializer.ClerkApiResultCallAdapterFactory
-import com.cerk.clerkserializer.ClerkApiResultConverterFactory
+import com.clerk.clerkserializer.ClerkApiResultCallAdapterFactory
+import com.clerk.clerkserializer.ClerkApiResultConverterFactory
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.error.ClerkClientError
 import com.clerk.sdk.network.middleware.incoming.ClientSyncingMiddleware

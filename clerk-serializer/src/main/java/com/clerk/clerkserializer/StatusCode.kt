@@ -1,4 +1,4 @@
-package com.cerk.clerkserializer
+package com.clerk.clerkserializer
 
 import kotlin.annotation.AnnotationRetention.RUNTIME
 

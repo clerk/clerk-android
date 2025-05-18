@@ -1,8 +1,8 @@
 package com.clerk.sdk.configuration
 
 import android.content.Context
-import com.cerk.clerkserializer.ClerkApiResult
-import com.cerk.clerkserializer.fold
+import com.clerk.clerkserializer.ClerkApiResult
+import com.clerk.clerkserializer.fold
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.lifecycle.AppLifecycleListener
 import com.clerk.sdk.log.ClerkLog

@@ -1,8 +1,8 @@
-package com.cerk.clerkserializer
+package com.clerk.clerkserializer
 
-import com.cerk.clerkserializer.ClerkApiResult.Failure.ClerkApiFailure
-import com.cerk.clerkserializer.ClerkApiResult.Failure.HttpFailure
-import com.cerk.clerkserializer.ClerkApiResult.Failure.UnknownFailure
+import com.clerk.clerkserializer.ClerkApiResult.Failure.ClerkApiFailure
+import com.clerk.clerkserializer.ClerkApiResult.Failure.HttpFailure
+import com.clerk.clerkserializer.ClerkApiResult.Failure.UnknownFailure
 import kotlin.reflect.KClass
 import toUnmodifiableMap
 
@@ -116,25 +116,26 @@ public sealed interface ClerkApiResult<out T : Any, out E : Any> {
     public fun <T : Any> success(value: T): Success<T> = Success(value, emptyMap())
 
     /** Returns a new [HttpFailure] with given [code] and optional [error]. */
-    public fun <E : Any> httpFailure(code: Int): HttpFailure<E> {
+    public fun <E : Any> httpFailure(code: Int): Failure.HttpFailure<E> {
       return httpFailure(code, null)
     }
 
     /** Returns a new [HttpFailure] with given [code] and optional [error]. */
-    public fun <E : Any> httpFailure(code: Int, error: E? = null): HttpFailure<E> {
+    public fun <E : Any> httpFailure(code: Int, error: E? = null): Failure.HttpFailure<E> {
       checkHttpFailureCode(code)
-      return HttpFailure(code, error, emptyMap())
+      return Failure.HttpFailure(code, error, emptyMap())
     }
 
     /** Returns a new [ClerkApiFailure] with given [error]. */
-    public fun <E : Any> apiFailure(): ClerkApiFailure<E> = apiFailure(null)
+    public fun <E : Any> apiFailure(): Failure.ClerkApiFailure<E> = apiFailure(null)
 
     /** Returns a new [ClerkApiFailure] with given [error]. */
-    public fun <E : Any> apiFailure(error: E? = null): ClerkApiFailure<E> =
-      ClerkApiFailure(error, emptyMap())
+    public fun <E : Any> apiFailure(error: E? = null): Failure.ClerkApiFailure<E> =
+      Failure.ClerkApiFailure(error, emptyMap())
 
     /** Returns a new [UnknownFailure] with given [error]. */
-    public fun unknownFailure(error: Throwable): UnknownFailure = UnknownFailure(error, emptyMap())
+    public fun unknownFailure(error: Throwable): Failure.UnknownFailure =
+      Failure.UnknownFailure(error, emptyMap())
 
     internal fun checkHttpFailureCode(code: Int) {
       require(code !in HTTP_SUCCESS_RANGE) {

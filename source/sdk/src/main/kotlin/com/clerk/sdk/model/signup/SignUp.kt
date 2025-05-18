@@ -1,6 +1,6 @@
 package com.clerk.sdk.model.signup
 
-import com.cerk.clerkserializer.ClerkApiResult
+import com.clerk.clerkserializer.ClerkApiResult
 import com.clerk.mapgenerator.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse

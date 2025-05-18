@@ -1,6 +1,6 @@
 package com.clerk.sdk.model.client
 
-import com.cerk.clerkserializer.ClerkApiResult
+import com.clerk.clerkserializer.ClerkApiResult
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session

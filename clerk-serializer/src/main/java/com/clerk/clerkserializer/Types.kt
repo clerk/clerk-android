@@ -1,4 +1,4 @@
-package com.cerk.clerkserializer
+package com.clerk.clerkserializer
 
 import java.lang.reflect.Array
 import java.lang.reflect.GenericArrayType

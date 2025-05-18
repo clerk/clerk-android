@@ -1,6 +1,6 @@
 @file:Suppress("TooManyFunctions")
 
-package com.cerk.clerkserializer
+package com.clerk.clerkserializer
 
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
@@ -108,7 +108,7 @@ public inline fun <T : Any, E : Any, C> ClerkApiResult<T, E>.fold(
 /**
  * Performs the given [action] on the encapsulated [ClerkApiResult.Failure] if this instance
  * represents [failure][ClerkApiResult.Failure]. Returns the original
- * com.cerk.clerkserializer.ClerkApiResult` unchanged.
+ * com.clerk.clerkserializer.ClerkApiResult` unchanged.
  */
 @OptIn(ExperimentalContracts::class)
 public inline fun <T : Any, E : Any> ClerkApiResult<T, E>.onFailure(
@@ -122,7 +122,7 @@ public inline fun <T : Any, E : Any> ClerkApiResult<T, E>.onFailure(
 /**
  * Performs the given [action] on the encapsulated [ClerkApiResult.Failure.HttpFailure] if this
  * instance represents [failure][ClerkApiResult.Failure.HttpFailure]. Returns the original
- * com.cerk.clerkserializer.ClerkApiResult` unchanged.
+ * com.clerk.clerkserializer.ClerkApiResult` unchanged.
  */
 @OptIn(ExperimentalContracts::class)
 public inline fun <T : Any, E : Any> ClerkApiResult<T, E>.onHttpFailure(
@@ -136,7 +136,7 @@ public inline fun <T : Any, E : Any> ClerkApiResult<T, E>.onHttpFailure(
 /**
  * Performs the given [action] on the encapsulated [ClerkApiResult.Failure.ApiFailure] if this
  * instance represents [failure][ClerkApiResult.Failure.ApiFailure]. Returns the original
- * com.cerk.clerkserializer.ClerkApiResult` unchanged.
+ * com.clerk.clerkserializer.ClerkApiResult` unchanged.
  */
 @OptIn(ExperimentalContracts::class)
 public inline fun <T : Any, E : Any> ClerkApiResult<T, E>.onApiFailure(
@@ -150,7 +150,7 @@ public inline fun <T : Any, E : Any> ClerkApiResult<T, E>.onApiFailure(
 /**
  * Performs the given [action] on the encapsulated [ClerkApiResult.Failure.UnknownFailure] if this
  * instance represents [failure][ClerkApiResult.Failure.UnknownFailure]. Returns the original
- * com.cerk.clerkserializer.ClerkApiResult` unchanged.
+ * com.clerk.clerkserializer.ClerkApiResult` unchanged.
  */
 @OptIn(ExperimentalContracts::class)
 public inline fun <T : Any, E : Any> ClerkApiResult<T, E>.onUnknownFailure(
@@ -163,7 +163,7 @@ public inline fun <T : Any, E : Any> ClerkApiResult<T, E>.onUnknownFailure(
 
 /**
  * Performs the given [action] on the encapsulated value if this instance represents
- * [success][ClerkApiResult.Success]. Returns the original com.cerk.clerkserializer.ClerkApiResult`
+ * [success][ClerkApiResult.Success]. Returns the original com.clerk.clerkserializer.ClerkApiResult`
  * unchanged.
  */
 @OptIn(ExperimentalContracts::class)

@@ -1,6 +1,6 @@
 package com.clerk.sdk.network
 
-import com.cerk.clerkserializer.ClerkApiResult
+import com.clerk.clerkserializer.ClerkApiResult
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.error.ClerkErrorResponse
