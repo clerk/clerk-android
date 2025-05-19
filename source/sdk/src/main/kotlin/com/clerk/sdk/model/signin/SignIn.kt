@@ -6,6 +6,7 @@ import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.requests.Requests
+import com.clerk.sdk.network.requests.toMap
 import com.clerk.sdk.network.serialization.ClerkApiResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -140,10 +141,68 @@ data class SignIn(
   }
 
   companion object {
+    /**
+     * Starts the sign in process. The SignIn object holds the state of the current sign-in and
+     * provides helper methods to navigate and complete the sign-in process. It is used to manage
+     * the sign-in lifecycle, including the first and second factor verification, and the creation
+     * of a new session.
+     *
+     * The following steps outline the sign-in process:
+     * 1. Initiate the sign-in process by collecting the user's authentication information and
+     *    passing the appropriate parameters to the `create()` method.
+     * 2. Prepare the first factor verification by calling `SignIn.prepareFirstFactor()`. Users
+     *    *must* complete a first factor verification. This can be something like providing a
+     *    password, an email link, a one-time code (OTP), a Web3 wallet address, or providing proof
+     *    of their identity through an external social account (SSO/OAuth).
+     * 3. Attempt to complete the first factor verification by calling
+     *    `SignIn.attemptFirstFactor()`.
+     * 4. Optionally, if you have enabled multi-factor for your application, you will need to
+     *    prepare the second factor verification by calling `SignIn.prepareSecondFactor()`.
+     * 5. Attempt to complete the second factor verification by calling
+     *    `SignIn.attemptSecondFactor()`.
+     * 6. If verification is successful, set the newly created session as the active session by
+     *    passing the `SignIn.createdSessionId` to the `setActive()` method on the `Clerk` object.
+     */
     suspend fun create(
       identifier: Requests.SignIn.Identifier
     ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
       return ClerkApi.instance.signIn(identifier.value)
     }
+
+    /**
+     * Prepares the first factor verification for the current sign-in process. This method is
+     * required to start the verification process for the first factor. The first factor can be a
+     * password, an email link, a one-time code (OTP), a Web3 wallet address, or proof of identity
+     * through an external social account (SSO/OAuth).
+     */
+    suspend fun prepareFirstFactor():
+      ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+      TODO()
+      //      return ClerkApi.instance.prepareFirstFactor
+    }
   }
+}
+
+/**
+ * Attempts to complete the first factor verification process. This is a required step in order to
+ * complete a sign in, as users should be verified at least by one factor of authentication.
+ *
+ * Make sure that a SignIn object already exists before you call this method, either by first
+ * calling SignIn.create() or SignIn.prepareFirstFactor(). The only strategy that does not require a
+ * verification to have already been prepared before attempting to complete it is the password
+ * strategy.
+ *
+ * Depending on the strategy that was selected when the verification was prepared, the method
+ * parameters will be different.
+ *
+ * Returns a SignIn object. Check the firstFactorVerification attribute for the status of the first
+ * factor verification process.
+ *
+ * @param params The parameters for the first factor verification.
+ * @see [Requests.SignIn.AttemptFirstFactorParams]
+ */
+suspend fun SignIn.attemptFirstFactor(
+  params: Requests.SignIn.AttemptFirstFactorParams
+): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+  return ClerkApi.instance.attemptFirstFactor(id = this.id, params = params.toMap())
 }

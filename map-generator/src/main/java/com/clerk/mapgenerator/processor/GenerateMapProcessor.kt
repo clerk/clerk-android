@@ -1,3 +1,5 @@
+@file:Suppress("NestedBlockDepth", "TooGenericExceptionCaught", "ReturnCount")
+
 package com.clerk.mapgenerator.processor
 
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -17,15 +19,127 @@ class GenerateMapProcessor(
   private val codeGenerator: CodeGenerator,
   private val logger: KSPLogger,
 ) : SymbolProcessor {
+
+  // Collect sealed interfaces and their implementations
+  private val sealedInterfacesMap = mutableMapOf<String, MutableList<KSClassDeclaration>>()
+
+  // Track processed classes to avoid duplicates
+  private val processedDataClasses = mutableSetOf<String>()
+  private val processedSealedInterfaces = mutableSetOf<String>()
+
   override fun process(resolver: Resolver): List<KSAnnotated> {
     val symbols = resolver.getSymbolsWithAnnotation("com.clerk.mapgenerator.annotation.AutoMap")
     val unprocessed = symbols.filter { !it.validate() }.toList()
 
-    symbols
-      .filter { it is KSClassDeclaration && it.validate() }
-      .forEach { it.accept(MapVisitor(), Unit) }
+    try {
+      // First pass: collect all implementations and their sealed parents
+      symbols
+        .filter { it is KSClassDeclaration && it.validate() }
+        .forEach {
+          val declaration = it as KSClassDeclaration
+          if (declaration.isDataClass()) {
+            // Check if this is part of a sealed hierarchy
+            val sealedParent = findSealedParent(declaration)
+            if (sealedParent != null) {
+              val parentQualifiedName = sealedParent.qualifiedName?.asString() ?: return@forEach
+              sealedInterfacesMap.getOrPut(parentQualifiedName) { mutableListOf() }.add(declaration)
+            }
+
+            // Process the data class as usual
+            val qualifiedName = declaration.qualifiedName?.asString() ?: return@forEach
+            if (qualifiedName !in processedDataClasses) {
+              declaration.accept(MapVisitor(), Unit)
+              processedDataClasses.add(qualifiedName)
+            }
+          }
+        }
+
+      // Second pass: generate extensions for sealed interfaces (once per sealed interface)
+      sealedInterfacesMap.forEach { (qualifiedName, implementations) ->
+        if (qualifiedName !in processedSealedInterfaces) {
+          val firstImplementation = implementations.firstOrNull() ?: return@forEach
+          val sealedParent = findSealedParent(firstImplementation) ?: return@forEach
+          generateSealedInterfaceExtension(sealedParent, implementations)
+          processedSealedInterfaces.add(qualifiedName)
+        }
+      }
+    } catch (e: Exception) {
+      logger.error("Error in processor: ${e.message}")
+    }
 
     return unprocessed
+  }
+
+  private fun findSealedParent(classDeclaration: KSClassDeclaration): KSClassDeclaration? {
+    // Get all superTypes of the class declaration
+    return classDeclaration.superTypes
+      // Resolve each type and get its declaration
+      .mapNotNull { it.resolve().declaration as? KSClassDeclaration }
+      // Find the first that is a sealed class or interface
+      .firstOrNull { it.modifiers.contains(Modifier.SEALED) }
+  }
+
+  private fun generateSealedInterfaceExtension(
+    sealedParent: KSClassDeclaration,
+    implementations: List<KSClassDeclaration>,
+  ) {
+    val packageName = sealedParent.packageName.asString()
+    val parentQualifiedName = sealedParent.qualifiedName?.asString() ?: return
+    val className = sealedParent.simpleName.asString()
+
+    // Skip if we've already processed this sealed interface
+    if (parentQualifiedName in processedSealedInterfaces) {
+      return
+    }
+
+    // Use a distinct filename to avoid conflicts
+    val filename = "${className}SealedMapExtension"
+
+    logger.info("Generating sealed interface extension for $parentQualifiedName")
+
+    // Collect all necessary imports
+    val importedClasses = mutableSetOf<String>()
+    importedClasses.add(parentQualifiedName)
+
+    // Add implementations to imports
+    implementations.forEach { impl ->
+      val implQualifiedName = impl.qualifiedName?.asString() ?: return@forEach
+      importedClasses.add(implQualifiedName)
+    }
+
+    val file =
+      codeGenerator.createNewFile(
+        Dependencies(true, sealedParent.containingFile!!),
+        packageName,
+        filename,
+      )
+
+    val content = buildString {
+      appendLine("package $packageName")
+      appendLine()
+
+      // Add imports
+      importedClasses.forEach { qualifiedName -> appendLine("import $qualifiedName") }
+
+      appendLine()
+      appendLine("fun $className.toMap(): Map<String, String> {")
+      appendLine("    return when (this) {")
+
+      // Generate when branches for each implementation
+      implementations.forEach { impl ->
+        val implClassName = impl.simpleName.asString()
+        appendLine("        is $implClassName -> (this as $implClassName).toMap()")
+      }
+
+      // Add an else branch for any non-@AutoMap implementations
+      appendLine("        else -> emptyMap()")
+
+      appendLine("    }")
+      appendLine("}")
+    }
+
+    file.write(content.toByteArray())
+    file.close()
   }
 
   inner class MapVisitor : KSVisitorVoid() {
@@ -39,6 +153,11 @@ class GenerateMapProcessor(
       val packageName = classDeclaration.packageName.asString()
       val qualifiedName = classDeclaration.qualifiedName?.asString() ?: return
       val className = classDeclaration.simpleName.asString()
+
+      // Skip if already processed
+      if (qualifiedName in processedDataClasses) {
+        return
+      }
 
       // Handle nested classes properly
       val nestedPath = determineNestedPath(classDeclaration)
@@ -55,6 +174,9 @@ class GenerateMapProcessor(
 
       file.write(generateExtension(packageName, nestedPath, importPath, properties))
       file.close()
+
+      // Mark as processed
+      processedDataClasses.add(qualifiedName)
     }
   }
 

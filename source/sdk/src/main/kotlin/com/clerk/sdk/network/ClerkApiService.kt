@@ -89,29 +89,31 @@ internal interface ClerkApiService {
 
   // region Sign In
   @FormUrlEncoded
-  @POST(Paths.ClientPath.SignIns.SIGN_INS)
+  @POST(Paths.ClientPath.SignInPath.SIGN_INS)
   suspend fun signIn(
     @Field("identifier") identifier: String
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
-  @GET(Paths.ClientPath.SignIns.WithId.SIGN_INS_WITH_ID)
+  @GET(Paths.ClientPath.SignInPath.WithId.SIGN_INS_WITH_ID)
   suspend fun signIn(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
-  @POST(Paths.ClientPath.SignIns.WithId.ATTEMPT_FIRST_FACTOR)
+  @FormUrlEncoded
+  @POST(Paths.ClientPath.SignInPath.WithId.ATTEMPT_FIRST_FACTOR)
   suspend fun attemptFirstFactor(
-    @Path("id") id: String
+    @Path("id") id: String,
+    @FieldMap params: Map<String, String>,
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
-  @POST(Paths.ClientPath.SignIns.WithId.ATTEMPT_FIRST_FACTOR)
+  @POST(Paths.ClientPath.SignInPath.WithId.ATTEMPT_FIRST_FACTOR)
   suspend fun attemptSecondFactor(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
-  @POST(Paths.ClientPath.SignIns.WithId.PREPARE_FIRST_FACTOR)
+  @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_FIRST_FACTOR)
   suspend fun prepareFirstFactor(
     @Path("id") id: String,
     @FieldMap fields: Map<String, String>,
@@ -124,7 +126,7 @@ internal interface ClerkApiService {
    * @param params The parameters for the second
    *   factor. @see [Requests.SignIn.PrepareSecondFactorParams]
    */
-  @POST(Paths.ClientPath.SignIns.WithId.PREPARE_SECOND_FACTOR)
+  @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
     @Path("id") id: String,
     @FieldMap params: Map<String, String>,
@@ -136,7 +138,7 @@ internal interface ClerkApiService {
    * The request body should contain the reset password fields as key-value pairs. The expected
    * input is [Requests.SignIn.ResetPasswordParams].
    */
-  @POST(Paths.ClientPath.SignIns.WithId.RESET_PASSWORD)
+  @POST(Paths.ClientPath.SignInPath.WithId.RESET_PASSWORD)
   suspend fun resetPassword(@Path("id") id: String, @FieldMap fields: Map<String, String>)
 
   // endregion
