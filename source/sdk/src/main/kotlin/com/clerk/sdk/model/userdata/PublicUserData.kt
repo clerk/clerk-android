@@ -22,5 +22,5 @@ data class PublicUserData(
   val identifier: String,
 
   /** The unique identifier of the user. */
-  @SerialName("user_id") val userId: String,
+  @SerialName("user_id") val userId: String? = null,
 )
