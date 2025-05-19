@@ -1,6 +1,5 @@
 package com.clerk.sdk.network
 
-import com.clerk.clerkserializer.ClerkApiResult
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.error.ClerkErrorResponse
@@ -12,6 +11,7 @@ import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.paths.Paths
 import com.clerk.sdk.network.requests.Requests
+import com.clerk.sdk.network.serialization.ClerkApiResult
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -88,30 +88,36 @@ internal interface ClerkApiService {
   // endregion
 
   // region Sign In
+  @FormUrlEncoded
+  @POST(Paths.ClientPath.SignInPath.SIGN_INS)
+  suspend fun signIn(
+    @Field("identifier") identifier: String
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
-  @POST(Paths.ClientPath.SignIns.SIGN_INS)
-  suspend fun signIn(): ClerkApiResult<SignIn, ClerkErrorResponse>
-
-  @GET(Paths.ClientPath.SignIns.WithId.SIGN_INS_WITH_ID)
+  @GET(Paths.ClientPath.SignInPath.WithId.SIGN_INS_WITH_ID)
   suspend fun signIn(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
-  @POST(Paths.ClientPath.SignIns.WithId.ATTEMPT_FIRST_FACTOR)
-  suspend fun attemptFirstFactor(@Path("id") id: String): ClerkApiResult<SignIn, ClerkErrorResponse>
+  @FormUrlEncoded
+  @POST(Paths.ClientPath.SignInPath.WithId.ATTEMPT_FIRST_FACTOR)
+  suspend fun attemptFirstFactor(
+    @Path("id") id: String,
+    @FieldMap params: Map<String, String>,
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
-  @POST(Paths.ClientPath.SignIns.WithId.ATTEMPT_FIRST_FACTOR)
+  @POST(Paths.ClientPath.SignInPath.WithId.ATTEMPT_FIRST_FACTOR)
   suspend fun attemptSecondFactor(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
-  @POST(Paths.ClientPath.SignIns.WithId.PREPARE_FIRST_FACTOR)
+  @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_FIRST_FACTOR)
   suspend fun prepareFirstFactor(
     @Path("id") id: String,
     @FieldMap fields: Map<String, String>,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   /**
    * Prepare the second factor for a sign in.
@@ -120,11 +126,11 @@ internal interface ClerkApiService {
    * @param params The parameters for the second
    *   factor. @see [Requests.SignIn.PrepareSecondFactorParams]
    */
-  @POST(Paths.ClientPath.SignIns.WithId.PREPARE_SECOND_FACTOR)
+  @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
     @Path("id") id: String,
     @FieldMap params: Map<String, String>,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   /**
    * Reset the password for a sign in.
@@ -132,7 +138,7 @@ internal interface ClerkApiService {
    * The request body should contain the reset password fields as key-value pairs. The expected
    * input is [Requests.SignIn.ResetPasswordParams].
    */
-  @POST(Paths.ClientPath.SignIns.WithId.RESET_PASSWORD)
+  @POST(Paths.ClientPath.SignInPath.WithId.RESET_PASSWORD)
   suspend fun resetPassword(@Path("id") id: String, @FieldMap fields: Map<String, String>)
 
   // endregion

@@ -1,4 +1,4 @@
-package com.clerk.clerkserializer
+package com.clerk.sdk.network.serialization
 
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.reflect.KClass

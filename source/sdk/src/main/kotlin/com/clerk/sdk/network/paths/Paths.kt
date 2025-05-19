@@ -15,7 +15,7 @@ internal object Paths {
       internal const val SESSIONS = "${CLIENT}/sessions"
 
       internal object WithId {
-        private const val SESSIONS_WITH_ID = "${SESSIONS}{id}"
+        private const val SESSIONS_WITH_ID = "${SESSIONS}/{id}"
 
         internal const val REMOVE = "${SESSIONS_WITH_ID}/remove"
         internal const val TOKENS = "${SESSIONS_WITH_ID}/tokens"
@@ -23,11 +23,11 @@ internal object Paths {
       }
     }
 
-    internal object SignIns {
+    internal object SignInPath {
       internal const val SIGN_INS = "${CLIENT}/sign_ins"
 
       internal object WithId {
-        internal const val SIGN_INS_WITH_ID = "${SIGN_INS}{id}"
+        internal const val SIGN_INS_WITH_ID = "${SIGN_INS}/{id}"
 
         internal const val ATTEMPT_FIRST_FACTOR = "${SIGN_INS_WITH_ID}/attempt_first_factor"
         internal const val PREPARE_FIRST_FACTOR = "${SIGN_INS_WITH_ID}/prepare_first_factor"

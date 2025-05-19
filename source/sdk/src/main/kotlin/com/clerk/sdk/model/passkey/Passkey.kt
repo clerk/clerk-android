@@ -1,7 +1,6 @@
 package com.clerk.sdk.model.passkey
 
 import com.clerk.sdk.model.verification.Verification
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 /** An object that represents a passkey associated with a user. */
@@ -17,11 +16,11 @@ data class Passkey(
   val verification: Verification? = null,
 
   /** The date when the passkey was created. */
-  val createdAt: Instant,
+  val createdAt: Long,
 
   /** The date when the passkey was last updated. */
-  val updatedAt: Instant,
+  val updatedAt: Long,
 
   /** The date when the passkey was last used. */
-  val lastUsedAt: Instant? = null,
+  val lastUsedAt: Long? = null,
 )

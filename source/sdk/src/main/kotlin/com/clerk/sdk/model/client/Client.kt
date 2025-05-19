@@ -1,12 +1,12 @@
 package com.clerk.sdk.model.client
 
-import com.clerk.clerkserializer.ClerkApiResult
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.network.ClerkApi
+import com.clerk.sdk.network.serialization.ClerkApiResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

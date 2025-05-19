@@ -1,4 +1,4 @@
-package com.clerk.clerkserializer
+package com.clerk.sdk.network.serialization
 
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -20,10 +20,10 @@ public object ClerkApiResultConverterFactory : Converter.Factory() {
     val nextAnnotations = annotations + errorResultType
     val delegateConverter =
       retrofit.nextResponseBodyConverter<Any>(this, successType, nextAnnotations)
-    return ApiResultConverter(delegateConverter)
+    return ClerkApiResultConverter(delegateConverter)
   }
 
-  private class ApiResultConverter(private val delegate: Converter<ResponseBody, Any>) :
+  private class ClerkApiResultConverter(private val delegate: Converter<ResponseBody, Any>) :
     Converter<ResponseBody, ClerkApiResult<*, *>> {
     override fun convert(value: ResponseBody): ClerkApiResult<*, *>? {
       return delegate.convert(value)?.let(ClerkApiResult.Companion::success)

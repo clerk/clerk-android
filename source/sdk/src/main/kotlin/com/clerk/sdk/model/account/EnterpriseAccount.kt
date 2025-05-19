@@ -1,7 +1,6 @@
 package com.clerk.sdk.model.account
 
 import com.clerk.sdk.model.verification.Verification
-import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -87,10 +86,10 @@ data class EnterpriseAccount(
     val disableAdditionalIdentifications: Boolean,
 
     /** The date and time when the enterprise connection was created. */
-    val createdAt: Instant,
+    val createdAt: Long,
 
     /** The date and time when the enterprise connection was last updated. */
-    val updatedAt: Instant,
+    val updatedAt: Long,
 
     /** A flag indicating whether subdomains are allowed for the enterprise connection. */
     val allowSubdomains: Boolean,

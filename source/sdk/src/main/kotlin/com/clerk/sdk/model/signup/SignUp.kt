@@ -1,18 +1,21 @@
+@file:Suppress("unused")
+
 package com.clerk.sdk.model.signup
 
-import com.clerk.clerkserializer.ClerkApiResult
-import com.clerk.mapgenerator.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
-import com.clerk.sdk.model.signup.SignUp.CreateParams
 import com.clerk.sdk.model.signup.SignUp.PrepareVerificationParams
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
+import com.clerk.sdk.network.requests.Requests
+import com.clerk.sdk.network.requests.Requests.SignUp.CreateParams
+import com.clerk.sdk.network.requests.toMap
+import com.clerk.sdk.network.serialization.ClerkApiResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
-typealias UpdateParams = SignUp.CreateParams
+typealias UpdateParams = CreateParams
 
 /**
  * The `SignUp` object holds the state of the current sign-up and provides helper methods to
@@ -152,42 +155,6 @@ data class SignUp(
     UNKNOWN,
   }
 
-  /**
-   * Represents the various strategies for initiating a `SignUp` request. This sealed class acts as
-   * a factory for the different combinations of parameters you can send to the create method
-   */
-  sealed interface CreateParams {
-
-    /**
-     * Standard sign-up strategy, allowing the user to provide common details such as email,
-     * password, and personal information.
-     *
-     * @param emailAddress The user's email address (optional).
-     * @param password The user's password (optional).
-     * @param firstName The user's first name (optional).
-     * @param lastName The user's last name (optional).
-     * @param username The user's username (optional).
-     * @param phoneNumber The user's phone number (optional).
-     */
-    @AutoMap
-    @Serializable
-    data class Standard(
-      @SerialName("email_address") val emailAddress: String? = null,
-      val password: String? = null,
-      @SerialName("first_name") val firstName: String? = null,
-      @SerialName("last_name") val lastName: String? = null,
-      val username: String? = null,
-      @SerialName("phone_number") val phoneNumber: String? = null,
-    ) : CreateParams
-
-    /**
-     * The `SignUp` will be created without any parameters.
-     *
-     * This is useful for inspecting a newly created `SignUp` object before deciding on a strategy.
-     */
-    object None : CreateParams
-  }
-
   /** Defines the parameters required to prepare a verification for the sign-up process. */
   enum class PrepareVerificationParams(val strategy: String) {
     /** Send a text message with a unique token to input */
@@ -196,39 +163,6 @@ data class SignUp(
     /** Send an email with a unique token to input */
     EMAIL_CODE("email_code"),
   }
-
-  /** Defines the strategies for attempting verification during the sign-up process. */
-  sealed interface AttemptVerificationParams {
-    /**
-     * Attempts verification using a code sent to the user's email address.
-     *
-     * @param code The one-time code sent to the user's email address.
-     */
-    data class EmailCode(val code: String) : AttemptVerificationParams
-
-    /**
-     * Attempts verification using a code sent to the user's phone number.
-     *
-     * @param code The one-time code sent to the user's phone number.
-     */
-    data class PhoneCode(val code: String) : AttemptVerificationParams
-
-    /** Converts the selected strategy into [AttemptVerificationParams] for the API request. */
-    val params: AttemptParams
-      get() =
-        when (this) {
-          is EmailCode -> AttemptParams(strategy = "email_code", code = code)
-          is PhoneCode -> AttemptParams(strategy = "phone_code", code = code)
-        }
-  }
-
-  /**
-   * Parameters used for the verification attempt during the sign-up process.
-   *
-   * @property strategy The strategy used for verification (e.g., `email_code` or `phone_code`).
-   * @property code The verification code provided by the user.
-   */
-  @Serializable data class AttemptParams(val strategy: String, val code: String)
 
   companion object {
 
@@ -255,16 +189,10 @@ data class SignUp(
      * @see [SignUp] kdoc for more info
      */
     suspend fun create(
-      createParams: CreateParams
+      createParams: Requests.SignUp.CreateParams
     ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
-      val formMap =
-        if (createParams is CreateParams.Standard) {
-          createParams.toMap()
-        } else {
-          emptyMap()
-        }
 
-      return ClerkApi.instance.createSignUp(formMap)
+      return ClerkApi.instance.createSignUp(createParams.toMap())
     }
   }
 }
@@ -272,32 +200,25 @@ data class SignUp(
 suspend fun SignUp.update(
   updateParams: UpdateParams
 ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
-  val formMap =
-    if (updateParams is CreateParams.Standard) {
-      updateParams.toMap()
-    } else {
-      emptyMap()
-    }
-  return ClerkApi.instance.updateSignUp(id, formMap)
+  return ClerkApi.instance.updateSignUp(id, updateParams.toMap())
 }
 
 /**
  * The [prepareVerification] method is used to initiate the verification process for a field that
  * requires it.
  *
- * There are two fields that need to be verified:
- * - [emailAddress]: The email address can be verified via an email code. This is a one-time code
- *   that is sent to the email already provided to the [SignUp] object. The [prepareVerification]
- *   sends this email.
- * - [phoneNumber]: The phone number can be verified via a phone code. This is a one-time code that
- *   is sent via an SMS to the phone already provided to the [SignUp] object. The
- *   [prepareVerification] sends this SMS.
+ * There are two fields that need to be verified: [com.clerk.sdk.model.signup.SignUp.emailAddress]:
+ * The email address can be verified via an email code. This is a one-time code that is sent to the
+ * email already provided to the [SignUp] object. The [prepareVerification] sends this email.
+ * [com.clerk.sdk.model.signup.SignUp.phoneNumber]: The phone number can be verified via a phone
+ * code. This is a one-time code that is sent via an SMS to the phone already provided to the
+ * [SignUp] object. The [prepareVerification] sends this SMS.
  *
- *     @param prepareVerificationParams: The parameters for preparing the verification.Specifies
- *       the field which requires verification.
- *     @return A [ClerkResponse] containing the result of the verification preparation. A
- *       successful response indicates that the verification process has been initiated, and the
- *       [SignUp] object is returned.
+ * @param prepareVerificationParams: The parameters for preparing the verification.Specifies the
+ *   field which requires verification
+ * @return A [ClerkApiResult] containing the result of the verification preparation. A successful
+ *   response indicates that the verification process has been initiated, and the [SignUp] object is
+ *   returned.
  */
 suspend fun SignUp.prepareVerification(
   prepareVerificationParams: PrepareVerificationParams
@@ -305,8 +226,18 @@ suspend fun SignUp.prepareVerification(
   return ClerkApi.instance.prepareSignUpVerification(this.id, prepareVerificationParams.strategy)
 }
 
+/**
+ * // Attempts to complete the in-flight verification process that corresponds to the given
+ * strategy. In order to use this method, you should first initiate a verification process by
+ * calling SignUp.prepareVerification.
+ *
+ * Depending on the strategy, the method parameters could differ.
+ *
+ * @param params: The parameters for the verification attempt. This includes the strategy and the
+ *   code @return: The updated [SignUp] object reflecting the verification attempt's result.
+ */
 suspend fun SignUp.attemptVerification(
-  params: SignUp.AttemptVerificationParams
+  params: Requests.SignUp.AttemptVerificationParams
 ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,

@@ -6,7 +6,6 @@ import com.clerk.sdk.model.emailaddress.EmailAddress
 import com.clerk.sdk.model.organization.OrganizationMembership
 import com.clerk.sdk.model.phonenumber.PhoneNumber
 import com.clerk.sdk.model.verification.Verification
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
@@ -37,7 +36,7 @@ data class User(
   val backupCodeEnabled: Boolean,
 
   /** Date when the user was first created. */
-  val createdAt: Instant,
+  val createdAt: Long,
 
   /** A boolean indicating whether the organization creation is enabled for the user or not. */
   val createOrganizationEnabled: Boolean,
@@ -79,13 +78,13 @@ data class User(
   val imageUrl: String,
 
   /** Date when the user last signed in. May be empty if the user has never signed in. */
-  val lastSignInAt: Instant? = null,
+  val lastSignInAt: Long? = null,
 
   /** The user's last name. */
   val lastName: String? = null,
 
   /** The date on which the user accepted the legal requirements if required. */
-  val legalAcceptedAt: Instant? = null,
+  val legalAcceptedAt: Long? = null,
 
   /**
    * A list of OrganizationMemberships representing the list of organizations the user is member
@@ -124,7 +123,7 @@ data class User(
   val twoFactorEnabled: Boolean,
 
   /** Date of the last time the user was updated. */
-  val updatedAt: Instant,
+  val updatedAt: Long,
 
   /**
    * Metadata that can be read and set from the Frontend API. One common use case for this attribute

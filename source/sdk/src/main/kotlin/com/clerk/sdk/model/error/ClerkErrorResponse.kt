@@ -10,7 +10,7 @@ data class ClerkErrorResponse(
   /** An array of `ClerkAPIError` objects, each describing an individual error. */
   val errors: List<Error>,
   /** An object containing additional information about the error response. */
-  val meta: Meta,
+  val meta: Meta? = null,
   /** A unique identifier for tracing the specific request, useful for debugging. */
   @SerialName("clerk_trace_id") val clerkTraceId: String,
 )

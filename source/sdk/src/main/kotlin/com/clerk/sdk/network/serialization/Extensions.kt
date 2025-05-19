@@ -1,6 +1,6 @@
 @file:Suppress("TooManyFunctions")
 
-package com.clerk.clerkserializer
+package com.clerk.sdk.network.serialization
 
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
@@ -66,6 +66,31 @@ public fun <E : Any> ClerkApiResult.Failure<E>.exceptionOrNull(): Throwable? {
   // https://youtrack.jetbrains.com/issue/KT-71690
   "WRONG_INVOCATION_KIND",
 )
+public suspend inline fun <T : Any, E : Any, C> ClerkApiResult<T, E>.suspendingFold(
+  noinline onSuccess: suspend (value: T) -> C,
+  noinline onFailure: (failure: ClerkApiResult.Failure<E>) -> C,
+): C {
+  contract {
+    callsInPlace(onSuccess, InvocationKind.AT_MOST_ONCE)
+    callsInPlace(onFailure, InvocationKind.AT_MOST_ONCE)
+  }
+  @Suppress("UNCHECKED_CAST")
+  return suspendingFold(
+    onSuccess,
+    onFailure as (ClerkApiResult.Failure.UnknownFailure) -> C,
+    onFailure,
+    onFailure,
+  )
+}
+
+/** Transforms an [ClerkApiResult] into a [C] value. */
+@OptIn(ExperimentalContracts::class)
+@Suppress(
+  // Inline to allow contextual actions
+  "NOTHING_TO_INLINE",
+  // https://youtrack.jetbrains.com/issue/KT-71690
+  "WRONG_INVOCATION_KIND",
+)
 public inline fun <T : Any, E : Any, C> ClerkApiResult<T, E>.fold(
   noinline onSuccess: (value: T) -> C,
   noinline onFailure: (failure: ClerkApiResult.Failure<E>) -> C,
@@ -81,6 +106,58 @@ public inline fun <T : Any, E : Any, C> ClerkApiResult<T, E>.fold(
     onFailure,
     onFailure,
   )
+}
+
+/**
+ * Returns a new [ClerkApiResult] by applying [transform] to the value of a
+ * [ClerkApiResult.Success], or returns the original [ClerkApiResult.Failure] if this is a failure.
+ */
+@OptIn(ExperimentalContracts::class)
+public inline fun <T : Any, R : Any, E : Any> ClerkApiResult<T, E>.flatMap(
+  transform: (value: T) -> ClerkApiResult<R, E>
+): ClerkApiResult<R, E> {
+  contract { callsInPlace(transform, InvocationKind.AT_MOST_ONCE) }
+  return when (this) {
+    is ClerkApiResult.Success -> transform(value)
+    is ClerkApiResult.Failure -> this as ClerkApiResult<R, E>
+  }
+}
+
+/**
+ * Returns a new [ClerkApiResult] by applying [transform] to the value of a
+ * [ClerkApiResult.Success], or returns the original [ClerkApiResult.Failure] if this is a failure.
+ */
+@OptIn(ExperimentalContracts::class)
+public suspend inline fun <T : Any, R : Any, E : Any> ClerkApiResult<T, E>.suspendingFlatMap(
+  transform: suspend (value: T) -> ClerkApiResult<R, E>
+): ClerkApiResult<R, E> {
+  contract { callsInPlace(transform, InvocationKind.AT_MOST_ONCE) }
+  return when (this) {
+    is ClerkApiResult.Success -> transform(value)
+    is ClerkApiResult.Failure -> this as ClerkApiResult<R, E>
+  }
+}
+
+/** Transforms an [ClerkApiResult] into a [C] value. */
+@OptIn(ExperimentalContracts::class)
+suspend inline fun <T : Any, E : Any, C> ClerkApiResult<T, E>.suspendingFold(
+  onSuccess: suspend (value: T) -> C,
+  onUnknownFailure: (failure: ClerkApiResult.Failure.UnknownFailure) -> C,
+  onHttpFailure: (failure: ClerkApiResult.Failure.HttpFailure<E>) -> C,
+  onApiFailure: (failure: ClerkApiResult.Failure.ClerkApiFailure<E>) -> C,
+): C {
+  contract {
+    callsInPlace(onSuccess, InvocationKind.AT_MOST_ONCE)
+    callsInPlace(onUnknownFailure, InvocationKind.AT_MOST_ONCE)
+    callsInPlace(onHttpFailure, InvocationKind.AT_MOST_ONCE)
+    callsInPlace(onApiFailure, InvocationKind.AT_MOST_ONCE)
+  }
+  return when (this) {
+    is ClerkApiResult.Success -> onSuccess(value)
+    is ClerkApiResult.Failure.ClerkApiFailure -> onApiFailure(this)
+    is ClerkApiResult.Failure.HttpFailure -> onHttpFailure(this)
+    is ClerkApiResult.Failure.UnknownFailure -> onUnknownFailure(this)
+  }
 }
 
 /** Transforms an [ClerkApiResult] into a [C] value. */
