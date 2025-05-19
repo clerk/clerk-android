@@ -86,11 +86,25 @@ class ConfigurationManager {
 
       clientResult.fold(
         onSuccess = { ClerkLog.d("Client result: $it") },
-        onFailure = { ClerkLog.e("Error getting client: $it") },
+        onFailure = {
+          ClerkLog.e("Error getting client: ${it.error}")
+          when (it.errorType) {
+            ClerkApiResult.Failure.ErrorType.API -> ClerkLog.e("API error: ${it.error}")
+            ClerkApiResult.Failure.ErrorType.HTTP -> ClerkLog.e("HTTP error: ${it.error}")
+            ClerkApiResult.Failure.ErrorType.UNKNOWN -> ClerkLog.e("Unknown error: ${it.error}")
+          }
+        },
       )
       environmentResult.fold(
         onSuccess = { ClerkLog.d("Environment result: $it") },
-        onFailure = { ClerkLog.e("Error getting environment: $it") },
+        onFailure = {
+          ClerkLog.e("Error getting environment: $it")
+          when (it.errorType) {
+            ClerkApiResult.Failure.ErrorType.API -> ClerkLog.e("API error: ${it.error}")
+            ClerkApiResult.Failure.ErrorType.HTTP -> ClerkLog.e("HTTP error: ${it.error}")
+            ClerkApiResult.Failure.ErrorType.UNKNOWN -> ClerkLog.e("Unknown error: ${it.error}")
+          }
+        },
       )
 
       if (clientResult is ClerkApiResult.Success && environmentResult is ClerkApiResult.Success) {

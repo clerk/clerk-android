@@ -13,7 +13,7 @@ import retrofit2.Retrofit
 /**
  * A custom [CallAdapter.Factory] for [ClerkApiResult] calls. This creates a delegating adapter for
  * suspend function calls that return [ClerkApiResult]. This facilitates returning all error types
- * through the possible [ClerkApiResult] subtypes.
+ * through a single [ClerkApiResult.Failure] type.
  */
 public object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
   @Suppress("ReturnCount")
@@ -58,20 +58,23 @@ public object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                     callback.onResponse(
                       call,
                       Response.success(
-                        ClerkApiResult.Failure.ClerkApiFailure(
+                        ClerkApiResult.Failure(
                           error = t.error,
+                          throwable = t,
+                          errorType = ClerkApiResult.Failure.ErrorType.API,
                           tags = mapOf(Request::class to call.request()),
                         )
                       ),
                     )
                   }
-
                   else -> {
                     callback.onResponse(
                       call,
                       Response.success(
-                        ClerkApiResult.Failure.UnknownFailure(
-                          error = t,
+                        ClerkApiResult.Failure(
+                          error = null,
+                          throwable = t,
+                          errorType = ClerkApiResult.Failure.ErrorType.UNKNOWN,
                           tags = mapOf(Request::class to call.request()),
                         )
                       ),
@@ -85,8 +88,7 @@ public object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                 response: Response<ClerkApiResult<*, *>>,
               ) {
                 if (response.isSuccessful) {
-                  // Repackage the initial result with new tags with this call's request +
-                  // response
+                  // Repackage the initial result with new tags with this call's request + response
                   val tags = mapOf(okhttp3.Response::class to response.raw())
                   val withTag =
                     when (val result = response.body()) {
@@ -126,8 +128,10 @@ public object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                         callback.onResponse(
                           call,
                           Response.success(
-                            ClerkApiResult.Failure.UnknownFailure(
-                              error = e,
+                            ClerkApiResult.Failure(
+                              error = null,
+                              throwable = e,
+                              errorType = ClerkApiResult.Failure.ErrorType.UNKNOWN,
                               tags = mapOf(okhttp3.Response::class to response.raw()),
                             )
                           ),
@@ -139,9 +143,10 @@ public object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                   callback.onResponse(
                     call,
                     Response.success(
-                      ClerkApiResult.Failure.HttpFailure(
-                        code = response.code(),
+                      ClerkApiResult.Failure(
                         error = errorBody,
+                        code = response.code(),
+                        errorType = ClerkApiResult.Failure.ErrorType.HTTP,
                         tags = mapOf(okhttp3.Response::class to response.raw()),
                       )
                     ),
