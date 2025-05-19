@@ -48,7 +48,7 @@ dependencies {
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
   implementation(libs.retrofit.kotlinx)
-  implementation(projects.mapGenerator)
+  implementation(projects.autoMap)
 
   testImplementation(libs.androidx.arch.test)
   testImplementation(libs.junit)
@@ -57,5 +57,5 @@ dependencies {
   testImplementation(libs.mockk)
   testImplementation(libs.robolectric)
 
-  ksp(projects.mapGenerator)
+  ksp(projects.autoMap)
 }
