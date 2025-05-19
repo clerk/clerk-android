@@ -48,7 +48,7 @@ data class SignIn(
   val status: Status,
 
   /** Array of all the authentication identifiers that are supported for this sign in. */
-  val supportedIdentifiers: List<Identifier>? = null,
+  val supportedIdentifiers: List<Requests.SignIn.Identifier>? = null,
 
   /** The authentication identifier value for the current sign-in. */
   val identifier: String? = null,

@@ -75,18 +75,17 @@ object Requests {
     )
 
     /** Represents an authentication identifier. */
-    @Serializable
     sealed interface Identifier {
       val value: String
 
       /** Email address identifier. */
-      data class Email(override val value: String) : Identifier
+      @Serializable data class Email(override val value: String) : Identifier
 
       /** Phone number identifier. */
-      data class Phone(override val value: String) : Identifier
+      @Serializable data class Phone(override val value: String) : Identifier
 
       /** Username identifier. */
-      data class Username(override val value: String) : Identifier
+      @Serializable data class Username(override val value: String) : Identifier
     }
 
     /** A parameter object for attempting the first factor verification in the sign-in process. */
