@@ -4,6 +4,7 @@ import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClerkResponse
+import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
@@ -39,7 +40,8 @@ internal interface ClerkApiService {
 
   // region Client
 
-  @GET(Paths.ClientPath.CLIENT) suspend fun client(): ClerkApiResult<Client, ClerkErrorResponse>
+  @GET(Paths.ClientPath.CLIENT)
+  suspend fun client(): ClerkApiResult<ClientPiggybackedResponse<Client>, ClerkErrorResponse>
 
   // endregion
 
@@ -86,30 +88,34 @@ internal interface ClerkApiService {
   // endregion
 
   // region Sign In
-
+  @FormUrlEncoded
   @POST(Paths.ClientPath.SignIns.SIGN_INS)
-  suspend fun signIn(): ClerkApiResult<SignIn, ClerkErrorResponse>
+  suspend fun signIn(
+    @Field("identifier") identifier: String
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   @GET(Paths.ClientPath.SignIns.WithId.SIGN_INS_WITH_ID)
   suspend fun signIn(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   @POST(Paths.ClientPath.SignIns.WithId.ATTEMPT_FIRST_FACTOR)
-  suspend fun attemptFirstFactor(@Path("id") id: String): ClerkApiResult<SignIn, ClerkErrorResponse>
+  suspend fun attemptFirstFactor(
+    @Path("id") id: String
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   @POST(Paths.ClientPath.SignIns.WithId.ATTEMPT_FIRST_FACTOR)
   suspend fun attemptSecondFactor(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   @POST(Paths.ClientPath.SignIns.WithId.PREPARE_FIRST_FACTOR)
   suspend fun prepareFirstFactor(
     @Path("id") id: String,
     @FieldMap fields: Map<String, String>,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   /**
    * Prepare the second factor for a sign in.
@@ -122,7 +128,7 @@ internal interface ClerkApiService {
   suspend fun prepareSecondFactor(
     @Path("id") id: String,
     @FieldMap params: Map<String, String>,
-  ): ClerkApiResult<SignIn, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   /**
    * Reset the password for a sign in.
@@ -151,7 +157,7 @@ internal interface ClerkApiService {
   @POST(Paths.SignUpPath.SIGN_UP)
   suspend fun createSignUp(
     @FieldMap fields: Map<String, String>
-  ): ClerkApiResult<SignUp, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
   /**
    * Update an ongoing sign up request.
@@ -163,7 +169,7 @@ internal interface ClerkApiService {
   suspend fun updateSignUp(
     @Field("id") id: String,
     @FieldMap fields: Map<String, String>,
-  ): ClerkApiResult<SignUp, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
   /** @see [prepareSignUpVerification] */
   @FormUrlEncoded
@@ -171,7 +177,7 @@ internal interface ClerkApiService {
   suspend fun prepareSignUpVerification(
     @Path("id") signUpId: String,
     @Field("strategy") strategy: String,
-  ): ClerkApiResult<SignUp, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
   /** @see [attemptSignUpVerification] */
   @FormUrlEncoded
@@ -180,7 +186,7 @@ internal interface ClerkApiService {
     @Path("id") signUpId: String,
     @Field("strategy") strategy: String,
     @Field("code") code: String,
-  ): ClerkApiResult<SignUp, ClerkErrorResponse>
+  ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
   // endregion
 }

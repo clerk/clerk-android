@@ -1,7 +1,13 @@
 package com.clerk.sdk.model.signin
 
+import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.factor.Factor
+import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.verification.Verification
+import com.clerk.sdk.network.ClerkApi
+import com.clerk.sdk.network.requests.Requests
+import com.clerk.sdk.network.serialization.ClerkApiResult
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -94,6 +100,7 @@ data class SignIn(
    */
   val createdSessionId: String? = null,
 ) {
+
   /**
    * An object containing information about the user of the current sign-in. This property is
    * populated only once an identifier is given to the SignIn object.
@@ -123,31 +130,20 @@ data class SignIn(
     COMPLETE,
 
     /** The sign-in process needs a first factor verification. */
-    NEEDS_FIRST_FACTOR,
+    @SerialName("needs_first_factor") NEEDS_FIRST_FACTOR,
 
     /** The sign-in process needs a second factor verification. */
-    NEEDS_SECOND_FACTOR,
+    @SerialName("needs_second_factor") NEEDS_SECOND_FACTOR,
 
     /** The sign-in process is in an unknown state. */
     UNKNOWN,
   }
 
-  /** Represents an authentication identifier. */
-  @Serializable
-  enum class Identifier {
-    /** Email address identifier. */
-    EMAIL_ADDRESS,
-
-    /** Phone number identifier. */
-    PHONE_NUMBER,
-
-    /** Username identifier. */
-    USERNAME,
-
-    /** Web3 wallet identifier. */
-    WEB3_WALLET,
-
-    /** Unknown identifier type. */
-    UNKNOWN,
+  companion object {
+    suspend fun create(
+      identifier: Requests.SignIn.Identifier
+    ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+      return ClerkApi.instance.signIn(identifier.value)
+    }
   }
 }

@@ -4,6 +4,7 @@ package com.clerk.sdk.model.signup
 
 import com.clerk.mapgenerator.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
+import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.signup.SignUp.CreateParams
 import com.clerk.sdk.model.signup.SignUp.PrepareVerificationParams
 import com.clerk.sdk.model.verification.Verification
@@ -255,7 +256,9 @@ data class SignUp(
      *   The [status] property reflects the current state of the sign-up.
      * @see [SignUp] kdoc for more info
      */
-    suspend fun create(createParams: CreateParams): ClerkApiResult<SignUp, ClerkErrorResponse> {
+    suspend fun create(
+      createParams: CreateParams
+    ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
       val formMap =
         if (createParams is CreateParams.Standard) {
           createParams.toMap()
@@ -268,7 +271,9 @@ data class SignUp(
   }
 }
 
-suspend fun SignUp.update(updateParams: UpdateParams): ClerkApiResult<SignUp, ClerkErrorResponse> {
+suspend fun SignUp.update(
+  updateParams: UpdateParams
+): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   val formMap =
     if (updateParams is CreateParams.Standard) {
       updateParams.toMap()
@@ -297,7 +302,7 @@ suspend fun SignUp.update(updateParams: UpdateParams): ClerkApiResult<SignUp, Cl
  */
 suspend fun SignUp.prepareVerification(
   prepareVerificationParams: PrepareVerificationParams
-): ClerkApiResult<SignUp, ClerkErrorResponse> {
+): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   return ClerkApi.instance.prepareSignUpVerification(this.id, prepareVerificationParams.strategy)
 }
 
@@ -313,7 +318,7 @@ suspend fun SignUp.prepareVerification(
  */
 suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
-): ClerkApiResult<SignUp, ClerkErrorResponse> {
+): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,
     strategy = params.params.strategy,

@@ -4,6 +4,13 @@ import com.clerk.mapgenerator.annotation.AutoMap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+private const val PHONE_CODE = "phone_code"
+private const val EMAIL_CODE = "email_code"
+private const val PASSWORD = "password"
+private const val PASSKEY = "passkey"
+private const val RESET_PASSWORD_EMAIL_CODE = "reset_password_email_code"
+private const val RESET_PASSWORD_PHONE_CODE = "reset_password_phone_code"
+
 /** This file contains the data classes for inputs into Clerk API. functions */
 object Requests {
 
@@ -54,21 +61,6 @@ object Requests {
       val strategy: String
     )
 
-    /** A strategy for preparing the second factor verification process. */
-    enum class PrepareSecondFactorStrategy {
-      /**
-       * phoneCode: The user will receive a one-time authentication code via SMS. At least one phone
-       * number should be on file for the user.
-       */
-      PHONE_CODE;
-
-      val params: PrepareSecondFactorParams
-        get() =
-          when (this) {
-            PHONE_CODE -> PrepareSecondFactorParams(strategy = "phone_code")
-          }
-    }
-
     /**
      * A parameter object for resetting a user's password.
      *
@@ -81,5 +73,72 @@ object Requests {
       val password: String,
       @SerialName("sign_out_of_other_sessions") val signOutOfOtherSessions: Boolean? = null,
     )
+
+    /** Represents an authentication identifier. */
+    @Serializable
+    sealed interface Identifier {
+      val value: String
+
+      /** Email address identifier. */
+      data class Email(override val value: String) : Identifier
+
+      /** Phone number identifier. */
+      data class Phone(override val value: String) : Identifier
+
+      /** Username identifier. */
+      data class Username(override val value: String) : Identifier
+    }
+
+    /** A parameter object for attempting the first factor verification in the sign-in process. */
+    sealed interface AttemptFirstFactorParams {
+      /** The identifier will be the user provided authentication value. */
+      val identifier: String
+
+      /**
+       * The [value] will be the strategy value. The strategy value depends on the object's
+       * identifier value. Each authentication identifier supports different verification
+       * strategies.
+       */
+      val value: String
+
+      /** The strategy value depends on the object's identifier value. Each authentication */
+      @AutoMap
+      @Serializable
+      data class EmailCode(
+        override val value: String = EMAIL_CODE,
+        override val identifier: String,
+      ) : AttemptFirstFactorParams
+
+      @AutoMap
+      @Serializable
+      data class PhoneCode(
+        override val value: String = PHONE_CODE,
+        override val identifier: String,
+      ) : AttemptFirstFactorParams
+
+      @AutoMap
+      @Serializable
+      data class Password(override val value: String = PASSWORD, override val identifier: String) :
+        AttemptFirstFactorParams
+
+      @AutoMap
+      @Serializable
+      data class Passkey(override val value: String = PASSKEY, override val identifier: String) :
+        AttemptFirstFactorParams
+
+      @AutoMap
+      @Serializable
+      data class ResetPasswordEmailCode(
+        override val value: String = RESET_PASSWORD_EMAIL_CODE,
+        override val identifier: String,
+      ) : AttemptFirstFactorParams
+
+      @AutoMap
+      @Serializable
+      data class ResetPasswordPhoneCode(
+        override val value: String = RESET_PASSWORD_PHONE_CODE,
+        override val identifier: String,
+      ) : AttemptFirstFactorParams
+    }
   }
 }

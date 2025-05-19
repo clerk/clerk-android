@@ -1,5 +1,7 @@
 package com.clerk.sdk.network.middleware.outgoing
 
+import com.clerk.sdk.storage.StorageHelper
+import com.clerk.sdk.storage.StorageKey
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -14,16 +16,19 @@ import okhttp3.Response
 class HeaderMiddleware : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
-    val newRequest =
+    val newRequestBuilder =
       request
         .newBuilder()
         .addHeader(OutgoingHeaders.X_CLERK_CLIENT.header, "android")
         .addHeader(OutgoingHeaders.CLERK_API_VERSION.header, "2024-10-01")
         .addHeader(OutgoingHeaders.X_ANDROID_SDK_VERSION.header, "0.1.0")
         .addHeader(OutgoingHeaders.X_MOBILE.header, "1")
-        .build()
 
-    return chain.proceed(newRequest)
+    StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)?.let {
+      newRequestBuilder.addHeader(OutgoingHeaders.AUTHORIZATION.header, it)
+    }
+
+    return chain.proceed(newRequestBuilder.build())
   }
 }
 
@@ -32,4 +37,5 @@ enum class OutgoingHeaders(val header: String) {
   CLERK_API_VERSION("clerk-api-version"),
   X_ANDROID_SDK_VERSION("x-android-sdk-version"),
   X_MOBILE("x-mobile"),
+  AUTHORIZATION("Authorization"),
 }
