@@ -1,14 +1,14 @@
 package com.clerk.sdk.configuration
 
 import android.content.Context
-import com.clerk.clerkserializer.ClerkApiResult
-import com.clerk.clerkserializer.fold
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.lifecycle.AppLifecycleListener
 import com.clerk.sdk.log.ClerkLog
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.network.ClerkApi
+import com.clerk.sdk.network.serialization.ClerkApiResult
+import com.clerk.sdk.network.serialization.fold
 import com.clerk.sdk.storage.StorageHelper
 import com.clerk.sdk.util.PublishableKeyHelper
 import java.lang.ref.WeakReference
@@ -100,7 +100,7 @@ class ConfigurationManager {
         )
         callback(
           ClerkConfigurationState.Success(
-            client = clientResult.value.response,
+            client = clientResult.value,
             environment = environmentResult.value,
           )
         )

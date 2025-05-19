@@ -1,17 +1,16 @@
 package com.clerk.sdk.network
 
-import com.clerk.clerkserializer.ClerkApiResult
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClerkResponse
-import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.paths.Paths
 import com.clerk.sdk.network.requests.Requests
+import com.clerk.sdk.network.serialization.ClerkApiResult
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -40,8 +39,7 @@ internal interface ClerkApiService {
 
   // region Client
 
-  @GET(Paths.ClientPath.CLIENT)
-  suspend fun client(): ClerkApiResult<ClientPiggybackedResponse<Client>, ClerkErrorResponse>
+  @GET(Paths.ClientPath.CLIENT) suspend fun client(): ClerkApiResult<Client, ClerkErrorResponse>
 
   // endregion
 
@@ -153,7 +151,7 @@ internal interface ClerkApiService {
   @POST(Paths.SignUpPath.SIGN_UP)
   suspend fun createSignUp(
     @FieldMap fields: Map<String, String>
-  ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
+  ): ClerkApiResult<SignUp, ClerkErrorResponse>
 
   /**
    * Update an ongoing sign up request.
@@ -165,7 +163,7 @@ internal interface ClerkApiService {
   suspend fun updateSignUp(
     @Field("id") id: String,
     @FieldMap fields: Map<String, String>,
-  ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
+  ): ClerkApiResult<SignUp, ClerkErrorResponse>
 
   /** @see [prepareSignUpVerification] */
   @FormUrlEncoded
@@ -173,7 +171,7 @@ internal interface ClerkApiService {
   suspend fun prepareSignUpVerification(
     @Path("id") signUpId: String,
     @Field("strategy") strategy: String,
-  ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
+  ): ClerkApiResult<SignUp, ClerkErrorResponse>
 
   /** @see [attemptSignUpVerification] */
   @FormUrlEncoded
@@ -182,7 +180,7 @@ internal interface ClerkApiService {
     @Path("id") signUpId: String,
     @Field("strategy") strategy: String,
     @Field("code") code: String,
-  ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
+  ): ClerkApiResult<SignUp, ClerkErrorResponse>
 
   // endregion
 }

@@ -1,18 +1,19 @@
+@file:Suppress("unused")
+
 package com.clerk.sdk.model.signup
 
-import com.clerk.clerkserializer.ClerkApiResult
 import com.clerk.mapgenerator.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
-import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.signup.SignUp.CreateParams
 import com.clerk.sdk.model.signup.SignUp.PrepareVerificationParams
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
+import com.clerk.sdk.network.serialization.ClerkApiResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
-typealias UpdateParams = SignUp.CreateParams
+typealias UpdateParams = CreateParams
 
 /**
  * The `SignUp` object holds the state of the current sign-up and provides helper methods to
@@ -254,9 +255,7 @@ data class SignUp(
      *   The [status] property reflects the current state of the sign-up.
      * @see [SignUp] kdoc for more info
      */
-    suspend fun create(
-      createParams: CreateParams
-    ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+    suspend fun create(createParams: CreateParams): ClerkApiResult<SignUp, ClerkErrorResponse> {
       val formMap =
         if (createParams is CreateParams.Standard) {
           createParams.toMap()
@@ -269,9 +268,7 @@ data class SignUp(
   }
 }
 
-suspend fun SignUp.update(
-  updateParams: UpdateParams
-): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+suspend fun SignUp.update(updateParams: UpdateParams): ClerkApiResult<SignUp, ClerkErrorResponse> {
   val formMap =
     if (updateParams is CreateParams.Standard) {
       updateParams.toMap()
@@ -285,29 +282,38 @@ suspend fun SignUp.update(
  * The [prepareVerification] method is used to initiate the verification process for a field that
  * requires it.
  *
- * There are two fields that need to be verified:
- * - [emailAddress]: The email address can be verified via an email code. This is a one-time code
- *   that is sent to the email already provided to the [SignUp] object. The [prepareVerification]
- *   sends this email.
- * - [phoneNumber]: The phone number can be verified via a phone code. This is a one-time code that
- *   is sent via an SMS to the phone already provided to the [SignUp] object. The
- *   [prepareVerification] sends this SMS.
+ * There are two fields that need to be verified: [com.clerk.sdk.model.signup.SignUp.emailAddress]:
+ * The email address can be verified via an email code. This is a one-time code that is sent to the
+ * email already provided to the [SignUp] object. The [prepareVerification] sends this email.
+ * [com.clerk.sdk.model.signup.SignUp.phoneNumber]: The phone number can be verified via a phone
+ * code. This is a one-time code that is sent via an SMS to the phone already provided to the
+ * [SignUp] object. The [prepareVerification] sends this SMS.
  *
- *     @param prepareVerificationParams: The parameters for preparing the verification.Specifies
- *       the field which requires verification.
- *     @return A [ClerkResponse] containing the result of the verification preparation. A
- *       successful response indicates that the verification process has been initiated, and the
- *       [SignUp] object is returned.
+ * @param prepareVerificationParams: The parameters for preparing the verification.Specifies the
+ *   field which requires verification
+ * @return A [ClerkApiResult] containing the result of the verification preparation. A successful
+ *   response indicates that the verification process has been initiated, and the [SignUp] object is
+ *   returned.
  */
 suspend fun SignUp.prepareVerification(
   prepareVerificationParams: PrepareVerificationParams
-): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+): ClerkApiResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.instance.prepareSignUpVerification(this.id, prepareVerificationParams.strategy)
 }
 
+/**
+ * // Attempts to complete the in-flight verification process that corresponds to the given
+ * strategy. In order to use this method, you should first initiate a verification process by
+ * calling SignUp.prepareVerification.
+ *
+ * Depending on the strategy, the method parameters could differ.
+ *
+ * @param params: The parameters for the verification attempt. This includes the strategy and the
+ *   code @return: The updated [SignUp] object reflecting the verification attempt's result.
+ */
 suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
-): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+): ClerkApiResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,
     strategy = params.params.strategy,

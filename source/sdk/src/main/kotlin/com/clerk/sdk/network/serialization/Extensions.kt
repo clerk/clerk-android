@@ -1,6 +1,6 @@
 @file:Suppress("TooManyFunctions")
 
-package com.clerk.clerkserializer
+package com.clerk.sdk.network.serialization
 
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind

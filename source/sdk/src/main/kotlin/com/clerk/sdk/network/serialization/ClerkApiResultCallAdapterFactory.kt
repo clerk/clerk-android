@@ -1,4 +1,4 @@
-package com.clerk.clerkserializer
+package com.clerk.sdk.network.serialization
 
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -32,10 +32,10 @@ public object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
       return null
     }
 
-    return ApiResultCallAdapter(retrofit, apiResultType, annotations)
+    return ClerkApiResultCallAdapter(retrofit, apiResultType, annotations)
   }
 
-  private class ApiResultCallAdapter(
+  private class ClerkApiResultCallAdapter(
     private val retrofit: Retrofit,
     private val apiResultType: ParameterizedType,
     private val annotations: Array<Annotation>,

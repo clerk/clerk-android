@@ -31,16 +31,12 @@ afterEvaluate {
         version = "0.1.0"
 
         from(components["release"])
-
-        // Don't try to manually modify the POM - let Gradle handle it
       }
     }
   }
 }
 
 dependencies {
-  api(projects.clerkSerializer)
-
   implementation(libs.androidx.datastore)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)

@@ -1,8 +1,5 @@
-package com.clerk.clerkserializer
+package com.clerk.sdk.network.serialization
 
-import com.clerk.clerkserializer.ClerkApiResult.Failure.ClerkApiFailure
-import com.clerk.clerkserializer.ClerkApiResult.Failure.HttpFailure
-import com.clerk.clerkserializer.ClerkApiResult.Failure.UnknownFailure
 import kotlin.reflect.KClass
 import toUnmodifiableMap
 

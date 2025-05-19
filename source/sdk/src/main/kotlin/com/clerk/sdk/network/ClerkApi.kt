@@ -1,13 +1,13 @@
 package com.clerk.sdk.network
 
-import com.clerk.clerkserializer.ClerkApiResultCallAdapterFactory
-import com.clerk.clerkserializer.ClerkApiResultConverterFactory
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.error.ClerkClientError
 import com.clerk.sdk.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.sdk.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.sdk.network.middleware.outgoing.HeaderMiddleware
 import com.clerk.sdk.network.middleware.outgoing.UrlAppendingMiddleware
+import com.clerk.sdk.network.serialization.ClerkApiResultCallAdapterFactory
+import com.clerk.sdk.network.serialization.ClerkApiResultConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient

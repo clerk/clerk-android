@@ -1,5 +1,6 @@
-package com.clerk.clerkserializer
+package com.clerk.sdk.network.serialization
 
+import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import okhttp3.ResponseBody
@@ -18,15 +19,28 @@ public object ClerkApiResultConverterFactory : Converter.Factory() {
     val errorType = type.actualTypeArguments[1]
     val errorResultType: Annotation = createResultType(errorType)
     val nextAnnotations = annotations + errorResultType
+
+    // Get the converter for ClientPiggybackedResponse<T> or T directly
     val delegateConverter =
       retrofit.nextResponseBodyConverter<Any>(this, successType, nextAnnotations)
-    return ApiResultConverter(delegateConverter)
+
+    return ClerkApiResultConverter(delegateConverter)
   }
 
-  private class ApiResultConverter(private val delegate: Converter<ResponseBody, Any>) :
+  private class ClerkApiResultConverter(private val delegate: Converter<ResponseBody, Any>) :
     Converter<ResponseBody, ClerkApiResult<*, *>> {
     override fun convert(value: ResponseBody): ClerkApiResult<*, *>? {
-      return delegate.convert(value)?.let(ClerkApiResult.Companion::success)
+      val result = delegate.convert(value)
+
+      // If the result is a ClientPiggybackedResponse, unwrap it
+      val finalResult =
+        if (result is ClientPiggybackedResponse<*>) {
+          result.response
+        } else {
+          result
+        }
+
+      return finalResult?.let(ClerkApiResult.Companion::success)
     }
   }
 }
