@@ -1,7 +1,6 @@
 package com.clerk.sdk.model.organization
 
 import com.clerk.sdk.model.userdata.PublicUserData
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -33,8 +32,8 @@ data class OrganizationMembership(
   val organization: Organization,
 
   /** The date when the membership was created. */
-  val createdAt: Instant,
+  val createdAt: Long,
 
   /** The date when the membership was last updated. */
-  val updatedAt: Instant,
+  val updatedAt: Long,
 )

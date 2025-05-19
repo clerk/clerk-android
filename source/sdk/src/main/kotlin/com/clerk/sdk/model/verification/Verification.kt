@@ -1,7 +1,6 @@
 package com.clerk.sdk.model.verification
 
 import com.clerk.sdk.model.error.Error
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 /** The state of the verification process of a sign-in or sign-up attempt. */
@@ -14,7 +13,7 @@ data class Verification(
   /** The number of attempts related to the verification. */
   val attempts: Int? = null,
   /** The time the verification will expire at. */
-  val expireAt: Instant? = null,
+  val expireAt: Long? = null,
   /** The last error the verification attempt ran into. */
   val error: Error? = null,
   /** The redirect URL for an external verification. */

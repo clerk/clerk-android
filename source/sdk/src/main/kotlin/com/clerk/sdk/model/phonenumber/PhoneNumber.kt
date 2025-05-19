@@ -1,7 +1,6 @@
 package com.clerk.sdk.model.phonenumber
 
 import com.clerk.sdk.model.verification.Verification
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
@@ -42,10 +41,10 @@ data class PhoneNumber(
   val defaultSecondFactor: Boolean,
 
   /** The date when the phone number was created. */
-  val createdAt: Instant,
+  val createdAt: Long,
 
   /** The date when the phone number was last updated. */
-  val updatedAt: Instant,
+  val updatedAt: Long,
 
   /**
    * An object containing information about any other identification that might be linked to this

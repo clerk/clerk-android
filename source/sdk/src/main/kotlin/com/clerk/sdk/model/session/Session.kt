@@ -3,7 +3,6 @@ package com.clerk.sdk.model.session
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.model.user.User
 import com.clerk.sdk.model.userdata.PublicUserData
-import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -18,7 +17,7 @@ import kotlinx.serialization.Serializable
  * than one sessions at any point in time, but only one of those sessions will be active.
  *
  * In certain scenarios, a session might be replaced by another one. This is often the case with
- * mutli-session applications.
+ * multi-session applications.
  *
  * All sessions that are expired, removed, replaced, ended or abandoned are not considered valid.
  *
@@ -41,13 +40,13 @@ data class Session(
   val status: SessionStatus,
 
   /** The time the session expires and will cease to be active. */
-  @SerialName("expire_at") val expireAt: Instant,
+  @SerialName("expire_at") val expireAt: Long,
 
   /** The time when the session was abandoned by the user. */
-  @SerialName("abandon_at") val abandonAt: Instant,
+  @SerialName("abandon_at") val abandonAt: Long,
 
   /** The time the session was last active on the client. */
-  @SerialName("last_active_at") val lastActiveAt: Instant,
+  @SerialName("last_active_at") val lastActiveAt: Long,
 
   /** The latest activity associated with the session. */
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
@@ -65,10 +64,10 @@ data class Session(
   @SerialName("public_user_data") val publicUserData: PublicUserData? = null,
 
   /** The time the session was created. */
-  @SerialName("created_at") val createdAt: Instant,
+  @SerialName("created_at") val createdAt: Long,
 
   /** The last time the session recorded activity of any kind. */
-  @SerialName("updated_at") val updatedAt: Instant,
+  @SerialName("updated_at") val updatedAt: Long,
 
   /** The last active token for the session. */
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,

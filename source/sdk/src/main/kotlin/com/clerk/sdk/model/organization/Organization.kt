@@ -1,6 +1,5 @@
 package com.clerk.sdk.model.organization
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -41,10 +40,10 @@ data class Organization(
   val adminDeleteEnabled: Boolean,
 
   /** The date when the organization was created. */
-  val createdAt: Instant,
+  val createdAt: Long,
 
   /** The date when the organization was last updated. */
-  val updatedAt: Instant,
+  val updatedAt: Long,
 
   /**
    * Metadata that can be read from the Frontend API and Backend API and can be set only from the

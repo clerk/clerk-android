@@ -26,11 +26,11 @@ internal object StorageHelper {
   }
 
   /** Save value of string type to [secureStorage] */
-  internal fun saveValue(key: StorageKey, value: String?) {
-    if (value.isNullOrEmpty()) {
+  internal fun saveValue(key: StorageKey, value: String) {
+    if (value.isNotEmpty()) {
       with(secureStorage.edit()) {
-        putString(key.name, null)
-        apply()
+        putString(key.name, value)
+        commit()
       }
       return
     }

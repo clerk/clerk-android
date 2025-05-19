@@ -90,54 +90,53 @@ object Requests {
 
     /** A parameter object for attempting the first factor verification in the sign-in process. */
     sealed interface AttemptFirstFactorParams {
-      /** The identifier will be the user provided authentication value. */
-      val identifier: String
 
       /**
-       * The [value] will be the strategy value. The strategy value depends on the object's
-       * identifier value. Each authentication identifier supports different verification
-       * strategies.
+       * The [strategy] value depends on the object's identifier value. Each authentication
+       * identifier supports different verification strategies.
        */
-      val value: String
+      val strategy: String
 
-      /** The strategy value depends on the object's identifier value. Each authentication */
+      /** The strategy strategy depends on the object's identifier strategy. Each authentication */
       @AutoMap
       @Serializable
       data class EmailCode(
-        override val value: String = EMAIL_CODE,
-        override val identifier: String,
+        override val strategy: String = EMAIL_CODE,
+        @SerialName("email_code") val emailCode: String,
       ) : AttemptFirstFactorParams {
-        constructor(identifier: String) : this(EMAIL_CODE, identifier)
+        constructor(emailCode: String) : this(EMAIL_CODE, emailCode)
       }
 
       @AutoMap
       @Serializable
       data class PhoneCode(
-        override val value: String = PHONE_CODE,
-        override val identifier: String,
+        override val strategy: String = PHONE_CODE,
+        @SerialName("phone_code") val phoneCode: String,
       ) : AttemptFirstFactorParams {
-        constructor(identifier: String) : this(PHONE_CODE, identifier)
+        constructor(phoneCode: String) : this(PHONE_CODE, phoneCode)
       }
 
       @AutoMap
       @Serializable
-      data class Password(override val value: String = PASSWORD, override val identifier: String) :
-        AttemptFirstFactorParams {
-        constructor(identifier: String) : this(PASSWORD, identifier)
+      data class Password(
+        override val strategy: String = PASSWORD,
+        @SerialName("password") val password: String,
+      ) : AttemptFirstFactorParams {
+        constructor(password: String) : this(PASSWORD, password)
       }
 
       @AutoMap
       @Serializable
-      data class Passkey(override val value: String = PASSKEY, override val identifier: String) :
+      data class Passkey(override val strategy: String = PASSKEY, val passkey: String) :
         AttemptFirstFactorParams {
-        constructor(identifier: String) : this(PASSKEY, identifier)
+        constructor(passkey: String) : this(PASSKEY, passkey)
       }
 
       @AutoMap
       @Serializable
       data class ResetPasswordEmailCode(
-        override val value: String = RESET_PASSWORD_EMAIL_CODE,
-        override val identifier: String,
+        override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+        val identifier: String,
       ) : AttemptFirstFactorParams {
         constructor(identifier: String) : this(RESET_PASSWORD_EMAIL_CODE, identifier)
       }
@@ -145,10 +144,10 @@ object Requests {
       @AutoMap
       @Serializable
       data class ResetPasswordPhoneCode(
-        override val value: String = RESET_PASSWORD_PHONE_CODE,
-        override val identifier: String,
+        override val strategy: String = RESET_PASSWORD_PHONE_CODE,
+        val password: String,
       ) : AttemptFirstFactorParams {
-        constructor(identifier: String) : this(RESET_PASSWORD_PHONE_CODE, identifier)
+        constructor(password: String) : this(RESET_PASSWORD_PHONE_CODE, password)
       }
     }
   }
