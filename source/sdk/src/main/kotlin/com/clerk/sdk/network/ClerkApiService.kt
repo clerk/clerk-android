@@ -3,7 +3,6 @@ package com.clerk.sdk.network
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.error.ClerkErrorResponse
-import com.clerk.sdk.model.response.ClerkResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
@@ -25,14 +24,14 @@ import retrofit2.http.Query
 /**
  * ClerkApiService is an interface that defines the API endpoints for the Clerk client.
  *
- * When the endpoints are called they'll come back as a [ClerkResponse], where the type will either
+ * When the endpoints are called they'll come back as a [ClerkApiResult], where the type will either
  * be the type specified or [com.clerk.sdk.model.error.ClerkErrorResponse] if there was an error.
  *
  * To handle the response:
  * ```kotlin
  * when(val result = clientApi.client()) {
  *   is Success ->  result.data // handle success
- *   is Failure -> result.errorResponse
+ *   is Failure -> result.error
  * }
  * ```
  */

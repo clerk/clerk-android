@@ -37,10 +37,11 @@ allprojects {
       endWithNewline()
       targetExclude("**/spotless.gradle")
     }
-    plugins.withType<KotlinBasePlugin>().configureEach {
-      configure<JavaPluginExtension> {
-        toolchain { languageVersion.set(JavaLanguageVersion.of(libs.versions.jvmTarget.get())) }
-      }
+  }
+
+  plugins.withType<KotlinBasePlugin>().configureEach {
+    configure<JavaPluginExtension> {
+      toolchain { languageVersion.set(JavaLanguageVersion.of(libs.versions.jvmTarget.get())) }
     }
   }
 
