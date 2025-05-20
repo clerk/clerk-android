@@ -15,7 +15,7 @@ private const val RESET_PASSWORD_PHONE_CODE = "reset_password_phone_code"
 object Requests {
 
   /** Request objects for the sign-in API. */
-  object SignIn {
+  object SignInRequest {
 
     /**
      * Parameter object for preparing the first factor verification
@@ -152,7 +152,7 @@ object Requests {
     }
   }
 
-  object SignUp {
+  object SignUpRequest {
 
     /**
      * Represents the various strategies for initiating a `SignUp` request. This sealed class acts

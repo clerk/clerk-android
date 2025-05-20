@@ -49,7 +49,7 @@ data class SignIn(
   val status: Status,
 
   /** Array of all the authentication identifiers that are supported for this sign in. */
-  val supportedIdentifiers: List<Requests.SignIn.Identifier>? = null,
+  val supportedIdentifiers: List<Requests.SignInRequest.Identifier>? = null,
 
   /** The authentication identifier value for the current sign-in. */
   val identifier: String? = null,
@@ -164,7 +164,7 @@ data class SignIn(
      *    passing the `SignIn.createdSessionId` to the `setActive()` method on the `Clerk` object.
      */
     suspend fun create(
-      identifier: Requests.SignIn.Identifier
+      identifier: Requests.SignInRequest.Identifier
     ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
       return ClerkApi.instance.signIn(identifier.value)
     }
@@ -199,10 +199,10 @@ data class SignIn(
  * factor verification process.
  *
  * @param params The parameters for the first factor verification.
- * @see [Requests.SignIn.AttemptFirstFactorParams]
+ * @see [Requests.SignInRequest.AttemptFirstFactorParams]
  */
 suspend fun SignIn.attemptFirstFactor(
-  params: Requests.SignIn.AttemptFirstFactorParams
+  params: Requests.SignInRequest.AttemptFirstFactorParams
 ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptFirstFactor(id = this.id, params = params.toMap())
 }

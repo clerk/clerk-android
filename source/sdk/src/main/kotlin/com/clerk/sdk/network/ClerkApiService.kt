@@ -12,6 +12,7 @@ import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.paths.Paths
 import com.clerk.sdk.network.requests.Requests
 import com.clerk.sdk.network.serialization.ClerkApiResult
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -57,17 +58,16 @@ internal interface ClerkApiService {
 
   // endregion
 
-  // region Session
+  // region Sesszion
 
   @GET(Paths.ClientPath.Sessions.SESSIONS)
   suspend fun sessions(): ClerkApiResult<Unit, ClerkErrorResponse>
 
-  @FormUrlEncoded
   @POST(Paths.ClientPath.Sessions.WithId.REMOVE)
-  suspend fun remove(
-    @Path("id") id: String,
-    @Field("id") userId: String,
-  ): ClerkApiResult<Session, ClerkErrorResponse>
+  suspend fun removeSession(@Path("id") id: String): ClerkApiResult<Session, ClerkErrorResponse>
+
+  @DELETE(Paths.ClientPath.Sessions.SESSIONS)
+  suspend fun deleteSessions(): ClerkApiResult<Client, ClerkErrorResponse>
 
   @FormUrlEncoded
   @POST(Paths.ClientPath.Sessions.WithId.TOKENS)
@@ -124,7 +124,7 @@ internal interface ClerkApiService {
    *
    * @param id The session id.
    * @param params The parameters for the second
-   *   factor. @see [Requests.SignIn.PrepareSecondFactorParams]
+   *   factor. @see [Requests.SignInRequest.PrepareSecondFactorParams]
    */
   @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
@@ -136,7 +136,7 @@ internal interface ClerkApiService {
    * Reset the password for a sign in.
    *
    * The request body should contain the reset password fields as key-value pairs. The expected
-   * input is [Requests.SignIn.ResetPasswordParams].
+   * input is [Requests.SignInRequest.ResetPasswordParams].
    */
   @POST(Paths.ClientPath.SignInPath.WithId.RESET_PASSWORD)
   suspend fun resetPassword(@Path("id") id: String, @FieldMap fields: Map<String, String>)

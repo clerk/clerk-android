@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -37,6 +38,8 @@ class ConfigurationManager {
       field = value
       value?.get()?.let { context -> StorageHelper.initialize(context) }
     }
+
+  internal var isInitialized: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
   /** The publishable key from your Clerk Dashboard, used to connect to Clerk. */
   internal lateinit var publishableKey: String
@@ -118,6 +121,7 @@ class ConfigurationManager {
             environment = environmentResult.value,
           )
         )
+        isInitialized.value = true
       } else {
 
         ClerkLog.e(

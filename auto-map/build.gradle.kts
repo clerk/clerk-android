@@ -13,13 +13,43 @@ java {
   withJavadocJar()
 }
 
-extra["PUBLISH_GROUP_ID"] = "com.clerk"
+publishing {
+  publications {
+    register<MavenPublication>("auto-map") {
+      groupId = "com.clerk"
+      artifactId = "auto-map"
+      version = "0.1.0"
 
-extra["PUBLISH_VERSION"] = "0.1.0"
+      from(components["java"])
 
-extra["POM_ARTIFACT_ID"] = "auto-map"
+      pom {
+        name = "Auto Map"
+        description = "A library for generating maps using KSP."
+        url.set("https://github.com/clerk/clerk-android")
 
-apply("${rootProject.projectDir}/scripts/publish-module.gradle")
+        scm {
+          connection.set("scm:git@github.com:clerk/clerk-android.git")
+          developerConnection.set("scm:git@github.com:clerk/clerk-android.git")
+          url.set("https://github.com/clerk/clerk-android")
+        }
+        licenses {
+          license {
+            name.set("MIT License")
+            url.set("https://opensource.org/licenses/MIT")
+          }
+
+          developers {
+            developer {
+              id.set("clerk")
+              name.set("Clerk")
+              email.set("support@clerk.dev")
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 kotlin { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21 } }
 

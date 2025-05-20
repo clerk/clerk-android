@@ -1,7 +1,6 @@
 package com.clerk.sdk
 
 import android.content.Context
-import androidx.annotation.VisibleForTesting
 import com.clerk.sdk.configuration.ClerkConfigurationState
 import com.clerk.sdk.configuration.ConfigurationManager
 import com.clerk.sdk.log.ClerkLog
@@ -9,6 +8,10 @@ import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.user.User
+import com.clerk.sdk.service.SignOutService
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * This is the main entrypoint class for the clerk package. It contains a number of methods and
@@ -16,6 +19,10 @@ import com.clerk.sdk.model.user.User
  */
 object Clerk {
 
+  /**
+   * The ConfigurationManager object is used to manage the configuration of the Clerk SDK. It
+   * handles the initialization of the SDK and the configuration of the Clerk API client.
+   */
   internal val configurationManager = ConfigurationManager()
 
   // region Configuration Properties
@@ -34,9 +41,14 @@ object Clerk {
   /** The Environment object for the current client */
   private lateinit var environment: Environment
 
-  @VisibleForTesting
-  val isInitialized: Boolean
-    get() = ::environment.isInitialized
+  /**
+   * The image URL for the logo to be used in the UI. This is the URL of the logo image that will be
+   * used in things like the sign-in screen and the sign-up screen.
+   */
+  val logoUrl: String
+    get() = environment.displayConfig.logoImageUrl
+
+  public val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized.asStateFlow()
 
   // endregion
 
@@ -95,4 +107,10 @@ object Clerk {
       }
     }
   }
+
+  /**
+   * Signs the current user out of the application. This will remove the current session and clear
+   * any cached user data.
+   */
+  fun signOut(): Flow<SignOutService.SignOutState> = SignOutService.signOut()
 }
