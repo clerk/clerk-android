@@ -36,7 +36,7 @@ object Clerk {
   // region State Properties
 
   /** The Client object for the current device. */
-  internal var client: Client? = null
+  var client: Client? = null
 
   /** The Environment object for the current client */
   private lateinit var environment: Environment

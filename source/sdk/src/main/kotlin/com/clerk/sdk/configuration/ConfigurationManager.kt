@@ -64,7 +64,7 @@ class ConfigurationManager {
 
     // Initialize the clerk api
     val baseUrl = PublishableKeyHelper().extractApiUrl(publishableKey)
-    ClerkApi.configure(baseUrl)
+    ClerkApi.configure(baseUrl, context)
 
     // Check if the API is reachable
     refreshClientAndEnvironment(callback)

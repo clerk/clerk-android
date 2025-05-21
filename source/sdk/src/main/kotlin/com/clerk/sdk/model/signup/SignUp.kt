@@ -136,7 +136,7 @@ data class SignUp(
   @Serializable
   enum class Status {
     /** The sign-up has been inactive for over 24 hours. */
-    ABANDONED,
+    @SerialName("abandoned") ABANDONED,
 
     /**
      * A requirement is unverified or missing from the Email, Phone, Username settings. For example,
@@ -149,10 +149,10 @@ data class SignUp(
      * All the required fields have been supplied and verified, so the sign-up is complete and a new
      * user and a session have been created.
      */
-    COMPLETE,
+    @SerialName("complete") COMPLETE,
 
     /** The status is unknown. */
-    UNKNOWN,
+    @SerialName("unknown") UNKNOWN,
   }
 
   /** Defines the parameters required to prepare a verification for the sign-up process. */

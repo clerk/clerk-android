@@ -128,7 +128,7 @@ data class SignIn(
   @Serializable
   enum class Status {
     /** The sign-in process is complete. */
-    COMPLETE,
+    @SerialName("complete") COMPLETE,
 
     /** The sign-in process needs a first factor verification. */
     @SerialName("needs_first_factor") NEEDS_FIRST_FACTOR,
