@@ -149,22 +149,13 @@ internal interface ClerkApiService {
 
   // region Sign Up
 
-  /**
-   * Create a new sign up request.
-   *
-   * @see [SignUp.create]
-   */
+  /** @see [SignUp.create] */
   @FormUrlEncoded
   @POST(Paths.SignUpPath.SIGN_UP)
   suspend fun createSignUp(
     @FieldMap fields: Map<String, String>
   ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
-  /**
-   * Update an ongoing sign up request.
-   *
-   * @see [updateSignUp]
-   */
   @FormUrlEncoded
   @PATCH(Paths.SignUpPath.SIGN_UP)
   suspend fun updateSignUp(
@@ -172,7 +163,7 @@ internal interface ClerkApiService {
     @FieldMap fields: Map<String, String>,
   ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
-  /** @see [prepareSignUpVerification] */
+  /** @see [com.clerk.sdk.model.signup.prepareVerification] */
   @FormUrlEncoded
   @POST(Paths.SignUpPath.WithId.PREPARE_VERIFICATION)
   suspend fun prepareSignUpVerification(
@@ -180,7 +171,7 @@ internal interface ClerkApiService {
     @Field("strategy") strategy: String,
   ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
-  /** @see [attemptSignUpVerification] */
+  /** @see [com.clerk.sdk.model.signup.attemptVerification] */
   @FormUrlEncoded
   @POST(Paths.SignUpPath.WithId.ATTEMPT_VERIFICATION)
   suspend fun attemptSignUpVerification(
