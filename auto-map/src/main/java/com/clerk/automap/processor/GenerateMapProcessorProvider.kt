@@ -1,4 +1,4 @@
-package com.clerk.mapgenerator.processor
+package com.clerk.automap.processor
 
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment

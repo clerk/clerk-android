@@ -113,7 +113,7 @@ internal interface ClerkApiService {
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_FIRST_FACTOR)
-  suspend fun prepareFirstFactor(
+  suspend fun prepareSignInFirstFactor(
     @Path("id") id: String,
     @FieldMap fields: Map<String, String>,
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>

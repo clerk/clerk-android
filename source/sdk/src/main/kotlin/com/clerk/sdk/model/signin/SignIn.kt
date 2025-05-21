@@ -8,6 +8,7 @@ import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.requests.Requests
 import com.clerk.sdk.network.requests.toMap
 import com.clerk.sdk.network.serialization.ClerkApiResult
+import com.google.i18n.phonenumbers.PhoneNumberUtil
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -154,33 +155,46 @@ data class SignIn(
      *    *must* complete a first factor verification. This can be something like providing a
      *    password, an email link, a one-time code (OTP), a Web3 wallet address, or providing proof
      *    of their identity through an external social account (SSO/OAuth).
-     * 3. Attempt to complete the first factor verification by calling
-     *    `SignIn.attemptFirstFactor()`.
+     * 3. Attempt to complete the first factor verification by calling [SignIn.attemptFirstFactor].
      * 4. Optionally, if you have enabled multi-factor for your application, you will need to
      *    prepare the second factor verification by calling `SignIn.prepareSecondFactor()`.
      * 5. Attempt to complete the second factor verification by calling
-     *    `SignIn.attemptSecondFactor()`.
+     *    [SignIn.attemptSecondFactor()]
      * 6. If verification is successful, set the newly created session as the active session by
      *    passing the `SignIn.createdSessionId` to the `setActive()` method on the `Clerk` object.
      */
     suspend fun create(
       identifier: Requests.SignInRequest.Identifier
     ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
-      return ClerkApi.instance.signIn(identifier.value)
-    }
-
-    /**
-     * Prepares the first factor verification for the current sign-in process. This method is
-     * required to start the verification process for the first factor. The first factor can be a
-     * password, an email link, a one-time code (OTP), a Web3 wallet address, or proof of identity
-     * through an external social account (SSO/OAuth).
-     */
-    suspend fun prepareFirstFactor():
-      ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
-      TODO()
-      //      return ClerkApi.instance.prepareFirstFactor
+      val input =
+        if (identifier == Requests.SignInRequest.Identifier.Phone) {
+          PhoneNumberUtil.getInstance().parse(identifier.value, "US").nationalNumber.toString()
+        } else {
+          identifier.value
+        }
+      return ClerkApi.instance.signIn(input)
     }
   }
+}
+
+/**
+ * Begins the first factor verification process. This is a required step in order to complete a sign
+ * in, as users should be verified at least by one factor of authentication.
+ *
+ * Common scenarios are one-time code (OTP) or social account (SSO) verification. This is determined
+ * by the accepted strategy parameter values. Each authentication identifier supports different
+ * strategies.
+ *
+ * Returns a SignIn object. Check the firstFactorVerification attribute for the status of the first
+ * factor verification process.
+ */
+suspend fun SignIn.prepareFirstFactor(
+  strategy: Requests.SignInRequest.PrepareFirstFactorStrategy
+): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+  return ClerkApi.instance.prepareSignInFirstFactor(
+    this.id,
+    PrepareFirstFactorParams.fromStrategy(this, strategy).toMap(),
+  )
 }
 
 /**

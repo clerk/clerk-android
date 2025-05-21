@@ -45,6 +45,7 @@ dependencies {
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
   implementation(libs.ksp.api)
+  implementation(libs.libphonenumber)
   implementation(libs.okhttp)
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
