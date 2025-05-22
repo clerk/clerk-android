@@ -138,7 +138,7 @@ class ClerkTest {
     // Given - environment field is not initialized by default
 
     // When
-    val initialized = Clerk.isInitialized
+    val initialized = Clerk.isInitialized.value
 
     // Then
     assertTrue(!initialized)
