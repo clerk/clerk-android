@@ -1,7 +1,8 @@
-@file:Suppress("NestedBlockDepth", "TooGenericExceptionCaught", "ReturnCount")
+@file:Suppress("NestedBlockDepth", "TooGenericExceptionCaught", "ReturnCount", "MagicNumber")
 
-package com.clerk.mapgenerator.processor
+package com.clerk.automap.processor
 
+import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -13,6 +14,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.Visibility
 import com.google.devtools.ksp.validate
 
 class GenerateMapProcessor(
@@ -22,13 +24,15 @@ class GenerateMapProcessor(
 
   // Collect sealed interfaces and their implementations
   private val sealedInterfacesMap = mutableMapOf<String, MutableList<KSClassDeclaration>>()
+  private val fileSuppressAnnotation =
+    "@file:Suppress(\"REDUNDANT_ELSE_IN_WHEN\", \"USELESS_CAST\")"
 
   // Track processed classes to avoid duplicates
   private val processedDataClasses = mutableSetOf<String>()
   private val processedSealedInterfaces = mutableSetOf<String>()
 
   override fun process(resolver: Resolver): List<KSAnnotated> {
-    val symbols = resolver.getSymbolsWithAnnotation("com.clerk.mapgenerator.annotation.AutoMap")
+    val symbols = resolver.getSymbolsWithAnnotation("com.clerk.automap.annotation.AutoMap")
     val unprocessed = symbols.filter { !it.validate() }.toList()
 
     try {
@@ -79,6 +83,51 @@ class GenerateMapProcessor(
       .firstOrNull { it.modifiers.contains(Modifier.SEALED) }
   }
 
+  // Helper function to determine the most restrictive visibility across
+  // class and all its parent classes/interfaces
+  private fun getEffectiveVisibility(classDeclaration: KSClassDeclaration): Visibility {
+    // Start with the class's own visibility
+    var mostRestrictive = classDeclaration.getVisibility()
+
+    // Get parent class and interfaces
+    val superTypes =
+      classDeclaration.superTypes.mapNotNull { it.resolve().declaration as? KSClassDeclaration }
+
+    // Find the most restrictive visibility among parent classes
+    for (superType in superTypes) {
+      val parentVisibility = superType.getVisibility()
+      // If parent is more restrictive, use its visibility
+      if (isMoreRestrictive(parentVisibility, mostRestrictive)) {
+        mostRestrictive = parentVisibility
+      }
+    }
+
+    return mostRestrictive
+  }
+
+  // Helper to determine if one visibility is more restrictive than another
+  private fun isMoreRestrictive(v1: Visibility, v2: Visibility): Boolean {
+    val order =
+      mapOf(
+        Visibility.PRIVATE to 1,
+        Visibility.INTERNAL to 2,
+        Visibility.PROTECTED to 3,
+        Visibility.PUBLIC to 4,
+      )
+    return (order[v1] ?: 4) < (order[v2] ?: 4)
+  }
+
+  // Generate the visibility modifier string based on effective visibility
+  private fun visibilityModifierString(classDeclaration: KSClassDeclaration): String {
+    return when (getEffectiveVisibility(classDeclaration)) {
+      Visibility.INTERNAL -> "internal "
+      Visibility.PRIVATE ->
+        "private " // Note: Extensions can't be more restrictive than what they're extending
+      Visibility.PROTECTED -> "protected " // Note: Usually doesn't apply to extensions
+      else -> "" // PUBLIC is default
+    }
+  }
+
   private fun generateSealedInterfaceExtension(
     sealedParent: KSClassDeclaration,
     implementations: List<KSClassDeclaration>,
@@ -114,7 +163,11 @@ class GenerateMapProcessor(
         filename,
       )
 
+    // Get visibility modifier of the sealed parent
+    val visibilityModifier = visibilityModifierString(sealedParent)
+
     val content = buildString {
+      appendLine(fileSuppressAnnotation)
       appendLine("package $packageName")
       appendLine()
 
@@ -122,7 +175,8 @@ class GenerateMapProcessor(
       importedClasses.forEach { qualifiedName -> appendLine("import $qualifiedName") }
 
       appendLine()
-      appendLine("fun $className.toMap(): Map<String, String> {")
+      // Apply the same visibility modifier as the parent class
+      appendLine("${visibilityModifier}fun $className.toMap(): Map<String, String> {")
       appendLine("    return when (this) {")
 
       // Generate when branches for each implementation
@@ -172,7 +226,9 @@ class GenerateMapProcessor(
           className + "MapExtension",
         )
 
-      file.write(generateExtension(packageName, nestedPath, importPath, properties))
+      file.write(
+        generateExtension(packageName, nestedPath, importPath, properties, classDeclaration)
+      )
       file.close()
 
       // Mark as processed
@@ -197,14 +253,19 @@ class GenerateMapProcessor(
     nestedPath: String,
     importPath: String,
     properties: List<KSPropertyDeclaration>,
+    classDeclaration: KSClassDeclaration,
   ): ByteArray {
+    // Get visibility modifier of the class or parent interfaces if more restrictive
+    val visibilityModifier = visibilityModifierString(classDeclaration)
+
     val content = buildString {
       appendLine("package $packageName")
       appendLine()
       appendLine("import $importPath")
       appendLine("import kotlinx.serialization.SerialName")
       appendLine()
-      appendLine("fun $nestedPath.toMap(): Map<String, String> {")
+      // Apply the appropriate visibility modifier
+      appendLine("${visibilityModifier}fun $nestedPath.toMap(): Map<String, String> {")
       appendLine("    val map = mutableMapOf<String, String>()")
 
       // Instead of directly creating the map, we'll build it conditionally

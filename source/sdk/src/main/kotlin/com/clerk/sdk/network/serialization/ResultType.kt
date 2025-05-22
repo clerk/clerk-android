@@ -10,7 +10,7 @@ import kotlin.reflect.KClass
  * This API should be considered read-only.
  */
 @Retention(RUNTIME)
-public annotation class ResultType(
+annotation class ResultType(
   val rawType: KClass<*>,
   val typeArgs: Array<ResultType> = [],
   val ownerType: KClass<*> = Nothing::class,

@@ -1,5 +1,7 @@
 package com.clerk.sdk.network
 
+import android.content.Context
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.clerk.sdk.Clerk
 import com.clerk.sdk.error.ClerkClientError
 import com.clerk.sdk.network.middleware.incoming.ClientSyncingMiddleware
@@ -36,12 +38,12 @@ internal object ClerkApi {
         )
 
   /** Initializes the API client with the given [baseUrl]. */
-  fun configure(baseUrl: String) {
-    _instance = buildRetrofit(baseUrl).create(ClerkApiService::class.java)
+  fun configure(baseUrl: String, context: Context) {
+    _instance = buildRetrofit(baseUrl, context).create(ClerkApiService::class.java)
   }
 
   /** Builds and configures the Retrofit instance. */
-  private fun buildRetrofit(baseUrl: String): Retrofit {
+  private fun buildRetrofit(baseUrl: String, context: Context): Retrofit {
     val urlWithVersion = "$baseUrl/${ClerkApiVersion.VERSION}/"
 
     val client =
@@ -56,6 +58,7 @@ internal object ClerkApi {
             addInterceptor(
               HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
             )
+            addInterceptor(ChuckerInterceptor(context))
           }
         }
         .build()

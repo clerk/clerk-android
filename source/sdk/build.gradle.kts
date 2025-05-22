@@ -40,15 +40,17 @@ dependencies {
   implementation(libs.androidx.datastore)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
+  implementation(libs.chucker.debug)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
   implementation(libs.ksp.api)
+  implementation(libs.libphonenumber)
   implementation(libs.okhttp)
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
   implementation(libs.retrofit.kotlinx)
-  implementation(projects.mapGenerator)
+  implementation(projects.autoMap)
 
   testImplementation(libs.androidx.arch.test)
   testImplementation(libs.junit)
@@ -57,5 +59,5 @@ dependencies {
   testImplementation(libs.mockk)
   testImplementation(libs.robolectric)
 
-  ksp(projects.mapGenerator)
+  ksp(projects.autoMap)
 }

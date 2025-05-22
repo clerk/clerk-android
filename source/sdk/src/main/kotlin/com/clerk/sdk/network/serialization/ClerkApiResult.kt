@@ -4,28 +4,40 @@ import kotlin.reflect.KClass
 import toUnmodifiableMap
 
 /**
- * Represents a result from a traditional HTTP API. [ClerkApiResult] has two sealed subtypes:
- * [Success] and [Failure]. [Success] is typed to [T] with no error type and [Failure] is typed to
- * [E] with no success type.
+ * ClerkApiService is an internal interface that defines the API endpoints for the Clerk
+ * authentication service.
  *
- * [Failure] in turn is represented by four sealed subtypes of its own: [Failure.NetworkFailure],
- * [Failure.ClerkApiFailure], [Failure.HttpFailure], and [Failure.UnknownFailure]. This allows for
- * simple handling of results through a consistent, non-exceptional flow via sealed `when` branches.
+ * This interface is not meant to be used directly by SDK consumers. Instead, all API operations
+ * should be accessed through the [ClerkApi.instance] singleton, which provides a more user-friendly
+ * API surface.
  *
- * ```
- * when (val result = myApi.someEndpoint()) {
- *   is Success -> doSomethingWith(result.response)
- *   is Failure -> when (result) {
- *     is NetworkFailure -> showError(result.error)
- *     is HttpFailure -> showError(result.code)
- *     is ApiFailure -> showError(result.error)
- *     is UnknownError -> showError(result.error)
- *   }
+ * The interface handles user authentication, session management, sign-up and sign-in flows, and
+ * environment information using Retrofit annotations to define the HTTP methods and endpoints.
+ *
+ * All endpoints return a [ClerkApiResult], which is a sealed type that represents either a
+ * successful response with the expected data ([ClerkApiResult.Success]) or a failure
+ * ([ClerkApiResult.Failure]). This approach allows for non-exceptional, type-safe handling of API
+ * responses.
+ *
+ * # Usage Example
+ *
+ * ```kotlin
+ * // Example: Creating a sign-in
+ * scope.launch {
+ *     val email = "user@example.com"
+ *     when (val result = ClerkApi.instance.signIn(email)) {
+ *         is ClerkApiResult.Success -> {
+ *             val signIn = result.value.response
+ *             // Proceed with the sign-in flow based on available factors
+ *             val firstFactor = signIn.supportedFirstFactors.firstOrNull()
+ *             // Handle first factor preparation
+ *         }
+ *         is ClerkApiResult.Failure -> {
+ *             // Handle sign-in failure
+ *         }
+ *     }
  * }
  * ```
- *
- * Usually, user code for this could just simply show a generic error message for a [Failure] case,
- * but a sealed class is exposed for more specific error messaging.
  */
 public sealed interface ClerkApiResult<out T : Any, out E : Any> {
 

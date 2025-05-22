@@ -6,7 +6,8 @@ import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
 
-public object ClerkApiResultConverterFactory : Converter.Factory() {
+/**  */
+object ClerkApiResultConverterFactory : Converter.Factory() {
   override fun responseBodyConverter(
     type: Type,
     annotations: Array<Annotation>,

@@ -24,6 +24,7 @@ sortDependencies = "0.14"
 spotless = "7.0.3"
 lifecycleProcess = "2.9.0"
 jetbrainsKotlinJvm = "2.1.21"
+chucker = "4.1.0"
 
 [libraries]
 
@@ -35,6 +36,9 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.0"
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+
+chucker-debug = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
+chucker-release = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker" }
 
 dagger = { group = "com.google.dagger", name = "dagger", version.ref = "dagger" }
 dagger-compiler = { group = "com.google.dagger", name = "dagger-compiler", version.ref = "dagger" }
@@ -53,6 +57,8 @@ kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
 ksp-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
 
 lints-compose = "com.slack.lint.compose:compose-lint-checks:1.4.2"
+libphonenumber = "com.googlecode.libphonenumber:libphonenumber:8.2.0"
+
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 mockk = "io.mockk:mockk:1.14.2"
 mockito = "org.mockito:mockito-core:5.18.0"

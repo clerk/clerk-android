@@ -8,4 +8,4 @@ import kotlin.annotation.AnnotationRetention.RUNTIME
  *
  * This API should be considered read-only.
  */
-@Retention(RUNTIME) public annotation class StatusCode(public val value: Int)
+@Retention(RUNTIME) annotation class StatusCode(public val value: Int)

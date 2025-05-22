@@ -3,7 +3,6 @@ package com.clerk.sdk.network
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.error.ClerkErrorResponse
-import com.clerk.sdk.model.response.ClerkResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.model.signin.SignIn
@@ -12,6 +11,7 @@ import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.paths.Paths
 import com.clerk.sdk.network.requests.Requests
 import com.clerk.sdk.network.serialization.ClerkApiResult
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -24,14 +24,14 @@ import retrofit2.http.Query
 /**
  * ClerkApiService is an interface that defines the API endpoints for the Clerk client.
  *
- * When the endpoints are called they'll come back as a [ClerkResponse], where the type will either
+ * When the endpoints are called they'll come back as a [ClerkApiResult], where the type will either
  * be the type specified or [com.clerk.sdk.model.error.ClerkErrorResponse] if there was an error.
  *
  * To handle the response:
  * ```kotlin
  * when(val result = clientApi.client()) {
  *   is Success ->  result.data // handle success
- *   is Failure -> result.errorResponse
+ *   is Failure -> result.error
  * }
  * ```
  */
@@ -57,17 +57,16 @@ internal interface ClerkApiService {
 
   // endregion
 
-  // region Session
+  // region Sesszion
 
   @GET(Paths.ClientPath.Sessions.SESSIONS)
   suspend fun sessions(): ClerkApiResult<Unit, ClerkErrorResponse>
 
-  @FormUrlEncoded
   @POST(Paths.ClientPath.Sessions.WithId.REMOVE)
-  suspend fun remove(
-    @Path("id") id: String,
-    @Field("id") userId: String,
-  ): ClerkApiResult<Session, ClerkErrorResponse>
+  suspend fun removeSession(@Path("id") id: String): ClerkApiResult<Session, ClerkErrorResponse>
+
+  @DELETE(Paths.ClientPath.Sessions.SESSIONS)
+  suspend fun deleteSessions(): ClerkApiResult<Client, ClerkErrorResponse>
 
   @FormUrlEncoded
   @POST(Paths.ClientPath.Sessions.WithId.TOKENS)
@@ -114,7 +113,7 @@ internal interface ClerkApiService {
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_FIRST_FACTOR)
-  suspend fun prepareFirstFactor(
+  suspend fun prepareSignInFirstFactor(
     @Path("id") id: String,
     @FieldMap fields: Map<String, String>,
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
@@ -124,7 +123,7 @@ internal interface ClerkApiService {
    *
    * @param id The session id.
    * @param params The parameters for the second
-   *   factor. @see [Requests.SignIn.PrepareSecondFactorParams]
+   *   factor. @see [Requests.SignInRequest.PrepareSecondFactorParams]
    */
   @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
@@ -136,7 +135,7 @@ internal interface ClerkApiService {
    * Reset the password for a sign in.
    *
    * The request body should contain the reset password fields as key-value pairs. The expected
-   * input is [Requests.SignIn.ResetPasswordParams].
+   * input is [Requests.SignInRequest.ResetPasswordParams].
    */
   @POST(Paths.ClientPath.SignInPath.WithId.RESET_PASSWORD)
   suspend fun resetPassword(@Path("id") id: String, @FieldMap fields: Map<String, String>)
@@ -150,22 +149,13 @@ internal interface ClerkApiService {
 
   // region Sign Up
 
-  /**
-   * Create a new sign up request.
-   *
-   * @see [SignUp.create]
-   */
+  /** @see [SignUp.create] */
   @FormUrlEncoded
   @POST(Paths.SignUpPath.SIGN_UP)
   suspend fun createSignUp(
     @FieldMap fields: Map<String, String>
   ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
-  /**
-   * Update an ongoing sign up request.
-   *
-   * @see [updateSignUp]
-   */
   @FormUrlEncoded
   @PATCH(Paths.SignUpPath.SIGN_UP)
   suspend fun updateSignUp(
@@ -173,7 +163,7 @@ internal interface ClerkApiService {
     @FieldMap fields: Map<String, String>,
   ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
-  /** @see [prepareSignUpVerification] */
+  /** @see [com.clerk.sdk.model.signup.prepareVerification] */
   @FormUrlEncoded
   @POST(Paths.SignUpPath.WithId.PREPARE_VERIFICATION)
   suspend fun prepareSignUpVerification(
@@ -181,7 +171,7 @@ internal interface ClerkApiService {
     @Field("strategy") strategy: String,
   ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
-  /** @see [attemptSignUpVerification] */
+  /** @see [com.clerk.sdk.model.signup.attemptVerification] */
   @FormUrlEncoded
   @POST(Paths.SignUpPath.WithId.ATTEMPT_VERIFICATION)
   suspend fun attemptSignUpVerification(

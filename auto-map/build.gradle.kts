@@ -49,14 +49,6 @@ publishing {
       }
     }
   }
-  repositories {
-    maven {
-      credentials {
-        username = "AWLQyWkv"
-        password = "sMf3qSD1/KUwVAo0C2nhpFcbPuw7Knw8ZqzImCYS4ygT"
-      }
-    }
-  }
 }
 
 kotlin { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21 } }

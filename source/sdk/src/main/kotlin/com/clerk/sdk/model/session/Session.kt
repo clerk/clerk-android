@@ -3,6 +3,7 @@ package com.clerk.sdk.model.session
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.model.user.User
 import com.clerk.sdk.model.userdata.PublicUserData
+import com.clerk.sdk.network.ClerkApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -135,3 +136,8 @@ data class SessionActivity(
    */
   @SerialName("is_mobile") val isMobile: Boolean? = null,
 )
+
+/** Deletes the current session. */
+suspend fun Session.delete() {
+  ClerkApi.instance.deleteSessions()
+}

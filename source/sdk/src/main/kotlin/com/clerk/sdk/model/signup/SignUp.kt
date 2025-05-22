@@ -8,7 +8,7 @@ import com.clerk.sdk.model.signup.SignUp.PrepareVerificationParams
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.requests.Requests
-import com.clerk.sdk.network.requests.Requests.SignUp.CreateParams
+import com.clerk.sdk.network.requests.Requests.SignUpRequest.CreateParams
 import com.clerk.sdk.network.requests.toMap
 import com.clerk.sdk.network.serialization.ClerkApiResult
 import kotlinx.serialization.SerialName
@@ -136,7 +136,7 @@ data class SignUp(
   @Serializable
   enum class Status {
     /** The sign-up has been inactive for over 24 hours. */
-    ABANDONED,
+    @SerialName("abandoned") ABANDONED,
 
     /**
      * A requirement is unverified or missing from the Email, Phone, Username settings. For example,
@@ -149,10 +149,10 @@ data class SignUp(
      * All the required fields have been supplied and verified, so the sign-up is complete and a new
      * user and a session have been created.
      */
-    COMPLETE,
+    @SerialName("complete") COMPLETE,
 
     /** The status is unknown. */
-    UNKNOWN,
+    @SerialName("unknown") UNKNOWN,
   }
 
   /** Defines the parameters required to prepare a verification for the sign-up process. */
@@ -189,7 +189,7 @@ data class SignUp(
      * @see [SignUp] kdoc for more info
      */
     suspend fun create(
-      createParams: Requests.SignUp.CreateParams
+      createParams: Requests.SignUpRequest.CreateParams
     ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
 
       return ClerkApi.instance.createSignUp(createParams.toMap())
@@ -237,7 +237,7 @@ suspend fun SignUp.prepareVerification(
  *   code @return: The updated [SignUp] object reflecting the verification attempt's result.
  */
 suspend fun SignUp.attemptVerification(
-  params: Requests.SignUp.AttemptVerificationParams
+  params: Requests.SignUpRequest.AttemptVerificationParams
 ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,

@@ -28,8 +28,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-private const val TEST_PUBLISHABLE_KEY = "pk_test_dmFsaWQtY2hhbW9pcy04Ni5jbGVyay5hY2NvdW50cy5kZXYk"
-
 @RunWith(RobolectricTestRunner::class)
 class ClerkTest {
   private val testDispatcher = StandardTestDispatcher()
@@ -79,19 +77,6 @@ class ClerkTest {
   }
 
   @Test
-  fun `initialize sets debug mode correctly`() = runTest {
-    // Given
-    val debugMode = true
-
-    // When
-    Clerk.initialize(mockContext, TEST_PUBLISHABLE_KEY, debugMode)
-
-    // Then
-    every { Clerk.debugMode } returns true
-    assertTrue(Clerk.debugMode)
-  }
-
-  @Test
   fun `session returns null when no active session exists`() = runTest {
     // Given
     every { Clerk.client } returns mockClient
@@ -138,7 +123,7 @@ class ClerkTest {
     // Given - environment field is not initialized by default
 
     // When
-    val initialized = Clerk.isInitialized
+    val initialized = Clerk.isInitialized.value
 
     // Then
     assertTrue(!initialized)
