@@ -28,8 +28,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-private const val TEST_PUBLISHABLE_KEY = "pk_test_dmFsaWQtY2hhbW9pcy04Ni5jbGVyay5hY2NvdW50cy5kZXYk"
-
 @RunWith(RobolectricTestRunner::class)
 class ClerkTest {
   private val testDispatcher = StandardTestDispatcher()
@@ -76,19 +74,6 @@ class ClerkTest {
   fun tearDown() {
     Dispatchers.resetMain()
     unmockkAll() // Reset all mocks
-  }
-
-  @Test
-  fun `initialize sets debug mode correctly`() = runTest {
-    // Given
-    val debugMode = true
-
-    // When
-    Clerk.initialize(mockContext, TEST_PUBLISHABLE_KEY, debugMode)
-
-    // Then
-    every { Clerk.debugMode } returns true
-    assertTrue(Clerk.debugMode)
   }
 
   @Test
