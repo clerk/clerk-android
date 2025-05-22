@@ -50,7 +50,7 @@ data class SignIn(
   val status: Status,
 
   /** Array of all the authentication identifiers that are supported for this sign in. */
-  val supportedIdentifiers: List<Requests.SignInRequest.Identifier>? = null,
+  @SerialName("supported_identifiers") val supportedIdentifiers: List<String>? = null,
 
   /** The authentication identifier value for the current sign-in. */
   val identifier: String? = null,
@@ -60,7 +60,7 @@ data class SignIn(
    *
    * Each factor contains information about the verification strategy that can be used.
    */
-  val supportedFirstFactors: List<Factor>? = null,
+  @SerialName("supported_first_factors") val supportedFirstFactors: List<Factor>? = null,
 
   /**
    * Array of the second factors that are supported in the current sign-in.
@@ -68,7 +68,7 @@ data class SignIn(
    * Each factor contains information about the verification strategy that can be used. This
    * property is populated only when the first factor is verified.
    */
-  val supportedSecondFactors: List<Factor>? = null,
+  @SerialName("supported_second_factors") val supportedSecondFactors: List<Factor>? = null,
 
   /**
    * The state of the verification process for the selected first factor.
@@ -77,7 +77,7 @@ data class SignIn(
    * selected. You need to call the `prepareFirstFactor` method in order to start the verification
    * process.
    */
-  val firstFactorVerification: Verification? = null,
+  @SerialName("first_factor_verification") val firstFactorVerification: Verification? = null,
 
   /**
    * The state of the verification process for the selected second factor.
@@ -86,21 +86,21 @@ data class SignIn(
    * selected. For the `phone_code` strategy, you need to call the `prepareSecondFactor` method in
    * order to start the verification process. For the `totp` strategy, you can directly attempt.
    */
-  val secondFactorVerification: Verification? = null,
+  @SerialName("second_factor_verification") val secondFactorVerification: Verification? = null,
 
   /**
    * An object containing information about the user of the current sign-in.
    *
    * This property is populated only once an identifier is given to the SignIn object.
    */
-  val userData: UserData? = null,
+  @SerialName("user_data") val userData: UserData? = null,
 
   /**
    * The identifier of the session that was created upon completion of the current sign-in.
    *
    * The value of this property is null if the sign-in status is not `complete`.
    */
-  val createdSessionId: String? = null,
+  @SerialName("created_session_id") val createdSessionId: String? = null,
 ) {
 
   /**
