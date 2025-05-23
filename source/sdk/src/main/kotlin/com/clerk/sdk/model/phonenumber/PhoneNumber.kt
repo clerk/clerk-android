@@ -2,7 +2,6 @@ package com.clerk.sdk.model.phonenumber
 
 import com.clerk.sdk.model.verification.Verification
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
 
 /**
  * The `PhoneNumber` object is a model around a phone number entity.
@@ -50,7 +49,7 @@ data class PhoneNumber(
    * An object containing information about any other identification that might be linked to this
    * phone number.
    */
-  val linkedTo: JsonObject? = null,
+  val linkedTo: List<String>? = null,
 
   /** A list of backup codes in case of lost phone number access. */
   val backupCodes: List<String>? = null,
