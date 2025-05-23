@@ -112,6 +112,7 @@ internal interface ClerkApiService {
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
+  @FormUrlEncoded
   @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_FIRST_FACTOR)
   suspend fun prepareSignInFirstFactor(
     @Path("id") id: String,
