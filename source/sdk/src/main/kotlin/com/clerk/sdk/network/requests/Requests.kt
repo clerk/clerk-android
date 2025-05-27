@@ -72,19 +72,15 @@ object Requests {
       /** The strategy strategy depends on the object's identifier strategy. Each authentication */
       @AutoMap
       @Serializable
-      data class EmailCode(
-        override val strategy: String = EMAIL_CODE,
-        @SerialName("email_code") val emailCode: String,
-      ) : AttemptFirstFactorParams {
+      data class EmailCode(override val strategy: String = EMAIL_CODE, val code: String) :
+        AttemptFirstFactorParams {
         constructor(emailCode: String) : this(EMAIL_CODE, emailCode)
       }
 
       @AutoMap
       @Serializable
-      data class PhoneCode(
-        override val strategy: String = PHONE_CODE,
-        @SerialName("phone_code") val phoneCode: String,
-      ) : AttemptFirstFactorParams {
+      data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
+        AttemptFirstFactorParams {
         constructor(phoneCode: String) : this(PHONE_CODE, phoneCode)
       }
 
