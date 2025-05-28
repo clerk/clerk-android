@@ -159,6 +159,15 @@ object Requests {
       object None : CreateParams
     }
 
+    /** Defines the parameters required to prepare a verification for the sign-up process. */
+    enum class PrepareVerificationParams(val strategy: String) {
+      /** Send a text message with a unique token to input */
+      PHONE_CODE("phone_code"),
+
+      /** Send an email with a unique token to input */
+      EMAIL_CODE("email_code"),
+    }
+
     /** Defines the strategies for attempting verification during the sign-up process. */
     sealed interface AttemptVerificationParams {
       /**
