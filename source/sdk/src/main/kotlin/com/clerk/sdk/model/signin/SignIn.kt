@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.clerk.sdk.model.signin
 
 import com.clerk.sdk.model.error.ClerkErrorResponse
