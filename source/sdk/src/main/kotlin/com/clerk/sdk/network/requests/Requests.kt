@@ -170,35 +170,27 @@ object Requests {
 
     /** Defines the strategies for attempting verification during the sign-up process. */
     sealed interface AttemptVerificationParams {
+      /** The strategy used for verification (e.g., `email_code` or `phone_code`). */
+      val strategy: String
+
+      /** The verification code provided by the user. */
+      val code: String
+
       /**
        * Attempts verification using a code sent to the user's email address.
        *
        * @param code The one-time code sent to the user's email address.
        */
-      data class EmailCode(val code: String) : AttemptVerificationParams
+      data class EmailCode(override val strategy: String = EMAIL_CODE, override val code: String) :
+        AttemptVerificationParams
 
       /**
        * Attempts verification using a code sent to the user's phone number.
        *
        * @param code The one-time code sent to the user's phone number.
        */
-      data class PhoneCode(val code: String) : AttemptVerificationParams
-
-      /** Converts the selected strategy into [AttemptVerificationParams] for the API request. */
-      val params: AttemptParams
-        get() =
-          when (this) {
-            is EmailCode -> AttemptParams(strategy = "email_code", code = code)
-            is PhoneCode -> AttemptParams(strategy = "phone_code", code = code)
-          }
+      data class PhoneCode(override val strategy: String = PHONE_CODE, override val code: String) :
+        AttemptVerificationParams
     }
-
-    /**
-     * Parameters used for the verification attempt during the sign-up process.
-     *
-     * @property strategy The strategy used for verification (e.g., `email_code` or `phone_code`).
-     * @property code The verification code provided by the user.
-     */
-    @Serializable data class AttemptParams(val strategy: String, val code: String)
   }
 }

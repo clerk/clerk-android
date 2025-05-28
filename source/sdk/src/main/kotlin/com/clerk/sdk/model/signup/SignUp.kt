@@ -232,7 +232,7 @@ suspend fun SignUp.attemptVerification(
 ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,
-    strategy = params.params.strategy,
-    code = params.params.code,
+    strategy = params.strategy,
+    code = params.code,
   )
 }
