@@ -65,11 +65,10 @@ internal sealed interface PrepareFirstFactorParams {
           EmailCode(emailId.orEmpty())
         }
 
-        RequestParams.SignInRequest.PrepareFirstFactor.PHONE_CODE ->
-          ResetPasswordPhoneCode(phoneId.orEmpty())
+        RequestParams.SignInRequest.PrepareFirstFactor.PHONE_CODE -> PhoneCode(phoneId.orEmpty())
         RequestParams.SignInRequest.PrepareFirstFactor.RESET_PASSWORD_PHONE_CODE -> {
           val phoneId = firstFactors.find { it.strategy == "phone_code" }?.phoneNumberId
-          PhoneCode(phoneId.orEmpty())
+          ResetPasswordPhoneCode(phoneId.orEmpty())
         }
 
         else -> Unknown()
