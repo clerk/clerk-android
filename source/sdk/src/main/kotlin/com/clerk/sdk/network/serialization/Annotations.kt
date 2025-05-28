@@ -1,3 +1,5 @@
+@file:Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+
 package com.clerk.sdk.network.serialization
 
 import java.lang.reflect.ParameterizedType
