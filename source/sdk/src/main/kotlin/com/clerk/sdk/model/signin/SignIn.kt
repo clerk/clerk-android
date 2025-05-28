@@ -5,7 +5,7 @@ import com.clerk.sdk.model.factor.Factor
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
-import com.clerk.sdk.network.requests.Requests
+import com.clerk.sdk.network.requests.RequestParams
 import com.clerk.sdk.network.requests.toMap
 import com.clerk.sdk.network.serialization.ClerkApiResult
 import com.google.i18n.phonenumbers.PhoneNumberUtil
@@ -140,6 +140,9 @@ data class SignIn(
     /** The sign-in process needs an identifier. */
     @SerialName("needs_identifier") NEEDS_IDENTIFIER,
 
+    /** The user needs to create a new password. */
+    @SerialName("needs_new_password") NEEDS_NEW_PASSWORD,
+
     /** The sign-in process is in an unknown state. */
     UNKNOWN,
   }
@@ -167,10 +170,10 @@ data class SignIn(
      *    passing the `SignIn.createdSessionId` to the `setActive()` method on the `Clerk` object.
      */
     suspend fun create(
-      identifier: Requests.SignInRequest.Identifier
+      identifier: RequestParams.SignInRequest.Identifier
     ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
       val input =
-        if (identifier == Requests.SignInRequest.Identifier.Phone) {
+        if (identifier == RequestParams.SignInRequest.Identifier.Phone) {
           PhoneNumberUtil.getInstance().parse(identifier.value, "US").nationalNumber.toString()
         } else {
           identifier.value
@@ -192,7 +195,7 @@ data class SignIn(
  * factor verification process.
  */
 suspend fun SignIn.prepareFirstFactor(
-  strategy: Requests.SignInRequest.PrepareFirstFactorStrategy
+  strategy: RequestParams.SignInRequest.PrepareFirstFactor
 ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
   return ClerkApi.instance.prepareSignInFirstFactor(
     this.id,
@@ -216,10 +219,27 @@ suspend fun SignIn.prepareFirstFactor(
  * factor verification process.
  *
  * @param params The parameters for the first factor verification.
- * @see [Requests.SignInRequest.AttemptFirstFactorParams]
+ * @see [RequestParams.SignInRequest.AttemptFirstFactor]
  */
 suspend fun SignIn.attemptFirstFactor(
-  params: Requests.SignInRequest.AttemptFirstFactorParams
+  params: RequestParams.SignInRequest.AttemptFirstFactor
 ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptFirstFactor(id = this.id, params = params.toMap())
+}
+
+/**
+ * Resets the password for the current sign in attempt.
+ *
+ * @param password The users new password
+ * @param signOutOfOtherSessions Whether to sign out of other sessions. Defaults to false.
+ */
+suspend fun SignIn.resetPassword(
+  password: String,
+  signOutOfOtherSessions: Boolean = false,
+): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+  return ClerkApi.instance.resetPassword(
+    id = this.id,
+    password = password,
+    signOutOfOtherSessions = signOutOfOtherSessions,
+  )
 }

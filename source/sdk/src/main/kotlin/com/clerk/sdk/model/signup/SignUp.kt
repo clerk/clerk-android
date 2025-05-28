@@ -6,16 +6,16 @@ import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
-import com.clerk.sdk.network.requests.Requests
-import com.clerk.sdk.network.requests.Requests.SignUpRequest.CreateParams
-import com.clerk.sdk.network.requests.Requests.SignUpRequest.PrepareVerificationParams
+import com.clerk.sdk.network.requests.RequestParams
+import com.clerk.sdk.network.requests.RequestParams.SignUpRequest.Create
+import com.clerk.sdk.network.requests.RequestParams.SignUpRequest.PrepareVerification
 import com.clerk.sdk.network.requests.toMap
 import com.clerk.sdk.network.serialization.ClerkApiResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
-typealias UpdateParams = CreateParams
+typealias UpdateParams = Create
 
 /**
  * The `SignUp` object holds the state of the current sign-up and provides helper methods to
@@ -172,18 +172,17 @@ data class SignUp(
      * What you must pass to params depends on which sign-up options you have enabled in your Clerk
      * application instance.
      *
-     * @param [createParams] The strategy to use for creating the sign-up. @see [CreateParams] for
-     *   details.
-     * @param createParams The parameters for creating the sign-up. @see [CreateParams] for details.
+     * @param [create] The strategy to use for creating the sign-up. @see [Create] for details.
+     * @param create The parameters for creating the sign-up. @see [Create] for details.
      * @return A [SignUp] object containing the current status and details of the sign-up process.
      *   The [status] property reflects the current state of the sign-up.
      * @see [SignUp] kdoc for more info
      */
     suspend fun create(
-      createParams: Requests.SignUpRequest.CreateParams
+      create: RequestParams.SignUpRequest.Create
     ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
 
-      return ClerkApi.instance.createSignUp(createParams.toMap())
+      return ClerkApi.instance.createSignUp(create.toMap())
     }
   }
 }
@@ -205,16 +204,16 @@ suspend fun SignUp.update(
  * code. This is a one-time code that is sent via an SMS to the phone already provided to the
  * [SignUp] object. The [prepareVerification] sends this SMS.
  *
- * @param prepareVerificationParams: The parameters for preparing the verification.Specifies the
- *   field which requires verification
+ * @param prepareVerification: The parameters for preparing the verification.Specifies the field
+ *   which requires verification
  * @return A [ClerkApiResult] containing the result of the verification preparation. A successful
  *   response indicates that the verification process has been initiated, and the [SignUp] object is
  *   returned.
  */
 suspend fun SignUp.prepareVerification(
-  prepareVerificationParams: PrepareVerificationParams
+  prepareVerification: PrepareVerification
 ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
-  return ClerkApi.instance.prepareSignUpVerification(this.id, prepareVerificationParams.strategy)
+  return ClerkApi.instance.prepareSignUpVerification(this.id, prepareVerification.strategy)
 }
 
 /**
@@ -228,7 +227,7 @@ suspend fun SignUp.prepareVerification(
  *   code @return: The updated [SignUp] object reflecting the verification attempt's result.
  */
 suspend fun SignUp.attemptVerification(
-  params: Requests.SignUpRequest.AttemptVerificationParams
+  params: RequestParams.SignUpRequest.AttemptVerification
 ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,

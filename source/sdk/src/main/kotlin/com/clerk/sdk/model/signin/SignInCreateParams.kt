@@ -1,6 +1,6 @@
 package com.clerk.sdk.model.signin
 
-import com.clerk.sdk.network.requests.Requests.SignInRequest.PrepareFirstFactorStrategy
+import com.clerk.sdk.network.requests.RequestParams.SignInRequest.PrepareFirstFactor
 
 /**
  * Represents the parameters required to initiate a sign-in flow.
@@ -27,7 +27,7 @@ sealed class SignInCreateParams {
   data class Identifier(
     val identifier: String,
     val password: String? = null,
-    val strategy: PrepareFirstFactorStrategy? = null,
+    val strategy: PrepareFirstFactor? = null,
   ) : SignInCreateParams()
 
   /** The user will be authenticated with their social connection account. */

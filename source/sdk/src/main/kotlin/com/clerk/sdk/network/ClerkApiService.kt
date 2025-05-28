@@ -9,7 +9,7 @@ import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.paths.Paths
-import com.clerk.sdk.network.requests.Requests
+import com.clerk.sdk.network.requests.RequestParams
 import com.clerk.sdk.network.serialization.ClerkApiResult
 import retrofit2.http.DELETE
 import retrofit2.http.Field
@@ -124,7 +124,7 @@ internal interface ClerkApiService {
    *
    * @param id The session id.
    * @param params The parameters for the second
-   *   factor. @see [Requests.SignInRequest.PrepareSecondFactorParams]
+   *   factor. @see [RequestParams.SignInRequest.PrepareSecondFactor]
    */
   @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
@@ -136,10 +136,18 @@ internal interface ClerkApiService {
    * Reset the password for a sign in.
    *
    * The request body should contain the reset password fields as key-value pairs. The expected
-   * input is [Requests.SignInRequest.ResetPasswordParams].
+   *
+   * @param id The session id.
+   * @param password The new password.
+   * @param signOutOfOtherSessions Whether to sign out of other sessions.
    */
+  @FormUrlEncoded
   @POST(Paths.ClientPath.SignInPath.WithId.RESET_PASSWORD)
-  suspend fun resetPassword(@Path("id") id: String, @FieldMap fields: Map<String, String>)
+  suspend fun resetPassword(
+    @Path("id") id: String,
+    @Field("password") password: String,
+    @Field("sign_out_of_other_sessions") signOutOfOtherSessions: Boolean,
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   // endregion
 

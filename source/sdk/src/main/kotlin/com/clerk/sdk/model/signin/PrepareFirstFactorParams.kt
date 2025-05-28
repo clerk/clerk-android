@@ -1,7 +1,7 @@
 package com.clerk.sdk.model.signin
 
 import com.clerk.automap.annotation.AutoMap
-import com.clerk.sdk.network.requests.Requests
+import com.clerk.sdk.network.requests.RequestParams
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -31,30 +31,47 @@ internal sealed interface PrepareFirstFactorParams {
 
   @AutoMap
   @Serializable
+  data class ResetPasswordEmailCode(
+    @SerialName("email_address_id") val emailAddressId: String,
+    override val strategy: String = "reset_password_email_code",
+  ) : PrepareFirstFactorParams
+
+  @AutoMap
+  @Serializable
+  data class ResetPasswordPhoneCode(
+    @SerialName("phone_number_id") val phoneNumberId: String,
+    override val strategy: String = "reset_password_phone_code",
+  ) : PrepareFirstFactorParams
+
+  @AutoMap
+  @Serializable
   data class Unknown(override val strategy: String = "unknown") : PrepareFirstFactorParams
 
   companion object {
     fun fromStrategy(
       signIn: SignIn,
-      strategy: Requests.SignInRequest.PrepareFirstFactorStrategy,
+      strategy: RequestParams.SignInRequest.PrepareFirstFactor,
     ): PrepareFirstFactorParams {
+      val firstFactors = signIn.supportedFirstFactors ?: return Unknown()
+      val emailId = firstFactors.find { it.strategy == "email_code" }?.emailAddressId
+      val phoneId = firstFactors.find { it.strategy == "phone_code" }?.phoneNumberId
+
       return when (strategy) {
-        Requests.SignInRequest.PrepareFirstFactorStrategy.EMAIL_CODE -> {
-          EmailCode(
-            signIn.supportedFirstFactors
-              ?.find { it.strategy == "email_code" }
-              ?.emailAddressId
-              .orEmpty()
-          )
+        RequestParams.SignInRequest.PrepareFirstFactor.RESET_PASSWORD_EMAIL_CODE ->
+          ResetPasswordEmailCode(emailId.orEmpty())
+
+        RequestParams.SignInRequest.PrepareFirstFactor.EMAIL_CODE -> {
+          val emailId = firstFactors.find { it.strategy == "email_code" }?.emailAddressId
+          EmailCode(emailId.orEmpty())
         }
-        Requests.SignInRequest.PrepareFirstFactorStrategy.PHONE_CODE -> {
-          PhoneCode(
-            signIn.supportedFirstFactors
-              ?.find { it.strategy == "phone_code" }
-              ?.phoneNumberId
-              .orEmpty()
-          )
+
+        RequestParams.SignInRequest.PrepareFirstFactor.PHONE_CODE ->
+          ResetPasswordPhoneCode(phoneId.orEmpty())
+        RequestParams.SignInRequest.PrepareFirstFactor.RESET_PASSWORD_PHONE_CODE -> {
+          val phoneId = firstFactors.find { it.strategy == "phone_code" }?.phoneNumberId
+          PhoneCode(phoneId.orEmpty())
         }
+
         else -> Unknown()
       }
     }
