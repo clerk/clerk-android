@@ -57,7 +57,7 @@ kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
 ksp-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
 
 lints-compose = "com.slack.lint.compose:compose-lint-checks:1.4.2"
-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.5"
+libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.6"
 
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 mockk = "io.mockk:mockk:1.14.2"
