@@ -124,7 +124,7 @@ internal interface ClerkApiService {
    *
    * @param id The session id.
    * @param params The parameters for the second
-   *   factor. @see [Requests.SignInRequest.PrepareSecondFactorParams]
+   *   factor. @see [Requests.SignInRequest.PrepareSecondFactor]
    */
   @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
@@ -136,7 +136,7 @@ internal interface ClerkApiService {
    * Reset the password for a sign in.
    *
    * The request body should contain the reset password fields as key-value pairs. The expected
-   * input is [Requests.SignInRequest.ResetPasswordParams].
+   * input is [Requests.SignInRequest.ResetPassword].
    */
   @POST(Paths.ClientPath.SignInPath.WithId.RESET_PASSWORD)
   suspend fun resetPassword(@Path("id") id: String, @FieldMap fields: Map<String, String>)

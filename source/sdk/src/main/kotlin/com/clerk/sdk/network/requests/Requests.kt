@@ -18,17 +18,19 @@ object Requests {
   object SignInRequest {
 
     @Serializable
-    enum class PrepareFirstFactorStrategy {
+    enum class PrepareFirstFactor {
       EMAIL_CODE,
       PHONE_CODE,
       PASSWORD,
       PASSKEY,
       O_AUTH,
+      RESET_PASSWORD_EMAIL_CODE,
+      RESET_PASSWORD_PHONE_CODE,
     }
 
     /** A parameter object for preparing the second factor verification. */
     @Serializable
-    data class PrepareSecondFactorParams(
+    data class PrepareSecondFactor(
       /** The strategy used for second factor verification. */
       val strategy: String
     )
@@ -41,7 +43,7 @@ object Requests {
      */
     @Serializable
     @AutoMap
-    data class ResetPasswordParams(
+    data class ResetPassword(
       val password: String,
       @SerialName("sign_out_of_other_sessions") val signOutOfOtherSessions: Boolean? = null,
     )
@@ -61,7 +63,7 @@ object Requests {
     }
 
     /** A parameter object for attempting the first factor verification in the sign-in process. */
-    sealed interface AttemptFirstFactorParams {
+    sealed interface AttemptFirstFactor {
 
       /**
        * The [strategy] value depends on the object's identifier value. Each authentication
@@ -73,14 +75,14 @@ object Requests {
       @AutoMap
       @Serializable
       data class EmailCode(override val strategy: String = EMAIL_CODE, val code: String) :
-        AttemptFirstFactorParams {
+        AttemptFirstFactor {
         constructor(emailCode: String) : this(EMAIL_CODE, emailCode)
       }
 
       @AutoMap
       @Serializable
       data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
-        AttemptFirstFactorParams {
+        AttemptFirstFactor {
         constructor(phoneCode: String) : this(PHONE_CODE, phoneCode)
       }
 
@@ -89,14 +91,14 @@ object Requests {
       data class Password(
         override val strategy: String = PASSWORD,
         @SerialName("password") val password: String,
-      ) : AttemptFirstFactorParams {
+      ) : AttemptFirstFactor {
         constructor(password: String) : this(PASSWORD, password)
       }
 
       @AutoMap
       @Serializable
       data class Passkey(override val strategy: String = PASSKEY, val passkey: String) :
-        AttemptFirstFactorParams {
+        AttemptFirstFactor {
         constructor(passkey: String) : this(PASSKEY, passkey)
       }
 
@@ -105,7 +107,7 @@ object Requests {
       data class ResetPasswordEmailCode(
         override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
         val identifier: String,
-      ) : AttemptFirstFactorParams {
+      ) : AttemptFirstFactor {
         constructor(identifier: String) : this(RESET_PASSWORD_EMAIL_CODE, identifier)
       }
 
@@ -114,7 +116,7 @@ object Requests {
       data class ResetPasswordPhoneCode(
         override val strategy: String = RESET_PASSWORD_PHONE_CODE,
         val password: String,
-      ) : AttemptFirstFactorParams {
+      ) : AttemptFirstFactor {
         constructor(password: String) : this(RESET_PASSWORD_PHONE_CODE, password)
       }
     }
@@ -126,7 +128,7 @@ object Requests {
      * Represents the various strategies for initiating a `SignUp` request. This sealed class acts
      * as a factory for the different combinations of parameters you can send to the create method
      */
-    sealed interface CreateParams {
+    sealed interface Create {
 
       /**
        * Standard sign-up strategy, allowing the user to provide common details such as email,
@@ -148,7 +150,7 @@ object Requests {
         @SerialName("last_name") val lastName: String? = null,
         val username: String? = null,
         @SerialName("phone_number") val phoneNumber: String? = null,
-      ) : CreateParams
+      ) : Create
 
       /**
        * The `SignUp` will be created without any parameters.
@@ -156,11 +158,11 @@ object Requests {
        * This is useful for inspecting a newly created `SignUp` object before deciding on a
        * strategy.
        */
-      object None : CreateParams
+      object None : Create
     }
 
     /** Defines the parameters required to prepare a verification for the sign-up process. */
-    enum class PrepareVerificationParams(val strategy: String) {
+    enum class PrepareVerification(val strategy: String) {
       /** Send a text message with a unique token to input */
       PHONE_CODE("phone_code"),
 
@@ -169,7 +171,7 @@ object Requests {
     }
 
     /** Defines the strategies for attempting verification during the sign-up process. */
-    sealed interface AttemptVerificationParams {
+    sealed interface AttemptVerification {
       /** The strategy used for verification (e.g., `email_code` or `phone_code`). */
       val strategy: String
 
@@ -182,7 +184,7 @@ object Requests {
        * @param code The one-time code sent to the user's email address.
        */
       data class EmailCode(override val strategy: String = EMAIL_CODE, override val code: String) :
-        AttemptVerificationParams
+        AttemptVerification
 
       /**
        * Attempts verification using a code sent to the user's phone number.
@@ -190,7 +192,7 @@ object Requests {
        * @param code The one-time code sent to the user's phone number.
        */
       data class PhoneCode(override val strategy: String = PHONE_CODE, override val code: String) :
-        AttemptVerificationParams
+        AttemptVerification
     }
   }
 }

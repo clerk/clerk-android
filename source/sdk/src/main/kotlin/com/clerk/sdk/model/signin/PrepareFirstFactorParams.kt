@@ -36,25 +36,23 @@ internal sealed interface PrepareFirstFactorParams {
   companion object {
     fun fromStrategy(
       signIn: SignIn,
-      strategy: Requests.SignInRequest.PrepareFirstFactorStrategy,
+      strategy: Requests.SignInRequest.PrepareFirstFactor,
     ): PrepareFirstFactorParams {
+      val firstFactors = signIn.supportedFirstFactors ?: return Unknown()
+
       return when (strategy) {
-        Requests.SignInRequest.PrepareFirstFactorStrategy.EMAIL_CODE -> {
-          EmailCode(
-            signIn.supportedFirstFactors
-              ?.find { it.strategy == "email_code" }
-              ?.emailAddressId
-              .orEmpty()
-          )
+        Requests.SignInRequest.PrepareFirstFactor.EMAIL_CODE,
+        Requests.SignInRequest.PrepareFirstFactor.RESET_PASSWORD_EMAIL_CODE -> {
+          val emailId = firstFactors.find { it.strategy == "email_code" }?.emailAddressId
+          EmailCode(emailId.orEmpty())
         }
-        Requests.SignInRequest.PrepareFirstFactorStrategy.PHONE_CODE -> {
-          PhoneCode(
-            signIn.supportedFirstFactors
-              ?.find { it.strategy == "phone_code" }
-              ?.phoneNumberId
-              .orEmpty()
-          )
+
+        Requests.SignInRequest.PrepareFirstFactor.PHONE_CODE,
+        Requests.SignInRequest.PrepareFirstFactor.RESET_PASSWORD_PHONE_CODE -> {
+          val phoneId = firstFactors.find { it.strategy == "phone_code" }?.phoneNumberId
+          PhoneCode(phoneId.orEmpty())
         }
+
         else -> Unknown()
       }
     }

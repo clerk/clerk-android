@@ -192,7 +192,7 @@ data class SignIn(
  * factor verification process.
  */
 suspend fun SignIn.prepareFirstFactor(
-  strategy: Requests.SignInRequest.PrepareFirstFactorStrategy
+  strategy: Requests.SignInRequest.PrepareFirstFactor
 ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
   return ClerkApi.instance.prepareSignInFirstFactor(
     this.id,
@@ -216,10 +216,10 @@ suspend fun SignIn.prepareFirstFactor(
  * factor verification process.
  *
  * @param params The parameters for the first factor verification.
- * @see [Requests.SignInRequest.AttemptFirstFactorParams]
+ * @see [Requests.SignInRequest.AttemptFirstFactor]
  */
 suspend fun SignIn.attemptFirstFactor(
-  params: Requests.SignInRequest.AttemptFirstFactorParams
+  params: Requests.SignInRequest.AttemptFirstFactor
 ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptFirstFactor(id = this.id, params = params.toMap())
 }
