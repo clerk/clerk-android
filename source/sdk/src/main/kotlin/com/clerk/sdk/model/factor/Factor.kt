@@ -1,5 +1,6 @@
 package com.clerk.sdk.model.factor
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -12,16 +13,16 @@ data class Factor(
   val strategy: String,
 
   /** The ID of the email address that a code or link will be sent to. */
-  val emailAddressId: String? = null,
+  @SerialName("email_address_id") val emailAddressId: String? = null,
 
   /** The ID of the phone number that a code will be sent to. */
-  val phoneNumberId: String? = null,
+  @SerialName("phone_number_id") val phoneNumberId: String? = null,
 
   /** The ID of the Web3 wallet that will be used to sign a message. */
   val web3WalletId: String? = null,
 
   /** The safe identifier of the factor. */
-  val safeIdentifier: String? = null,
+  @SerialName("safe_identifier") val safeIdentifier: String? = null,
 
   /** Whether the factor is the primary factor. */
   val primary: Boolean? = null,

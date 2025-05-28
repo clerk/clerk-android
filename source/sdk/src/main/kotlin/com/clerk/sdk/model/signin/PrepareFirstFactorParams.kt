@@ -2,6 +2,7 @@ package com.clerk.sdk.model.signin
 
 import com.clerk.automap.annotation.AutoMap
 import com.clerk.sdk.network.requests.Requests
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -16,13 +17,17 @@ internal sealed interface PrepareFirstFactorParams {
 
   @AutoMap
   @Serializable
-  data class EmailCode(val emailAddressId: String, override val strategy: String = "email_code") :
-    PrepareFirstFactorParams
+  data class EmailCode(
+    @SerialName("email_address_id") val emailAddressId: String,
+    override val strategy: String = "email_code",
+  ) : PrepareFirstFactorParams
 
   @AutoMap
   @Serializable
-  data class PhoneCode(val phoneNumberId: String, override val strategy: String = "phone_code") :
-    PrepareFirstFactorParams
+  data class PhoneCode(
+    @SerialName("phone_number_id") val phoneNumberId: String,
+    override val strategy: String = "phone_code",
+  ) : PrepareFirstFactorParams
 
   @AutoMap
   @Serializable

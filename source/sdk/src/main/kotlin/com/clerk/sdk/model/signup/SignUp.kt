@@ -4,11 +4,11 @@ package com.clerk.sdk.model.signup
 
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
-import com.clerk.sdk.model.signup.SignUp.PrepareVerificationParams
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.requests.Requests
 import com.clerk.sdk.network.requests.Requests.SignUpRequest.CreateParams
+import com.clerk.sdk.network.requests.Requests.SignUpRequest.PrepareVerificationParams
 import com.clerk.sdk.network.requests.toMap
 import com.clerk.sdk.network.serialization.ClerkApiResult
 import kotlinx.serialization.SerialName
@@ -155,15 +155,6 @@ data class SignUp(
     @SerialName("unknown") UNKNOWN,
   }
 
-  /** Defines the parameters required to prepare a verification for the sign-up process. */
-  enum class PrepareVerificationParams(val strategy: String) {
-    /** Send a text message with a unique token to input */
-    PHONE_CODE("phone_code"),
-
-    /** Send an email with a unique token to input */
-    EMAIL_CODE("email_code"),
-  }
-
   companion object {
 
     /**
@@ -241,7 +232,7 @@ suspend fun SignUp.attemptVerification(
 ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,
-    strategy = params.params.strategy,
-    code = params.params.code,
+    strategy = params.strategy,
+    code = params.code,
   )
 }

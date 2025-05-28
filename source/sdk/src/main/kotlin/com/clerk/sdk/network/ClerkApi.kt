@@ -10,7 +10,9 @@ import com.clerk.sdk.network.middleware.outgoing.HeaderMiddleware
 import com.clerk.sdk.network.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.sdk.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.sdk.network.serialization.ClerkApiResultConverterFactory
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -20,11 +22,13 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 /** Singleton responsible for configuring and exposing the Clerk API service. */
 internal object ClerkApi {
 
+  @OptIn(ExperimentalSerializationApi::class)
   private val json = Json {
     isLenient = true
     ignoreUnknownKeys = true
     coerceInputValues = true
     explicitNulls = false
+    namingStrategy = JsonNamingStrategy.SnakeCase
   }
 
   private var _instance: ClerkApiService? = null

@@ -72,19 +72,15 @@ object Requests {
       /** The strategy strategy depends on the object's identifier strategy. Each authentication */
       @AutoMap
       @Serializable
-      data class EmailCode(
-        override val strategy: String = EMAIL_CODE,
-        @SerialName("email_code") val emailCode: String,
-      ) : AttemptFirstFactorParams {
+      data class EmailCode(override val strategy: String = EMAIL_CODE, val code: String) :
+        AttemptFirstFactorParams {
         constructor(emailCode: String) : this(EMAIL_CODE, emailCode)
       }
 
       @AutoMap
       @Serializable
-      data class PhoneCode(
-        override val strategy: String = PHONE_CODE,
-        @SerialName("phone_code") val phoneCode: String,
-      ) : AttemptFirstFactorParams {
+      data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
+        AttemptFirstFactorParams {
         constructor(phoneCode: String) : this(PHONE_CODE, phoneCode)
       }
 
@@ -163,37 +159,38 @@ object Requests {
       object None : CreateParams
     }
 
+    /** Defines the parameters required to prepare a verification for the sign-up process. */
+    enum class PrepareVerificationParams(val strategy: String) {
+      /** Send a text message with a unique token to input */
+      PHONE_CODE("phone_code"),
+
+      /** Send an email with a unique token to input */
+      EMAIL_CODE("email_code"),
+    }
+
     /** Defines the strategies for attempting verification during the sign-up process. */
     sealed interface AttemptVerificationParams {
+      /** The strategy used for verification (e.g., `email_code` or `phone_code`). */
+      val strategy: String
+
+      /** The verification code provided by the user. */
+      val code: String
+
       /**
        * Attempts verification using a code sent to the user's email address.
        *
        * @param code The one-time code sent to the user's email address.
        */
-      data class EmailCode(val code: String) : AttemptVerificationParams
+      data class EmailCode(override val strategy: String = EMAIL_CODE, override val code: String) :
+        AttemptVerificationParams
 
       /**
        * Attempts verification using a code sent to the user's phone number.
        *
        * @param code The one-time code sent to the user's phone number.
        */
-      data class PhoneCode(val code: String) : AttemptVerificationParams
-
-      /** Converts the selected strategy into [AttemptVerificationParams] for the API request. */
-      val params: AttemptParams
-        get() =
-          when (this) {
-            is EmailCode -> AttemptParams(strategy = "email_code", code = code)
-            is PhoneCode -> AttemptParams(strategy = "phone_code", code = code)
-          }
+      data class PhoneCode(override val strategy: String = PHONE_CODE, override val code: String) :
+        AttemptVerificationParams
     }
-
-    /**
-     * Parameters used for the verification attempt during the sign-up process.
-     *
-     * @property strategy The strategy used for verification (e.g., `email_code` or `phone_code`).
-     * @property code The verification code provided by the user.
-     */
-    @Serializable data class AttemptParams(val strategy: String, val code: String)
   }
 }
