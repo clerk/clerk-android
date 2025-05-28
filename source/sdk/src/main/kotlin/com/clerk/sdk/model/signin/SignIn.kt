@@ -137,6 +137,9 @@ data class SignIn(
     /** The sign-in process needs a second factor verification. */
     @SerialName("needs_second_factor") NEEDS_SECOND_FACTOR,
 
+    /** The sign-in process needs an identifier. */
+    @SerialName("needs_identifier") NEEDS_IDENTIFIER,
+
     /** The sign-in process is in an unknown state. */
     UNKNOWN,
   }
