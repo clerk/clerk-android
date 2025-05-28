@@ -6,9 +6,9 @@ import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
-import com.clerk.sdk.network.requests.Requests
-import com.clerk.sdk.network.requests.Requests.SignUpRequest.Create
-import com.clerk.sdk.network.requests.Requests.SignUpRequest.PrepareVerification
+import com.clerk.sdk.network.requests.RequestParams
+import com.clerk.sdk.network.requests.RequestParams.SignUpRequest.Create
+import com.clerk.sdk.network.requests.RequestParams.SignUpRequest.PrepareVerification
 import com.clerk.sdk.network.requests.toMap
 import com.clerk.sdk.network.serialization.ClerkApiResult
 import kotlinx.serialization.SerialName
@@ -179,7 +179,7 @@ data class SignUp(
      * @see [SignUp] kdoc for more info
      */
     suspend fun create(
-      create: Requests.SignUpRequest.Create
+      create: RequestParams.SignUpRequest.Create
     ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
 
       return ClerkApi.instance.createSignUp(create.toMap())
@@ -227,7 +227,7 @@ suspend fun SignUp.prepareVerification(
  *   code @return: The updated [SignUp] object reflecting the verification attempt's result.
  */
 suspend fun SignUp.attemptVerification(
-  params: Requests.SignUpRequest.AttemptVerification
+  params: RequestParams.SignUpRequest.AttemptVerification
 ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,

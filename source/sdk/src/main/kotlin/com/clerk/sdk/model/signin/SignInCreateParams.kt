@@ -1,6 +1,6 @@
 package com.clerk.sdk.model.signin
 
-import com.clerk.sdk.network.requests.Requests.SignInRequest.PrepareFirstFactor
+import com.clerk.sdk.network.requests.RequestParams.SignInRequest.PrepareFirstFactor
 
 /**
  * Represents the parameters required to initiate a sign-in flow.

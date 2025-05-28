@@ -12,7 +12,7 @@ private const val RESET_PASSWORD_EMAIL_CODE = "reset_password_email_code"
 private const val RESET_PASSWORD_PHONE_CODE = "reset_password_phone_code"
 
 /** This file contains the data classes for inputs into Clerk API. functions */
-object Requests {
+object RequestParams {
 
   /** Request objects for the sign-in API. */
   object SignInRequest {
@@ -33,19 +33,6 @@ object Requests {
     data class PrepareSecondFactor(
       /** The strategy used for second factor verification. */
       val strategy: String
-    )
-
-    /**
-     * A parameter object for resetting a user's password.
-     *
-     * @param password The user's current password
-     * @param signOutOfOtherSessions Whether to sign out of all other sessions after the password
-     */
-    @Serializable
-    @AutoMap
-    data class ResetPassword(
-      val password: String,
-      @SerialName("sign_out_of_other_sessions") val signOutOfOtherSessions: Boolean? = null,
     )
 
     /** Represents an authentication identifier. */
@@ -76,14 +63,14 @@ object Requests {
       @Serializable
       data class EmailCode(override val strategy: String = EMAIL_CODE, val code: String) :
         AttemptFirstFactor {
-        constructor(emailCode: String) : this(EMAIL_CODE, emailCode)
+        constructor(code: String) : this(EMAIL_CODE, code)
       }
 
       @AutoMap
       @Serializable
       data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
         AttemptFirstFactor {
-        constructor(phoneCode: String) : this(PHONE_CODE, phoneCode)
+        constructor(code: String) : this(PHONE_CODE, code)
       }
 
       @AutoMap
@@ -106,7 +93,7 @@ object Requests {
       @Serializable
       data class ResetPasswordEmailCode(
         override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
-        val identifier: String,
+        val code: String,
       ) : AttemptFirstFactor {
         constructor(identifier: String) : this(RESET_PASSWORD_EMAIL_CODE, identifier)
       }
@@ -115,7 +102,7 @@ object Requests {
       @Serializable
       data class ResetPasswordPhoneCode(
         override val strategy: String = RESET_PASSWORD_PHONE_CODE,
-        val password: String,
+        val code: String,
       ) : AttemptFirstFactor {
         constructor(password: String) : this(RESET_PASSWORD_PHONE_CODE, password)
       }
@@ -184,7 +171,9 @@ object Requests {
        * @param code The one-time code sent to the user's email address.
        */
       data class EmailCode(override val strategy: String = EMAIL_CODE, override val code: String) :
-        AttemptVerification
+        AttemptVerification {
+        constructor(code: String) : this(EMAIL_CODE, code)
+      }
 
       /**
        * Attempts verification using a code sent to the user's phone number.
@@ -192,7 +181,9 @@ object Requests {
        * @param code The one-time code sent to the user's phone number.
        */
       data class PhoneCode(override val strategy: String = PHONE_CODE, override val code: String) :
-        AttemptVerification
+        AttemptVerification {
+        constructor(code: String) : this(PHONE_CODE, code)
+      }
     }
   }
 }
