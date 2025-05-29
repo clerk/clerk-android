@@ -9,7 +9,21 @@ import kotlinx.serialization.Serializable
 private const val EMAIL_CODE = "email_code"
 private const val PHONE_CODE = "phone_code"
 
-sealed interface FirstFactorFormData {
+/**
+ * Sealed interface representing form data for first factor authentication strategies.
+ *
+ * Each implementation encapsulates the required parameters for specific authentication methods,
+ * including email verification, phone verification, and password reset flows. The interface ensures
+ * type safety for first factor verification strategies by defining a fixed set of possible
+ * implementations that include:
+ * - Email code verification with email address ID
+ * - Phone code verification with phone number ID
+ * - Password reset via email and phone strategies
+ * - Unknown/unmapped strategy fallback
+ *
+ * This should not be used by end users and should be kept internal to clerk
+ */
+internal sealed interface FirstFactorFormData {
   val strategy: String
 
   @AutoMap
@@ -43,7 +57,7 @@ sealed interface FirstFactorFormData {
   data class Unknown(override val strategy: String = "Unknown") : FirstFactorFormData
 }
 
-fun PrepareFirstFactorParams.Strategy.toFormData(): FirstFactorFormData {
+internal fun PrepareFirstFactorParams.Strategy.toFormData(): FirstFactorFormData {
   val firstFactors =
     requireNotNull(signIn?.supportedFirstFactors) { "No supported first factors set" }
   val emailId = firstFactors.find { it.strategy == EMAIL_CODE }?.emailAddressId

@@ -9,7 +9,6 @@ import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.paths.Paths
-import com.clerk.sdk.network.requests.RequestParams
 import com.clerk.sdk.network.serialization.ClerkApiResult
 import retrofit2.http.DELETE
 import retrofit2.http.Field
@@ -123,8 +122,7 @@ internal interface ClerkApiService {
    * Prepare the second factor for a sign in.
    *
    * @param id The session id.
-   * @param params The parameters for the second
-   *   factor. @see [RequestParams.SignInRequest.PrepareSecondFactor]
+   * @param params The parameters for the second factor. @see [SignIn.PrepareSecondFactorParams]
    */
   @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
