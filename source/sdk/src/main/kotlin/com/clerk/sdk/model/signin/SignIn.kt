@@ -12,7 +12,6 @@ import com.clerk.sdk.model.signin.internal.toMap
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.serialization.ClerkApiResult
-import com.google.i18n.phonenumbers.PhoneNumberUtil
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -180,17 +179,20 @@ data class SignIn(
   )
 
   /** Represents an authentication identifier. */
-  sealed interface Identifier {
-    val value: String
+  object SignInCreateParams {
 
-    /** Email address identifier. */
-    @Serializable data class Email(override val value: String) : Identifier
+    sealed interface Identity {
+      val value: String
 
-    /** Phone number identifier. */
-    @Serializable data class Phone(override val value: String) : Identifier
+      /** Email address identifier. */
+      @Serializable data class Email(override val value: String) : Identity
 
-    /** Username identifier. */
-    @Serializable data class Username(override val value: String) : Identifier
+      /** Phone number identifier. */
+      @Serializable data class Phone(override val value: String) : Identity
+
+      /** Username identifier. */
+      @Serializable data class Username(override val value: String) : Identity
+    }
   }
 
   /** A parameter object for attempting the first factor verification in the sign-in process. */
@@ -275,15 +277,10 @@ data class SignIn(
      *    passing the `SignIn.createdSessionId` to the `setActive()` method on the `Clerk` object.
      */
     suspend fun create(
-      identifier: Identifier
+      identifier: SignInCreateParams.Identity
     ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
-      val input =
-        if (identifier is Identifier.Phone) {
-          PhoneNumberUtil.getInstance().parse(identifier.value, "US").nationalNumber.toString()
-        } else {
-          identifier.value
-        }
-      return ClerkApi.instance.signIn(input)
+
+      return ClerkApi.instance.signIn(identifier.value)
     }
   }
 }
