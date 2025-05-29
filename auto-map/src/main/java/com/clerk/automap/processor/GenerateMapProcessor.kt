@@ -269,6 +269,8 @@ class GenerateMapProcessor(
       appendLine("    val map = mutableMapOf<String, String>()")
 
       // Instead of directly creating the map, we'll build it conditionally
+      logger.info("Processing class: ${classDeclaration.qualifiedName?.asString()}")
+      logger.info("Properties found:")
       properties.forEach { property ->
         val propName = property.simpleName.asString()
 

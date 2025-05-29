@@ -134,7 +134,7 @@ class ConfigurationManager {
 
 sealed interface ClerkConfigurationState {
 
-  data class Success(val environment: Environment, val client: Client?) : ClerkConfigurationState
+  data class Success(val environment: Environment, val client: Client) : ClerkConfigurationState
 
   object Error : ClerkConfigurationState
 }

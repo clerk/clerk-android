@@ -6,108 +6,106 @@ import kotlinx.serialization.Serializable
 
 private const val PHONE_CODE = "phone_code"
 private const val EMAIL_CODE = "email_code"
-private const val PASSWORD = "password"
-private const val PASSKEY = "passkey"
-private const val RESET_PASSWORD_EMAIL_CODE = "reset_password_email_code"
-private const val RESET_PASSWORD_PHONE_CODE = "reset_password_phone_code"
 
 /** This file contains the data classes for inputs into Clerk API. functions */
 object RequestParams {
 
   /** Request objects for the sign-in API. */
-  object SignInRequest {
-
-    @Serializable
-    enum class PrepareFirstFactor {
-      EMAIL_CODE,
-      PHONE_CODE,
-      PASSWORD,
-      PASSKEY,
-      O_AUTH,
-      RESET_PASSWORD_EMAIL_CODE,
-      RESET_PASSWORD_PHONE_CODE,
-    }
-
-    /** A parameter object for preparing the second factor verification. */
-    @Serializable
-    data class PrepareSecondFactor(
-      /** The strategy used for second factor verification. */
-      val strategy: String
-    )
-
-    /** Represents an authentication identifier. */
-    sealed interface Identifier {
-      val value: String
-
-      /** Email address identifier. */
-      @Serializable data class Email(override val value: String) : Identifier
-
-      /** Phone number identifier. */
-      @Serializable data class Phone(override val value: String) : Identifier
-
-      /** Username identifier. */
-      @Serializable data class Username(override val value: String) : Identifier
-    }
-
-    /** A parameter object for attempting the first factor verification in the sign-in process. */
-    sealed interface AttemptFirstFactor {
-
-      /**
-       * The [strategy] value depends on the object's identifier value. Each authentication
-       * identifier supports different verification strategies.
-       */
-      val strategy: String
-
-      /** The strategy strategy depends on the object's identifier strategy. Each authentication */
-      @AutoMap
-      @Serializable
-      data class EmailCode(override val strategy: String = EMAIL_CODE, val code: String) :
-        AttemptFirstFactor {
-        constructor(code: String) : this(EMAIL_CODE, code)
-      }
-
-      @AutoMap
-      @Serializable
-      data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
-        AttemptFirstFactor {
-        constructor(code: String) : this(PHONE_CODE, code)
-      }
-
-      @AutoMap
-      @Serializable
-      data class Password(
-        override val strategy: String = PASSWORD,
-        @SerialName("password") val password: String,
-      ) : AttemptFirstFactor {
-        constructor(password: String) : this(PASSWORD, password)
-      }
-
-      @AutoMap
-      @Serializable
-      data class Passkey(override val strategy: String = PASSKEY, val passkey: String) :
-        AttemptFirstFactor {
-        constructor(passkey: String) : this(PASSKEY, passkey)
-      }
-
-      @AutoMap
-      @Serializable
-      data class ResetPasswordEmailCode(
-        override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
-        val code: String,
-      ) : AttemptFirstFactor {
-        constructor(identifier: String) : this(RESET_PASSWORD_EMAIL_CODE, identifier)
-      }
-
-      @AutoMap
-      @Serializable
-      data class ResetPasswordPhoneCode(
-        override val strategy: String = RESET_PASSWORD_PHONE_CODE,
-        val code: String,
-      ) : AttemptFirstFactor {
-        constructor(password: String) : this(RESET_PASSWORD_PHONE_CODE, password)
-      }
-    }
-  }
+  //  object SignInRequest {
+  //
+  //    @Serializable
+  //    enum class PrepareFirstFactor {
+  //      EMAIL_CODE,
+  //      PHONE_CODE,
+  //      PASSWORD,
+  //      PASSKEY,
+  //      O_AUTH,
+  //      RESET_PASSWORD_EMAIL_CODE,
+  //      RESET_PASSWORD_PHONE_CODE,
+  //    }
+  //
+  //    /** A parameter object for preparing the second factor verification. */
+  //    @Serializable
+  //    data class PrepareSecondFactor(
+  //      /** The strategy used for second factor verification. */
+  //      val strategy: String
+  //    )
+  //
+  //    /** Represents an authentication identifier. */
+  //    sealed interface Identifier {
+  //      val value: String
+  //
+  //      /** Email address identifier. */
+  //      @Serializable data class Email(override val value: String) : Identifier
+  //
+  //      /** Phone number identifier. */
+  //      @Serializable data class Phone(override val value: String) : Identifier
+  //
+  //      /** Username identifier. */
+  //      @Serializable data class Username(override val value: String) : Identifier
+  //    }
+  //
+  //    /** A parameter object for attempting the first factor verification in the sign-in process.
+  // */
+  //    sealed interface AttemptFirstFactor {
+  //
+  //      /**
+  //       * The [strategy] value depends on the object's identifier value. Each authentication
+  //       * identifier supports different verification strategies.
+  //       */
+  //      val strategy: String
+  //
+  //      /** The strategy strategy depends on the object's identifier strategy. Each authentication
+  // */
+  //      @AutoMap
+  //      @Serializable
+  //      data class EmailCode(override val strategy: String = EMAIL_CODE, val code: String) :
+  //        AttemptFirstFactor {
+  //        constructor(code: String) : this(EMAIL_CODE, code)
+  //      }
+  //
+  //      @AutoMap
+  //      @Serializable
+  //      data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
+  //        AttemptFirstFactor {
+  //        constructor(code: String) : this(PHONE_CODE, code)
+  //      }
+  //
+  //      @AutoMap
+  //      @Serializable
+  //      data class Password(
+  //        override val strategy: String = PASSWORD,
+  //        @SerialName("password") val password: String,
+  //      ) : AttemptFirstFactor {
+  //        constructor(password: String) : this(PASSWORD, password)
+  //      }
+  //
+  //      @AutoMap
+  //      @Serializable
+  //      data class Passkey(override val strategy: String = PASSKEY, val passkey: String) :
+  //        AttemptFirstFactor {
+  //        constructor(passkey: String) : this(PASSKEY, passkey)
+  //      }
+  //
+  //      @AutoMap
+  //      @Serializable
+  //      data class ResetPasswordEmailCode(
+  //        override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+  //        val code: String,
+  //      ) : AttemptFirstFactor {
+  //        constructor(identifier: String) : this(RESET_PASSWORD_EMAIL_CODE, identifier)
+  //      }
+  //
+  //      @AutoMap
+  //      @Serializable
+  //      data class ResetPasswordPhoneCode(
+  //        override val strategy: String = RESET_PASSWORD_PHONE_CODE,
+  //        val code: String,
+  //      ) : AttemptFirstFactor {
+  //        constructor(password: String) : this(RESET_PASSWORD_PHONE_CODE, password)
+  //      }
+  //    }
+  //  }
 
   object SignUpRequest {
 
