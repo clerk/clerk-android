@@ -25,6 +25,8 @@ spotless = "7.0.4"
 lifecycleProcess = "2.9.0"
 jetbrainsKotlinJvm = "2.1.21"
 chucker = "4.1.0"
+composeBom = "2025.05.01"
+foundationLayoutAndroid = "1.8.2"
 
 [libraries]
 
@@ -36,6 +38,8 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.0"
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 
 chucker-debug = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
 chucker-release = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker" }
@@ -74,6 +78,7 @@ retrofit-converterScalars = { module = "com.squareup.retrofit2:converter-scalars
 robolectric = "org.robolectric:robolectric:4.14.1"
 
 statelyCollections = "co.touchlab:stately-concurrent-collections:2.0.7"
+androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationLayoutAndroid" }
 
 
 [plugins]
@@ -88,4 +93,5 @@ sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "sortD
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 

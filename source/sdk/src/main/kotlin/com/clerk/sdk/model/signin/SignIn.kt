@@ -1,16 +1,26 @@
+@file:Suppress("unused")
+
 package com.clerk.sdk.model.signin
 
+import com.clerk.automap.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.factor.Factor
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
+import com.clerk.sdk.model.signin.SignIn.PrepareFirstFactorParams
+import com.clerk.sdk.model.signin.internal.toFormData
+import com.clerk.sdk.model.signin.internal.toMap
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
-import com.clerk.sdk.network.requests.RequestParams
-import com.clerk.sdk.network.requests.toMap
 import com.clerk.sdk.network.serialization.ClerkApiResult
-import com.google.i18n.phonenumbers.PhoneNumberUtil
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+
+private const val PHONE_CODE = "phone_code"
+private const val EMAIL_CODE = "email_code"
+private const val PASSWORD = "password"
+private const val PASSKEY = "passkey"
+private const val RESET_PASSWORD_EMAIL_CODE = "reset_password_email_code"
+private const val RESET_PASSWORD_PHONE_CODE = "reset_password_phone_code"
 
 /**
  * The `SignIn` object holds the state of the current sign-in process and provides helper methods to
@@ -147,6 +157,108 @@ data class SignIn(
     UNKNOWN,
   }
 
+  /** A parameter object for attempting the first factor verification in the sign-in process. */
+  sealed interface AttemptFirstFactorParams {
+
+    /**
+     * The [strategy] value depends on the object's identifier value. Each authentication identifier
+     * supports different verification strategies.
+     */
+    val strategy: String
+
+    @AutoMap
+    @Serializable
+    data class EmailCode(override val strategy: String = EMAIL_CODE, val code: String) :
+      AttemptFirstFactorParams {
+      constructor(code: String) : this(EMAIL_CODE, code)
+    }
+
+    @AutoMap
+    @Serializable
+    data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
+      AttemptFirstFactorParams {
+      constructor(code: String) : this(PHONE_CODE, code)
+    }
+
+    @AutoMap
+    @Serializable
+    data class Password(
+      override val strategy: String = PASSWORD,
+      @SerialName("password") val password: String,
+    ) : AttemptFirstFactorParams {
+      constructor(password: String) : this(PASSWORD, password)
+    }
+
+    @AutoMap
+    @Serializable
+    data class Passkey(override val strategy: String = PASSKEY, val passkey: String) :
+      AttemptFirstFactorParams {
+      constructor(passkey: String) : this(PASSKEY, passkey)
+    }
+
+    @AutoMap
+    @Serializable
+    data class ResetPasswordEmailCode(
+      override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+      val code: String,
+    ) : AttemptFirstFactorParams {
+      constructor(code: String) : this(RESET_PASSWORD_EMAIL_CODE, code)
+    }
+
+    @AutoMap
+    @Serializable
+    data class ResetPasswordPhoneCode(
+      override val strategy: String = RESET_PASSWORD_PHONE_CODE,
+      val code: String,
+    ) : AttemptFirstFactorParams {
+      constructor(code: String) : this(RESET_PASSWORD_PHONE_CODE, code)
+    }
+  }
+
+  sealed interface PrepareFirstFactorParams {
+
+    @Serializable
+    enum class Strategy {
+      EMAIL_CODE,
+      PHONE_CODE,
+      PASSWORD,
+      PASSKEY,
+      O_AUTH,
+      RESET_PASSWORD_EMAIL_CODE,
+      RESET_PASSWORD_PHONE_CODE,
+    }
+  }
+
+  /** A parameter object for preparing the second factor verification. */
+  @Serializable
+  data class PrepareSecondFactorParams(
+    /** The strategy used for second factor verification. */
+    val strategy: String
+  )
+
+  @Serializable
+  data class ResetPasswordParams(
+    val password: String,
+    @SerialName("sign_out_of_other_sessions") val signOutOfOtherSessions: Boolean = false,
+  )
+
+  /** Represents an authentication identifier. */
+  object SignInCreateParams {
+
+    sealed interface Identifier {
+      val value: String
+
+      /** Email address identifier. */
+      @Serializable data class Email(override val value: String) : Identifier
+
+      /** Phone number identifier. */
+      @Serializable data class Phone(override val value: String) : Identifier
+
+      /** Username identifier. */
+      @Serializable data class Username(override val value: String) : Identifier
+    }
+  }
+
   companion object {
     /**
      * Starts the sign in process. The SignIn object holds the state of the current sign-in and
@@ -168,17 +280,13 @@ data class SignIn(
      *    [SignIn.attemptSecondFactor()]
      * 6. If verification is successful, set the newly created session as the active session by
      *    passing the `SignIn.createdSessionId` to the `setActive()` method on the `Clerk` object.
+     *
+     *     @param [identifier] The identifier of the user to authenticate with
      */
     suspend fun create(
-      identifier: RequestParams.SignInRequest.Identifier
+      identifier: SignInCreateParams.Identifier
     ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
-      val input =
-        if (identifier == RequestParams.SignInRequest.Identifier.Phone) {
-          PhoneNumberUtil.getInstance().parse(identifier.value, "US").nationalNumber.toString()
-        } else {
-          identifier.value
-        }
-      return ClerkApi.instance.signIn(input)
+      return ClerkApi.instance.signIn(identifier.value)
     }
   }
 }
@@ -193,14 +301,14 @@ data class SignIn(
  *
  * Returns a SignIn object. Check the firstFactorVerification attribute for the status of the first
  * factor verification process.
+ *
+ * @param strategy The strategy to authenticate with.
+ * @see SignIn.PrepareFirstFactorParams
  */
 suspend fun SignIn.prepareFirstFactor(
-  strategy: RequestParams.SignInRequest.PrepareFirstFactor
+  strategy: PrepareFirstFactorParams.Strategy
 ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
-  return ClerkApi.instance.prepareSignInFirstFactor(
-    this.id,
-    PrepareFirstFactorParams.fromStrategy(this, strategy).toMap(),
-  )
+  return ClerkApi.instance.prepareSignInFirstFactor(this.id, strategy.toFormData().toMap())
 }
 
 /**
@@ -219,27 +327,26 @@ suspend fun SignIn.prepareFirstFactor(
  * factor verification process.
  *
  * @param params The parameters for the first factor verification.
- * @see [RequestParams.SignInRequest.AttemptFirstFactor]
+ * @see [SignIn.AttemptFirstFactorParams]
  */
 suspend fun SignIn.attemptFirstFactor(
-  params: RequestParams.SignInRequest.AttemptFirstFactor
+  params: SignIn.AttemptFirstFactorParams
 ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
-  return ClerkApi.instance.attemptFirstFactor(id = this.id, params = params.toMap())
+  return ClerkApi.instance.attemptFirstFactor(id = this.id, params = emptyMap())
 }
 
 /**
  * Resets the password for the current sign in attempt.
  *
- * @param password The users new password
- * @param signOutOfOtherSessions Whether to sign out of other sessions. Defaults to false.
+ * @param params an instance of [SignIn.ResetPasswordParams]
+ * @see SignIn.ResetPasswordParams
  */
 suspend fun SignIn.resetPassword(
-  password: String,
-  signOutOfOtherSessions: Boolean = false,
+  params: SignIn.ResetPasswordParams
 ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
   return ClerkApi.instance.resetPassword(
     id = this.id,
-    password = password,
-    signOutOfOtherSessions = signOutOfOtherSessions,
+    password = params.password,
+    signOutOfOtherSessions = params.signOutOfOtherSessions,
   )
 }

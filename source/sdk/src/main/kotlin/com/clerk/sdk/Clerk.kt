@@ -6,7 +6,9 @@ import com.clerk.sdk.configuration.ConfigurationManager
 import com.clerk.sdk.log.ClerkLog
 import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
+import com.clerk.sdk.model.environment.UserSettings
 import com.clerk.sdk.model.session.Session
+import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.user.User
 import com.clerk.sdk.service.SignOutService
 import kotlinx.coroutines.flow.Flow
@@ -36,7 +38,7 @@ object Clerk {
   // region State Properties
 
   /** The Client object for the current device. */
-  var client: Client? = null
+  lateinit var client: Client
 
   /** The Environment object for the current client */
   private lateinit var environment: Environment
@@ -48,7 +50,13 @@ object Clerk {
   val logoUrl: String
     get() = environment.displayConfig.logoImageUrl
 
+  val socialProviders: Map<String, UserSettings.SocialConfig>
+    get() = environment.userSettings.social
+
   public val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized.asStateFlow()
+
+  public var signIn: SignIn? = null
+    get() = client.signIn
 
   // endregion
 
@@ -59,7 +67,7 @@ object Clerk {
    * If there is no active session, this field will be nil.
    */
   val session: Session?
-    get() = client.let { c -> c?.sessions?.firstOrNull { it.id == c.lastActiveSessionId } }
+    get() = client.let { c -> c.sessions.firstOrNull { it.id == c.lastActiveSessionId } }
 
   /**
    * A shortcut to Session.user which holds the currently active User object. If the session is nil,

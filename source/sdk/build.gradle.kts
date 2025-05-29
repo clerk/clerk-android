@@ -2,6 +2,7 @@ plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.plugin.serialization)
+  alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.ksp)
   id("maven-publish")
 }
@@ -14,10 +15,12 @@ android {
 
   buildTypes { release { isMinifyEnabled = false } }
 
+  buildFeatures { compose = true }
+
   publishing {
     singleVariant("release") {
       withSourcesJar()
-      //      withJavadocJar()
+      withJavadocJar()
     }
   }
 }
@@ -37,9 +40,12 @@ afterEvaluate {
 }
 
 dependencies {
+  implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.datastore)
+  implementation(libs.androidx.foundation.layout.android)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
+  implementation(libs.androidx.ui.tooling)
   implementation(libs.chucker.debug)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
