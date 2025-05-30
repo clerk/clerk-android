@@ -41,6 +41,7 @@ afterEvaluate {
 
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
+  implementation(libs.androidx.browser)
   implementation(libs.androidx.datastore)
   implementation(libs.androidx.foundation.layout.android)
   implementation(libs.androidx.lifecycle)
