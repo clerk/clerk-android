@@ -3,7 +3,6 @@ package com.clerk.sdk.network
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.clerk.sdk.Clerk
-import com.clerk.sdk.error.ClerkClientError
 import com.clerk.sdk.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.sdk.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.sdk.network.middleware.outgoing.HeaderMiddleware
@@ -36,10 +35,7 @@ internal object ClerkApi {
   /** Exposes the configured Clerk API service or throws if not initialized. */
   internal val instance: ClerkApiService
     get() =
-      _instance
-        ?: throw ClerkClientError(
-          "ClerkApi is not configured. Call ClerkApi.configure(baseUrl) first."
-        )
+      _instance ?: error("ClerkApi is not configured. Call ClerkApi.configure(baseUrl) first.")
 
   /** Initializes the API client with the given [baseUrl]. */
   fun configure(baseUrl: String, context: Context) {

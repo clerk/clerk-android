@@ -1,7 +1,6 @@
 package com.clerk.sdk.util
 
 import android.util.Base64
-import com.clerk.sdk.error.ClerkClientError
 import com.clerk.sdk.util.TokenConstants.TOKEN_PREFIX_LIVE
 import com.clerk.sdk.util.TokenConstants.TOKEN_PREFIX_TEST
 
@@ -25,7 +24,7 @@ internal class PublishableKeyHelper {
     return if (decodedString.isNotEmpty()) {
       "$URL_SSL_PREFIX${decodedString.dropLast(1)}"
     } else {
-      throw ClerkClientError("Invalid publishable key")
+      error("Invalid publishable key")
     }
   }
 }

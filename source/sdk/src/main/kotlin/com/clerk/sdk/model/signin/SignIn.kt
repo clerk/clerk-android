@@ -256,6 +256,18 @@ data class SignIn(
 
       /** Username identifier. */
       @Serializable data class Username(override val value: String) : Identifier
+
+      /**
+       * OAuth identifier.
+       *
+       * @param [value] should be `oauth_google`, `oauth_facebook`, etc. When using Clerk you can
+       *   get this field from [com.clerk.sdk.model.environment.UserSettings.SocialConfig.strategy],
+       *   the available and configured social providers can be found via
+       *   [com.clerk.sdk.Clerk.socialProviders]
+       * @param [redirectUrl] The URL to redirect to after the OAuth flow completes.
+       */
+      @Serializable
+      data class OAuth(override val value: String, val redirectUrl: String) : Identifier
     }
   }
 

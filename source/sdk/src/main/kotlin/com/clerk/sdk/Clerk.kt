@@ -50,6 +50,16 @@ object Clerk {
   val logoUrl: String
     get() = environment.displayConfig.logoImageUrl
 
+  /**
+   * Gets the map of available social providers configured in the Clerk environment.
+   *
+   * This map contains the strategies for each social provider, which can be used to identify OAuth
+   * providers when initiating a sign-in process. The keys are the strategy identifiers (e.g.,
+   * "oauth_google"), and the values provide configuration details for each provider.
+   *
+   * Use this to obtain the available social providers and their respective strategy names when
+   * constructing [SignIn.create] with an OAuth identifier.
+   */
   val socialProviders: Map<String, UserSettings.SocialConfig>
     get() = environment.userSettings.social
 
