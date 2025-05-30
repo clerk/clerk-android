@@ -41,11 +41,14 @@ afterEvaluate {
 
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
+  implementation(libs.androidx.appcompat)
   implementation(libs.androidx.browser)
   implementation(libs.androidx.datastore)
   implementation(libs.androidx.foundation.layout.android)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
+  implementation(libs.androidx.lifecycle.runtime)
+  implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.ui.tooling)
   implementation(libs.chucker.debug)
   implementation(libs.kotlinx.coroutines)

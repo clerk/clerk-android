@@ -56,7 +56,7 @@ internal interface ClerkApiService {
 
   // endregion
 
-  // region Sesszion
+  // region Session
 
   @GET(Paths.ClientPath.Sessions.SESSIONS)
   suspend fun sessions(): ClerkApiResult<Unit, ClerkErrorResponse>
@@ -88,12 +88,20 @@ internal interface ClerkApiService {
   // region Sign In
   @FormUrlEncoded
   @POST(Paths.ClientPath.SignInPath.SIGN_INS)
-  suspend fun signIn(
+  suspend fun createSignIn(
     @Field("identifier") identifier: String
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
+  /** @see SignIn.authenticateWithRedirect */
+  @FormUrlEncoded
+  @POST(Paths.ClientPath.SignInPath.SIGN_INS)
+  suspend fun authenticateWithRedirect(
+    @Field("strategy") strategy: String,
+    @Field("redirect_url") redirectUrl: String,
+  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
+
   @GET(Paths.ClientPath.SignInPath.WithId.SIGN_INS_WITH_ID)
-  suspend fun signIn(
+  suspend fun fetchSignIn(
     @Path("id") id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
@@ -108,7 +116,7 @@ internal interface ClerkApiService {
   @POST(Paths.ClientPath.SignInPath.WithId.ATTEMPT_FIRST_FACTOR)
   suspend fun attemptSecondFactor(
     @Path("id") id: String,
-    @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
+    @Query("rotating_token_nonce") rotatingTokenNonce: String,
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   @FormUrlEncoded

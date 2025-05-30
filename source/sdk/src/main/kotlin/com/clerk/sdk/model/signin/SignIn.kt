@@ -2,6 +2,7 @@
 
 package com.clerk.sdk.model.signin
 
+import android.content.Context
 import com.clerk.automap.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.factor.Factor
@@ -12,6 +13,8 @@ import com.clerk.sdk.model.signin.internal.toMap
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.serialization.ClerkApiResult
+import com.clerk.sdk.service.SSOService
+import com.clerk.sdk.sso.RedirectConfiguration
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -215,6 +218,27 @@ data class SignIn(
     }
   }
 
+  sealed interface AuthenticateWithRedirectParams {
+    val strategy: String
+    val redirectUrl: String
+
+    data class OAuth(
+      override val strategy: String,
+      @SerialName("redirect_url")
+      override val redirectUrl: String = RedirectConfiguration.REDIRECT_URL,
+    ) : AuthenticateWithRedirectParams {
+      constructor(strategy: String) : this(strategy, RedirectConfiguration.REDIRECT_URL)
+    }
+
+    data class EnterpriseSSO(
+      override val strategy: String,
+      @SerialName("redirect_url")
+      override val redirectUrl: String = RedirectConfiguration.REDIRECT_URL,
+    ) : AuthenticateWithRedirectParams {
+      constructor(strategy: String) : this(strategy, RedirectConfiguration.REDIRECT_URL)
+    }
+  }
+
   sealed interface PrepareFirstFactorParams {
 
     @Serializable
@@ -298,7 +322,32 @@ data class SignIn(
     suspend fun create(
       identifier: SignInCreateParams.Identifier
     ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
-      return ClerkApi.instance.signIn(identifier.value)
+      return ClerkApi.instance.createSignIn(identifier.value)
+    }
+
+    /**
+     * Initiates the sign-in process using an OAuth or Enterprise SSO redirect flow.
+     *
+     * This method is used for authentication strategies that require redirecting the user to an
+     * external authentication provider (e.g., Google, Facebook, or an Enterprise SSO provider). The
+     * user will be redirected to the specified [redirectUrl] to complete authentication.
+     *
+     * @param context The context in which the authentication flow is initiated. Used to open the in
+     *   app browser.
+     * @param params The parameters for the redirect-based authentication.
+     *     - [strategy]: The authentication strategy (e.g., OAuth provider or Enterprise SSO).
+     *     - [redirectUrl]: The URL to redirect the user to after initiating the authentication
+     *       flow.
+     *
+     * Supported strategies include:
+     * - OAuth providers (e.g., `oauth_google`, `oauth_facebook`)
+     * - Enterprise SSO providers
+     */
+    suspend fun authenticateWithRedirect(
+      context: Context,
+      params: AuthenticateWithRedirectParams,
+    ): ClerkApiResult<SignIn, ClerkErrorResponse> {
+      return SSOService.authenticateWithRedirect(context, params)
     }
   }
 }
@@ -361,4 +410,10 @@ suspend fun SignIn.resetPassword(
     password = params.password,
     signOutOfOtherSessions = params.signOutOfOtherSessions,
   )
+}
+
+suspend fun SignIn.get(
+  rotatingTokenNonce: String? = null
+): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+  return ClerkApi.instance.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
