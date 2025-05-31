@@ -49,7 +49,7 @@ class PublishableKeyHelperTest {
     assertEquals("https://$domain", result)
   }
 
-  @Test(expected = ClerkClientError::class)
+  @Test(expected = IllegalStateException::class)
   fun `extractApiUrl with empty decoded string throws ClerkClientError`() {
     // Given
     val emptyString = ""
