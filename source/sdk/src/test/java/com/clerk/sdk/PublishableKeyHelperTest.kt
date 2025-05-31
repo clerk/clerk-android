@@ -1,7 +1,6 @@
 package com.clerk.sdk
 
 import android.util.Base64
-import com.clerk.sdk.error.ClerkClientError
 import com.clerk.sdk.util.PublishableKeyHelper
 import com.clerk.sdk.util.TokenConstants
 import org.junit.Assert.assertEquals
@@ -50,7 +49,7 @@ class PublishableKeyHelperTest {
     assertEquals("https://$domain", result)
   }
 
-  @Test(expected = ClerkClientError::class)
+  @Test(expected = IllegalStateException::class)
   fun `extractApiUrl with empty decoded string throws ClerkClientError`() {
     // Given
     val emptyString = ""

@@ -11,7 +11,10 @@ android {
   namespace = "com.clerk.sdk"
   compileSdk = 35
 
-  defaultConfig { minSdk = 24 }
+  defaultConfig {
+    minSdk = 24
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+  }
 
   buildTypes { release { isMinifyEnabled = false } }
 
@@ -41,10 +44,14 @@ afterEvaluate {
 
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
+  implementation(libs.androidx.appcompat)
+  implementation(libs.androidx.browser)
   implementation(libs.androidx.datastore)
   implementation(libs.androidx.foundation.layout.android)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
+  implementation(libs.androidx.lifecycle.runtime)
+  implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.ui.tooling)
   implementation(libs.chucker.debug)
   implementation(libs.kotlinx.coroutines)
@@ -58,12 +65,21 @@ dependencies {
   implementation(libs.retrofit.kotlinx)
   implementation(projects.autoMap)
 
+  testImplementation(kotlin("test"))
   testImplementation(libs.androidx.arch.test)
+  testImplementation(libs.core.ktx)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.mockito)
   testImplementation(libs.mockk)
   testImplementation(libs.robolectric)
+
+  androidTestImplementation(libs.androidx.arch.test)
+  androidTestImplementation(libs.junit)
+  androidTestImplementation(libs.kotlinx.coroutines.test)
+  androidTestImplementation(libs.mockito)
+  androidTestImplementation(libs.mockk)
+  androidTestImplementation(libs.robolectric)
 
   ksp(projects.autoMap)
 }

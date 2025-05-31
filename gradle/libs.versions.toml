@@ -1,7 +1,8 @@
 [versions]
-agp = "8.10.1"
+agp = "8.10.0"
 appcompat = "1.7.0"
 coreKtx = "1.16.0"
+coreKtxVersion = "1.6.1"
 dagger = "2.56.2"
 datastore = "1.1.7"
 detekt = "1.23.8"
@@ -37,13 +38,16 @@ androidx-datastore = { group = "androidx.datastore", name = "datastore-preferenc
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.0"
+androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
+androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.0"
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-
+androidx-browser = "androidx.browser:browser:1.8.0"
 chucker-debug = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
 chucker-release = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker" }
 
+core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
 dagger = { group = "com.google.dagger", name = "dagger", version.ref = "dagger" }
 dagger-compiler = { group = "com.google.dagger", name = "dagger-compiler", version.ref = "dagger" }
 

@@ -12,10 +12,6 @@ import kotlinx.coroutines.flow.flowOn
 
 /**
  * SignOutService is responsible for signing out the user by removing the session from the Clerk
- * API. It uses a coroutine to perform the network operation on a background thread.
- */
-/**
- * SignOutService is responsible for signing out the user by removing the session from the Clerk
  * API. It uses a coroutine to perform the network operation on a background thread and returns a
  * Flow of SignOutState to provide updates on the operation status.
  */

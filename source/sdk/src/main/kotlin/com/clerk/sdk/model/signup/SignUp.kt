@@ -5,10 +5,10 @@ package com.clerk.sdk.model.signup
 import com.clerk.automap.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
-import com.clerk.sdk.model.signup.SignUp.Companion.create
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.serialization.ClerkApiResult
+import com.clerk.sdk.sso.SSOResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -234,6 +234,8 @@ data class SignUp(
      * This is useful for inspecting a newly created `SignUp` object before deciding on a strategy.
      */
     object None : SignUpCreateParams
+
+    object Transfer : SignUpCreateParams
   }
 
   companion object {
@@ -253,17 +255,22 @@ data class SignUp(
      * What you must pass to params depends on which sign-up options you have enabled in your Clerk
      * application instance.
      *
-     * @param [create] The strategy to use for creating the sign-up. @see [Create] for details.
-     * @param create The parameters for creating the sign-up. @see [Create] for details.
+     * @param [params] The strategy to use for creating the sign-up. @see [Create] for details.
+     * @param params The parameters for creating the sign-up. @see [Create] for details.
      * @return A [SignUp] object containing the current status and details of the sign-up process.
      *   The [status] property reflects the current state of the sign-up.
-     * @see [SignUp] kdoc for more info
+     * @see [SignUp]
      */
     suspend fun create(
-      create: SignUpCreateParams
+      params: SignUpCreateParams
     ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
-
-      return ClerkApi.instance.createSignUp(create.toMap())
+      val paramMap =
+        if (params is SignUpCreateParams.Transfer) {
+          mapOf("transfer" to "true")
+        } else {
+          params.toMap()
+        }
+      return ClerkApi.instance.createSignUp(paramMap)
     }
   }
 }
@@ -316,3 +323,6 @@ suspend fun SignUp.attemptVerification(
     code = params.code,
   )
 }
+
+/** Converts the [SignUp] object to an [SSOResult] object. */
+fun SignUp.toSSOResult() = SSOResult(signUp = this)
