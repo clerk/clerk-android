@@ -1,3 +1,5 @@
+@file:Suppress("LongMethod")
+
 package com.clerk.automap.processor
 
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -62,12 +64,49 @@ internal class SealedInterfaceGenerator(
       appendLine("${visibilityModifier}fun $functionParameterType.toMap(): Map<String, String> {")
       appendLine("    return when (this) {")
 
-      // Generate when branches ONLY for @AutoMap implementations using fully qualified names
+      // Generate when branches ONLY for @AutoMap implementations
+      // Instead of calling toMap() recursively, we need to generate the actual mapping logic
       implementations.forEach { impl ->
         val implFullyQualifiedName = impl.qualifiedName?.asString() ?: return@forEach
         val implNestedName = getNestedClassName(impl)
         logger.info("Adding when branch for: $implNestedName (qualified: $implFullyQualifiedName)")
-        appendLine("        is $implNestedName -> (this as $implNestedName).toMap()")
+
+        // Generate inline mapping instead of recursive toMap() call
+        appendLine("        is $implNestedName -> {")
+        appendLine("            val map = mutableMapOf<String, String>()")
+
+        // Get properties of this implementation and generate mapping logic
+        val properties = impl.getAllProperties().toList()
+        properties.forEach { property ->
+          val propName = property.simpleName.asString()
+
+          // Check for @SerialName annotation
+          val serialNameAnnotation =
+            property.annotations.find {
+              it.shortName.asString() == "SerialName" &&
+                it.annotationType.resolve().declaration.qualifiedName?.asString() ==
+                  "kotlinx.serialization.SerialName"
+            }
+
+          val keyName =
+            if (serialNameAnnotation != null) {
+              val serialNameValue =
+                serialNameAnnotation.arguments
+                  .find { it.name?.asString() == null || it.name?.asString() == "value" }
+                  ?.value
+                  ?.toString()
+                  ?.trim('"') ?: propName
+              serialNameValue
+            } else {
+              propName
+            }
+
+          // Add null check before adding to map
+          appendLine("            this.$propName?.let { map[\"$keyName\"] = it.toString() }")
+        }
+
+        appendLine("            map")
+        appendLine("        }")
       }
 
       // Add an else branch for any non-@AutoMap implementations

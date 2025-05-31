@@ -39,12 +39,11 @@ internal class SSOManagerActivity : AppCompatActivity() {
   }
 
   override fun onResume() {
-    ClerkLog.e("onResume called")
     super.onResume()
     // on first run, launch the intent to start the OAuth/SSO flow in the browser
     if (!authorizationStarted) {
       try {
-        ClerkLog.e("Launching custom tab with uri: $desiredUri")
+        ClerkLog.d("Launching custom tab with uri: $desiredUri")
         CustomTabsIntent.Builder().build().launchUrl(this, desiredUri)
         authorizationStarted = true
       } catch (_: UninitializedPropertyAccessException) {
@@ -78,7 +77,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
    * @param state Bundle containing the activity state
    */
   private fun hydrateState(state: Bundle?) {
-    ClerkLog.e("hydrateState called with state: $state")
+    ClerkLog.d("hydrateState called with state: $state")
     if (state == null) return finish()
     authorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false)
     state.getString(URI_KEY)?.let { desiredUri = Uri.parse(it) }

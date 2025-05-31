@@ -3,23 +3,27 @@ package com.clerk.sdk.service
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.core.net.toUri
 import com.clerk.sdk.Clerk
+import com.clerk.sdk.log.ClerkLog
 import com.clerk.sdk.model.error.ClerkErrorResponse
-import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.signin.get
+import com.clerk.sdk.model.signin.toSSOResult
+import com.clerk.sdk.model.signup.SignUp
+import com.clerk.sdk.model.signup.toSSOResult
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.serialization.ClerkApiResult
+import com.clerk.sdk.service.SSOService.authenticateWithRedirect
 import com.clerk.sdk.sso.SSOReceiverActivity
-import java.util.concurrent.ConcurrentHashMap
+import com.clerk.sdk.sso.SSOResult
 import kotlinx.coroutines.CompletableDeferred
 
 internal object SSOService {
-  private val pendingResults =
-    ConcurrentHashMap<
-      String,
-      CompletableDeferred<ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>>,
-    >()
+  private var currentPendingAuth:
+    CompletableDeferred<ClerkApiResult<SSOResult, ClerkErrorResponse>>? =
+    null
+  private var currentSignInId: String? = null
 
   /**
    * Handles Single Sign-On (SSO) and OAuth authentication flows for the Clerk SDK.
@@ -35,7 +39,15 @@ internal object SSOService {
   suspend fun authenticateWithRedirect(
     context: Context,
     params: SignIn.AuthenticateWithRedirectParams,
-  ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+  ): ClerkApiResult<SSOResult, ClerkErrorResponse> {
+    // Clear any existing pending auth to prevent conflicts
+    currentPendingAuth?.complete(
+      ClerkApiResult.unknownFailure(
+        Exception("New authentication started, cancelling previous attempt")
+      )
+    )
+    clearCurrentAuth()
+
     val initialResult =
       ClerkApi.instance.authenticateWithRedirect(
         strategy = params.strategy,
@@ -44,9 +56,12 @@ internal object SSOService {
 
     return when (initialResult) {
       is ClerkApiResult.Failure -> {
+        val message = initialResult.error?.errors?.first()?.message
+        ClerkLog.e("Failed to authenticate with redirect: $message")
         ClerkApiResult.apiFailure(initialResult.error)
       }
       is ClerkApiResult.Success -> {
+        ClerkLog.d("Successfully authenticated with redirect: $initialResult")
         val externalUrl =
           requireNotNull(
             initialResult.value.response.firstFactorVerification?.externalVerificationRedirectUrl
@@ -56,13 +71,13 @@ internal object SSOService {
 
         val signInId = initialResult.value.response.id
         val completableDeferred =
-          CompletableDeferred<
-            ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
-          >()
-        pendingResults[signInId] = completableDeferred
+          CompletableDeferred<ClerkApiResult<SSOResult, ClerkErrorResponse>>()
+
+        currentPendingAuth = completableDeferred
+        currentSignInId = signInId
 
         val intent =
-          Intent(context, SSOReceiverActivity::class.java).apply { data = Uri.parse(externalUrl) }
+          Intent(context, SSOReceiverActivity::class.java).apply { data = externalUrl.toUri() }
         context.startActivity(intent)
 
         // This will suspend until completeAuthenticateWithRedirect is called
@@ -85,48 +100,98 @@ internal object SSOService {
    *   Expected to contain a `rotating_token_nonce` query parameter to associate with the pending
    *   sign-in request.
    */
+  @Suppress("TooGenericExceptionCaught")
   suspend fun completeAuthenticateWithRedirect(uri: Uri) {
     try {
+      ClerkLog.d("Completing authentication with redirect: $uri")
+
+      if (currentPendingAuth == null) {
+        ClerkLog.w("No pending authentication found for redirect: $uri")
+        return
+      }
+
       val nonce = uri.getQueryParameter("rotating_token_nonce")
 
       // It's a sign up, so call for a transfer
       if (nonce == null) {
-        //        SignIn.create()
+        handleSignUpTransfer()
+      } else {
+        handleSignIn(nonce)
       }
-
-      val signInResult = requireNotNull(Clerk.signIn).get(rotatingTokenNonce = nonce)
-
-      when (signInResult) {
-        is ClerkApiResult.Success -> {
-          val signIn = signInResult.value.response
-          val deferred = pendingResults.remove(signIn.id)
-          deferred?.complete(ClerkApiResult.success(signInResult.value))
-        }
-        is ClerkApiResult.Failure -> {
-          // If we can't determine which sign-in failed, complete all pending ones
-          val deferredResults = pendingResults.values.toList()
-          pendingResults.clear()
-          deferredResults.forEach { it.complete(ClerkApiResult.apiFailure((signInResult.error))) }
-        }
-      }
-    } catch (e: IllegalArgumentException) {
-      val deferreds = pendingResults.values.toList()
-      pendingResults.clear()
-      deferreds.forEach { it.complete(ClerkApiResult.unknownFailure(e)) }
+    } catch (e: Exception) {
+      ClerkLog.e("Error completing authentication with redirect: ${e.message}")
+      currentPendingAuth?.complete(ClerkApiResult.unknownFailure(e))
+      clearCurrentAuth()
     }
   }
 
-  fun cancelAuthenticateWithRedirect(signInId: String? = null) {
-    if (signInId != null) {
-      pendingResults
-        .remove(signInId)
-        ?.complete(ClerkApiResult.unknownFailure(error("Authentication canceled")))
-    } else {
-      val deferreds = pendingResults.values.toList()
-      pendingResults.clear()
-      deferreds.forEach {
-        it.complete(ClerkApiResult.unknownFailure(error("Authentication canceled")))
+  private suspend fun handleSignIn(nonce: String) {
+    val signInResult = requireNotNull(Clerk.signIn).get(rotatingTokenNonce = nonce)
+
+    when (signInResult) {
+      is ClerkApiResult.Success -> {
+        ClerkLog.d("Successfully completed sign-in with nonce: $nonce")
+        currentPendingAuth?.complete(
+          ClerkApiResult.success(signInResult.value.response.toSSOResult())
+        )
+        clearCurrentAuth()
+      }
+
+      is ClerkApiResult.Failure -> {
+        val errorMessage = signInResult.error?.errors?.first()?.longMessage
+        ClerkLog.e(
+          "Failed to complete sign-in with rotating token nonce $nonce, error: $errorMessage"
+        )
+        currentPendingAuth?.complete(ClerkApiResult.apiFailure(signInResult.error))
+        clearCurrentAuth()
       }
     }
+  }
+
+  private suspend fun handleSignUpTransfer() {
+    ClerkLog.d("Handling sign-up transfer")
+    val createResult = SignUp.create(SignUp.SignUpCreateParams.Transfer)
+
+    when (createResult) {
+      is ClerkApiResult.Success -> {
+        ClerkLog.d("Successfully completed sign-up transfer")
+        currentPendingAuth?.complete(
+          ClerkApiResult.success(createResult.value.response.toSSOResult())
+        )
+        clearCurrentAuth()
+      }
+
+      is ClerkApiResult.Failure -> {
+        val errorMessage = createResult.error?.errors?.first()?.longMessage
+        ClerkLog.e("Failed to complete sign-up transfer, error: $errorMessage")
+        currentPendingAuth?.complete(ClerkApiResult.apiFailure(createResult.error))
+        clearCurrentAuth()
+      }
+    }
+  }
+
+  /**
+   * Clears the current authentication state. Should be called when authentication completes
+   * (successfully or with error).
+   */
+  private fun clearCurrentAuth() {
+    currentPendingAuth = null
+    currentSignInId = null
+  }
+
+  /**
+   * Cancels any pending authentication flow. Useful for cleanup when the authentication process
+   * needs to be aborted.
+   */
+  fun cancelPendingAuthentication() {
+    currentPendingAuth?.complete(
+      ClerkApiResult.unknownFailure(Exception("Authentication cancelled"))
+    )
+    clearCurrentAuth()
+  }
+
+  /** Returns true if there's currently a pending authentication flow. */
+  fun hasPendingAuthentication(): Boolean {
+    return currentPendingAuth != null
   }
 }
