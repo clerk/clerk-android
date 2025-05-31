@@ -1,4 +1,4 @@
-@file:Suppress("NestedBlockDepth", "TooGenericExceptionCaught", "ReturnCount", "MagicNumber")
+@file:Suppress("TooGenericExceptionCaught", "ReturnCount")
 
 package com.clerk.automap.processor
 
