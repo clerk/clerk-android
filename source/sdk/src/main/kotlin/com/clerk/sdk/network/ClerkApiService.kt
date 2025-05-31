@@ -86,10 +86,15 @@ internal interface ClerkApiService {
   // endregion
 
   // region Sign In
+
+  /**
+   * @param params The parameters for the sign in. @see [SignIn.SignInCreateParams]
+   * @see SignIn.create
+   */
   @FormUrlEncoded
   @POST(Paths.ClientPath.SignInPath.SIGN_INS)
   suspend fun createSignIn(
-    @Field("identifier") identifier: String
+    @FieldMap params: Map<String, String>
   ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse>
 
   /** @see SignIn.authenticateWithRedirect */

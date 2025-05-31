@@ -219,6 +219,7 @@ data class SignIn(
   }
 
   sealed interface AuthenticateWithRedirectParams {
+
     val strategy: String
     val redirectUrl: String
 
@@ -269,29 +270,50 @@ data class SignIn(
   /** Represents an authentication identifier. */
   object SignInCreateParams {
 
-    sealed interface Identifier {
-      val value: String
+    sealed interface Strategy {
+      val strategy: String
 
-      /** Email address identifier. */
-      @Serializable data class Email(override val value: String) : Identifier
+      @AutoMap
+      @Serializable
+      data class EmailCode(override val strategy: String = EMAIL_CODE, val identifier: String) :
+        Strategy {
+        constructor(identifier: String) : this(strategy = EMAIL_CODE, identifier = identifier)
+      }
 
-      /** Phone number identifier. */
-      @Serializable data class Phone(override val value: String) : Identifier
+      @AutoMap
+      @Serializable
+      data class PhoneCode(override val strategy: String = PHONE_CODE, val identifier: String) :
+        Strategy {
+        constructor(identifier: String) : this(strategy = PHONE_CODE, identifier = identifier)
+      }
 
-      /** Username identifier. */
-      @Serializable data class Username(override val value: String) : Identifier
+      @AutoMap
+      @Serializable
+      data class Password(override val strategy: String = PASSWORD, val identifier: String) :
+        Strategy {
+        constructor(identifier: String) : this(strategy = PASSWORD, identifier = identifier)
+      }
 
       /**
        * OAuth identifier.
        *
-       * @param [value] should be `oauth_google`, `oauth_facebook`, etc. When using Clerk you can
+       * @param [strategy] should be `oauth_google`, `oauth_facebook`, etc. When using Clerk you can
        *   get this field from [com.clerk.sdk.model.environment.UserSettings.SocialConfig.strategy],
        *   the available and configured social providers can be found via
        *   [com.clerk.sdk.Clerk.socialProviders]
        * @param [redirectUrl] The URL to redirect to after the OAuth flow completes.
+       * @param context The context in which the authentication flow is initiated. Used to open the
+       *   in app browser.
        */
-      @Serializable
-      data class OAuth(override val value: String, val redirectUrl: String) : Identifier
+      data class OAuth(
+        override val strategy: String,
+        val redirectUrl: String,
+        val context: Context,
+      ) : Strategy
+
+      data class Transfer(override val strategy: String = "transfer") : Strategy {
+        constructor() : this(strategy = "transfer")
+      }
     }
   }
 
@@ -317,12 +339,26 @@ data class SignIn(
      * 6. If verification is successful, set the newly created session as the active session by
      *    passing the `SignIn.createdSessionId` to the `setActive()` method on the `Clerk` object.
      *
-     *     @param [identifier] The identifier of the user to authenticate with
+     * @param params The strategy to authenticate with.
+     * @see [SignIn.SignInCreateParams]
      */
     suspend fun create(
-      identifier: SignInCreateParams.Identifier
+      params: SignInCreateParams.Strategy
     ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
-      return ClerkApi.instance.createSignIn(identifier.value)
+      return when (params) {
+        is SignInCreateParams.Strategy.OAuth ->
+          SSOService.authenticateWithRedirect(
+            context = params.context,
+            params =
+              AuthenticateWithRedirectParams.OAuth(
+                strategy = params.strategy,
+                redirectUrl = params.redirectUrl,
+              ),
+          )
+        is SignInCreateParams.Strategy.Transfer ->
+          ClerkApi.instance.createSignIn(mapOf("transfer" to "true"))
+        else -> ClerkApi.instance.createSignIn(params.toMap())
+      }
     }
 
     /**
@@ -330,23 +366,26 @@ data class SignIn(
      *
      * This method is used for authentication strategies that require redirecting the user to an
      * external authentication provider (e.g., Google, Facebook, or an Enterprise SSO provider). The
-     * user will be redirected to the specified [redirectUrl] to complete authentication.
+     * user will be redirected to the specified [AuthenticateWithRedirectParams.redirectUrl] to
+     * complete authentication.
      *
      * @param context The context in which the authentication flow is initiated. Used to open the in
      *   app browser.
      * @param params The parameters for the redirect-based authentication.
-     *     - [strategy]: The authentication strategy (e.g., OAuth provider or Enterprise SSO).
-     *     - [redirectUrl]: The URL to redirect the user to after initiating the authentication
-     *       flow.
+     *     - [AuthenticateWithRedirectParams.strategy]: The authentication strategy (e.g., OAuth
+     *       provider or Enterprise SSO).
+     *     - [AuthenticateWithRedirectParams.redirectUrl]: The URL to redirect the user to after
+     *       initiating the authentication flow.
      *
      * Supported strategies include:
      * - OAuth providers (e.g., `oauth_google`, `oauth_facebook`)
-     * - Enterprise SSO providers
+     *
+     * **See Also:** [OAuthProviders](https://clerk.com/docs/references/javascript/types/sso)
      */
     suspend fun authenticateWithRedirect(
       context: Context,
       params: AuthenticateWithRedirectParams,
-    ): ClerkApiResult<SignIn, ClerkErrorResponse> {
+    ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
       return SSOService.authenticateWithRedirect(context, params)
     }
   }
