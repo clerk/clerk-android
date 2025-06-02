@@ -13,7 +13,22 @@ import okhttp3.Interceptor
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 
+/**
+ * Network middleware that automatically syncs the Clerk client state from API responses.
+ *
+ * This middleware intercepts successful JSON responses and checks for a "client" field in the
+ * response body. If found, it deserializes the client data and updates the global [Clerk.client]
+ * state.
+ *
+ * @property json The JSON serializer used for deserializing the client data.
+ */
 class ClientSyncingMiddleware(private val json: Json) : Interceptor {
+  /**
+   * Intercepts network responses to sync client state.
+   *
+   * @param chain The interceptor chain.
+   * @return The original response, potentially with a new body if it was read for client syncing.
+   */
   override fun intercept(chain: Interceptor.Chain): Response {
     val response = chain.proceed(chain.request())
 
