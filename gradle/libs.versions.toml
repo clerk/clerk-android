@@ -81,7 +81,6 @@ retrofit-converterScalars = { module = "com.squareup.retrofit2:converter-scalars
 
 robolectric = "org.robolectric:robolectric:4.14.1"
 
-statelyCollections = "co.touchlab:stately-concurrent-collections:2.0.7"
 androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationLayoutAndroid" }
 
 
