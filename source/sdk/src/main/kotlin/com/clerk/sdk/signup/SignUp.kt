@@ -4,7 +4,6 @@ package com.clerk.sdk.signup
 
 import com.clerk.automap.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
-import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.serialization.ClerkApiResult
@@ -261,9 +260,7 @@ data class SignUp(
      *   The [status] property reflects the current state of the sign-up.
      * @see [SignUp]
      */
-    suspend fun create(
-      params: SignUpCreateParams
-    ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+    suspend fun create(params: SignUpCreateParams): ClerkApiResult<SignUp, ClerkErrorResponse> {
       val paramMap =
         if (params is SignUpCreateParams.Transfer) {
           mapOf("transfer" to "true")
@@ -277,7 +274,7 @@ data class SignUp(
 
 suspend fun SignUp.update(
   updateParams: SignUpUpdateParams
-): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+): ClerkApiResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.instance.updateSignUp(id, updateParams.toMap())
 }
 
@@ -299,7 +296,7 @@ suspend fun SignUp.update(
  */
 suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
-): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+): ClerkApiResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.instance.prepareSignUpVerification(this.id, prepareVerification.value)
 }
 
@@ -315,7 +312,7 @@ suspend fun SignUp.prepareVerification(
  */
 suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
-): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse> {
+): ClerkApiResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,
     strategy = params.strategy,

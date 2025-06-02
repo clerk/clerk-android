@@ -62,12 +62,12 @@ internal object SSOService {
         ClerkLog.d("Successfully authenticated with redirect: $initialResult")
         val externalUrl =
           requireNotNull(
-            initialResult.value.response.firstFactorVerification?.externalVerificationRedirectUrl
+            initialResult.value.firstFactorVerification?.externalVerificationRedirectUrl
           ) {
             "External URL cannot be null"
           }
 
-        val signInId = initialResult.value.response.id
+        val signInId = initialResult.value.id
         val completableDeferred =
           CompletableDeferred<ClerkApiResult<SSOResult, ClerkErrorResponse>>()
 
@@ -130,7 +130,7 @@ internal object SSOService {
       is ClerkApiResult.Success -> {
         ClerkLog.d("Successfully completed sign-in with nonce: $nonce")
         currentPendingAuth?.complete(
-          ClerkApiResult.Companion.success(signInResult.value.response.toSSOResult())
+          ClerkApiResult.Companion.success(signInResult.value.toSSOResult())
         )
         clearCurrentAuth()
       }
@@ -154,7 +154,7 @@ internal object SSOService {
       is ClerkApiResult.Success -> {
         ClerkLog.d("Successfully completed sign-up transfer")
         currentPendingAuth?.complete(
-          ClerkApiResult.Companion.success(createResult.value.response.toSSOResult())
+          ClerkApiResult.Companion.success(createResult.value.toSSOResult())
         )
         clearCurrentAuth()
       }

@@ -117,7 +117,7 @@ class ConfigurationManager {
         )
         callback(
           ClerkConfigurationState.Success(
-            client = clientResult.value.response,
+            client = clientResult.value,
             environment = environmentResult.value,
           )
         )

@@ -6,7 +6,6 @@ import android.content.Context
 import com.clerk.automap.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.factor.Factor
-import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.serialization.ClerkApiResult
@@ -352,7 +351,7 @@ data class SignIn(
      */
     suspend fun create(
       params: SignInCreateParams.Strategy
-    ): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+    ): ClerkApiResult<SignIn, ClerkErrorResponse> {
       return when (params) {
         is SignInCreateParams.Strategy.Transfer ->
           ClerkApi.instance.createSignIn(mapOf("transfer" to "true"))
@@ -410,7 +409,7 @@ data class SignIn(
  */
 suspend fun SignIn.prepareFirstFactor(
   strategy: PrepareFirstFactorParams.Strategy
-): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+): ClerkApiResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.prepareSignInFirstFactor(this.id, strategy.toFormData().toMap())
 }
 
@@ -434,7 +433,7 @@ suspend fun SignIn.prepareFirstFactor(
  */
 suspend fun SignIn.attemptFirstFactor(
   params: SignIn.AttemptFirstFactorParams
-): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+): ClerkApiResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.attemptFirstFactor(id = this.id, params = emptyMap())
 }
 
@@ -446,7 +445,7 @@ suspend fun SignIn.attemptFirstFactor(
  */
 suspend fun SignIn.resetPassword(
   params: SignIn.ResetPasswordParams
-): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+): ClerkApiResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.resetPassword(
     id = this.id,
     password = params.password,
@@ -456,7 +455,7 @@ suspend fun SignIn.resetPassword(
 
 suspend fun SignIn.get(
   rotatingTokenNonce: String? = null
-): ClerkApiResult<ClientPiggybackedResponse<SignIn>, ClerkErrorResponse> {
+): ClerkApiResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
 

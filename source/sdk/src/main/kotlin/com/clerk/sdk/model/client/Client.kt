@@ -1,7 +1,6 @@
 package com.clerk.sdk.model.client
 
 import com.clerk.sdk.model.error.ClerkErrorResponse
-import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.serialization.ClerkApiResult
@@ -41,7 +40,6 @@ data class Client(
 
   companion object {
     /** Fetches the current client object from the Clerk API. */
-    suspend fun get(): ClerkApiResult<ClientPiggybackedResponse<Client>, ClerkErrorResponse> =
-      ClerkApi.instance.client()
+    suspend fun get(): ClerkApiResult<Client, ClerkErrorResponse> = ClerkApi.instance.client()
   }
 }
