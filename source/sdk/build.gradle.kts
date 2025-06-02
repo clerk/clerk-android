@@ -1,10 +1,13 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.plugin.serialization)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.ksp)
-  id("maven-publish")
+  alias(libs.plugins.mavenPublish)
+  signing
 }
 
 android {
@@ -19,25 +22,35 @@ android {
   buildTypes { release { isMinifyEnabled = false } }
 
   buildFeatures { compose = true }
-
-  publishing {
-    singleVariant("release") {
-      withSourcesJar()
-      withJavadocJar()
-    }
-  }
 }
 
-afterEvaluate {
-  publishing {
-    publications {
-      register<MavenPublication>("release") {
-        groupId = "com.clerk"
-        artifactId = "clerk-android"
-        version = "0.1.0"
+mavenPublishing {
+  publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
 
-        from(components["release"])
+  pom {
+    name.set("Clerk Android SDK")
+    description.set("Clerk SDK for Android")
+    inceptionYear.set("2025")
+    url.set("https://github.com/clerk/clerk-android")
+    licenses {
+      license {
+        name.set("MIT License")
+        url.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+        distribution.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
       }
+    }
+
+    developers {
+      developer {
+        id.set("clerk")
+        name.set("Clerk")
+        url.set("https://clerk.com")
+      }
+    }
+    scm {
+      url.set("https://github.com/clerk/clerk-android")
+      connection.set("scm:git:git://github.com/clerk/clerk-android.git")
+      developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
     }
   }
 }

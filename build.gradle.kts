@@ -12,9 +12,11 @@ plugins {
   alias(libs.plugins.dokka) apply false
   alias(libs.plugins.sortDependencies) apply false
   alias(libs.plugins.jetbrains.kotlin.jvm) apply false
+  alias(libs.plugins.mavenPublish)
 }
 
 allprojects {
+  apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
     ratchetFrom("origin/main")
@@ -39,12 +41,42 @@ allprojects {
     }
   }
 
+  mavenPublishing {
+    coordinates("com.clerk", "clerk-android", "0.1.0")
+
+    pom {
+      name.set("Clerk Android SDK")
+      description.set("Clerk SDK for Android")
+      inceptionYear.set("2025")
+      url.set("https://github.com/clerk/clerk-android")
+      licenses {
+        license {
+          name.set("MIT License")
+          url.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+          distribution.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+        }
+      }
+
+      developers {
+        developer {
+          id.set("clerk")
+          name.set("Clerk")
+          url.set("https://clerk.com")
+        }
+      }
+      scm {
+        url.set("https://github.com/clerk/clerk-android")
+        connection.set("scm:git:git://github.com/clerk/clerk-android.git")
+        developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
+      }
+    }
+  }
+
   plugins.withType<KotlinBasePlugin>().configureEach {
     configure<JavaPluginExtension> {
       toolchain { languageVersion.set(JavaLanguageVersion.of(libs.versions.jvmTarget.get())) }
     }
   }
-
   apply(plugin = "io.gitlab.arturbosch.detekt")
   configure<DetektExtension> {
     toolVersion = "1.23.8"

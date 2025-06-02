@@ -1,52 +1,46 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
   id("java-library")
   alias(libs.plugins.jetbrains.kotlin.jvm)
   alias(libs.plugins.ksp)
-  id("maven-publish")
+  alias(libs.plugins.mavenPublish)
 }
 
 java {
   sourceCompatibility = JavaVersion.VERSION_21
   targetCompatibility = JavaVersion.VERSION_21
-
-  withSourcesJar()
-  withJavadocJar()
 }
 
-publishing {
-  publications {
-    register<MavenPublication>("auto-map") {
-      groupId = "com.clerk"
-      artifactId = "auto-map"
-      version = "0.1.0"
+mavenPublishing {
+  coordinates("com.clerk", "automap", "0.0.1")
+  publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+  signAllPublications()
 
-      from(components["java"])
-
-      pom {
-        name = "Auto Map"
-        description = "A library for generating maps using KSP."
-        url.set("https://github.com/clerk/clerk-android")
-
-        scm {
-          connection.set("scm:git@github.com:clerk/clerk-android.git")
-          developerConnection.set("scm:git@github.com:clerk/clerk-android.git")
-          url.set("https://github.com/clerk/clerk-android")
-        }
-        licenses {
-          license {
-            name.set("MIT License")
-            url.set("https://opensource.org/licenses/MIT")
-          }
-
-          developers {
-            developer {
-              id.set("clerk")
-              name.set("Clerk")
-              email.set("support@clerk.dev")
-            }
-          }
-        }
+  pom {
+    name.set("Clerk AutoMap")
+    description.set("Generate maps from data classes.")
+    inceptionYear.set("2025")
+    url.set("https://github.com/clerk/clerk-android")
+    licenses {
+      license {
+        name.set("MIT License")
+        url.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+        distribution.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
       }
+    }
+
+    developers {
+      developer {
+        id.set("clerk")
+        name.set("Clerk")
+        url.set("https://clerk.com")
+      }
+    }
+    scm {
+      url.set("https://github.com/clerk/clerk-android")
+      connection.set("scm:git:git://github.com/clerk/clerk-android.git")
+      developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
     }
   }
 }
