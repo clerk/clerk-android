@@ -1,6 +1,6 @@
 package com.clerk.sdk.signin.internal
 
-import com.clerk.automap.annotation.AutoMap
+import com.clerk.automap.annotations.AutoMap
 import com.clerk.sdk.Clerk.signIn
 import com.clerk.sdk.signin.SignIn.PrepareFirstFactorParams
 import kotlinx.serialization.SerialName

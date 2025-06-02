@@ -10,6 +10,7 @@ pluginManagement {
       }
     }
     mavenCentral()
+    mavenLocal()
     gradlePluginPortal()
   }
 }
@@ -19,9 +20,10 @@ dependencyResolutionManagement {
   repositories {
     google()
     mavenCentral()
+    mavenLocal()
   }
 }
 
 rootProject.name = "Clerk"
 
-include(":source:sdk", "auto-map")
+include(":source:sdk")

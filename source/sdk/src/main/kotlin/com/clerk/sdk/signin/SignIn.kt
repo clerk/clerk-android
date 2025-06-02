@@ -3,7 +3,7 @@
 package com.clerk.sdk.signin
 
 import android.content.Context
-import com.clerk.automap.annotation.AutoMap
+import com.clerk.automap.annotations.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.factor.Factor
 import com.clerk.sdk.model.verification.Verification
@@ -434,7 +434,7 @@ suspend fun SignIn.prepareFirstFactor(
 suspend fun SignIn.attemptFirstFactor(
   params: SignIn.AttemptFirstFactorParams
 ): ClerkApiResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi.instance.attemptFirstFactor(id = this.id, params = emptyMap())
+  return ClerkApi.instance.attemptFirstFactor(id = this.id, params = params.toMap())
 }
 
 /**

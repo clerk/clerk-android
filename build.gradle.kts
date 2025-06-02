@@ -12,9 +12,11 @@ plugins {
   alias(libs.plugins.sortDependencies) apply false
   alias(libs.plugins.jetbrains.kotlin.jvm) apply false
   alias(libs.plugins.mavenPublish)
+  alias(libs.plugins.dokka) apply false
 }
 
 allprojects {
+  apply(plugin = "org.jetbrains.dokka")
   apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {

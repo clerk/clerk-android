@@ -2,7 +2,7 @@
 
 package com.clerk.sdk.signup
 
-import com.clerk.automap.annotation.AutoMap
+import com.clerk.automap.annotations.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi

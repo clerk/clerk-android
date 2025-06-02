@@ -6,8 +6,8 @@ coreKtxVersion = "1.6.1"
 dagger = "2.56.2"
 datastore = "1.1.7"
 detekt = "1.23.8"
-dokka = "2.0.0"
 eithernet = "2.0.0"
+dokka = "1.9.20"
 espressoCore = "3.6.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -28,6 +28,7 @@ jetbrainsKotlinJvm = "2.1.21"
 chucker = "4.1.0"
 composeBom = "2025.05.01"
 foundationLayoutAndroid = "1.8.2"
+automap = "0.0.1-SNAPSHOT"
 
 [libraries]
 
@@ -44,6 +45,10 @@ androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-p
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-browser = "androidx.browser:browser:1.8.0"
+
+clerk-automap-annotations = { module = "com.clerk:automap-annotations", version.ref = "automap"}
+clerk-automap-processor = { module = "com.clerk:automap-processor", version.ref = "automap"}
+
 chucker-debug = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
 chucker-release = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker" }
 

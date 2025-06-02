@@ -7,7 +7,6 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.ksp)
   alias(libs.plugins.mavenPublish)
-  id("dokka-convention")
 }
 
 android {
@@ -55,12 +54,6 @@ mavenPublishing {
   }
 }
 
-tasks.named<org.jetbrains.dokka.gradle.DokkaTask>("dokkaHtml") {
-  dependsOn(
-    rootProject.tasks.named<org.jetbrains.dokka.gradle.DokkaMultiModuleTask>("dokkaHtmlMultiModule")
-  )
-}
-
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.appcompat)
@@ -73,6 +66,7 @@ dependencies {
   implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.ui.tooling)
   implementation(libs.chucker.debug)
+  implementation(libs.clerk.automap.annotations)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
@@ -82,7 +76,6 @@ dependencies {
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
   implementation(libs.retrofit.kotlinx)
-  implementation(projects.autoMap)
 
   testImplementation(kotlin("test"))
   testImplementation(libs.androidx.arch.test)
@@ -100,5 +93,5 @@ dependencies {
   androidTestImplementation(libs.mockk)
   androidTestImplementation(libs.robolectric)
 
-  ksp(projects.autoMap)
+  ksp(libs.clerk.automap.processor)
 }
