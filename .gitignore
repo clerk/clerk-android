@@ -16,3 +16,4 @@
 local.properties
 workbench/*
 /source/build/
+/buildSrc/build/

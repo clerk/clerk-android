@@ -9,14 +9,12 @@ plugins {
   alias(libs.plugins.android.library) apply false
   alias(libs.plugins.spotless) apply false
   alias(libs.plugins.detekt) apply false
-  alias(libs.plugins.dokka) apply false
   alias(libs.plugins.sortDependencies) apply false
   alias(libs.plugins.jetbrains.kotlin.jvm) apply false
   alias(libs.plugins.mavenPublish)
 }
 
 allprojects {
-  apply(plugin = "org.jetbrains.dokka")
   apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
@@ -97,8 +95,4 @@ allprojects {
       exclude("**/resources/**")
       exclude("**/build/**")
     }
-}
-
-project(":source") {
-  tasks.named("dokkaHtmlMultiModule") { dependsOn(rootProject.tasks.named("dokkaHtmlMultiModule")) }
 }
