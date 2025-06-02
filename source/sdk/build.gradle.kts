@@ -7,7 +7,6 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.ksp)
   alias(libs.plugins.mavenPublish)
-  signing
 }
 
 android {
@@ -53,6 +52,12 @@ mavenPublishing {
       developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
     }
   }
+}
+
+tasks.named<org.jetbrains.dokka.gradle.DokkaTask>("dokkaHtml") {
+  dependsOn(
+    rootProject.tasks.named<org.jetbrains.dokka.gradle.DokkaMultiModuleTask>("dokkaHtmlMultiModule")
+  )
 }
 
 dependencies {

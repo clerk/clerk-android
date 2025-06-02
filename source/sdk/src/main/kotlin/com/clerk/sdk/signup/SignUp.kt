@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.clerk.sdk.model.signup
+package com.clerk.sdk.signup
 
 import com.clerk.automap.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
@@ -285,12 +285,11 @@ suspend fun SignUp.update(
  * The [prepareVerification] method is used to initiate the verification process for a field that
  * requires it.
  *
- * There are two fields that need to be verified: [com.clerk.sdk.model.signup.SignUp.emailAddress]:
- * The email address can be verified via an email code. This is a one-time code that is sent to the
- * email already provided to the [SignUp] object. The [prepareVerification] sends this email.
- * [com.clerk.sdk.model.signup.SignUp.phoneNumber]: The phone number can be verified via a phone
- * code. This is a one-time code that is sent via an SMS to the phone already provided to the
- * [SignUp] object. The [prepareVerification] sends this SMS.
+ * There are two fields that need to be verified: [SignUp.emailAddress]: The email address can be
+ * verified via an email code. This is a one-time code that is sent to the email already provided to
+ * the [SignUp] object. The [prepareVerification] sends this email. [SignUp.phoneNumber]: The phone
+ * number can be verified via a phone code. This is a one-time code that is sent via an SMS to the
+ * phone already provided to the [SignUp] object. The [prepareVerification] sends this SMS.
  *
  * @param prepareVerification: The parameters for preparing the verification.Specifies the field
  *   which requires verification

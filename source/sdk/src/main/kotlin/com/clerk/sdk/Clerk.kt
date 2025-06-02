@@ -8,9 +8,9 @@ import com.clerk.sdk.model.client.Client
 import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.environment.UserSettings
 import com.clerk.sdk.model.session.Session
-import com.clerk.sdk.model.signin.SignIn
 import com.clerk.sdk.model.user.User
 import com.clerk.sdk.service.SignOutService
+import com.clerk.sdk.signin.SignIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

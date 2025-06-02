@@ -13,7 +13,6 @@ import okhttp3.Interceptor
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 
-@Suppress("NestedBlockDepth")
 class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val response = chain.proceed(chain.request())

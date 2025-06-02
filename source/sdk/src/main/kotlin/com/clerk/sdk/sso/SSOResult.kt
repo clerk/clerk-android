@@ -1,7 +1,7 @@
 package com.clerk.sdk.sso
 
-import com.clerk.sdk.model.signin.SignIn
-import com.clerk.sdk.model.signup.SignUp
+import com.clerk.sdk.signin.SignIn
+import com.clerk.sdk.signup.SignUp
 import kotlinx.serialization.Serializable
 
 /**

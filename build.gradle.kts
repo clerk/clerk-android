@@ -16,6 +16,7 @@ plugins {
 }
 
 allprojects {
+  apply(plugin = "org.jetbrains.dokka")
   apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
@@ -96,4 +97,8 @@ allprojects {
       exclude("**/resources/**")
       exclude("**/build/**")
     }
+}
+
+project(":source") {
+  tasks.named("dokkaHtmlMultiModule") { dependsOn(rootProject.tasks.named("dokkaHtmlMultiModule")) }
 }

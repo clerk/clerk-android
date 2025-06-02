@@ -5,11 +5,11 @@ import com.clerk.sdk.model.environment.Environment
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
 import com.clerk.sdk.model.session.Session
-import com.clerk.sdk.model.signin.SignIn
-import com.clerk.sdk.model.signup.SignUp
 import com.clerk.sdk.model.token.TokenResource
 import com.clerk.sdk.network.paths.Paths
 import com.clerk.sdk.network.serialization.ClerkApiResult
+import com.clerk.sdk.signin.SignIn
+import com.clerk.sdk.signup.SignUp
 import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
@@ -183,7 +183,7 @@ internal interface ClerkApiService {
     @FieldMap fields: Map<String, String>,
   ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
-  /** @see [com.clerk.sdk.model.signup.prepareVerification] */
+  /** @see [com.clerk.sdk.signup.prepareVerification] */
   @FormUrlEncoded
   @POST(Paths.SignUpPath.WithId.PREPARE_VERIFICATION)
   suspend fun prepareSignUpVerification(
@@ -191,7 +191,7 @@ internal interface ClerkApiService {
     @Field("strategy") strategy: String,
   ): ClerkApiResult<ClientPiggybackedResponse<SignUp>, ClerkErrorResponse>
 
-  /** @see [com.clerk.sdk.model.signup.attemptVerification] */
+  /** @see [com.clerk.sdk.signup.attemptVerification] */
   @FormUrlEncoded
   @POST(Paths.SignUpPath.WithId.ATTEMPT_VERIFICATION)
   suspend fun attemptSignUpVerification(

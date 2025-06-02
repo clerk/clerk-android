@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.lifecycle.lifecycleScope
 import com.clerk.sdk.log.ClerkLog
-import com.clerk.sdk.service.SSOService
 import kotlinx.coroutines.launch
 
 /**

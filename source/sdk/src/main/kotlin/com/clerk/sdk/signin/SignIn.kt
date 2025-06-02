@@ -1,21 +1,21 @@
 @file:Suppress("unused")
 
-package com.clerk.sdk.model.signin
+package com.clerk.sdk.signin
 
 import android.content.Context
 import com.clerk.automap.annotation.AutoMap
 import com.clerk.sdk.model.error.ClerkErrorResponse
 import com.clerk.sdk.model.factor.Factor
 import com.clerk.sdk.model.response.ClientPiggybackedResponse
-import com.clerk.sdk.model.signin.SignIn.PrepareFirstFactorParams
-import com.clerk.sdk.model.signin.internal.toFormData
-import com.clerk.sdk.model.signin.internal.toMap
 import com.clerk.sdk.model.verification.Verification
 import com.clerk.sdk.network.ClerkApi
 import com.clerk.sdk.network.serialization.ClerkApiResult
-import com.clerk.sdk.service.SSOService
+import com.clerk.sdk.signin.SignIn.PrepareFirstFactorParams
+import com.clerk.sdk.signin.internal.toFormData
+import com.clerk.sdk.signin.internal.toMap
 import com.clerk.sdk.sso.RedirectConfiguration
 import com.clerk.sdk.sso.SSOResult
+import com.clerk.sdk.sso.SSOService
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
