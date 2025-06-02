@@ -28,7 +28,7 @@ jetbrainsKotlinJvm = "2.1.21"
 chucker = "4.1.0"
 composeBom = "2025.05.01"
 foundationLayoutAndroid = "1.8.2"
-automap = "0.0.1-SNAPSHOT"
+automap = "0.0.1"
 
 [libraries]
 
