@@ -34,7 +34,7 @@ Would you like to work on Open Source software and help maintain this repository
 2. Create an application in your Clerk dashboard
 
 ## 🧑‍💻 Installation
-The Clerk Android SDK is distributed via Maven Central. To add the Clerk SDK to your project, first ensure you have added [mavenCentral](https://docs.gradle.org/current/userguide/declaring_repositories.html) to your projects `build.gradle(.kts)` then, add the Clerk SDK to your application's dependencies:
+The Clerk Android SDK is distributed via Maven Central. To add the Clerk SDK to your project, first ensure you have added [mavenCentral](https://docs.gradle.org/current/userguide/declaring_repositories.html) to your project's `build.gradle(.kts)`, then add the Clerk SDK to your application's dependencies:
 ```gradle
 dependencies {
     ...
@@ -44,7 +44,7 @@ dependencies {
 ```
 
 ## 🛠️ Usage
-Before using any part of the SDK you must call `.initialize` and pass in your publishable key and an application context. The publishable key is used to associate your application with Clerk's backend and the application context is used for saving the long-lived token and registering activities/receivers/deeplinks.
+Before using any part of the SDK, you must, call `.initialize` and pass in your publishable key and an application context. The publishable key is used to associate your application with Clerk's backend and the application context is used for saving the long-lived token and registering activities/receivers/deeplinks.
 
 ```kotlin
 import com.clerk.Clerk
@@ -62,20 +62,19 @@ class ClerkPlaygroundApplication : Application() {
   }
 }
 ```
-Now you can conditionally render content based on the users session 
-
+Now you can conditionally render content based on the user's session:
 ```kotlin
 import com.clerk.Clerk
 
 if (Clerk.user != null) {
   Text("Hello, ${Clerk.user.id}"
 } else {
-  Text("You are signed out)
+  Text("You are signed out")
 }
 ```
 
 ### Authentication
-If a function takes any paramters those paramters are generally exposed as a data class or enum named after the function itself. i.e. paramters for `SignUp.Create` are exposed as `SignUp.SignUpCreateParams` this follows the same pattern as other Clerk SDKs.
+If a function takes any parameters those parameters are generally exposed as a data class or enum named after the function itself. i.e. parameters for `SignUp.Create` are exposed as `SignUp.SignUpCreateParams` this follows the same pattern as other Clerk SDKs.
 
 #### Sign Up with Email and Perform Verification
 ```kotlin
@@ -83,7 +82,7 @@ If a function takes any paramters those paramters are generally exposed as a dat
 SignUp.create(SignUpCreateParams.Standard(emailAddress))
   .onSuccess { signUp ->
     // Check if the SignUp needs the email address verified and send an OTP code via email.
-      if (signUp.unverifiedFields.contains("email_address") {
+      if (signUp.unverifiedFields.contains("email_address")) {
         signUp.prepareVerification(SignUp.PrepareVerificationParams.EMAIL_CODE)
       }
     }
@@ -100,8 +99,8 @@ Clerk.signUp
   }
 ```
 
-#### Sign In with OAuth(e.g. Google, Github, etc.)
-Clerk will handle the OAuth flow and deeplinking for you, you just need to pass it the context of your application.
+#### Sign In with OAuth(e.g. Google, GitHub, etc.)
+Clerk will handle the OAuth flow and deep linking for you, you just need to pass it the context of your application.
 ```kotlin
 SignIn.authenticateWithRedirect(context, OAuthProvider.GOOGLE)
 ```
@@ -109,13 +108,13 @@ SignIn.authenticateWithRedirect(context, OAuthProvider.GOOGLE)
 #### Forgot Password
 ```kotlin
 // Create a sign in and send an OTP code to verify the user owns the email
-SignIn.create(Strategy.EmailCode("user@example.com")
+SignIn.create(Strategy.EmailCode("user@example.com"))
 
 // After collecting the OTP code from the user, attempt verification
 Clerk.signIn.attemptFirstFactor(Strategy.ResetPasswordEmailCode("123456"))
   .onSuccess { signIn ->
     // Set a new password to complete the process
-    signIn.resetPassword(password = "********", signOutOfOtherSessions = "true")
+    signIn.resetPassword(password = "********", signOutOfOtherSessions = true)
   }
 ```
 
