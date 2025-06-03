@@ -1,3 +1,0 @@
-config/bin/detekt-cli filter=lfs diff=lfs merge=lfs -text
-config/bin/ktfmt filter=lfs diff=lfs merge=lfs -text
-config/bin/sort-dependencies filter=lfs diff=lfs merge=lfs -text
