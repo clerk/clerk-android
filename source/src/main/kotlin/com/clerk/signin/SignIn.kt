@@ -420,9 +420,15 @@ data class SignIn(
        * This strategy is used for Google one tap authentication.
        *
        * @param strategy The strategy identifier for Google one tap sign-in.
+       * @param identifier The identifier for the Google one tap sign-in.
        */
-      data class GoogleOneTap(override val strategy: String = "google_one_tap") : Strategy {
-        constructor() : this(strategy = "google_one_tap")
+      @AutoMap
+      @Serializable
+      data class GoogleOneTap(
+        override val strategy: String = "google_one_tap",
+        val identifier: String,
+      ) : Strategy {
+        constructor(identifier: String) : this(strategy = "google_one_tap", identifier = identifier)
       }
     }
   }
