@@ -3,48 +3,41 @@
 package com.clerk.service
 
 import com.clerk.Clerk
+import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.model.session.delete
 import com.clerk.network.ClerkApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import com.clerk.network.serialization.ClerkApiResult
 
 /**
- * SignOutService is responsible for signing out the user by removing the session from the Clerk
- * API. It uses a coroutine to perform the network operation on a background thread and returns a
- * Flow of SignOutState to provide updates on the operation status.
+ * Service responsible for signing out users by removing their active session.
+ *
+ * The SignOutService handles the complete sign-out process, including removing the session from the
+ * Clerk API and cleaning up local session state. It performs network operations asynchronously and
+ * provides proper error handling.
  */
 object SignOutService {
 
-  /** Represents the various states during the sign-out process. */
-  sealed class SignOutState {
-    object Loading : SignOutState()
-
-    object Success : SignOutState()
-
-    data class Error(val exception: Throwable) : SignOutState()
-  }
-
   /**
-   * Signs out the user by removing the session from the Clerk API.
+   * Signs out the currently authenticated user by removing their active session.
    *
-   * @return Flow emitting the current state of the sign-out operation.
+   * This method will attempt to remove the session from the Clerk API if a session ID exists,
+   * otherwise it will delete the local session. The operation is performed asynchronously and
+   * includes proper error handling.
+   *
+   * @return A [ClerkApiResult] indicating the success or failure of the sign-out operation. Returns
+   *   [ClerkApiResult.success] with [Unit] on successful sign-out, or
+   *   [ClerkApiResult.unknownFailure] with error details on failure.
    */
-  fun signOut(): Flow<SignOutState> =
-    flow {
-        emit(SignOutState.Loading)
-
-        try {
-          if (Clerk.session?.id != null) {
-            Clerk.session?.id?.let { sessionId -> ClerkApi.instance.removeSession(sessionId) }
-          } else {
-            Clerk.session?.delete()
-          }
-          emit(SignOutState.Success)
-        } catch (e: Exception) {
-          emit(SignOutState.Error(e))
-        }
+  suspend fun signOut(): ClerkApiResult<Unit, ClerkErrorResponse> {
+    try {
+      if (Clerk.session?.id != null) {
+        Clerk.session?.id?.let { sessionId -> ClerkApi.instance.removeSession(sessionId) }
+      } else {
+        Clerk.session?.delete()
       }
-      .flowOn(Dispatchers.IO)
+      return ClerkApiResult.success(Unit)
+    } catch (e: Exception) {
+      return ClerkApiResult.unknownFailure(error(e.message ?: "Unknown error"))
+    }
+  }
 }

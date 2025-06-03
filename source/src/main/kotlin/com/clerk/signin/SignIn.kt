@@ -12,6 +12,7 @@ import com.clerk.network.serialization.ClerkApiResult
 import com.clerk.signin.SignIn.PrepareFirstFactorParams
 import com.clerk.signin.internal.toFormData
 import com.clerk.signin.internal.toMap
+import com.clerk.sso.OAuthProvider
 import com.clerk.sso.RedirectConfiguration
 import com.clerk.sso.SSOResult
 import com.clerk.sso.SSOService
@@ -160,7 +161,13 @@ data class SignIn(
     UNKNOWN,
   }
 
-  /** A parameter object for attempting the first factor verification in the sign-in process. */
+  /**
+   * A sealed interface defining parameter objects for attempting first factor verification in the
+   * sign-in process.
+   *
+   * Each implementation represents a different verification strategy that can be used to complete
+   * the first factor authentication step.
+   */
   sealed interface AttemptFirstFactorParams {
 
     /**
@@ -169,6 +176,11 @@ data class SignIn(
      */
     val strategy: String
 
+    /**
+     * Parameters for email code verification strategy.
+     *
+     * @property code The verification code received via email.
+     */
     @AutoMap
     @Serializable
     data class EmailCode(override val strategy: String = EMAIL_CODE, val code: String) :
@@ -176,6 +188,11 @@ data class SignIn(
       constructor(code: String) : this(EMAIL_CODE, code)
     }
 
+    /**
+     * Parameters for phone code verification strategy.
+     *
+     * @property code The verification code received via SMS.
+     */
     @AutoMap
     @Serializable
     data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
@@ -183,6 +200,11 @@ data class SignIn(
       constructor(code: String) : this(PHONE_CODE, code)
     }
 
+    /**
+     * Parameters for password verification strategy.
+     *
+     * @property password The user's password.
+     */
     @AutoMap
     @Serializable
     data class Password(
@@ -192,6 +214,11 @@ data class SignIn(
       constructor(password: String) : this(PASSWORD, password)
     }
 
+    /**
+     * Parameters for passkey verification strategy.
+     *
+     * @property passkey The passkey credential for authentication.
+     */
     @AutoMap
     @Serializable
     data class Passkey(override val strategy: String = PASSKEY, val passkey: String) :
@@ -199,6 +226,11 @@ data class SignIn(
       constructor(passkey: String) : this(PASSKEY, passkey)
     }
 
+    /**
+     * Parameters for reset password email code verification strategy.
+     *
+     * @property code The verification code received via email for password reset.
+     */
     @AutoMap
     @Serializable
     data class ResetPasswordEmailCode(
@@ -208,6 +240,11 @@ data class SignIn(
       constructor(code: String) : this(RESET_PASSWORD_EMAIL_CODE, code)
     }
 
+    /**
+     * Parameters for reset password phone code verification strategy.
+     *
+     * @property code The verification code received via SMS for password reset.
+     */
     @AutoMap
     @Serializable
     data class ResetPasswordPhoneCode(
@@ -218,61 +255,125 @@ data class SignIn(
     }
   }
 
+  /**
+   * A sealed interface defining parameter objects for redirect-based authentication strategies.
+   *
+   * This includes OAuth providers and Enterprise SSO configurations that require redirecting the
+   * user to an external authentication provider.
+   */
   sealed interface AuthenticateWithRedirectParams {
 
-    val strategy: String
+    /** The OAuth or SSO provider to authenticate with. */
+    val provider: OAuthProvider
+
+    /** The URL to redirect to after the authentication flow completes. */
     val redirectUrl: String
 
+    /**
+     * Parameters for OAuth authentication with redirect.
+     *
+     * @property provider The OAuth provider (e.g., Google, Facebook, GitHub).
+     * @property redirectUrl The URL to redirect to after OAuth completion.
+     */
     data class OAuth(
-      override val strategy: String,
+      override val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.REDIRECT_URL,
     ) : AuthenticateWithRedirectParams {
-      constructor(strategy: String) : this(strategy, RedirectConfiguration.REDIRECT_URL)
+      constructor(provider: OAuthProvider) : this(provider, RedirectConfiguration.REDIRECT_URL)
     }
 
+    /**
+     * Parameters for Enterprise SSO authentication with redirect.
+     *
+     * @property provider The Enterprise SSO provider.
+     * @property redirectUrl The URL to redirect to after SSO completion.
+     */
     data class EnterpriseSSO(
-      override val strategy: String,
+      override val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.REDIRECT_URL,
     ) : AuthenticateWithRedirectParams {
-      constructor(strategy: String) : this(strategy, RedirectConfiguration.REDIRECT_URL)
+      constructor(provider: OAuthProvider) : this(provider, RedirectConfiguration.REDIRECT_URL)
     }
   }
 
+  /**
+   * A sealed interface defining parameter objects for preparing first factor verification.
+   *
+   * This interface is used to specify which verification strategy should be prepared before
+   * attempting the first factor authentication.
+   */
   sealed interface PrepareFirstFactorParams {
 
+    /** Enumeration of available first factor verification strategies. */
     @Serializable
     enum class Strategy {
+      /** Email code verification strategy. */
       EMAIL_CODE,
+
+      /** Phone code (SMS) verification strategy. */
       PHONE_CODE,
+
+      /** Password verification strategy. */
       PASSWORD,
+
+      /** Passkey verification strategy. */
       PASSKEY,
+
+      /** OAuth verification strategy. */
       O_AUTH,
+
+      /** Reset password email code verification strategy. */
       RESET_PASSWORD_EMAIL_CODE,
+
+      /** Reset password phone code verification strategy. */
       RESET_PASSWORD_PHONE_CODE,
     }
   }
 
-  /** A parameter object for preparing the second factor verification. */
+  /**
+   * A parameter object for preparing the second factor verification.
+   *
+   * @property strategy The strategy used for second factor verification (e.g., "phone_code",
+   *   "totp").
+   */
   @Serializable
   data class PrepareSecondFactorParams(
     /** The strategy used for second factor verification. */
     val strategy: String
   )
 
+  /**
+   * Parameters for resetting a user's password during the sign-in process.
+   *
+   * @property password The new password to set for the user.
+   * @property signOutOfOtherSessions Whether to sign out of all other sessions when the password is
+   *   reset.
+   */
   @Serializable
   data class ResetPasswordParams(
     val password: String,
     @SerialName("sign_out_of_other_sessions") val signOutOfOtherSessions: Boolean = false,
   )
 
-  /** Represents an authentication identifier. */
+  /** Container object for sign-in creation parameters and strategies. */
   object SignInCreateParams {
 
+    /**
+     * A sealed interface defining different strategies for creating a sign-in.
+     *
+     * Each implementation represents a different method of initiating the sign-in process.
+     */
     sealed interface Strategy {
+      /** The authentication strategy identifier. */
       val strategy: String
 
+      /**
+       * Email code sign-in strategy.
+       *
+       * @property identifier The email address to send the verification code to.
+       */
       @AutoMap
       @Serializable
       data class EmailCode(override val strategy: String = EMAIL_CODE, val identifier: String) :
@@ -280,6 +381,11 @@ data class SignIn(
         constructor(identifier: String) : this(strategy = EMAIL_CODE, identifier = identifier)
       }
 
+      /**
+       * Phone code sign-in strategy.
+       *
+       * @property identifier The phone number to send the verification code to.
+       */
       @AutoMap
       @Serializable
       data class PhoneCode(override val strategy: String = PHONE_CODE, val identifier: String) :
@@ -287,6 +393,11 @@ data class SignIn(
         constructor(identifier: String) : this(strategy = PHONE_CODE, identifier = identifier)
       }
 
+      /**
+       * Password sign-in strategy.
+       *
+       * @property identifier The email address or username for password authentication.
+       */
       @AutoMap
       @Serializable
       data class Password(override val strategy: String = PASSWORD, val identifier: String) :
@@ -294,26 +405,11 @@ data class SignIn(
         constructor(identifier: String) : this(strategy = PASSWORD, identifier = identifier)
       }
 
-      //      /**
-      //       * OAuth identifier.
-      //       *
-      //       * @param [strategy] should be `oauth_google`, `oauth_facebook`, etc. When using Clerk
-      // you can
-      //       *   get this field from
-      // [com.clerk.model.environment.UserSettings.SocialConfig.strategy],
-      //       *   the available and configured social providers can be found via
-      //       *   [com.clerk.Clerk.socialProviders]
-      //       * @param [redirectUrl] The URL to redirect to after the OAuth flow completes.
-      //       * @param context The context in which the authentication flow is initiated. Used to
-      // open the
-      //       *   in app browser.
-      //       */
-      //      data class OAuth(
-      //        override val strategy: String,
-      //        val redirectUrl: String,
-      //        val context: Context,
-      //      ) : Strategy
-
+      /**
+       * Transfer strategy for account transfer scenarios.
+       *
+       * This strategy is used when transferring an existing session or account state.
+       */
       data class Transfer(override val strategy: String = "transfer") : Strategy {
         constructor() : this(strategy = "transfer")
       }
@@ -405,6 +501,8 @@ data class SignIn(
  * factor verification process.
  *
  * @param strategy The strategy to authenticate with.
+ * @return A [ClerkApiResult] containing the updated SignIn object with the prepared first factor
+ *   verification.
  * @see SignIn.PrepareFirstFactorParams
  */
 suspend fun SignIn.prepareFirstFactor(
@@ -429,6 +527,8 @@ suspend fun SignIn.prepareFirstFactor(
  * factor verification process.
  *
  * @param params The parameters for the first factor verification.
+ * @return A [ClerkApiResult] containing the updated SignIn object with the first factor
+ *   verification result.
  * @see [SignIn.AttemptFirstFactorParams]
  */
 suspend fun SignIn.attemptFirstFactor(
@@ -440,7 +540,12 @@ suspend fun SignIn.attemptFirstFactor(
 /**
  * Resets the password for the current sign in attempt.
  *
- * @param params an instance of [SignIn.ResetPasswordParams]
+ * This function is used when a user needs to reset their password during the sign-in process,
+ * typically after receiving a password reset verification code.
+ *
+ * @param params An instance of [SignIn.ResetPasswordParams] containing the new password and session
+ *   options.
+ * @return A [ClerkApiResult] containing the updated SignIn object after the password reset.
  * @see SignIn.ResetPasswordParams
  */
 suspend fun SignIn.resetPassword(
@@ -453,11 +558,44 @@ suspend fun SignIn.resetPassword(
   )
 }
 
+/**
+ * Resets the password for the current sign in attempt.
+ *
+ * This function is used when a user needs to reset their password during the sign-in process,
+ * typically after receiving a password reset verification code.
+ *
+ * @param params An instance of [SignIn.ResetPasswordParams] containing the new password and session
+ *   options.
+ * @return A [ClerkApiResult] containing the updated SignIn object after the password reset.
+ * @see SignIn.ResetPasswordParams
+ */
+suspend fun SignIn.resetPassword(
+  password: String,
+  signOutOfOtherSessions: Boolean = false,
+): ClerkApiResult<SignIn, ClerkErrorResponse> {
+  return ClerkApi.instance.resetPassword(id = this.id, password = password, signOutOfOtherSessions)
+}
+
+/**
+ * Retrieves the current state of the SignIn object from the server.
+ *
+ * This function can be used to refresh the SignIn object and get the latest status and verification
+ * information.
+ *
+ * @param rotatingTokenNonce Optional nonce for rotating token validation.
+ * @return A [ClerkApiResult] containing the refreshed SignIn object.
+ */
 suspend fun SignIn.get(
   rotatingTokenNonce: String? = null
 ): ClerkApiResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
 
-/** Converts the current [SignIn] instance to an [SSOResult]. */
+/**
+ * Converts the current [SignIn] instance to an [SSOResult].
+ *
+ * This is useful for handling SignIn results in the same way as SSO authentication results.
+ *
+ * @return An [SSOResult] containing this SignIn instance.
+ */
 fun SignIn.toSSOResult() = SSOResult(signIn = this)
