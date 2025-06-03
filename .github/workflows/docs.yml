@@ -67,8 +67,8 @@ jobs:
     - name: Update git config
       working-directory: docs
       run: |
-        git config --local user.name "CI"
-        git config --local user.email "ci@clerk.com"
+        git config --local user.name "swolfand"
+        git config --local user.email "sam@clerk.dev"
     - name: Commit
       working-directory: main
       run: |
