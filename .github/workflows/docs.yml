@@ -4,11 +4,9 @@ on:
   push:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref != 'refs/heads/main' || github.run_number }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull') }}
-
 jobs:
   docs:
     runs-on: macos-latest
@@ -28,7 +26,6 @@ jobs:
     - name: Generate docs
       working-directory: main
       run: ./gradlew dokkaJekyllMultiModule
-
     - name: Zip docs site
       run: |
         cd main/docs
@@ -46,35 +43,27 @@ jobs:
       with:
         ref: main
         path: main
-
     - uses: actions/checkout@v4
       with:
         ref: docs
         path: docs
-
     - uses: actions/download-artifact@v4.3.0
       with:
         path: artifacts
-
-    - name: Unzip
+    - name: Unzip and replace docs
       run: |
-        mkdir unzipped-docs
-        unzipped_path="unzipped-docs/main"
-        mkdir -p "$unzipped_path"
-        unzip "artifacts/main/Docs.zip" -d "$unzipped_path"
-        echo "extracting to root"
-        rsync -a "$unzipped_path/" docs/docs
-    - name: Update git config
+        # Clear the docs directory (except .git)
+        find docs -mindepth 1 -name '.git' -prune -o -type f -delete
+        find docs -mindepth 1 -name '.git' -prune -o -type d -empty -delete
+        # Extract docs directly to docs directory
+        unzip "artifacts/main/Docs.zip" -d docs
+    - name: Commit
       working-directory: docs
       run: |
+        current_sha="$(git -C ../main rev-parse @)"
         git config --local user.name "swolfand"
         git config --local user.email "sam@clerk.dev"
-    - name: Commit
-      working-directory: main
-      run: |
-        current_sha="$(git rev-parse @)"
-        cd ../docs
         if [[ -z $(git status --porcelain) ]]; then exit 0; fi
         git add --all
-        git commit -m "$current_sha"
+        git commit -m "Update docs from $current_sha"
         git push
