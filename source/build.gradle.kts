@@ -60,18 +60,6 @@ mavenPublishing {
   }
 }
 
-tasks.named<DokkaTaskPartial>("dokkaJekyllPartial").configure {
-  dependsOn(tasks.named("kspDebugKotlin"))
-  dependsOn(tasks.named("kspReleaseKotlin"))
-  dependencies { dokkaPlugin(libs.versioning.plugin) }
-  moduleName.set("Clerk Android")
-  suppressInheritedMembers.set(true)
-  dokkaSourceSets.configureEach {
-    includes.from(listOf("module.md"))
-    reportUndocumented.set(true)
-  }
-}
-
 tasks.withType<DokkaTaskPartial>().configureEach {
   dependsOn(tasks.named("kspDebugKotlin"))
   dependsOn(tasks.named("kspReleaseKotlin"))

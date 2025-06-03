@@ -64,9 +64,7 @@ allprojects {
     }
 }
 
-// tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
-
-tasks.dokkaJekyllMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
+tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
 
 subprojects {
   plugins.withType<JavaPlugin> {
