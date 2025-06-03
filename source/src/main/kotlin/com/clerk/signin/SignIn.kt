@@ -25,6 +25,9 @@ private const val PASSWORD = "password"
 private const val PASSKEY = "passkey"
 private const val RESET_PASSWORD_EMAIL_CODE = "reset_password_email_code"
 private const val RESET_PASSWORD_PHONE_CODE = "reset_password_phone_code"
+private const val TICKET = "ticket"
+private const val GOOGLE_ONE_TAP = "google_one_tap"
+private const val TRANSFER = "transfer"
 
 /**
  * The `SignIn` object holds the state of the current sign-in process and provides helper methods to
@@ -410,8 +413,8 @@ data class SignIn(
        *
        * This strategy is used when transferring an existing session or account state.
        */
-      data class Transfer(override val strategy: String = "transfer") : Strategy {
-        constructor() : this(strategy = "transfer")
+      data class Transfer(override val strategy: String = TRANSFER) : Strategy {
+        constructor() : this(strategy = TRANSFER)
       }
 
       /**
@@ -420,9 +423,27 @@ data class SignIn(
        * This strategy is used for Google one tap authentication.
        *
        * @param strategy The strategy identifier for Google one tap sign-in.
+       * @param identifier The identifier for the Google one tap sign-in.
        */
-      data class GoogleOneTap(override val strategy: String = "google_one_tap") : Strategy {
-        constructor() : this(strategy = "google_one_tap")
+      @AutoMap
+      @Serializable
+      data class GoogleOneTap(
+        override val strategy: String = GOOGLE_ONE_TAP,
+        val identifier: String,
+      ) : Strategy {
+        constructor(identifier: String) : this(strategy = GOOGLE_ONE_TAP, identifier = identifier)
+      }
+
+      /**
+       * Ticket strategy for authentication using a ticket.
+       *
+       * @param strategy The strategy identifier for ticket authentication.
+       * @param identifier The identifier for the ticket authentication.
+       */
+      @AutoMap
+      @Serializable
+      data class Ticket(override val strategy: String = TICKET, val identifier: String) : Strategy {
+        constructor(identifier: String) : this(strategy = TICKET, identifier = identifier)
       }
     }
   }
@@ -455,15 +476,41 @@ data class SignIn(
      *
      * @param params The strategy to authenticate with.
      * @see [SignIn.SignInCreateParams]
+     *
+     * Example usage:
+     * ```kotlin
+     * SignIn.create(SignInCreateParams.Strategy.EmailAddress("user@example.com"))
+     *          .onSuccess { signIn -> // Do something with the signIn object }
+     *          .onFailure { error -> // Handle the error }
+     * ```
      */
     suspend fun create(
       params: SignInCreateParams.Strategy
     ): ClerkApiResult<SignIn, ClerkErrorResponse> {
       return when (params) {
         is SignInCreateParams.Strategy.Transfer ->
-          ClerkApi.instance.createSignIn(mapOf("transfer" to "true"))
+          ClerkApi.instance.createSignIn(mapOf(TRANSFER to "true"))
         else -> ClerkApi.instance.createSignIn(params.toMap())
       }
+    }
+
+    /**
+     * Creates a new SignIn object with the provided parameters. This is the equivalent of calling
+     * `SignIn.create()` with JSON.
+     *
+     * @param params The raw parameters to create the SignIn object with.
+     * @return A [ClerkApiResult] containing the created SignIn object.
+     *
+     * Example usage:
+     *
+     *  ```kotlin
+     *  val signIn = SignIn.create(mapOf("identifier" to "user@example.com"))
+     *                        .onSuccess { signIn -> Do something with the signIn object }
+     *                        .onFailure { error -> Handle the error }
+     *  ```
+     */
+    suspend fun create(params: Map<String, String>): ClerkApiResult<SignIn, ClerkErrorResponse> {
+      return ClerkApi.instance.createSignIn(params)
     }
 
     /**
@@ -477,19 +524,20 @@ data class SignIn(
      * @param context The context in which the authentication flow is initiated. Used to open the in
      *   app browser.
      * @param params The parameters for the redirect-based authentication.
-     *     - [AuthenticateWithRedirectParams.strategy]: The authentication strategy (e.g., OAuth
-     *       provider or Enterprise SSO).
-     *     - [AuthenticateWithRedirectParams.redirectUrl]: The URL to redirect the user to after
-     *       initiating the authentication flow.
-     *
-     * Supported strategies include:
-     * - OAuth providers (e.g., `oauth_google`, `oauth_facebook`)
-     *
+     *   [AuthenticateWithRedirectParams.provider] an [OAuthProvider]
+     *   [AuthenticateWithRedirectParams.redirectUrl] The URL to redirect the user to after
+     *   initiating the authentication flow. Set by default to [RedirectConfiguration.REDIRECT_URL]
      * @return A [ClerkApiResult] containing the result of the authentication flow. The [SSOResult]
      *   could contain either a sign-in or sign-up result, depending on whether an account transfer
      *   took place (i.e. if the user didn't have an account and a sign up was created instead).
      *
-     * **See Also:** [OAuthProviders](https://clerk.com/docs/references/javascript/types/sso)
+     * **See Also:** [OAuthProviders](https://clerk.com/docs/references/javascript/types/sso) \n \n
+     * Example usage:
+     * ```kotlin
+     * SignIn.authenticateWithRedirect(context, AuthenticateWithRedirectParams(provider = OAuthProvider.GOOGLE))
+     *   .onSuccess { result ->  // Handle the result }
+     *   .onFailure { error ->  // Handle the error }
+     * ```
      */
     suspend fun authenticateWithRedirect(
       context: Context,
@@ -515,6 +563,13 @@ data class SignIn(
  * @return A [ClerkApiResult] containing the updated SignIn object with the prepared first factor
  *   verification.
  * @see SignIn.PrepareFirstFactorParams
+ *
+ * Example usage:
+ * ```kotlin
+ * Clerk.signIn.prepareFirstFactor(strategy = PrepareFirstFactorParams.Strategy.EmailCode)
+ *   .onSuccess { updatedSignIn ->  // Handle the updated SignIn object }
+ *   .onFailure { error ->  // Handle the error }
+ * ```
  */
 suspend fun SignIn.prepareFirstFactor(
   strategy: PrepareFirstFactorParams.Strategy
@@ -575,8 +630,10 @@ suspend fun SignIn.resetPassword(
  * This function is used when a user needs to reset their password during the sign-in process,
  * typically after receiving a password reset verification code.
  *
- * @param params An instance of [SignIn.ResetPasswordParams] containing the new password and session
- *   options.
+ * @param password An instance of [SignIn.ResetPasswordParams] containing the new password and
+ *   session options.
+ * @param signOutOfOtherSessions Whether to sign out of other sessions after resetting the password.
+ *   Defaults to false.
  * @return A [ClerkApiResult] containing the updated SignIn object after the password reset.
  * @see SignIn.ResetPasswordParams
  */
