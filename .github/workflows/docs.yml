@@ -27,7 +27,7 @@ jobs:
         java-version: 17
     - name: Generate docs
       working-directory: main
-      run: ./gradlew dokkaHtmlMultiModule
+      run: ./gradlew dokkaJekyllMultiModule
 
     - name: Zip docs site
       run: |
