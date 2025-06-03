@@ -50,20 +50,25 @@ jobs:
     - uses: actions/download-artifact@v4.3.0
       with:
         path: artifacts
-    - name: Unzip and replace docs
+    - name: Unzip
       run: |
-        # Clear the docs directory (except .git)
-        find docs -mindepth 1 -name '.git' -prune -o -type f -delete
-        find docs -mindepth 1 -name '.git' -prune -o -type d -empty -delete
-        # Extract docs directly to docs directory
-        unzip "artifacts/main/Docs.zip" -d docs
-    - name: Commit
+        mkdir unzipped-docs
+        unzipped_path="unzipped-docs/main"
+        mkdir -p "$unzipped_path"
+        unzip "artifacts/main/Docs.zip" -d "$unzipped_path"
+        echo "extracting to root"
+        rsync -a "$unzipped_path/" docs/docs
+    - name: Update git config
       working-directory: docs
       run: |
-        current_sha="$(git -C ../main rev-parse @)"
         git config --local user.name "swolfand"
         git config --local user.email "sam@clerk.dev"
+    - name: Commit
+      working-directory: main
+      run: |
+        current_sha="$(git rev-parse @)"
+        cd ../docs
         if [[ -z $(git status --porcelain) ]]; then exit 0; fi
         git add --all
-        git commit -m "Update docs from $current_sha"
+        git commit -m "$current_sha"
         git push
