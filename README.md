@@ -34,7 +34,7 @@ Would you like to work on Open Source software and help maintain this repository
 2. Create an application in your Clerk dashboard
 
 ## 🧑‍💻 Installation
-The Clerk Android SDK is distributed via Maven Central. To add the Clerk SDK to your project, first ensure you have added [mavenCentral()}(https://docs.gradle.org/current/userguide/declaring_repositories.html) to your projects `build.gradle(.kts)` then, add the Clerk SDK to your application's dependencies:
+The Clerk Android SDK is distributed via Maven Central. To add the Clerk SDK to your project, first ensure you have added [mavenCentral](https://docs.gradle.org/current/userguide/declaring_repositories.html) to your projects `build.gradle(.kts)` then, add the Clerk SDK to your application's dependencies:
 ```gradle
 dependencies {
     ...
