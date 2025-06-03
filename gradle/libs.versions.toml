@@ -9,7 +9,7 @@ detekt = "1.23.8"
 eithernet = "2.0.0"
 dokka = "1.9.20"
 espressoCore = "3.6.1"
-jdk = "17"
+jdk = "22"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 jvmTarget = "17"
@@ -29,7 +29,7 @@ jetbrainsKotlinJvm = "2.1.21"
 chucker = "4.1.0"
 composeBom = "2025.05.01"
 foundationLayoutAndroid = "1.8.2"
-automap = "0.0.2"
+automap = "0.0.11"
 
 [libraries]
 
