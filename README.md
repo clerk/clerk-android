@@ -39,6 +39,7 @@ The Clerk Android SDK is distributed via Maven Central. To add the Clerk SDK to 
 dependencies {
     ...
     implementation(com.clerk:clerk-android:<latest-version>)
+    ...
 }
 ```
 
