@@ -13,11 +13,11 @@ jobs:
   docs:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: "main"
         path: main
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: docs
         path: docs
@@ -42,12 +42,12 @@ jobs:
     needs: [docs]
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: main
         path: main
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: docs
         path: docs
