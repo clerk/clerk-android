@@ -1,0 +1,28 @@
+---
+title: strategy
+---
+//[Clerk Android](../../../../../../index.html)/[com.clerk.signin](../../../../index.html)/[SignIn](../../../index.html)/[SignInCreateParams](../../index.html)/[Strategy](../index.html)/[GoogleOneTap](index.html)/[strategy](strategy.html)
+
+
+
+# strategy
+
+
+
+[androidJvm]\
+open override val [strategy](strategy.html): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html)
+
+
+
+#### Parameters
+
+
+androidJvm
+
+| | |
+|---|---|
+| strategy | The strategy identifier for Google one tap sign-in. |
+
+
+
+
