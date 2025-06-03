@@ -1,4 +1,5 @@
 import com.vanniktech.maven.publish.SonatypeHost
+import org.jetbrains.dokka.gradle.DokkaTaskPartial
 
 plugins {
   alias(libs.plugins.android.library)
@@ -59,6 +60,18 @@ mavenPublishing {
   }
 }
 
+tasks.named<DokkaTaskPartial>("dokkaHtmlPartial").configure {
+  dependsOn(tasks.named("kspDebugKotlin"))
+  dependsOn(tasks.named("kspReleaseKotlin"))
+  dependencies { dokkaPlugin(libs.versioning.plugin) }
+  moduleName.set("Clerk Android")
+  suppressInheritedMembers.set(true)
+  dokkaSourceSets.configureEach {
+    includes.from(listOf("module.md"))
+    reportUndocumented.set(true)
+  }
+}
+
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.appcompat)
@@ -76,7 +89,6 @@ dependencies {
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)
   implementation(libs.ksp.api)
-  implementation(libs.libphonenumber)
   implementation(libs.okhttp)
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
