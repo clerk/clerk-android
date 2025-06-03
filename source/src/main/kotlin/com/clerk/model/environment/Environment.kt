@@ -1,0 +1,22 @@
+package com.clerk.model.environment
+
+import com.clerk.model.error.ClerkErrorResponse
+import com.clerk.network.ClerkApi
+import com.clerk.network.serialization.ClerkApiResult
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Environment(
+  @SerialName("auth_config") val authConfig: AuthConfig,
+  @SerialName("display_config") val displayConfig: DisplayConfig,
+  @SerialName("user_settings") val userSettings: UserSettings,
+  @SerialName("fraud_settings") val fraudSettings: FraudSettings,
+) {
+  companion object {
+
+    /** Fetches the environment configuration from the Clerk API. */
+    suspend fun get(): ClerkApiResult<Environment, ClerkErrorResponse> =
+      ClerkApi.instance.environment()
+  }
+}
