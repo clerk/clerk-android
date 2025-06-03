@@ -413,6 +413,17 @@ data class SignIn(
       data class Transfer(override val strategy: String = "transfer") : Strategy {
         constructor() : this(strategy = "transfer")
       }
+
+      /**
+       * Google one tap sign-in strategy.
+       *
+       * This strategy is used for Google one tap authentication.
+       *
+       * @param strategy The strategy identifier for Google one tap sign-in.
+       */
+      data class GoogleOneTap(override val strategy: String = "google_one_tap") : Strategy {
+        constructor() : this(strategy = "google_one_tap")
+      }
     }
   }
 
