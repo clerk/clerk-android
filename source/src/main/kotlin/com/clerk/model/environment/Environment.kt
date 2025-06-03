@@ -7,7 +7,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Environment(
+internal data class Environment(
   @SerialName("auth_config") val authConfig: AuthConfig,
   @SerialName("display_config") val displayConfig: DisplayConfig,
   @SerialName("user_settings") val userSettings: UserSettings,

@@ -1,9 +1,7 @@
 package com.clerk
 
 import android.content.Context
-import com.clerk.configuration.ClerkConfigurationState
 import com.clerk.configuration.ConfigurationManager
-import com.clerk.log.ClerkLog
 import com.clerk.model.client.Client
 import com.clerk.model.environment.Environment
 import com.clerk.model.environment.UserSettings
@@ -14,23 +12,25 @@ import com.clerk.network.serialization.ClerkApiResult
 import com.clerk.service.SignOutService
 import com.clerk.signin.SignIn
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * This is the main entrypoint class for the clerk package. It contains a number of methods and
- * properties for interacting with the Clerk API.
+ * Main entrypoint class for the Clerk SDK.
+ *
+ * Provides access to authentication state, user information, and core functionality for managing
+ * user sessions and sign-in flows.
  */
 object Clerk {
 
-  /**
-   * The ConfigurationManager object is used to manage the configuration of the Clerk It handles the
-   * initialization of the SDK and the configuration of the Clerk API client.
-   */
-  internal val configurationManager = ConfigurationManager()
+  /** Internal configuration manager responsible for SDK initialization and API client setup. */
+  private val configurationManager = ConfigurationManager()
 
   // region Configuration Properties
 
-  /** Enable for additional debugging signals. */
+  /**
+   * Enable for additional debugging signals and logging.
+   *
+   * When enabled, provides verbose logging for SDK operations and API calls.
+   */
   var debugMode: Boolean = false
     private set
 
@@ -38,98 +38,133 @@ object Clerk {
 
   // region State Properties
 
-  /** The Client object for the current device. */
+  /**
+   * The Client object representing the current device and its authentication state.
+   *
+   * Contains information about active sessions, sign-in attempts, and device-specific data.
+   */
   lateinit var client: Client
 
-  /** The Environment object for the current client */
+  /** Internal environment configuration containing display settings and authentication options. */
   private lateinit var environment: Environment
-
-  /**
-   * The image URL for the logo to be used in the UI. This is the URL of the logo image that will be
-   * used in things like the sign-in screen and the sign-up screen.
-   */
-  val logoUrl: String
-    get() = environment.displayConfig.logoImageUrl
-
-  /**
-   * Gets the map of available social providers configured in the Clerk environment.
-   *
-   * This map contains the strategies for each social provider, which can be used to identify OAuth
-   * providers when initiating a sign-in process. The keys are the strategy identifiers (e.g.,
-   * "oauth_google"), and the values provide configuration details for each provider.
-   *
-   * Use this to obtain the available social providers and their respective strategy names when
-   * constructing [SignIn.create] with an OAuth identifier.
-   */
-  val socialProviders: Map<String, UserSettings.SocialConfig>
-    get() = environment.userSettings.social
-
-  public val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized.asStateFlow()
-
-  public var signIn: SignIn? = null
-    get() = client.signIn
 
   // endregion
 
   // region Computed Properties
 
   /**
-   * The currently active Session, which is guaranteed to be one of the sessions in Client.sessions.
-   * If there is no active session, this field will be nil.
+   * The image URL for the application logo used in authentication UI components.
+   *
+   * This logo appears in sign-in screens, sign-up flows, and other authentication interfaces. The
+   * URL is configured in your Clerk Dashboard under branding settings.
    */
-  val session: Session?
-    get() = client.let { c -> c.sessions.firstOrNull { it.id == c.lastActiveSessionId } }
+  val logoUrl: String
+    get() = if (::environment.isInitialized) environment.displayConfig.logoImageUrl else ""
 
   /**
-   * A shortcut to Session.user which holds the currently active User object. If the session is nil,
-   * the user field will match.
+   * Map of available social authentication providers configured for this application.
+   *
+   * Each entry contains the provider's strategy identifier (e.g., "oauth_google", "oauth_facebook")
+   * and its configuration details. Use these strategy identifiers when initiating OAuth sign-in
+   * flows.
+   *
+   * @return Map where keys are strategy identifiers and values contain provider configuration.
+   * @see [SignIn.create] for usage with OAuth authentication.
+   */
+  val socialProviders: Map<String, UserSettings.SocialConfig>
+    get() = if (::environment.isInitialized) environment.userSettings.social else emptyMap()
+
+  /**
+   * Reactive state indicating whether the Clerk SDK has completed initialization.
+   *
+   * Observe this StateFlow to know when the SDK is ready for authentication operations. The SDK
+   * must be initialized before calling authentication methods.
+   */
+  val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized
+
+  /**
+   * The current sign-in attempt, if one is in progress.
+   *
+   * This represents an ongoing authentication flow and provides access to verification steps and
+   * authentication state. Returns null when no sign-in is active.
+   */
+  val signIn: SignIn?
+    get() = if (::client.isInitialized) client.signIn else null
+
+  /**
+   * The currently active user session.
+   *
+   * Represents an authenticated session and is guaranteed to be one of the sessions in
+   * [Client.sessions]. Returns null when no session is active.
+   */
+  val session: Session?
+    get() =
+      if (::client.isInitialized) {
+        client.sessions.firstOrNull { it.id == client.lastActiveSessionId }
+      } else null
+
+  /**
+   * The currently authenticated user.
+   *
+   * Provides access to user profile information, email addresses, phone numbers, and other user
+   * data. Returns null when no user is signed in.
    */
   val user: User?
     get() = session?.user
+
+  /**
+   * Indicates whether a user is currently signed in.
+   *
+   * @return true if there is an active session with a user, false otherwise.
+   */
+  val isSignedIn: Boolean
+    get() = session != null
 
   // endregion
 
   // region Public Methods
 
   /**
-   * Configures the shared clerk instance.
+   * Initializes the Clerk SDK with the provided configuration.
    *
-   * @param context The application context.
-   * @param publishableKey The publishable key from your Clerk Dashboard, used to connect to Clerk.
-   * @param debugMode Enable for additional logging.
-   * @param onInitialized A callback that is called when the configuration is complete. It returns
-   *   true if the configuration was successful, and false if there was an error.
+   * This method must be called before using any other Clerk functionality. It configures the API
+   * client, initializes local storage, and begins the authentication state setup.
+   *
+   * @param context The application context used for initialization and storage setup.
+   * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
+   *   Clerk.
+   * @param debugMode Enable additional logging and debugging information (default: false).
+   * @throws IllegalArgumentException if the publishable key format is invalid.
    */
-  fun initialize(
-    context: Context,
-    publishableKey: String,
-    debugMode: Boolean = false,
-    onInitialized: (Boolean) -> Unit = {},
-  ) {
+  fun initialize(context: Context, publishableKey: String, debugMode: Boolean = false) {
     this.debugMode = debugMode
-    configurationManager.configure(context, publishableKey) { state ->
-      when (state) {
-        is ClerkConfigurationState.Success -> {
-          if (debugMode) {
-            ClerkLog.d(
-              "Clerk configured successfully: client: ${state.client}, environment: ${state.environment}"
-            )
-          }
-          this.client = state.client
-          this.environment = state.environment
-          onInitialized(true)
-        }
-        ClerkConfigurationState.Error -> {
-          ClerkLog.e("Failed to configure Clerk")
-          onInitialized(false)
-        }
-      }
-    }
+    configurationManager.configure(context, publishableKey)
   }
 
   /**
-   * Signs the current user out of the application. This will remove the current session and clear
-   * any cached user data.
+   * Signs out the currently authenticated user.
+   *
+   * This operation removes the active session from both the server and local storage, clearing all
+   * cached user data and authentication state.
+   *
+   * @return A [ClerkApiResult] indicating success or failure of the sign-out operation.
    */
   suspend fun signOut(): ClerkApiResult<Unit, ClerkErrorResponse> = SignOutService.signOut()
+
+  // endregion
+
+  // region Internal Methods
+
+  /**
+   * Internal method to update the environment configuration.
+   *
+   * Called by [ConfigurationManager] when environment data is refreshed from the server.
+   *
+   * @param environment The updated environment configuration.
+   */
+  internal fun updateEnvironment(environment: Environment) {
+    this.environment = environment
+  }
+
+  // endregion
 }
