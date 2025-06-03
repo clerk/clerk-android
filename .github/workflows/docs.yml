@@ -1,4 +1,4 @@
-name: Versioned Docs
+name: Generate docs
 on:
   workflow_dispatch:
   push:
