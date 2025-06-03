@@ -439,20 +439,12 @@ data class SignIn(
        *
        * @param strategy The strategy identifier for ticket authentication.
        * @param identifier The identifier for the ticket authentication.
-       * @param ticket The ticket used for authentication.
-       * **
+       * @param ticket The ticket used for authentication. **
        */
       @AutoMap
       @Serializable
-      data class Ticket(
-        override val strategy: String = TICKET,
-        val identifier: String,
-        val ticket: String,
-      ) : Strategy {
-        constructor(
-          identifier: String,
-          ticket: String,
-        ) : this(strategy = TICKET, identifier = identifier, ticket = ticket)
+      data class Ticket(override val strategy: String = TICKET, val ticket: String) : Strategy {
+        constructor(ticket: String) : this(strategy = TICKET, ticket = ticket)
       }
     }
   }
