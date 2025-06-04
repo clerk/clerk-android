@@ -3,5 +3,10 @@
     "deploymentEnabled": {
       "main": false
     }
+  },
+  "github": {
+    "ignored": [
+      "renovate/**"
+    ]
   }
 }
