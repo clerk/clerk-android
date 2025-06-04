@@ -125,7 +125,7 @@ Clerk.signOut()
 
 ### 📚 Further Reading
 
-Full reference documentation is available for (Clerk Android)[https://clerk-android.clerkstage.dev] as well as a quickstart guide 
+Full reference documentation is available for [Clerk Android](https://clerk-android.clerkstage.dev) as well as a quickstart guide 
  
 <!---
 ## 🤝 How to Contribute
