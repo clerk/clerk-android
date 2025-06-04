@@ -123,7 +123,8 @@ Clerk.signIn.attemptFirstFactor(Strategy.ResetPasswordEmailCode("123456"))
 Clerk.signOut()
 ```
 
-Further Reading
+### 📚 Further Reading
+
 Full reference documentation is available for (Clerk Android)[https://clerk-android.clerkstage.dev] as well as a quickstart guide 
  
 <!---
