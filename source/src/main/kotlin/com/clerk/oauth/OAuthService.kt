@@ -9,7 +9,7 @@ import com.clerk.log.ClerkLog
 import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.network.ClerkApi
 import com.clerk.network.serialization.ClerkResult
-import com.clerk.oauth.SSOService.authenticateWithRedirect
+import com.clerk.oauth.OAuthService.authenticateWithRedirect
 import com.clerk.signin.SignIn
 import com.clerk.signin.get
 import com.clerk.signin.toSSOResult
@@ -17,7 +17,7 @@ import com.clerk.signup.SignUp
 import com.clerk.signup.toSSOResult
 import kotlinx.coroutines.CompletableDeferred
 
-internal object SSOService {
+internal object OAuthService {
   private var currentPendingAuth:
     CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>? =
     null
@@ -31,8 +31,8 @@ internal object SSOService {
    * methods to start, complete, or cancel authentication flows that require user redirection to
    * external providers (e.g., Google, Facebook).
    *
-   * For redirect-based flows, this service uses [SSOReceiverActivity] to intercept the redirect URI
-   * and finalize the sign-in process.
+   * For redirect-based flows, this service uses [OAuthReceiverActivity] to intercept the redirect
+   * URI and finalize the sign-in process.
    */
   suspend fun authenticateWithRedirect(
     context: Context,
@@ -75,7 +75,7 @@ internal object SSOService {
         currentSignInId = signInId
 
         val intent =
-          Intent(context, SSOReceiverActivity::class.java).apply { data = externalUrl.toUri() }
+          Intent(context, OAuthReceiverActivity::class.java).apply { data = externalUrl.toUri() }
         context.startActivity(intent)
 
         // This will suspend until completeAuthenticateWithRedirect is called
@@ -89,8 +89,8 @@ internal object SSOService {
    * redirected back to the app after completing external authentication (e.g., OAuth or SSO
    * provider).
    *
-   * This method is typically triggered internally via [SSOReceiverActivity] when the app receives a
-   * redirect URI containing authentication results. It processes the redirect URI to retrieve the
+   * This method is typically triggered internally via [OAuthReceiverActivity] when the app receives
+   * a redirect URI containing authentication results. It processes the redirect URI to retrieve the
    * sign-in result, resolves the corresponding pending [CompletableDeferred], and updates the
    * sign-in state.
    *

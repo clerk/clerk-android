@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
  * This activity is designed to handle configuration changes and process death, preserving the
  * authentication state throughout the flow.
  */
-internal class SSOManagerActivity : AppCompatActivity() {
+internal class OAuthManagerActivity : AppCompatActivity() {
   private var authorizationStarted = false
   private lateinit var desiredUri: Uri
 
@@ -88,7 +88,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
    * @param uri The callback URI containing authentication results
    */
   private fun authorizationComplete(uri: Uri) {
-    lifecycleScope.launch { SSOService.completeAuthenticateWithRedirect(uri) }
+    lifecycleScope.launch { OAuthService.completeAuthenticateWithRedirect(uri) }
   }
 
   /** Handles authentication cancellation by the user. */
@@ -133,7 +133,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
      * @return Basic intent for the SSO manager activity
      */
     internal fun createBaseIntent(context: Context): Intent =
-      Intent(context, SSOManagerActivity::class.java)
+      Intent(context, OAuthManagerActivity::class.java)
 
     internal const val URI_KEY = "uri"
     private const val KEY_AUTHORIZATION_STARTED = "authStarted"
