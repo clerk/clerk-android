@@ -9,13 +9,14 @@ import com.clerk.model.factor.Factor
 import com.clerk.model.verification.Verification
 import com.clerk.network.ClerkApi
 import com.clerk.network.serialization.ClerkApiResult
+import com.clerk.oauth.GoogleSignInService
+import com.clerk.oauth.OAuthProvider
+import com.clerk.oauth.RedirectConfiguration
+import com.clerk.oauth.SSOResult
+import com.clerk.oauth.SSOService
 import com.clerk.signin.SignIn.PrepareFirstFactorParams
 import com.clerk.signin.internal.toFormData
 import com.clerk.signin.internal.toMap
-import com.clerk.sso.OAuthProvider
-import com.clerk.sso.RedirectConfiguration
-import com.clerk.sso.SSOResult
-import com.clerk.sso.SSOService
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -488,6 +489,7 @@ data class SignIn(
       return when (params) {
         is SignInCreateParams.Strategy.Transfer ->
           ClerkApi.instance.createSignIn(mapOf(TRANSFER to "true"))
+        is SignInCreateParams.Strategy.GoogleOneTap -> GoogleSignInService.signInWithGoogle()
         else -> ClerkApi.instance.createSignIn(params.toMap())
       }
     }
