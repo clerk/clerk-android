@@ -234,7 +234,20 @@ data class SignUp(
      */
     object None : SignUpCreateParams
 
+    /**
+     * The `SignUp` will be created by transferring an existing session.
+     *
+     * This is used when a user is going through the Sign In flow and we detect they need to sign up
+     * instead. This shouldn't be used for any other purpose.
+     */
     object Transfer : SignUpCreateParams
+
+    /**
+     * The `SignUp` will be created using a Google One Tap token.
+     *
+     * Note: the one tap token should be obtained by calling [SignIn.authenticateWithOneTap].
+     */
+    data class GoogleOneTap(val token: String) : SignUpCreateParams
   }
 
   companion object {

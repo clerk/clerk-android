@@ -12,9 +12,7 @@ import com.clerk.network.serialization.ClerkResult
 import com.clerk.oauth.OAuthService.authenticateWithRedirect
 import com.clerk.signin.SignIn
 import com.clerk.signin.get
-import com.clerk.signin.toSSOResult
 import com.clerk.signup.SignUp
-import com.clerk.signup.toSSOResult
 import kotlinx.coroutines.CompletableDeferred
 
 internal object OAuthService {
@@ -24,7 +22,7 @@ internal object OAuthService {
   private var currentSignInId: String? = null
 
   /**
-   * Handles Single Sign-On (SSO) and OAuth authentication flows for the Clerk
+   * Handles OAuth authentication flows for the Clerk SDK
    *
    * This service manages redirect-based authentication flows, including initiating OAuth,
    * Enterprise SSO, and handling callback URIs to complete the authentication process. It provides
@@ -33,6 +31,8 @@ internal object OAuthService {
    *
    * For redirect-based flows, this service uses [OAuthReceiverActivity] to intercept the redirect
    * URI and finalize the sign-in process.
+   *
+   * Note: We handle sign in with google nee Google One Tap, in [GoogleSignInService]
    */
   suspend fun authenticateWithRedirect(
     context: Context,
@@ -40,7 +40,7 @@ internal object OAuthService {
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     // Clear any existing pending auth to prevent conflicts
     currentPendingAuth?.complete(
-      ClerkResult.Companion.unknownFailure(
+      ClerkResult.unknownFailure(
         Exception("New authentication started, cancelling previous attempt")
       )
     )
@@ -56,7 +56,7 @@ internal object OAuthService {
       is ClerkResult.Failure -> {
         val message = initialResult.error?.errors?.first()?.message
         ClerkLog.e("Failed to authenticate with redirect: $message")
-        ClerkResult.Companion.apiFailure(initialResult.error)
+        ClerkResult.apiFailure(initialResult.error)
       }
       is ClerkResult.Success -> {
         ClerkLog.d("Successfully authenticated with redirect: $initialResult")
@@ -118,54 +118,25 @@ internal object OAuthService {
       }
     } catch (e: Exception) {
       ClerkLog.e("Error completing authentication with redirect: ${e.message}")
-      currentPendingAuth?.complete(ClerkResult.Companion.unknownFailure(e))
+      currentPendingAuth?.complete(ClerkResult.unknownFailure(e))
       clearCurrentAuth()
     }
   }
 
   private suspend fun handleSignIn(nonce: String) {
-    val signInResult = requireNotNull(Clerk.signIn).get(rotatingTokenNonce = nonce)
+    val signInResult =
+      requireNotNull(Clerk.signIn).get(rotatingTokenNonce = nonce).signInToOAuthResult()
+    currentPendingAuth?.complete(signInResult)
 
-    when (signInResult) {
-      is ClerkResult.Success -> {
-        ClerkLog.d("Successfully completed sign-in with nonce: $nonce")
-        currentPendingAuth?.complete(
-          ClerkResult.Companion.success(signInResult.value.toSSOResult())
-        )
-        clearCurrentAuth()
-      }
-
-      is ClerkResult.Failure -> {
-        val errorMessage = signInResult.error?.errors?.first()?.longMessage
-        ClerkLog.e(
-          "Failed to complete sign-in with rotating token nonce $nonce, error: $errorMessage"
-        )
-        currentPendingAuth?.complete(ClerkResult.Companion.apiFailure(signInResult.error))
-        clearCurrentAuth()
-      }
-    }
+    clearCurrentAuth()
   }
 
   private suspend fun handleSignUpTransfer() {
     ClerkLog.d("Handling sign-up transfer")
-    val createResult = SignUp.Companion.create(SignUp.SignUpCreateParams.Transfer)
+    val createResult = SignUp.create(SignUp.SignUpCreateParams.Transfer).signUpToOAuthResult()
+    currentPendingAuth?.complete(createResult)
 
-    when (createResult) {
-      is ClerkResult.Success -> {
-        ClerkLog.d("Successfully completed sign-up transfer")
-        currentPendingAuth?.complete(
-          ClerkResult.Companion.success(createResult.value.toSSOResult())
-        )
-        clearCurrentAuth()
-      }
-
-      is ClerkResult.Failure -> {
-        val errorMessage = createResult.error?.errors?.first()?.longMessage
-        ClerkLog.e("Failed to complete sign-up transfer, error: $errorMessage")
-        currentPendingAuth?.complete(ClerkResult.Companion.apiFailure(createResult.error))
-        clearCurrentAuth()
-      }
-    }
+    clearCurrentAuth()
   }
 
   /**

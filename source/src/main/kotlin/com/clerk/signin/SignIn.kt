@@ -505,7 +505,9 @@ data class SignIn(
      * @return A [ClerkResult] containing the result of the authentication flow. or
      *   [ClerkResult.Failure] if the authentication fails.
      */
-    suspend fun authenticateWithGoogle(context: Context): ClerkResult<SignIn, ClerkErrorResponse> {
+    suspend fun authenticateWithGoogleOneTap(
+      context: Context
+    ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return GoogleSignInService.signInWithGoogle(context)
     }
 
@@ -654,12 +656,3 @@ suspend fun SignIn.get(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
-
-/**
- * Converts the current [SignIn] instance to an [OAuthResult].
- *
- * This is useful for handling SignIn results in the same way as SSO authentication results.
- *
- * @return An [OAuthResult] containing this SignIn instance.
- */
-fun SignIn.toSSOResult() = OAuthResult(signIn = this)
