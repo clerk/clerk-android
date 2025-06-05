@@ -1,4 +1,4 @@
-package com.clerk.sso
+package com.clerk.oauth
 
 import com.clerk.signin.SignIn
 import com.clerk.signup.SignUp

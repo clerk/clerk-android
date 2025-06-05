@@ -1,4 +1,4 @@
-package com.clerk.sso
+package com.clerk.oauth
 
 import android.content.ActivityNotFoundException
 import android.content.Context

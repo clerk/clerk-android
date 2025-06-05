@@ -7,7 +7,7 @@ import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.model.verification.Verification
 import com.clerk.network.ClerkApi
 import com.clerk.network.serialization.ClerkApiResult
-import com.clerk.sso.SSOResult
+import com.clerk.oauth.SSOResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
