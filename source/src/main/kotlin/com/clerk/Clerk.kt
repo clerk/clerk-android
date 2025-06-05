@@ -46,7 +46,7 @@ object Clerk {
   lateinit var client: Client
 
   /** Internal environment configuration containing display settings and authentication options. */
-  private lateinit var environment: Environment
+  internal lateinit var environment: Environment
 
   // endregion
 

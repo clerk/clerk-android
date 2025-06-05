@@ -13,6 +13,7 @@ data class DisplayConfig(
   @SerialName("home_url") val homeUrl: String,
   @SerialName("privacy_policy_url") val privacyPolicyUrl: String?,
   @SerialName("terms_url") val termsUrl: String?,
+  @SerialName("google_one_tap_client_id") val googleOneTapClientId: String?,
 )
 
 @Serializable
