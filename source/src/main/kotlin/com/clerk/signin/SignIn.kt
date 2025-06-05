@@ -545,6 +545,17 @@ data class SignIn(
     ): ClerkApiResult<SSOResult, ClerkErrorResponse> {
       return SSOService.authenticateWithRedirect(context, params)
     }
+
+    /**
+     * Authenticates the user with a token generated from Google identity services.
+     *
+     * @param context The application context of the end users device.
+     */
+    suspend fun authenticateWithGoogle(
+      context: Context
+    ): ClerkApiResult<SignIn, ClerkErrorResponse> {
+      return GoogleSignInService.signInWithGoogle()
+    }
   }
 }
 
