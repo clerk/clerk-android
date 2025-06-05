@@ -285,6 +285,14 @@ data class SignUp(
   }
 }
 
+/**
+ * The [update] method is used to update the sign-up process with new information. This can be used
+ * to add additional fields to the sign-up process, such as a phone number or an email address.
+ *
+ * @param updateParams: The parameters for updating the sign-up. This includes the fields to be
+ *   updated.
+ * @return A [ClerkResult] containing the updated [SignUp] object.
+ */
 suspend fun SignUp.update(
   updateParams: SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {

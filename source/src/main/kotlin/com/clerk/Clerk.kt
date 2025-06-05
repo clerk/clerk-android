@@ -11,6 +11,7 @@ import com.clerk.model.user.User
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.service.SignOutService
 import com.clerk.signin.SignIn
+import com.clerk.signup.SignUp
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -90,6 +91,15 @@ object Clerk {
    */
   val signIn: SignIn?
     get() = if (::client.isInitialized) client.signIn else null
+
+  /**
+   * The current sign-up attempt, if one is in progress.
+   *
+   * This represents an ongoing user registration flow and provides access to verification steps and
+   * registration state. Returns null when no sign-up is active.
+   */
+  val signUp: SignUp?
+    get() = if (::client.isInitialized) client.signUp else null
 
   /**
    * The currently active user session.
