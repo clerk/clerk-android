@@ -427,11 +427,8 @@ data class SignIn(
        */
       @AutoMap
       @Serializable
-      data class GoogleOneTap(
-        override val strategy: String = GOOGLE_ONE_TAP,
-        val identifier: String,
-      ) : Strategy {
-        constructor(identifier: String) : this(strategy = GOOGLE_ONE_TAP, identifier = identifier)
+      data class GoogleOneTap(override val strategy: String = GOOGLE_ONE_TAP) : Strategy {
+        constructor() : this(strategy = GOOGLE_ONE_TAP)
       }
 
       /**
