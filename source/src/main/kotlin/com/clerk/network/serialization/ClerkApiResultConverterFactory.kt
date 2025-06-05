@@ -14,7 +14,7 @@ object ClerkApiResultConverterFactory : Converter.Factory() {
     annotations: Array<out Annotation>,
     retrofit: Retrofit,
   ): Converter<ResponseBody, *>? {
-    if (getRawType(type) != ClerkApiResult::class.java) return null
+    if (getRawType(type) != ClerkResult::class.java) return null
 
     val successType = (type as ParameterizedType).actualTypeArguments[0]
     val errorType = type.actualTypeArguments[1]
@@ -60,8 +60,8 @@ object ClerkApiResultConverterFactory : Converter.Factory() {
   }
 
   private class ClerkApiResultConverter(private val delegate: Converter<ResponseBody, Any>) :
-    Converter<ResponseBody, ClerkApiResult<*, *>> {
-    override fun convert(value: ResponseBody): ClerkApiResult<*, *>? {
+    Converter<ResponseBody, ClerkResult<*, *>> {
+    override fun convert(value: ResponseBody): ClerkResult<*, *>? {
       return delegate.convert(value)?.let { result ->
         // If the result is a ClientPiggybackedResponse, unwrap it
         val unwrappedResult =
@@ -70,7 +70,7 @@ object ClerkApiResultConverterFactory : Converter.Factory() {
           } else {
             result
           }
-        @Suppress("UNCHECKED_CAST") ClerkApiResult.success(unwrappedResult as Any)
+        @Suppress("UNCHECKED_CAST") ClerkResult.success(unwrappedResult as Any)
       }
     }
   }

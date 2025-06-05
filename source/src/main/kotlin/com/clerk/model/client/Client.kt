@@ -3,7 +3,7 @@ package com.clerk.model.client
 import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.model.session.Session
 import com.clerk.network.ClerkApi
-import com.clerk.network.serialization.ClerkApiResult
+import com.clerk.network.serialization.ClerkResult
 import com.clerk.signin.SignIn
 import com.clerk.signup.SignUp
 import kotlinx.serialization.SerialName
@@ -40,6 +40,6 @@ data class Client(
 
   companion object {
     /** Fetches the current client object from the Clerk API. */
-    suspend fun get(): ClerkApiResult<Client, ClerkErrorResponse> = ClerkApi.instance.client()
+    suspend fun get(): ClerkResult<Client, ClerkErrorResponse> = ClerkApi.instance.client()
   }
 }

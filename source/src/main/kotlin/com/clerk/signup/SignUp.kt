@@ -6,8 +6,8 @@ import com.clerk.automap.annotations.AutoMap
 import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.model.verification.Verification
 import com.clerk.network.ClerkApi
-import com.clerk.network.serialization.ClerkApiResult
-import com.clerk.oauth.SSOResult
+import com.clerk.network.serialization.ClerkResult
+import com.clerk.oauth.OAuthResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -260,7 +260,7 @@ data class SignUp(
      *   The [status] property reflects the current state of the sign-up.
      * @see [SignUp]
      */
-    suspend fun create(params: SignUpCreateParams): ClerkApiResult<SignUp, ClerkErrorResponse> {
+    suspend fun create(params: SignUpCreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
       val paramMap =
         if (params is SignUpCreateParams.Transfer) {
           mapOf("transfer" to "true")
@@ -274,7 +274,7 @@ data class SignUp(
 
 suspend fun SignUp.update(
   updateParams: SignUpUpdateParams
-): ClerkApiResult<SignUp, ClerkErrorResponse> {
+): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.instance.updateSignUp(id, updateParams.toMap())
 }
 
@@ -290,13 +290,13 @@ suspend fun SignUp.update(
  *
  * @param prepareVerification: The parameters for preparing the verification.Specifies the field
  *   which requires verification
- * @return A [ClerkApiResult] containing the result of the verification preparation. A successful
+ * @return A [ClerkResult] containing the result of the verification preparation. A successful
  *   response indicates that the verification process has been initiated, and the [SignUp] object is
  *   returned.
  */
 suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
-): ClerkApiResult<SignUp, ClerkErrorResponse> {
+): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.instance.prepareSignUpVerification(this.id, prepareVerification.value)
 }
 
@@ -312,7 +312,7 @@ suspend fun SignUp.prepareVerification(
  */
 suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
-): ClerkApiResult<SignUp, ClerkErrorResponse> {
+): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,
     strategy = params.strategy,
@@ -320,5 +320,5 @@ suspend fun SignUp.attemptVerification(
   )
 }
 
-/** Converts the [SignUp] object to an [SSOResult] object. */
-fun SignUp.toSSOResult() = SSOResult(signUp = this)
+/** Converts the [SignUp] object to an [OAuthResult] object. */
+fun SignUp.toSSOResult() = OAuthResult(signUp = this)

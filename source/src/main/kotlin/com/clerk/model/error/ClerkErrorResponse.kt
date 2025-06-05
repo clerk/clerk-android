@@ -27,3 +27,5 @@ data class Error(
 )
 
 @Serializable data class Meta(val client: Client? = null)
+
+fun ClerkErrorResponse.firstMessage(): String? = this.errors.firstOrNull()?.message

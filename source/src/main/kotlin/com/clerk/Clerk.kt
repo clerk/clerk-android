@@ -8,7 +8,7 @@ import com.clerk.model.environment.UserSettings
 import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.model.session.Session
 import com.clerk.model.user.User
-import com.clerk.network.serialization.ClerkApiResult
+import com.clerk.network.serialization.ClerkResult
 import com.clerk.service.SignOutService
 import com.clerk.signin.SignIn
 import kotlinx.coroutines.flow.StateFlow
@@ -147,9 +147,9 @@ object Clerk {
    * This operation removes the active session from both the server and local storage, clearing all
    * cached user data and authentication state.
    *
-   * @return A [ClerkApiResult] indicating success or failure of the sign-out operation.
+   * @return A [ClerkResult] indicating success or failure of the sign-out operation.
    */
-  suspend fun signOut(): ClerkApiResult<Unit, ClerkErrorResponse> = SignOutService.signOut()
+  suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> = SignOutService.signOut()
 
   // endregion
 

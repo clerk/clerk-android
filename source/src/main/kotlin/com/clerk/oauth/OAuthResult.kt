@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * state. We handle the transfer automatically in the SDK, so you don't have to worry about it.
  */
 @Serializable
-data class SSOResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {
+data class OAuthResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {
 
   /**
    * Convenience property to determine the type of result.

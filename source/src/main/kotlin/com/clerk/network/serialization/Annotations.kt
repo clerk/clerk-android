@@ -7,7 +7,7 @@ import java.lang.reflect.Type
 import java.lang.reflect.WildcardType
 
 public fun createStatusCode(code: Int): StatusCode {
-  ClerkApiResult.checkHttpFailureCode(code)
+  ClerkResult.checkHttpFailureCode(code)
   return StatusCode(code)
 }
 

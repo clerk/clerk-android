@@ -11,9 +11,9 @@ import retrofit2.Response
 import retrofit2.Retrofit
 
 /**
- * A custom [CallAdapter.Factory] for [ClerkApiResult] calls. This creates a delegating adapter for
- * suspend function calls that return [ClerkApiResult]. This facilitates returning all error types
- * through a single [ClerkApiResult.Failure] type.
+ * A custom [CallAdapter.Factory] for [ClerkResult] calls. This creates a delegating adapter for
+ * suspend function calls that return [ClerkResult]. This facilitates returning all error types
+ * through a single [ClerkResult.Failure] type.
  */
 object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
   @Suppress("ReturnCount")
@@ -26,9 +26,7 @@ object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
       return null
     }
     val apiResultType = getParameterUpperBound(0, returnType as ParameterizedType)
-    if (
-      apiResultType !is ParameterizedType || apiResultType.rawType != ClerkApiResult::class.java
-    ) {
+    if (apiResultType !is ParameterizedType || apiResultType.rawType != ClerkResult::class.java) {
       return null
     }
 
@@ -39,29 +37,29 @@ object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
     private val retrofit: Retrofit,
     private val apiResultType: ParameterizedType,
     private val annotations: Array<Annotation>,
-  ) : CallAdapter<ClerkApiResult<*, *>, Call<ClerkApiResult<*, *>>> {
+  ) : CallAdapter<ClerkResult<*, *>, Call<ClerkResult<*, *>>> {
 
     private companion object {
       private const val HTTP_NO_CONTENT = 204
       private const val HTTP_RESET_CONTENT = 205
     }
 
-    override fun adapt(call: Call<ClerkApiResult<*, *>>): Call<ClerkApiResult<*, *>> {
-      return object : Call<ClerkApiResult<*, *>> by call {
+    override fun adapt(call: Call<ClerkResult<*, *>>): Call<ClerkResult<*, *>> {
+      return object : Call<ClerkResult<*, *>> by call {
         @Suppress("LongMethod")
-        override fun enqueue(callback: Callback<ClerkApiResult<*, *>>) {
+        override fun enqueue(callback: Callback<ClerkResult<*, *>>) {
           call.enqueue(
-            object : Callback<ClerkApiResult<*, *>> {
-              override fun onFailure(call: Call<ClerkApiResult<*, *>>, t: Throwable) {
+            object : Callback<ClerkResult<*, *>> {
+              override fun onFailure(call: Call<ClerkResult<*, *>>, t: Throwable) {
                 when (t) {
                   is ApiException -> {
                     callback.onResponse(
                       call,
                       Response.success(
-                        ClerkApiResult.Failure(
+                        ClerkResult.Failure(
                           error = t.error,
                           throwable = t,
-                          errorType = ClerkApiResult.Failure.ErrorType.API,
+                          errorType = ClerkResult.Failure.ErrorType.API,
                           tags = mapOf(Request::class to call.request()),
                         )
                       ),
@@ -71,10 +69,10 @@ object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                     callback.onResponse(
                       call,
                       Response.success(
-                        ClerkApiResult.Failure(
+                        ClerkResult.Failure(
                           error = null,
                           throwable = t,
-                          errorType = ClerkApiResult.Failure.ErrorType.UNKNOWN,
+                          errorType = ClerkResult.Failure.ErrorType.UNKNOWN,
                           tags = mapOf(Request::class to call.request()),
                         )
                       ),
@@ -84,15 +82,15 @@ object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
               }
 
               override fun onResponse(
-                call: Call<ClerkApiResult<*, *>>,
-                response: Response<ClerkApiResult<*, *>>,
+                call: Call<ClerkResult<*, *>>,
+                response: Response<ClerkResult<*, *>>,
               ) {
                 if (response.isSuccessful) {
                   // Repackage the initial result with new tags with this call's request + response
                   val tags = mapOf(okhttp3.Response::class to response.raw())
                   val withTag =
                     when (val result = response.body()) {
-                      is ClerkApiResult.Success -> result.withTags(result.tags + tags)
+                      is ClerkResult.Success -> result.withTags(result.tags + tags)
                       null -> {
                         val responseCode = response.code()
                         if (
@@ -100,7 +98,7 @@ object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                             apiResultType.actualTypeArguments[0] == Unit::class.java
                         ) {
                           @Suppress("UNCHECKED_CAST")
-                          ClerkApiResult.success(Unit).withTags(tags as Map<KClass<*>, Any>)
+                          ClerkResult.success(Unit).withTags(tags as Map<KClass<*>, Any>)
                         } else {
                           null
                         }
@@ -128,10 +126,10 @@ object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                         callback.onResponse(
                           call,
                           Response.success(
-                            ClerkApiResult.Failure(
+                            ClerkResult.Failure(
                               error = null,
                               throwable = e,
-                              errorType = ClerkApiResult.Failure.ErrorType.UNKNOWN,
+                              errorType = ClerkResult.Failure.ErrorType.UNKNOWN,
                               tags = mapOf(okhttp3.Response::class to response.raw()),
                             )
                           ),
@@ -143,10 +141,10 @@ object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                   callback.onResponse(
                     call,
                     Response.success(
-                      ClerkApiResult.Failure(
+                      ClerkResult.Failure(
                         error = errorBody,
                         code = response.code(),
-                        errorType = ClerkApiResult.Failure.ErrorType.HTTP,
+                        errorType = ClerkResult.Failure.ErrorType.HTTP,
                         tags = mapOf(okhttp3.Response::class to response.raw()),
                       )
                     ),

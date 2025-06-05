@@ -8,7 +8,7 @@ import com.clerk.Clerk
 import com.clerk.log.ClerkLog
 import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.network.ClerkApi
-import com.clerk.network.serialization.ClerkApiResult
+import com.clerk.network.serialization.ClerkResult
 import com.clerk.oauth.SSOService.authenticateWithRedirect
 import com.clerk.signin.SignIn
 import com.clerk.signin.get
@@ -19,7 +19,7 @@ import kotlinx.coroutines.CompletableDeferred
 
 internal object SSOService {
   private var currentPendingAuth:
-    CompletableDeferred<ClerkApiResult<SSOResult, ClerkErrorResponse>>? =
+    CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>? =
     null
   private var currentSignInId: String? = null
 
@@ -37,10 +37,10 @@ internal object SSOService {
   suspend fun authenticateWithRedirect(
     context: Context,
     params: SignIn.AuthenticateWithRedirectParams,
-  ): ClerkApiResult<SSOResult, ClerkErrorResponse> {
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     // Clear any existing pending auth to prevent conflicts
     currentPendingAuth?.complete(
-      ClerkApiResult.Companion.unknownFailure(
+      ClerkResult.Companion.unknownFailure(
         Exception("New authentication started, cancelling previous attempt")
       )
     )
@@ -53,12 +53,12 @@ internal object SSOService {
       )
 
     return when (initialResult) {
-      is ClerkApiResult.Failure -> {
+      is ClerkResult.Failure -> {
         val message = initialResult.error?.errors?.first()?.message
         ClerkLog.e("Failed to authenticate with redirect: $message")
-        ClerkApiResult.Companion.apiFailure(initialResult.error)
+        ClerkResult.Companion.apiFailure(initialResult.error)
       }
-      is ClerkApiResult.Success -> {
+      is ClerkResult.Success -> {
         ClerkLog.d("Successfully authenticated with redirect: $initialResult")
         val externalUrl =
           requireNotNull(
@@ -69,7 +69,7 @@ internal object SSOService {
 
         val signInId = initialResult.value.id
         val completableDeferred =
-          CompletableDeferred<ClerkApiResult<SSOResult, ClerkErrorResponse>>()
+          CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>()
 
         currentPendingAuth = completableDeferred
         currentSignInId = signInId
@@ -118,7 +118,7 @@ internal object SSOService {
       }
     } catch (e: Exception) {
       ClerkLog.e("Error completing authentication with redirect: ${e.message}")
-      currentPendingAuth?.complete(ClerkApiResult.Companion.unknownFailure(e))
+      currentPendingAuth?.complete(ClerkResult.Companion.unknownFailure(e))
       clearCurrentAuth()
     }
   }
@@ -127,20 +127,20 @@ internal object SSOService {
     val signInResult = requireNotNull(Clerk.signIn).get(rotatingTokenNonce = nonce)
 
     when (signInResult) {
-      is ClerkApiResult.Success -> {
+      is ClerkResult.Success -> {
         ClerkLog.d("Successfully completed sign-in with nonce: $nonce")
         currentPendingAuth?.complete(
-          ClerkApiResult.Companion.success(signInResult.value.toSSOResult())
+          ClerkResult.Companion.success(signInResult.value.toSSOResult())
         )
         clearCurrentAuth()
       }
 
-      is ClerkApiResult.Failure -> {
+      is ClerkResult.Failure -> {
         val errorMessage = signInResult.error?.errors?.first()?.longMessage
         ClerkLog.e(
           "Failed to complete sign-in with rotating token nonce $nonce, error: $errorMessage"
         )
-        currentPendingAuth?.complete(ClerkApiResult.Companion.apiFailure(signInResult.error))
+        currentPendingAuth?.complete(ClerkResult.Companion.apiFailure(signInResult.error))
         clearCurrentAuth()
       }
     }
@@ -151,18 +151,18 @@ internal object SSOService {
     val createResult = SignUp.Companion.create(SignUp.SignUpCreateParams.Transfer)
 
     when (createResult) {
-      is ClerkApiResult.Success -> {
+      is ClerkResult.Success -> {
         ClerkLog.d("Successfully completed sign-up transfer")
         currentPendingAuth?.complete(
-          ClerkApiResult.Companion.success(createResult.value.toSSOResult())
+          ClerkResult.Companion.success(createResult.value.toSSOResult())
         )
         clearCurrentAuth()
       }
 
-      is ClerkApiResult.Failure -> {
+      is ClerkResult.Failure -> {
         val errorMessage = createResult.error?.errors?.first()?.longMessage
         ClerkLog.e("Failed to complete sign-up transfer, error: $errorMessage")
-        currentPendingAuth?.complete(ClerkApiResult.Companion.apiFailure(createResult.error))
+        currentPendingAuth?.complete(ClerkResult.Companion.apiFailure(createResult.error))
         clearCurrentAuth()
       }
     }
@@ -183,7 +183,7 @@ internal object SSOService {
    */
   fun cancelPendingAuthentication() {
     currentPendingAuth?.complete(
-      ClerkApiResult.Companion.unknownFailure(Exception("Authentication cancelled"))
+      ClerkResult.Companion.unknownFailure(Exception("Authentication cancelled"))
     )
     clearCurrentAuth()
   }

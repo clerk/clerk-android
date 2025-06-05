@@ -6,7 +6,7 @@ import com.clerk.Clerk
 import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.model.session.delete
 import com.clerk.network.ClerkApi
-import com.clerk.network.serialization.ClerkApiResult
+import com.clerk.network.serialization.ClerkResult
 
 /**
  * Service responsible for signing out users by removing their active session.
@@ -24,20 +24,20 @@ object SignOutService {
    * otherwise it will delete the local session. The operation is performed asynchronously and
    * includes proper error handling.
    *
-   * @return A [ClerkApiResult] indicating the success or failure of the sign-out operation. Returns
-   *   [ClerkApiResult.success] with [Unit] on successful sign-out, or
-   *   [ClerkApiResult.unknownFailure] with error details on failure.
+   * @return A [ClerkResult] indicating the success or failure of the sign-out operation. Returns
+   *   [ClerkResult.success] with [Unit] on successful sign-out, or [ClerkResult.unknownFailure]
+   *   with error details on failure.
    */
-  suspend fun signOut(): ClerkApiResult<Unit, ClerkErrorResponse> {
+  suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
     try {
       if (Clerk.session?.id != null) {
         Clerk.session?.id?.let { sessionId -> ClerkApi.instance.removeSession(sessionId) }
       } else {
         Clerk.session?.delete()
       }
-      return ClerkApiResult.success(Unit)
+      return ClerkResult.success(Unit)
     } catch (e: Exception) {
-      return ClerkApiResult.unknownFailure(error(e.message ?: "Unknown error"))
+      return ClerkResult.unknownFailure(error(e.message ?: "Unknown error"))
     }
   }
 }
