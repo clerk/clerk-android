@@ -123,9 +123,32 @@ Clerk.signIn.attemptFirstFactor(Strategy.ResetPasswordEmailCode("123456"))
 Clerk.signOut()
 ```
 
-### 📚 Further Reading
+### 📚 Docs
 
-Full reference documentation is available for [Clerk Android](https://clerk-android.clerkstage.dev) as well as a quickstart guide 
+[Reference documentation](https://clerk-android.clerkstage.dev)
+
+
+## ✅ Supported Features
+
+| Feature | Android Support
+--- | :---:
+Email/Phone/Username Authentication | ✅
+Email Code Verification | ✅
+SMS Code Verification | ✅
+Multi-Factor Authentication (TOTP / SMS) | ✅
+Sign in / Sign up with OAuth | ✅
+Native Sign in with Google | 🚧
+Session Management | ✅ 
+Multi-Session Applications | ❌
+Forgot Password | ✅
+User Management | ❌
+Passkeys | ❌
+Enterprise SSO (SAML) | ❌
+Device Attestation | ❌
+Organizations | ❌
+Prebuilt UI Components | ❌ 
+Magic Links | ❌ 
+Web3 Wallet | ❌
  
 <!---
 ## 🤝 How to Contribute
