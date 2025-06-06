@@ -202,7 +202,7 @@ data class SignUp(
    * encapsulates the different ways to create a sign-up, such as using standard parameters (e.g.,
    * email, password) or creating without any parameters to inspect the signUp object first.
    */
-  sealed interface SignUpCreateParams {
+  sealed interface CreateParams {
     /**
      * Standard sign-up strategy, allowing the user to provide common details such as email,
      * password, and personal information.
@@ -223,14 +223,14 @@ data class SignUp(
       @SerialName("last_name") val lastName: String? = null,
       val username: String? = null,
       @SerialName("phone_number") val phoneNumber: String? = null,
-    ) : SignUpCreateParams
+    ) : CreateParams
 
     /**
      * The `SignUp` will be created without any parameters.
      *
      * This is useful for inspecting a newly created `SignUp` object before deciding on a strategy.
      */
-    object None : SignUpCreateParams
+    object None : CreateParams
 
     /**
      * The `SignUp` will be created by transferring an existing session.
@@ -238,16 +238,17 @@ data class SignUp(
      * This is used when a user is going through the Sign In flow and we detect they need to sign up
      * instead. This shouldn't be used for any other purpose.
      */
-    object Transfer : SignUpCreateParams
+    object Transfer : CreateParams
 
     /**
      * The `SignUp` will be created using a Google One Tap token.
      *
      * Note: the one tap token should be obtained by calling [SignIn.authenticateWithOneTap()].
      */
+    @AutoMap
     @Serializable
     data class GoogleOneTap(val strategy: String = "google_one_tap", val token: String) :
-      SignUpCreateParams
+      CreateParams
   }
 
   sealed interface SignUpUpdateParams {
@@ -294,14 +295,14 @@ data class SignUp(
      *
      * @param [params] The strategy to use for creating the sign-up. @see [SignUp.create] for
      *   details.
-     * @param params The parameters for creating the sign-up. @see [SignUpCreateParams] for details.
+     * @param params The parameters for creating the sign-up. @see [CreateParams] for details.
      * @return A [SignUp] object containing the current status and details of the sign-up process.
      *   The [status] property reflects the current state of the sign-up.
      * @see [SignUp]
      */
-    suspend fun create(params: SignUpCreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
+    suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
       val paramMap =
-        if (params is SignUpCreateParams.Transfer) {
+        if (params is CreateParams.Transfer) {
           mapOf("transfer" to "true")
         } else {
           params.toMap()

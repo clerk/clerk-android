@@ -133,7 +133,7 @@ internal object OAuthService {
 
   private suspend fun handleSignUpTransfer() {
     ClerkLog.d("Handling sign-up transfer")
-    val createResult = SignUp.create(SignUp.SignUpCreateParams.Transfer).signUpToOAuthResult()
+    val createResult = SignUp.create(SignUp.CreateParams.Transfer).signUpToOAuthResult()
     currentPendingAuth?.complete(createResult)
 
     clearCurrentAuth()

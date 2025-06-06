@@ -59,11 +59,11 @@ internal object GoogleSignInService {
       credential is CustomCredential &&
         credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
     ) {
-      val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+      val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
 
       // First try to authenticate (sign in)
       val authResult: ClerkResult<SignIn, ClerkErrorResponse> =
-        ClerkApi.instance.authenticateWithGoogle(token = googleIdTokenCredential.idToken)
+        ClerkApi.instance.authenticateWithGoogle(token = idToken)
 
       // Handle the result
       when (authResult) {
@@ -72,10 +72,7 @@ internal object GoogleSignInService {
           // Check if we need to create a new account instead
           if (authResult.error?.errors?.first()?.code == "external_account_not_found") {
             // Account doesn't exist, so create it via sign up
-            SignUp.create(
-                SignUp.SignUpCreateParams.GoogleOneTap(token = googleIdTokenCredential.idToken)
-              )
-              .signUpToOAuthResult()
+            SignUp.create(SignUp.CreateParams.GoogleOneTap(token = idToken)).signUpToOAuthResult()
           } else {
             // Some other error occurred
             authResult.signInToOAuthResult()
