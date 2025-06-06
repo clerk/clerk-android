@@ -23,10 +23,10 @@ com.clerk.network
 com.clerk.network.middleware.incoming
 com.clerk.network.middleware.outgoing
 com.clerk.network.serialization
+com.clerk.oauth
 com.clerk.service
 com.clerk.signin
 com.clerk.signup
-com.clerk.sso
 com.clerk.storage
 com.clerk.ui
 com.clerk.util
