@@ -183,9 +183,9 @@ internal interface ClerkApiService {
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @PATCH(Paths.SignUpPath.SIGN_UP)
+  @PATCH(Paths.SignUpPath.WithId.UPDATE)
   suspend fun updateSignUp(
-    @Field("id") id: String,
+    @Path("id") id: String,
     @FieldMap fields: Map<String, String>,
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
