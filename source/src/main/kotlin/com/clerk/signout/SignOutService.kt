@@ -1,6 +1,4 @@
-@file:Suppress("TooGenericExceptionCaught")
-
-package com.clerk.service
+package com.clerk.signout
 
 import com.clerk.Clerk
 import com.clerk.model.error.ClerkErrorResponse
@@ -15,7 +13,7 @@ import com.clerk.network.serialization.ClerkResult
  * Clerk API and cleaning up local session state. It performs network operations asynchronously and
  * provides proper error handling.
  */
-object SignOutService {
+internal object SignOutService {
 
   /**
    * Signs out the currently authenticated user by removing their active session.
@@ -24,9 +22,11 @@ object SignOutService {
    * otherwise it will delete the local session. The operation is performed asynchronously and
    * includes proper error handling.
    *
-   * @return A [ClerkResult] indicating the success or failure of the sign-out operation. Returns
-   *   [ClerkResult.success] with [Unit] on successful sign-out, or [ClerkResult.unknownFailure]
-   *   with error details on failure.
+   * @return A [com.clerk.network.serialization.ClerkResult] indicating the success or failure of
+   *   the sign-out operation. Returns
+   *   [com.clerk.network.serialization.ClerkResult.Companion.success] with [Unit] on successful
+   *   sign-out, or [com.clerk.network.serialization.ClerkResult.Companion.unknownFailure] with
+   *   error details on failure.
    */
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
     try {
@@ -35,9 +35,9 @@ object SignOutService {
       } else {
         Clerk.session?.delete()
       }
-      return ClerkResult.success(Unit)
+      return ClerkResult.Companion.success(Unit)
     } catch (e: Exception) {
-      return ClerkResult.unknownFailure(error(e.message ?: "Unknown error"))
+      return ClerkResult.Companion.unknownFailure(error(e.message ?: "Unknown error"))
     }
   }
 }

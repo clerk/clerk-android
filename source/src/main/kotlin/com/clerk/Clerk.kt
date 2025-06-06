@@ -9,8 +9,8 @@ import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.model.session.Session
 import com.clerk.model.user.User
 import com.clerk.network.serialization.ClerkResult
-import com.clerk.service.SignOutService
 import com.clerk.signin.SignIn
+import com.clerk.signout.SignOutService
 import com.clerk.signup.SignUp
 import kotlinx.coroutines.flow.StateFlow
 
