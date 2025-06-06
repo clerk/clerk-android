@@ -67,7 +67,7 @@ Now you can conditionally render content based on the user's session:
 import com.clerk.Clerk
 
 if (Clerk.user != null) {
-  Text("Hello, ${Clerk.user.id})"
+  Text("Hello, ${Clerk.user.id}")
 } else {
   Text("You are signed out")
 }
