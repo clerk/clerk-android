@@ -13,7 +13,7 @@ private const val AUTHORIZATION_HEADER = "Authorization"
  * This middleware intercepts network responses and checks for the presence of an Authorization
  * header. If found, the token is automatically saved to the device's local storage for future use.
  */
-class DeviceTokenSavingMiddleware : Interceptor {
+internal class DeviceTokenSavingMiddleware : Interceptor {
   /**
    * Intercepts the network response to save any device token present in the Authorization header.
    *

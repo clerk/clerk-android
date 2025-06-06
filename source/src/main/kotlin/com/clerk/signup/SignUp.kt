@@ -245,7 +245,9 @@ data class SignUp(
      *
      * Note: the one tap token should be obtained by calling [SignIn.authenticateWithOneTap()].
      */
-    data class GoogleOneTap(val token: String) : SignUpCreateParams
+    @Serializable
+    data class GoogleOneTap(val strategy: String = "google_one_tap", val token: String) :
+      SignUpCreateParams
   }
 
   sealed interface SignUpUpdateParams {

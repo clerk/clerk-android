@@ -22,7 +22,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
  *
  * @property json The JSON serializer used for deserializing the client data.
  */
-class ClientSyncingMiddleware(private val json: Json) : Interceptor {
+internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   /**
    * Intercepts network responses to sync client state.
    *

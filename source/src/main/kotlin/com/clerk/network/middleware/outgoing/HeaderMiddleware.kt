@@ -13,7 +13,7 @@ import okhttp3.Response
  * - x-android-sdk-version: "{Current SDK Version}"
  * - x-mobile: "1"
  */
-class HeaderMiddleware : Interceptor {
+internal class HeaderMiddleware : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val newRequestBuilder =
@@ -32,7 +32,7 @@ class HeaderMiddleware : Interceptor {
   }
 }
 
-enum class OutgoingHeaders(val header: String) {
+private enum class OutgoingHeaders(val header: String) {
   X_CLERK_CLIENT("X-Clerk-Client"),
   CLERK_API_VERSION("clerk-api-version"),
   X_ANDROID_SDK_VERSION("x-android-sdk-version"),
