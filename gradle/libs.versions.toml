@@ -27,7 +27,7 @@ automap = "0.0.11"
 androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"
 androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.0"
+androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.1"
 androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.9.0"
 androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.0"
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
