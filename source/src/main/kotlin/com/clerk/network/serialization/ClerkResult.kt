@@ -1,23 +1,21 @@
 package com.clerk.network.serialization
 
+import com.clerk.model.error.ClerkErrorResponse
+import com.clerk.model.error.firstMessage
 import kotlin.reflect.KClass
 import toUnmodifiableMap
 
 /**
- * ClerkApiService is an internal interface that defines the API endpoints for the Clerk
- * authentication service.
+ * ClerkResult is a sealed interface used throughout the Clerk SDK to represent the result of an API
+ * call. It provides a type-safe and non-exceptional way to handle either a successful response with
+ * data or a failure with error details.
  *
- * This interface is not meant to be used directly by SDK consumers. Instead, all API operations
- * should be accessed through the [ClerkApi.instance] singleton, which provides a more user-friendly
- * API surface.
+ * All consumer facing functions return [ClerkResult] values. This interface allows for pattern
+ * matching with [Success] and [Failure] cases using Kotlin's `when` expression.
  *
- * The interface handles user authentication, session management, sign-up and sign-in flows, and
- * environment information using Retrofit annotations to define the HTTP methods and endpoints.
- *
- * All endpoints return a [ClerkApiResult], which is a sealed type that represents either a
- * successful response with the expected data ([ClerkApiResult.Success]) or a failure
- * ([ClerkApiResult.Failure]). This approach allows for non-exceptional, type-safe handling of API
- * responses.
+ * [Success] contains the successfully retrieved data, while [Failure] wraps error information such
+ * as HTTP status codes, API errors, or unexpected failures. This design ensures predictable error
+ * handling and avoids checked exceptions.
  *
  * # Usage Example
  *
@@ -26,24 +24,25 @@ import toUnmodifiableMap
  * scope.launch {
  *     val email = "user@example.com"
  *     when (val result = ClerkApi.instance.signIn(email)) {
- *         is ClerkApiResult.Success -> {
+ *         is ClerkResult.Success -> {
  *             val signIn = result.value.response
  *             // Proceed with the sign-in flow based on available factors
  *             val firstFactor = signIn.supportedFirstFactors.firstOrNull()
  *             // Handle first factor preparation
  *         }
- *         is ClerkApiResult.Failure -> {
- *             // Handle sign-in failure
+ *         is ClerkResult.Failure -> {
+ *             // Handle sign-in failure using error, code, or throwable
+ *             val errorMessage = result.error?.firstMessage() ?: "Unknown error"
  *         }
  *     }
  * }
  * ```
  */
-public sealed interface ClerkApiResult<out T : Any, out E : Any> {
+public sealed interface ClerkResult<out T : Any, out E : Any> {
 
   /** A successful result with the data available in [value]. */
   public class Success<out T : Any>
-  public constructor(public val value: T, tags: Map<KClass<*>, Any>) : ClerkApiResult<T, Nothing> {
+  public constructor(public val value: T, tags: Map<KClass<*>, Any>) : ClerkResult<T, Nothing> {
     public val tags: Map<KClass<*>, Any> = tags.toUnmodifiableMap()
 
     public fun withTags(tags: Map<KClass<*>, Any>): Success<T> {
@@ -59,7 +58,7 @@ public sealed interface ClerkApiResult<out T : Any, out E : Any> {
     public val code: Int? = null,
     public val errorType: ErrorType = ErrorType.UNKNOWN,
     tags: Map<KClass<*>, Any> = emptyMap(),
-  ) : ClerkApiResult<Nothing, E> {
+  ) : ClerkResult<Nothing, E> {
     public val tags: Map<KClass<*>, Any> = tags.toUnmodifiableMap()
 
     public fun withTags(tags: Map<KClass<*>, Any>): Failure<E> {
@@ -103,3 +102,10 @@ public sealed interface ClerkApiResult<out T : Any, out E : Any> {
     }
   }
 }
+
+/**
+ * Convenience function to extract the first error message from a [ClerkResult.Failure] containing a
+ * [ClerkErrorResponse]. Returns `null` if the error is not a [ClerkErrorResponse] or if there are
+ * no error messages.
+ */
+fun ClerkResult.Failure<ClerkErrorResponse>.firstErrorMessageOrNull() = this.error?.firstMessage()

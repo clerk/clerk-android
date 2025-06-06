@@ -6,16 +6,14 @@ import com.clerk.automap.annotations.AutoMap
 import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.model.verification.Verification
 import com.clerk.network.ClerkApi
-import com.clerk.network.serialization.ClerkApiResult
-import com.clerk.sso.SSOResult
+import com.clerk.network.serialization.ClerkResult
+import com.clerk.oauth.OAuthResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
 private const val EMAIL_CODE = "email_code"
 private const val PHONE_CODE = "phone_code"
-
-typealias SignUpUpdateParams = SignUp.SignUpCreateParams
 
 /**
  * The `SignUp` object holds the state of the current sign-up and provides helper methods to
@@ -234,7 +232,45 @@ data class SignUp(
      */
     object None : SignUpCreateParams
 
+    /**
+     * The `SignUp` will be created by transferring an existing session.
+     *
+     * This is used when a user is going through the Sign In flow and we detect they need to sign up
+     * instead. This shouldn't be used for any other purpose.
+     */
     object Transfer : SignUpCreateParams
+
+    /**
+     * The `SignUp` will be created using a Google One Tap token.
+     *
+     * Note: the one tap token should be obtained by calling [SignIn.authenticateWithOneTap()].
+     */
+    data class GoogleOneTap(val token: String) : SignUpCreateParams
+  }
+
+  sealed interface SignUpUpdateParams {
+    /**
+     * Standard sign-up strategy, allowing the user to provide common details such as email,
+     * password, and personal information. The update parameters are just a mirror of the create
+     * parameters.
+     *
+     * @param emailAddress The user's email address (optional).
+     * @param password The user's password (optional).
+     * @param firstName The user's first name (optional).
+     * @param lastName The user's last name (optional).
+     * @param username The user's username (optional).
+     * @param phoneNumber The user's phone number (optional).
+     */
+    @AutoMap
+    @Serializable
+    data class Standard(
+      @SerialName("email_address") val emailAddress: String? = null,
+      val password: String? = null,
+      @SerialName("first_name") val firstName: String? = null,
+      @SerialName("last_name") val lastName: String? = null,
+      val username: String? = null,
+      @SerialName("phone_number") val phoneNumber: String? = null,
+    ) : SignUpUpdateParams
   }
 
   companion object {
@@ -254,13 +290,14 @@ data class SignUp(
      * What you must pass to params depends on which sign-up options you have enabled in your Clerk
      * application instance.
      *
-     * @param [params] The strategy to use for creating the sign-up. @see [Create] for details.
-     * @param params The parameters for creating the sign-up. @see [Create] for details.
+     * @param [params] The strategy to use for creating the sign-up. @see [SignUp.create] for
+     *   details.
+     * @param params The parameters for creating the sign-up. @see [SignUpCreateParams] for details.
      * @return A [SignUp] object containing the current status and details of the sign-up process.
      *   The [status] property reflects the current state of the sign-up.
      * @see [SignUp]
      */
-    suspend fun create(params: SignUpCreateParams): ClerkApiResult<SignUp, ClerkErrorResponse> {
+    suspend fun create(params: SignUpCreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
       val paramMap =
         if (params is SignUpCreateParams.Transfer) {
           mapOf("transfer" to "true")
@@ -272,10 +309,18 @@ data class SignUp(
   }
 }
 
+/**
+ * The [update] method is used to update the sign-up process with new information. This can be used
+ * to add additional fields to the sign-up process, such as a phone number or an email address.
+ *
+ * @param updateParams: The parameters for updating the sign-up. This includes the fields to be
+ *   updated.
+ * @return A [ClerkResult] containing the updated [SignUp] object.
+ */
 suspend fun SignUp.update(
-  updateParams: SignUpUpdateParams
-): ClerkApiResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.instance.updateSignUp(id, updateParams.toMap())
+  updateParams: SignUp.SignUpUpdateParams
+): ClerkResult<SignUp, ClerkErrorResponse> {
+  return ClerkApi.instance.updateSignUp(this.id, updateParams.toMap())
 }
 
 /**
@@ -290,13 +335,13 @@ suspend fun SignUp.update(
  *
  * @param prepareVerification: The parameters for preparing the verification.Specifies the field
  *   which requires verification
- * @return A [ClerkApiResult] containing the result of the verification preparation. A successful
+ * @return A [ClerkResult] containing the result of the verification preparation. A successful
  *   response indicates that the verification process has been initiated, and the [SignUp] object is
  *   returned.
  */
 suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
-): ClerkApiResult<SignUp, ClerkErrorResponse> {
+): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.instance.prepareSignUpVerification(this.id, prepareVerification.value)
 }
 
@@ -312,7 +357,7 @@ suspend fun SignUp.prepareVerification(
  */
 suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
-): ClerkApiResult<SignUp, ClerkErrorResponse> {
+): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.instance.attemptSignUpVerification(
     signUpId = this.id,
     strategy = params.strategy,
@@ -320,5 +365,5 @@ suspend fun SignUp.attemptVerification(
   )
 }
 
-/** Converts the [SignUp] object to an [SSOResult] object. */
-fun SignUp.toSSOResult() = SSOResult(signUp = this)
+/** Converts the [SignUp] object to an [OAuthResult] object. */
+fun SignUp.toSSOResult() = OAuthResult(signUp = this)

@@ -1,4 +1,4 @@
-package com.clerk.sso
+package com.clerk.oauth
 
 import android.content.Context
 import android.content.Intent
@@ -8,39 +8,39 @@ import com.clerk.Clerk
 import com.clerk.log.ClerkLog
 import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.network.ClerkApi
-import com.clerk.network.serialization.ClerkApiResult
+import com.clerk.network.serialization.ClerkResult
+import com.clerk.oauth.OAuthService.authenticateWithRedirect
 import com.clerk.signin.SignIn
 import com.clerk.signin.get
-import com.clerk.signin.toSSOResult
 import com.clerk.signup.SignUp
-import com.clerk.signup.toSSOResult
-import com.clerk.sso.SSOService.authenticateWithRedirect
 import kotlinx.coroutines.CompletableDeferred
 
-internal object SSOService {
+internal object OAuthService {
   private var currentPendingAuth:
-    CompletableDeferred<ClerkApiResult<SSOResult, ClerkErrorResponse>>? =
+    CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>? =
     null
   private var currentSignInId: String? = null
 
   /**
-   * Handles Single Sign-On (SSO) and OAuth authentication flows for the Clerk
+   * Handles OAuth authentication flows for the Clerk SDK
    *
    * This service manages redirect-based authentication flows, including initiating OAuth,
    * Enterprise SSO, and handling callback URIs to complete the authentication process. It provides
    * methods to start, complete, or cancel authentication flows that require user redirection to
    * external providers (e.g., Google, Facebook).
    *
-   * For redirect-based flows, this service uses [SSOReceiverActivity] to intercept the redirect URI
-   * and finalize the sign-in process.
+   * For redirect-based flows, this service uses [OAuthReceiverActivity] to intercept the redirect
+   * URI and finalize the sign-in process.
+   *
+   * Note: We handle sign in with google nee Google One Tap, in [GoogleSignInService]
    */
   suspend fun authenticateWithRedirect(
     context: Context,
     params: SignIn.AuthenticateWithRedirectParams,
-  ): ClerkApiResult<SSOResult, ClerkErrorResponse> {
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     // Clear any existing pending auth to prevent conflicts
     currentPendingAuth?.complete(
-      ClerkApiResult.Companion.unknownFailure(
+      ClerkResult.unknownFailure(
         Exception("New authentication started, cancelling previous attempt")
       )
     )
@@ -53,12 +53,12 @@ internal object SSOService {
       )
 
     return when (initialResult) {
-      is ClerkApiResult.Failure -> {
+      is ClerkResult.Failure -> {
         val message = initialResult.error?.errors?.first()?.message
         ClerkLog.e("Failed to authenticate with redirect: $message")
-        ClerkApiResult.Companion.apiFailure(initialResult.error)
+        ClerkResult.apiFailure(initialResult.error)
       }
-      is ClerkApiResult.Success -> {
+      is ClerkResult.Success -> {
         ClerkLog.d("Successfully authenticated with redirect: $initialResult")
         val externalUrl =
           requireNotNull(
@@ -69,13 +69,13 @@ internal object SSOService {
 
         val signInId = initialResult.value.id
         val completableDeferred =
-          CompletableDeferred<ClerkApiResult<SSOResult, ClerkErrorResponse>>()
+          CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>()
 
         currentPendingAuth = completableDeferred
         currentSignInId = signInId
 
         val intent =
-          Intent(context, SSOReceiverActivity::class.java).apply { data = externalUrl.toUri() }
+          Intent(context, OAuthReceiverActivity::class.java).apply { data = externalUrl.toUri() }
         context.startActivity(intent)
 
         // This will suspend until completeAuthenticateWithRedirect is called
@@ -89,8 +89,8 @@ internal object SSOService {
    * redirected back to the app after completing external authentication (e.g., OAuth or SSO
    * provider).
    *
-   * This method is typically triggered internally via [SSOReceiverActivity] when the app receives a
-   * redirect URI containing authentication results. It processes the redirect URI to retrieve the
+   * This method is typically triggered internally via [OAuthReceiverActivity] when the app receives
+   * a redirect URI containing authentication results. It processes the redirect URI to retrieve the
    * sign-in result, resolves the corresponding pending [CompletableDeferred], and updates the
    * sign-in state.
    *
@@ -118,54 +118,25 @@ internal object SSOService {
       }
     } catch (e: Exception) {
       ClerkLog.e("Error completing authentication with redirect: ${e.message}")
-      currentPendingAuth?.complete(ClerkApiResult.Companion.unknownFailure(e))
+      currentPendingAuth?.complete(ClerkResult.unknownFailure(e))
       clearCurrentAuth()
     }
   }
 
   private suspend fun handleSignIn(nonce: String) {
-    val signInResult = requireNotNull(Clerk.signIn).get(rotatingTokenNonce = nonce)
+    val signInResult =
+      requireNotNull(Clerk.signIn).get(rotatingTokenNonce = nonce).signInToOAuthResult()
+    currentPendingAuth?.complete(signInResult)
 
-    when (signInResult) {
-      is ClerkApiResult.Success -> {
-        ClerkLog.d("Successfully completed sign-in with nonce: $nonce")
-        currentPendingAuth?.complete(
-          ClerkApiResult.Companion.success(signInResult.value.toSSOResult())
-        )
-        clearCurrentAuth()
-      }
-
-      is ClerkApiResult.Failure -> {
-        val errorMessage = signInResult.error?.errors?.first()?.longMessage
-        ClerkLog.e(
-          "Failed to complete sign-in with rotating token nonce $nonce, error: $errorMessage"
-        )
-        currentPendingAuth?.complete(ClerkApiResult.Companion.apiFailure(signInResult.error))
-        clearCurrentAuth()
-      }
-    }
+    clearCurrentAuth()
   }
 
   private suspend fun handleSignUpTransfer() {
     ClerkLog.d("Handling sign-up transfer")
-    val createResult = SignUp.Companion.create(SignUp.SignUpCreateParams.Transfer)
+    val createResult = SignUp.create(SignUp.SignUpCreateParams.Transfer).signUpToOAuthResult()
+    currentPendingAuth?.complete(createResult)
 
-    when (createResult) {
-      is ClerkApiResult.Success -> {
-        ClerkLog.d("Successfully completed sign-up transfer")
-        currentPendingAuth?.complete(
-          ClerkApiResult.Companion.success(createResult.value.toSSOResult())
-        )
-        clearCurrentAuth()
-      }
-
-      is ClerkApiResult.Failure -> {
-        val errorMessage = createResult.error?.errors?.first()?.longMessage
-        ClerkLog.e("Failed to complete sign-up transfer, error: $errorMessage")
-        currentPendingAuth?.complete(ClerkApiResult.Companion.apiFailure(createResult.error))
-        clearCurrentAuth()
-      }
-    }
+    clearCurrentAuth()
   }
 
   /**
@@ -183,7 +154,7 @@ internal object SSOService {
    */
   fun cancelPendingAuthentication() {
     currentPendingAuth?.complete(
-      ClerkApiResult.Companion.unknownFailure(Exception("Authentication cancelled"))
+      ClerkResult.Companion.unknownFailure(Exception("Authentication cancelled"))
     )
     clearCurrentAuth()
   }

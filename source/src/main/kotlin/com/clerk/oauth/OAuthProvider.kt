@@ -1,4 +1,4 @@
-package com.clerk.sso
+package com.clerk.oauth
 /**
  * Enum class representing supported OAuth providers for authentication. Each provider is associated
  * with a specific strategy string used in Clerk API requests.

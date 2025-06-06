@@ -8,14 +8,15 @@ import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.model.factor.Factor
 import com.clerk.model.verification.Verification
 import com.clerk.network.ClerkApi
-import com.clerk.network.serialization.ClerkApiResult
+import com.clerk.network.serialization.ClerkResult
+import com.clerk.oauth.GoogleSignInService
+import com.clerk.oauth.OAuthProvider
+import com.clerk.oauth.OAuthResult
+import com.clerk.oauth.OAuthService
+import com.clerk.oauth.RedirectConfiguration
 import com.clerk.signin.SignIn.PrepareFirstFactorParams
 import com.clerk.signin.internal.toFormData
 import com.clerk.signin.internal.toMap
-import com.clerk.sso.OAuthProvider
-import com.clerk.sso.RedirectConfiguration
-import com.clerk.sso.SSOResult
-import com.clerk.sso.SSOService
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -418,23 +419,6 @@ data class SignIn(
       }
 
       /**
-       * Google one tap sign-in strategy.
-       *
-       * This strategy is used for Google one tap authentication.
-       *
-       * @param strategy The strategy identifier for Google one tap sign-in.
-       * @param identifier The identifier for the Google one tap sign-in.
-       */
-      @AutoMap
-      @Serializable
-      data class GoogleOneTap(
-        override val strategy: String = GOOGLE_ONE_TAP,
-        val identifier: String,
-      ) : Strategy {
-        constructor(identifier: String) : this(strategy = GOOGLE_ONE_TAP, identifier = identifier)
-      }
-
-      /**
        * Ticket strategy for authentication using a ticket.
        *
        * @param strategy The strategy identifier for ticket authentication.
@@ -487,7 +471,7 @@ data class SignIn(
      */
     suspend fun create(
       params: SignInCreateParams.Strategy
-    ): ClerkApiResult<SignIn, ClerkErrorResponse> {
+    ): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
         is SignInCreateParams.Strategy.Transfer ->
           ClerkApi.instance.createSignIn(mapOf(TRANSFER to "true"))
@@ -500,18 +484,31 @@ data class SignIn(
      * `SignIn.create()` with JSON.
      *
      * @param params The raw parameters to create the SignIn object with.
-     * @return A [ClerkApiResult] containing the created SignIn object.
+     * @return A [ClerkResult] containing the created SignIn object.
      *
      * Example usage:
      *
      *  ```kotlin
-     *  val signIn = SignIn.create(mapOf("identifier" to "user@example.com"))
-     *                        .onSuccess { signIn -> Do something with the signIn object }
-     *                        .onFailure { error -> Handle the error }
+     * SignIn.create(mapOf("identifier" to "user@example.com"))
+     *          .onSuccess { signIn -> Do something with the signIn object }
+     *          .onFailure { error -> Handle the error }
      *  ```
      */
-    suspend fun create(params: Map<String, String>): ClerkApiResult<SignIn, ClerkErrorResponse> {
+    suspend fun create(params: Map<String, String>): ClerkResult<SignIn, ClerkErrorResponse> {
       return ClerkApi.instance.createSignIn(params)
+    }
+
+    /**
+     * Authenticates the user with a token generated from Google identity services.
+     *
+     * @param context The application context of the end users device.
+     * @return A [ClerkResult] containing the result of the authentication flow. or
+     *   [ClerkResult.Failure] if the authentication fails.
+     */
+    suspend fun authenticateWithGoogleOneTap(
+      context: Context
+    ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      return GoogleSignInService.signInWithGoogle(context)
     }
 
     /**
@@ -528,7 +525,7 @@ data class SignIn(
      *   [AuthenticateWithRedirectParams.provider] an [OAuthProvider]
      *   [AuthenticateWithRedirectParams.redirectUrl] The URL to redirect the user to after
      *   initiating the authentication flow. Set by default to [RedirectConfiguration.REDIRECT_URL]
-     * @return A [ClerkApiResult] containing the result of the authentication flow. The [SSOResult]
+     * @return A [ClerkResult] containing the result of the authentication flow. The [OAuthResult]
      *   could contain either a sign-in or sign-up result, depending on whether an account transfer
      *   took place (i.e. if the user didn't have an account and a sign up was created instead).
      *
@@ -543,8 +540,8 @@ data class SignIn(
     suspend fun authenticateWithRedirect(
       context: Context,
       params: AuthenticateWithRedirectParams,
-    ): ClerkApiResult<SSOResult, ClerkErrorResponse> {
-      return SSOService.authenticateWithRedirect(context, params)
+    ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      return OAuthService.authenticateWithRedirect(context, params)
     }
   }
 }
@@ -561,7 +558,7 @@ data class SignIn(
  * factor verification process.
  *
  * @param strategy The strategy to authenticate with.
- * @return A [ClerkApiResult] containing the updated SignIn object with the prepared first factor
+ * @return A [ClerkResult] containing the updated SignIn object with the prepared first factor
  *   verification.
  * @see SignIn.PrepareFirstFactorParams
  *
@@ -574,7 +571,7 @@ data class SignIn(
  */
 suspend fun SignIn.prepareFirstFactor(
   strategy: PrepareFirstFactorParams.Strategy
-): ClerkApiResult<SignIn, ClerkErrorResponse> {
+): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.prepareSignInFirstFactor(this.id, strategy.toFormData().toMap())
 }
 
@@ -594,13 +591,13 @@ suspend fun SignIn.prepareFirstFactor(
  * factor verification process.
  *
  * @param params The parameters for the first factor verification.
- * @return A [ClerkApiResult] containing the updated SignIn object with the first factor
- *   verification result.
+ * @return A [ClerkResult] containing the updated SignIn object with the first factor verification
+ *   result.
  * @see [SignIn.AttemptFirstFactorParams]
  */
 suspend fun SignIn.attemptFirstFactor(
   params: SignIn.AttemptFirstFactorParams
-): ClerkApiResult<SignIn, ClerkErrorResponse> {
+): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.attemptFirstFactor(id = this.id, params = params.toMap())
 }
 
@@ -612,12 +609,12 @@ suspend fun SignIn.attemptFirstFactor(
  *
  * @param params An instance of [SignIn.ResetPasswordParams] containing the new password and session
  *   options.
- * @return A [ClerkApiResult] containing the updated SignIn object after the password reset.
+ * @return A [ClerkResult] containing the updated SignIn object after the password reset.
  * @see SignIn.ResetPasswordParams
  */
 suspend fun SignIn.resetPassword(
   params: SignIn.ResetPasswordParams
-): ClerkApiResult<SignIn, ClerkErrorResponse> {
+): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.resetPassword(
     id = this.id,
     password = params.password,
@@ -635,13 +632,13 @@ suspend fun SignIn.resetPassword(
  *   session options.
  * @param signOutOfOtherSessions Whether to sign out of other sessions after resetting the password.
  *   Defaults to false.
- * @return A [ClerkApiResult] containing the updated SignIn object after the password reset.
+ * @return A [ClerkResult] containing the updated SignIn object after the password reset.
  * @see SignIn.ResetPasswordParams
  */
 suspend fun SignIn.resetPassword(
   password: String,
   signOutOfOtherSessions: Boolean = false,
-): ClerkApiResult<SignIn, ClerkErrorResponse> {
+): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.resetPassword(id = this.id, password = password, signOutOfOtherSessions)
 }
 
@@ -652,19 +649,10 @@ suspend fun SignIn.resetPassword(
  * information.
  *
  * @param rotatingTokenNonce Optional nonce for rotating token validation.
- * @return A [ClerkApiResult] containing the refreshed SignIn object.
+ * @return A [ClerkResult] containing the refreshed SignIn object.
  */
 suspend fun SignIn.get(
   rotatingTokenNonce: String? = null
-): ClerkApiResult<SignIn, ClerkErrorResponse> {
+): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
-
-/**
- * Converts the current [SignIn] instance to an [SSOResult].
- *
- * This is useful for handling SignIn results in the same way as SSO authentication results.
- *
- * @return An [SSOResult] containing this SignIn instance.
- */
-fun SignIn.toSSOResult() = SSOResult(signIn = this)

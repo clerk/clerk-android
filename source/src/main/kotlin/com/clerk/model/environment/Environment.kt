@@ -2,7 +2,7 @@ package com.clerk.model.environment
 
 import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.network.ClerkApi
-import com.clerk.network.serialization.ClerkApiResult
+import com.clerk.network.serialization.ClerkResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -16,7 +16,7 @@ internal data class Environment(
   companion object {
 
     /** Fetches the environment configuration from the Clerk API. */
-    suspend fun get(): ClerkApiResult<Environment, ClerkErrorResponse> =
+    suspend fun get(): ClerkResult<Environment, ClerkErrorResponse> =
       ClerkApi.instance.environment()
   }
 }

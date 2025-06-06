@@ -7,7 +7,7 @@ import com.clerk.log.ClerkLog
 import com.clerk.model.client.Client
 import com.clerk.model.environment.Environment
 import com.clerk.network.ClerkApi
-import com.clerk.network.serialization.ClerkApiResult
+import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.fold
 import com.clerk.storage.StorageHelper
 import com.clerk.util.PublishableKeyHelper
@@ -174,7 +174,7 @@ internal class ConfigurationManager {
         handleEnvironmentResult(environmentResult)
 
         // Update Clerk state if both operations succeeded
-        if (clientResult is ClerkApiResult.Success && environmentResult is ClerkApiResult.Success) {
+        if (clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success) {
           updateClerkState(clientResult.value, environmentResult.value)
           _isInitialized.value = true
 
@@ -197,7 +197,7 @@ internal class ConfigurationManager {
   }
 
   /** Handles the client API result with appropriate logging. */
-  private fun handleClientResult(result: ClerkApiResult<Client, *>) {
+  private fun handleClientResult(result: ClerkResult<Client, *>) {
     result.fold(
       onSuccess = { client ->
         if (Clerk.debugMode) {
@@ -212,7 +212,7 @@ internal class ConfigurationManager {
   }
 
   /** Handles the environment API result with appropriate logging. */
-  private fun handleEnvironmentResult(result: ClerkApiResult<Environment, *>) {
+  private fun handleEnvironmentResult(result: ClerkResult<Environment, *>) {
     result.fold(
       onSuccess = { environment ->
         if (Clerk.debugMode) {
@@ -229,13 +229,13 @@ internal class ConfigurationManager {
   /** Logs API errors with appropriate detail based on error type. */
   private fun logApiError(
     operation: String,
-    errorType: ClerkApiResult.Failure.ErrorType,
+    errorType: ClerkResult.Failure.ErrorType,
     error: String,
   ) {
     when (errorType) {
-      ClerkApiResult.Failure.ErrorType.API -> ClerkLog.e("$operation API error: $error")
-      ClerkApiResult.Failure.ErrorType.HTTP -> ClerkLog.e("$operation HTTP error: $error")
-      ClerkApiResult.Failure.ErrorType.UNKNOWN -> ClerkLog.e("$operation unknown error: $error")
+      ClerkResult.Failure.ErrorType.API -> ClerkLog.e("$operation API error: $error")
+      ClerkResult.Failure.ErrorType.HTTP -> ClerkLog.e("$operation HTTP error: $error")
+      ClerkResult.Failure.ErrorType.UNKNOWN -> ClerkLog.e("$operation unknown error: $error")
     }
   }
 
