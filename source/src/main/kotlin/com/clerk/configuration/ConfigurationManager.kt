@@ -2,7 +2,7 @@ package com.clerk.configuration
 
 import android.content.Context
 import com.clerk.Clerk
-import com.clerk.lifecycle.AppLifecycleListener
+import com.clerk.configuration.lifecycle.AppLifecycleListener
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.client.Client

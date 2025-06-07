@@ -1,4 +1,4 @@
-package com.clerk.lifecycle
+package com.clerk.configuration.lifecycle
 
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
