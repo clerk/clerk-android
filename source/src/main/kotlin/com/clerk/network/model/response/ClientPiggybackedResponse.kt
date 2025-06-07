@@ -1,6 +1,6 @@
 package com.clerk.network.model.response
 
-import com.clerk.model.client.Client
+import com.clerk.network.model.client.Client
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

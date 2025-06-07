@@ -1,9 +1,9 @@
 package com.clerk.network.model.session
 
-import com.clerk.model.token.TokenResource
-import com.clerk.model.user.User
-import com.clerk.model.userdata.PublicUserData
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.token.TokenResource
+import com.clerk.network.model.user.User
+import com.clerk.network.model.userdata.PublicUserData
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

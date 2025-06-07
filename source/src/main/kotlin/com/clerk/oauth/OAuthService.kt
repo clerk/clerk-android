@@ -6,8 +6,8 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.Clerk
 import com.clerk.log.ClerkLog
-import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.oauth.OAuthService.authenticateWithRedirect
 import com.clerk.signin.SignIn

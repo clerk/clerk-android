@@ -1,6 +1,6 @@
 package com.clerk.network.model.passkey
 
-import com.clerk.model.verification.Verification
+import com.clerk.network.model.verification.Verification
 import kotlinx.serialization.Serializable
 
 /** An object that represents a passkey associated with a user. */

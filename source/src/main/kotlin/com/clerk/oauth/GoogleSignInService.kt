@@ -8,8 +8,8 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import com.clerk.Clerk
 import com.clerk.log.ClerkLog
-import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.signin.SignIn
 import com.clerk.signup.SignUp

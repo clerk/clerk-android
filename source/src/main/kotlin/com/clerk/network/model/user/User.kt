@@ -1,11 +1,11 @@
 package com.clerk.network.model.user
 
-import com.clerk.model.account.EnterpriseAccount
-import com.clerk.model.account.ExternalAccount
-import com.clerk.model.emailaddress.EmailAddress
-import com.clerk.model.organization.OrganizationMembership
-import com.clerk.model.passkey.Passkey
-import com.clerk.model.phonenumber.PhoneNumber
+import com.clerk.network.model.account.EnterpriseAccount
+import com.clerk.network.model.account.ExternalAccount
+import com.clerk.network.model.emailaddress.EmailAddress
+import com.clerk.network.model.organization.OrganizationMembership
+import com.clerk.network.model.passkey.Passkey
+import com.clerk.network.model.phonenumber.PhoneNumber
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject

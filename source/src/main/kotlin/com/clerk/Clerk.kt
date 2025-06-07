@@ -2,12 +2,12 @@ package com.clerk
 
 import android.content.Context
 import com.clerk.configuration.ConfigurationManager
-import com.clerk.model.client.Client
-import com.clerk.model.environment.Environment
-import com.clerk.model.environment.UserSettings
-import com.clerk.model.error.ClerkErrorResponse
-import com.clerk.model.session.Session
-import com.clerk.model.user.User
+import com.clerk.network.model.client.Client
+import com.clerk.network.model.environment.Environment
+import com.clerk.network.model.environment.UserSettings
+import com.clerk.network.model.error.ClerkErrorResponse
+import com.clerk.network.model.session.Session
+import com.clerk.network.model.user.User
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.signin.SignIn
 import com.clerk.signout.SignOutService

@@ -1,6 +1,6 @@
 package com.clerk.network.model.phonenumber
 
-import com.clerk.model.verification.Verification
+import com.clerk.network.model.verification.Verification
 import kotlinx.serialization.Serializable
 
 /**

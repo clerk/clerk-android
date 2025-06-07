@@ -1,9 +1,9 @@
 package com.clerk.signout
 
 import com.clerk.Clerk
-import com.clerk.model.error.ClerkErrorResponse
-import com.clerk.model.session.delete
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.error.ClerkErrorResponse
+import com.clerk.network.model.session.delete
 import com.clerk.network.serialization.ClerkResult
 
 /**

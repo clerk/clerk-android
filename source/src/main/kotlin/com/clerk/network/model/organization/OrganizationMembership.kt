@@ -1,6 +1,6 @@
 package com.clerk.network.model.organization
 
-import com.clerk.model.userdata.PublicUserData
+import com.clerk.network.model.userdata.PublicUserData
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 

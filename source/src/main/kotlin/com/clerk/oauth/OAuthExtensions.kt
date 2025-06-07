@@ -1,6 +1,6 @@
 package com.clerk.oauth
 
-import com.clerk.model.error.ClerkErrorResponse
+import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.firstErrorMessageOrNull
 import com.clerk.signin.SignIn

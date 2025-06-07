@@ -1,8 +1,8 @@
 package com.clerk.network.model.client
 
-import com.clerk.model.error.ClerkErrorResponse
-import com.clerk.model.session.Session
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.error.ClerkErrorResponse
+import com.clerk.network.model.session.Session
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.signin.SignIn
 import com.clerk.signup.SignUp

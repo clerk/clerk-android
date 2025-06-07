@@ -1,7 +1,7 @@
 package com.clerk.network.model.environment
 
-import com.clerk.model.error.ClerkErrorResponse
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

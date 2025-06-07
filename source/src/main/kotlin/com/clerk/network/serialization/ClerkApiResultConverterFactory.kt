@@ -1,6 +1,6 @@
 package com.clerk.network.serialization
 
-import com.clerk.model.response.ClientPiggybackedResponse
+import com.clerk.network.model.response.ClientPiggybackedResponse
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import okhttp3.ResponseBody
@@ -44,7 +44,7 @@ object ClerkApiResultConverterFactory : Converter.Factory() {
     return when (rawType.name) {
       "com.clerk.signin.SignIn",
       "com.clerk.signup.SignUp",
-      "com.clerk.model.client.Client" -> true
+      "com.clerk.network.model.client.Client" -> true
       else -> false
     }
   }

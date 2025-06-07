@@ -1,6 +1,6 @@
 package com.clerk.network.model.verification
 
-import com.clerk.model.error.Error
+import com.clerk.network.model.error.Error
 import kotlinx.serialization.Serializable
 
 /** The state of the verification process of a sign-in or sign-up attempt. */

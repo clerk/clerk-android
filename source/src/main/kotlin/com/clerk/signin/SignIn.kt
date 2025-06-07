@@ -4,10 +4,10 @@ package com.clerk.signin
 
 import android.content.Context
 import com.clerk.automap.annotations.AutoMap
-import com.clerk.model.error.ClerkErrorResponse
-import com.clerk.model.factor.Factor
-import com.clerk.model.verification.Verification
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.error.ClerkErrorResponse
+import com.clerk.network.model.factor.Factor
+import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.oauth.GoogleSignInService
 import com.clerk.oauth.OAuthProvider

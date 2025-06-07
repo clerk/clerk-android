@@ -1,10 +1,10 @@
 package com.clerk.network
 
-import com.clerk.model.client.Client
-import com.clerk.model.environment.Environment
-import com.clerk.model.error.ClerkErrorResponse
-import com.clerk.model.session.Session
-import com.clerk.model.token.TokenResource
+import com.clerk.network.model.client.Client
+import com.clerk.network.model.environment.Environment
+import com.clerk.network.model.error.ClerkErrorResponse
+import com.clerk.network.model.session.Session
+import com.clerk.network.model.token.TokenResource
 import com.clerk.network.paths.Paths
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.signin.SignIn

@@ -1,7 +1,7 @@
 package com.clerk.network.serialization
 
-import com.clerk.model.error.ClerkErrorResponse
-import com.clerk.model.error.firstMessage
+import com.clerk.network.model.error.ClerkErrorResponse
+import com.clerk.network.model.error.firstMessage
 import kotlin.reflect.KClass
 import toUnmodifiableMap
 

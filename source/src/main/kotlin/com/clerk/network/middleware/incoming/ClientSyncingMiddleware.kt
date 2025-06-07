@@ -2,7 +2,7 @@ package com.clerk.network.middleware.incoming
 
 import com.clerk.Clerk
 import com.clerk.log.ClerkLog
-import com.clerk.model.client.Client
+import com.clerk.network.model.client.Client
 import java.io.IOException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json

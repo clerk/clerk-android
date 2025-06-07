@@ -37,8 +37,8 @@ enum class OAuthProvider(val strategy: String) {
   companion object {
     /**
      * Convenience function to retrieve an OAuthProvider from its strategy string. Generally used to
-     * take a [com.clerk.model.environment.UserSettings.SocialConfig.strategy] and convert it to an
-     * OAuthProvider.
+     * take a [com.clerk.network.model.environment.UserSettings.SocialConfig.strategy] and convert
+     * it to an OAuthProvider.
      *
      * @param [strategy] the strategy string to match against.
      * @return the corresponding OAuthProvider.

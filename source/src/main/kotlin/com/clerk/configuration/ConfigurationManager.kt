@@ -4,9 +4,9 @@ import android.content.Context
 import com.clerk.Clerk
 import com.clerk.lifecycle.AppLifecycleListener
 import com.clerk.log.ClerkLog
-import com.clerk.model.client.Client
-import com.clerk.model.environment.Environment
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.client.Client
+import com.clerk.network.model.environment.Environment
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.fold
 import com.clerk.storage.StorageHelper
