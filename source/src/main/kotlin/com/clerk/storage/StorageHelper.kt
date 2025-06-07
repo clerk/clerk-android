@@ -2,6 +2,7 @@ package com.clerk.storage
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.clerk.storage.StorageHelper.secureStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,10 +29,7 @@ internal object StorageHelper {
   /** Save value of string type to [secureStorage] */
   internal fun saveValue(key: StorageKey, value: String) {
     if (value.isNotEmpty()) {
-      with(secureStorage.edit()) {
-        putString(key.name, value)
-        commit()
-      }
+      secureStorage.edit(commit = true) { putString(key.name, value) }
       return
     }
   }
@@ -43,10 +41,7 @@ internal object StorageHelper {
 
   /** Delete value of string type from [secureStorage] */
   internal fun deleteValue(name: String) {
-    with(secureStorage.edit()) {
-      remove(name)
-      apply()
-    }
+    secureStorage.edit { remove(name) }
   }
 }
 
