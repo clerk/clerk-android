@@ -1,8 +1,6 @@
-package com.clerk.util
+package com.clerk.configuration
 
 import android.util.Base64
-import com.clerk.util.TokenConstants.TOKEN_PREFIX_LIVE
-import com.clerk.util.TokenConstants.TOKEN_PREFIX_TEST
 
 private const val URL_SSL_PREFIX = "https://"
 
@@ -15,14 +13,14 @@ internal class PublishableKeyHelper {
   internal fun extractApiUrl(publishableKey: String): String {
     val prefixRemoved =
       publishableKey
-        .removePrefix(TOKEN_PREFIX_TEST)
-        .removePrefix(TOKEN_PREFIX_LIVE) // Handles both test and live
+        .removePrefix(TokenConstants.TOKEN_PREFIX_TEST)
+        .removePrefix(TokenConstants.TOKEN_PREFIX_LIVE) // Handles both test and live
 
     val decodedBytes = Base64.decode(prefixRemoved, Base64.DEFAULT)
     val decodedString = String(decodedBytes)
 
     return if (decodedString.isNotEmpty()) {
-      "$URL_SSL_PREFIX${decodedString.dropLast(1)}"
+      "${URL_SSL_PREFIX}${decodedString.dropLast(1)}"
     } else {
       error("Invalid publishable key")
     }

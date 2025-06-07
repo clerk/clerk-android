@@ -10,7 +10,6 @@ import com.clerk.network.model.environment.Environment
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.fold
 import com.clerk.storage.StorageHelper
-import com.clerk.util.PublishableKeyHelper
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

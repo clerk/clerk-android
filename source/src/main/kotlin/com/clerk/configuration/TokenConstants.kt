@@ -1,4 +1,4 @@
-package com.clerk.util
+package com.clerk.configuration
 
 object TokenConstants {
   const val TOKEN_PREFIX_LIVE = "pk_live_"

@@ -1,9 +1,14 @@
 package com.clerk.network.middleware.outgoing
 
+import com.clerk.Clerk
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import okhttp3.Interceptor
 import okhttp3.Response
+
+private const val CURRENT_API_VERSION = "2024-10-01"
+private const val CURRENT_SDK_VERSION = "0.1.0"
+private const val IS_MOBILE_HEADER_VALUE = "1"
 
 /**
  * HeaderMiddleware is an OkHttp interceptor that adds custom headers to outgoing requests. It adds
@@ -18,9 +23,13 @@ internal class HeaderMiddleware : Interceptor {
     val newRequestBuilder =
       request
         .newBuilder()
-        .addHeader(OutgoingHeaders.CLERK_API_VERSION.header, "2024-10-01")
-        .addHeader(OutgoingHeaders.X_ANDROID_SDK_VERSION.header, "0.1.0")
-        .addHeader(OutgoingHeaders.X_MOBILE.header, "1")
+        .addHeader(OutgoingHeaders.CLERK_API_VERSION.header, CURRENT_API_VERSION)
+        .addHeader(OutgoingHeaders.X_ANDROID_SDK_VERSION.header, CURRENT_SDK_VERSION)
+        .addHeader(OutgoingHeaders.X_MOBILE.header, IS_MOBILE_HEADER_VALUE)
+
+    Clerk.client.id?.let {
+      newRequestBuilder.addHeader(OutgoingHeaders.X_CLERK_CLIENT_ID.header, it)
+    }
 
     StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)?.let {
       newRequestBuilder.addHeader(OutgoingHeaders.AUTHORIZATION.header, it)
@@ -35,4 +44,5 @@ private enum class OutgoingHeaders(val header: String) {
   X_ANDROID_SDK_VERSION("x-android-sdk-version"),
   X_MOBILE("x-mobile"),
   AUTHORIZATION("Authorization"),
+  X_CLERK_CLIENT_ID("x-clerk-client-id"),
 }
