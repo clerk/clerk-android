@@ -4,7 +4,6 @@ import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import io.mockk.every
 import io.mockk.mockkObject
-import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.UUID
@@ -37,13 +36,14 @@ class DeviceIdGeneratorTest {
   }
 
   @Test
-  fun `getOrGenerateDeviceId returns existing device ID when one exists`() {
+  fun `initialize and getDeviceId returns existing device ID when one exists`() {
     // Given
     val existingDeviceId = "existing-device-id-123"
     every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns existingDeviceId
 
     // When
-    val result = DeviceIdGenerator.getOrGenerateDeviceId()
+    DeviceIdGenerator.initialize()
+    val result = DeviceIdGenerator.getDeviceId()
 
     // Then
     assertEquals(existingDeviceId, result)
@@ -52,55 +52,7 @@ class DeviceIdGeneratorTest {
   }
 
   @Test
-  fun `getOrGenerateDeviceId generates new device ID when none exists`() {
-    // Given
-    every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns null
-    val savedDeviceIdSlot = slot<String>()
-    every { StorageHelper.saveValue(StorageKey.DEVICE_ID, capture(savedDeviceIdSlot)) } returns Unit
-
-    // When
-    val result = DeviceIdGenerator.getOrGenerateDeviceId()
-
-    // Then
-    assertNotNull("Generated device ID should not be null", result)
-    assertFalse("Generated device ID should not be empty", result.isEmpty())
-
-    // Verify it's a valid UUID format
-    try {
-      UUID.fromString(result)
-    } catch (e: IllegalArgumentException) {
-      throw AssertionError("Generated device ID should be a valid UUID format: $result")
-    }
-
-    // Verify storage interactions
-    verify(exactly = 1) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
-    verify(exactly = 1) { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) }
-    assertEquals("Saved device ID should match returned ID", result, savedDeviceIdSlot.captured)
-  }
-
-  @Test
-  fun `getOrGenerateDeviceId generates new device ID when existing is empty string`() {
-    // Given
-    every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns ""
-    val savedDeviceIdSlot = slot<String>()
-    every { StorageHelper.saveValue(StorageKey.DEVICE_ID, capture(savedDeviceIdSlot)) } returns Unit
-
-    // When
-    val result = DeviceIdGenerator.getOrGenerateDeviceId()
-
-    // Then
-    assertNotNull("Generated device ID should not be null", result)
-    assertFalse("Generated device ID should not be empty", result.isEmpty())
-
-    // Verify it's a valid UUID format
-    UUID.fromString(result) // Will throw if invalid
-
-    verify(exactly = 1) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
-    verify(exactly = 1) { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) }
-  }
-
-  @Test
-  fun `getOrGenerateDeviceId is thread safe and generates only one device ID`() {
+  fun `initialize is thread safe and generates only one device ID`() {
     // Given - Simulate no existing device ID in storage
     every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns null
     val savedDeviceIds = mutableListOf<String>()
@@ -115,7 +67,8 @@ class DeviceIdGeneratorTest {
     repeat(numberOfThreads) {
       executor.submit {
         try {
-          val deviceId = DeviceIdGenerator.getOrGenerateDeviceId()
+          DeviceIdGenerator.initialize()
+          val deviceId = DeviceIdGenerator.getDeviceId()
           synchronized(results) { results.add(deviceId) }
         } finally {
           latch.countDown()
@@ -147,88 +100,52 @@ class DeviceIdGeneratorTest {
   }
 
   @Test
-  fun `deviceId lazy property returns stored device ID`() {
-    // Given
-    val storedDeviceId = "stored-device-id-456"
-    every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns storedDeviceId
+  fun `getDeviceId throws exception when not initialized`() {
+    // Given - DeviceIdGenerator is not initialized
 
-    // When
-    val result = DeviceIdGenerator.deviceId
-
-    // Then
-    assertEquals(storedDeviceId, result)
-    verify(exactly = 1) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
+    // When & Then
+    try {
+      DeviceIdGenerator.getDeviceId()
+      throw AssertionError("Expected IllegalStateException to be thrown")
+    } catch (e: IllegalStateException) {
+      assertEquals("DeviceIdGenerator not initialized", e.message)
+    }
   }
 
   @Test
-  fun `deviceId lazy property returns null when no device ID is stored`() {
-    // Given
-    every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns null
-
-    // When
-    val result = DeviceIdGenerator.deviceId
-
-    // Then
-    assertEquals(null, result)
-    verify(exactly = 1) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
-  }
-
-  @Test
-  fun `consecutive calls to getOrGenerateDeviceId return same ID with caching`() {
+  fun `consecutive calls to getDeviceId return same ID with caching`() {
     // Given
     val existingDeviceId = "existing-device-id-789"
     every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns existingDeviceId
 
     // When
-    val firstCall = DeviceIdGenerator.getOrGenerateDeviceId()
-    val secondCall = DeviceIdGenerator.getOrGenerateDeviceId()
-    val thirdCall = DeviceIdGenerator.getOrGenerateDeviceId()
+    DeviceIdGenerator.initialize()
+    val firstCall = DeviceIdGenerator.getDeviceId()
+    val secondCall = DeviceIdGenerator.getDeviceId()
+    val thirdCall = DeviceIdGenerator.getDeviceId()
 
     // Then
     assertEquals("All calls should return same device ID", firstCall, secondCall)
     assertEquals("All calls should return same device ID", secondCall, thirdCall)
     assertEquals("Should return existing device ID", existingDeviceId, firstCall)
 
-    // With caching, storage should only be called once for the first call
+    // With caching, storage should only be called once during initialization
     verify(exactly = 1) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
     verify(exactly = 0) { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) }
   }
 
   @Test
-  fun `generated device IDs are unique across multiple generations`() {
-    // Given - Simulate no existing device ID, then clear and generate again
-    every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns null
-    every { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) } returns Unit
-
-    // When
-    val firstDeviceId = DeviceIdGenerator.getOrGenerateDeviceId()
-
-    // Simulate clearing storage and generating again
-    val secondDeviceId = DeviceIdGenerator.getOrGenerateDeviceId()
-
-    // Then
-    assertNotNull("First device ID should not be null", firstDeviceId)
-    assertNotNull("Second device ID should not be null", secondDeviceId)
-
-    // Both should be valid UUIDs
-    UUID.fromString(firstDeviceId)
-    UUID.fromString(secondDeviceId)
-
-    // Note: In this test setup, both calls will generate the same ID due to the synchronized block
-    // In a real scenario where storage is actually cleared between calls, they would be different
-  }
-
-  @Test
-  fun `generated device IDs are cached and reused`() {
+  fun `device IDs are cached and reused after initialization`() {
     // Given - Simulate no existing device ID initially
     every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns null
     every { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) } returns Unit
 
     // When
-    val firstDeviceId = DeviceIdGenerator.getOrGenerateDeviceId()
+    DeviceIdGenerator.initialize()
+    val firstDeviceId = DeviceIdGenerator.getDeviceId()
 
     // Second call should return the same cached ID without hitting storage again
-    val secondDeviceId = DeviceIdGenerator.getOrGenerateDeviceId()
+    val secondDeviceId = DeviceIdGenerator.getDeviceId()
 
     // Then
     assertNotNull("First device ID should not be null", firstDeviceId)
@@ -245,7 +162,7 @@ class DeviceIdGeneratorTest {
       secondDeviceId,
     )
 
-    // Storage should only be accessed once for loading, and once for saving
+    // Storage should only be accessed once during initialization
     verify(exactly = 1) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
     verify(exactly = 1) { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) }
   }

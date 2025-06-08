@@ -4,10 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.clerk.storage.StorageHelper.secureStorage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 private const val CLERK_PREFERENCES_FILE_NAME = "clerk_preferences"
 
@@ -19,11 +15,12 @@ internal object StorageHelper {
 
   private lateinit var secureStorage: SharedPreferences
 
+  /**
+   * Synchronously initializes the secure storage. We do this synchronously because we need to
+   * ensure that the storage is initialized before we generate a device ID.
+   */
   fun initialize(context: Context) {
-    CoroutineScope(SupervisorJob()).launch(Dispatchers.IO) {
-      secureStorage =
-        context.getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
-    }
+    secureStorage = context.getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
   }
 
   /** Save value of string type to [secureStorage] */

@@ -95,13 +95,13 @@ internal class ConfigurationManager {
       )
       return
     }
-
     try {
       this.context = WeakReference(context.applicationContext)
       this.publishableKey = publishableKey
 
       // Initialize storage helper explicitly to ensure it's ready
       StorageHelper.initialize(context.applicationContext)
+      DeviceIdGenerator.initialize()
 
       // Extract base URL and configure API client
       val baseUrl = PublishableKeyHelper().extractApiUrl(publishableKey)

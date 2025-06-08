@@ -1,7 +1,6 @@
 package com.clerk.network.middleware.outgoing
 
 import com.clerk.Clerk
-import com.clerk.configuration.DeviceIdGenerator
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import okhttp3.Interceptor
@@ -26,13 +25,12 @@ internal class HeaderMiddleware : Interceptor {
         .addHeader(OutgoingHeaders.CLERK_API_VERSION.header, CURRENT_API_VERSION)
         .addHeader(OutgoingHeaders.X_ANDROID_SDK_VERSION.header, CURRENT_SDK_VERSION)
         .addHeader(OutgoingHeaders.X_MOBILE.header, IS_MOBILE_HEADER_VALUE)
-        .addHeader(
-          OutgoingHeaders.X_CLERK_DEVICE_ID.header,
-          DeviceIdGenerator.getOrGenerateDeviceId(),
-        )
+    //        .addHeader(OutgoingHeaders.X_CLERK_DEVICE_ID.header, DeviceIdGenerator.getDeviceId())
 
-    Clerk.client.id?.let {
-      newRequestBuilder.addHeader(OutgoingHeaders.X_CLERK_CLIENT_ID.header, it)
+    if (Clerk.isInitialized.value) {
+      Clerk.client.id?.let {
+        newRequestBuilder.addHeader(OutgoingHeaders.X_CLERK_CLIENT_ID.header, it)
+      }
     }
 
     StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)?.let {
