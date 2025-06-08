@@ -1,5 +1,6 @@
 package com.clerk.configuration
 
+import androidx.annotation.VisibleForTesting
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import java.util.UUID
@@ -7,26 +8,59 @@ import java.util.UUID
 /** Generates a unique device ID if one doesn't already exist. */
 internal object DeviceIdGenerator {
 
-  val deviceId by lazy { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
+  private var _deviceId: String? = null
+  private var deviceIdInitialized = false
 
+  val deviceId: String?
+    get() {
+      if (!deviceIdInitialized) {
+        _deviceId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
+        deviceIdInitialized = true
+      }
+      return _deviceId
+    }
+
+  // Volatile to ensure visibility across threads
+  @Volatile private var cachedDeviceId: String? = null
+
+  @Suppress("ReturnCount")
   /**
-   * Generates a unique device ID if one doesn't already exist and returns it.
+   * Generates a unique device ID if one doesn't already exist and returns it. This method is
+   * thread-safe and ensures only one device ID is ever generated.
    *
    * @return The unique device ID.
    */
   fun getOrGenerateDeviceId(): String {
-    var currentDeviceId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
-    if (currentDeviceId.isNullOrEmpty()) {
-      synchronized(this) {
-        // Double-check inside the lock to handle concurrent calls
-        currentDeviceId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
-        if (currentDeviceId.isNullOrEmpty()) {
-          val generatedDeviceId = UUID.randomUUID().toString()
-          StorageHelper.saveValue(StorageKey.DEVICE_ID, generatedDeviceId)
-          currentDeviceId = generatedDeviceId
-        }
-      }
+    // First check without synchronization for performance
+    cachedDeviceId?.let {
+      return it
     }
-    return currentDeviceId!!
+
+    synchronized(this) {
+      // Double-check inside the lock
+      cachedDeviceId?.let {
+        return it
+      }
+
+      // Load from storage
+      val storedDeviceId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
+      if (!storedDeviceId.isNullOrEmpty()) {
+        cachedDeviceId = storedDeviceId
+        return storedDeviceId
+      }
+
+      // Generate new device ID only if none exists
+      val generatedDeviceId = UUID.randomUUID().toString()
+      StorageHelper.saveValue(StorageKey.DEVICE_ID, generatedDeviceId)
+      cachedDeviceId = generatedDeviceId
+      return generatedDeviceId
+    }
+  }
+
+  @VisibleForTesting
+  internal fun clearCache() {
+    cachedDeviceId = null
+    _deviceId = null
+    deviceIdInitialized = false
   }
 }
