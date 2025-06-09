@@ -15,6 +15,7 @@ import com.clerk.signin.SignIn
 import com.clerk.signup.SignUp
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import java.util.UUID
 
 /**
  * Service for handling Sign In with Google, previously known as Google One Tap.
@@ -34,6 +35,7 @@ internal object GoogleSignInService {
       GetGoogleIdOption.Builder()
         .setFilterByAuthorizedAccounts(false)
         .setServerClientId(oneTapClientId)
+        .setNonce(UUID.randomUUID().toString())
         .setAutoSelectEnabled(true)
         .build()
 
