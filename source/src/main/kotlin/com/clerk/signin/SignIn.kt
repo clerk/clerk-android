@@ -17,13 +17,13 @@ import com.clerk.oauth.RedirectConfiguration
 import com.clerk.signin.SignIn.PrepareFirstFactorParams
 import com.clerk.signin.internal.toFormData
 import com.clerk.signin.internal.toMap
-import com.clerk.signin.toMap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 private const val PHONE_CODE = "phone_code"
 private const val EMAIL_CODE = "email_code"
 private const val STRATEGY_TOTP = "totp"
+private const val BACKUP_CODE = "backup_code"
 private const val PASSWORD = "password"
 private const val PASSKEY = "passkey"
 private const val RESET_PASSWORD_EMAIL_CODE = "reset_password_email_code"
@@ -277,6 +277,13 @@ data class SignIn(
     data class TOTP(override val strategy: String = STRATEGY_TOTP, val code: String) :
       AttemptSecondFactorParams {
       constructor(code: String) : this(STRATEGY_TOTP, code)
+    }
+
+    @AutoMap
+    @Serializable
+    data class BackupCode(override val strategy: String = BACKUP_CODE, val code: String) :
+      AttemptSecondFactorParams {
+      constructor(code: String) : this(BACKUP_CODE, code)
     }
   }
 
