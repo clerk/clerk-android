@@ -30,6 +30,7 @@ internal object Paths {
         internal const val SIGN_INS_WITH_ID = "${SIGN_INS}/{id}"
 
         internal const val ATTEMPT_FIRST_FACTOR = "${SIGN_INS_WITH_ID}/attempt_first_factor"
+        internal const val ATTEMPT_SECOND_FACTOR = "${SIGN_INS_WITH_ID}/attempt_second_factor"
         internal const val PREPARE_FIRST_FACTOR = "${SIGN_INS_WITH_ID}/prepare_first_factor"
         internal const val PREPARE_SECOND_FACTOR = "${SIGN_INS_WITH_ID}/prepare_second_factor"
         internal const val RESET_PASSWORD = "${SIGN_INS_WITH_ID}/reset_password"

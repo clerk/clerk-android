@@ -124,10 +124,11 @@ internal interface ClerkApiService {
     @FieldMap params: Map<String, String>,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
-  @POST(Paths.ClientPath.SignInPath.WithId.ATTEMPT_FIRST_FACTOR)
+  @FormUrlEncoded
+  @POST(Paths.ClientPath.SignInPath.WithId.ATTEMPT_SECOND_FACTOR)
   suspend fun attemptSecondFactor(
     @Path("id") id: String,
-    @Query("rotating_token_nonce") rotatingTokenNonce: String,
+    @FieldMap params: Map<String, String>,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
   @FormUrlEncoded

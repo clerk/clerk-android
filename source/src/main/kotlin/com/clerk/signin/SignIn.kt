@@ -17,11 +17,13 @@ import com.clerk.oauth.RedirectConfiguration
 import com.clerk.signin.SignIn.PrepareFirstFactorParams
 import com.clerk.signin.internal.toFormData
 import com.clerk.signin.internal.toMap
+import com.clerk.signin.toMap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 private const val PHONE_CODE = "phone_code"
 private const val EMAIL_CODE = "email_code"
+private const val STRATEGY_TOTP = "totp"
 private const val PASSWORD = "password"
 private const val PASSKEY = "passkey"
 private const val RESET_PASSWORD_EMAIL_CODE = "reset_password_email_code"
@@ -260,7 +262,23 @@ data class SignIn(
   }
 
   /** Parameters for second factor authentication strategies. */
-  sealed interface AttemptSecondFactorParams {}
+  sealed interface AttemptSecondFactorParams {
+    val strategy: String
+
+    @AutoMap
+    @Serializable
+    data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
+      AttemptSecondFactorParams {
+      constructor(code: String) : this(PHONE_CODE, code)
+    }
+
+    @AutoMap
+    @Serializable
+    data class TOTP(override val strategy: String = STRATEGY_TOTP, val code: String) :
+      AttemptSecondFactorParams {
+      constructor(code: String) : this(STRATEGY_TOTP, code)
+    }
+  }
 
   /**
    * A sealed interface defining parameter objects for redirect-based authentication strategies.
@@ -626,7 +644,28 @@ suspend fun SignIn.attemptFirstFactor(
   return ClerkApi.instance.attemptFirstFactor(id = this.id, params = params.toMap())
 }
 
-suspend fun SignIn.attemptSecondFactor() {}
+/**
+ * Attempts to complete the second factor verification process. This is an optional step in order to
+ * complete a sign in, as users should be verified at least by one factor of authentication.
+ *
+ * Make sure that a SignIn object already exists before you call this method, either by first
+ * calling SignIn.create() or SignIn.prepareSecondFactor().
+ *
+ * Depending on the strategy that was selected when the verification was prepared, the method
+ * parameters will be different.
+ *
+ * Returns a SignIn object.
+ *
+ * @param params The parameters for the second factor verification.
+ * @return A [ClerkResult] containing the updated SignIn object with the second factor verification
+ *   result.
+ * @see [SignIn.AttemptSecondFactorParams]
+ */
+suspend fun SignIn.attemptSecondFactor(
+  params: SignIn.AttemptSecondFactorParams
+): ClerkResult<SignIn, ClerkErrorResponse> {
+  return ClerkApi.instance.attemptSecondFactor(id = this.id, params = params.toMap())
+}
 
 /**
  * Resets the password for the current sign in attempt.
