@@ -259,6 +259,9 @@ data class SignIn(
     }
   }
 
+  /** Parameters for second factor authentication strategies. */
+  sealed interface AttemptSecondFactorParams {}
+
   /**
    * A sealed interface defining parameter objects for redirect-based authentication strategies.
    *
@@ -342,11 +345,15 @@ data class SignIn(
    * @property strategy The strategy used for second factor verification (e.g., "phone_code",
    *   "totp").
    */
+  @AutoMap
   @Serializable
   data class PrepareSecondFactorParams(
     /** The strategy used for second factor verification. */
-    val strategy: String
-  )
+    val strategy: String = PHONE_CODE,
+    @SerialName("phone_number_id") val phoneNumberId: String? = null,
+  ) {
+    constructor(phoneNumberId: String) : this(strategy = PHONE_CODE, phoneNumberId = phoneNumberId)
+  }
 
   /**
    * Parameters for resetting a user's password during the sign-in process.
@@ -576,6 +583,24 @@ suspend fun SignIn.prepareFirstFactor(
 }
 
 /**
+ * Prepares the second factor verification for the sign in process.
+ *
+ * This function is used to initiate the second factor verification process, which is required for
+ * multi-factor authentication (MFA) during the sign-in process.
+ *
+ * @return A [ClerkResult] containing the updated SignIn object with the prepared second factor
+ *   verification.
+ */
+suspend fun SignIn.prepareSecondFactor(): ClerkResult<SignIn, ClerkErrorResponse> {
+  val params =
+    SignIn.PrepareSecondFactorParams(
+      phoneNumberId =
+        this.supportedSecondFactors?.find { it.strategy == "phone_code" }?.phoneNumberId
+    )
+  return ClerkApi.instance.prepareSecondFactor(id = this.id, params = params.toMap())
+}
+
+/**
  * Attempts to complete the first factor verification process. This is a required step in order to
  * complete a sign in, as users should be verified at least by one factor of authentication.
  *
@@ -600,6 +625,8 @@ suspend fun SignIn.attemptFirstFactor(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.instance.attemptFirstFactor(id = this.id, params = params.toMap())
 }
+
+suspend fun SignIn.attemptSecondFactor() {}
 
 /**
  * Resets the password for the current sign in attempt.

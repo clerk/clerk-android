@@ -143,6 +143,7 @@ internal interface ClerkApiService {
    * @param id The session id.
    * @param params The parameters for the second factor. @see [SignIn.PrepareSecondFactorParams]
    */
+  @FormUrlEncoded
   @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
     @Path("id") id: String,
