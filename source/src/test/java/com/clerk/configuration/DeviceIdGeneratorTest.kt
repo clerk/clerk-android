@@ -108,7 +108,7 @@ class DeviceIdGeneratorTest {
       DeviceIdGenerator.getDeviceId()
       throw AssertionError("Expected IllegalStateException to be thrown")
     } catch (e: IllegalStateException) {
-      assertEquals("DeviceIdGenerator not initialized", e.message)
+      assertEquals("Device ID not initialized", e.message)
     }
   }
 
