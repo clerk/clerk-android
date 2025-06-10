@@ -3,8 +3,6 @@ $dokka.linkExtension:html
 
 module:Clerk Android
 com.clerk
-com.clerk.configuration
-com.clerk.network
 com.clerk.network.model.account
 com.clerk.network.model.client
 com.clerk.network.model.deleted
@@ -25,4 +23,3 @@ com.clerk.network.serialization
 com.clerk.oauth
 com.clerk.signin
 com.clerk.signup
-com.clerk.ui
