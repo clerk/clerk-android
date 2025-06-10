@@ -310,9 +310,11 @@ data class SignIn(
     data class OAuth(
       override val provider: OAuthProvider,
       @SerialName("redirect_url")
-      override val redirectUrl: String = RedirectConfiguration.REDIRECT_URL,
+      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : AuthenticateWithRedirectParams {
-      constructor(provider: OAuthProvider) : this(provider, RedirectConfiguration.REDIRECT_URL)
+      constructor(
+        provider: OAuthProvider
+      ) : this(provider, RedirectConfiguration.DEFAULT_REDIRECT_URL)
     }
 
     /**
@@ -324,9 +326,11 @@ data class SignIn(
     data class EnterpriseSSO(
       override val provider: OAuthProvider,
       @SerialName("redirect_url")
-      override val redirectUrl: String = RedirectConfiguration.REDIRECT_URL,
+      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : AuthenticateWithRedirectParams {
-      constructor(provider: OAuthProvider) : this(provider, RedirectConfiguration.REDIRECT_URL)
+      constructor(
+        provider: OAuthProvider
+      ) : this(provider, RedirectConfiguration.DEFAULT_REDIRECT_URL)
     }
   }
 
@@ -556,7 +560,8 @@ data class SignIn(
      * @param params The parameters for the redirect-based authentication.
      *   [AuthenticateWithRedirectParams.provider] an [OAuthProvider]
      *   [AuthenticateWithRedirectParams.redirectUrl] The URL to redirect the user to after
-     *   initiating the authentication flow. Set by default to [RedirectConfiguration.REDIRECT_URL]
+     *   initiating the authentication flow. Set by default to
+     *   [RedirectConfiguration.DEFAULT_REDIRECT_URL]
      * @return A [ClerkResult] containing the result of the authentication flow. The [OAuthResult]
      *   could contain either a sign-in or sign-up result, depending on whether an account transfer
      *   took place (i.e. if the user didn't have an account and a sign up was created instead).

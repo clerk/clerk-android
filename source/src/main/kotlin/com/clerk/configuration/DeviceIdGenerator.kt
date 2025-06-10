@@ -5,7 +5,7 @@ import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import java.util.UUID
 
-object DeviceIdGenerator {
+internal object DeviceIdGenerator {
   @Volatile private var cachedDeviceId: String? = null
 
   // Call this during app initialization

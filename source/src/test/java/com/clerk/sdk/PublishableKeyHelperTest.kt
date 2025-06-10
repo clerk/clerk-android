@@ -2,7 +2,6 @@ package com.clerk.sdk
 
 import android.util.Base64
 import com.clerk.configuration.PublishableKeyHelper
-import com.clerk.configuration.TokenConstants
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test

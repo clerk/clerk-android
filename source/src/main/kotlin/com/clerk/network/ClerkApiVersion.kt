@@ -1,5 +1,5 @@
 package com.clerk.network
 
-object ClerkApiVersion {
+internal object ClerkApiVersion {
   const val VERSION = "v1"
 }
