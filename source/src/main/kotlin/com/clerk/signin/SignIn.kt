@@ -540,7 +540,7 @@ data class SignIn(
     suspend fun authenticateWithGoogleOneTap(
       context: Context
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return GoogleSignInService.signInWithGoogle(context)
+      return GoogleSignInService().signInWithGoogle(context)
     }
 
     /**

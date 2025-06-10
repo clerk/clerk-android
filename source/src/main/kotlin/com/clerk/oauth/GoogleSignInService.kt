@@ -1,21 +1,16 @@
 package com.clerk.oauth
 
 import android.content.Context
-import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
-import com.clerk.Clerk
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.signin.SignIn
 import com.clerk.signup.SignUp
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import java.util.UUID
 
 /**
  * Service for handling Sign In with Google, previously known as Google One Tap.
@@ -23,29 +18,14 @@ import java.util.UUID
  * Note: Before using this service, you must configure Google Sign In in your Clerk Dashboard, as
  * well as add your Google Cloud Client ID to your Google OAuth configuration.
  */
-internal object GoogleSignInService {
+internal class GoogleSignInService(
+  val googleCredentialManager: GoogleCredentialManager = GoogleCredentialManagerImpl()
+) {
 
   suspend fun signInWithGoogle(context: Context): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val oneTapClientId =
-      requireNotNull(Clerk.environment.displayConfig.googleOneTapClientId) {
-        "Google One Tap is not configured for this application." +
-          " Please add a Google One Tap Client ID in your Clerk Dashboard."
-      }
-    val googleIdOption: GetGoogleIdOption =
-      GetGoogleIdOption.Builder()
-        .setFilterByAuthorizedAccounts(false)
-        .setServerClientId(oneTapClientId)
-        .setNonce(UUID.randomUUID().toString())
-        .setAutoSelectEnabled(true)
-        .build()
-
-    val request: GetCredentialRequest =
-      GetCredentialRequest.Builder().addCredentialOption(googleIdOption).build()
-
-    val credentialManager = CredentialManager.create(context)
 
     return try {
-      val result = credentialManager.getCredential(request = request, context = context)
+      val result = googleCredentialManager.getSignInWithGoogleCredential(context)
       handleSignInResult(result)
     } catch (e: GetCredentialException) {
       ClerkLog.e("Error retrieving Google ID token: ${e.message}")
@@ -61,7 +41,7 @@ internal object GoogleSignInService {
       credential is CustomCredential &&
         credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
     ) {
-      val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+      val idToken = googleCredentialManager.getIdTokenFromCredential(credential.data)
 
       // First try to authenticate (sign in)
       val authResult: ClerkResult<SignIn, ClerkErrorResponse> =
