@@ -7,18 +7,26 @@ import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.client.Client
 import com.clerk.network.model.environment.Environment
+import com.clerk.network.model.session.fetchToken
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.fold
+import com.clerk.session.SessionGetTokenOptions
 import com.clerk.storage.StorageHelper
 import java.lang.ref.WeakReference
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+
+private const val REFRESH_TOKEN_INTERVAL = 50
 
 /**
  * Internal configuration manager responsible for Clerk SDK initialization and lifecycle management.
@@ -73,6 +81,13 @@ internal class ConfigurationManager {
   private var hasConfigured = false
 
   /**
+   * Internal job reference for ongoing refresh token operations.
+   *
+   * Used to cancel ongoing refresh operations if needed.
+   */
+  private var refreshJob: Job? = null
+
+  /**
    * Configures the Clerk SDK with the provided application context and publishable key.
    *
    * This method performs the following initialization steps:
@@ -117,6 +132,7 @@ internal class ConfigurationManager {
       AppLifecycleListener.configure {
         if (hasConfigured) {
           refreshClientAndEnvironment()
+          startTokenRefresh()
         }
       }
 
@@ -126,6 +142,25 @@ internal class ConfigurationManager {
       ClerkLog.e("Failed to configure ConfigurationManager: ${e.message}")
       throw e
     }
+  }
+
+  private fun startTokenRefresh() {
+    if (Clerk.debugMode) {
+      ClerkLog.d("Starting token refresh")
+    }
+    // Cancel any ongoing jobs.
+    refreshJob?.cancel()
+    refreshJob =
+      scope.launch {
+        while (isActive) {
+          delay(REFRESH_TOKEN_INTERVAL.seconds)
+          try {
+            Clerk.session?.fetchToken(SessionGetTokenOptions(skipCache = true))
+          } catch (e: Exception) {
+            ClerkLog.w("Token refresh failed: ${e.message}")
+          }
+        }
+      }
   }
 
   /**
@@ -250,20 +285,5 @@ internal class ConfigurationManager {
     if (Clerk.debugMode) {
       ClerkLog.d("Clerk state updated - Client ID: ${client.id}, Sessions: ${client.sessions.size}")
     }
-  }
-
-  /**
-   * Cleans up resources and resets state.
-   *
-   * This method should be called when the SDK is being shut down to prevent memory leaks and ensure
-   * proper cleanup of background operations.
-   */
-  internal fun cleanup() {
-    context?.clear()
-    context = null
-    hasConfigured = false
-    _isInitialized.value = false
-
-    ClerkLog.d("ConfigurationManager cleaned up")
   }
 }
