@@ -144,6 +144,13 @@ suspend fun Session.delete() {
   ClerkApi.instance.deleteSessions()
 }
 
+/**
+ * Fetches a fresh JWT for the session.
+ *
+ * @param options The options to use when fetching the token.
+ * @return The [TokenResource] if the token was fetched successfully, null otherwise.
+ * @see SessionGetTokenOptions
+ */
 suspend fun Session.fetchToken(
   options: SessionGetTokenOptions = SessionGetTokenOptions()
 ): TokenResource? {
