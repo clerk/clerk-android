@@ -4,6 +4,8 @@ import com.clerk.network.ClerkApi
 import com.clerk.network.model.token.TokenResource
 import com.clerk.network.model.user.User
 import com.clerk.network.model.userdata.PublicUserData
+import com.clerk.session.SessionGetTokenOptions
+import com.clerk.session.SessionTokenFetcher
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -140,4 +142,17 @@ data class SessionActivity(
 /** Deletes the current session. */
 suspend fun Session.delete() {
   ClerkApi.instance.deleteSessions()
+}
+
+/**
+ * Fetches a fresh JWT for the session.
+ *
+ * @param options The options to use when fetching the token.
+ * @return The [TokenResource] if the token was fetched successfully, null otherwise.
+ * @see SessionGetTokenOptions
+ */
+suspend fun Session.fetchToken(
+  options: SessionGetTokenOptions = SessionGetTokenOptions()
+): TokenResource? {
+  return SessionTokenFetcher().getToken(this, options)
 }

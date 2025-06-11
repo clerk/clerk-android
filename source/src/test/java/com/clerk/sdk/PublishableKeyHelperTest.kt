@@ -9,6 +9,9 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+private const val TOKEN_PREFIX_LIVE = "pk_live_"
+private const val TOKEN_PREFIX_TEST = "pk_test_"
+
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE)
 class PublishableKeyHelperTest {
@@ -25,7 +28,7 @@ class PublishableKeyHelperTest {
     // Given
     val domain = "clerk.example.com"
     val encodedDomain = Base64.encodeToString("${domain}x".toByteArray(), Base64.DEFAULT)
-    val testKey = "${TokenConstants.TOKEN_PREFIX_TEST}$encodedDomain"
+    val testKey = "${TOKEN_PREFIX_TEST}$encodedDomain"
 
     // When
     val result = publishableKeyHelper.extractApiUrl(testKey)
@@ -39,7 +42,7 @@ class PublishableKeyHelperTest {
     // Given
     val domain = "clerk.example.com"
     val encodedDomain = Base64.encodeToString("${domain}x".toByteArray(), Base64.DEFAULT)
-    val liveKey = "${TokenConstants.TOKEN_PREFIX_LIVE}$encodedDomain"
+    val liveKey = "${TOKEN_PREFIX_LIVE}$encodedDomain"
 
     // When
     val result = publishableKeyHelper.extractApiUrl(liveKey)
@@ -53,7 +56,7 @@ class PublishableKeyHelperTest {
     // Given
     val emptyString = ""
     val encodedEmptyString = Base64.encodeToString(emptyString.toByteArray(), Base64.DEFAULT)
-    val testKey = "${TokenConstants.TOKEN_PREFIX_TEST}$encodedEmptyString"
+    val testKey = "${TOKEN_PREFIX_TEST}$encodedEmptyString"
 
     // When
     publishableKeyHelper.extractApiUrl(testKey)
@@ -80,7 +83,7 @@ class PublishableKeyHelperTest {
     // Given
     val singleCharDomain = "x"
     val encodedSingleChar = Base64.encodeToString(singleCharDomain.toByteArray(), Base64.DEFAULT)
-    val testKey = "${TokenConstants.TOKEN_PREFIX_TEST}$encodedSingleChar"
+    val testKey = "${TOKEN_PREFIX_TEST}$encodedSingleChar"
 
     // When
     val result = publishableKeyHelper.extractApiUrl(testKey)
