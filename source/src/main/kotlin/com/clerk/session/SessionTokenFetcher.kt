@@ -66,9 +66,9 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     return try {
       val tokensRequest =
         if (options.template != null) {
-          ClerkApi().tokens(session.id, options.template)
+          ClerkApi.session.tokens(session.id, options.template)
         } else {
-          ClerkApi().tokens(session.id)
+          ClerkApi.session.tokens(session.id)
         }
 
       val result =

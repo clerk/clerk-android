@@ -7,5 +7,5 @@ import com.clerk.network.serialization.ClerkResult
 import retrofit2.http.GET
 
 internal interface EnvironmentApi {
-  @GET(Paths.ENVIRONMENT) suspend fun environment(): ClerkResult<Environment, ClerkErrorResponse>
+  @GET(Paths.ENVIRONMENT) suspend fun get(): ClerkResult<Environment, ClerkErrorResponse>
 }

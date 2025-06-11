@@ -7,6 +7,7 @@ import com.clerk.network.model.account.ExternalAccount
 import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.emailaddress.EmailAddress
 import com.clerk.network.model.error.ClerkErrorResponse
+import com.clerk.network.model.image.ImageResource
 import com.clerk.network.model.organization.OrganizationMembership
 import com.clerk.network.model.passkey.Passkey
 import com.clerk.network.model.phonenumber.PhoneNumber
@@ -14,6 +15,7 @@ import com.clerk.network.serialization.ClerkResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import okhttp3.MultipartBody
 
 /**
  * The [User] object holds all of the information for a single user of your application and provides
@@ -188,5 +190,24 @@ data class User(
     /** Deletes the current user, or the user with the given session ID, from the Clerk API. */
     suspend fun delete(sessionId: String? = null): ClerkResult<DeletedObject, ClerkErrorResponse> =
       ClerkApi.user.deleteUser(sessionId)
+
+    object ProfileImage {
+      /**
+       * Update the current user's profile image, or the user with the given session ID, with the
+       * provided image data.
+       */
+      suspend fun updateProfileImage(
+        sessionId: String? = null,
+        data: MultipartBody.Part,
+      ): ClerkResult<ImageResource, ClerkErrorResponse> {
+        return ClerkApi.user.updateProfileImage(sessionId, data)
+      }
+
+      suspend fun deleteProfileImage(
+        sessionId: String? = null
+      ): ClerkResult<DeletedObject, ClerkErrorResponse> {
+        return ClerkApi.user.deleteProfileImage(sessionId)
+      }
+    }
   }
 }

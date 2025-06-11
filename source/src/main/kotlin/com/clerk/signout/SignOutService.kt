@@ -31,13 +31,13 @@ internal object SignOutService {
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
     try {
       if (Clerk.session?.id != null) {
-        Clerk.session?.id?.let { sessionId -> ClerkApi().removeSession(sessionId) }
+        Clerk.session?.id?.let { sessionId -> ClerkApi.session.removeSession(sessionId) }
       } else {
         Clerk.session?.delete()
       }
-      return ClerkResult.Companion.success(Unit)
+      return ClerkResult.success(Unit)
     } catch (e: Exception) {
-      return ClerkResult.Companion.unknownFailure(error(e.message ?: "Unknown error"))
+      return ClerkResult.unknownFailure(error(e.message ?: "Unknown error"))
     }
   }
 }

@@ -7,5 +7,5 @@ import com.clerk.network.serialization.ClerkResult
 import retrofit2.http.GET
 
 internal interface ClientApi {
-  @GET(Paths.ClientPath.CLIENT) suspend fun client(): ClerkResult<Client, ClerkErrorResponse>
+  @GET(Paths.ClientPath.CLIENT) suspend fun get(): ClerkResult<Client, ClerkErrorResponse>
 }

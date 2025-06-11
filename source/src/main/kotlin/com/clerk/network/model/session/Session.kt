@@ -141,7 +141,7 @@ data class SessionActivity(
 
 /** Deletes the current session. */
 suspend fun Session.delete() {
-  ClerkApi().deleteSessions()
+  ClerkApi.session.deleteSessions()
 }
 
 /**
