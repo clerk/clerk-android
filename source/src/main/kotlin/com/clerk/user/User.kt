@@ -142,4 +142,23 @@ data class User(
 
   /** The user's username. */
   val username: String? = null,
-)
+) {
+
+  /** Parameters for updating a user. */
+  data class UpdateParams(
+    /** The user's first name. */
+    @SerialName("first_name") val firstName: String? = null,
+    /** The user's last name. */
+    @SerialName("last_name") val lastName: String? = null,
+    /** The user's username. */
+    val username: String? = null,
+    /** The ID for the [EmailAddress] to be set as primary. */
+    @SerialName("primary_email_address_id") val primaryEmailAddressId: String? = null,
+    /** The ID for the [PhoneNumber] to be set as primary. */
+    @SerialName("primary_phone_number_id") val primaryPhoneNumberId: String? = null,
+    /** The ID for the image to be set as profile image. */
+    @SerialName("profile_image_id") val profileImageId: String? = null,
+    @SerialName("public_metadata") val publicMetadata: String? = null,
+    @SerialName("private_metadata") val privateMetadata: String? = null,
+  )
+}

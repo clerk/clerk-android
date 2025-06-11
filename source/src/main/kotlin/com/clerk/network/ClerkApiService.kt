@@ -1,14 +1,18 @@
 package com.clerk.network
 
 import com.clerk.network.model.client.Client
+import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.environment.Environment
 import com.clerk.network.model.error.ClerkErrorResponse
+import com.clerk.network.model.image.ImageResource
 import com.clerk.network.model.session.Session
 import com.clerk.network.model.token.TokenResource
 import com.clerk.network.paths.Paths
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.signin.SignIn
 import com.clerk.signup.SignUp
+import com.clerk.user.User
+import okhttp3.MultipartBody
 import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
@@ -16,6 +20,7 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -201,5 +206,66 @@ internal interface ClerkApiService {
     @Field("code") code: String,
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
+  // endregion
+
+  // region User
+  /** @see [com.clerk.user.get] */
+  @GET(Paths.UserPath.ME)
+  suspend fun getUser(
+    @Query("_clerk_session_id") sessionId: String? = null
+  ): ClerkResult<User, ClerkErrorResponse>
+
+  /** @see [com.clerk.user.update] */
+  @PATCH(Paths.UserPath.ME)
+  @FormUrlEncoded
+  suspend fun updateUser(
+    @FieldMap fields: Map<String, String>
+  ): ClerkResult<User, ClerkErrorResponse>
+
+  @DELETE(Paths.UserPath.ME)
+  suspend fun deleteUser(
+    @Query("_clerk_session_id") sessionId: String? = null
+  ): ClerkResult<DeletedObject, ClerkErrorResponse>
+
+  @POST(Paths.UserPath.PROFILE_IMAGE)
+  fun updateProfileImage(
+    @Query("_clerk_session_id") sessionId: String? = null,
+    @Part file: MultipartBody.Part,
+  ): ClerkResult<ImageResource, ClerkErrorResponse>
+
+  @DELETE(Paths.UserPath.PROFILE_IMAGE)
+  suspend fun deleteProfileImage(
+    @Query("_clerk_session_id") sessionId: String? = null
+  ): ClerkResult<DeletedObject, ClerkErrorResponse>
+
+  @FormUrlEncoded
+  @POST(Paths.UserPath.Password.UPDATE)
+  suspend fun updatePassword(
+    @Query("_clerk_session_id") sessionId: String? = null,
+    @FieldMap fields: Map<String, String>,
+  ): ClerkResult<Session, ClerkErrorResponse>
+
+  @FormUrlEncoded
+  @POST
+  suspend fun deletePassword(
+    @Query("_clerk_session_id") sessionId: String? = null,
+    @Field("password") password: String,
+  ): ClerkResult<Session, ClerkErrorResponse>
+
+  @GET(Paths.UserPath.Sessions.ACTIVE)
+  suspend fun getActiveSessions(
+    @Query("_clerk_session_id") sessionId: String? = null
+  ): ClerkResult<List<Session>, ClerkErrorResponse>
+
+  @POST(Paths.UserPath.Sessions.REVOKE)
+  suspend fun revokeSession(
+    @Query("_clerk_session_id") sessionId: String? = null,
+    @Path("session_id") sessionIdToRevoke: String,
+  ): ClerkResult<Session, ClerkErrorResponse>
+
+  @GET(Paths.UserPath.Sessions.SESSIONS)
+  suspend fun getSessions(
+    @Query("_clerk_session_id") sessionId: String? = null
+  ): ClerkResult<List<Session>, ClerkErrorResponse>
   // endregion
 }
