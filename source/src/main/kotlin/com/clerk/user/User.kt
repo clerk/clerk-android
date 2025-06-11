@@ -1,4 +1,4 @@
-package com.clerk.network.model.user
+package com.clerk.user
 
 import com.clerk.network.model.account.EnterpriseAccount
 import com.clerk.network.model.account.ExternalAccount

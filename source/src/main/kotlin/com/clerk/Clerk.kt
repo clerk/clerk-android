@@ -7,11 +7,11 @@ import com.clerk.network.model.environment.Environment
 import com.clerk.network.model.environment.UserSettings
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.session.Session
-import com.clerk.network.model.user.User
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.signin.SignIn
 import com.clerk.signout.SignOutService
 import com.clerk.signup.SignUp
+import com.clerk.user.User
 import kotlinx.coroutines.flow.StateFlow
 
 /**
