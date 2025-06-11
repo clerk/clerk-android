@@ -80,7 +80,6 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime)
   implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.playServicesAuth)
-  implementation(libs.androidx.ui.tooling)
   implementation(libs.chucker.debug)
   implementation(libs.clerk.automap.annotations)
   implementation(libs.google.identity)

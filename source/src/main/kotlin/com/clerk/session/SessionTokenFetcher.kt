@@ -1,6 +1,5 @@
 package com.clerk.session
 
-import com.auth0.android.jwt.JWT
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.session.Session
@@ -13,7 +12,7 @@ import kotlinx.coroutines.coroutineScope
 
 private const val DEFAULT_EXPIRATION_BUFFER = 1000L
 
-class SessionTokenFetcher {
+internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManagerImpl()) {
   private val tokenTasks = ConcurrentHashMap<String, Deferred<TokenResource?>>()
 
   suspend fun getToken(
@@ -85,7 +84,7 @@ class SessionTokenFetcher {
 
   private fun isTokenValid(token: TokenResource, bufferSeconds: Long): Boolean {
     return try {
-      val expiresAt = JWT(token.jwt).expiresAt
+      val expiresAt = jwtManager.createFromString(token.jwt).expiresAt
       expiresAt?.let {
         (it.time - System.currentTimeMillis()) > bufferSeconds * DEFAULT_EXPIRATION_BUFFER
       } == true
