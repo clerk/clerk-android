@@ -81,7 +81,7 @@ internal object Paths {
       const val PHONE_NUMBERS = "${ME}/phone_numbers"
 
       internal object WithId {
-        const val PHONE_NUMBERS_WITH_ID = "${PHONE_NUMBERS}/{phone_id}"
+        const val PHONE_NUMBERS_WITH_ID = "${PHONE_NUMBERS}/{phone_number_id}"
         const val ATTEMPT_VERIFICATION = "${PHONE_NUMBERS_WITH_ID}/attempt_verification"
         const val PREPARE_VERIFICATION = "${PHONE_NUMBERS_WITH_ID}/prepare_verification"
       }
@@ -113,4 +113,17 @@ internal object Paths {
 
     const val BACKUP_CODES = "${ME}/backup_codes"
   }
+}
+
+internal object CommonParams {
+  const val PHONE_NUMBER_ID = "phone_number_id"
+  const val EMAIL_ID = "email_id"
+  const val SESSION_ID = "session_id"
+  const val EXTERNAL_ACCOUNT_ID = "external_account_id"
+  const val PASSKEY_ID = "passkey_id"
+  const val TOTP_ID = "totp_id"
+  const val STRATEGY = "strategy"
+  const val CODE = "code"
+  const val ID = "id"
+  const val CLERK_SESSION_ID = "_clerk_session_id"
 }
