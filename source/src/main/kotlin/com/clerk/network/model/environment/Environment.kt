@@ -16,7 +16,6 @@ internal data class Environment(
   companion object {
 
     /** Fetches the environment configuration from the Clerk API. */
-    suspend fun get(): ClerkResult<Environment, ClerkErrorResponse> =
-      ClerkApi.instance.environment()
+    suspend fun get(): ClerkResult<Environment, ClerkErrorResponse> = ClerkApi().environment()
   }
 }

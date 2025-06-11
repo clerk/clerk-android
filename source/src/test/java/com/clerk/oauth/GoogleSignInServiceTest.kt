@@ -66,7 +66,7 @@ class GoogleSignInServiceTest {
 
     // Mock the ClerkApi
     mockkObject(ClerkApi)
-    every { ClerkApi.instance } returns mockk(relaxed = true)
+    every { ClerkApi() } returns mockk(relaxed = true)
 
     // Mock SignUp.create
     mockkObject(SignUp.Companion)
@@ -94,7 +94,7 @@ class GoogleSignInServiceTest {
       mockGetCredentialResponse
     every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
 
-    coEvery { ClerkApi.instance.authenticateWithGoogle(token = idToken) } returns
+    coEvery { ClerkApi().authenticateWithGoogle(token = idToken) } returns
       ClerkResult.success(mockSignIn)
 
     // When
@@ -129,7 +129,7 @@ class GoogleSignInServiceTest {
       mockGetCredentialResponse
     every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
 
-    coEvery { ClerkApi.instance.authenticateWithGoogle(token = idToken) } returns
+    coEvery { ClerkApi().authenticateWithGoogle(token = idToken) } returns
       ClerkResult.apiFailure(errorResponse)
     coEvery { SignUp.create(any<SignUp.CreateParams.GoogleOneTap>()) } returns
       ClerkResult.success(mockSignUp)
@@ -166,7 +166,7 @@ class GoogleSignInServiceTest {
       mockGetCredentialResponse
     every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
 
-    coEvery { ClerkApi.instance.authenticateWithGoogle(token = idToken) } returns
+    coEvery { ClerkApi().authenticateWithGoogle(token = idToken) } returns
       ClerkResult.apiFailure(errorResponse)
 
     // When
@@ -234,7 +234,7 @@ class GoogleSignInServiceTest {
       mockGetCredentialResponse
     every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
 
-    coEvery { ClerkApi.instance.authenticateWithGoogle(token = idToken) } returns
+    coEvery { ClerkApi().authenticateWithGoogle(token = idToken) } returns
       ClerkResult.apiFailure(errorResponse)
     coEvery { SignUp.create(capture(createParamsSlot)) } returns ClerkResult.success(mockSignUp)
 

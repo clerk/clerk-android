@@ -307,7 +307,7 @@ data class SignUp(
         } else {
           params.toMap()
         }
-      return ClerkApi.instance.createSignUp(paramMap)
+      return ClerkApi().createSignUp(paramMap)
     }
 
     /**
@@ -326,7 +326,7 @@ data class SignUp(
      * @return A [ClerkResult] containing the created [SignUp] object.
      */
     suspend fun create(params: Map<String, String>): ClerkResult<SignUp, ClerkErrorResponse> {
-      return ClerkApi.instance.createSignUp(params)
+      return ClerkApi().createSignUp(params)
     }
   }
 }
@@ -342,7 +342,7 @@ data class SignUp(
 suspend fun SignUp.update(
   updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.instance.updateSignUp(this.id, updateParams.toMap())
+  return ClerkApi().updateSignUp(this.id, updateParams.toMap())
 }
 
 /**
@@ -364,7 +364,7 @@ suspend fun SignUp.update(
 suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.instance.prepareSignUpVerification(this.id, prepareVerification.value)
+  return ClerkApi().prepareSignUpVerification(this.id, prepareVerification.value)
 }
 
 /**
@@ -380,11 +380,8 @@ suspend fun SignUp.prepareVerification(
 suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.instance.attemptSignUpVerification(
-    signUpId = this.id,
-    strategy = params.strategy,
-    code = params.code,
-  )
+  return ClerkApi()
+    .attemptSignUpVerification(signUpId = this.id, strategy = params.strategy, code = params.code)
 }
 
 /** Converts the [SignUp] object to an [OAuthResult] object. */

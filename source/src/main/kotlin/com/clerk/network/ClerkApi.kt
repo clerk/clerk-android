@@ -32,10 +32,8 @@ internal object ClerkApi {
 
   private var _instance: ClerkApiService? = null
 
-  /** Exposes the configured Clerk API service or throws if not initialized. */
-  internal val instance: ClerkApiService
-    get() =
-      _instance ?: error("ClerkApi is not configured. Call ClerkApi.configure(baseUrl) first.")
+  /** Invoke operator to make ClerkApiProvider callable, returning the API service instance. */
+  operator fun invoke(): ClerkApiService = _instance ?: error("ClerkApi is not configured.")
 
   /** Initializes the API client with the given [baseUrl]. */
   fun configure(baseUrl: String, context: Context) {

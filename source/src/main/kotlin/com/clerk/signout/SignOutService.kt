@@ -31,7 +31,7 @@ internal object SignOutService {
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
     try {
       if (Clerk.session?.id != null) {
-        Clerk.session?.id?.let { sessionId -> ClerkApi.instance.removeSession(sessionId) }
+        Clerk.session?.id?.let { sessionId -> ClerkApi().removeSession(sessionId) }
       } else {
         Clerk.session?.delete()
       }

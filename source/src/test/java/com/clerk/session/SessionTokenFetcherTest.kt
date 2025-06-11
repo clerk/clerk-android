@@ -57,7 +57,7 @@ class SessionTokenFetcherTest {
 
     // Mock ClerkApi
     mockkObject(ClerkApi)
-    every { ClerkApi.instance } returns mockClerkApiService
+    every { ClerkApi() } returns mockClerkApiService
 
     // Mock SessionTokensCache
     mockkObject(SessionTokensCache)
