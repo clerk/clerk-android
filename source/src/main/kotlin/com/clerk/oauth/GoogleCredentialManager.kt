@@ -27,6 +27,8 @@ internal interface GoogleCredentialManager {
 
   /** Take a [GoogleIdTokenCredential] and extract the ID token from it. */
   fun getIdTokenFromCredential(credentialData: Bundle): String
+
+  fun getGoogleIdOption(): GetGoogleIdOption
 }
 
 class GoogleCredentialManagerImpl : GoogleCredentialManager {
@@ -51,5 +53,16 @@ class GoogleCredentialManagerImpl : GoogleCredentialManager {
 
   override fun getIdTokenFromCredential(credentialData: Bundle): String {
     return GoogleIdTokenCredential.createFrom(credentialData).idToken
+  }
+
+  override fun getGoogleIdOption(): GetGoogleIdOption {
+    val oneTapClientId = requireNotNull(Clerk.environment.displayConfig.googleOneTapClientId)
+
+    return GetGoogleIdOption.Builder()
+      .setFilterByAuthorizedAccounts(false)
+      .setAutoSelectEnabled(true)
+      .setNonce(UUID.randomUUID().toString())
+      .setServerClientId(oneTapClientId)
+      .build()
   }
 }

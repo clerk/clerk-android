@@ -1,8 +1,8 @@
 package com.clerk.oauth
 
 import android.content.Context
+import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
@@ -26,17 +26,16 @@ internal class GoogleSignInService(
 
     return try {
       val result = googleCredentialManager.getSignInWithGoogleCredential(context)
-      handleSignInResult(result)
+      handleSignInResult(result.credential)
     } catch (e: GetCredentialException) {
       ClerkLog.e("Error retrieving Google ID token: ${e.message}")
       ClerkResult.unknownFailure(e)
     }
   }
 
-  private suspend fun handleSignInResult(
-    result: GetCredentialResponse
+  suspend fun handleSignInResult(
+    credential: Credential
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val credential = result.credential
     return if (
       credential is CustomCredential &&
         credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL

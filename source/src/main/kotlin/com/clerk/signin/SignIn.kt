@@ -14,6 +14,7 @@ import com.clerk.oauth.OAuthProvider
 import com.clerk.oauth.OAuthResult
 import com.clerk.oauth.OAuthService
 import com.clerk.oauth.RedirectConfiguration
+import com.clerk.passkeys.PasskeySignInService
 import com.clerk.signin.SignIn.PrepareFirstFactorParams
 import com.clerk.signin.internal.toFormData
 import com.clerk.signin.internal.toMap
@@ -223,12 +224,15 @@ data class SignIn(
     /**
      * Parameters for passkey verification strategy.
      *
-     * @property passkey The passkey credential for authentication.
+     * @property publicKeyCredential The passkey credential for authentication.
+     * @see PasskeySignInService for generating the credential.
      */
     @AutoMap
     @Serializable
-    data class Passkey(override val strategy: String = PASSKEY, val passkey: String) :
-      AttemptFirstFactorParams {
+    data class Passkey(
+      override val strategy: String = PASSKEY,
+      @SerialName("public_key_credential") val publicKeyCredential: String,
+    ) : AttemptFirstFactorParams {
       constructor(passkey: String) : this(PASSKEY, passkey)
     }
 
@@ -398,7 +402,7 @@ data class SignIn(
   )
 
   /** Container object for sign-in creation parameters and strategies. */
-  object SignInCreateParams {
+  object CreateParams {
 
     /**
      * A sealed interface defining different strategies for creating a sign-in.
@@ -466,6 +470,11 @@ data class SignIn(
       data class Ticket(override val strategy: String = TICKET, val ticket: String) : Strategy {
         constructor(ticket: String) : this(strategy = TICKET, ticket = ticket)
       }
+
+      /** Passkey strategy for authentication using a passkey. */
+      data class Passkey(override val strategy: String = PASSKEY, val context: Context) : Strategy {
+        constructor(context: Context) : this(strategy = PASSKEY, context = context)
+      }
     }
   }
 
@@ -496,7 +505,7 @@ data class SignIn(
      * creation of the SignIn object internally.
      *
      * @param params The strategy to authenticate with.
-     * @see [SignIn.SignInCreateParams]
+     * @see [SignIn.CreateParams]
      *
      * Example usage:
      * ```kotlin
@@ -505,12 +514,11 @@ data class SignIn(
      *          .onFailure { error -> // Handle the error }
      * ```
      */
-    suspend fun create(
-      params: SignInCreateParams.Strategy
-    ): ClerkResult<SignIn, ClerkErrorResponse> {
+    suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
-        is SignInCreateParams.Strategy.Transfer ->
+        is CreateParams.Strategy.Transfer ->
           ClerkApi.instance.createSignIn(mapOf(TRANSFER to "true"))
+        is CreateParams.Strategy.Passkey -> PasskeySignInService().signInWithPasskey(params.context)
         else -> ClerkApi.instance.createSignIn(params.toMap())
       }
     }

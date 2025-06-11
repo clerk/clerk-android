@@ -25,8 +25,6 @@ object Clerk {
   /** Internal configuration manager responsible for SDK initialization and API client setup. */
   private val configurationManager = ConfigurationManager()
 
-  // region Configuration Properties
-
   /**
    * Enable for additional debugging signals and logging.
    *
@@ -34,10 +32,6 @@ object Clerk {
    */
   var debugMode: Boolean = false
     private set
-
-  // endregion
-
-  // region State Properties
 
   /**
    * The Client object representing the current device and its authentication state.
@@ -49,7 +43,13 @@ object Clerk {
   /** Internal environment configuration containing display settings and authentication options. */
   internal lateinit var environment: Environment
 
-  // endregion
+  /**
+   * The base URL for the Clerk API.
+   *
+   * This is the publishable key from your Clerk Dashboard that connects your app to Clerk, Base64
+   * decoded.
+   */
+  internal lateinit var baseUrl: String
 
   // region Computed Properties
 

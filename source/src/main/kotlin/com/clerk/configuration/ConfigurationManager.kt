@@ -121,7 +121,8 @@ internal class ConfigurationManager {
 
       // Extract base URL and configure API client
       val baseUrl = PublishableKeyHelper().extractApiUrl(publishableKey)
-      ClerkApi.configure(baseUrl, context.applicationContext)
+      Clerk.baseUrl = baseUrl
+      ClerkApi.configure(Clerk.baseUrl, context.applicationContext)
 
       // Mark as configured before starting async operations
       hasConfigured = true

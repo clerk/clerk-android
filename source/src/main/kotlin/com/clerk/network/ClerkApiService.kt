@@ -79,7 +79,7 @@ internal interface ClerkApiService {
   // region Sign In
 
   /**
-   * @param params The parameters for the sign in. @see [SignIn.SignInCreateParams]
+   * @param params The parameters for the sign in. @see [SignIn.CreateParams]
    * @see SignIn.create
    */
   @FormUrlEncoded
