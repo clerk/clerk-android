@@ -144,6 +144,8 @@ suspend fun Session.delete() {
   ClerkApi.instance.deleteSessions()
 }
 
-suspend fun Session.fetchToken(options: SessionGetTokenOptions): TokenResource? {
+suspend fun Session.fetchToken(
+  options: SessionGetTokenOptions = SessionGetTokenOptions()
+): TokenResource? {
   return SessionTokenFetcher().getToken(this, options)
 }
