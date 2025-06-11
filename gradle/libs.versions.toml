@@ -38,6 +38,8 @@ androidx-credentials = "androidx.credentials:credentials:1.5.0"
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.5.0"
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.1.1"
 
+jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
+
 clerk-automap-annotations = { module = "com.clerk:automap-annotations", version.ref = "automap" }
 clerk-automap-processor = { module = "com.clerk:automap-processor", version.ref = "automap" }
 

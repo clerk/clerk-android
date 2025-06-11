@@ -5,7 +5,6 @@ plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.plugin.serialization)
-  alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.ksp)
   alias(libs.plugins.mavenPublish)
 }
@@ -23,12 +22,10 @@ android {
     debug { isMinifyEnabled = false }
 
     release {
-      isMinifyEnabled = false
+      isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
   }
-
-  buildFeatures { compose = true }
 }
 
 mavenPublishing {
@@ -75,12 +72,9 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 }
 
 dependencies {
-  implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.browser)
   implementation(libs.androidx.credentials)
-  implementation(libs.androidx.datastore)
-  implementation(libs.androidx.foundation.layout.android)
   implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
   implementation(libs.androidx.lifecycle.runtime)
@@ -90,6 +84,7 @@ dependencies {
   implementation(libs.chucker.debug)
   implementation(libs.clerk.automap.annotations)
   implementation(libs.google.identity)
+  implementation(libs.jwt.decode)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
   implementation(libs.kotlinx.serialization)

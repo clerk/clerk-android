@@ -67,18 +67,13 @@ internal interface ClerkApiService {
 
   @FormUrlEncoded
   @POST(Paths.ClientPath.Sessions.WithId.TOKENS)
-  suspend fun tokens(
-    @Path("id") userId: String,
-    @Field("id") id: String,
-  ): ClerkResult<TokenResource, ClerkErrorResponse>
+  suspend fun tokens(@Path("id") sessionId: String): ClerkResult<TokenResource, ClerkErrorResponse>
 
   @FormUrlEncoded
   @POST(Paths.ClientPath.Sessions.WithId.TEMPLATE)
-  suspend fun tokensTemplate(
+  suspend fun tokens(
     @Path("id") userId: String,
     @Path("template") templateType: String,
-    @Field("id") id: String,
-    @Field("template") template: String,
   ): ClerkResult<TokenResource, ClerkErrorResponse>
 
   // endregion
