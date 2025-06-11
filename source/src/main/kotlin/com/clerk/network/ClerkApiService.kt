@@ -65,11 +65,9 @@ internal interface ClerkApiService {
   @DELETE(Paths.ClientPath.Sessions.SESSIONS)
   suspend fun deleteSessions(): ClerkResult<Client, ClerkErrorResponse>
 
-  @FormUrlEncoded
   @POST(Paths.ClientPath.Sessions.WithId.TOKENS)
   suspend fun tokens(@Path("id") sessionId: String): ClerkResult<TokenResource, ClerkErrorResponse>
 
-  @FormUrlEncoded
   @POST(Paths.ClientPath.Sessions.WithId.TEMPLATE)
   suspend fun tokens(
     @Path("id") userId: String,

@@ -2,6 +2,7 @@ package com.clerk.configuration
 
 import android.content.Context
 import com.clerk.Clerk
+import com.clerk.Clerk.debugMode
 import com.clerk.configuration.lifecycle.AppLifecycleListener
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
@@ -145,21 +146,44 @@ internal class ConfigurationManager {
   }
 
   private fun startTokenRefresh() {
-    if (Clerk.debugMode) {
-      ClerkLog.d("Starting token refresh")
+    ClerkLog.d("startTokenRefresh() called - debugMode: $debugMode, hasConfigured: $hasConfigured")
+
+    if (!hasConfigured) {
+      ClerkLog.w("Cannot start token refresh - not configured")
+      return
     }
-    // Cancel any ongoing jobs.
+
+    val currentSession = Clerk.session
+    if (currentSession == null) {
+      ClerkLog.w("Cannot start token refresh - no active session")
+      return
+    }
+
+    ClerkLog.d("Starting token refresh for session: ${currentSession.id}")
+
+    // Cancel any ongoing jobs
     refreshJob?.cancel()
     refreshJob =
       scope.launch {
+        var refreshCount = 0
         while (isActive) {
+          ClerkLog.d("Token refresh cycle ${++refreshCount} - waiting ${REFRESH_TOKEN_INTERVAL}s")
           delay(REFRESH_TOKEN_INTERVAL.seconds)
+
           try {
-            Clerk.session?.fetchToken(SessionGetTokenOptions(skipCache = true))
+            val session = Clerk.session
+            if (session != null) {
+              ClerkLog.d("Refreshing token for session: ${session.id}")
+              session.fetchToken(SessionGetTokenOptions(skipCache = true))
+              ClerkLog.d("Token refresh successful")
+            } else {
+              ClerkLog.w("No session available for token refresh")
+            }
           } catch (e: Exception) {
             ClerkLog.w("Token refresh failed: ${e.message}")
           }
         }
+        ClerkLog.d("Token refresh loop ended")
       }
   }
 
@@ -211,6 +235,10 @@ internal class ConfigurationManager {
         if (clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success) {
           updateClerkState(clientResult.value, environmentResult.value)
           _isInitialized.value = true
+
+          if (Clerk.session != null) {
+            startTokenRefresh()
+          }
 
           if (Clerk.debugMode) {
             ClerkLog.d("Client and environment refresh completed successfully")
