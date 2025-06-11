@@ -73,7 +73,7 @@ private constructor(
   "ReturnCount",
   "RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS",
 )
-fun Type.canonicalize(): Type {
+internal fun Type.canonicalize(): Type {
   return when (this) {
     is Class<*> -> {
       if (isArray) GenericArrayTypeImpl(this@canonicalize.componentType.canonicalize()) else this
