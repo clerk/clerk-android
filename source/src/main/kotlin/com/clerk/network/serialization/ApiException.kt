@@ -1,3 +1,3 @@
 package com.clerk.network.serialization
 
-public class ApiException(public val error: Any?) : Exception()
+internal class ApiException(public val error: Any?) : Exception()

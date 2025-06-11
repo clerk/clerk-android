@@ -8,7 +8,7 @@ import retrofit2.Converter
 import retrofit2.Retrofit
 
 /**  */
-object ClerkApiResultConverterFactory : Converter.Factory() {
+internal object ClerkApiResultConverterFactory : Converter.Factory() {
   override fun responseBodyConverter(
     type: Type,
     annotations: Array<out Annotation>,

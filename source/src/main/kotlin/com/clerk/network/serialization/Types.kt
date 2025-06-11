@@ -15,13 +15,13 @@ internal val Type.rawType: Class<*>
 internal fun Type.asArrayType(): GenericArrayType = Types.arrayOf(this)
 
 /** Factory methods for types. */
-public object Types {
+internal object Types {
   /**
    * Returns a new parameterized type, applying `typeArguments` to `rawType`. Use this method if
    * `rawType` is not enclosed in another type.
    */
   @JvmStatic
-  public fun newParameterizedType(rawType: Type, vararg typeArguments: Type): ParameterizedType {
+  internal fun newParameterizedType(rawType: Type, vararg typeArguments: Type): ParameterizedType {
     require(typeArguments.isNotEmpty()) { "Missing type arguments for $rawType" }
     return ParameterizedTypeImpl(null, rawType, *typeArguments)
   }
@@ -31,7 +31,7 @@ public object Types {
    * `rawType` is enclosed in `ownerType`.
    */
   @JvmStatic
-  public fun newParameterizedTypeWithOwner(
+  internal fun newParameterizedTypeWithOwner(
     ownerType: Type?,
     rawType: Type,
     vararg typeArguments: Type,
@@ -42,7 +42,7 @@ public object Types {
 
   /** Returns an array type whose elements are all instances of `componentType`. */
   @JvmStatic
-  public fun arrayOf(componentType: Type): GenericArrayType {
+  internal fun arrayOf(componentType: Type): GenericArrayType {
     return GenericArrayTypeImpl(componentType)
   }
 
@@ -52,7 +52,7 @@ public object Types {
    * returns `?`, which is shorthand for `? extends Object`.
    */
   @JvmStatic
-  public fun subtypeOf(bound: Type): WildcardType {
+  internal fun subtypeOf(bound: Type): WildcardType {
     val upperBounds =
       if (bound is WildcardType) {
         bound.upperBounds
@@ -67,7 +67,7 @@ public object Types {
    * `String.class`, this returns `? super String`.
    */
   @JvmStatic
-  public fun supertypeOf(bound: Type): WildcardType {
+  internal fun supertypeOf(bound: Type): WildcardType {
     val lowerBounds =
       if (bound is WildcardType) {
         bound.lowerBounds
@@ -78,7 +78,7 @@ public object Types {
   }
 
   @JvmStatic
-  public fun getRawType(type: Type?): Class<*> {
+  internal fun getRawType(type: Type?): Class<*> {
     return when (type) {
       is Class<*> -> {
         // type is a normal class.
@@ -114,7 +114,7 @@ public object Types {
   @Suppress("CyclomaticComplexMethod")
   /** Returns true if `a` and `b` are equal. */
   @JvmStatic
-  public fun equals(a: Type?, b: Type?): Boolean {
+  internal fun equals(a: Type?, b: Type?): Boolean {
     if (a === b) {
       return true // Also handles (a == null && b == null).
     }

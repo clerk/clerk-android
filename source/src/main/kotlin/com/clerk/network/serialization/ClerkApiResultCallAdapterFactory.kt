@@ -15,7 +15,7 @@ import retrofit2.Retrofit
  * suspend function calls that return [ClerkResult]. This facilitates returning all error types
  * through a single [ClerkResult.Failure] type.
  */
-object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
+internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
   @Suppress("ReturnCount")
   override fun get(
     returnType: Type,

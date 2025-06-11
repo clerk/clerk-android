@@ -369,4 +369,4 @@ suspend fun SignUp.attemptVerification(
 }
 
 /** Converts the [SignUp] object to an [OAuthResult] object. */
-fun SignUp.toSSOResult() = OAuthResult(signUp = this)
+internal fun SignUp.toOAuthResult() = OAuthResult(signUp = this)

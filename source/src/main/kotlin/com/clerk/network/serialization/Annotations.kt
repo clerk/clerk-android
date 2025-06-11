@@ -6,12 +6,12 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.lang.reflect.WildcardType
 
-public fun createStatusCode(code: Int): StatusCode {
+internal fun createStatusCode(code: Int): StatusCode {
   ClerkResult.checkHttpFailureCode(code)
   return StatusCode(code)
 }
 
-public fun createResultType(type: Type): ResultType {
+internal fun createResultType(type: Type): ResultType {
   var ownerType: Type = Nothing::class.java
   val rawType: Class<*>
   val typeArgs: Array<ResultType>
@@ -45,7 +45,7 @@ public fun createResultType(type: Type): ResultType {
 }
 
 @Suppress("ReturnCount")
-public fun Type.removeSubtypeWildcard(): Type {
+internal fun Type.removeSubtypeWildcard(): Type {
   if (this !is WildcardType) return this
   val lowerBounds = lowerBounds
   if (lowerBounds.isNotEmpty()) return this
