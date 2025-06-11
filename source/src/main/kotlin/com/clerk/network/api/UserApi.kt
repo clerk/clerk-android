@@ -64,14 +64,14 @@ internal interface UserApi {
   suspend fun updatePassword(
     @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @FieldMap fields: Map<String, String>,
-  ): ClerkResult<Session, ClerkErrorResponse>
+  ): ClerkResult<User, ClerkErrorResponse>
 
   @FormUrlEncoded
   @POST
   suspend fun deletePassword(
     @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
-    @Field("password") password: String,
-  ): ClerkResult<Session, ClerkErrorResponse>
+    @Field("current_password") password: String,
+  ): ClerkResult<User, ClerkErrorResponse>
 
   @GET(Paths.UserPath.Sessions.ACTIVE)
   suspend fun getActiveSessions(

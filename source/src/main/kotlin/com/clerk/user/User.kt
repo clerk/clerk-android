@@ -171,30 +171,57 @@ data class User(
     @SerialName("private_metadata") val privateMetadata: String? = null,
   )
 
-  companion object {
-    /** Retrieves the current user, or the user with the given session ID, from the Clerk API. */
-    suspend fun get(sessionId: String? = null): ClerkResult<User, ClerkErrorResponse> =
-      ClerkApi.user.getUser(sessionId)
+  @AutoMap
+  @Serializable
+  data class UpdatePasswordParams(
+    @SerialName("current_password") val currentPassword: String? = null,
+    @SerialName("new_password") val newPassword: String,
+    val signOutOfOtherSessions: Boolean = false,
+  ) {
 
-    /**
-     * Updates the current user, or the user with the given session ID, with the provided
-     * parameters.
-     */
-    suspend fun update(
-      sessionId: String? = null,
-      params: UpdateParams,
-    ): ClerkResult<User, ClerkErrorResponse> {
-      return ClerkApi.user.updateUser(sessionId = sessionId, fields = params.toMap())
-    }
+    companion object {
+      /**
+       * Retrieves the current user, or the user with the given session ID, from the Clerk API.
+       *
+       * @param sessionId The session id of the user to retrieve. If null, the current user is
+       *   retrieved.
+       * @return A [ClerkResult] containing the [User] if the operation was successful, or a
+       *   [ClerkErrorResponse] if it failed.
+       */
+      suspend fun get(sessionId: String? = null): ClerkResult<User, ClerkErrorResponse> =
+        ClerkApi.user.getUser(sessionId)
 
-    /** Deletes the current user, or the user with the given session ID, from the Clerk API. */
-    suspend fun delete(sessionId: String? = null): ClerkResult<DeletedObject, ClerkErrorResponse> =
-      ClerkApi.user.deleteUser(sessionId)
+      /**
+       * Updates the current user, or the user with the given session ID, with the provided
+       * parameters.
+       *
+       * @param sessionId The session id of the user to update. If null, the current user is
+       *   updated.
+       * @param params The parameters to update the user with. **See**: [UpdateParams].
+       * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
+       *   [ClerkErrorResponse] if it failed.
+       */
+      suspend fun update(
+        sessionId: String? = null,
+        params: UpdateParams,
+      ): ClerkResult<User, ClerkErrorResponse> {
+        return ClerkApi.user.updateUser(sessionId = sessionId, fields = params.toMap())
+      }
 
-    object ProfileImage {
+      /** Deletes the current user, or the user with the given session ID, from the Clerk API. */
+      suspend fun delete(
+        sessionId: String? = null
+      ): ClerkResult<DeletedObject, ClerkErrorResponse> = ClerkApi.user.deleteUser(sessionId)
+
       /**
        * Update the current user's profile image, or the user with the given session ID, with the
        * provided image data.
+       *
+       * @param sessionId The session id of the user to update. If null, the current user is
+       *   updated.
+       * @param data The image data to upload.
+       * @return A [ClerkResult] containing the [ImageResource] if the operation was successful, or
+       *   a [ClerkErrorResponse] if it failed.
        */
       suspend fun updateProfileImage(
         sessionId: String? = null,
@@ -203,10 +230,56 @@ data class User(
         return ClerkApi.user.updateProfileImage(sessionId, data)
       }
 
+      /**
+       * Deletes the current user's profile image, or the user with the given session ID, from the
+       * Clerk API.
+       *
+       * @param sessionId The session id of the user to delete the profile image from. If null, the
+       *   current user's profile image is deleted.
+       * @return A [ClerkResult] containing the [DeletedObject] if the operation was successful, or
+       *   a [ClerkErrorResponse] if it failed.
+       */
       suspend fun deleteProfileImage(
         sessionId: String? = null
       ): ClerkResult<DeletedObject, ClerkErrorResponse> {
         return ClerkApi.user.deleteProfileImage(sessionId)
+      }
+
+      /**
+       * Updates the current user's password, or the user with the given session ID, using the Clerk
+       * API.
+       *
+       * @param sessionId The session id of the user to update the password for. If null, the
+       *   current user's password is updated.
+       * @param params The parameters for updating the password.
+       * @return A [ClerkResult] containing the [User] if the operation was successful, or a
+       *   [ClerkErrorResponse] if it failed.
+       *
+       * **See:** [UpdatePasswordParams] for the available parameters.
+       */
+      suspend fun updatePassword(
+        sessionId: String? = null,
+        params: UpdatePasswordParams,
+      ): ClerkResult<User, ClerkErrorResponse> {
+        return ClerkApi.user.updatePassword(sessionId, params.toMap())
+      }
+
+      /**
+       * Deletes the current user's password, or the user with the given session ID, using the Clerk
+       * API.
+       *
+       * @param sessionId The session id of the user to delete the password for. If null, the
+       *   current user's password is deleted.
+       * @param currentPassword The current password of the user. If null, the password is deleted
+       *   without verification.
+       * @return A [ClerkResult] containing the [User] if the operation was successful, or a
+       *   [ClerkErrorResponse] if it failed.
+       */
+      suspend fun deletePassword(
+        sessionId: String? = null,
+        currentPassword: String,
+      ): ClerkResult<User, ClerkErrorResponse> {
+        return ClerkApi.user.deletePassword(sessionId, currentPassword)
       }
     }
   }
