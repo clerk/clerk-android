@@ -160,3 +160,5 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
     override fun responseType(): Type = apiResultType
   }
 }
+
+private class ApiException(public val error: Any?) : Exception()
