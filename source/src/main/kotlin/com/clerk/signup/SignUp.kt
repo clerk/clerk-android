@@ -309,6 +309,25 @@ data class SignUp(
         }
       return ClerkApi.instance.createSignUp(paramMap)
     }
+
+    /**
+     * Creates a new sign-up process and returns a `SignUp` object based on the provided strategy
+     * and optional parameters.
+     *
+     * Creates a new sign-up instance using the specified strategy.
+     *
+     * This method initiates a new sign-up process by sending the appropriate parameters to Clerk's
+     * API. It deactivates any existing sign-up process and stores the sign-up lifecycle state in
+     * the `status` property.
+     *
+     * This is a raw json version of the create method.
+     *
+     * @param params: The parameters for creating the sign-up.
+     * @return A [ClerkResult] containing the created [SignUp] object.
+     */
+    suspend fun create(params: Map<String, String>): ClerkResult<SignUp, ClerkErrorResponse> {
+      return ClerkApi.instance.createSignUp(params)
+    }
   }
 }
 
