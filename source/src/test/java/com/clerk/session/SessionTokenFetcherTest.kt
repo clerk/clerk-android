@@ -2,7 +2,6 @@ package com.clerk.session
 
 import com.auth0.android.jwt.JWT
 import com.clerk.network.ClerkApi
-import com.clerk.network.ClerkApiService
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.error.Error
 import com.clerk.network.model.session.Session

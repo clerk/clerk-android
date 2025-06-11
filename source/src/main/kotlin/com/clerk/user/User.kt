@@ -1,11 +1,16 @@
 package com.clerk.user
 
+import com.clerk.automap.annotations.AutoMap
+import com.clerk.network.ClerkApi
 import com.clerk.network.model.account.EnterpriseAccount
 import com.clerk.network.model.account.ExternalAccount
+import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.emailaddress.EmailAddress
+import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.organization.OrganizationMembership
 import com.clerk.network.model.passkey.Passkey
 import com.clerk.network.model.phonenumber.PhoneNumber
+import com.clerk.network.serialization.ClerkResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -145,6 +150,8 @@ data class User(
 ) {
 
   /** Parameters for updating a user. */
+  @AutoMap
+  @Serializable
   data class UpdateParams(
     /** The user's first name. */
     @SerialName("first_name") val firstName: String? = null,
@@ -161,4 +168,25 @@ data class User(
     @SerialName("public_metadata") val publicMetadata: String? = null,
     @SerialName("private_metadata") val privateMetadata: String? = null,
   )
+
+  companion object {
+    /** Retrieves the current user, or the user with the given session ID, from the Clerk API. */
+    suspend fun get(sessionId: String? = null): ClerkResult<User, ClerkErrorResponse> =
+      ClerkApi.user.getUser(sessionId)
+
+    /**
+     * Updates the current user, or the user with the given session ID, with the provided
+     * parameters.
+     */
+    suspend fun update(
+      sessionId: String? = null,
+      params: UpdateParams,
+    ): ClerkResult<User, ClerkErrorResponse> {
+      return ClerkApi.user.updateUser(sessionId = sessionId, fields = params.toMap())
+    }
+
+    /** Deletes the current user, or the user with the given session ID, from the Clerk API. */
+    suspend fun delete(sessionId: String? = null): ClerkResult<DeletedObject, ClerkErrorResponse> =
+      ClerkApi.user.deleteUser(sessionId)
+  }
 }

@@ -516,9 +516,9 @@ data class SignIn(
      */
     suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
-        is CreateParams.Strategy.Transfer -> ClerkApi().createSignIn(mapOf(TRANSFER to "true"))
+        is CreateParams.Strategy.Transfer -> ClerkApi.signIn.createSignIn(mapOf(TRANSFER to "true"))
         is CreateParams.Strategy.Passkey -> PasskeySignInService().signInWithPasskey(params.context)
-        else -> ClerkApi().createSignIn(params.toMap())
+        else -> ClerkApi.signIn.createSignIn(params.toMap())
       }
     }
 
@@ -538,7 +538,7 @@ data class SignIn(
      *  ```
      */
     suspend fun create(params: Map<String, String>): ClerkResult<SignIn, ClerkErrorResponse> {
-      return ClerkApi().createSignIn(params)
+      return ClerkApi.signIn.createSignIn(params)
     }
 
     /**
@@ -616,7 +616,7 @@ data class SignIn(
 suspend fun SignIn.prepareFirstFactor(
   strategy: PrepareFirstFactorParams.Strategy
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi().prepareSignInFirstFactor(this.id, strategy.toFormData().toMap())
+  return ClerkApi.signIn.prepareSignInFirstFactor(this.id, strategy.toFormData().toMap())
 }
 
 /**
@@ -634,7 +634,7 @@ suspend fun SignIn.prepareSecondFactor(): ClerkResult<SignIn, ClerkErrorResponse
       phoneNumberId =
         this.supportedSecondFactors?.find { it.strategy == "phone_code" }?.phoneNumberId
     )
-  return ClerkApi().prepareSecondFactor(id = this.id, params = params.toMap())
+  return ClerkApi.signIn.prepareSecondFactor(id = this.id, params = params.toMap())
 }
 
 /**
@@ -660,7 +660,7 @@ suspend fun SignIn.prepareSecondFactor(): ClerkResult<SignIn, ClerkErrorResponse
 suspend fun SignIn.attemptFirstFactor(
   params: SignIn.AttemptFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi().attemptFirstFactor(id = this.id, params = params.toMap())
+  return ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
 }
 
 /**
@@ -683,7 +683,7 @@ suspend fun SignIn.attemptFirstFactor(
 suspend fun SignIn.attemptSecondFactor(
   params: SignIn.AttemptSecondFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi().attemptSecondFactor(id = this.id, params = params.toMap())
+  return ClerkApi.signIn.attemptSecondFactor(id = this.id, params = params.toMap())
 }
 
 /**
@@ -700,12 +700,11 @@ suspend fun SignIn.attemptSecondFactor(
 suspend fun SignIn.resetPassword(
   params: SignIn.ResetPasswordParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi()
-    .resetPassword(
-      id = this.id,
-      password = params.password,
-      signOutOfOtherSessions = params.signOutOfOtherSessions,
-    )
+  return ClerkApi.signIn.resetPassword(
+    id = this.id,
+    password = params.password,
+    signOutOfOtherSessions = params.signOutOfOtherSessions,
+  )
 }
 
 /**
@@ -725,7 +724,7 @@ suspend fun SignIn.resetPassword(
   password: String,
   signOutOfOtherSessions: Boolean = false,
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi().resetPassword(id = this.id, password = password, signOutOfOtherSessions)
+  return ClerkApi.signIn.resetPassword(id = this.id, password = password, signOutOfOtherSessions)
 }
 
 /**
@@ -740,5 +739,5 @@ suspend fun SignIn.resetPassword(
 suspend fun SignIn.get(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi().fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
+  return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
