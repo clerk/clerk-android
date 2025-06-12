@@ -100,7 +100,7 @@ internal interface UserApi {
   suspend fun attemptEmailAddressVerification(
     @Path(CommonParams.EMAIL_ID) emailAddressId: String,
     @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
-    @Field(CommonParams.CODE) strategy: String,
+    @Field(CommonParams.CODE) code: String,
   ): ClerkResult<EmailAddress, ClerkErrorResponse>
 
   @FormUrlEncoded

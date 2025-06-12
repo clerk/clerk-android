@@ -294,6 +294,19 @@ data class User(
       ): ClerkResult<List<Session>, ClerkErrorResponse> {
         return ClerkApi.user.getSessions(sessionId)
       }
+
+      suspend fun emailAddresses(
+        sessionId: String? = null
+      ): ClerkResult<List<EmailAddress>, ClerkErrorResponse> {
+        return ClerkApi.user.getEmailAddresses(sessionId)
+      }
+
+      suspend fun createEmailAddress(
+        sessionId: String? = null,
+        email: String,
+      ): ClerkResult<EmailAddress, ClerkErrorResponse> {
+        return ClerkApi.user.createEmailAddress(sessionId, email)
+      }
     }
   }
 }
