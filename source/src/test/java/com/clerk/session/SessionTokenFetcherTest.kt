@@ -2,6 +2,7 @@ package com.clerk.session
 
 import com.auth0.android.jwt.JWT
 import com.clerk.network.ClerkApi
+import com.clerk.network.api.SessionApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.error.Error
 import com.clerk.network.model.token.TokenResource
@@ -34,7 +35,7 @@ class SessionTokenFetcherTest {
   private lateinit var mockTokenResource: TokenResource
   private lateinit var mockJWT: JWT
   private lateinit var mockJWTManager: JWTManager
-  private lateinit var mockClerkApiService: ClerkApiService
+  private lateinit var mockClerkApiService: SessionApi
 
   @Before
   fun setup() {
@@ -55,7 +56,7 @@ class SessionTokenFetcherTest {
 
     // Mock ClerkApi
     mockkObject(ClerkApi)
-    every { ClerkApi() } returns mockClerkApiService
+    every { ClerkApi.session } returns mockClerkApiService
 
     // Mock SessionTokensCache
     mockkObject(SessionTokensCache)
