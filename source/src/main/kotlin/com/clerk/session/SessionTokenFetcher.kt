@@ -2,7 +2,6 @@ package com.clerk.session
 
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
-import com.clerk.network.model.session.Session
 import com.clerk.network.model.token.TokenResource
 import com.clerk.network.serialization.successOrElse
 import java.util.concurrent.ConcurrentHashMap
@@ -66,9 +65,9 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     return try {
       val tokensRequest =
         if (options.template != null) {
-          ClerkApi.instance.tokens(session.id, options.template)
+          ClerkApi.session.tokens(session.id, options.template)
         } else {
-          ClerkApi.instance.tokens(session.id)
+          ClerkApi.session.tokens(session.id)
         }
 
       val result =

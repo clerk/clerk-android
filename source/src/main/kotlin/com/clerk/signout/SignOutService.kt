@@ -3,8 +3,8 @@ package com.clerk.signout
 import com.clerk.Clerk
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
-import com.clerk.network.model.session.delete
 import com.clerk.network.serialization.ClerkResult
+import com.clerk.session.delete
 
 /**
  * Service responsible for signing out users by removing their active session.
@@ -31,13 +31,13 @@ internal object SignOutService {
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
     try {
       if (Clerk.session?.id != null) {
-        Clerk.session?.id?.let { sessionId -> ClerkApi.instance.removeSession(sessionId) }
+        Clerk.session?.id?.let { sessionId -> ClerkApi.session.removeSession(sessionId) }
       } else {
         Clerk.session?.delete()
       }
-      return ClerkResult.Companion.success(Unit)
+      return ClerkResult.success(Unit)
     } catch (e: Exception) {
-      return ClerkResult.Companion.unknownFailure(error(e.message ?: "Unknown error"))
+      return ClerkResult.unknownFailure(error(e.message ?: "Unknown error"))
     }
   }
 }

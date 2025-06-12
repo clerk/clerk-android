@@ -4,8 +4,8 @@ import android.content.Context
 import com.clerk.Clerk
 import com.clerk.network.model.client.Client
 import com.clerk.network.model.environment.Environment
-import com.clerk.network.model.session.Session
-import com.clerk.network.model.user.User
+import com.clerk.session.Session
+import com.clerk.user.User
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject

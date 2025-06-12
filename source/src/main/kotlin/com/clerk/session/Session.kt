@@ -1,11 +1,11 @@
-package com.clerk.network.model.session
+package com.clerk.session
 
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.token.TokenResource
-import com.clerk.network.model.user.User
 import com.clerk.network.model.userdata.PublicUserData
-import com.clerk.session.SessionGetTokenOptions
-import com.clerk.session.SessionTokenFetcher
+import com.clerk.network.serialization.ClerkResult
+import com.clerk.user.User
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -141,7 +141,7 @@ data class SessionActivity(
 
 /** Deletes the current session. */
 suspend fun Session.delete() {
-  ClerkApi.instance.deleteSessions()
+  ClerkApi.session.deleteSessions()
 }
 
 /**
@@ -155,4 +155,17 @@ suspend fun Session.fetchToken(
   options: SessionGetTokenOptions = SessionGetTokenOptions()
 ): TokenResource? {
   return SessionTokenFetcher().getToken(this, options)
+}
+
+/**
+ * Revokes the current session.
+ *
+ * @return The [ClerkResult] of the revocation. If the session was revoked successfully, the result
+ *   will contain the revoked session. If the session was not revoked successfully, the result will
+ *   contain the error response.
+ * @see ClerkResult
+ * @see ClerkErrorResponse
+ */
+suspend fun Session.revoke(): ClerkResult<Session, ClerkErrorResponse> {
+  return ClerkApi.session.revokeSession(sessionIdToRevoke = this.id)
 }

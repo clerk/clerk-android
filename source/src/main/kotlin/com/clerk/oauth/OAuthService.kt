@@ -47,7 +47,7 @@ internal object OAuthService {
     clearCurrentAuth()
 
     val initialResult =
-      ClerkApi.instance.authenticateWithRedirect(
+      ClerkApi.signIn.authenticateWithRedirect(
         strategy = params.provider.strategy,
         redirectUrl = params.redirectUrl,
       )

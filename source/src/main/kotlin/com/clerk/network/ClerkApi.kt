@@ -3,6 +3,12 @@ package com.clerk.network
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.clerk.Clerk
+import com.clerk.network.api.ClientApi
+import com.clerk.network.api.EnvironmentApi
+import com.clerk.network.api.SessionApi
+import com.clerk.network.api.SignInApi
+import com.clerk.network.api.SignUpApi
+import com.clerk.network.api.UserApi
 import com.clerk.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.network.middleware.outgoing.HeaderMiddleware
@@ -30,16 +36,39 @@ internal object ClerkApi {
     namingStrategy = JsonNamingStrategy.SnakeCase
   }
 
-  private var _instance: ClerkApiService? = null
+  private var _client: ClientApi? = null
+  val client: ClientApi
+    get() = _client ?: error("ClerkApi is not configured.")
 
-  /** Exposes the configured Clerk API service or throws if not initialized. */
-  internal val instance: ClerkApiService
-    get() =
-      _instance ?: error("ClerkApi is not configured. Call ClerkApi.configure(baseUrl) first.")
+  private var _environment: EnvironmentApi? = null
+  val environment: EnvironmentApi
+    get() = _environment ?: error("ClerkApi is not configured.")
+
+  private var _session: SessionApi? = null
+  val session: SessionApi
+    get() = _session ?: error("ClerkApi is not configured.")
+
+  private var _signIn: SignInApi? = null
+  val signIn: SignInApi
+    get() = _signIn ?: error("ClerkApi is not configured.")
+
+  private var _signUp: SignUpApi? = null
+  val signUp: SignUpApi
+    get() = _signUp ?: error("ClerkApi is not configured.")
+
+  private var _user: UserApi? = null
+  val user: UserApi
+    get() = _user ?: error("ClerkApi is not configured.")
 
   /** Initializes the API client with the given [baseUrl]. */
   fun configure(baseUrl: String, context: Context) {
-    _instance = buildRetrofit(baseUrl, context).create(ClerkApiService::class.java)
+    val retrofit = buildRetrofit(baseUrl, context)
+    _client = retrofit.create(ClientApi::class.java)
+    _environment = retrofit.create(EnvironmentApi::class.java)
+    _session = retrofit.create(SessionApi::class.java)
+    _signIn = retrofit.create(SignInApi::class.java)
+    _signUp = retrofit.create(SignUpApi::class.java)
+    _user = retrofit.create(UserApi::class.java)
   }
 
   /** Builds and configures the Retrofit instance. */

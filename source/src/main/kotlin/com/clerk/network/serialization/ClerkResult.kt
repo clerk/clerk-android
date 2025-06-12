@@ -23,7 +23,7 @@ import toUnmodifiableMap
  * // Example: Creating a sign-in
  * scope.launch {
  *     val email = "user@example.com"
- *     when (val result = ClerkApi.instance.signIn(email)) {
+ *     when (val result = ClerkApi().signIn(email)) {
  *         is ClerkResult.Success -> {
  *             val signIn = result.value.response
  *             // Proceed with the sign-in flow based on available factors

@@ -59,7 +59,7 @@ class PasskeySignInService {
 
   private suspend fun createSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
     ClerkLog.e("PasskeySignInService: Creating SignIn with passkey strategy")
-    val result = ClerkApi.instance.createSignIn(mapOf("strategy" to "passkey"))
+    val result = ClerkApi.signIn.createSignIn(mapOf("strategy" to "passkey"))
     ClerkLog.e("PasskeySignInService: CreateSignIn result: $result")
     return result
   }
@@ -68,7 +68,7 @@ class PasskeySignInService {
     context: Context,
     signIn: SignIn,
     allowedCredentialIds: List<String> = emptyList(),
-  ): androidx.credentials.Credential {
+  ): Credential {
     ClerkLog.e(
       "PasskeySignInService: getCredentialFromManager called with allowedCredentialIds: $allowedCredentialIds"
     )
@@ -145,7 +145,7 @@ class PasskeySignInService {
   ): GetPublicKeyCredentialOption {
     ClerkLog.e(
       "PasskeySignInService: buildPublicKeyCredentialOption called with nonce:" +
-              " $challenge, allowedCredentialIds: $allowedCredentialIds"
+        " $challenge, allowedCredentialIds: $allowedCredentialIds"
     )
 
     val allowCredentials =

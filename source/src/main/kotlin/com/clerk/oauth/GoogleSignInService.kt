@@ -44,7 +44,7 @@ internal class GoogleSignInService(
 
       // First try to authenticate (sign in)
       val authResult: ClerkResult<SignIn, ClerkErrorResponse> =
-        ClerkApi.instance.authenticateWithGoogle(token = idToken)
+        ClerkApi.signIn.authenticateWithGoogle(token = idToken)
 
       // Handle the result
       when (authResult) {
