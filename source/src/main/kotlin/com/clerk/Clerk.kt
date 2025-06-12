@@ -53,14 +53,17 @@ object Clerk {
 
   // region Computed Properties
 
+  val applicationName: String?
+    get() = if (::environment.isInitialized) environment.displayConfig.applicationName else null
+
   /**
    * The image URL for the application logo used in authentication UI components.
    *
    * This logo appears in sign-in screens, sign-up flows, and other authentication interfaces. The
    * URL is configured in your Clerk Dashboard under branding settings.
    */
-  val logoUrl: String
-    get() = if (::environment.isInitialized) environment.displayConfig.logoImageUrl else ""
+  val logoUrl: String?
+    get() = if (::environment.isInitialized) environment.displayConfig.logoImageUrl else null
 
   /**
    * Map of available social authentication providers configured for this application.
