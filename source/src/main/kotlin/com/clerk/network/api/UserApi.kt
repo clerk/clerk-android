@@ -190,7 +190,8 @@ internal interface UserApi {
 
   @PATCH(Paths.UserPath.Passkeys.WithId.PASSKEYS_WITH_ID)
   suspend fun updatePasskey(
-    @Path(CommonParams.PASSKEY_ID) passkeyId: String
+    @Path(CommonParams.PASSKEY_ID) passkeyId: String,
+    @Field("name") name: String? = null,
   ): ClerkResult<Passkey, ClerkErrorResponse>
 
   @FormUrlEncoded

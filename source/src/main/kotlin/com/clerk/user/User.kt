@@ -320,6 +320,12 @@ data class User(
       ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
         return ClerkApi.user.createPhoneNumber(sessionId, phoneNumber)
       }
+
+      suspend fun createPasskey(
+        sessionId: String? = null
+      ): ClerkResult<Passkey, ClerkErrorResponse> {
+        return ClerkApi.user.createPasskey(sessionId = sessionId)
+      }
     }
   }
 }
