@@ -3,23 +3,28 @@ $dokka.linkExtension:html
 
 module:Clerk Android
 com.clerk
+com.clerk.network.api
 com.clerk.network.model.account
+com.clerk.network.model.backupcodes
 com.clerk.network.model.client
 com.clerk.network.model.deleted
 com.clerk.network.model.emailaddress
 com.clerk.network.model.environment
 com.clerk.network.model.error
 com.clerk.network.model.factor
+com.clerk.network.model.image
 com.clerk.network.model.organization
 com.clerk.network.model.passkey
 com.clerk.network.model.phonenumber
 com.clerk.network.model.response
-com.clerk.network.model.session
 com.clerk.network.model.token
-com.clerk.network.model.user
+com.clerk.network.model.totp
 com.clerk.network.model.userdata
 com.clerk.network.model.verification
 com.clerk.network.serialization
 com.clerk.oauth
+com.clerk.passkeys
+com.clerk.session
 com.clerk.signin
 com.clerk.signup
+com.clerk.user
