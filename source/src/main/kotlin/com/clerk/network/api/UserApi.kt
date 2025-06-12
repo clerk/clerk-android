@@ -8,12 +8,12 @@ import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.image.ImageResource
 import com.clerk.network.model.passkey.Passkey
 import com.clerk.network.model.phonenumber.PhoneNumber
-import com.clerk.network.model.session.Session
 import com.clerk.network.model.totp.TOTPResource
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.paths.CommonParams
 import com.clerk.network.paths.Paths
 import com.clerk.network.serialization.ClerkResult
+import com.clerk.session.Session
 import com.clerk.user.User
 import okhttp3.MultipartBody
 import retrofit2.http.DELETE
@@ -48,6 +48,11 @@ internal interface UserApi {
     @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
+  @GET(Paths.UserPath.Sessions.SESSIONS)
+  suspend fun getSessions(
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
+  ): ClerkResult<List<Session>, ClerkErrorResponse>
+
   @POST(Paths.UserPath.PROFILE_IMAGE)
   fun updateProfileImage(
     @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
@@ -75,17 +80,6 @@ internal interface UserApi {
 
   @GET(Paths.UserPath.Sessions.ACTIVE)
   suspend fun getActiveSessions(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
-  ): ClerkResult<List<Session>, ClerkErrorResponse>
-
-  @POST(Paths.UserPath.Sessions.REVOKE)
-  suspend fun revokeSession(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
-    @Path("session_id") sessionIdToRevoke: String,
-  ): ClerkResult<Session, ClerkErrorResponse>
-
-  @GET(Paths.UserPath.Sessions.SESSIONS)
-  suspend fun getSessions(
     @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
   ): ClerkResult<List<Session>, ClerkErrorResponse>
 

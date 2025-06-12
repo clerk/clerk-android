@@ -2,7 +2,6 @@ package com.clerk.session
 
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
-import com.clerk.network.model.session.Session
 import com.clerk.network.model.token.TokenResource
 import com.clerk.network.serialization.successOrElse
 import java.util.concurrent.ConcurrentHashMap

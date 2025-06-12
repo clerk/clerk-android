@@ -4,7 +4,6 @@ import com.auth0.android.jwt.JWT
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.error.Error
-import com.clerk.network.model.session.Session
 import com.clerk.network.model.token.TokenResource
 import com.clerk.network.serialization.ClerkResult
 import io.mockk.coEvery

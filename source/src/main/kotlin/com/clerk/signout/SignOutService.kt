@@ -3,8 +3,8 @@ package com.clerk.signout
 import com.clerk.Clerk
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
-import com.clerk.network.model.session.delete
 import com.clerk.network.serialization.ClerkResult
+import com.clerk.session.delete
 
 /**
  * Service responsible for signing out users by removing their active session.

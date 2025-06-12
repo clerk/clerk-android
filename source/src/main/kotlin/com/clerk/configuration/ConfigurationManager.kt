@@ -8,10 +8,10 @@ import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.client.Client
 import com.clerk.network.model.environment.Environment
-import com.clerk.network.model.session.fetchToken
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.fold
 import com.clerk.session.SessionGetTokenOptions
+import com.clerk.session.fetchToken
 import com.clerk.storage.StorageHelper
 import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.seconds

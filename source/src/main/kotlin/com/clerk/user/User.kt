@@ -12,6 +12,7 @@ import com.clerk.network.model.organization.OrganizationMembership
 import com.clerk.network.model.passkey.Passkey
 import com.clerk.network.model.phonenumber.PhoneNumber
 import com.clerk.network.serialization.ClerkResult
+import com.clerk.session.Session
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -280,6 +281,18 @@ data class User(
         currentPassword: String,
       ): ClerkResult<User, ClerkErrorResponse> {
         return ClerkApi.user.deletePassword(sessionId, currentPassword)
+      }
+
+      suspend fun activeSessions(
+        sessionId: String? = null
+      ): ClerkResult<List<Session>, ClerkErrorResponse> {
+        return ClerkApi.user.getActiveSessions(sessionId)
+      }
+
+      suspend fun allSessions(
+        sessionId: String? = null
+      ): ClerkResult<List<Session>, ClerkErrorResponse> {
+        return ClerkApi.user.getSessions(sessionId)
       }
     }
   }
