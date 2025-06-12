@@ -5,6 +5,7 @@ import com.clerk.automap.annotations.MapProperty
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.account.EnterpriseAccount
 import com.clerk.network.model.account.ExternalAccount
+import com.clerk.network.model.backupcodes.BackupCodeResource
 import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.emailaddress.EmailAddress
 import com.clerk.network.model.error.ClerkErrorResponse
@@ -12,6 +13,7 @@ import com.clerk.network.model.image.ImageResource
 import com.clerk.network.model.organization.OrganizationMembership
 import com.clerk.network.model.passkey.Passkey
 import com.clerk.network.model.phonenumber.PhoneNumber
+import com.clerk.network.model.totp.TOTPResource
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.oauth.OAuthProvider
@@ -155,7 +157,12 @@ data class User(
   val username: String? = null,
 ) {
 
-  /** Parameters for updating a user. */
+  /**
+   * Parameters for updating a user's profile information.
+   *
+   * All fields are optional - only provide the fields you want to update. Null values will be
+   * ignored and the existing values will be preserved.
+   */
   @AutoMap
   @Serializable
   data class UpdateParams(
@@ -171,18 +178,42 @@ data class User(
     @SerialName("primary_phone_number_id") val primaryPhoneNumberId: String? = null,
     /** The ID for the image to be set as profile image. */
     @SerialName("profile_image_id") val profileImageId: String? = null,
+    /** JSON string containing public metadata to update. */
     @SerialName("public_metadata") val publicMetadata: String? = null,
+    /** JSON string containing private metadata to update. */
     @SerialName("private_metadata") val privateMetadata: String? = null,
   )
 
+  /**
+   * Parameters for updating a user's password.
+   *
+   * @property currentPassword The user's current password (required for verification)
+   * @property newPassword The new password to set
+   * @property signOutOfOtherSessions Whether to sign out of all other sessions after password
+   *   change
+   */
   @AutoMap
   @Serializable
   data class UpdatePasswordParams(
+    /** The user's current password for verification. */
     @SerialName("current_password") val currentPassword: String? = null,
+    /** The new password to set for the user. */
     @SerialName("new_password") val newPassword: String,
+    /** Whether to sign out of all other sessions after changing the password. Default is false. */
     val signOutOfOtherSessions: Boolean = false,
   )
 
+  /**
+   * Parameters for creating an external account connection.
+   *
+   * External accounts allow users to sign in using social providers like Google, Facebook, GitHub,
+   * etc. The provider must be enabled in your Clerk Dashboard settings before it can be used.
+   *
+   * @property provider The OAuth provider to connect (e.g., Google, Facebook, GitHub)
+   * @property redirectUrl The URL to redirect to after successful OAuth authorization
+   * @property oidcPrompt Optional OpenID Connect prompt parameter
+   * @property oidcLoginHint Optional OpenID Connect login hint parameter
+   */
   @AutoMap
   @Serializable
   data class CreateExternalAccountParams(
@@ -193,7 +224,9 @@ data class User(
      * on their part.
      */
     val redirectUrl: String? = null,
+    /** Optional OpenID Connect prompt parameter to control the authentication flow. */
     val oidcPrompt: String? = null,
+    /** Optional OpenID Connect login hint parameter to pre-fill the user's identifier. */
     val oidcLoginHint: String? = null,
   )
 
@@ -297,24 +330,70 @@ data class User(
       return ClerkApi.user.deletePassword(sessionId, currentPassword)
     }
 
+    /**
+     * Retrieves the active sessions for the current user or the user with the given session ID.
+     *
+     * Active sessions are sessions that are currently valid and can be used for authentication.
+     * This excludes expired or revoked sessions.
+     *
+     * @param sessionId The session ID of the user whose active sessions to retrieve. If null, the
+     *   current user's active sessions are retrieved.
+     * @return A [ClerkResult] containing a list of active [Session] objects on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
     suspend fun activeSessions(
       sessionId: String? = null
     ): ClerkResult<List<Session>, ClerkErrorResponse> {
       return ClerkApi.user.getActiveSessions(sessionId)
     }
 
+    /**
+     * Retrieves all sessions for the current user or the user with the given session ID.
+     *
+     * This includes both active and inactive (expired/revoked) sessions, providing a complete
+     * history of the user's authentication sessions.
+     *
+     * @param sessionId The session ID of the user whose sessions to retrieve. If null, the current
+     *   user's sessions are retrieved.
+     * @return A [ClerkResult] containing a list of all [Session] objects on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
     suspend fun allSessions(
       sessionId: String? = null
     ): ClerkResult<List<Session>, ClerkErrorResponse> {
       return ClerkApi.user.getSessions(sessionId)
     }
 
+    /**
+     * Retrieves all email addresses associated with the current user or the user with the given
+     * session ID.
+     *
+     * This includes both verified and unverified email addresses, including the primary email
+     * address.
+     *
+     * @param sessionId The session ID of the user whose email addresses to retrieve. If null, the
+     *   current user's email addresses are retrieved.
+     * @return A [ClerkResult] containing a list of [EmailAddress] objects on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
     suspend fun emailAddresses(
       sessionId: String? = null
     ): ClerkResult<List<EmailAddress>, ClerkErrorResponse> {
       return ClerkApi.user.getEmailAddresses(sessionId)
     }
 
+    /**
+     * Creates a new email address for the current user or the user with the given session ID.
+     *
+     * The newly created email address will be unverified initially. The user will need to complete
+     * the verification process before the email address can be used for authentication.
+     *
+     * @param sessionId The session ID of the user to create the email address for. If null, the
+     *   email address is created for the current user.
+     * @param email The email address to add to the user's account
+     * @return A [ClerkResult] containing the created [EmailAddress] object on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
     suspend fun createEmailAddress(
       sessionId: String? = null,
       email: String,
@@ -322,12 +401,37 @@ data class User(
       return ClerkApi.user.createEmailAddress(sessionId, email)
     }
 
+    /**
+     * Retrieves all phone numbers associated with the current user or the user with the given
+     * session ID.
+     *
+     * This includes both verified and unverified phone numbers, including the primary phone number.
+     *
+     * @param sessionId The session ID of the user whose phone numbers to retrieve. If null, the
+     *   current user's phone numbers are retrieved.
+     * @return A [ClerkResult] containing a list of [PhoneNumber] objects on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
     suspend fun phoneNumbers(
       sessionId: String? = null
     ): ClerkResult<List<PhoneNumber>, ClerkErrorResponse> {
       return ClerkApi.user.getPhoneNumbers(sessionId)
     }
 
+    /**
+     * Creates a new phone number for the current user or the user with the given session ID.
+     *
+     * The newly created phone number will be unverified initially. The user will need to complete
+     * the verification process (typically via SMS) before the phone number can be used for
+     * authentication or two-factor authentication.
+     *
+     * @param sessionId The session ID of the user to create the phone number for. If null, the
+     *   phone number is created for the current user.
+     * @param phoneNumber The phone number to add to the user's account (should include country
+     *   code)
+     * @return A [ClerkResult] containing the created [PhoneNumber] object on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
     suspend fun createPhoneNumber(
       sessionId: String? = null,
       phoneNumber: String,
@@ -335,6 +439,18 @@ data class User(
       return ClerkApi.user.createPhoneNumber(sessionId, phoneNumber)
     }
 
+    /**
+     * Creates a new passkey for the current user or the user with the given session ID.
+     *
+     * Passkeys are a modern, secure authentication method that uses cryptographic key pairs. The
+     * creation process will typically prompt the user to use their device's biometric
+     * authentication (fingerprint, face recognition) or device PIN to create the passkey.
+     *
+     * @param sessionId The session ID of the user to create the passkey for. If null, the passkey
+     *   is created for the current user.
+     * @return A [ClerkResult] containing the created [Passkey] object on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
     suspend fun createPasskey(sessionId: String? = null): ClerkResult<Passkey, ClerkErrorResponse> {
       return ClerkApi.user.createPasskey(sessionId = sessionId)
     }
@@ -366,6 +482,68 @@ data class User(
       params: CreateExternalAccountParams
     ): ClerkResult<Verification, ClerkErrorResponse> {
       return ClerkApi.user.createExternalAccount(params.toMap())
+    }
+
+    /**
+     * Creates a new TOTP (Time-based One-Time Password) configuration for the current user.
+     *
+     * TOTP is commonly used for two-factor authentication with authenticator apps like Google
+     * Authenticator, Authy, or 1Password. This method generates a secret key that can be used to
+     * set up the authenticator app.
+     *
+     * After calling this method, the user will need to scan a QR code or manually enter the secret
+     * into their authenticator app, then verify it using [attemptTOTPVerification].
+     *
+     * @return A [ClerkResult] containing the [TOTPResource] with setup information on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
+    suspend fun createTOTP(): ClerkResult<TOTPResource, ClerkErrorResponse> {
+      return ClerkApi.user.createTOTP()
+    }
+
+    /**
+     * Deletes the TOTP (Time-based One-Time Password) configuration for the current user.
+     *
+     * This removes the user's TOTP setup, disabling two-factor authentication via authenticator
+     * apps. The user will no longer be able to use TOTP codes for authentication until they set up
+     * TOTP again.
+     *
+     * @return A [ClerkResult] containing a [DeletedObject] on success, or a [ClerkErrorResponse] on
+     *   failure
+     */
+    suspend fun deleteTOTP(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+      return ClerkApi.user.deleteTOTP()
+    }
+
+    /**
+     * Verifies a TOTP (Time-based One-Time Password) code to complete the TOTP setup process.
+     *
+     * This method should be called after [createTOTP] to verify that the user has correctly
+     * configured their authenticator app. The user should provide a 6-digit code generated by their
+     * authenticator app.
+     *
+     * @param code The 6-digit TOTP code generated by the user's authenticator app
+     * @return A [ClerkResult] containing the verified [TOTPResource] on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
+    suspend fun attemptTOTPVerification(
+      code: String
+    ): ClerkResult<TOTPResource, ClerkErrorResponse> {
+      return ClerkApi.user.attemptTOTPVerification(code)
+    }
+
+    /**
+     * Generates backup codes for the current user's account.
+     *
+     * Backup codes are single-use recovery codes that can be used for authentication when the
+     * user's primary two-factor authentication method (like TOTP or SMS) is unavailable. These
+     * codes should be stored securely by the user.
+     *
+     * @return A [ClerkResult] containing the [BackupCodeResource] with the generated backup codes
+     *   on success, or a [ClerkErrorResponse] on failure
+     */
+    suspend fun createBackupCodes(): ClerkResult<BackupCodeResource, ClerkErrorResponse> {
+      return ClerkApi.user.createBackupCodes()
     }
   }
 }

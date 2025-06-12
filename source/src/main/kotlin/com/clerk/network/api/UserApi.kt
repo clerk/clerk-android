@@ -2,6 +2,7 @@
 
 package com.clerk.network.api
 
+import com.clerk.network.model.backupcodes.BackupCodeResource
 import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.emailaddress.EmailAddress
 import com.clerk.network.model.error.ClerkErrorResponse
@@ -236,4 +237,7 @@ internal interface UserApi {
   suspend fun attemptTOTPVerification(
     @Field(CommonParams.CODE) code: String
   ): ClerkResult<TOTPResource, ClerkErrorResponse>
+
+  @POST(Paths.UserPath.BACKUP_CODES)
+  suspend fun createBackupCodes(): ClerkResult<BackupCodeResource, ClerkErrorResponse>
 }
