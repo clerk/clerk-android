@@ -1,7 +1,14 @@
 package com.clerk.network.model.phonenumber
 
+import com.clerk.network.ClerkApi
+import com.clerk.network.model.deleted.DeletedObject
+import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.verification.Verification
+import com.clerk.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
+
+/** The verification strategy constant used for phone number verification via SMS code. */
+private const val PHONE_CODE = "phone_code"
 
 /**
  * The `PhoneNumber` object is a model around a phone number entity.
@@ -54,3 +61,87 @@ data class PhoneNumber(
   /** A list of backup codes in case of lost phone number access. */
   val backupCodes: List<String>? = null,
 )
+
+/**
+ * Attempts to verify this phone number using the provided verification code.
+ *
+ * This is the second and final step in the phone number verification process. The verification code
+ * is typically sent via SMS after calling [prepareVerification].
+ *
+ * @param sessionId Optional session ID to use for the verification attempt
+ * @param code The one-time verification code received via SMS
+ * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun PhoneNumber.attemptVerification(
+  sessionId: String? = null,
+  code: String,
+): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+  return ClerkApi.user.attemptPhoneNumberVerification(
+    phoneNumberId = this.id,
+    sessionId = sessionId,
+    code = code,
+  )
+}
+
+/**
+ * Initiates the phone number verification process by sending a verification code via SMS.
+ *
+ * This is the first step in the phone number verification process. After calling this method, a
+ * one-time verification code will be sent to the phone number via SMS. Use [attemptVerification] to
+ * complete the verification process.
+ *
+ * @param sessionId Optional session ID to use for preparing the verification
+ * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun PhoneNumber.prepareVerification(
+  sessionId: String? = null
+): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+  return ClerkApi.user.preparePhoneNumberVerification(
+    phoneNumberId = this.id,
+    strategy = PHONE_CODE,
+    sessionId = sessionId,
+  )
+}
+
+/**
+ * Updates the properties of this phone number.
+ *
+ * Allows modification of second factor authentication settings for this phone number.
+ *
+ * @param sessionId Optional session ID to use for the update operation
+ * @param reservedForSecondFactor Whether this phone number should be reserved for second factor
+ *   authentication
+ * @param defaultSecondFactor Whether this phone number should be the default second factor method
+ * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun PhoneNumber.updatePhoneNumber(
+  sessionId: String? = null,
+  reservedForSecondFactor: Boolean? = null,
+  defaultSecondFactor: Boolean? = null,
+): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+  return ClerkApi.user.updatePhoneNumber(
+    phoneNumberId = this.id,
+    sessionId = sessionId,
+    reservedForSecondFactor = reservedForSecondFactor,
+    defaultSecondFactor = defaultSecondFactor,
+  )
+}
+
+/**
+ * Deletes this phone number from the user's account.
+ *
+ * This operation is irreversible. Once deleted, the phone number will no longer be associated with
+ * the user's account and cannot be used for authentication or contact purposes.
+ *
+ * @param sessionId Optional session ID to use for the delete operation
+ * @return A [ClerkResult] containing a [DeletedObject] on success, or a [ClerkErrorResponse] on
+ *   failure
+ */
+suspend fun PhoneNumber.deletePhoneNumber(
+  sessionId: String? = null
+): ClerkResult<DeletedObject, ClerkErrorResponse> {
+  return ClerkApi.user.deletePhoneNumber(phoneNumberId = this.id, sessionId = sessionId)
+}

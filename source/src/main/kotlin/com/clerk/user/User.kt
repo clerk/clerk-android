@@ -307,6 +307,19 @@ data class User(
       ): ClerkResult<EmailAddress, ClerkErrorResponse> {
         return ClerkApi.user.createEmailAddress(sessionId, email)
       }
+
+      suspend fun phoneNumbers(
+        sessionId: String? = null
+      ): ClerkResult<List<PhoneNumber>, ClerkErrorResponse> {
+        return ClerkApi.user.getPhoneNumbers(sessionId)
+      }
+
+      suspend fun createPhoneNumber(
+        sessionId: String? = null,
+        phoneNumber: String,
+      ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+        return ClerkApi.user.createPhoneNumber(sessionId, phoneNumber)
+      }
     }
   }
 }
