@@ -204,7 +204,7 @@ internal interface UserApi {
 
   @FormUrlEncoded
   @POST(Paths.UserPath.ExternalAccounts.EXTERNAL_ACCOUNTS)
-  suspend fun connectOAuthAccount(
+  suspend fun createExternalAccount(
     @FieldMap params: Map<String, String>
   ): ClerkResult<Verification, ClerkErrorResponse>
 
@@ -212,7 +212,7 @@ internal interface UserApi {
   @PATCH(Paths.UserPath.ExternalAccounts.WithId.REAUTHORIZE)
   suspend fun reauthorizeExternalAccount(
     @Path(CommonParams.EXTERNAL_ACCOUNT_ID) externalAccountId: String,
-    @FieldMap params: Map<String, String>,
+    @Field("redirect_url") redirectUrl: String,
   ): ClerkResult<Verification, ClerkErrorResponse>
 
   @DELETE(Paths.UserPath.ExternalAccounts.WithId.EXTERNAL_ACCOUNTS_WITH_ID)

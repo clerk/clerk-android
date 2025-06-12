@@ -1,6 +1,7 @@
 package com.clerk.user
 
 import com.clerk.automap.annotations.AutoMap
+import com.clerk.automap.annotations.MapProperty
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.account.EnterpriseAccount
 import com.clerk.network.model.account.ExternalAccount
@@ -11,7 +12,9 @@ import com.clerk.network.model.image.ImageResource
 import com.clerk.network.model.organization.OrganizationMembership
 import com.clerk.network.model.passkey.Passkey
 import com.clerk.network.model.phonenumber.PhoneNumber
+import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
+import com.clerk.oauth.OAuthProvider
 import com.clerk.session.Session
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -178,154 +181,191 @@ data class User(
     @SerialName("current_password") val currentPassword: String? = null,
     @SerialName("new_password") val newPassword: String,
     val signOutOfOtherSessions: Boolean = false,
-  ) {
+  )
 
-    companion object {
-      /**
-       * Retrieves the current user, or the user with the given session ID, from the Clerk API.
-       *
-       * @param sessionId The session id of the user to retrieve. If null, the current user is
-       *   retrieved.
-       * @return A [ClerkResult] containing the [User] if the operation was successful, or a
-       *   [ClerkErrorResponse] if it failed.
-       */
-      suspend fun get(sessionId: String? = null): ClerkResult<User, ClerkErrorResponse> =
-        ClerkApi.user.getUser(sessionId)
+  @AutoMap
+  @Serializable
+  data class CreateExternalAccountParams(
+    /** The strategy corresponding to the OAuth provider. For example: `oauth_google` */
+    @MapProperty("strategy") @SerialName("strategy") val provider: OAuthProvider,
+    /**
+     * The full URL or path that the OAuth provider should redirect to, on successful authorization
+     * on their part.
+     */
+    val redirectUrl: String? = null,
+    val oidcPrompt: String? = null,
+    val oidcLoginHint: String? = null,
+  )
 
-      /**
-       * Updates the current user, or the user with the given session ID, with the provided
-       * parameters.
-       *
-       * @param sessionId The session id of the user to update. If null, the current user is
-       *   updated.
-       * @param params The parameters to update the user with. **See**: [UpdateParams].
-       * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
-       *   [ClerkErrorResponse] if it failed.
-       */
-      suspend fun update(
-        sessionId: String? = null,
-        params: UpdateParams,
-      ): ClerkResult<User, ClerkErrorResponse> {
-        return ClerkApi.user.updateUser(sessionId = sessionId, fields = params.toMap())
-      }
+  companion object {
+    /**
+     * Retrieves the current user, or the user with the given session ID, from the Clerk API.
+     *
+     * @param sessionId The session id of the user to retrieve. If null, the current user is
+     *   retrieved.
+     * @return A [ClerkResult] containing the [User] if the operation was successful, or a
+     *   [ClerkErrorResponse] if it failed.
+     */
+    suspend fun get(sessionId: String? = null): ClerkResult<User, ClerkErrorResponse> =
+      ClerkApi.user.getUser(sessionId)
 
-      /** Deletes the current user, or the user with the given session ID, from the Clerk API. */
-      suspend fun delete(
-        sessionId: String? = null
-      ): ClerkResult<DeletedObject, ClerkErrorResponse> = ClerkApi.user.deleteUser(sessionId)
+    /**
+     * Updates the current user, or the user with the given session ID, with the provided
+     * parameters.
+     *
+     * @param sessionId The session id of the user to update. If null, the current user is updated.
+     * @param params The parameters to update the user with. **See**: [UpdateParams].
+     * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
+     *   [ClerkErrorResponse] if it failed.
+     */
+    suspend fun update(
+      sessionId: String? = null,
+      params: UpdateParams,
+    ): ClerkResult<User, ClerkErrorResponse> {
+      return ClerkApi.user.updateUser(sessionId = sessionId, fields = params.toMap())
+    }
 
-      /**
-       * Update the current user's profile image, or the user with the given session ID, with the
-       * provided image data.
-       *
-       * @param sessionId The session id of the user to update. If null, the current user is
-       *   updated.
-       * @param data The image data to upload.
-       * @return A [ClerkResult] containing the [ImageResource] if the operation was successful, or
-       *   a [ClerkErrorResponse] if it failed.
-       */
-      suspend fun updateProfileImage(
-        sessionId: String? = null,
-        data: MultipartBody.Part,
-      ): ClerkResult<ImageResource, ClerkErrorResponse> {
-        return ClerkApi.user.updateProfileImage(sessionId, data)
-      }
+    /** Deletes the current user, or the user with the given session ID, from the Clerk API. */
+    suspend fun delete(sessionId: String? = null): ClerkResult<DeletedObject, ClerkErrorResponse> =
+      ClerkApi.user.deleteUser(sessionId)
 
-      /**
-       * Deletes the current user's profile image, or the user with the given session ID, from the
-       * Clerk API.
-       *
-       * @param sessionId The session id of the user to delete the profile image from. If null, the
-       *   current user's profile image is deleted.
-       * @return A [ClerkResult] containing the [DeletedObject] if the operation was successful, or
-       *   a [ClerkErrorResponse] if it failed.
-       */
-      suspend fun deleteProfileImage(
-        sessionId: String? = null
-      ): ClerkResult<DeletedObject, ClerkErrorResponse> {
-        return ClerkApi.user.deleteProfileImage(sessionId)
-      }
+    /**
+     * Update the current user's profile image, or the user with the given session ID, with the
+     * provided image data.
+     *
+     * @param sessionId The session id of the user to update. If null, the current user is updated.
+     * @param data The image data to upload.
+     * @return A [ClerkResult] containing the [ImageResource] if the operation was successful, or a
+     *   [ClerkErrorResponse] if it failed.
+     */
+    suspend fun updateProfileImage(
+      sessionId: String? = null,
+      data: MultipartBody.Part,
+    ): ClerkResult<ImageResource, ClerkErrorResponse> {
+      return ClerkApi.user.updateProfileImage(sessionId, data)
+    }
 
-      /**
-       * Updates the current user's password, or the user with the given session ID, using the Clerk
-       * API.
-       *
-       * @param sessionId The session id of the user to update the password for. If null, the
-       *   current user's password is updated.
-       * @param params The parameters for updating the password.
-       * @return A [ClerkResult] containing the [User] if the operation was successful, or a
-       *   [ClerkErrorResponse] if it failed.
-       *
-       * **See:** [UpdatePasswordParams] for the available parameters.
-       */
-      suspend fun updatePassword(
-        sessionId: String? = null,
-        params: UpdatePasswordParams,
-      ): ClerkResult<User, ClerkErrorResponse> {
-        return ClerkApi.user.updatePassword(sessionId, params.toMap())
-      }
+    /**
+     * Deletes the current user's profile image, or the user with the given session ID, from the
+     * Clerk API.
+     *
+     * @param sessionId The session id of the user to delete the profile image from. If null, the
+     *   current user's profile image is deleted.
+     * @return A [ClerkResult] containing the [DeletedObject] if the operation was successful, or a
+     *   [ClerkErrorResponse] if it failed.
+     */
+    suspend fun deleteProfileImage(
+      sessionId: String? = null
+    ): ClerkResult<DeletedObject, ClerkErrorResponse> {
+      return ClerkApi.user.deleteProfileImage(sessionId)
+    }
 
-      /**
-       * Deletes the current user's password, or the user with the given session ID, using the Clerk
-       * API.
-       *
-       * @param sessionId The session id of the user to delete the password for. If null, the
-       *   current user's password is deleted.
-       * @param currentPassword The current password of the user. If null, the password is deleted
-       *   without verification.
-       * @return A [ClerkResult] containing the [User] if the operation was successful, or a
-       *   [ClerkErrorResponse] if it failed.
-       */
-      suspend fun deletePassword(
-        sessionId: String? = null,
-        currentPassword: String,
-      ): ClerkResult<User, ClerkErrorResponse> {
-        return ClerkApi.user.deletePassword(sessionId, currentPassword)
-      }
+    /**
+     * Updates the current user's password, or the user with the given session ID, using the Clerk
+     * API.
+     *
+     * @param sessionId The session id of the user to update the password for. If null, the current
+     *   user's password is updated.
+     * @param params The parameters for updating the password.
+     * @return A [ClerkResult] containing the [User] if the operation was successful, or a
+     *   [ClerkErrorResponse] if it failed.
+     *
+     * **See:** [UpdatePasswordParams] for the available parameters.
+     */
+    suspend fun updatePassword(
+      sessionId: String? = null,
+      params: UpdatePasswordParams,
+    ): ClerkResult<User, ClerkErrorResponse> {
+      return ClerkApi.user.updatePassword(sessionId, params.toMap())
+    }
 
-      suspend fun activeSessions(
-        sessionId: String? = null
-      ): ClerkResult<List<Session>, ClerkErrorResponse> {
-        return ClerkApi.user.getActiveSessions(sessionId)
-      }
+    /**
+     * Deletes the current user's password, or the user with the given session ID, using the Clerk
+     * API.
+     *
+     * @param sessionId The session id of the user to delete the password for. If null, the current
+     *   user's password is deleted.
+     * @param currentPassword The current password of the user. If null, the password is deleted
+     *   without verification.
+     * @return A [ClerkResult] containing the [User] if the operation was successful, or a
+     *   [ClerkErrorResponse] if it failed.
+     */
+    suspend fun deletePassword(
+      sessionId: String? = null,
+      currentPassword: String,
+    ): ClerkResult<User, ClerkErrorResponse> {
+      return ClerkApi.user.deletePassword(sessionId, currentPassword)
+    }
 
-      suspend fun allSessions(
-        sessionId: String? = null
-      ): ClerkResult<List<Session>, ClerkErrorResponse> {
-        return ClerkApi.user.getSessions(sessionId)
-      }
+    suspend fun activeSessions(
+      sessionId: String? = null
+    ): ClerkResult<List<Session>, ClerkErrorResponse> {
+      return ClerkApi.user.getActiveSessions(sessionId)
+    }
 
-      suspend fun emailAddresses(
-        sessionId: String? = null
-      ): ClerkResult<List<EmailAddress>, ClerkErrorResponse> {
-        return ClerkApi.user.getEmailAddresses(sessionId)
-      }
+    suspend fun allSessions(
+      sessionId: String? = null
+    ): ClerkResult<List<Session>, ClerkErrorResponse> {
+      return ClerkApi.user.getSessions(sessionId)
+    }
 
-      suspend fun createEmailAddress(
-        sessionId: String? = null,
-        email: String,
-      ): ClerkResult<EmailAddress, ClerkErrorResponse> {
-        return ClerkApi.user.createEmailAddress(sessionId, email)
-      }
+    suspend fun emailAddresses(
+      sessionId: String? = null
+    ): ClerkResult<List<EmailAddress>, ClerkErrorResponse> {
+      return ClerkApi.user.getEmailAddresses(sessionId)
+    }
 
-      suspend fun phoneNumbers(
-        sessionId: String? = null
-      ): ClerkResult<List<PhoneNumber>, ClerkErrorResponse> {
-        return ClerkApi.user.getPhoneNumbers(sessionId)
-      }
+    suspend fun createEmailAddress(
+      sessionId: String? = null,
+      email: String,
+    ): ClerkResult<EmailAddress, ClerkErrorResponse> {
+      return ClerkApi.user.createEmailAddress(sessionId, email)
+    }
 
-      suspend fun createPhoneNumber(
-        sessionId: String? = null,
-        phoneNumber: String,
-      ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
-        return ClerkApi.user.createPhoneNumber(sessionId, phoneNumber)
-      }
+    suspend fun phoneNumbers(
+      sessionId: String? = null
+    ): ClerkResult<List<PhoneNumber>, ClerkErrorResponse> {
+      return ClerkApi.user.getPhoneNumbers(sessionId)
+    }
 
-      suspend fun createPasskey(
-        sessionId: String? = null
-      ): ClerkResult<Passkey, ClerkErrorResponse> {
-        return ClerkApi.user.createPasskey(sessionId = sessionId)
-      }
+    suspend fun createPhoneNumber(
+      sessionId: String? = null,
+      phoneNumber: String,
+    ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+      return ClerkApi.user.createPhoneNumber(sessionId, phoneNumber)
+    }
+
+    suspend fun createPasskey(sessionId: String? = null): ClerkResult<Passkey, ClerkErrorResponse> {
+      return ClerkApi.user.createPasskey(sessionId = sessionId)
+    }
+
+    /**
+     * Adds an external account for the user. A new [ExternalAccount] will be created and associated
+     * with the user. This method is useful if you want to allow an already signed-in user to
+     * connect their account with an external provider, such as Facebook, GitHub, etc., so that they
+     * can sign in with that provider in the future.
+     *
+     * **Note:** The social provider that you want to connect to must be enabled in your app's
+     * settings in the Clerk Dashboard. See: (Social
+     * connections)[https://clerk.com/docs/authentication/configuration/sign-up-sign-in-options#social-connections-o-auth]
+     *
+     * After calling `createExternalAccount`, the initial state of the returned [ExternalAccount]
+     * will be unverified. To initiate the connection with the external provider, redirect the user
+     * to the [com.clerk.network.model.verification.Verification.externalVerificationRedirectUrl]
+     * contained in the result of the `createExternalAccount` call.
+     *
+     * Upon return, inspect within the user.externalAccounts the entry that corresponds to the
+     * requested strategy:
+     * - If the connection succeeded, then externalAccount.verification.status will be verified.
+     * - If the connection failed, then the externalAccount.verification.status will not be verified
+     *   and the externalAccount.verification.error will contain the error encountered, which you
+     *   can present to the user. To learn more about the properties available on verification, see
+     *   the verification reference.
+     */
+    suspend fun createExternalAccount(
+      params: CreateExternalAccountParams
+    ): ClerkResult<Verification, ClerkErrorResponse> {
+      return ClerkApi.user.createExternalAccount(params.toMap())
     }
   }
 }
