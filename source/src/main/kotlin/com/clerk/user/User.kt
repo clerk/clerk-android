@@ -547,3 +547,7 @@ data class User(
     }
   }
 }
+
+fun User.fullName(): String {
+  return "$firstName $lastName"
+}
