@@ -32,7 +32,7 @@ internal object ClerkApi {
     isLenient = true
     ignoreUnknownKeys = true
     coerceInputValues = true
-    explicitNulls = false
+    explicitNulls = true
     namingStrategy = JsonNamingStrategy.SnakeCase
   }
 

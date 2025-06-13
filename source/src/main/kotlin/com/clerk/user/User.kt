@@ -19,10 +19,12 @@ import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.session.Session
 import com.clerk.sso.OAuthProvider
+import com.clerk.user.User.Companion.attemptTOTPVerification
+import com.clerk.user.User.Companion.createTOTP
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import okhttp3.MultipartBody
+import java.io.File
 
 /**
  * The [User] object holds all of the information for a single user of your application and provides
@@ -273,11 +275,11 @@ data class User(
      * @return A [ClerkResult] containing the [ImageResource] if the operation was successful, or a
      *   [ClerkErrorResponse] if it failed.
      */
-    suspend fun updateProfileImage(
-      sessionId: String? = Clerk.session?.id,
-      data: MultipartBody.Part,
+    suspend fun setProfileImage(
+      sessionId: String? = null,
+      file: File,
     ): ClerkResult<ImageResource, ClerkErrorResponse> {
-      return ClerkApi.user.updateProfileImage(sessionId, data)
+      return UserService.setProfilePhoto(sessionId, file)
     }
 
     /**
