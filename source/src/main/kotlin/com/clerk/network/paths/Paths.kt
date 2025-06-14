@@ -53,7 +53,7 @@ internal object Paths {
   internal const val ENVIRONMENT = "environment"
 
   internal object UserPath {
-    const val ME = "/me"
+    const val ME = "me"
     const val PROFILE_IMAGE = "${ME}/profile_image"
 
     internal object Password {

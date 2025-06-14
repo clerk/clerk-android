@@ -47,13 +47,13 @@ import okhttp3.MultipartBody
 @Serializable
 data class User(
   /** A boolean indicating whether the user has enabled Backup codes. */
-  @SerialName("backup_code_enabled") val backupCodeEnabled: Boolean,
+  @SerialName("backup_code_enabled") val backupCodeEnabled: Boolean? = null,
 
   /** Date when the user was first created. */
-  @SerialName("created_at") val createdAt: Long,
+  @SerialName("created_at") val createdAt: Long? = null,
 
   /** A boolean indicating whether the organization creation is enabled for the user or not. */
-  @SerialName("create_organization_enabled") val createOrganizationEnabled: Boolean,
+  @SerialName("create_organization_enabled") val createOrganizationEnabled: Boolean? = null,
 
   /**
    * An integer indicating the number of organizations that can be created by the user. If the value
@@ -62,7 +62,7 @@ data class User(
   @SerialName("create_organizations_limit") val createOrganizationsLimit: Int? = null,
 
   /** A boolean indicating whether the user is able to delete their own account or not. */
-  @SerialName("delete_self_enabled") val deleteSelfEnabled: Boolean,
+  @SerialName("delete_self_enabled") val deleteSelfEnabled: Boolean = false,
 
   /** An array of all the EmailAddress objects associated with the user. Includes the primary. */
   @SerialName("email_addresses") val emailAddresses: List<EmailAddress>,
@@ -104,7 +104,8 @@ data class User(
    * A list of OrganizationMemberships representing the list of organizations the user is member
    * with.
    */
-  @SerialName("organization_memberships") val organizationMemberships: List<OrganizationMembership>,
+  @SerialName("organization_memberships")
+  val organizationMemberships: List<OrganizationMembership>? = null,
 
   /** An array of all the Passkey objects associated with the user. */
   val passkeys: List<Passkey>,
@@ -252,8 +253,8 @@ data class User(
      *   [ClerkErrorResponse] if it failed.
      */
     suspend fun update(
-      sessionId: String? = null,
       params: UpdateParams,
+      sessionId: String? = null,
     ): ClerkResult<User, ClerkErrorResponse> {
       return ClerkApi.user.updateUser(sessionId = sessionId, fields = params.toMap())
     }

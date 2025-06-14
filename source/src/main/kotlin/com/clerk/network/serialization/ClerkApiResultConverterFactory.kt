@@ -7,6 +7,8 @@ import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
 
+private const val ENVIRONMENT_TYPE = "com.clerk.network.model.environment.Environment"
+
 /**  */
 internal object ClerkApiResultConverterFactory : Converter.Factory() {
   override fun responseBodyConverter(
@@ -41,12 +43,7 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
   private fun shouldWrapInClientPiggybackedResponse(successType: Type): Boolean {
     // Check if this is a type that should be unwrapped from ClientPiggybackedResponse
     val rawType = getRawType(successType)
-    return when (rawType.name) {
-      "com.clerk.signin.SignIn",
-      "com.clerk.signup.SignUp",
-      "com.clerk.network.model.client.Client" -> true
-      else -> false
-    }
+    return rawType.name != ENVIRONMENT_TYPE
   }
 
   private fun createParameterizedType(rawType: Class<*>, typeArgument: Type): ParameterizedType {

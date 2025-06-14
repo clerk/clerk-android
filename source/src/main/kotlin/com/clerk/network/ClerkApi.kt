@@ -73,7 +73,7 @@ internal object ClerkApi {
 
   /** Builds and configures the Retrofit instance. */
   private fun buildRetrofit(baseUrl: String, context: Context): Retrofit {
-    val urlWithVersion = "$baseUrl/${ClerkApiVersion.VERSION}/"
+    val urlWithVersion = "$baseUrl/v1/"
 
     val client =
       OkHttpClient.Builder()

@@ -44,6 +44,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             if (clientJson != null && clientJson !is JsonNull) {
               // Extract and set the client
               val client = json.decodeFromJsonElement<Client>(clientJson)
+              ClerkLog.d("Client synced: ${client.id}")
               Clerk.client = client
             }
           }
