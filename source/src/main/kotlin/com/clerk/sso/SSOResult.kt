@@ -11,7 +11,9 @@ import kotlinx.serialization.Serializable
  * @property signUp The sign-up object if the SSO operation resulted in a sign-up.
  *
  * This is used since SSO can result in either a sign-in or a sign-up, depending on the user's
- * state. We handle the transfer automatically in the SDK, so you don't have to worry about it.
+ * state. We handle the transfer automatically in the SDK, so you don't have to worry about it, but
+ * this is the object that will be returned to you. Only one of [signIn] or [signUp] will be
+ * non-null.
  */
 @Serializable
 data class OAuthResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {

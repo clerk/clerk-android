@@ -54,7 +54,8 @@ internal class SSOManagerActivity : AppCompatActivity() {
       }
       return
     }
-    // subsequent runs, we either got the response back from SSOReceiverActivity or it was cancelled
+    // subsequent runs, we either got the response back from OAuthReceiverActivity or it was
+    // cancelled
     intent.data?.let { authorizationComplete(it) } ?: authorizationCanceled()
     finish()
   }
