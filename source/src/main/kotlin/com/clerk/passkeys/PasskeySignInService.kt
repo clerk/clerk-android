@@ -25,7 +25,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
 
-class PasskeySignInService {
+internal object PasskeySignInService {
 
   suspend fun signInWithPasskey(
     context: Context,

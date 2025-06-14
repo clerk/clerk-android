@@ -517,7 +517,7 @@ data class SignIn(
     suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
         is CreateParams.Strategy.Transfer -> ClerkApi.signIn.createSignIn(mapOf(TRANSFER to "true"))
-        is CreateParams.Strategy.Passkey -> PasskeySignInService().signInWithPasskey(params.context)
+        is CreateParams.Strategy.Passkey -> PasskeySignInService.signInWithPasskey(params.context)
         else -> ClerkApi.signIn.createSignIn(params.toMap())
       }
     }
