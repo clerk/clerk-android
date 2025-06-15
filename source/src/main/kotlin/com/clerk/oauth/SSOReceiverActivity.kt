@@ -6,8 +6,8 @@ import com.clerk.log.ClerkLog
 
 /**
  * Activity that receives OAuth/SSO callbacks via deep links. This activity serves as the entry
- * point for authentication provider callbacks and immediately forwards them to
- * [OAuthManagerActivity] for processing.
+ * point for authentication provider callbacks and immediately forwards them to [SSOManagerActivity]
+ * for processing.
  *
  * The activity is declared in the manifest to handle the OAuth callback URL scheme, making it the
  * destination for authentication provider redirects.
@@ -17,11 +17,11 @@ import com.clerk.log.ClerkLog
  * 2. Forwarding it to SSOManagerActivity for processing
  * 3. Finishing itself to maintain a clean back stack
  */
-internal class OAuthReceiverActivity : Activity() {
+internal class SSOReceiverActivity : Activity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     ClerkLog.d("SSOReceiverActivity started with intent: ${intent?.data}")
     super.onCreate(savedInstanceState)
-    startActivity(OAuthManagerActivity.createResponseHandlingIntent(this, intent?.data))
+    startActivity(SSOManagerActivity.createResponseHandlingIntent(this, intent?.data))
     finish()
   }
 }

@@ -12,8 +12,8 @@ import com.clerk.network.serialization.ClerkResult
 import com.clerk.oauth.GoogleSignInService
 import com.clerk.oauth.OAuthProvider
 import com.clerk.oauth.OAuthResult
-import com.clerk.oauth.OAuthService
 import com.clerk.oauth.RedirectConfiguration
+import com.clerk.oauth.SSOService
 import com.clerk.passkeys.PasskeySignInService
 import com.clerk.signin.SignIn.PrepareFirstFactorParams
 import com.clerk.signin.internal.toFormData
@@ -585,7 +585,7 @@ data class SignIn(
       context: Context,
       params: AuthenticateWithRedirectParams,
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return OAuthService.authenticateWithRedirect(context, params)
+      return SSOService.authenticateWithRedirect(context, params)
     }
   }
 }
