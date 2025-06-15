@@ -15,11 +15,11 @@ internal data class Environment(
 ) {
   val passkeyIsEnabled: Boolean
     get() =
-      userSettings?.attributes?.any { (key, value) -> key == "passkey" && value.enabled } == true
+      userSettings.attributes.any { (key, value) -> key == "passkey" && value.enabled } == true
 
   val mfaIsEnabled: Boolean
     get() =
-      userSettings?.attributes?.any { (_, value) -> value.enabled && value.usedForSecondFactor } ==
+      userSettings.attributes.any { (_, value) -> value.enabled && value.usedForSecondFactor } ==
         true
 
   val mfaAuthenticatorAppIsEnabled: Boolean
@@ -29,19 +29,19 @@ internal data class Environment(
 
   val passwordIsEnabled: Boolean
     get() =
-      userSettings?.attributes?.any { (key, value) -> key == "password" && value.enabled } == true
+      userSettings.attributes.any { (key, value) -> key == "password" && value.enabled } == true
 
   val usernameIsEnabled: Boolean
     get() =
-      userSettings?.attributes?.any { (key, value) -> key == "username" && value.enabled } == true
+      userSettings.attributes.any { (key, value) -> key == "username" && value.enabled } == true
 
   val firstNameIsEnabled: Boolean
     get() =
-      userSettings?.attributes?.any { (key, value) -> key == "first_name" && value.enabled } == true
+      userSettings.attributes.any { (key, value) -> key == "first_name" && value.enabled } == true
 
   val lastNameIsEnabled: Boolean
     get() =
-      userSettings?.attributes?.any { (key, value) -> key == "last_name" && value.enabled } == true
+      userSettings.attributes.any { (key, value) -> key == "last_name" && value.enabled } == true
 
   companion object {
 
