@@ -13,6 +13,36 @@ internal data class Environment(
   @SerialName("user_settings") val userSettings: UserSettings,
   @SerialName("fraud_settings") val fraudSettings: FraudSettings,
 ) {
+  val passkeyIsEnabled: Boolean
+    get() =
+      userSettings?.attributes?.any { (key, value) -> key == "passkey" && value.enabled } == true
+
+  val mfaIsEnabled: Boolean
+    get() =
+      userSettings?.attributes?.any { (_, value) -> value.enabled && value.usedForSecondFactor } ==
+        true
+
+  val mfaAuthenticatorAppIsEnabled: Boolean
+    get() =
+      userSettings.attributes["authenticator_app"]?.enabled == true &&
+        userSettings.attributes["authenticator_app"]?.usedForSecondFactor == true
+
+  val passwordIsEnabled: Boolean
+    get() =
+      userSettings?.attributes?.any { (key, value) -> key == "password" && value.enabled } == true
+
+  val usernameIsEnabled: Boolean
+    get() =
+      userSettings?.attributes?.any { (key, value) -> key == "username" && value.enabled } == true
+
+  val firstNameIsEnabled: Boolean
+    get() =
+      userSettings?.attributes?.any { (key, value) -> key == "first_name" && value.enabled } == true
+
+  val lastNameIsEnabled: Boolean
+    get() =
+      userSettings?.attributes?.any { (key, value) -> key == "last_name" && value.enabled } == true
+
   companion object {
 
     /** Fetches the environment configuration from the Clerk API. */
