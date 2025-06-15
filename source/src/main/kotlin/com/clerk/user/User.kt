@@ -1,5 +1,6 @@
 package com.clerk.user
 
+import com.clerk.Clerk
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
 import com.clerk.network.ClerkApi
@@ -254,7 +255,7 @@ data class User(
      */
     suspend fun update(
       params: UpdateParams,
-      sessionId: String? = null,
+      sessionId: String? = Clerk.session?.id,
     ): ClerkResult<User, ClerkErrorResponse> {
       return ClerkApi.user.updateUser(sessionId = sessionId, fields = params.toMap())
     }
@@ -273,7 +274,7 @@ data class User(
      *   [ClerkErrorResponse] if it failed.
      */
     suspend fun updateProfileImage(
-      sessionId: String? = null,
+      sessionId: String? = Clerk.session?.id,
       data: MultipartBody.Part,
     ): ClerkResult<ImageResource, ClerkErrorResponse> {
       return ClerkApi.user.updateProfileImage(sessionId, data)
@@ -289,7 +290,7 @@ data class User(
      *   [ClerkErrorResponse] if it failed.
      */
     suspend fun deleteProfileImage(
-      sessionId: String? = null
+      sessionId: String? = Clerk.session?.id
     ): ClerkResult<DeletedObject, ClerkErrorResponse> {
       return ClerkApi.user.deleteProfileImage(sessionId)
     }
@@ -307,7 +308,7 @@ data class User(
      * **See:** [UpdatePasswordParams] for the available parameters.
      */
     suspend fun updatePassword(
-      sessionId: String? = null,
+      sessionId: String? = Clerk.session?.id,
       params: UpdatePasswordParams,
     ): ClerkResult<User, ClerkErrorResponse> {
       return ClerkApi.user.updatePassword(sessionId, params.toMap())
@@ -325,7 +326,7 @@ data class User(
      *   [ClerkErrorResponse] if it failed.
      */
     suspend fun deletePassword(
-      sessionId: String? = null,
+      sessionId: String? = Clerk.session?.id,
       currentPassword: String,
     ): ClerkResult<User, ClerkErrorResponse> {
       return ClerkApi.user.deletePassword(sessionId, currentPassword)
@@ -343,7 +344,7 @@ data class User(
      *   [ClerkErrorResponse] on failure
      */
     suspend fun activeSessions(
-      sessionId: String? = null
+      sessionId: String? = Clerk.session?.id
     ): ClerkResult<List<Session>, ClerkErrorResponse> {
       return ClerkApi.user.getActiveSessions(sessionId)
     }
@@ -360,7 +361,7 @@ data class User(
      *   [ClerkErrorResponse] on failure
      */
     suspend fun allSessions(
-      sessionId: String? = null
+      sessionId: String? = Clerk.session?.id
     ): ClerkResult<List<Session>, ClerkErrorResponse> {
       return ClerkApi.user.getSessions(sessionId)
     }
@@ -378,7 +379,7 @@ data class User(
      *   [ClerkErrorResponse] on failure
      */
     suspend fun emailAddresses(
-      sessionId: String? = null
+      sessionId: String? = Clerk.session?.id
     ): ClerkResult<List<EmailAddress>, ClerkErrorResponse> {
       return ClerkApi.user.getEmailAddresses(sessionId)
     }
@@ -396,7 +397,7 @@ data class User(
      *   [ClerkErrorResponse] on failure
      */
     suspend fun createEmailAddress(
-      sessionId: String? = null,
+      sessionId: String? = Clerk.session?.id,
       email: String,
     ): ClerkResult<EmailAddress, ClerkErrorResponse> {
       return ClerkApi.user.createEmailAddress(sessionId, email)
@@ -414,7 +415,7 @@ data class User(
      *   [ClerkErrorResponse] on failure
      */
     suspend fun phoneNumbers(
-      sessionId: String? = null
+      sessionId: String? = Clerk.session?.id
     ): ClerkResult<List<PhoneNumber>, ClerkErrorResponse> {
       return ClerkApi.user.getPhoneNumbers(sessionId)
     }
@@ -434,7 +435,7 @@ data class User(
      *   [ClerkErrorResponse] on failure
      */
     suspend fun createPhoneNumber(
-      sessionId: String? = null,
+      sessionId: String? = Clerk.session?.id,
       phoneNumber: String,
     ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
       return ClerkApi.user.createPhoneNumber(sessionId, phoneNumber)
