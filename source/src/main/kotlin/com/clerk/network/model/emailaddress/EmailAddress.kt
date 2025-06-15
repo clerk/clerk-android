@@ -7,7 +7,6 @@ import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /** The EmailAddress object represents an email address associated with a user. */
 @Serializable
@@ -22,8 +21,10 @@ data class EmailAddress(
   val verification: Verification? = null,
 
   /** A list of linked accounts or identifiers associated with this email address. */
-  @SerialName("linked_to") val linkedTo: List<JsonElement>? = null,
+  @SerialName("linked_to") val linkedTo: List<LinkedEntity>? = null,
 ) {
+
+  @Serializable data class LinkedEntity(val id: String, val type: String)
 
   /**
    * Parameters used to prepare the email address for verification using the specified strategy.

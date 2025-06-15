@@ -8,7 +8,6 @@ import com.clerk.network.serialization.ClerkResult
 import com.clerk.user.User
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
 
 /**
  * The `ExternalAccount` object is a model around an identification obtained by an external provider
@@ -49,12 +48,6 @@ data class ExternalAccount(
 
   /** The user's username. */
   val username: String? = null,
-
-  /**
-   * Metadata that can be read from the Frontend API and Backend API and can be set only from the
-   * Backend API.
-   */
-  @SerialName("public_metadata") val publicMetadata: JsonObject? = null,
 
   /**
    * A descriptive label to differentiate multiple external accounts of the same user for the same

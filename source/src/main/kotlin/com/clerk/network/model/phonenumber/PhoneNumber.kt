@@ -41,16 +41,16 @@ data class PhoneNumber(
   /**
    * A boolean indicating whether this phone number is reserved for second factor authentication.
    */
-  val reservedForSecondFactor: Boolean,
+  val reservedForSecondFactor: Boolean = false,
 
   /** A boolean indicating whether this phone number is the default second factor. */
-  val defaultSecondFactor: Boolean,
+  val defaultSecondFactor: Boolean = false,
 
   /** The date when the phone number was created. */
-  val createdAt: Long,
+  val createdAt: Long? = null,
 
   /** The date when the phone number was last updated. */
-  val updatedAt: Long,
+  val updatedAt: Long? = null,
 
   /**
    * An object containing information about any other identification that might be linked to this
