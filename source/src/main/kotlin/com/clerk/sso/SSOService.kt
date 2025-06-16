@@ -48,7 +48,7 @@ internal object SSOService {
 
     val initialResult =
       ClerkApi.signIn.authenticateWithRedirect(
-        strategy = params.provider.strategy,
+        strategy = params.provider.providerData.strategy,
         redirectUrl = params.redirectUrl,
       )
 

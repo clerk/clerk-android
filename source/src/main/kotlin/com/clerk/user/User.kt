@@ -21,10 +21,10 @@ import com.clerk.session.Session
 import com.clerk.sso.OAuthProvider
 import com.clerk.user.User.Companion.attemptTOTPVerification
 import com.clerk.user.User.Companion.createTOTP
+import java.io.File
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import java.io.File
 
 /**
  * The [User] object holds all of the information for a single user of your application and provides
@@ -222,7 +222,7 @@ data class User(
   @Serializable
   data class CreateExternalAccountParams(
     /** The strategy corresponding to the OAuth provider. For example: `oauth_google` */
-    @MapProperty("strategy") @SerialName("strategy") val provider: OAuthProvider,
+    @MapProperty("providerData?.strategy") @SerialName("strategy") val provider: OAuthProvider,
     /**
      * The full URL or path that the OAuth provider should redirect to, on successful authorization
      * on their part.

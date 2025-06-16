@@ -1,6 +1,7 @@
 package com.clerk.network.middleware.outgoing
 
 import com.clerk.Clerk
+import com.clerk.log.ClerkLog
 import com.clerk.network.paths.Paths
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
@@ -35,6 +36,7 @@ internal class HeaderMiddleware : Interceptor {
     }
 
     if (request.url.encodedPath.contains(Paths.UserPath.PROFILE_IMAGE)) {
+      ClerkLog.d("Removing Content-Type header for profile image upload")
       newRequestBuilder.removeHeader("Content-Type")
     }
 
@@ -42,7 +44,11 @@ internal class HeaderMiddleware : Interceptor {
       newRequestBuilder.addHeader(OutgoingHeaders.AUTHORIZATION.header, it)
     }
 
-    return chain.proceed(newRequestBuilder.build())
+    val newRequest = newRequestBuilder.build()
+
+    ClerkLog.d("Outgoing request headers: ${newRequest.headers}")
+
+    return chain.proceed(newRequest)
   }
 }
 
