@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 /** Settings for fraud prevention in the Clerk environment. */
 @Serializable
-data class FraudSettings(val native: Native) {
+internal data class FraudSettings(val native: Native) {
   /** Native platform specific fraud prevention settings. */
   @Serializable
   data class Native(

@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DisplayConfig(
+internal data class DisplayConfig(
   @SerialName("instance_environment_type") val instanceEnvironmentType: InstanceEnvironmentType,
   @SerialName("application_name") val applicationName: String,
   @SerialName("preferred_sign_in_strategy") val preferredSignInStrategy: PreferredSignInStrategy,
@@ -17,7 +17,7 @@ data class DisplayConfig(
 )
 
 @Serializable
-enum class PreferredSignInStrategy {
+internal enum class PreferredSignInStrategy {
   @SerialName("password") PASSWORD,
   @SerialName("otp") OTP,
   @SerialName("unknown") UNKNOWN,

@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserSettings(
+internal data class UserSettings(
   val attributes: Map<String, AttributesConfig>,
   @SerialName("sign_up") val signUp: SignUpUserSettings,
   val social: Map<String, SocialConfig>,

@@ -12,7 +12,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-interface SignUpApi {
+internal interface SignUpApi {
   /** @see [SignUp.create] */
   @FormUrlEncoded
   @POST(Paths.SignUpPath.SIGN_UP)
