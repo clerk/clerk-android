@@ -1,6 +1,5 @@
 package com.clerk.network.middleware.outgoing
 
-import com.clerk.log.ClerkLog
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -13,8 +12,6 @@ internal class UrlAppendingMiddleware : Interceptor {
 
     val appendedUrl =
       originalUrl.newBuilder().addQueryParameter(IS_NATIVE_QUERY_PARAM, true.toString()).build()
-
-    ClerkLog.e("QQQ: $appendedUrl")
 
     val newRequest = originalRequest.newBuilder().url(appendedUrl).build()
     return chain.proceed(newRequest)
