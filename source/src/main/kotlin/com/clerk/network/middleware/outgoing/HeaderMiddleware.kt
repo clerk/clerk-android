@@ -1,6 +1,7 @@
 package com.clerk.network.middleware.outgoing
 
 import com.clerk.Clerk
+import com.clerk.network.paths.Paths
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import okhttp3.Interceptor
@@ -31,6 +32,10 @@ internal class HeaderMiddleware : Interceptor {
       Clerk.client.id?.let {
         newRequestBuilder.addHeader(OutgoingHeaders.X_CLERK_CLIENT_ID.header, it)
       }
+    }
+
+    if (request.url.encodedPath.contains(Paths.UserPath.PROFILE_IMAGE)) {
+      newRequestBuilder.removeHeader("Content-Type")
     }
 
     StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)?.let {
