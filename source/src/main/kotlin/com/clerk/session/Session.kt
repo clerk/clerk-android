@@ -175,5 +175,5 @@ suspend fun Session.revoke(): ClerkResult<Session, ClerkErrorResponse> {
  * Convenience accessor to tell if the given session is the current device. Used mostly for
  * constructing the User profile security view.
  */
-val Session.isThisDevice
+val Session.isThisDevice: Boolean
   get() = this.id == Clerk.session?.id
