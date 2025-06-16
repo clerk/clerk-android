@@ -1,4 +1,4 @@
-package com.clerk.oauth
+package com.clerk.sso
 
 import android.content.Context
 import android.content.Intent
@@ -9,10 +9,10 @@ import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
-import com.clerk.oauth.SSOService.authenticateWithRedirect
 import com.clerk.signin.SignIn
 import com.clerk.signin.get
 import com.clerk.signup.SignUp
+import com.clerk.sso.SSOService.authenticateWithRedirect
 import kotlinx.coroutines.CompletableDeferred
 
 internal object SSOService {

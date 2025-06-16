@@ -15,10 +15,10 @@ import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
-import com.clerk.oauth.GoogleCredentialManagerImpl
-import com.clerk.oauth.GoogleSignInService
 import com.clerk.signin.SignIn
 import com.clerk.signin.attemptFirstFactor
+import com.clerk.sso.GoogleCredentialManagerImpl
+import com.clerk.sso.GoogleSignInService
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import java.net.URL
 import kotlinx.serialization.Serializable

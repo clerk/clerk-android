@@ -17,8 +17,8 @@ import com.clerk.network.model.phonenumber.PhoneNumber
 import com.clerk.network.model.totp.TOTPResource
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
-import com.clerk.oauth.OAuthProvider
 import com.clerk.session.Session
+import com.clerk.sso.OAuthProvider
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject

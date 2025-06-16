@@ -9,15 +9,15 @@ import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.factor.Factor
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
-import com.clerk.oauth.GoogleSignInService
-import com.clerk.oauth.OAuthProvider
-import com.clerk.oauth.OAuthResult
-import com.clerk.oauth.RedirectConfiguration
-import com.clerk.oauth.SSOService
 import com.clerk.passkeys.PasskeySignInService
 import com.clerk.signin.SignIn.PrepareFirstFactorParams
 import com.clerk.signin.internal.toFormData
 import com.clerk.signin.internal.toMap
+import com.clerk.sso.GoogleSignInService
+import com.clerk.sso.OAuthProvider
+import com.clerk.sso.OAuthResult
+import com.clerk.sso.RedirectConfiguration
+import com.clerk.sso.SSOService
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

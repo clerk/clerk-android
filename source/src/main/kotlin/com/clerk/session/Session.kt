@@ -1,5 +1,6 @@
 package com.clerk.session
 
+import com.clerk.Clerk
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.token.TokenResource
@@ -169,3 +170,10 @@ suspend fun Session.fetchToken(
 suspend fun Session.revoke(): ClerkResult<Session, ClerkErrorResponse> {
   return ClerkApi.session.revokeSession(sessionIdToRevoke = this.id)
 }
+
+/**
+ * Convenience accessor to tell if the given session is the current device. Used mostly for
+ * constructing the User profile security view.
+ */
+val Session.isThisDevice
+  get() = this.id == Clerk.session?.id

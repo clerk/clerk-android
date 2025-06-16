@@ -1,4 +1,4 @@
-package com.clerk.oauth
+package com.clerk.sso
 
 import android.app.Activity
 import android.os.Bundle
