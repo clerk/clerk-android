@@ -1,8 +1,6 @@
 package com.clerk.network.middleware.outgoing
 
 import com.clerk.Clerk
-import com.clerk.log.ClerkLog
-import com.clerk.network.paths.Paths
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import okhttp3.Interceptor
@@ -35,20 +33,11 @@ internal class HeaderMiddleware : Interceptor {
       }
     }
 
-    if (request.url.encodedPath.contains(Paths.UserPath.PROFILE_IMAGE)) {
-      ClerkLog.d("Removing Content-Type header for profile image upload")
-      newRequestBuilder.removeHeader("Content-Type")
-    }
-
     StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)?.let {
       newRequestBuilder.addHeader(OutgoingHeaders.AUTHORIZATION.header, it)
     }
 
-    val newRequest = newRequestBuilder.build()
-
-    ClerkLog.d("Outgoing request headers: ${newRequest.headers}")
-
-    return chain.proceed(newRequest)
+    return chain.proceed(newRequestBuilder.build())
   }
 }
 
