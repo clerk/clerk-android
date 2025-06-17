@@ -2,6 +2,7 @@
 
 package com.clerk.network.api
 
+import com.clerk.Clerk
 import com.clerk.network.model.backupcodes.BackupCodeResource
 import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.emailaddress.EmailAddress
@@ -33,152 +34,152 @@ internal interface UserApi {
   /** @see [com.clerk.user.User.get] */
   @GET(Paths.UserPath.ME)
   suspend fun getUser(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
   ): ClerkResult<User, ClerkErrorResponse>
 
   /** @see [com.clerk.user.User.update] */
   @PATCH(Paths.UserPath.ME)
   @FormUrlEncoded
   suspend fun updateUser(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @FieldMap fields: Map<String, String>,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<User, ClerkErrorResponse>
 
   /** @see [com.clerk.user.User.delete] */
   @DELETE(Paths.UserPath.ME)
   suspend fun deleteUser(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   @GET(Paths.UserPath.Sessions.SESSIONS)
   suspend fun getSessions(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
   ): ClerkResult<List<Session>, ClerkErrorResponse>
 
   @Multipart
   @POST(Paths.UserPath.PROFILE_IMAGE)
   suspend fun setProfileImage(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Part file: MultipartBody.Part,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<ImageResource, ClerkErrorResponse>
 
   @DELETE(Paths.UserPath.PROFILE_IMAGE)
   suspend fun deleteProfileImage(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   @FormUrlEncoded
   @POST(Paths.UserPath.Password.UPDATE)
   suspend fun updatePassword(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @FieldMap fields: Map<String, String>,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<User, ClerkErrorResponse>
 
   @FormUrlEncoded
   @POST
   suspend fun deletePassword(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Field("current_password") password: String,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<User, ClerkErrorResponse>
 
   @GET(Paths.UserPath.Sessions.ACTIVE)
   suspend fun getActiveSessions(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
   ): ClerkResult<List<Session>, ClerkErrorResponse>
 
   @GET(Paths.UserPath.EmailAddress.EMAIL_ADDRESSES)
   suspend fun getEmailAddresses(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
   ): ClerkResult<List<EmailAddress>, ClerkErrorResponse>
 
   @FormUrlEncoded
   @POST(Paths.UserPath.EmailAddress.EMAIL_ADDRESSES)
   suspend fun createEmailAddress(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Field("email_address") emailAddress: String,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.user?.id,
   ): ClerkResult<EmailAddress, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @POST(Paths.UserPath.EmailAddress.WithId.EMAIL_ADDRESSES_WITH_ID)
+  @POST(Paths.UserPath.EmailAddress.WithId.ATTEMPT_VERIFICATION)
   suspend fun attemptEmailAddressVerification(
     @Path(CommonParams.EMAIL_ID) emailAddressId: String,
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Field(CommonParams.CODE) code: String,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<EmailAddress, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @POST(Paths.UserPath.EmailAddress.WithId.EMAIL_ADDRESSES_WITH_ID)
+  @POST(Paths.UserPath.EmailAddress.WithId.PREPARE_VERIFICATION)
   suspend fun prepareEmailAddressVerification(
     @Path(CommonParams.EMAIL_ID) emailAddressId: String,
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @FieldMap params: Map<String, String>,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<EmailAddress, ClerkErrorResponse>
 
   @GET(Paths.UserPath.EmailAddress.WithId.EMAIL_ADDRESSES_WITH_ID)
   suspend fun getEmailAddress(
     @Path(CommonParams.EMAIL_ID) emailAddressId: String,
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<EmailAddress, ClerkErrorResponse>
 
   @DELETE(Paths.UserPath.EmailAddress.WithId.EMAIL_ADDRESSES_WITH_ID)
   suspend fun deleteEmailAddress(
     @Path(CommonParams.EMAIL_ID) emailAddressId: String,
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
-  ): ClerkResult<EmailAddress, ClerkErrorResponse>
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
+  ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   @GET(Paths.UserPath.PhoneNumbers.PHONE_NUMBERS)
   suspend fun getPhoneNumbers(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
   ): ClerkResult<List<PhoneNumber>, ClerkErrorResponse>
 
   @FormUrlEncoded
   @POST(Paths.UserPath.PhoneNumbers.PHONE_NUMBERS)
   suspend fun createPhoneNumber(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Field("phone_number") phoneNumber: String,
     @Field("reserved_for_second_factor") reservedForSecondFactor: Boolean = false,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 
   @FormUrlEncoded
   @POST(Paths.UserPath.PhoneNumbers.WithId.PHONE_NUMBERS_WITH_ID)
   suspend fun attemptPhoneNumberVerification(
     @Path(CommonParams.PHONE_NUMBER_ID) phoneNumberId: String,
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Field(CommonParams.CODE) code: String,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 
   @FormUrlEncoded
   @POST(Paths.UserPath.PhoneNumbers.WithId.PHONE_NUMBERS_WITH_ID)
   suspend fun preparePhoneNumberVerification(
     @Path(CommonParams.PHONE_NUMBER_ID) phoneNumberId: String,
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Field(CommonParams.STRATEGY) strategy: String,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 
   @GET(Paths.UserPath.PhoneNumbers.WithId.PHONE_NUMBERS_WITH_ID)
   suspend fun getPhoneNumber(
     @Path(CommonParams.PHONE_NUMBER_ID) phoneNumberId: String,
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 
   @DELETE(Paths.UserPath.PhoneNumbers.WithId.PHONE_NUMBERS_WITH_ID)
   suspend fun deletePhoneNumber(
     @Path(CommonParams.PHONE_NUMBER_ID) phoneNumberId: String,
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   @FormUrlEncoded
   @PATCH(Paths.UserPath.PhoneNumbers.WithId.PHONE_NUMBERS_WITH_ID)
   suspend fun updatePhoneNumber(
     @Path(CommonParams.PHONE_NUMBER_ID) phoneNumberId: String,
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Field("reserved_for_second_factor") reservedForSecondFactor: Boolean? = null,
     @Field("default_second_factor") defaultSecondFactor: Boolean? = null,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 
   @POST(Paths.UserPath.Passkeys.PASSKEYS)
   suspend fun createPasskey(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
   ): ClerkResult<Passkey, ClerkErrorResponse>
 
   @GET(Paths.UserPath.Passkeys.WithId.PASSKEYS_WITH_ID)

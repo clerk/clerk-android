@@ -24,18 +24,14 @@ internal object UserService {
    * uploads it to the Clerk API to set as the user's profile photo. The file is given a random UUID
    * as the filename in the request.
    *
-   * @param sessionId Optional session identifier. If null, the current session will be used.
    * @param file The image file to upload as the profile photo. Should be a valid image file.
    * @return A [ClerkResult] containing either the uploaded [ImageResource] on success or a
    *   [ClerkErrorResponse] on failure.
    */
-  suspend fun setProfilePhoto(
-    sessionId: String? = null,
-    file: File,
-  ): ClerkResult<ImageResource, ClerkErrorResponse> {
+  suspend fun setProfilePhoto(file: File): ClerkResult<ImageResource, ClerkErrorResponse> {
     val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
     val body = MultipartBody.Part.createFormData("file", "filename.jpeg", requestFile)
 
-    return ClerkApi.user.setProfileImage(sessionId, file = body)
+    return ClerkApi.user.setProfileImage(file = body)
   }
 }
