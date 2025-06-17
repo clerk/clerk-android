@@ -91,17 +91,13 @@ suspend fun PhoneNumber.attemptVerification(
  * one-time verification code will be sent to the phone number via SMS. Use [attemptVerification] to
  * complete the verification process.
  *
- * @param sessionId Optional session ID to use for preparing the verification
  * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun PhoneNumber.prepareVerification(
-  sessionId: String? = null
-): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+suspend fun PhoneNumber.prepareVerification(): ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return ClerkApi.user.preparePhoneNumberVerification(
     phoneNumberId = this.id,
     strategy = PHONE_CODE,
-    sessionId = sessionId,
   )
 }
 
@@ -110,21 +106,18 @@ suspend fun PhoneNumber.prepareVerification(
  *
  * Allows modification of second factor authentication settings for this phone number.
  *
- * @param sessionId Optional session ID to use for the update operation
  * @param reservedForSecondFactor Whether this phone number should be reserved for second factor
  *   authentication
  * @param defaultSecondFactor Whether this phone number should be the default second factor method
  * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
  *   [ClerkErrorResponse] on failure
  */
-suspend fun PhoneNumber.updatePhoneNumber(
-  sessionId: String? = null,
+suspend fun PhoneNumber.update(
   reservedForSecondFactor: Boolean? = null,
   defaultSecondFactor: Boolean? = null,
 ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return ClerkApi.user.updatePhoneNumber(
     phoneNumberId = this.id,
-    sessionId = sessionId,
     reservedForSecondFactor = reservedForSecondFactor,
     defaultSecondFactor = defaultSecondFactor,
   )
@@ -136,12 +129,9 @@ suspend fun PhoneNumber.updatePhoneNumber(
  * This operation is irreversible. Once deleted, the phone number will no longer be associated with
  * the user's account and cannot be used for authentication or contact purposes.
  *
- * @param sessionId Optional session ID to use for the delete operation
  * @return A [ClerkResult] containing a [DeletedObject] on success, or a [ClerkErrorResponse] on
  *   failure
  */
-suspend fun PhoneNumber.deletePhoneNumber(
-  sessionId: String? = null
-): ClerkResult<DeletedObject, ClerkErrorResponse> {
-  return ClerkApi.user.deletePhoneNumber(phoneNumberId = this.id, sessionId = sessionId)
+suspend fun PhoneNumber.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+  return ClerkApi.user.deletePhoneNumber(phoneNumberId = this.id)
 }

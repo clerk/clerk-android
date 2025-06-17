@@ -141,7 +141,7 @@ internal interface UserApi {
   ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @POST(Paths.UserPath.PhoneNumbers.WithId.PHONE_NUMBERS_WITH_ID)
+  @POST(Paths.UserPath.PhoneNumbers.WithId.ATTEMPT_VERIFICATION)
   suspend fun attemptPhoneNumberVerification(
     @Path(CommonParams.PHONE_NUMBER_ID) phoneNumberId: String,
     @Field(CommonParams.CODE) code: String,
@@ -149,7 +149,7 @@ internal interface UserApi {
   ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @POST(Paths.UserPath.PhoneNumbers.WithId.PHONE_NUMBERS_WITH_ID)
+  @POST(Paths.UserPath.PhoneNumbers.WithId.PREPARE_VERIFICATION)
   suspend fun preparePhoneNumberVerification(
     @Path(CommonParams.PHONE_NUMBER_ID) phoneNumberId: String,
     @Field(CommonParams.STRATEGY) strategy: String,
