@@ -100,7 +100,7 @@ internal interface UserApi {
   ): ClerkResult<EmailAddress, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @POST(Paths.UserPath.EmailAddress.WithId.EMAIL_ADDRESSES_WITH_ID)
+  @POST(Paths.UserPath.EmailAddress.WithId.ATTEMPT_VERIFICATION)
   suspend fun attemptEmailAddressVerification(
     @Path(CommonParams.EMAIL_ID) emailAddressId: String,
     @Field(CommonParams.CODE) code: String,
@@ -108,7 +108,7 @@ internal interface UserApi {
   ): ClerkResult<EmailAddress, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @POST(Paths.UserPath.EmailAddress.WithId.EMAIL_ADDRESSES_WITH_ID)
+  @POST(Paths.UserPath.EmailAddress.WithId.PREPARE_VERIFICATION)
   suspend fun prepareEmailAddressVerification(
     @Path(CommonParams.EMAIL_ID) emailAddressId: String,
     @FieldMap params: Map<String, String>,
@@ -125,7 +125,7 @@ internal interface UserApi {
   suspend fun deleteEmailAddress(
     @Path(CommonParams.EMAIL_ID) emailAddressId: String,
     @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
-  ): ClerkResult<EmailAddress, ClerkErrorResponse>
+  ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   @GET(Paths.UserPath.PhoneNumbers.PHONE_NUMBERS)
   suspend fun getPhoneNumbers(

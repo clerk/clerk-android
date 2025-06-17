@@ -73,7 +73,7 @@ internal object Paths {
       internal object WithId {
         const val EMAIL_ADDRESSES_WITH_ID = "${EMAIL_ADDRESSES}/{email_id}"
         const val ATTEMPT_VERIFICATION = "${EMAIL_ADDRESSES_WITH_ID}/attempt_verification"
-        const val PREPARE_VERIFICATION = "${EMAIL_ADDRESSES}/prepare_verification"
+        const val PREPARE_VERIFICATION = "${EMAIL_ADDRESSES_WITH_ID}/prepare_verification"
       }
     }
 
