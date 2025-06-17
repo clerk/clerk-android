@@ -12,6 +12,7 @@ import com.clerk.network.api.UserApi
 import com.clerk.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.network.middleware.outgoing.HeaderMiddleware
+import com.clerk.network.middleware.outgoing.MultipartHeaderInterceptor
 import com.clerk.network.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.network.serialization.ClerkApiResultConverterFactory
@@ -32,7 +33,7 @@ internal object ClerkApi {
     isLenient = true
     ignoreUnknownKeys = true
     coerceInputValues = true
-    explicitNulls = false
+    explicitNulls = true
     namingStrategy = JsonNamingStrategy.SnakeCase
   }
 
@@ -82,6 +83,7 @@ internal object ClerkApi {
           addInterceptor(HeaderMiddleware())
           addInterceptor(DeviceTokenSavingMiddleware())
           addInterceptor(UrlAppendingMiddleware())
+          addInterceptor(MultipartHeaderInterceptor())
 
           if (Clerk.debugMode) {
             addInterceptor(

@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 /** Represents information about an image. */
 @Serializable
 data class ImageResource(
+  @SerialName("object") val objectType: String,
   /** The unique identifier of the image. */
   val id: String,
   /** The name of the image. */

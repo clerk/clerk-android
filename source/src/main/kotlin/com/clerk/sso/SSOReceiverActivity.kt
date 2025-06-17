@@ -19,7 +19,7 @@ import com.clerk.log.ClerkLog
  */
 internal class SSOReceiverActivity : Activity() {
   override fun onCreate(savedInstanceState: Bundle?) {
-    ClerkLog.d("SSOReceiverActivity started with intent: ${intent?.data}")
+    ClerkLog.d("OAuthReceiverActivity started with intent: ${intent?.data}")
     super.onCreate(savedInstanceState)
     startActivity(SSOManagerActivity.createResponseHandlingIntent(this, intent?.data))
     finish()

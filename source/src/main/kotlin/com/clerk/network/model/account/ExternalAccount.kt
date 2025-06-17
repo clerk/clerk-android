@@ -5,6 +5,7 @@ import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
+import com.clerk.sso.OAuthProvider
 import com.clerk.user.User
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -111,3 +112,6 @@ suspend fun ExternalAccount.delete(): ClerkResult<DeletedObject, ClerkErrorRespo
 suspend fun ExternalAccount.revokeTokens(): ClerkResult<User, ClerkErrorResponse> {
   return ClerkApi.user.revokeExternalAccountTokens(externalAccountId = this.id)
 }
+
+val ExternalAccount.oauthProviderType: OAuthProvider
+  get() = OAuthProvider.fromStrategy(this.provider)
