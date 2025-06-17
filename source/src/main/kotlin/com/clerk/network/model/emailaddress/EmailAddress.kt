@@ -67,6 +67,7 @@ suspend fun EmailAddress.attemptVerification(
  * @param params The parameters to use for the verification.
  * @return A [ClerkResult] containing the updated [EmailAddress] if the verification was successful,
  *   or a [ClerkErrorResponse] if the verification failed.
+ * @see EmailAddress.PrepareVerificationParams
  */
 suspend fun EmailAddress.prepareVerification(
   params: EmailAddress.PrepareVerificationParams
@@ -90,8 +91,6 @@ suspend fun EmailAddress.get(): ClerkResult<EmailAddress, ClerkErrorResponse> {
 /**
  * Deletes the [EmailAddress] from the server.
  *
- * @param sessionId The session ID to use for the request. If null, the request will be made without
- *   a session ID.
  * @return A [ClerkResult] containing the deleted [EmailAddress] if the request was successful, or a
  *   [ClerkErrorResponse] if the request failed.
  */
