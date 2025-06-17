@@ -3,6 +3,7 @@ package com.clerk.user
 import com.clerk.Clerk
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
+import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.account.EnterpriseAccount
 import com.clerk.network.model.account.ExternalAccount
@@ -235,7 +236,10 @@ data class User(
   )
 
   val verifiedExternalAccounts: List<ExternalAccount>
-    get() = externalAccounts.filter { it.verification?.status == Verification.Status.VERIFIED }
+    get() {
+      ClerkLog.e("QQQ externalAccounts: ${externalAccounts}")
+      return externalAccounts.filter { it.verification?.status == Verification.Status.VERIFIED }
+    }
 
   companion object {
     /**

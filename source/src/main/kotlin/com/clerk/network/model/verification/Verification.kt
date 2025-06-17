@@ -1,13 +1,14 @@
 package com.clerk.network.model.verification
 
 import com.clerk.network.model.error.Error
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** The state of the verification process of a sign-in or sign-up attempt. */
 @Serializable
 data class Verification(
   /** The state of the verification. */
-  val status: Status? = null,
+  val status: Status,
   /** The strategy pertaining to the parent sign-up or sign-in attempt. */
   val strategy: String? = null,
   /** The number of attempts related to the verification. */
@@ -24,11 +25,11 @@ data class Verification(
   /** The state of the verification. */
   @Serializable
   enum class Status {
-    UNVERIFIED,
-    VERIFIED,
-    TRANSFERABLE,
-    FAILED,
-    EXPIRED,
-    UNKNOWN,
+    @SerialName("unverified") UNVERIFIED,
+    @SerialName("verified") VERIFIED,
+    @SerialName("transferable") TRANSFERABLE,
+    @SerialName("expired") FAILED,
+    @SerialName("failed") EXPIRED,
+    @SerialName("state_unknown") UNKNOWN,
   }
 }
