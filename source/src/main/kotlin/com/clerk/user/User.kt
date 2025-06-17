@@ -234,6 +234,9 @@ data class User(
     val oidcLoginHint: String? = null,
   )
 
+  val verifiedExternalAccounts: List<ExternalAccount>
+    get() = externalAccounts.filter { it.verification?.status == Verification.Status.VERIFIED }
+
   companion object {
     /**
      * Retrieves the current user, or the user with the given session ID, from the Clerk API.
@@ -398,11 +401,8 @@ data class User(
      * @return A [ClerkResult] containing the created [EmailAddress] object on success, or a
      *   [ClerkErrorResponse] on failure
      */
-    suspend fun createEmailAddress(
-      sessionId: String? = Clerk.session?.id,
-      email: String,
-    ): ClerkResult<EmailAddress, ClerkErrorResponse> {
-      return ClerkApi.user.createEmailAddress(sessionId, email)
+    suspend fun createEmailAddress(email: String): ClerkResult<EmailAddress, ClerkErrorResponse> {
+      return ClerkApi.user.createEmailAddress(emailAddress = email)
     }
 
     /**
@@ -550,8 +550,4 @@ data class User(
       return ClerkApi.user.createBackupCodes()
     }
   }
-}
-
-fun User.fullName(): String {
-  return "$firstName $lastName"
 }

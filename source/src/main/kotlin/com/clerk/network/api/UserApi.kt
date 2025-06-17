@@ -2,6 +2,7 @@
 
 package com.clerk.network.api
 
+import com.clerk.Clerk
 import com.clerk.network.model.backupcodes.BackupCodeResource
 import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.emailaddress.EmailAddress
@@ -94,8 +95,8 @@ internal interface UserApi {
   @FormUrlEncoded
   @POST(Paths.UserPath.EmailAddress.EMAIL_ADDRESSES)
   suspend fun createEmailAddress(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Field("email_address") emailAddress: String,
+    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.user?.id,
   ): ClerkResult<EmailAddress, ClerkErrorResponse>
 
   @FormUrlEncoded
