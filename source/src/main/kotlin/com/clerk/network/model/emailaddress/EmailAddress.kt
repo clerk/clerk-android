@@ -70,14 +70,9 @@ data class EmailAddress(
  *   or a [ClerkErrorResponse] if the verification failed.
  */
 suspend fun EmailAddress.attemptVerification(
-  code: String,
-  sessionId: String? = null,
+  code: String
 ): ClerkResult<EmailAddress, ClerkErrorResponse> {
-  return ClerkApi.user.attemptEmailAddressVerification(
-    emailAddressId = this.id,
-    code = code,
-    sessionId = sessionId,
-  )
+  return ClerkApi.user.attemptEmailAddressVerification(emailAddressId = this.id, code = code)
 }
 
 /**
@@ -90,12 +85,10 @@ suspend fun EmailAddress.attemptVerification(
  *   or a [ClerkErrorResponse] if the verification failed.
  */
 suspend fun EmailAddress.prepareVerification(
-  sessionId: String? = null,
-  params: EmailAddress.PrepareVerificationParams,
+  params: EmailAddress.PrepareVerificationParams
 ): ClerkResult<EmailAddress, ClerkErrorResponse> {
   return ClerkApi.user.prepareEmailAddressVerification(
     emailAddressId = this.id,
-    sessionId = sessionId,
     params = params.toMap(),
   )
 }
@@ -108,10 +101,8 @@ suspend fun EmailAddress.prepareVerification(
  * @return A [ClerkResult] containing the [EmailAddress] if the request was successful, or a
  *   [ClerkErrorResponse] if the request failed.
  */
-suspend fun EmailAddress.get(
-  sessionId: String? = null
-): ClerkResult<EmailAddress, ClerkErrorResponse> {
-  return ClerkApi.user.getEmailAddress(emailAddressId = this.id, sessionId = sessionId)
+suspend fun EmailAddress.get(): ClerkResult<EmailAddress, ClerkErrorResponse> {
+  return ClerkApi.user.getEmailAddress(emailAddressId = this.id)
 }
 
 /**
@@ -122,8 +113,6 @@ suspend fun EmailAddress.get(
  * @return A [ClerkResult] containing the deleted [EmailAddress] if the request was successful, or a
  *   [ClerkErrorResponse] if the request failed.
  */
-suspend fun EmailAddress.delete(
-  sessionId: String? = null
-): ClerkResult<EmailAddress, ClerkErrorResponse> {
-  return ClerkApi.user.deleteEmailAddress(emailAddressId = this.id, sessionId = sessionId)
+suspend fun EmailAddress.delete(): ClerkResult<EmailAddress, ClerkErrorResponse> {
+  return ClerkApi.user.deleteEmailAddress(emailAddressId = this.id)
 }
