@@ -12,11 +12,11 @@ import com.clerk.network.model.emailaddress.EmailAddress
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.image.ImageResource
 import com.clerk.network.model.organization.OrganizationMembership
-import com.clerk.network.model.passkey.Passkey
 import com.clerk.network.model.phonenumber.PhoneNumber
 import com.clerk.network.model.totp.TOTPResource
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
+import com.clerk.passkeys.Passkey
 import com.clerk.session.Session
 import com.clerk.sso.OAuthProvider
 import com.clerk.user.User.Companion.attemptTOTPVerification

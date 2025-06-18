@@ -1,4 +1,4 @@
-package com.clerk.network.model.passkey
+package com.clerk.passkeys
 
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.deleted.DeletedObject

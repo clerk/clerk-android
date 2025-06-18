@@ -8,13 +8,13 @@ import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.emailaddress.EmailAddress
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.image.ImageResource
-import com.clerk.network.model.passkey.Passkey
 import com.clerk.network.model.phonenumber.PhoneNumber
 import com.clerk.network.model.totp.TOTPResource
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.paths.CommonParams
 import com.clerk.network.paths.Paths
 import com.clerk.network.serialization.ClerkResult
+import com.clerk.passkeys.Passkey
 import com.clerk.session.Session
 import com.clerk.user.User
 import okhttp3.MultipartBody
