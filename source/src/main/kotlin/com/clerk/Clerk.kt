@@ -12,6 +12,7 @@ import com.clerk.signin.SignIn
 import com.clerk.signout.SignOutService
 import com.clerk.signup.SignUp
 import com.clerk.user.User
+import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -50,6 +51,8 @@ object Clerk {
    * decoded.
    */
   internal lateinit var baseUrl: String
+
+  internal var applicationContext: WeakReference<Context>? = null
 
   // region Computed Properties
 
@@ -180,6 +183,7 @@ object Clerk {
   fun initialize(context: Context, publishableKey: String, debugMode: Boolean = false) {
     this.debugMode = debugMode
     configurationManager.configure(context, publishableKey)
+    this.applicationContext = WeakReference(context)
   }
 
   /**

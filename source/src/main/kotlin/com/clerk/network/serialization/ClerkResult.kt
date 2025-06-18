@@ -115,5 +115,5 @@ fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull() = this.err
  *
  * @return The error message, or null.
  */
-fun ClerkResult.Failure<ClerkErrorResponse>.longErrorMessageOrNull() =
-  this.error?.errors?.firstOrNull()?.longMessage
+val ClerkResult.Failure<ClerkErrorResponse>.longErrorMessageOrNull: String?
+  get() = this.error?.errors?.firstOrNull()?.longMessage

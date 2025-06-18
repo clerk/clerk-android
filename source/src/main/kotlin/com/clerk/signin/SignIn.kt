@@ -582,10 +582,12 @@ data class SignIn(
      * ```
      */
     suspend fun authenticateWithRedirect(
-      context: Context,
-      params: AuthenticateWithRedirectParams,
+      params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return SSOService.authenticateWithRedirect(context, params)
+      return SSOService.authenticateWithRedirect(
+        strategy = params.provider.providerData.strategy,
+        redirectUrl = params.redirectUrl,
+      )
     }
   }
 }

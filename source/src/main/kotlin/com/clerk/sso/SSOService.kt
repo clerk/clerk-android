@@ -1,42 +1,70 @@
 package com.clerk.sso
 
-import android.content.Context
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.Clerk
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.account.ExternalAccount
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
-import com.clerk.signin.SignIn
+import com.clerk.network.serialization.longErrorMessageOrNull
 import com.clerk.signin.get
 import com.clerk.signup.SignUp
 import com.clerk.sso.SSOService.authenticateWithRedirect
+import com.clerk.user.User.CreateExternalAccountParams
 import kotlinx.coroutines.CompletableDeferred
 
+/**
+ * Internal service that handles OAuth authentication flows for the Clerk SDK.
+ *
+ * This service manages redirect-based authentication flows, including initiating OAuth, Enterprise
+ * SSO, and handling callback URIs to complete the authentication process. It provides methods to
+ * start, complete, or cancel authentication flows that require user redirection to external
+ * providers (e.g., Google, Facebook, GitHub, etc.).
+ *
+ * The service maintains internal state to track pending authentication attempts and uses
+ * [SSOReceiverActivity] to intercept redirect URIs and finalize the authentication process.
+ *
+ * ## Key Features:
+ * - OAuth provider authentication (Google, Facebook, GitHub, etc.)
+ * - Enterprise SSO authentication flows
+ * - Automatic cleanup of pending authentication state
+ * - Error handling and logging throughout the flow
+ *
+ * For external account connections to existing users, see [ExternalAccountService]. For Google One
+ * Tap authentication, see [GoogleSignInService].
+ */
 internal object SSOService {
+  /**
+   * Tracks the current pending OAuth authentication flow. This deferred completes when the
+   * authentication process finishes (success or failure).
+   */
   private var currentPendingAuth:
     CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>? =
     null
-  private var currentSignInId: String? = null
 
   /**
-   * Handles OAuth authentication flows for the Clerk SDK
+   * Initiates an OAuth authentication flow with redirect to an external provider.
    *
-   * This service manages redirect-based authentication flows, including initiating OAuth,
-   * Enterprise SSO, and handling callback URIs to complete the authentication process. It provides
-   * methods to start, complete, or cancel authentication flows that require user redirection to
-   * external providers (e.g., Google, Facebook).
+   * This method handles redirect-based authentication flows by:
+   * 1. Starting the authentication request with the specified strategy and redirect URL
+   * 2. Launching the external provider's authentication page via [SSOReceiverActivity]
+   * 3. Suspending until the user completes authentication and returns to the app
+   * 4. Processing the authentication result and returning the appropriate [ClerkResult]
    *
-   * For redirect-based flows, this service uses [SSOReceiverActivity] to intercept the redirect URI
-   * and finalize the sign-in process.
+   * The method automatically cancels any existing pending authentication to prevent conflicts.
    *
-   * Note: We handle sign in with google nee Google One Tap, in [GoogleSignInService]
+   * @param strategy The OAuth strategy identifier (e.g., "oauth_google", "oauth_facebook")
+   * @param redirectUrl The URL where the OAuth provider should redirect after authentication
+   * @return A [ClerkResult] containing the [OAuthResult] on success, or [ClerkErrorResponse] on
+   *   failure
    */
   suspend fun authenticateWithRedirect(
-    context: Context,
-    params: SignIn.AuthenticateWithRedirectParams,
+    strategy: String,
+    redirectUrl: String,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     // Clear any existing pending auth to prevent conflicts
     currentPendingAuth?.complete(
@@ -47,14 +75,11 @@ internal object SSOService {
     clearCurrentAuth()
 
     val initialResult =
-      ClerkApi.signIn.authenticateWithRedirect(
-        strategy = params.provider.providerData.strategy,
-        redirectUrl = params.redirectUrl,
-      )
+      ClerkApi.signIn.authenticateWithRedirect(strategy = strategy, redirectUrl = redirectUrl)
 
     return when (initialResult) {
       is ClerkResult.Failure -> {
-        val message = initialResult.error?.errors?.first()?.message
+        val message = initialResult.longErrorMessageOrNull
         ClerkLog.e("Failed to authenticate with redirect: $message")
         ClerkResult.apiFailure(initialResult.error)
       }
@@ -67,16 +92,17 @@ internal object SSOService {
             "External URL cannot be null"
           }
 
-        val signInId = initialResult.value.id
         val completableDeferred =
           CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>()
 
         currentPendingAuth = completableDeferred
-        currentSignInId = signInId
 
         val intent =
-          Intent(context, SSOReceiverActivity::class.java).apply { data = externalUrl.toUri() }
-        context.startActivity(intent)
+          Intent(Clerk.applicationContext?.get(), SSOReceiverActivity::class.java).apply {
+            data = externalUrl.toUri()
+            addFlags(FLAG_ACTIVITY_NEW_TASK)
+          }
+        Clerk.applicationContext?.get()?.startActivity(intent)
 
         // This will suspend until completeAuthenticateWithRedirect is called
         completableDeferred.await()
@@ -85,18 +111,21 @@ internal object SSOService {
   }
 
   /**
-   * Completes the authentication flow initiated by [authenticateWithRedirect] when the user is
-   * redirected back to the app after completing external authentication (e.g., OAuth or SSO
-   * provider).
+   * Completes the authentication flow initiated by [authenticateWithRedirect].
+   *
+   * This method is called when the user is redirected back to the app after completing external
+   * authentication (e.g., OAuth or SSO provider). It processes the redirect URI to retrieve the
+   * authentication result and resolves the pending authentication flow.
+   *
+   * The method handles two authentication scenarios:
+   * 1. **Sign In**: When the URI contains a `rotating_token_nonce` parameter
+   * 2. **Sign Up Transfer**: When no nonce is present, indicating a new user registration
    *
    * This method is typically triggered internally via [SSOReceiverActivity] when the app receives a
-   * redirect URI containing authentication results. It processes the redirect URI to retrieve the
-   * sign-in result, resolves the corresponding pending [CompletableDeferred], and updates the
-   * sign-in state.
+   * redirect URI containing authentication results.
    *
    * @param uri The redirect URI received after completion of the external authentication flow.
-   *   Expected to contain a `rotating_token_nonce` query parameter to associate with the pending
-   *   sign-in request.
+   *   Expected to contain a `rotating_token_nonce` query parameter for sign-in flows.
    */
   @Suppress("TooGenericExceptionCaught")
   suspend fun completeAuthenticateWithRedirect(uri: Uri) {
@@ -123,6 +152,46 @@ internal object SSOService {
     }
   }
 
+  /**
+   * Initiates the process of connecting an external account to an existing user.
+   *
+   * This method delegates to [ExternalAccountService.connectExternalAccount] to handle the external
+   * account connection process.
+   *
+   * @param params The parameters for creating the external account connection, including the OAuth
+   *   provider and optional redirect URLs
+   * @return A [ClerkResult] containing the connected [ExternalAccount] on success, or
+   *   [ClerkErrorResponse] on failure
+   * @see ExternalAccountService.connectExternalAccount
+   */
+  suspend fun connectExternalAccount(
+    params: CreateExternalAccountParams
+  ): ClerkResult<ExternalAccount, ClerkErrorResponse> {
+    return ExternalAccountService.connectExternalAccount(params)
+  }
+
+  /**
+   * Completes the external account connection process.
+   *
+   * This method delegates to [ExternalAccountService.completeExternalConnection] to handle the
+   * completion of external account connections.
+   *
+   * @see ExternalAccountService.completeExternalConnection
+   */
+  suspend fun completeExternalConnection() {
+    ExternalAccountService.completeExternalConnection()
+  }
+
+  /**
+   * Handles the sign-in completion process using the provided rotating token nonce.
+   *
+   * This method is called when a redirect URI contains a `rotating_token_nonce` parameter,
+   * indicating that the user is completing a sign-in flow. It uses the nonce to fetch the updated
+   * sign-in state and converts it to an OAuth result.
+   *
+   * @param nonce The rotating token nonce from the redirect URI, used to identify and retrieve the
+   *   specific sign-in attempt
+   */
   private suspend fun handleSignIn(nonce: String) {
     val signInResult =
       requireNotNull(Clerk.signIn).get(rotatingTokenNonce = nonce).signInToOAuthResult()
@@ -131,6 +200,13 @@ internal object SSOService {
     clearCurrentAuth()
   }
 
+  /**
+   * Handles the sign-up transfer process for new user registrations.
+   *
+   * This method is called when a redirect URI does not contain a rotating token nonce, indicating
+   * that a new user is completing a sign-up flow via OAuth. It creates a transfer-type sign-up to
+   * complete the registration process.
+   */
   private suspend fun handleSignUpTransfer() {
     ClerkLog.d("Handling sign-up transfer")
     val createResult = SignUp.create(SignUp.CreateParams.Transfer).signUpToOAuthResult()
@@ -140,17 +216,22 @@ internal object SSOService {
   }
 
   /**
-   * Clears the current authentication state. Should be called when authentication completes
-   * (successfully or with error).
+   * Clears the current authentication state.
+   *
+   * This method resets the pending authentication deferred to null, effectively cleaning up the
+   * internal state. Should be called when authentication completes (successfully or with error) to
+   * prevent memory leaks and state conflicts.
    */
   private fun clearCurrentAuth() {
     currentPendingAuth = null
-    currentSignInId = null
   }
 
   /**
-   * Cancels any pending authentication flow. Useful for cleanup when the authentication process
-   * needs to be aborted.
+   * Cancels any pending authentication flow.
+   *
+   * This method completes any pending authentication with a cancellation error and clears the
+   * authentication state. Useful for cleanup when the authentication process needs to be aborted
+   * (e.g., user navigates away, app is backgrounded, etc.).
    */
   fun cancelPendingAuthentication() {
     currentPendingAuth?.complete(
@@ -159,8 +240,27 @@ internal object SSOService {
     clearCurrentAuth()
   }
 
-  /** Returns true if there's currently a pending authentication flow. */
+  /**
+   * Checks if there's currently a pending authentication flow.
+   *
+   * @return `true` if there's an active authentication flow waiting for completion, `false`
+   *   otherwise
+   */
   fun hasPendingAuthentication(): Boolean {
     return currentPendingAuth != null
+  }
+
+  /**
+   * Checks if there's currently a pending external account connection.
+   *
+   * This method delegates to [ExternalAccountService.hasPendingExternalAccountConnection] to check
+   * the external account connection state.
+   *
+   * @return `true` if there's an active external account connection waiting for completion, `false`
+   *   otherwise
+   * @see ExternalAccountService.hasPendingExternalAccountConnection
+   */
+  fun hasPendingExternalAccountConnection(): Boolean {
+    return ExternalAccountService.hasPendingExternalAccountConnection()
   }
 }

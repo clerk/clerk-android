@@ -4,6 +4,7 @@ package com.clerk.network.api
 
 import com.clerk.Clerk
 import com.clerk.emailaddress.EmailAddress
+import com.clerk.network.model.account.ExternalAccount
 import com.clerk.network.model.backupcodes.BackupCodeResource
 import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.error.ClerkErrorResponse
@@ -210,7 +211,7 @@ internal interface UserApi {
   @POST(Paths.UserPath.ExternalAccounts.EXTERNAL_ACCOUNTS)
   suspend fun createExternalAccount(
     @FieldMap params: Map<String, String>
-  ): ClerkResult<Verification, ClerkErrorResponse>
+  ): ClerkResult<ExternalAccount, ClerkErrorResponse>
 
   @FormUrlEncoded
   @PATCH(Paths.UserPath.ExternalAccounts.WithId.REAUTHORIZE)
