@@ -1,6 +1,7 @@
 package com.clerk.attestation
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.serialization.onFailure
@@ -101,7 +102,8 @@ internal object DeviceAttestationHelper {
    * @return The hexadecimal string representation of the SHA-256 hash
    * @throws RuntimeException if hashing fails
    */
-  private fun getHashedClientId(clientId: String): String {
+  @VisibleForTesting
+  fun getHashedClientId(clientId: String): String {
 
     try {
       val digest = MessageDigest.getInstance("SHA-256")
