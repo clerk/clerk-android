@@ -19,6 +19,7 @@ import com.clerk.passkeys.Passkey
 import com.clerk.phonenumber.PhoneNumber
 import com.clerk.session.Session
 import com.clerk.sso.OAuthProvider
+import com.clerk.sso.RedirectConfiguration
 import com.clerk.user.User.Companion.attemptTOTPVerification
 import com.clerk.user.User.Companion.createTOTP
 import java.io.File
@@ -227,7 +228,7 @@ data class User(
      * The full URL or path that the OAuth provider should redirect to, on successful authorization
      * on their part.
      */
-    val redirectUrl: String? = null,
+    val redirectUrl: String? = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     /** Optional OpenID Connect prompt parameter to control the authentication flow. */
     val oidcPrompt: String? = null,
     /** Optional OpenID Connect login hint parameter to pre-fill the user's identifier. */
