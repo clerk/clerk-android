@@ -30,7 +30,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 internal object ClerkApi {
 
   @OptIn(ExperimentalSerializationApi::class)
-  private val json = Json {
+  internal val json = Json {
     isLenient = true
     ignoreUnknownKeys = true
     coerceInputValues = true
