@@ -4,15 +4,17 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
-import com.clerk.network.serialization.onFailure
-import com.clerk.network.serialization.onSuccess
+import com.clerk.network.model.client.Client
+import com.clerk.network.model.error.ClerkErrorResponse
+import com.clerk.network.serialization.ClerkResult
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.StandardIntegrityManager
 import java.security.MessageDigest
+import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 private const val HASH_CONSTANT = 0xff
 
@@ -59,26 +61,38 @@ internal object DeviceAttestationHelper {
   }
 
   /**
-   * Retrieves an integrity token and initiates device attestation verification.
+   * Retrieves an integrity token and initiates device attestation verification. This function
+   * suspends until the integrity verification completes.
    *
    * @param clientId The client identifier to be hashed and included in the token request
-   * @param applicationId The application/package identifier for attestation
+   * @return The integrity token string
    * @throws IllegalArgumentException if integrityTokenProvider is null
    */
-  fun getAndVerifyIntegrityToken(clientId: String, applicationId: String?) {
-    val tokenProvider = requireNotNull(integrityTokenProvider)
-    val response =
-      tokenProvider.request(
-        StandardIntegrityManager.StandardIntegrityTokenRequest.builder()
-          .setRequestHash(getHashedClientId(clientId))
-          .build()
-      )
-    response
-      .addOnSuccessListener {
-        ClerkLog.d("Integrity token retrieved successfully")
-        scope.launch { attestDevice(token = it.token(), applicationId = applicationId) }
-      }
-      .addOnFailureListener { ClerkLog.e("Failed to get integrity token: $it") }
+  @Throws(IllegalArgumentException::class)
+  suspend fun attestDevice(clientId: String): ClerkResult<String, ClerkErrorResponse> {
+    val tokenProvider =
+      requireNotNull(integrityTokenProvider) { "Integrity token provider must not be null" }
+
+    return suspendCancellableCoroutine { continuation ->
+      val response =
+        tokenProvider.request(
+          StandardIntegrityManager.StandardIntegrityTokenRequest.builder()
+            .setRequestHash(getHashedClientId(clientId))
+            .build()
+        )
+
+      response
+        .addOnSuccessListener { tokenResponse ->
+          ClerkLog.d("Integrity token retrieved successfully")
+          continuation.resume(ClerkResult.success(tokenResponse.token()))
+        }
+        .addOnFailureListener { exception ->
+          ClerkLog.e("Failed to get integrity token: $exception")
+          continuation.resume(
+            ClerkResult.unknownFailure(error("Failed to get integrity token: $exception"))
+          )
+        }
+    }
   }
 
   /**
@@ -86,13 +100,13 @@ internal object DeviceAttestationHelper {
    *
    * @param token The integrity token obtained from Google Play Integrity API
    * @param applicationId The application package name for verification
+   * @return true if attestation was successful, false otherwise
    */
-  private suspend fun attestDevice(token: String, applicationId: String?) {
-    ClerkLog.d("Attesting device")
-    ClerkApi.deviceAttestationApi
-      .verify(packageName = applicationId!!, token = token)
-      .onSuccess { ClerkLog.d("Device attestation successful") }
-      .onFailure { ClerkLog.e("Device attestation failed: $it") }
+  suspend fun performAssertion(
+    token: String,
+    applicationId: String?,
+  ): ClerkResult<Client, ClerkErrorResponse> {
+    return ClerkApi.deviceAttestationApi.verify(packageName = applicationId!!, token = token)
   }
 
   /**

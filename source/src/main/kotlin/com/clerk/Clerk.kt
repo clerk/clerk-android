@@ -55,6 +55,8 @@ object Clerk {
   /** Application context used for setting up deep links and SSO Receivers */
   internal var applicationContext: WeakReference<Context>? = null
 
+  internal var applicationId: String? = null
+
   // region Computed Properties
 
   val applicationName: String?
@@ -210,6 +212,7 @@ object Clerk {
       options = options,
     )
     this.applicationContext = WeakReference(context)
+    this.applicationId = options?.deviceAttestationOptions?.applicationId
   }
 
   /**

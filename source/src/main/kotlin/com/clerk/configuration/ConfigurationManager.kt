@@ -13,6 +13,7 @@ import com.clerk.network.model.environment.Environment
 import com.clerk.network.model.environment.FraudSettings
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.fold
+import com.clerk.network.serialization.successOrElse
 import com.clerk.session.SessionGetTokenOptions
 import com.clerk.session.fetchToken
 import com.clerk.storage.StorageHelper
@@ -310,7 +311,7 @@ internal class ConfigurationManager {
     )
   }
 
-  private fun attestDeviceIfNeeded(
+  private suspend fun attestDeviceIfNeeded(
     applicationId: String?,
     clientId: String,
     environment: Environment,
@@ -320,10 +321,14 @@ internal class ConfigurationManager {
       (deviceAttestationMode == FraudSettings.DeviceAttestationMode.ONBOARDING) ||
         deviceAttestationMode == FraudSettings.DeviceAttestationMode.ENFORCED
     ) {
-      DeviceAttestationHelper.getAndVerifyIntegrityToken(
-        applicationId = applicationId,
-        clientId = clientId,
-      )
+      val token =
+        DeviceAttestationHelper.attestDevice(clientId).successOrElse {
+          error("Device attestation failed: $it")
+        }
+
+      DeviceAttestationHelper.performAssertion(token, applicationId).successOrElse {
+        error("Device attestation failed: $it")
+      }
     }
   }
 
