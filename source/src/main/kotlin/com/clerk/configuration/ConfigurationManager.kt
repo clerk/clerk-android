@@ -3,11 +3,14 @@ package com.clerk.configuration
 import android.content.Context
 import com.clerk.Clerk
 import com.clerk.Clerk.debugMode
+import com.clerk.ClerkConfigurationOptions
+import com.clerk.attestation.DeviceAttestationHelper
 import com.clerk.configuration.lifecycle.AppLifecycleListener
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.client.Client
 import com.clerk.network.model.environment.Environment
+import com.clerk.network.model.environment.FraudSettings
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.fold
 import com.clerk.session.SessionGetTokenOptions
@@ -101,10 +104,11 @@ internal class ConfigurationManager {
    *
    * @param context The application context used for storage and API configuration.
    * @param publishableKey The publishable key from Clerk Dashboard for API authentication.
+   * @param options Additional configuration options, such as device attestation settings.
    * @throws IllegalStateException if called multiple times.
    * @throws IllegalArgumentException if publishableKey format is invalid.
    */
-  fun configure(context: Context, publishableKey: String) {
+  fun configure(context: Context, publishableKey: String, options: ClerkConfigurationOptions?) {
     if (hasConfigured) {
       ClerkLog.w(
         "ConfigurationManager.configure() called multiple times. Ignoring subsequent calls."
@@ -114,6 +118,10 @@ internal class ConfigurationManager {
     try {
       this.context = WeakReference(context.applicationContext)
       this.publishableKey = publishableKey
+      DeviceAttestationHelper.prepareIntegrityTokenProvider(
+        context.applicationContext,
+        cloudProjectNumber = options?.deviceAttestationOptions?.cloudProjectNumber,
+      )
 
       // Initialize storage helper explicitly to ensure it's ready
       StorageHelper.initialize(context.applicationContext)
@@ -128,12 +136,12 @@ internal class ConfigurationManager {
       hasConfigured = true
 
       // Start initial data refresh
-      refreshClientAndEnvironment()
+      refreshClientAndEnvironment(options?.deviceAttestationOptions?.applicationId)
 
       // Set up lifecycle monitoring for automatic refresh
       AppLifecycleListener.configure {
         if (hasConfigured) {
-          refreshClientAndEnvironment()
+          refreshClientAndEnvironment(options?.deviceAttestationOptions?.applicationId)
           startTokenRefresh()
         }
       }
@@ -199,7 +207,7 @@ internal class ConfigurationManager {
    *
    * The method is safe to call multiple times and will not interfere with ongoing requests.
    */
-  private fun refreshClientAndEnvironment() {
+  private fun refreshClientAndEnvironment(applicationId: String?) {
     if (!hasConfigured) {
       ClerkLog.w("Attempted to refresh before configuration. Skipping.")
       return
@@ -212,7 +220,7 @@ internal class ConfigurationManager {
       return
     }
 
-    if (Clerk.debugMode) {
+    if (debugMode) {
       ClerkLog.d("Starting client and environment refresh")
     }
 
@@ -234,6 +242,11 @@ internal class ConfigurationManager {
 
         // Update Clerk state if both operations succeeded
         if (clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success) {
+          attestDeviceIfNeeded(
+            applicationId = applicationId,
+            clientId = clientResult.value.id!!,
+            environment = environmentResult.value,
+          )
           updateClerkState(clientResult.value, environmentResult.value)
           _isInitialized.value = true
 
@@ -241,7 +254,7 @@ internal class ConfigurationManager {
             startTokenRefresh()
           }
 
-          if (Clerk.debugMode) {
+          if (debugMode) {
             ClerkLog.d("Client and environment refresh completed successfully")
           }
         } else {
@@ -259,7 +272,11 @@ internal class ConfigurationManager {
     }
   }
 
-  /** Handles the client API result with appropriate logging. */
+  /**
+   * Handles the client API result with appropriate logging.
+   *
+   * Note: updating clerk state happens in [updateClerkState]
+   */
   private fun handleClientResult(result: ClerkResult<Client, *>) {
     result.fold(
       onSuccess = { client ->
@@ -274,11 +291,15 @@ internal class ConfigurationManager {
     )
   }
 
-  /** Handles the environment API result with appropriate logging. */
+  /**
+   * Handles the environment API result with appropriate logging.
+   *
+   * Note: updating clerk state happens in [updateClerkState]
+   */
   private fun handleEnvironmentResult(result: ClerkResult<Environment, *>) {
     result.fold(
       onSuccess = { environment ->
-        if (Clerk.debugMode) {
+        if (debugMode) {
           ClerkLog.d("Environment loaded successfully: ${environment.authConfig}")
         }
       },
@@ -287,6 +308,23 @@ internal class ConfigurationManager {
         logApiError("Environment", failure.errorType, failure.error.toString())
       },
     )
+  }
+
+  private fun attestDeviceIfNeeded(
+    applicationId: String?,
+    clientId: String,
+    environment: Environment,
+  ) {
+    val deviceAttestationMode = environment.fraudSettings.native.deviceAttestationMode
+    if (
+      (deviceAttestationMode == FraudSettings.DeviceAttestationMode.ONBOARDING) ||
+        deviceAttestationMode == FraudSettings.DeviceAttestationMode.ENFORCED
+    ) {
+      DeviceAttestationHelper.getAndVerifyIntegrityToken(
+        applicationId = applicationId,
+        clientId = clientId,
+      )
+    }
   }
 
   /** Logs API errors with appropriate detail based on error type. */

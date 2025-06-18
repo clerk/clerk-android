@@ -8,7 +8,7 @@ internal object Paths {
     internal object DeviceAttestation {
       const val DEVICE_ATTESTATION = "${CLIENT}/device_attestation"
       const val CHALLENGES = "${DEVICE_ATTESTATION}/challenges"
-      const val VERIFY = "${DEVICE_ATTESTATION}/verify"
+      const val VERIFY = "$CLIENT/verify"
     }
 
     internal object Sessions {
