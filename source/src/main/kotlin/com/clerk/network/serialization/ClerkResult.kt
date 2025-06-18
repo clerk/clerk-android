@@ -108,4 +108,12 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
  * [ClerkErrorResponse]. Returns `null` if the error is not a [ClerkErrorResponse] or if there are
  * no error messages.
  */
-fun ClerkResult.Failure<ClerkErrorResponse>.firstErrorMessageOrNull() = this.error?.firstMessage()
+fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull() = this.error?.firstMessage()
+
+/**
+ * Convenience function to extract the long error message from a [ClerkResult.Failure].
+ *
+ * @return The error message, or null.
+ */
+fun ClerkResult.Failure<ClerkErrorResponse>.longErrorMessageOrNull() =
+  this.error?.errors?.first()?.longMessage

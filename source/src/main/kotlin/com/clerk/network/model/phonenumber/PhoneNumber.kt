@@ -68,20 +68,14 @@ data class PhoneNumber(
  * This is the second and final step in the phone number verification process. The verification code
  * is typically sent via SMS after calling [prepareVerification].
  *
- * @param sessionId Optional session ID to use for the verification attempt
  * @param code The one-time verification code received via SMS
  * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
  *   [ClerkErrorResponse] on failure
  */
 suspend fun PhoneNumber.attemptVerification(
-  sessionId: String? = null,
-  code: String,
+  code: String
 ): ClerkResult<PhoneNumber, ClerkErrorResponse> {
-  return ClerkApi.user.attemptPhoneNumberVerification(
-    phoneNumberId = this.id,
-    sessionId = sessionId,
-    code = code,
-  )
+  return ClerkApi.user.attemptPhoneNumberVerification(phoneNumberId = this.id, code = code)
 }
 
 /**
