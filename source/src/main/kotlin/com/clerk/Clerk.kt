@@ -52,6 +52,7 @@ object Clerk {
    */
   internal lateinit var baseUrl: String
 
+  /** Application context used for setting up deep links and SSO Receivers */
   internal var applicationContext: WeakReference<Context>? = null
 
   // region Computed Properties
@@ -177,12 +178,37 @@ object Clerk {
    * @param context The application context used for initialization and storage setup.
    * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
    *   Clerk.
-   * @param debugMode Enable additional logging and debugging information (default: false).
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
-  fun initialize(context: Context, publishableKey: String, debugMode: Boolean = false) {
-    this.debugMode = debugMode
-    configurationManager.configure(context, publishableKey)
+  fun initialize(context: Context, publishableKey: String) {
+    this.debugMode = false
+    configurationManager.configure(context, publishableKey, null)
+    this.applicationContext = WeakReference(context)
+  }
+
+  /**
+   * Initializes the Clerk SDK with the provided configuration.
+   *
+   * This method must be called before using any other Clerk functionality. It configures the API
+   * client, initializes local storage, and begins the authentication state setup.
+   *
+   * @param context The application context used for initialization and storage setup.
+   * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
+   *   Clerk.
+   * @param options Enable additional options for the Clerk SDK. See [ClerkOptions] for details.
+   * @throws IllegalArgumentException if the publishable key format is invalid.
+   */
+  fun initialize(
+    context: Context,
+    publishableKey: String,
+    options: ClerkConfigurationOptions? = null,
+  ) {
+    this.debugMode = options?.enableDebugMode == true
+    configurationManager.configure(
+      context = context,
+      publishableKey = publishableKey,
+      options = options,
+    )
     this.applicationContext = WeakReference(context)
   }
 
@@ -213,3 +239,13 @@ object Clerk {
 
   // endregion
 }
+
+/** Data class for enabling extra functionality on the Clerk SDK. */
+data class ClerkConfigurationOptions(
+  /** Enables verbose logging */
+  val enableDebugMode: Boolean = false,
+  /** Used only for device attestation. Should be something like: `com.example.app` */
+  val deviceAttestationOptions: DeviceAttestationOptions? = null,
+)
+
+data class DeviceAttestationOptions(val applicationId: String, val cloudProjectNumber: Long)

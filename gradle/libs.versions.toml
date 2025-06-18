@@ -37,6 +37,7 @@ androidx-browser = "androidx.browser:browser:1.8.0"
 androidx-credentials = "androidx.credentials:credentials:1.5.0"
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.5.0"
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.1.1"
+google-playIntegrity = "com.google.android.play:integrity:1.4.0"
 
 jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
 

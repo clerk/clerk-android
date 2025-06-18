@@ -2,13 +2,16 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
+    <ID>MagicNumber:DeviceAttestationHelper.kt$DeviceAttestationHelper$0xff</ID>
     <ID>MaxLineLength:User.kt$User.Companion$*</ID>
     <ID>NestedBlockDepth:ClientSyncingMiddleware.kt$ClientSyncingMiddleware$override fun intercept(chain: Interceptor.Chain): Response</ID>
     <ID>TooGenericExceptionCaught:ConfigurationManager.kt$ConfigurationManager$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DeviceAttestationHelper.kt$DeviceAttestationHelper$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ExternalAccountService.kt$ExternalAccountService$e: Exception</ID>
     <ID>TooGenericExceptionCaught:PasskeySignInService.kt$PasskeySignInService$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SessionTokenFetcher.kt$SessionTokenFetcher$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SignOutService.kt$SignOutService$e: Exception</ID>
+    <ID>TooGenericExceptionThrown:DeviceAttestationHelper.kt$DeviceAttestationHelper$throw RuntimeException("Failed to hash clientId", e)</ID>
     <ID>TooManyFunctions:User.kt$User$Companion</ID>
     <ID>UnusedPrivateClass:ClerkApiResultCallAdapterFactory.kt$ApiException : Exception</ID>
     <ID>UnusedPrivateProperty:PasskeySignInService.kt$PasskeySignInService$val getPasswordOption = GetPasswordOption()</ID>

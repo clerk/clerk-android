@@ -4,6 +4,7 @@ import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.clerk.Clerk
 import com.clerk.network.api.ClientApi
+import com.clerk.network.api.DeviceAttestationApi
 import com.clerk.network.api.EnvironmentApi
 import com.clerk.network.api.SessionApi
 import com.clerk.network.api.SignInApi
@@ -61,6 +62,10 @@ internal object ClerkApi {
   val user: UserApi
     get() = _user ?: error("ClerkApi is not configured.")
 
+  private var _deviceAttestationApi: DeviceAttestationApi? = null
+  val deviceAttestationApi: DeviceAttestationApi
+    get() = _deviceAttestationApi ?: error("ClerkApi is not configured.")
+
   /** Initializes the API client with the given [baseUrl]. */
   fun configure(baseUrl: String, context: Context) {
     val retrofit = buildRetrofit(baseUrl, context)
@@ -70,6 +75,7 @@ internal object ClerkApi {
     _signIn = retrofit.create(SignInApi::class.java)
     _signUp = retrofit.create(SignUpApi::class.java)
     _user = retrofit.create(UserApi::class.java)
+    _deviceAttestationApi = retrofit.create(DeviceAttestationApi::class.java)
   }
 
   /** Builds and configures the Retrofit instance. */
