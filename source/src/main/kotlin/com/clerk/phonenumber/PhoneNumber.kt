@@ -1,4 +1,4 @@
-package com.clerk.network.model.phonenumber
+package com.clerk.phonenumber
 
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.deleted.DeletedObject

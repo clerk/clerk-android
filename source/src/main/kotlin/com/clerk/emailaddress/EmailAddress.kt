@@ -1,8 +1,9 @@
-package com.clerk.network.model.emailaddress
+package com.clerk.emailaddress
 
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.deleted.DeletedObject
+import com.clerk.network.model.emailaddress.toMap
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
