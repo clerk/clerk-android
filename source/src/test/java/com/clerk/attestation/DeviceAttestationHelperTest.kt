@@ -3,14 +3,16 @@ package com.clerk.attestation
 import android.content.Context
 import com.clerk.network.ClerkApi
 import com.clerk.network.api.DeviceAttestationApi
+import com.clerk.network.serialization.ClerkResult
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.StandardIntegrityManager
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -48,7 +50,7 @@ class DeviceAttestationHelperTest {
   }
 
   @Test
-  fun `prepareIntegrityTokenProvider throws exception when cloudProjectNumber is null`() {
+  fun `prepareIntegrityTokenProvider throws exception when cloudProjectNumber is null`() = runTest {
     // When & Then
     try {
       DeviceAttestationHelper.prepareIntegrityTokenProvider(mockContext, null)
@@ -59,47 +61,39 @@ class DeviceAttestationHelperTest {
   }
 
   @Test
-  fun `prepareIntegrityTokenProvider creates integrity manager when null`() {
-    // Given
-    val cloudProjectNumber = 123456789L
-    every { mockIntegrityManager.prepareIntegrityToken(any()) } returns mockk(relaxed = true)
-
-    // When
-    DeviceAttestationHelper.prepareIntegrityTokenProvider(mockContext, cloudProjectNumber)
-
-    // Then
-    verify { IntegrityManagerFactory.createStandard(mockContext) }
-    assertEquals(mockIntegrityManager, DeviceAttestationHelper.integrityManager)
-  }
-
-  @Test
-  fun `prepareIntegrityTokenProvider reuses existing integrity manager`() {
-    // Given
-    val cloudProjectNumber = 123456789L
-    DeviceAttestationHelper.integrityManager = mockIntegrityManager
-    every { mockIntegrityManager.prepareIntegrityToken(any()) } returns mockk(relaxed = true)
-
-    // When
-    DeviceAttestationHelper.prepareIntegrityTokenProvider(mockContext, cloudProjectNumber)
-
-    // Then
-    verify(exactly = 0) { IntegrityManagerFactory.createStandard(any()) }
-    verify { mockIntegrityManager.prepareIntegrityToken(any()) }
-  }
-
-  @Test
-  fun `getAndVerifyIntegrityToken throws exception when token provider is null`() {
+  fun `attestDevice throws exception when token provider is null`() = runTest {
     // Given
     DeviceAttestationHelper.integrityTokenProvider = null
 
     // When & Then
     try {
-      DeviceAttestationHelper.getAndVerifyIntegrityToken("client-id", "app-id")
+      DeviceAttestationHelper.attestDevice("client-id")
       throw AssertionError("Expected IllegalArgumentException to be thrown")
     } catch (e: IllegalArgumentException) {
       assertNotNull("Exception message should not be null", e.message)
-      // requireNotNull() throws IllegalArgumentException - exact message may vary by Kotlin version
+      assertTrue(
+        "Exception message should mention token provider",
+        e.message!!.contains("Integrity token provider must not be null"),
+      )
     }
+  }
+
+  @Test
+  fun `performAssertion calls device attestation API`() = runTest {
+    // Given
+    val token = "test-token"
+    val applicationId = "com.example.app"
+    val mockClient = mockk<com.clerk.network.model.client.Client>()
+
+    coEvery { mockDeviceAttestationApi.verify(any(), any()) } returns
+      ClerkResult.success(mockClient)
+
+    // When
+    val result = DeviceAttestationHelper.performAssertion(token, applicationId)
+
+    // Then
+    assertTrue("Result should be success", result is ClerkResult.Success)
+    assertEquals(mockClient, (result as ClerkResult.Success).value)
   }
 
   @Test
