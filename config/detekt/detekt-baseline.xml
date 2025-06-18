@@ -5,6 +5,7 @@
     <ID>MaxLineLength:User.kt$User.Companion$*</ID>
     <ID>NestedBlockDepth:ClientSyncingMiddleware.kt$ClientSyncingMiddleware$override fun intercept(chain: Interceptor.Chain): Response</ID>
     <ID>TooGenericExceptionCaught:ConfigurationManager.kt$ConfigurationManager$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ExternalAccountService.kt$ExternalAccountService$e: Exception</ID>
     <ID>TooGenericExceptionCaught:PasskeySignInService.kt$PasskeySignInService$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SessionTokenFetcher.kt$SessionTokenFetcher$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SignOutService.kt$SignOutService$e: Exception</ID>

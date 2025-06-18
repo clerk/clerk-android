@@ -77,7 +77,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
    * @param state Bundle containing the activity state
    */
   private fun hydrateState(state: Bundle?) {
-    ClerkLog.d("hydrateState called with state: $state")
     if (state == null) return finish()
     authorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false)
     state.getString(URI_KEY)?.let { desiredUri = Uri.parse(it) }
@@ -89,7 +88,15 @@ internal class SSOManagerActivity : AppCompatActivity() {
    * @param uri The callback URI containing authentication results
    */
   private fun authorizationComplete(uri: Uri) {
-    lifecycleScope.launch { SSOService.completeAuthenticateWithRedirect(uri) }
+    lifecycleScope.launch {
+      if (SSOService.hasPendingExternalAccountConnection()) {
+        ClerkLog.d("authorizationComplete called with external connection")
+        SSOService.completeExternalConnection()
+      } else {
+        ClerkLog.d("authorizationComplete called with redirect: $uri")
+        SSOService.completeAuthenticateWithRedirect(uri)
+      }
+    }
   }
 
   /** Handles authentication cancellation by the user. */
@@ -121,7 +128,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
     internal fun createResponseHandlingIntent(context: Context, responseUri: Uri?): Intent {
       val intent = createBaseIntent(context)
       intent.data = responseUri
-      // Add the URI to the extras Bundle as well
       responseUri?.let { intent.putExtra(URI_KEY, it.toString()) }
       intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
       return intent
@@ -138,5 +144,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
     internal const val URI_KEY = "uri"
     private const val KEY_AUTHORIZATION_STARTED = "authStarted"
+    internal const val IS_EXTERNAL_CONNECTION = "is_external_connection"
   }
 }

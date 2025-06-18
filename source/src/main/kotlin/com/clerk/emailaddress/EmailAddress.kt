@@ -1,4 +1,4 @@
-package com.clerk.network.model.emailaddress
+package com.clerk.emailaddress
 
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.network.ClerkApi

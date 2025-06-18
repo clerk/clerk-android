@@ -277,7 +277,7 @@ internal object PasskeySignInService {
 }
 
 @Serializable
-data class WebAuthnRequest(
+internal data class WebAuthnRequest(
   val challenge: String,
   val allowCredentials: List<Map<String, String>> = emptyList(),
   val timeout: Long,

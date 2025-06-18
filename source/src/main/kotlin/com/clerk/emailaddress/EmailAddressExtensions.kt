@@ -1,4 +1,4 @@
-package com.clerk.network.model.emailaddress
+package com.clerk.emailaddress
 
 import com.clerk.Clerk
 import com.clerk.network.model.verification.Verification
