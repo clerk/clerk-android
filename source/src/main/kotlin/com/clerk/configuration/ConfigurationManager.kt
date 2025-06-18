@@ -119,10 +119,6 @@ internal class ConfigurationManager {
     try {
       this.context = WeakReference(context.applicationContext)
       this.publishableKey = publishableKey
-      DeviceAttestationHelper.prepareIntegrityTokenProvider(
-        context.applicationContext,
-        cloudProjectNumber = options?.deviceAttestationOptions?.cloudProjectNumber,
-      )
 
       // Initialize storage helper explicitly to ensure it's ready
       StorageHelper.initialize(context.applicationContext)
@@ -137,12 +133,12 @@ internal class ConfigurationManager {
       hasConfigured = true
 
       // Start initial data refresh
-      refreshClientAndEnvironment(options?.deviceAttestationOptions?.applicationId)
+      refreshClientAndEnvironment(options)
 
       // Set up lifecycle monitoring for automatic refresh
       AppLifecycleListener.configure {
         if (hasConfigured) {
-          refreshClientAndEnvironment(options?.deviceAttestationOptions?.applicationId)
+          refreshClientAndEnvironment(options)
           startTokenRefresh()
         }
       }
@@ -208,7 +204,7 @@ internal class ConfigurationManager {
    *
    * The method is safe to call multiple times and will not interfere with ongoing requests.
    */
-  private fun refreshClientAndEnvironment(applicationId: String?) {
+  private fun refreshClientAndEnvironment(options: ClerkConfigurationOptions?) {
     if (!hasConfigured) {
       ClerkLog.w("Attempted to refresh before configuration. Skipping.")
       return
@@ -244,7 +240,9 @@ internal class ConfigurationManager {
         // Update Clerk state if both operations succeeded
         if (clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success) {
           attestDeviceIfNeeded(
-            applicationId = applicationId,
+            applicationContext = context.applicationContext,
+            cloudProjectNumber = options?.deviceAttestationOptions?.cloudProjectNumber,
+            applicationId = options?.deviceAttestationOptions?.applicationId,
             clientId = clientResult.value.id!!,
             environment = environmentResult.value,
           )
@@ -315,12 +313,18 @@ internal class ConfigurationManager {
     applicationId: String?,
     clientId: String,
     environment: Environment,
+    cloudProjectNumber: Long?,
+    applicationContext: Context,
   ) {
     val deviceAttestationMode = environment.fraudSettings.native.deviceAttestationMode
     if (
       (deviceAttestationMode == FraudSettings.DeviceAttestationMode.ONBOARDING) ||
         deviceAttestationMode == FraudSettings.DeviceAttestationMode.ENFORCED
     ) {
+      DeviceAttestationHelper.prepareIntegrityTokenProvider(
+        applicationContext,
+        cloudProjectNumber = cloudProjectNumber,
+      )
       val token =
         DeviceAttestationHelper.attestDevice(clientId).successOrElse {
           error("Device attestation failed: $it")

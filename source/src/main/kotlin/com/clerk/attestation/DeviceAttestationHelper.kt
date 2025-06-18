@@ -11,6 +11,7 @@ import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.StandardIntegrityManager
 import java.security.MessageDigest
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -35,29 +36,51 @@ internal object DeviceAttestationHelper {
   var integrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider? = null
 
   /**
-   * Prepares the integrity token provider for the given cloud project.
+   * Prepares the integrity token provider for the given cloud project. This is a suspend function
+   * that waits for the preparation to complete.
    *
    * @param context The Android application context
    * @param cloudProjectNumber The Google Cloud project number associated with the app
    * @throws IllegalArgumentException if cloudProjectNumber is null
+   * @throws IllegalStateException if preparation fails
    */
-  fun prepareIntegrityTokenProvider(context: Context, cloudProjectNumber: Long?) {
+  suspend fun prepareIntegrityTokenProvider(context: Context, cloudProjectNumber: Long?) {
     requireNotNull(cloudProjectNumber) { "Cloud project number is required" }
+
     if (integrityManager == null) {
       integrityManager = IntegrityManagerFactory.createStandard(context)
     }
 
-    requireNotNull(integrityManager) { "IntegrityManager is not initialized" }
-      .prepareIntegrityToken(
-        StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
-          .setCloudProjectNumber(cloudProjectNumber)
-          .build()
-      )
-      .addOnSuccessListener { tokenProvider ->
-        ClerkLog.d("Integrity token provider prepared successfully")
-        integrityTokenProvider = tokenProvider
+    val manager = requireNotNull(integrityManager) { "IntegrityManager is not initialized" }
+
+    suspendCancellableCoroutine<Unit> { continuation ->
+      val task =
+        manager.prepareIntegrityToken(
+          StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
+            .setCloudProjectNumber(cloudProjectNumber)
+            .build()
+        )
+
+      task
+        .addOnSuccessListener { tokenProvider ->
+          ClerkLog.d("Integrity token provider prepared successfully")
+          integrityTokenProvider = tokenProvider
+          continuation.resume(Unit)
+        }
+        .addOnFailureListener { exception ->
+          ClerkLog.e("Failed to prepare integrity token: $exception")
+          continuation.resumeWithException(
+            IllegalStateException("Failed to prepare integrity token", exception)
+          )
+        }
+
+      // Handle cancellation
+      continuation.invokeOnCancellation {
+        // Google Play Integrity API tasks don't support cancellation directly,
+        // but we can log that the operation was cancelled
+        ClerkLog.d("Integrity token preparation was cancelled")
       }
-      .addOnFailureListener { ClerkLog.e("Failed to prepare integrity token: $it") }
+    }
   }
 
   /**
