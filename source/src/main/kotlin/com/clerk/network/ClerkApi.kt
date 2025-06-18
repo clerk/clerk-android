@@ -11,6 +11,7 @@ import com.clerk.network.api.SignInApi
 import com.clerk.network.api.SignUpApi
 import com.clerk.network.api.UserApi
 import com.clerk.network.middleware.incoming.ClientSyncingMiddleware
+import com.clerk.network.middleware.incoming.DeviceAssertionInterceptor
 import com.clerk.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.network.middleware.outgoing.HeaderMiddleware
 import com.clerk.network.middleware.outgoing.MultipartHeaderInterceptor
@@ -30,7 +31,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 internal object ClerkApi {
 
   @OptIn(ExperimentalSerializationApi::class)
-  private val json = Json {
+  internal val json = Json {
     isLenient = true
     ignoreUnknownKeys = true
     coerceInputValues = true
@@ -90,6 +91,7 @@ internal object ClerkApi {
           addInterceptor(DeviceTokenSavingMiddleware())
           addInterceptor(UrlAppendingMiddleware())
           addInterceptor(MultipartHeaderInterceptor())
+          addInterceptor(DeviceAssertionInterceptor())
 
           if (Clerk.debugMode) {
             addInterceptor(
