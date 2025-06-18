@@ -116,4 +116,4 @@ fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull() = this.err
  * @return The error message, or null.
  */
 fun ClerkResult.Failure<ClerkErrorResponse>.longErrorMessageOrNull() =
-  this.error?.errors?.first()?.longMessage
+  this.error?.errors?.firstOrNull()?.longMessage
