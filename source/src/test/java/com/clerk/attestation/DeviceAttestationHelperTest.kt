@@ -22,6 +22,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+/** Expected length of SHA-256 hash in hexadecimal characters */
+private const val SHA256_HEX_LENGTH = 64
+
 @RunWith(RobolectricTestRunner::class)
 class DeviceAttestationHelperTest {
 
@@ -42,6 +45,7 @@ class DeviceAttestationHelperTest {
     // Reset the helper state
     DeviceAttestationHelper.integrityManager = null
     DeviceAttestationHelper.integrityTokenProvider = null
+    DeviceAttestationHelper.clearCache()
   }
 
   @After
@@ -68,12 +72,12 @@ class DeviceAttestationHelperTest {
     // When & Then
     try {
       DeviceAttestationHelper.attestDevice("client-id")
-      throw AssertionError("Expected IllegalArgumentException to be thrown")
-    } catch (e: IllegalArgumentException) {
+      throw AssertionError("Expected IllegalStateException to be thrown")
+    } catch (e: IllegalStateException) {
       assertNotNull("Exception message should not be null", e.message)
       assertTrue(
-        "Exception message should mention token provider",
-        e.message!!.contains("Integrity token provider must not be null"),
+        "Error message should mention token provider",
+        e.message!!.contains("Integrity token provider must be prepared before attestation"),
       )
     }
   }
@@ -97,6 +101,20 @@ class DeviceAttestationHelperTest {
   }
 
   @Test
+  fun `performAssertion throws exception when applicationId is null`() = runTest {
+    // Given
+    val token = "test-token"
+
+    // When & Then
+    try {
+      DeviceAttestationHelper.performAssertion(token, null)
+      throw AssertionError("Expected IllegalArgumentException to be thrown")
+    } catch (e: IllegalArgumentException) {
+      assertEquals("Application ID is required for device attestation", e.message)
+    }
+  }
+
+  @Test
   fun `getHashedClientId generates correct SHA-256 hash`() {
     // Given
     val clientId = "test-client-id"
@@ -106,8 +124,8 @@ class DeviceAttestationHelperTest {
 
     // Then
     assertNotNull(result)
-    assertEquals(64, result.length) // SHA-256 produces 64 character hex string
-    assertTrue(result.matches(Regex("[0-9a-f]{64}"))) // Should be valid hex string
+    assertEquals(SHA256_HEX_LENGTH, result.length) // SHA-256 produces 64 character hex string
+    assertTrue(result.matches(Regex("[0-9a-f]{$SHA256_HEX_LENGTH}"))) // Should be valid hex string
   }
 
   @Test
@@ -122,10 +140,14 @@ class DeviceAttestationHelperTest {
 
       // Same input should always produce same hash
       assertEquals("Hash should be consistent for input: $input", result1, result2)
-      assertEquals("Hash should be 64 characters for input: $input", 64, result1.length)
+      assertEquals(
+        "Hash should be $SHA256_HEX_LENGTH characters for input: $input",
+        SHA256_HEX_LENGTH,
+        result1.length,
+      )
       assertTrue(
         "Hash should be valid hex for input: $input",
-        result1.matches(Regex("[0-9a-f]{64}")),
+        result1.matches(Regex("[0-9a-f]{$SHA256_HEX_LENGTH}")),
       )
     }
   }
@@ -142,6 +164,40 @@ class DeviceAttestationHelperTest {
 
     // Then
     assertTrue("Different inputs should produce different hashes", hash1 != hash2)
+  }
+
+  @Test
+  fun `getHashedClientId uses cache for performance`() {
+    // Given
+    val clientId = "test-client-id"
+
+    // When - call multiple times
+    val result1 = DeviceAttestationHelper.getHashedClientId(clientId)
+    val result2 = DeviceAttestationHelper.getHashedClientId(clientId)
+    val result3 = DeviceAttestationHelper.getHashedClientId(clientId)
+
+    // Then - all results should be identical (from cache)
+    assertEquals("Results should be identical from cache", result1, result2)
+    assertEquals("Results should be identical from cache", result2, result3)
+  }
+
+  @Test
+  fun `clearCache resets helper state`() {
+    // Given - generate some cached data
+    DeviceAttestationHelper.getHashedClientId("test")
+
+    // When
+    DeviceAttestationHelper.clearCache()
+
+    // Then
+    val statsAfter = DeviceAttestationHelper.getCacheStats()
+    assertEquals("Hash cache should be empty", 0, statsAfter.hashCacheSize)
+    assertEquals("Prepared providers should be empty", 0, statsAfter.preparedProvidersCount)
+    assertEquals(
+      "Token provider should be null",
+      null,
+      DeviceAttestationHelper.integrityTokenProvider,
+    )
   }
 
   @Test
