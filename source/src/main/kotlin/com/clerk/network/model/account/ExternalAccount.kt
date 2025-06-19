@@ -71,7 +71,7 @@ data class ExternalAccount(
  *   [ClerkErrorResponse] on failure
  * @throws IllegalArgumentException if the external verification redirect URL is null
  */
-suspend fun ExternalAccount.reauthorize(): ClerkResult<Verification, ClerkErrorResponse> {
+suspend fun ExternalAccount.reauthorize(): ClerkResult<ExternalAccount, ClerkErrorResponse> {
   val redirectUrl =
     requireNotNull(this.verification?.externalVerificationRedirectUrl) {
       "External verification redirect URL is null"
