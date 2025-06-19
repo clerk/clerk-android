@@ -25,7 +25,8 @@ internal class HeaderMiddleware : Interceptor {
         .addHeader(OutgoingHeaders.CLERK_API_VERSION.header, CURRENT_API_VERSION)
         .addHeader(OutgoingHeaders.X_ANDROID_SDK_VERSION.header, CURRENT_SDK_VERSION)
         .addHeader(OutgoingHeaders.X_MOBILE.header, IS_MOBILE_HEADER_VALUE)
-    //        .addHeader(OutgoingHeaders.X_CLERK_DEVICE_ID.header, DeviceIdGenerator.getDeviceId())
+    //        .addHeader(OutgoingHeaders.X_CLERK_DEVICE_ID.header,
+    // DeviceIdGenerator.getOrGenerateDeviceId())
 
     if (Clerk.isInitialized.value) {
       Clerk.client.id?.let {

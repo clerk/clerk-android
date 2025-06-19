@@ -10,7 +10,6 @@ import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.image.ImageResource
 import com.clerk.network.model.totp.TOTPResource
-import com.clerk.network.model.verification.Verification
 import com.clerk.network.paths.CommonParams
 import com.clerk.network.paths.Paths
 import com.clerk.network.serialization.ClerkResult
@@ -218,7 +217,7 @@ internal interface UserApi {
   suspend fun reauthorizeExternalAccount(
     @Path(CommonParams.EXTERNAL_ACCOUNT_ID) externalAccountId: String,
     @Field("redirect_url") redirectUrl: String,
-  ): ClerkResult<Verification, ClerkErrorResponse>
+  ): ClerkResult<ExternalAccount, ClerkErrorResponse>
 
   @DELETE(Paths.UserPath.ExternalAccounts.WithId.EXTERNAL_ACCOUNTS_WITH_ID)
   suspend fun deleteExternalAccount(
