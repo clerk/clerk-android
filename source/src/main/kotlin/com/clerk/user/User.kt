@@ -206,7 +206,7 @@ data class User(
     /** The new password to set for the user. */
     @SerialName("new_password") val newPassword: String,
     /** Whether to sign out of all other sessions after changing the password. Default is false. */
-    val signOutOfOtherSessions: Boolean = false,
+    @SerialName("sign_out_of_other_sessions") val signOutOfOtherSessions: Boolean = false,
   )
 
   /**
