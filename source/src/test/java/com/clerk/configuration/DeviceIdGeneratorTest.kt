@@ -18,6 +18,18 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+/** Number of threads to use for concurrency testing */
+private const val CONCURRENCY_TEST_THREAD_COUNT = 10
+
+/** Expected number of times storage should be called during initialization */
+private const val EXPECTED_STORAGE_LOAD_CALLS = 1
+
+/** Expected number of times storage should be called when saving new device ID */
+private const val EXPECTED_STORAGE_SAVE_CALLS = 1
+
+/** Expected number of device IDs that should be saved during initialization */
+private const val EXPECTED_SAVED_DEVICE_ID_COUNT = 1
+
 @RunWith(RobolectricTestRunner::class)
 class DeviceIdGeneratorTest {
 
@@ -47,7 +59,7 @@ class DeviceIdGeneratorTest {
 
     // Then
     assertEquals(existingDeviceId, result)
-    verify(exactly = 1) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
+    verify(exactly = EXPECTED_STORAGE_LOAD_CALLS) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
     verify(exactly = 0) { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) }
   }
 
@@ -58,13 +70,12 @@ class DeviceIdGeneratorTest {
     val savedDeviceIds = mutableListOf<String>()
     every { StorageHelper.saveValue(StorageKey.DEVICE_ID, capture(savedDeviceIds)) } returns Unit
 
-    val numberOfThreads = 10
-    val executor = Executors.newFixedThreadPool(numberOfThreads)
-    val latch = CountDownLatch(numberOfThreads)
+    val executor = Executors.newFixedThreadPool(CONCURRENCY_TEST_THREAD_COUNT)
+    val latch = CountDownLatch(CONCURRENCY_TEST_THREAD_COUNT)
     val results = mutableListOf<String>()
 
     // When - Execute multiple threads simultaneously
-    repeat(numberOfThreads) {
+    repeat(CONCURRENCY_TEST_THREAD_COUNT) {
       executor.submit {
         try {
           DeviceIdGenerator.initialize()
@@ -81,7 +92,11 @@ class DeviceIdGeneratorTest {
     executor.shutdown()
 
     // Then
-    assertEquals("All threads should return a device ID", numberOfThreads, results.size)
+    assertEquals(
+      "All threads should return a device ID",
+      CONCURRENCY_TEST_THREAD_COUNT,
+      results.size,
+    )
 
     // All threads should return the same ID due to proper synchronization and caching
     val firstId = results.first()
@@ -95,20 +110,32 @@ class DeviceIdGeneratorTest {
     UUID.fromString(firstId) // Will throw if invalid
 
     // Verify that only one ID was saved
-    assertEquals("Only one device ID should be saved", 1, savedDeviceIds.size)
+    assertEquals(
+      "Only one device ID should be saved",
+      EXPECTED_SAVED_DEVICE_ID_COUNT,
+      savedDeviceIds.size,
+    )
     assertEquals("Saved ID should match the generated ID", firstId, savedDeviceIds.first())
   }
 
   @Test
-  fun `getDeviceId throws exception when not initialized`() {
-    // Given - DeviceIdGenerator is not initialized
+  fun `getDeviceId automatically initializes when not previously initialized`() {
+    // Given - Simulate no existing device ID in storage but storage is working
+    every { StorageHelper.loadValue(StorageKey.DEVICE_ID) } returns null
+    every { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) } returns Unit
 
-    // When & Then
-    try {
-      DeviceIdGenerator.getDeviceId()
-      throw AssertionError("Expected IllegalStateException to be thrown")
-    } catch (e: IllegalStateException) {
-      assertEquals("Device ID not initialized", e.message)
+    // When - Call getDeviceId without explicit initialization
+    val result = DeviceIdGenerator.getDeviceId()
+
+    // Then - Should return a valid device ID
+    assertNotNull("Device ID should not be null", result)
+    assertFalse("Device ID should not be empty", result.isEmpty())
+    UUID.fromString(result) // Will throw if invalid
+
+    // Should have attempted to load and save to storage
+    verify(exactly = EXPECTED_STORAGE_LOAD_CALLS) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
+    verify(exactly = EXPECTED_STORAGE_SAVE_CALLS) {
+      StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>())
     }
   }
 
@@ -130,7 +157,7 @@ class DeviceIdGeneratorTest {
     assertEquals("Should return existing device ID", existingDeviceId, firstCall)
 
     // With caching, storage should only be called once during initialization
-    verify(exactly = 1) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
+    verify(exactly = EXPECTED_STORAGE_LOAD_CALLS) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
     verify(exactly = 0) { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) }
   }
 
@@ -163,7 +190,9 @@ class DeviceIdGeneratorTest {
     )
 
     // Storage should only be accessed once during initialization
-    verify(exactly = 1) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
-    verify(exactly = 1) { StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>()) }
+    verify(exactly = EXPECTED_STORAGE_LOAD_CALLS) { StorageHelper.loadValue(StorageKey.DEVICE_ID) }
+    verify(exactly = EXPECTED_STORAGE_SAVE_CALLS) {
+      StorageHelper.saveValue(StorageKey.DEVICE_ID, any<String>())
+    }
   }
 }
