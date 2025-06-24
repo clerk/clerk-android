@@ -1,5 +1,5 @@
 [versions]
-agp = "8.10.0"
+agp = "8.11.0"
 appcompat = "1.7.1"
 coreKtxVersion = "1.6.1"
 datastore = "1.1.7"
