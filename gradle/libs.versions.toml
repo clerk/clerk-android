@@ -58,7 +58,7 @@ kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
 ksp-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
 
 
-mockk = "io.mockk:mockk:1.14.2"
+mockk = "io.mockk:mockk:1.14.4"
 mockito = "org.mockito:mockito-core:5.18.0"
 
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
