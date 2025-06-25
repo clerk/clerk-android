@@ -9,7 +9,7 @@ import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.factor.Factor
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
-import com.clerk.passkeys.PasskeySignInService
+import com.clerk.passkeys.PasskeyService
 import com.clerk.signin.SignIn.PrepareFirstFactorParams
 import com.clerk.signin.internal.toFormData
 import com.clerk.signin.internal.toMap
@@ -225,7 +225,7 @@ data class SignIn(
      * Parameters for passkey verification strategy.
      *
      * @property publicKeyCredential The passkey credential for authentication.
-     * @see PasskeySignInService for generating the credential.
+     * @see PasskeyService for generating the credential.
      */
     @AutoMap
     @Serializable
@@ -472,8 +472,8 @@ data class SignIn(
       }
 
       /** Passkey strategy for authentication using a passkey. */
-      data class Passkey(override val strategy: String = PASSKEY, val context: Context) : Strategy {
-        constructor(context: Context) : this(strategy = PASSKEY, context = context)
+      data class Passkey(override val strategy: String = PASSKEY) : Strategy {
+        constructor() : this(strategy = PASSKEY)
       }
     }
   }
@@ -517,7 +517,7 @@ data class SignIn(
     suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
         is CreateParams.Strategy.Transfer -> ClerkApi.signIn.createSignIn(mapOf(TRANSFER to "true"))
-        is CreateParams.Strategy.Passkey -> PasskeySignInService.signInWithPasskey(params.context)
+        is CreateParams.Strategy.Passkey -> PasskeyService.signInWithPasskey()
         else -> ClerkApi.signIn.createSignIn(params.toMap())
       }
     }

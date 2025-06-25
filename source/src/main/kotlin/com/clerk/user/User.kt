@@ -16,6 +16,7 @@ import com.clerk.network.model.totp.TOTPResource
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.passkeys.Passkey
+import com.clerk.passkeys.PasskeyService
 import com.clerk.phonenumber.PhoneNumber
 import com.clerk.session.Session
 import com.clerk.sso.OAuthProvider
@@ -418,8 +419,8 @@ data class User(
      * @return A [ClerkResult] containing the created [Passkey] object on success, or a
      *   [ClerkErrorResponse] on failure
      */
-    suspend fun createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
-      return ClerkApi.user.createPasskey()
+    suspend fun createPasskey() {
+      return PasskeyService.createPasskey()
     }
 
     /**
