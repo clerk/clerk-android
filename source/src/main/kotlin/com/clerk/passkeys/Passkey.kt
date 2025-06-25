@@ -36,7 +36,24 @@ data class Passkey(
 
   /** The date when the passkey was last used. */
   val lastUsedAt: Long? = null,
-)
+) {
+
+  companion object {
+    /**
+     * Creates a new passkey for the current user or the user with the given session ID.
+     *
+     * Passkeys are a modern, secure authentication method that uses cryptographic key pairs. The
+     * creation process will typically prompt the user to use their device's biometric
+     * authentication (fingerprint, face recognition) or device PIN to create the passkey.
+     *
+     * @return A [ClerkResult] containing the created [Passkey] object on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
+    suspend fun create(): ClerkResult<Passkey, ClerkErrorResponse> {
+      return PasskeyService.createPasskey()
+    }
+  }
+}
 
 /**
  * Updates the properties of this passkey.
