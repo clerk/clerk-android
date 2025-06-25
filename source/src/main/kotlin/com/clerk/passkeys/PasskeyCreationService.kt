@@ -3,10 +3,10 @@ package com.clerk.passkeys
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.credentials.CreatePublicKeyCredentialRequest
-import androidx.credentials.CredentialManager
 import com.clerk.Clerk
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.onFailure
 import com.clerk.network.serialization.onSuccess
@@ -17,11 +17,22 @@ import kotlinx.serialization.json.jsonPrimitive
  * Service responsible for creating new passkeys for users.
  *
  * This service handles the complete passkey creation flow including:
- * - Initiating passkey creation with the Clerk API
- * - Using Android Credential Manager to create the actual credential
+ * - Initiating passkey creation with the Clerk API to get the challenge
+ * - Using Android's CredentialManager to create the passkey credential
  * - Verifying the created passkey with the Clerk API
  */
 internal object PasskeyCreationService {
+
+  private var credentialManager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()
+
+  /**
+   * Sets the credential manager for testing purposes.
+   *
+   * @param manager The credential manager implementation to use
+   */
+  internal fun setCredentialManager(manager: PasskeyCredentialManager) {
+    credentialManager = manager
+  }
 
   /**
    * Creates a new passkey for the current user.
@@ -37,30 +48,39 @@ internal object PasskeyCreationService {
    * credential creation and verification flow.
    */
   @SuppressLint("PublicKeyCredential")
-  suspend fun createPasskey() {
+  suspend fun createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
     val context = Clerk.applicationContext!!.get()!!
-    val credentialManager = CredentialManager.create(context)
-    when (val createPasskeyResult = ClerkApi.user.createPasskey()) {
-      is ClerkResult.Failure -> {}
+    return when (val createPasskeyResult = ClerkApi.user.createPasskey()) {
+      is ClerkResult.Failure -> {
+        ClerkLog.e("Passkey creation failed: ${createPasskeyResult.error}")
+        createPasskeyResult
+      }
       is ClerkResult.Success -> {
-        val createPublicKeyCredentialRequest =
-          CreatePublicKeyCredentialRequest(
-            requestJson = createPasskeyResult.value.verification?.nonce!!
-          )
-        val result =
-          credentialManager.createCredential(
-            context = context,
-            request = createPublicKeyCredentialRequest,
-          )
-        val passkeyData = parsePasskeyDataDirectFromBundle(result.data)
-        ClerkApi.user
-          .attemptPasskeyVerification(
-            passkeyId = createPasskeyResult.value.id,
-            publicKeyCredential = ClerkApi.json.encodeToString(passkeyData),
-          )
-          .onSuccess { ClerkLog.d("Passkey created successfully: ${it}") }
-          .onFailure { ClerkLog.e("Passkey creation failed: ${it}") }
-        ClerkLog.e("Passkey creation result: ${result.data}")
+        try {
+          val createPublicKeyCredentialRequest =
+            CreatePublicKeyCredentialRequest(
+              requestJson = createPasskeyResult.value.verification?.nonce!!
+            )
+          val result =
+            credentialManager.createCredential(
+              context = context,
+              request = createPublicKeyCredentialRequest,
+            )
+          val passkeyData = parsePasskeyDataDirectFromBundle(result.data)
+          val verificationResult =
+            ClerkApi.user.attemptPasskeyVerification(
+              passkeyId = createPasskeyResult.value.id,
+              publicKeyCredential = ClerkApi.json.encodeToString(passkeyData),
+            )
+          verificationResult
+            .onSuccess { ClerkLog.d("Passkey created successfully: ${it}") }
+            .onFailure { ClerkLog.e("Passkey creation failed: ${it}") }
+          ClerkLog.d("Passkey creation result: ${result.data}")
+          verificationResult
+        } catch (e: Exception) {
+          ClerkLog.e("Passkey creation failed with exception: ${e.message}")
+          ClerkResult.unknownFailure(e)
+        }
       }
     }
   }

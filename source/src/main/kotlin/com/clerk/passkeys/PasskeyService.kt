@@ -32,8 +32,11 @@ internal object PasskeyService {
    * 1. Requesting passkey creation from the Clerk API
    * 2. Using the Android Credential Manager to create the credential
    * 3. Verifying the created passkey with the Clerk API
+   *
+   * @return A [ClerkResult] containing the created [Passkey] object on success, or a
+   *   [ClerkErrorResponse] on failure
    */
-  suspend fun createPasskey() {
-    PasskeyCreationService.createPasskey()
+  suspend fun createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
+    return PasskeyCreationService.createPasskey()
   }
 }

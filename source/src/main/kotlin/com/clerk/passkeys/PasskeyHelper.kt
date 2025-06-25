@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonObject
 internal const val STRATEGY_KEY = "strategy"
 
 /** Passkey strategy identifier used in authentication requests */
-internal const val PASSKEY_STRATEGY = "passkey"
+private const val PASSKEY_STRATEGY_VALUE = "passkey"
 
 /**
  * Helper utilities for passkey operations.
@@ -18,6 +18,10 @@ internal const val PASSKEY_STRATEGY = "passkey"
  * Contains shared functionality used by both passkey creation and authentication services.
  */
 internal object PasskeyHelper {
+
+  /** Gets the passkey strategy value */
+  val passkeyStrategy: String
+    get() = PASSKEY_STRATEGY_VALUE
 
   /**
    * Extracts the domain from the Clerk base URL for use as the Relying Party ID.

@@ -2,7 +2,6 @@ package com.clerk.passkeys
 
 import android.content.Context
 import androidx.credentials.Credential
-import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
@@ -27,10 +26,31 @@ import org.json.JSONObject
  * This service handles the complete passkey authentication flow including:
  * - Creating a sign-in session with passkey strategy
  * - Requesting credentials from Android Credential Manager
- * - Processing different types of credentials (passkey, password, Google)
+ * * - Processing different types of credentials (passkey, password, Google)
  * - Completing the authentication with the Clerk API
  */
 internal object PasskeyAuthenticationService {
+
+  private var credentialManager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()
+  private var googleSignInService: GoogleSignInService = GoogleSignInService()
+
+  /**
+   * Sets the credential manager for testing purposes.
+   *
+   * @param manager The credential manager implementation to use
+   */
+  internal fun setCredentialManager(manager: PasskeyCredentialManager) {
+    credentialManager = manager
+  }
+
+  /**
+   * Sets the Google sign-in service for testing purposes.
+   *
+   * @param service The Google sign-in service implementation to use
+   */
+  internal fun setGoogleSignInService(service: GoogleSignInService) {
+    googleSignInService = service
+  }
 
   /**
    * Initiates and completes a sign-in flow using passkeys.
@@ -79,7 +99,7 @@ internal object PasskeyAuthenticationService {
    * @return [ClerkResult] containing either a [SignIn] session or an error
    */
   private suspend fun createSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
-    return ClerkApi.signIn.createSignIn(mapOf(STRATEGY_KEY to PASSKEY_STRATEGY))
+    return ClerkApi.signIn.createSignIn(mapOf(STRATEGY_KEY to PasskeyHelper.passkeyStrategy))
   }
 
   /**
@@ -90,7 +110,7 @@ internal object PasskeyAuthenticationService {
    * presented with available credentials to choose from.
    *
    * @param context Android context for the credential manager
-   * @param signIn The sign-in session containing authentication challenge
+   * @param signIn The sign-in session containing the WebAuthn challenge
    * @param allowedCredentialIds Optional list of allowed credential IDs to filter results
    * @return The selected [Credential] from the user
    * @throws NoCredentialException if no credentials are available
@@ -101,7 +121,6 @@ internal object PasskeyAuthenticationService {
     signIn: SignIn,
     allowedCredentialIds: List<String> = emptyList(),
   ): Credential {
-    val credentialManager = CredentialManager.create(context)
     val credentialRequest = buildCredentialRequest(signIn, allowedCredentialIds)
 
     val result =
@@ -278,7 +297,7 @@ internal object PasskeyAuthenticationService {
       ClerkLog.d("Processing Google ID token credential")
     }
 
-    return when (val result = GoogleSignInService().handleSignInResult(credential)) {
+    return when (val result = googleSignInService.handleSignInResult(credential)) {
       is ClerkResult.Success -> {
         ClerkResult.success(result.value.signIn!!)
       }

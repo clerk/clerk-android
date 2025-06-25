@@ -419,7 +419,7 @@ data class User(
      * @return A [ClerkResult] containing the created [Passkey] object on success, or a
      *   [ClerkErrorResponse] on failure
      */
-    suspend fun createPasskey() {
+    suspend fun createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
       return PasskeyService.createPasskey()
     }
 
