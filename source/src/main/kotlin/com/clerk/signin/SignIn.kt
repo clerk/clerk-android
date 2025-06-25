@@ -292,50 +292,21 @@ data class SignIn(
   }
 
   /**
-   * A sealed interface defining parameter objects for redirect-based authentication strategies.
+   * Parameters for authenticating with a redirect to an external provider.
    *
    * This includes OAuth providers and Enterprise SSO configurations that require redirecting the
    * user to an external authentication provider.
+   *
+   * @param provider The [OAuthProvider] to authenticate with,
+   * @param redirectUrl The URL to redirect back to after successful authentication.
    */
-  sealed interface AuthenticateWithRedirectParams {
-
-    /** The OAuth or SSO provider to authenticate with. */
-    val provider: OAuthProvider
-
-    /** The URL to redirect to after the authentication flow completes. */
-    val redirectUrl: String
-
-    /**
-     * Parameters for OAuth authentication with redirect.
-     *
-     * @property provider The OAuth provider (e.g., Google, Facebook, GitHub).
-     * @property redirectUrl The URL to redirect to after OAuth completion.
-     */
-    data class OAuth(
-      override val provider: OAuthProvider,
-      @SerialName("redirect_url")
-      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-    ) : AuthenticateWithRedirectParams {
-      constructor(
-        provider: OAuthProvider
-      ) : this(provider, RedirectConfiguration.DEFAULT_REDIRECT_URL)
-    }
-
-    /**
-     * Parameters for Enterprise SSO authentication with redirect.
-     *
-     * @property provider The Enterprise SSO provider.
-     * @property redirectUrl The URL to redirect to after SSO completion.
-     */
-    data class EnterpriseSSO(
-      override val provider: OAuthProvider,
-      @SerialName("redirect_url")
-      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-    ) : AuthenticateWithRedirectParams {
-      constructor(
-        provider: OAuthProvider
-      ) : this(provider, RedirectConfiguration.DEFAULT_REDIRECT_URL)
-    }
+  data class AuthenticateWithRedirectParams(
+    val provider: OAuthProvider,
+    @SerialName("redirect_url") val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+  ) {
+    constructor(
+      provider: OAuthProvider
+    ) : this(provider, RedirectConfiguration.DEFAULT_REDIRECT_URL)
   }
 
   /**

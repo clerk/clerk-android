@@ -2,14 +2,12 @@
 agp = "8.11.0"
 appcompat = "1.7.1"
 coreKtxVersion = "1.6.1"
-datastore = "1.1.7"
 detekt = "1.23.8"
-eithernet = "2.0.0"
 dokka = "1.9.20"
 jdk = "17"
 jvmTarget = "17"
 kotlin = "2.2.0"
-ksp = "2.1.21-2.0.2"
+ksp = "2.2.0-2.0.2"
 mavenPublish = "0.33.0"
 okhttp = "4.12.0"
 retrofit = "3.0.0"
@@ -18,21 +16,17 @@ spotless = "7.0.4"
 lifecycleProcess = "2.9.1"
 jetbrainsKotlinJvm = "2.2.0"
 chucker = "4.1.0"
-composeBom = "2025.06.01"
 foundationLayoutAndroid = "1.8.3"
 automap = "0.0.5"
 
 [libraries]
 
 androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"
-androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.1"
 androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.9.1"
 androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.1"
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-browser = "androidx.browser:browser:1.8.0"
 androidx-credentials = "androidx.credentials:credentials:1.5.0"
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.5.0"
