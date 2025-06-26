@@ -141,10 +141,10 @@ Native Sign in with Google | ✅
 Session Management | ✅ 
 Multi-Session Applications | ❌
 Forgot Password | ✅
-User Management | ❌
-Passkeys | ❌
+User Management | ✅
+Passkeys | ✅
 Enterprise SSO (SAML) | ❌
-Device Attestation | ❌
+Device Attestation | ✅
 Organizations | ❌
 Prebuilt UI Components | ❌ 
 Magic Links | ❌ 
