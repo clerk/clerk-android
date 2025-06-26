@@ -65,7 +65,7 @@
     <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
   </div>
   <div class="tabbedcontent">
-    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="FUNCTION,EXTENSION_FUNCTION">Functions</button></div>
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="FUNCTION,EXTENSION_FUNCTION">Functions</button><button class="section-tab" data-togglable="PROPERTY,EXTENSION_PROPERTY">Properties</button></div>
     <div class="tabs-section-body">
       <div data-togglable="TYPE">
         <h2 class="">Types</h2>
@@ -80,6 +80,25 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-clerk-result/index.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><span class="token keyword">out </span><a href="-clerk-result/index.html">E</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">ClerkResult is a sealed interface used throughout the Clerk SDK to represent the result of an API call. It provides a type-safe and non-exceptional way to handle either a successful response with data or a failure with error details.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="EXTENSION_PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-1087154795%2FProperties%2F1059751064" anchor-label="longErrorMessageOrNull" id="-1087154795%2FProperties%2F1059751064" data-filterable-set=":source:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="long-error-message-or-null.html"><span>long</span><wbr><span>Error</span><wbr><span>Message</span><wbr><span>Or</span><wbr><span><span>Null</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1087154795%2FProperties%2F1059751064"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="-clerk-result/-failure/index.html">ClerkResult.Failure</a><span class="token operator">&lt;</span><a href="../com.clerk.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="long-error-message-or-null.html">longErrorMessageOrNull</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Convenience function to extract the long error message from a <a href="-clerk-result/-failure/index.html">ClerkResult.Failure</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -129,21 +148,6 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">inline </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="fold.html">T</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="fold.html">E</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="fold.html">C</a><span class="token operator">&gt; </span><a href="-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="fold.html">T</a><span class="token punctuation">, </span><a href="fold.html">E</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="fold.html"><span class="token function">fold</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">onSuccess<span class="token operator">: </span><span class="token punctuation">(</span>value<span class="token operator">: </span><a href="fold.html">T</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="fold.html">C</a><span class="token punctuation">, </span></span><span class="parameter ">onFailure<span class="token operator">: </span><span class="token punctuation">(</span>failure<span class="token operator">: </span><a href="-clerk-result/-failure/index.html">ClerkResult.Failure</a><span class="token operator">&lt;</span><a href="fold.html">E</a><span class="token operator">&gt;</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="fold.html">C</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="fold.html">C</a></div><div class="brief "><p class="paragraph">Transforms an <a href="-clerk-result/index.html">ClerkResult</a> into a <a href="fold.html">C</a> value.</p></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="-1087154795%2FFunctions%2F1059751064" anchor-label="longErrorMessageOrNull" id="-1087154795%2FFunctions%2F1059751064" data-filterable-set=":source:dokkaHtmlPartial/release"></a>
-          <div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="long-error-message-or-null.html"><span>long</span><wbr><span>Error</span><wbr><span>Message</span><wbr><span>Or</span><wbr><span><span>Null</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1087154795%2FFunctions%2F1059751064"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="-clerk-result/-failure/index.html">ClerkResult.Failure</a><span class="token operator">&lt;</span><a href="../com.clerk.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="long-error-message-or-null.html"><span class="token function">longErrorMessageOrNull</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="/<Error class: unknown class>///PointingToDeclaration/">&lt;Error class: unknown class&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Convenience function to extract the long error message from a <a href="-clerk-result/-failure/index.html">ClerkResult.Failure</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
