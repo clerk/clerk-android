@@ -60,7 +60,26 @@ data class PhoneNumber(
 
   /** A list of backup codes in case of lost phone number access. */
   val backupCodes: List<String>? = null,
-)
+) {
+
+  companion object {
+    /**
+     * Creates a new phone number for the current user or the user with the given session ID.
+     *
+     * The newly created phone number will be unverified initially. The user will need to complete
+     * the verification process (typically via SMS) before the phone number can be used for
+     * authentication or two-factor authentication.
+     *
+     * @param phoneNumber The phone number to add to the user's account (should include country
+     *   code)
+     * @return A [ClerkResult] containing the created [PhoneNumber] object on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
+    suspend fun create(phoneNumber: String): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+      return ClerkApi.user.createPhoneNumber(phoneNumber)
+    }
+  }
+}
 
 /**
  * Attempts to verify this phone number using the provided verification code.

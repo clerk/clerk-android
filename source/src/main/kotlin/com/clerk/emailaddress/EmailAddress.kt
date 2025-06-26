@@ -46,6 +46,22 @@ data class EmailAddress(
       @SerialName("action_complete_redirect_url") val actionCompleteRedirectUrl: String? = null,
     ) : PrepareVerificationParams
   }
+
+  companion object {
+    /**
+     * Creates a new email address for the current user or the user with the given session ID.
+     *
+     * The newly created email address will be unverified initially. The user will need to complete
+     * the verification process before the email address can be used for authentication.
+     *
+     * @param email The email address to add to the user's account
+     * @return A [ClerkResult] containing the created [EmailAddress] object on success, or a
+     *   [ClerkErrorResponse] on failure
+     */
+    suspend fun create(email: String): ClerkResult<EmailAddress, ClerkErrorResponse> {
+      return ClerkApi.user.createEmailAddress(emailAddress = email)
+    }
+  }
 }
 
 /**
