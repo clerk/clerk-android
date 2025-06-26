@@ -160,7 +160,7 @@ internal object DeviceAttestationHelper {
     val tokenProvider =
       integrityTokenProvider
         ?: return ClerkResult.unknownFailure(
-          error("Integrity token provider must be prepared before attestation")
+          IllegalStateException("Integrity token provider must be prepared before attestation")
         )
 
     return try {
@@ -184,7 +184,9 @@ internal object DeviceAttestationHelper {
             .addOnFailureListener { exception ->
               ClerkLog.e("Failed to get integrity token: $exception")
               continuation.resume(
-                ClerkResult.unknownFailure(error("Failed to get integrity token: $exception"))
+                ClerkResult.unknownFailure(
+                  IllegalStateException("Failed to get integrity token: $exception")
+                )
               )
             }
 
@@ -194,7 +196,7 @@ internal object DeviceAttestationHelper {
       }
     } catch (e: Exception) {
       ClerkLog.e("Timeout or error during device attestation: ${e.message}")
-      ClerkResult.unknownFailure(error("Device attestation timeout: ${e.message}"))
+      ClerkResult.unknownFailure(IllegalStateException("Device attestation timeout: ${e.message}"))
     }
   }
 
@@ -228,7 +230,7 @@ internal object DeviceAttestationHelper {
       }
     } catch (e: Exception) {
       ClerkLog.e("Exception during device assertion: ${e.message}")
-      ClerkResult.unknownFailure(error("Device assertion failed: ${e.message}"))
+      ClerkResult.unknownFailure(IllegalStateException("Device assertion failed: ${e.message}"))
     }
   }
 
