@@ -14,7 +14,6 @@ import com.clerk.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.network.middleware.incoming.DeviceAssertionInterceptor
 import com.clerk.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.network.middleware.outgoing.HeaderMiddleware
-import com.clerk.network.middleware.outgoing.MultipartHeaderInterceptor
 import com.clerk.network.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.network.serialization.ClerkApiResultConverterFactory
@@ -90,7 +89,6 @@ internal object ClerkApi {
           addInterceptor(HeaderMiddleware())
           addInterceptor(DeviceTokenSavingMiddleware())
           addInterceptor(UrlAppendingMiddleware())
-          addInterceptor(MultipartHeaderInterceptor())
           addInterceptor(DeviceAssertionInterceptor())
 
           if (Clerk.debugMode) {
