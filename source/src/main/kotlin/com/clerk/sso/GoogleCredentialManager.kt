@@ -1,6 +1,5 @@
 package com.clerk.sso
 
-import android.content.Context
 import android.os.Bundle
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -23,7 +22,7 @@ internal interface GoogleCredentialManager {
    * @param context The context used to access the credential manager.
    * @return A [GetCredentialResponse] containing the retrieved Google credential.
    */
-  suspend fun getSignInWithGoogleCredential(context: Context): GetCredentialResponse
+  suspend fun getSignInWithGoogleCredential(): GetCredentialResponse
 
   /** Take a [GoogleIdTokenCredential] and extract the ID token from it. */
   fun getIdTokenFromCredential(credentialData: Bundle): String
@@ -32,9 +31,12 @@ internal interface GoogleCredentialManager {
 }
 
 class GoogleCredentialManagerImpl : GoogleCredentialManager {
-  override suspend fun getSignInWithGoogleCredential(context: Context): GetCredentialResponse {
+  override suspend fun getSignInWithGoogleCredential(): GetCredentialResponse {
 
-    val oneTapClientId = requireNotNull(Clerk.environment.displayConfig.googleOneTapClientId)
+    val oneTapClientId =
+      requireNotNull(Clerk.environment.displayConfig.googleOneTapClientId) {
+        "Google One Tap Client ID is not set. Please set it in your Clerk dashboard."
+      }
 
     val googleIdOption: GetGoogleIdOption =
       GetGoogleIdOption.Builder()
@@ -46,9 +48,12 @@ class GoogleCredentialManagerImpl : GoogleCredentialManager {
 
     val request = GetCredentialRequest.Builder().addCredentialOption(googleIdOption).build()
 
-    val credentialManager = CredentialManager.create(context)
+    val credentialManager = CredentialManager.create(Clerk.applicationContext!!.get()!!)
 
-    return credentialManager.getCredential(request = request, context = context)
+    return credentialManager.getCredential(
+      request = request,
+      context = Clerk.applicationContext!!.get()!!,
+    )
   }
 
   override fun getIdTokenFromCredential(credentialData: Bundle): String {

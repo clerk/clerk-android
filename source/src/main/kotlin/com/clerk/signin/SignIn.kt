@@ -2,8 +2,8 @@
 
 package com.clerk.signin
 
-import android.content.Context
 import com.clerk.automap.annotations.AutoMap
+import com.clerk.automap.annotations.MapProperty
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.factor.Factor
@@ -32,6 +32,8 @@ private const val RESET_PASSWORD_PHONE_CODE = "reset_password_phone_code"
 private const val TICKET = "ticket"
 private const val GOOGLE_ONE_TAP = "google_one_tap"
 private const val TRANSFER = "transfer"
+
+private const val ENTERPRISE_SSO = "enterprise_sso"
 
 /**
  * The `SignIn` object holds the state of the current sign-in process and provides helper methods to
@@ -296,17 +298,38 @@ data class SignIn(
    *
    * This includes OAuth providers and Enterprise SSO configurations that require redirecting the
    * user to an external authentication provider.
-   *
-   * @param provider The [OAuthProvider] to authenticate with,
-   * @param redirectUrl The URL to redirect back to after successful authentication.
    */
-  data class AuthenticateWithRedirectParams(
-    val provider: OAuthProvider,
-    @SerialName("redirect_url") val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-  ) {
-    constructor(
-      provider: OAuthProvider
-    ) : this(provider, RedirectConfiguration.DEFAULT_REDIRECT_URL)
+  sealed interface AuthenticateWithRedirectParams {
+    val redirectUrl: String
+    val legalAccepted: Boolean?
+    val emailAddress: String?
+    val identifier: String?
+
+    /** OAuth params for redirect authentication, you can use [OAuthProvider] directly */
+    @AutoMap
+    data class OAuth(
+      @MapProperty("providerData?.strategy") val strategy: OAuthProvider,
+      @SerialName("redirect_url")
+      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+      @SerialName("email_address") override val emailAddress: String?,
+      @SerialName("legal_accepted") override val legalAccepted: Boolean?,
+      override val identifier: String?,
+    ) : AuthenticateWithRedirectParams {
+      constructor(
+        provider: OAuthProvider
+      ) : this(provider, RedirectConfiguration.DEFAULT_REDIRECT_URL, null, null, null)
+    }
+
+    /** Enterprise SSO params for redirect authentication */
+    @AutoMap
+    data class EnterpriseSSO(
+      val strategy: String = ENTERPRISE_SSO,
+      @SerialName("redirect_url")
+      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+      @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
+      @SerialName("email_address") override val emailAddress: String? = null,
+      override val identifier: String? = null,
+    ) : AuthenticateWithRedirectParams
   }
 
   /**
@@ -515,14 +538,11 @@ data class SignIn(
     /**
      * Authenticates the user with a token generated from Google identity services.
      *
-     * @param context The application context of the end users device.
      * @return A [ClerkResult] containing the result of the authentication flow. or
      *   [ClerkResult.Failure] if the authentication fails.
      */
-    suspend fun authenticateWithGoogleOneTap(
-      context: Context
-    ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return GoogleSignInService().signInWithGoogle(context)
+    suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      return GoogleSignInService().signInWithGoogle()
     }
 
     /**
@@ -535,11 +555,8 @@ data class SignIn(
      *
      * @param context The context in which the authentication flow is initiated. Used to open the in
      *   app browser.
-     * @param params The parameters for the redirect-based authentication.
-     *   [AuthenticateWithRedirectParams.provider] an [OAuthProvider]
-     *   [AuthenticateWithRedirectParams.redirectUrl] The URL to redirect the user to after
-     *   initiating the authentication flow. Set by default to
-     *   [RedirectConfiguration.DEFAULT_REDIRECT_URL]
+     * @param params The parameters for the redirect-based authentication. See:
+     *   [AuthenticateWithRedirectParams]
      * @return A [ClerkResult] containing the result of the authentication flow. The [OAuthResult]
      *   could contain either a sign-in or sign-up result, depending on whether an account transfer
      *   took place (i.e. if the user didn't have an account and a sign up was created instead).
@@ -555,10 +572,7 @@ data class SignIn(
     suspend fun authenticateWithRedirect(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return SSOService.authenticateWithRedirect(
-        strategy = params.provider.providerData.strategy,
-        redirectUrl = params.redirectUrl,
-      )
+      return SSOService.authenticateWithRedirect(params)
     }
   }
 }

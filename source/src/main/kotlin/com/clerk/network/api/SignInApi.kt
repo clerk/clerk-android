@@ -36,8 +36,7 @@ internal interface SignInApi {
   @FormUrlEncoded
   @POST(Paths.ClientPath.SignInPath.SIGN_INS)
   suspend fun authenticateWithRedirect(
-    @Field(CommonParams.STRATEGY) strategy: String,
-    @Field("redirect_url") redirectUrl: String,
+    @FieldMap params: Map<String, String>
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
   @GET(Paths.ClientPath.SignInPath.WithId.SIGN_INS_WITH_ID)
