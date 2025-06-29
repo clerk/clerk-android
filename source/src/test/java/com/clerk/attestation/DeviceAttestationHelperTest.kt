@@ -69,17 +69,20 @@ class DeviceAttestationHelperTest {
     // Given
     DeviceAttestationHelper.integrityTokenProvider = null
 
-    // When & Then
-    try {
-      DeviceAttestationHelper.attestDevice("client-id")
-      throw AssertionError("Expected IllegalStateException to be thrown")
-    } catch (e: IllegalStateException) {
-      assertNotNull("Exception message should not be null", e.message)
-      assertTrue(
-        "Error message should mention token provider",
-        e.message!!.contains("Integrity token provider must be prepared before attestation"),
-      )
-    }
+    // When
+    val result = DeviceAttestationHelper.attestDevice("client-id")
+
+    // Then
+    assertTrue("Result should be failure", result is ClerkResult.Failure)
+    val failure = result as ClerkResult.Failure
+    assertNotNull("Throwable should not be null", failure.throwable)
+    assertTrue("Error should be IllegalStateException", failure.throwable is IllegalStateException)
+    assertTrue(
+      "Error message should mention token provider",
+      failure.throwable!!
+        .message!!
+        .contains("Integrity token provider must be prepared before attestation"),
+    )
   }
 
   @Test

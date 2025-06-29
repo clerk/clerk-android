@@ -124,7 +124,7 @@ class ClerkApiResultConverterFactoryTest {
     val sessionListType = createParameterizedType(List::class.java, Session::class.java)
 
     // When we check if it's a List
-    val isListType = (sessionListType as ParameterizedType).rawType == List::class.java
+    val isListType = sessionListType.rawType == List::class.java
 
     // Then it should be identified as a List
     assertEquals(true, isListType)
@@ -134,6 +134,7 @@ class ClerkApiResultConverterFactoryTest {
     assertEquals("Session", elementType.simpleName)
   }
 
+  @Suppress("UNCHECKED_CAST")
   @Test
   fun `ClerkApiResultConverter handles null delegate response`() {
     // Given
