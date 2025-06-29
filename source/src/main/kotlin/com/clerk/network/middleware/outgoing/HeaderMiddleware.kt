@@ -2,6 +2,7 @@ package com.clerk.network.middleware.outgoing
 
 import com.clerk.Clerk
 import com.clerk.configuration.DeviceIdGenerator
+import com.clerk.network.paths.Paths
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import okhttp3.Interceptor
@@ -39,6 +40,11 @@ internal class HeaderMiddleware : Interceptor {
 
     StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)?.let {
       newRequestBuilder.addHeader(OutgoingHeaders.AUTHORIZATION.header, it)
+    }
+
+    // See: https://community.cloudflare.com/t/cannot-seem-to-send-multipart-form-data/163491
+    if (request.url.encodedPath.contains(Paths.UserPath.PROFILE_IMAGE)) {
+      newRequestBuilder.removeHeader("Content-Type")
     }
 
     return chain.proceed(newRequestBuilder.build())

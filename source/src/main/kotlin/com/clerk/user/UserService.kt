@@ -1,13 +1,18 @@
 package com.clerk.user
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.image.ImageResource
 import com.clerk.network.serialization.ClerkResult
 import java.io.File
+import java.io.FileOutputStream
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+
+private const val COMPRESSION_PERCENTAGE = 75
 
 /**
  * Internal service object that provides user-related operations and API interactions.
@@ -29,9 +34,21 @@ internal object UserService {
    *   [ClerkErrorResponse] on failure.
    */
   suspend fun setProfilePhoto(file: File): ClerkResult<ImageResource, ClerkErrorResponse> {
-    val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-    val body = MultipartBody.Part.createFormData("file", "filename.jpeg", requestFile)
+    val compressedFile = compressImage(file)
+    val requestFile = compressedFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+    val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
 
-    return ClerkApi.user.setProfileImage(file = body)
+    return ClerkApi.user.setProfileImage(body)
+  }
+
+  fun compressImage(file: File, quality: Int = COMPRESSION_PERCENTAGE): File {
+    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+    val outputFile = File(file.parent, "compressed_${file.name}")
+
+    FileOutputStream(outputFile).use { out ->
+      bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
+    }
+
+    return outputFile
   }
 }
