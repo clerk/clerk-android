@@ -12,6 +12,7 @@ import com.clerk.network.serialization.ClerkResult
 import com.clerk.sso.OAuthProvider
 import com.clerk.sso.OAuthResult
 import com.clerk.sso.RedirectConfiguration
+import com.clerk.sso.SSOService
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -230,10 +231,10 @@ data class SignUp(
 
     enum class Strategy(val value: String) {
       /** Send a text message with a unique token to input */
-      PHONE_CODE(com.clerk.Constants.Strategy.PHONE_CODE),
+      PHONE_CODE(AuthStrategy.PHONE_CODE),
 
       /** Send an email with a unique token to input */
-      EMAIL_CODE(com.clerk.Constants.Strategy.EMAIL_CODE),
+      EMAIL_CODE(AuthStrategy.EMAIL_CODE),
     }
   }
 
@@ -369,7 +370,17 @@ data class SignUp(
       return ClerkApi.signUp.createSignUp(params)
     }
 
-    //    suspend fun authenticateWithRedirect() {}
+    suspend fun authenticateWithRedirect(
+      params: AuthenticateWithRedirectParams
+    ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      return SSOService.authenticateWithRedirect(
+        strategy = params.toMap()[AuthStrategy.STRATEGY_KEY]!!,
+        redirectUrl = params.redirectUrl,
+        identifier = params.identifier,
+        emailAddress = params.emailAddress,
+        legalAccepted = params.legalAccepted,
+      )
+    }
   }
 }
 

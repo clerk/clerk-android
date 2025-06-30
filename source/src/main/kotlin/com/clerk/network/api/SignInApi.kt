@@ -36,7 +36,11 @@ internal interface SignInApi {
   @FormUrlEncoded
   @POST(Paths.ClientPath.SignInPath.SIGN_INS)
   suspend fun authenticateWithRedirect(
-    @FieldMap params: Map<String, String>
+    @Field("strategy") strategy: String,
+    @Field("redirect_url") redirectUrl: String?,
+    @Field("identifier") identifier: String? = null,
+    @Field("email_address") emailAddress: String? = null,
+    @Field("legal_accepted") legalAccepted: Boolean? = null,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
   @GET(Paths.ClientPath.SignInPath.WithId.SIGN_INS_WITH_ID)

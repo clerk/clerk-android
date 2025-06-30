@@ -13,7 +13,6 @@ import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.longErrorMessageOrNull
 import com.clerk.signin.SignIn
 import com.clerk.signin.get
-import com.clerk.signin.toMap
 import com.clerk.signup.SignUp
 import com.clerk.sso.SSOService.authenticateWithRedirect
 import com.clerk.user.User.CreateExternalAccountParams
@@ -64,7 +63,11 @@ internal object SSOService {
    *   failure
    */
   suspend fun authenticateWithRedirect(
-    params: SignIn.AuthenticateWithRedirectParams
+    strategy: String,
+    redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+    identifier: String? = null,
+    emailAddress: String? = null,
+    legalAccepted: Boolean? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     // Clear any existing pending auth to prevent conflicts
     currentPendingAuth?.complete(
@@ -74,7 +77,14 @@ internal object SSOService {
     )
     clearCurrentAuth()
 
-    val initialResult = ClerkApi.signIn.authenticateWithRedirect(params.toMap())
+    val initialResult =
+      ClerkApi.signIn.authenticateWithRedirect(
+        strategy = strategy,
+        redirectUrl = redirectUrl,
+        identifier = identifier,
+        emailAddress = emailAddress,
+        legalAccepted = legalAccepted,
+      )
 
     return when (initialResult) {
       is ClerkResult.Failure -> {
