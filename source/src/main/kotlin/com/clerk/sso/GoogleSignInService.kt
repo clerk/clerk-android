@@ -60,7 +60,9 @@ internal class GoogleSignInService(
         }
       }
     } else {
-      ClerkResult.unknownFailure(error("Unsupported credential type: ${credential.type}"))
+      ClerkResult.unknownFailure(
+        IllegalStateException("Unsupported credential type: ${credential.type}")
+      )
     }
   }
 }
