@@ -8,9 +8,8 @@ import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.factor.Factor
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
+import com.clerk.passkeys.GoogleCredentialAuthenticationService
 import com.clerk.passkeys.PasskeyService
-import com.clerk.signin.SignIn.PrepareFirstFactorParams
-import com.clerk.signin.internal.toMap
 import com.clerk.sso.GoogleSignInService
 import com.clerk.sso.OAuthProvider
 import com.clerk.sso.OAuthResult
@@ -520,6 +519,18 @@ data class SignIn(
     }
   }
 
+  /** Enumerates the types of credential requests supported by the service. */
+  enum class CredentialType {
+    /** Request for a public key credential (passkey). */
+    PASSKEY,
+
+    /** Request for a password credential. */
+    PASSWORD,
+
+    /** Request for a Google ID token credential. */
+    GOOGLE,
+  }
+
   companion object {
     /**
      * Starts the sign in process. The SignIn object holds the state of the current sign-in and
@@ -618,7 +629,7 @@ data class SignIn(
      *   could contain either a sign-in or sign-up result, depending on whether an account transfer
      *   took place (i.e. if the user didn't have an account and a sign up was created instead).
      * @see [AuthenticateWithRedirectParams]
-     * @see [OAuthProviders](https://clerk.com/docs/references/javascript/types/sso)
+     * @see [OAuthProvider](https://clerk.com/docs/references/javascript/types/sso)
      *
      * ### Example usage:
      * ```kotlin
@@ -635,6 +646,19 @@ data class SignIn(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return SSOService.authenticateWithRedirect(params)
+    }
+
+    /**
+     * Authenticates using the Google Credential Manager. The allowed types are Passkeys, Passwords,
+     * and Google One Tap. You can control which credentials are used by passing the correct
+     * [SignIn.CredentialType]
+     */
+    suspend fun authenticateWithGoogleCredentials(
+      credentialTypes: List<CredentialType>
+    ): ClerkResult<SignIn, ClerkErrorResponse> {
+      return GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        credentialTypes = credentialTypes
+      )
     }
   }
 }
@@ -667,7 +691,7 @@ data class SignIn(
  * ```
  */
 suspend fun SignIn.prepareFirstFactor(
-  params: PrepareFirstFactorParams
+  params: SignIn.PrepareFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
 }

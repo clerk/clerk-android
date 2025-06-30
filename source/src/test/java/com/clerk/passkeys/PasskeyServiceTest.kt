@@ -30,7 +30,7 @@ class PasskeyServiceTest {
     mockPasskey = mockk(relaxed = true)
 
     // Mock the underlying services
-    mockkObject(PasskeyAuthenticationService)
+    mockkObject(GoogleCredentialAuthenticationService)
     mockkObject(PasskeyCreationService)
   }
 
@@ -42,7 +42,7 @@ class PasskeyServiceTest {
   @Test
   fun `signInWithPasskey delegates to PasskeyAuthenticationService with empty list`() = runTest {
     // Given
-    coEvery { PasskeyAuthenticationService.signInWithPasskey(any()) } returns
+    coEvery { GoogleCredentialAuthenticationService.signInWithGoogleCredential(any()) } returns
       ClerkResult.success(mockSignIn)
 
     // When
@@ -51,7 +51,7 @@ class PasskeyServiceTest {
     // Then
     assertTrue(result is ClerkResult.Success)
     assertEquals(mockSignIn, (result as ClerkResult.Success).value)
-    coVerify { PasskeyAuthenticationService.signInWithPasskey(emptyList()) }
+    coVerify { GoogleCredentialAuthenticationService.signInWithGoogleCredential(emptyList()) }
   }
 
   @Test
@@ -59,8 +59,9 @@ class PasskeyServiceTest {
     runTest {
       // Given
       val allowedCredentialIds = listOf("credential-1", "credential-2", "credential-3")
-      coEvery { PasskeyAuthenticationService.signInWithPasskey(allowedCredentialIds) } returns
-        ClerkResult.success(mockSignIn)
+      coEvery {
+        GoogleCredentialAuthenticationService.signInWithGoogleCredential(allowedCredentialIds)
+      } returns ClerkResult.success(mockSignIn)
 
       // When
       val result = PasskeyService.signInWithPasskey(allowedCredentialIds)
@@ -68,7 +69,9 @@ class PasskeyServiceTest {
       // Then
       assertTrue(result is ClerkResult.Success)
       assertEquals(mockSignIn, (result as ClerkResult.Success).value)
-      coVerify { PasskeyAuthenticationService.signInWithPasskey(allowedCredentialIds) }
+      coVerify {
+        GoogleCredentialAuthenticationService.signInWithGoogleCredential(allowedCredentialIds)
+      }
     }
 
   @Test
@@ -82,7 +85,7 @@ class PasskeyServiceTest {
       )
     val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "test-trace")
 
-    coEvery { PasskeyAuthenticationService.signInWithPasskey(any()) } returns
+    coEvery { GoogleCredentialAuthenticationService.signInWithGoogleCredential(any()) } returns
       ClerkResult.apiFailure(errorResponse)
 
     // When
@@ -91,7 +94,7 @@ class PasskeyServiceTest {
     // Then
     assertTrue(result is ClerkResult.Failure)
     assertEquals(errorResponse, (result as ClerkResult.Failure).error)
-    coVerify { PasskeyAuthenticationService.signInWithPasskey(emptyList()) }
+    coVerify { GoogleCredentialAuthenticationService.signInWithGoogleCredential(emptyList()) }
   }
 
   @Test
@@ -148,8 +151,9 @@ class PasskeyServiceTest {
   fun `signInWithPasskey with large credential list delegates correctly`() = runTest {
     // Given
     val largeCredentialList = (1..100).map { "credential-$it" }
-    coEvery { PasskeyAuthenticationService.signInWithPasskey(largeCredentialList) } returns
-      ClerkResult.success(mockSignIn)
+    coEvery {
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(largeCredentialList)
+    } returns ClerkResult.success(mockSignIn)
 
     // When
     val result = PasskeyService.signInWithPasskey(largeCredentialList)
@@ -157,14 +161,16 @@ class PasskeyServiceTest {
     // Then
     assertTrue(result is ClerkResult.Success)
     assertEquals(mockSignIn, (result as ClerkResult.Success).value)
-    coVerify { PasskeyAuthenticationService.signInWithPasskey(largeCredentialList) }
+    coVerify {
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(largeCredentialList)
+    }
   }
 
   @Test
   fun `signInWithPasskey handles unknown failure from PasskeyAuthenticationService`() = runTest {
     // Given
     val exception = IllegalStateException("Unknown state")
-    coEvery { PasskeyAuthenticationService.signInWithPasskey(any()) } returns
+    coEvery { GoogleCredentialAuthenticationService.signInWithGoogleCredential(any()) } returns
       ClerkResult.unknownFailure(exception)
 
     // When
@@ -173,6 +179,6 @@ class PasskeyServiceTest {
     // Then
     assertTrue(result is ClerkResult.Failure)
     assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, (result as ClerkResult.Failure).errorType)
-    coVerify { PasskeyAuthenticationService.signInWithPasskey(emptyList()) }
+    coVerify { GoogleCredentialAuthenticationService.signInWithGoogleCredential(emptyList()) }
   }
 }
