@@ -37,7 +37,7 @@ internal object SignOutService {
       }
       return ClerkResult.success(Unit)
     } catch (e: Exception) {
-      return ClerkResult.unknownFailure(error(e.message ?: "Unknown error"))
+      return ClerkResult.unknownFailure(Exception(e.message ?: "Unknown error"))
     }
   }
 }

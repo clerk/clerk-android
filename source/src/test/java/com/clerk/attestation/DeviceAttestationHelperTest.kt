@@ -1,6 +1,6 @@
-package com.clerk.attestation
-
 import android.content.Context
+import com.clerk.Constants.Attestation.SHA256_HEX_LENGTH
+import com.clerk.attestation.DeviceAttestationHelper
 import com.clerk.network.ClerkApi
 import com.clerk.network.api.DeviceAttestationApi
 import com.clerk.network.serialization.ClerkResult
@@ -23,8 +23,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /** Expected length of SHA-256 hash in hexadecimal characters */
-private const val SHA256_HEX_LENGTH = 64
-
 @RunWith(RobolectricTestRunner::class)
 class DeviceAttestationHelperTest {
 

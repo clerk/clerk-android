@@ -1,5 +1,7 @@
 package com.clerk.network.serialization
 
+import com.clerk.Constants.Http.NO_CONTENT
+import com.clerk.Constants.Http.RESET_CONTENT
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import kotlin.reflect.KClass
@@ -38,11 +40,6 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
     private val apiResultType: ParameterizedType,
     private val annotations: Array<Annotation>,
   ) : CallAdapter<ClerkResult<*, *>, Call<ClerkResult<*, *>>> {
-
-    private companion object {
-      private const val HTTP_NO_CONTENT = 204
-      private const val HTTP_RESET_CONTENT = 205
-    }
 
     override fun adapt(call: Call<ClerkResult<*, *>>): Call<ClerkResult<*, *>> {
       return object : Call<ClerkResult<*, *>> by call {
@@ -94,7 +91,7 @@ internal object ClerkApiResultCallAdapterFactory : CallAdapter.Factory() {
                       null -> {
                         val responseCode = response.code()
                         if (
-                          (responseCode == HTTP_NO_CONTENT || responseCode == HTTP_RESET_CONTENT) &&
+                          (responseCode == NO_CONTENT || responseCode == RESET_CONTENT) &&
                             apiResultType.actualTypeArguments[0] == Unit::class.java
                         ) {
                           @Suppress("UNCHECKED_CAST")

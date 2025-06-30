@@ -1,4 +1,3 @@
-import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 
 plugins {
@@ -11,7 +10,7 @@ plugins {
 
 android {
   namespace = "com.clerk.sdk"
-  compileSdk = 35
+  compileSdk = 36
 
   defaultConfig {
     minSdk = 24
@@ -20,14 +19,14 @@ android {
 
   buildTypes {
     release {
-      isMinifyEnabled = false
+      isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
   }
 }
 
 mavenPublishing {
-  publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+  publishToMavenCentral()
 
   pom {
     name.set("Clerk Android SDK")

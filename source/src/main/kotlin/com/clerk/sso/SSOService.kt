@@ -11,6 +11,7 @@ import com.clerk.network.model.account.ExternalAccount
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.longErrorMessageOrNull
+import com.clerk.signin.SignIn
 import com.clerk.signin.get
 import com.clerk.signup.SignUp
 import com.clerk.sso.SSOService.authenticateWithRedirect
@@ -57,14 +58,16 @@ internal object SSOService {
    *
    * The method automatically cancels any existing pending authentication to prevent conflicts.
    *
-   * @param strategy The OAuth strategy identifier (e.g., "oauth_google", "oauth_facebook")
-   * @param redirectUrl The URL where the OAuth provider should redirect after authentication
+   * @param params The [SignIn.AuthenticateWithRedirectParams] for the authentication request.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or [ClerkErrorResponse] on
    *   failure
    */
   suspend fun authenticateWithRedirect(
     strategy: String,
-    redirectUrl: String,
+    redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+    identifier: String? = null,
+    emailAddress: String? = null,
+    legalAccepted: Boolean? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     // Clear any existing pending auth to prevent conflicts
     currentPendingAuth?.complete(
@@ -75,7 +78,13 @@ internal object SSOService {
     clearCurrentAuth()
 
     val initialResult =
-      ClerkApi.signIn.authenticateWithRedirect(strategy = strategy, redirectUrl = redirectUrl)
+      ClerkApi.signIn.authenticateWithRedirect(
+        strategy = strategy,
+        redirectUrl = redirectUrl,
+        identifier = identifier,
+        emailAddress = emailAddress,
+        legalAccepted = legalAccepted,
+      )
 
     return when (initialResult) {
       is ClerkResult.Failure -> {

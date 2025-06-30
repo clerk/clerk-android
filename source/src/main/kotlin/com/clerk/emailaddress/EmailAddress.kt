@@ -1,5 +1,7 @@
 package com.clerk.emailaddress
 
+import com.clerk.Constants.Strategy.EMAIL_CODE
+import com.clerk.Constants.Strategy.ENTERPRISE_SSO
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.deleted.DeletedObject
@@ -8,10 +10,6 @@ import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
-private const val EMAIL_CODE = "email_code"
-
-private const val ENTERPRISE_SSO = "enterprise_sso"
 
 /** The EmailAddress object represents an email address associated with a user. */
 @Serializable

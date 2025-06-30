@@ -1,5 +1,6 @@
 package com.clerk.passkeys
 
+import com.clerk.Constants.Strategy.PASSKEY as PASSKEY_STRATEGY
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.error.ClerkErrorResponse
@@ -8,7 +9,6 @@ import com.clerk.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
 
 /** The verification strategy constant used for passkey verification. */
-private const val PASSKEY_STRATEGY = "passkey"
 
 /**
  * An object that represents a passkey associated with a user.

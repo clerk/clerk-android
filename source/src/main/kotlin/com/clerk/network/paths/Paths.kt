@@ -1,5 +1,8 @@
 package com.clerk.network.paths
 
+import com.clerk.Constants.Paths.SESSIONS_WITH_ID
+import com.clerk.Constants.Paths.SIGN_UP_WITH_ID
+
 @Suppress("MemberNameEqualsClassName")
 internal object Paths {
   internal object ClientPath {
@@ -15,8 +18,6 @@ internal object Paths {
       internal const val SESSIONS = "${CLIENT}/sessions"
 
       internal object WithId {
-        private const val SESSIONS_WITH_ID = "${SESSIONS}/{id}"
-
         internal const val REMOVE = "${SESSIONS_WITH_ID}/remove"
         internal const val TOKENS = "${SESSIONS_WITH_ID}/tokens"
         internal const val TEMPLATE = "${TOKENS}/{template}"
@@ -42,8 +43,6 @@ internal object Paths {
     const val SIGN_UP = "client/sign_ups"
 
     internal object WithId {
-      private const val SIGN_UP_WITH_ID = "client/sign_ups/{id}"
-
       const val UPDATE = SIGN_UP_WITH_ID
       const val PREPARE_VERIFICATION = "${SIGN_UP_WITH_ID}/prepare_verification"
       const val ATTEMPT_VERIFICATION = "${SIGN_UP_WITH_ID}/attempt_verification"

@@ -22,7 +22,10 @@ internal object PasskeyService {
   suspend fun signInWithPasskey(
     allowedCredentialIds: List<String> = emptyList()
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    return PasskeyAuthenticationService.signInWithPasskey(allowedCredentialIds)
+    return GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+      credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+      allowedCredentialIds = allowedCredentialIds,
+    )
   }
 
   /**

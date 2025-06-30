@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.lifecycle.lifecycleScope
+import com.clerk.Constants.Storage.KEY_AUTHORIZATION_STARTED
 import com.clerk.log.ClerkLog
 import kotlinx.coroutines.launch
 
@@ -143,7 +144,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
       Intent(context, SSOManagerActivity::class.java)
 
     internal const val URI_KEY = "uri"
-    private const val KEY_AUTHORIZATION_STARTED = "authStarted"
     internal const val IS_EXTERNAL_CONNECTION = "is_external_connection"
   }
 }

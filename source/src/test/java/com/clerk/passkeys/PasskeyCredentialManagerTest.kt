@@ -17,8 +17,6 @@ class PasskeyCredentialManagerTest {
     // Given/When
     val manager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()
 
-    // Then
-    assert(manager is PasskeyCredentialManager) { "Should implement the interface" }
     assert(manager is PasskeyCredentialManagerImpl) { "Should be the correct implementation" }
   }
 

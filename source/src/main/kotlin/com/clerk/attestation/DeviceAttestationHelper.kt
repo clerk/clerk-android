@@ -2,6 +2,10 @@ package com.clerk.attestation
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import com.clerk.Constants.Attestation.ATTESTATION_TIMEOUT_MS
+import com.clerk.Constants.Attestation.HASH_CACHE_MAX_SIZE
+import com.clerk.Constants.Attestation.HASH_CONSTANT
+import com.clerk.Constants.Attestation.PREPARATION_TIMEOUT_MS
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.client.Client
@@ -20,11 +24,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
-
-private const val HASH_CONSTANT = 0xff
-private const val PREPARATION_TIMEOUT_MS = 30_000L // 30 seconds
-private const val ATTESTATION_TIMEOUT_MS = 15_000L // 15 seconds
-private const val HASH_CACHE_MAX_SIZE = 100
 
 /**
  * Helper object for handling device attestation using Google Play Integrity API.

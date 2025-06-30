@@ -1,9 +1,8 @@
 package com.clerk.network.middleware.outgoing
 
+import com.clerk.Constants.Http.IS_NATIVE_QUERY_PARAM
 import okhttp3.Interceptor
 import okhttp3.Response
-
-private const val IS_NATIVE_QUERY_PARAM = "_is_native"
 
 internal class UrlAppendingMiddleware : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {

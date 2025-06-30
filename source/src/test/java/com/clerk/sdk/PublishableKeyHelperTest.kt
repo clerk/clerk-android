@@ -1,6 +1,8 @@
 package com.clerk.sdk
 
 import android.util.Base64
+import com.clerk.Constants.Prefixes.TOKEN_PREFIX_LIVE
+import com.clerk.Constants.Prefixes.TOKEN_PREFIX_TEST
 import com.clerk.configuration.PublishableKeyHelper
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -8,9 +10,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-
-private const val TOKEN_PREFIX_LIVE = "pk_live_"
-private const val TOKEN_PREFIX_TEST = "pk_test_"
 
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE)

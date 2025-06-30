@@ -1,16 +1,13 @@
 package com.clerk.network.middleware.outgoing
 
 import com.clerk.Clerk
+import com.clerk.Constants
 import com.clerk.configuration.DeviceIdGenerator
 import com.clerk.network.paths.Paths
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import okhttp3.Interceptor
 import okhttp3.Response
-
-private const val CURRENT_API_VERSION = "2024-10-01"
-private const val CURRENT_SDK_VERSION = "0.1.0"
-private const val IS_MOBILE_HEADER_VALUE = "1"
 
 /**
  * HeaderMiddleware is an OkHttp interceptor that adds custom clerk specific headers to outgoing
@@ -24,9 +21,9 @@ internal class HeaderMiddleware : Interceptor {
     val newRequestBuilder =
       request
         .newBuilder()
-        .addHeader(OutgoingHeaders.CLERK_API_VERSION.header, CURRENT_API_VERSION)
-        .addHeader(OutgoingHeaders.X_ANDROID_SDK_VERSION.header, CURRENT_SDK_VERSION)
-        .addHeader(OutgoingHeaders.X_MOBILE.header, IS_MOBILE_HEADER_VALUE)
+        .addHeader(OutgoingHeaders.CLERK_API_VERSION.header, Constants.Http.CURRENT_API_VERSION)
+        .addHeader(OutgoingHeaders.X_ANDROID_SDK_VERSION.header, Constants.Http.CURRENT_SDK_VERSION)
+        .addHeader(OutgoingHeaders.X_MOBILE.header, Constants.Http.IS_MOBILE_HEADER_VALUE)
         .addHeader(
           OutgoingHeaders.X_CLERK_DEVICE_ID.header,
           DeviceIdGenerator.getOrGenerateDeviceId(),
