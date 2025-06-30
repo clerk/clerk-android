@@ -21,11 +21,9 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -187,12 +185,15 @@ class GoogleSignInServiceTest {
     coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } returns
       mockGetCredentialResponse
 
-    // When & Then
-    val exception =
-      assertThrows(IllegalStateException::class.java) {
-        runBlocking { googleSignInService.signInWithGoogle() }
-      }
-    assertEquals("Unsupported credential type: unsupported_type", exception.message)
+    // When
+    val result = googleSignInService.signInWithGoogle()
+
+    // Then
+    assertTrue(result is ClerkResult.Failure)
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertTrue(failure.throwable is IllegalStateException)
+    assertEquals("Unsupported credential type: unsupported_type", failure.throwable?.message)
   }
 
   @Test
