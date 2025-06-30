@@ -192,10 +192,8 @@ data class SignIn(
      */
     @AutoMap
     @Serializable
-    data class EmailCode(override val strategy: String = EMAIL_CODE, val code: String) :
-      AttemptFirstFactorParams {
-      constructor(code: String) : this(EMAIL_CODE, code)
-    }
+    data class EmailCode(val code: String, override val strategy: String = EMAIL_CODE) :
+      AttemptFirstFactorParams
 
     /**
      * Parameters for phone code verification strategy.
@@ -204,10 +202,8 @@ data class SignIn(
      */
     @AutoMap
     @Serializable
-    data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
-      AttemptFirstFactorParams {
-      constructor(code: String) : this(PHONE_CODE, code)
-    }
+    data class PhoneCode(val code: String, override val strategy: String = PHONE_CODE) :
+      AttemptFirstFactorParams
 
     /**
      * Parameters for password verification strategy.
@@ -217,11 +213,9 @@ data class SignIn(
     @AutoMap
     @Serializable
     data class Password(
-      override val strategy: String = PASSWORD,
       @SerialName("password") val password: String,
-    ) : AttemptFirstFactorParams {
-      constructor(password: String) : this(PASSWORD, password)
-    }
+      override val strategy: String = PASSWORD,
+    ) : AttemptFirstFactorParams
 
     /**
      * Parameters for passkey verification strategy.
@@ -232,11 +226,9 @@ data class SignIn(
     @AutoMap
     @Serializable
     data class Passkey(
-      override val strategy: String = PASSKEY,
       @SerialName("public_key_credential") val publicKeyCredential: String,
-    ) : AttemptFirstFactorParams {
-      constructor(passkey: String) : this(PASSKEY, passkey)
-    }
+      override val strategy: String = PASSKEY,
+    ) : AttemptFirstFactorParams
 
     /**
      * Parameters for reset password email code verification strategy.
@@ -246,11 +238,9 @@ data class SignIn(
     @AutoMap
     @Serializable
     data class ResetPasswordEmailCode(
-      override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
       val code: String,
-    ) : AttemptFirstFactorParams {
-      constructor(code: String) : this(RESET_PASSWORD_EMAIL_CODE, code)
-    }
+      override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+    ) : AttemptFirstFactorParams
 
     /**
      * Parameters for reset password phone code verification strategy.
@@ -260,11 +250,9 @@ data class SignIn(
     @AutoMap
     @Serializable
     data class ResetPasswordPhoneCode(
-      override val strategy: String = RESET_PASSWORD_PHONE_CODE,
       val code: String,
-    ) : AttemptFirstFactorParams {
-      constructor(code: String) : this(RESET_PASSWORD_PHONE_CODE, code)
-    }
+      override val strategy: String = RESET_PASSWORD_PHONE_CODE,
+    ) : AttemptFirstFactorParams
   }
 
   /** Parameters for second factor authentication strategies. */
@@ -273,24 +261,18 @@ data class SignIn(
 
     @AutoMap
     @Serializable
-    data class PhoneCode(override val strategy: String = PHONE_CODE, val code: String) :
-      AttemptSecondFactorParams {
-      constructor(code: String) : this(PHONE_CODE, code)
-    }
+    data class PhoneCode(val code: String, override val strategy: String = PHONE_CODE) :
+      AttemptSecondFactorParams
 
     @AutoMap
     @Serializable
-    data class TOTP(override val strategy: String = STRATEGY_TOTP, val code: String) :
-      AttemptSecondFactorParams {
-      constructor(code: String) : this(STRATEGY_TOTP, code)
-    }
+    data class TOTP(val code: String, override val strategy: String = STRATEGY_TOTP) :
+      AttemptSecondFactorParams
 
     @AutoMap
     @Serializable
-    data class BackupCode(override val strategy: String = BACKUP_CODE, val code: String) :
-      AttemptSecondFactorParams {
-      constructor(code: String) : this(BACKUP_CODE, code)
-    }
+    data class BackupCode(val code: String, override val strategy: String = BACKUP_CODE) :
+      AttemptSecondFactorParams
   }
 
   /**
@@ -311,14 +293,10 @@ data class SignIn(
       @MapProperty("providerData?.strategy") val strategy: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
-      @SerialName("email_address") override val emailAddress: String?,
-      @SerialName("legal_accepted") override val legalAccepted: Boolean?,
-      override val identifier: String?,
-    ) : AuthenticateWithRedirectParams {
-      constructor(
-        provider: OAuthProvider
-      ) : this(provider, RedirectConfiguration.DEFAULT_REDIRECT_URL, null, null, null)
-    }
+      @SerialName("email_address") override val emailAddress: String? = null,
+      @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
+      override val identifier: String? = null,
+    ) : AuthenticateWithRedirectParams
 
     /** Enterprise SSO params for redirect authentication */
     @AutoMap
@@ -378,9 +356,7 @@ data class SignIn(
     /** The strategy used for second factor verification. */
     val strategy: String = PHONE_CODE,
     @SerialName("phone_number_id") val phoneNumberId: String? = null,
-  ) {
-    constructor(phoneNumberId: String) : this(strategy = PHONE_CODE, phoneNumberId = phoneNumberId)
-  }
+  )
 
   /**
    * Parameters for resetting a user's password during the sign-in process.
@@ -414,10 +390,8 @@ data class SignIn(
        */
       @AutoMap
       @Serializable
-      data class EmailCode(override val strategy: String = EMAIL_CODE, val identifier: String) :
-        Strategy {
-        constructor(identifier: String) : this(strategy = EMAIL_CODE, identifier = identifier)
-      }
+      data class EmailCode(val identifier: String, override val strategy: String = EMAIL_CODE) :
+        Strategy
 
       /**
        * Phone code sign-in strategy.
@@ -426,10 +400,8 @@ data class SignIn(
        */
       @AutoMap
       @Serializable
-      data class PhoneCode(override val strategy: String = PHONE_CODE, val identifier: String) :
-        Strategy {
-        constructor(identifier: String) : this(strategy = PHONE_CODE, identifier = identifier)
-      }
+      data class PhoneCode(val identifier: String, override val strategy: String = PHONE_CODE) :
+        Strategy
 
       /**
        * Password sign-in strategy.
@@ -438,19 +410,15 @@ data class SignIn(
        */
       @AutoMap
       @Serializable
-      data class Password(override val strategy: String = PASSWORD, val identifier: String) :
-        Strategy {
-        constructor(identifier: String) : this(strategy = PASSWORD, identifier = identifier)
-      }
+      data class Password(val identifier: String, override val strategy: String = PASSWORD) :
+        Strategy
 
       /**
        * Transfer strategy for account transfer scenarios.
        *
        * This strategy is used when transferring an existing session or account state.
        */
-      data class Transfer(override val strategy: String = TRANSFER) : Strategy {
-        constructor() : this(strategy = TRANSFER)
-      }
+      data class Transfer(override val strategy: String = TRANSFER) : Strategy
 
       /**
        * Ticket strategy for authentication using a ticket.
@@ -461,14 +429,23 @@ data class SignIn(
        */
       @AutoMap
       @Serializable
-      data class Ticket(override val strategy: String = TICKET, val ticket: String) : Strategy {
-        constructor(ticket: String) : this(strategy = TICKET, ticket = ticket)
-      }
+      data class Ticket(val ticket: String, override val strategy: String = TICKET) : Strategy
 
       /** Passkey strategy for authentication using a passkey. */
-      data class Passkey(override val strategy: String = PASSKEY) : Strategy {
-        constructor() : this(strategy = PASSKEY)
-      }
+      data class Passkey(override val strategy: String = PASSKEY) : Strategy
+
+      /**
+       * The user will be authenticated through SAML or OIDC depending on the configuration of their
+       * enterprise SSO account.
+       */
+      @AutoMap
+      @Serializable
+      data class EnterpriseSSO(
+        val identifier: String,
+        override val strategy: String = ENTERPRISE_SSO,
+        @SerialName("redirect_url")
+        val redirectUrl: String? = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+      ) : Strategy
     }
   }
 

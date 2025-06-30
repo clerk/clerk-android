@@ -170,20 +170,16 @@ data class SignUp(
      *
      * @param code The one-time code sent to the user's email address.
      */
-    data class EmailCode(override val strategy: String = EMAIL_CODE, override val code: String) :
-      AttemptVerificationParams {
-      constructor(code: String) : this(EMAIL_CODE, code)
-    }
+    data class EmailCode(override val code: String, override val strategy: String = EMAIL_CODE) :
+      AttemptVerificationParams
 
     /**
      * Attempts verification using a code sent to the user's phone number.
      *
      * @param code The one-time code sent to the user's phone number.
      */
-    data class PhoneCode(override val strategy: String = PHONE_CODE, override val code: String) :
-      AttemptVerificationParams {
-      constructor(code: String) : this(PHONE_CODE, code)
-    }
+    data class PhoneCode(override val code: String, override val strategy: String = PHONE_CODE) :
+      AttemptVerificationParams
   }
 
   object PrepareVerificationParams {
