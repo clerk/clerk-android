@@ -60,7 +60,10 @@ class PasskeyServiceTest {
       // Given
       val allowedCredentialIds = listOf("credential-1", "credential-2", "credential-3")
       coEvery {
-        GoogleCredentialAuthenticationService.signInWithGoogleCredential(allowedCredentialIds)
+        GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+          allowedCredentialIds = allowedCredentialIds,
+          credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+        )
       } returns ClerkResult.success(mockSignIn)
 
       // When
@@ -70,7 +73,10 @@ class PasskeyServiceTest {
       assertTrue(result is ClerkResult.Success)
       assertEquals(mockSignIn, (result as ClerkResult.Success).value)
       coVerify {
-        GoogleCredentialAuthenticationService.signInWithGoogleCredential(allowedCredentialIds)
+        GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+          allowedCredentialIds = allowedCredentialIds,
+          credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+        )
       }
     }
 
@@ -152,7 +158,10 @@ class PasskeyServiceTest {
     // Given
     val largeCredentialList = (1..100).map { "credential-$it" }
     coEvery {
-      GoogleCredentialAuthenticationService.signInWithGoogleCredential(largeCredentialList)
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        allowedCredentialIds = largeCredentialList,
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+      )
     } returns ClerkResult.success(mockSignIn)
 
     // When
@@ -162,7 +171,10 @@ class PasskeyServiceTest {
     assertTrue(result is ClerkResult.Success)
     assertEquals(mockSignIn, (result as ClerkResult.Success).value)
     coVerify {
-      GoogleCredentialAuthenticationService.signInWithGoogleCredential(largeCredentialList)
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        allowedCredentialIds = largeCredentialList,
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+      )
     }
   }
 

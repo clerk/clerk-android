@@ -108,8 +108,8 @@ internal object GoogleCredentialAuthenticationService {
    * ```
    */
   suspend fun signInWithGoogleCredential(
-    allowedCredentialIds: List<String> = emptyList(),
     credentialTypes: List<SignIn.CredentialType>,
+    allowedCredentialIds: List<String> = emptyList(),
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     if (credentialTypes.isEmpty()) {
       return ClerkResult.unknownFailure(IllegalStateException("No credential types specified"))

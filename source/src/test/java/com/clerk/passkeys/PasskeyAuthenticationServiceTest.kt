@@ -91,7 +91,10 @@ class PasskeyAuthenticationServiceTest {
     coEvery { mockSignIn.attemptFirstFactor(any()) } returns ClerkResult.success(mockSignIn)
 
     // When
-    val result = GoogleCredentialAuthenticationService.signInWithGoogleCredential()
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY)
+      )
 
     // Then
     assertTrue(result is ClerkResult.Success)
@@ -114,7 +117,10 @@ class PasskeyAuthenticationServiceTest {
     coEvery { mockCredentialManager.getCredential(any(), any()) } returns mockGetCredentialResponse
 
     // When
-    val result = GoogleCredentialAuthenticationService.signInWithGoogleCredential()
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY)
+      )
 
     // Then
     assertTrue(result is ClerkResult.Success)
@@ -135,7 +141,10 @@ class PasskeyAuthenticationServiceTest {
     coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.apiFailure(errorResponse)
 
     // When
-    val result = GoogleCredentialAuthenticationService.signInWithGoogleCredential()
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        listOf(SignIn.CredentialType.PASSKEY)
+      )
 
     // Then
     assertTrue(result is ClerkResult.Failure)
@@ -156,7 +165,10 @@ class PasskeyAuthenticationServiceTest {
     coEvery { mockCredentialManager.getCredential(any(), any()) } throws exception
 
     // When
-    val result = GoogleCredentialAuthenticationService.signInWithGoogleCredential()
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        listOf(SignIn.CredentialType.PASSKEY)
+      )
 
     // Then
     assertTrue(result is ClerkResult.Failure)
@@ -177,7 +189,10 @@ class PasskeyAuthenticationServiceTest {
     coEvery { mockCredentialManager.getCredential(any(), any()) } returns mockGetCredentialResponse
 
     // When
-    val result = GoogleCredentialAuthenticationService.signInWithGoogleCredential()
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        listOf(SignIn.CredentialType.PASSKEY)
+      )
 
     // Then
     assertTrue(result is ClerkResult.Failure)
