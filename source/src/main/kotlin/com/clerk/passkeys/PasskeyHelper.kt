@@ -1,6 +1,7 @@
 package com.clerk.passkeys
 
 import com.clerk.Clerk
+import com.clerk.Constants.Passkey.PASSKEY_STRATEGY_VALUE
 import com.clerk.log.ClerkLog
 import java.net.URL
 import kotlinx.serialization.Serializable
@@ -8,9 +9,6 @@ import kotlinx.serialization.json.JsonObject
 
 /** Strategy key used in API requests to identify the authentication method */
 internal const val STRATEGY_KEY = "strategy"
-
-/** Passkey strategy identifier used in authentication requests */
-private const val PASSKEY_STRATEGY_VALUE = "passkey"
 
 /**
  * Helper utilities for passkey operations.

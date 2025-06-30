@@ -1,5 +1,10 @@
 package com.clerk.configuration
 
+/** Number of threads to use for concurrency testing */
+import com.clerk.Constants.Test.CONCURRENCY_TEST_THREAD_COUNT
+import com.clerk.Constants.Test.EXPECTED_SAVED_DEVICE_ID_COUNT
+import com.clerk.Constants.Test.EXPECTED_STORAGE_LOAD_CALLS
+import com.clerk.Constants.Test.EXPECTED_STORAGE_SAVE_CALLS
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import io.mockk.every
@@ -17,18 +22,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-
-/** Number of threads to use for concurrency testing */
-private const val CONCURRENCY_TEST_THREAD_COUNT = 10
-
-/** Expected number of times storage should be called during initialization */
-private const val EXPECTED_STORAGE_LOAD_CALLS = 1
-
-/** Expected number of times storage should be called when saving new device ID */
-private const val EXPECTED_STORAGE_SAVE_CALLS = 1
-
-/** Expected number of device IDs that should be saved during initialization */
-private const val EXPECTED_SAVED_DEVICE_ID_COUNT = 1
 
 @RunWith(RobolectricTestRunner::class)
 class DeviceIdGeneratorTest {

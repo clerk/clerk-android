@@ -4,6 +4,12 @@ import android.content.Context
 import com.clerk.Clerk
 import com.clerk.Clerk.debugMode
 import com.clerk.ClerkConfigurationOptions
+import com.clerk.Constants.Config.API_TIMEOUT_SECONDS
+import com.clerk.Constants.Config.BACKOFF_BASE_DELAY_SECONDS
+import com.clerk.Constants.Config.EXPONENTIAL_BACKOFF_SHIFT
+import com.clerk.Constants.Config.MAX_ATTESTATION_RETRIES
+import com.clerk.Constants.Config.REFRESH_TOKEN_INTERVAL
+import com.clerk.Constants.Config.TIMEOUT_MULTIPLIER
 import com.clerk.attestation.DeviceAttestationHelper
 import com.clerk.configuration.lifecycle.AppLifecycleListener
 import com.clerk.log.ClerkLog
@@ -31,24 +37,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-
-/** Token refresh interval in seconds */
-private const val REFRESH_TOKEN_INTERVAL = 50
-
-/** API request timeout in seconds */
-private const val API_TIMEOUT_SECONDS = 30L
-
-/** Multiplier to convert seconds to milliseconds */
-private const val TIMEOUT_MULTIPLIER = 1000
-
-/** Base delay for exponential backoff in seconds */
-private const val BACKOFF_BASE_DELAY_SECONDS = 5L
-
-/** Maximum number of device attestation retry attempts */
-private const val MAX_ATTESTATION_RETRIES = 3
-
-/** Bit shift value for exponential backoff calculation */
-private const val EXPONENTIAL_BACKOFF_SHIFT = 1
 
 /**
  * Internal configuration manager responsible for Clerk SDK initialization and lifecycle management.

@@ -1,5 +1,6 @@
 package com.clerk.session
 
+import com.clerk.Constants
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.token.TokenResource
@@ -8,8 +9,6 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-
-private const val DEFAULT_EXPIRATION_BUFFER = 1000L
 
 internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManagerImpl()) {
   private val tokenTasks = ConcurrentHashMap<String, Deferred<TokenResource?>>()
@@ -85,7 +84,8 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     return try {
       val expiresAt = jwtManager.createFromString(token.jwt).expiresAt
       expiresAt?.let {
-        (it.time - System.currentTimeMillis()) > bufferSeconds * DEFAULT_EXPIRATION_BUFFER
+        (it.time - System.currentTimeMillis()) >
+          bufferSeconds * Constants.Config.DEFAULT_EXPIRATION_BUFFER
       } == true
     } catch (e: Exception) {
       ClerkLog.w("Failed to parse JWT expiration: ${e.message}")

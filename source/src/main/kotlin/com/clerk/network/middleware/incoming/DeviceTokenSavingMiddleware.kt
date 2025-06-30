@@ -1,11 +1,10 @@
 package com.clerk.network.middleware.incoming
 
+import com.clerk.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
 import okhttp3.Interceptor
 import okhttp3.Response
-
-private const val AUTHORIZATION_HEADER = "Authorization"
 
 /**
  * OkHttp interceptor that saves device tokens from response headers to local storage.

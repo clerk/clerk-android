@@ -3,9 +3,8 @@ package com.clerk.storage
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.clerk.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
 import com.clerk.storage.StorageHelper.secureStorage
-
-private const val CLERK_PREFERENCES_FILE_NAME = "clerk_preferences"
 
 /**
  * Helper class to manage secure storage of data. SharedPreferences are used to store data, all keys

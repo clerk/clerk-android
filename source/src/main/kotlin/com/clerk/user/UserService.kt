@@ -2,6 +2,7 @@ package com.clerk.user
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.clerk.Constants.Config.COMPRESSION_PERCENTAGE
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.image.ImageResource
@@ -11,8 +12,6 @@ import java.io.FileOutputStream
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-
-private const val COMPRESSION_PERCENTAGE = 75
 
 /**
  * Internal service object that provides user-related operations and API interactions.

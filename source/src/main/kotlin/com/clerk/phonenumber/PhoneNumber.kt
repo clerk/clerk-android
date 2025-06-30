@@ -1,5 +1,6 @@
 package com.clerk.phonenumber
 
+import com.clerk.Constants.Strategy.PHONE_CODE
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.error.ClerkErrorResponse
@@ -8,7 +9,6 @@ import com.clerk.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
 
 /** The verification strategy constant used for phone number verification via SMS code. */
-private const val PHONE_CODE = "phone_code"
 
 /**
  * The `PhoneNumber` object is a model around a phone number entity.

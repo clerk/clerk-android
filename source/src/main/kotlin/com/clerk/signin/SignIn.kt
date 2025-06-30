@@ -1,6 +1,17 @@
 package com.clerk.signin
 
 import com.clerk.Clerk.signIn
+import com.clerk.Constants.Strategy.BACKUP_CODE
+import com.clerk.Constants.Strategy.EMAIL_CODE
+import com.clerk.Constants.Strategy.ENTERPRISE_SSO
+import com.clerk.Constants.Strategy.PASSKEY
+import com.clerk.Constants.Strategy.PASSWORD
+import com.clerk.Constants.Strategy.PHONE_CODE
+import com.clerk.Constants.Strategy.RESET_PASSWORD_EMAIL_CODE
+import com.clerk.Constants.Strategy.RESET_PASSWORD_PHONE_CODE
+import com.clerk.Constants.Strategy.TICKET
+import com.clerk.Constants.Strategy.TOTP as STRATEGY_TOTP
+import com.clerk.Constants.Strategy.TRANSFER
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
 import com.clerk.network.ClerkApi
@@ -17,19 +28,6 @@ import com.clerk.sso.RedirectConfiguration
 import com.clerk.sso.SSOService
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
-private const val PHONE_CODE = "phone_code"
-private const val EMAIL_CODE = "email_code"
-private const val STRATEGY_TOTP = "totp"
-private const val BACKUP_CODE = "backup_code"
-private const val PASSWORD = "password"
-private const val PASSKEY = "passkey"
-private const val RESET_PASSWORD_EMAIL_CODE = "reset_password_email_code"
-private const val RESET_PASSWORD_PHONE_CODE = "reset_password_phone_code"
-private const val TICKET = "ticket"
-private const val TRANSFER = "transfer"
-
-private const val ENTERPRISE_SSO = "enterprise_sso"
 
 /**
  * The `SignIn` object holds the state of the current sign-in process and provides helper methods to
@@ -334,6 +332,7 @@ data class SignIn(
      * @property legalAccepted Whether the user has accepted the legal terms.
      * @property identifier The user's identifier for authentication.
      */
+    @Serializable
     @AutoMap
     data class OAuth(
       @MapProperty("providerData?.strategy") val strategy: OAuthProvider,
@@ -353,6 +352,7 @@ data class SignIn(
      * @property emailAddress The user's email address for pre-filling authentication forms.
      * @property identifier The user's identifier for authentication.
      */
+    @Serializable
     @AutoMap
     data class EnterpriseSSO(
       val strategy: String = ENTERPRISE_SSO,
@@ -387,7 +387,7 @@ data class SignIn(
       @SerialName("email_address_id")
       val emailAddressId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
-      override val strategy: String = "email_code",
+      override val strategy: String = EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -396,7 +396,7 @@ data class SignIn(
       @SerialName("phone_number_id")
       val phoneNumberId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
-      override val strategy: String = "phone_code",
+      override val strategy: String = PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -404,7 +404,7 @@ data class SignIn(
     data class ResetPasswordEmailCode(
       val emailAddressId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
-      override val strategy: String = "reset_password_email_code",
+      override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -412,7 +412,7 @@ data class SignIn(
     data class ResetPasswordPhoneCode(
       val phoneNumberId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
-      override val strategy: String = "reset_password_phone_code",
+      override val strategy: String = RESET_PASSWORD_PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     data class Unknown(override val strategy: String = "Unknown") : PrepareFirstFactorParams

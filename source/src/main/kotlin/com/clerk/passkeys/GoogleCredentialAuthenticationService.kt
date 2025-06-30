@@ -12,6 +12,7 @@ import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.Clerk
+import com.clerk.Constants.Passkey.STRATEGY_KEY
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
@@ -46,9 +47,6 @@ import org.json.JSONObject
  * @see GoogleSignInService
  */
 internal object GoogleCredentialAuthenticationService {
-
-  /** Strategy key used for creating sign-in sessions. */
-  private const val STRATEGY_KEY = "strategy"
 
   /** The credential manager used for passkey operations. */
   private var credentialManager: PasskeyCredentialManager = PasskeyCredentialManagerImpl()

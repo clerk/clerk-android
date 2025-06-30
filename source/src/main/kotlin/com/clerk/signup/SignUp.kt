@@ -2,18 +2,19 @@
 
 package com.clerk.signup
 
+import com.clerk.Constants.Strategy as AuthStrategy
 import com.clerk.automap.annotations.AutoMap
+import com.clerk.automap.annotations.MapProperty
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
+import com.clerk.sso.OAuthProvider
 import com.clerk.sso.OAuthResult
+import com.clerk.sso.RedirectConfiguration
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-
-private const val EMAIL_CODE = "email_code"
-private const val PHONE_CODE = "phone_code"
 
 /**
  * The `SignUp` object holds the state of the current sign-up and provides helper methods to
@@ -170,26 +171,69 @@ data class SignUp(
      *
      * @param code The one-time code sent to the user's email address.
      */
-    data class EmailCode(override val code: String, override val strategy: String = EMAIL_CODE) :
-      AttemptVerificationParams
+    data class EmailCode(
+      override val code: String,
+      override val strategy: String = AuthStrategy.EMAIL_CODE,
+    ) : AttemptVerificationParams
 
     /**
      * Attempts verification using a code sent to the user's phone number.
      *
      * @param code The one-time code sent to the user's phone number.
      */
-    data class PhoneCode(override val code: String, override val strategy: String = PHONE_CODE) :
-      AttemptVerificationParams
+    data class PhoneCode(
+      override val code: String,
+      override val strategy: String = AuthStrategy.PHONE_CODE,
+    ) : AttemptVerificationParams
+  }
+
+  sealed interface AuthenticateWithRedirectParams {
+
+    val redirectUrl: String
+    val identifier: String?
+    val emailAddress: String?
+    val legalAccepted: Boolean?
+
+    @AutoMap
+    @Serializable
+    data class OAuth(
+      @MapProperty("providerData?.strategy") @SerialName("strategy") val provider: OAuthProvider,
+      @SerialName("redirect_url")
+      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+      override val identifier: String? = null,
+      @SerialName("email_address") override val emailAddress: String? = null,
+      @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
+    ) : AuthenticateWithRedirectParams
+
+    /**
+     * Enterprise SSO params for redirect authentication.
+     *
+     * @property strategy The Enterprise SSO strategy identifier.
+     * @property redirectUrl The URL to redirect to after authentication.
+     * @property legalAccepted Whether the user has accepted the legal terms.
+     * @property emailAddress The user's email address for pre-filling authentication forms.
+     * @property identifier The user's identifier for authentication.
+     */
+    @Serializable
+    @AutoMap
+    data class EnterpriseSSO(
+      val strategy: String = AuthStrategy.ENTERPRISE_SSO,
+      @SerialName("redirect_url")
+      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+      @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
+      @SerialName("email_address") override val emailAddress: String? = null,
+      override val identifier: String? = null,
+    ) : AuthenticateWithRedirectParams
   }
 
   object PrepareVerificationParams {
 
     enum class Strategy(val value: String) {
       /** Send a text message with a unique token to input */
-      PHONE_CODE("phone_code"),
+      PHONE_CODE(com.clerk.Constants.Strategy.PHONE_CODE),
 
       /** Send an email with a unique token to input */
-      EMAIL_CODE("email_code"),
+      EMAIL_CODE(com.clerk.Constants.Strategy.EMAIL_CODE),
     }
   }
 
@@ -324,6 +368,8 @@ data class SignUp(
     suspend fun create(params: Map<String, String>): ClerkResult<SignUp, ClerkErrorResponse> {
       return ClerkApi.signUp.createSignUp(params)
     }
+
+    //    suspend fun authenticateWithRedirect() {}
   }
 }
 

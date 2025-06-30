@@ -1,10 +1,9 @@
 package com.clerk.configuration
 
 import android.util.Base64
-
-private const val URL_SSL_PREFIX = "https://"
-private const val TOKEN_PREFIX_LIVE = "pk_live_"
-private const val TOKEN_PREFIX_TEST = "pk_test_"
+import com.clerk.Constants.Prefixes.TOKEN_PREFIX_LIVE
+import com.clerk.Constants.Prefixes.TOKEN_PREFIX_TEST
+import com.clerk.Constants.Prefixes.URL_SSL_PREFIX
 
 internal class PublishableKeyHelper {
   /**
