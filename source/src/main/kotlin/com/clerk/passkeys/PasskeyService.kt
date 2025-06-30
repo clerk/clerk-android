@@ -23,8 +23,8 @@ internal object PasskeyService {
     allowedCredentialIds: List<String> = emptyList()
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     return GoogleCredentialAuthenticationService.signInWithGoogleCredential(
-      allowedCredentialIds,
-      listOf(SignIn.CredentialType.PASSKEY),
+      credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+      allowedCredentialIds = allowedCredentialIds,
     )
   }
 
