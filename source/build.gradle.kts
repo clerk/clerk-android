@@ -15,6 +15,7 @@ android {
   defaultConfig {
     minSdk = 24
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.sdk.get()}\"")
   }
 
   buildTypes {
@@ -24,37 +25,8 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
   }
-}
 
-mavenPublishing {
-  publishToMavenCentral()
-
-  pom {
-    name.set("Clerk Android SDK")
-    description.set("Clerk SDK for Android")
-    inceptionYear.set("2025")
-    url.set("https://github.com/clerk/clerk-android")
-    licenses {
-      license {
-        name.set("MIT License")
-        url.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
-        distribution.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
-      }
-    }
-
-    developers {
-      developer {
-        id.set("clerk")
-        name.set("Clerk")
-        url.set("https://clerk.com")
-      }
-    }
-    scm {
-      url.set("https://github.com/clerk/clerk-android")
-      connection.set("scm:git:git://github.com/clerk/clerk-android.git")
-      developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
-    }
-  }
+  buildFeatures { buildConfig = true }
 }
 
 tasks.withType<DokkaTaskPartial>().configureEach {

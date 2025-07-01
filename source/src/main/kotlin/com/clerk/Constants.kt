@@ -1,5 +1,7 @@
 package com.clerk
 
+import com.clerk.sdk.BuildConfig
+
 /** Consolidated constants used throughout the Clerk SDK */
 object Constants {
 
@@ -25,7 +27,7 @@ object Constants {
     const val NO_CONTENT = 204
     const val RESET_CONTENT = 205
     const val CURRENT_API_VERSION = "2024-10-01"
-    const val CURRENT_SDK_VERSION = "0.1.0"
+    const val CURRENT_SDK_VERSION = BuildConfig.SDK_VERSION
     const val IS_MOBILE_HEADER_VALUE = "1"
     const val AUTHORIZATION_HEADER = "Authorization"
     const val IS_NATIVE_QUERY_PARAM = "_is_native"

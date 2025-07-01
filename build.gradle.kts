@@ -15,6 +15,8 @@ plugins {
   alias(libs.plugins.dokka)
 }
 
+val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+
 allprojects {
   apply(plugin = "org.jetbrains.dokka")
   apply(plugin = "com.vanniktech.maven.publish")
@@ -85,8 +87,10 @@ subprojects {
     compilerOptions { jvmTarget.set(libs.versions.jvmTarget.map(JvmTarget::fromTarget)) }
   }
 
+  val sdkVersion = projectLibs.findVersion("clerk-sdk").get().toString()
+
   mavenPublishing {
-    coordinates("com.clerk", "clerk-android", "0.1.0")
+    coordinates("com.clerk", "clerk-android", sdkVersion)
 
     pom {
       name.set("Clerk Android SDK")
