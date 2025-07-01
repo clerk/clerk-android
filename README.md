@@ -99,10 +99,36 @@ Clerk.signUp
   }
 ```
 
+#### Passwordless Sign In
+```kotlin
+var signIn: SignIn
+
+// Create the sign in
+SignIn.create(SignIn.CreateParams.Strategy.EmailCode("email@example.com"))
+        .onSuccess {
+          // Save the SignIn object
+          signIn = it
+        }
+
+// After collecting the OTP code from the user, attempt verification
+signIn.attemptFirstFactor(Strategy.EmailCode("12345))) 
+```
+
 #### Sign In with OAuth(e.g. Google, GitHub, etc.)
 Clerk will handle the OAuth flow and deep linking for you, you just need to pass it the context of your application.
 ```kotlin
-SignIn.authenticateWithRedirect(context, OAuthProvider.GOOGLE)
+SignIn.authenticateWithRedirect(OAuthProvider.GOOGLE)
+```
+
+#### Native Sign In with Google
+```kotlin
+SignIn.authenticateWithGoogleOneTap()
+```
+
+#### Authenticate with Google Credential Manager
+```kotlin
+SignIn
+  .authenticateWithGoogleCredentialManager(credentialTypes = listOf(CredentialType.PASSKEY, CredentialType.PASSWORD, CredentialType.GOOGLE)))
 ```
 
 #### Forgot Password
@@ -122,6 +148,52 @@ Clerk.signIn.attemptFirstFactor(Strategy.ResetPasswordEmailCode("123456"))
 ```kotlin
 Clerk.signOut()
 ```
+
+### User Management
+
+#### Update User Profile
+```kotlin
+user.update(User.UpdateParams(firstName = "Walter", lastName = "Johnson")))
+```
+
+#### Update User Profile Image
+```kotlin
+// After getting java.io.File object to upload
+user.setProfileImage(file: file)
+```
+
+#### Add Phone Number
+```kotlin
+// For saving the created phone number
+lateinit var newPhoneNumber: PhoneNumber
+
+// Create a new phone number on the user's account
+user.createPhoneNumber("5555550100)
+    .onSuccess {
+       newPhoneNumber = it
+       // Use the returned resource to send an OTP
+       newPhoneNumber.prepareVerification()
+     }
+
+// After collectiong the OTP code from the user, attempt verification
+newPhoneNumber.attemptVerification(code: "12345")
+```
+
+#### Link an External Account
+```
+user.createExternalAccount(User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE))
+    .onSuccess { it.reauthorize() }
+```
+
+#### Session Tokens
+```kotlin
+ Clerk.session?.fetchToken()?.jwt?.let { token ->
+        headers["Authorization"] = "Bearer $token"
+    }
+```
+
+For a full set of features and functionality, please see our docs!
+
 
 ### 📚 Docs
 
