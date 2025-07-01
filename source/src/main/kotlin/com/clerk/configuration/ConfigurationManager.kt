@@ -214,7 +214,7 @@ internal class ConfigurationManager {
             val session = Clerk.session
             if (session != null) {
               ClerkLog.d("Refreshing token for session: ${session.id}")
-              session.fetchToken(SessionGetTokenOptions(skipCache = true))
+              session.fetchToken(SessionGetTokenOptions(skipCache = false))
               ClerkLog.d("Token refresh successful")
             } else {
               ClerkLog.w("No session available for token refresh")

@@ -33,7 +33,7 @@ object Constants {
 
   /** Configuration and timing constants */
   object Config {
-    const val REFRESH_TOKEN_INTERVAL = 50
+    const val REFRESH_TOKEN_INTERVAL = 5
     const val API_TIMEOUT_SECONDS = 30L
     const val TIMEOUT_MULTIPLIER = 1000
     const val BACKOFF_BASE_DELAY_SECONDS = 5L
