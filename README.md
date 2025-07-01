@@ -157,12 +157,8 @@ SignUp.create(SignUp.CreateParams.Standard(emailAddress = "user@example.com"))
 
 // After collecting the OTP from the user
 Clerk.signUp?.attemptVerification(SignUp.AttemptVerificationParams.EmailCode(code = "123456"))
-    ?.onSuccess { 
+    .onSuccess { 
         // User is signed in successfully
-    }
-    ?.onFailure { error ->
-        // Handle verification error
-        Log.e("Clerk", "Verification failed: ${error.message}")
     }
 ```
 
@@ -179,17 +175,11 @@ SignIn.create(SignIn.CreateParams.Strategy.EmailCode("email@example.com"))
         signIn = it
         // OTP code sent to email
     }
-    .onFailure { error ->
-        Log.e("Clerk", "Sign-in creation failed: ${error.message}")
-    }
 
 // After collecting the OTP code from the user, attempt verification
 signIn?.attemptFirstFactor(SignIn.AttemptFirstFactorParams.Strategy.EmailCode("123456"))
-    ?.onSuccess {
+    .onSuccess {
         // User signed in successfully
-    }
-    ?.onFailure { error ->
-        Log.e("Clerk", "Sign-in failed: ${error.message}")
     }
 ```
 
@@ -205,9 +195,6 @@ import com.clerk.network.model.oauth.OAuthProvider
 SignIn.authenticateWithRedirect(OAuthProvider.GOOGLE)
     .onSuccess {
         // OAuth flow initiated successfully
-    }
-    .onFailure { error ->
-        Log.e("Clerk", "OAuth failed: ${error.message}")
     }
 ```
 
@@ -285,16 +272,11 @@ Clerk.signOut()
 ```kotlin
 import com.clerk.User
 
-Clerk.user?.update(
-    User.UpdateParams(
-        firstName = "Walter", 
-        lastName = "Johnson"
-    )
-)?.onSuccess { updatedUser ->
-    // Profile updated successfully
-}?.onFailure { error ->
-    Log.e("Clerk", "Profile update failed: ${error.message}")
-}
+Clerk.user.update(
+    User.UpdateParams(firstName = "Walter", lastName = "Johnson"))
+        .onSuccess {
+           updatedUser -> // User updated
+        }
 ```
 
 #### Update User Profile Image
@@ -302,12 +284,9 @@ Clerk.user?.update(
 ```kotlin
 // After getting a java.io.File object to upload
 val imageFile: File = // ... your image file
-Clerk.user?.setProfileImage(file = imageFile)
-    ?.onSuccess { 
+Clerk.user.setProfileImage(file = imageFile)
+    .onSuccess { 
         // Profile image updated successfully
-    }
-    ?.onFailure { error ->
-        Log.e("Clerk", "Profile image update failed: ${error.message}")
     }
 ```
 
@@ -319,14 +298,11 @@ import com.clerk.PhoneNumber
 lateinit var newPhoneNumber: PhoneNumber
 
 // Create a new phone number on the user's account
-Clerk.user?.createPhoneNumber("+15555550100")
-    ?.onSuccess { phoneNumber ->
+Clerk.user.createPhoneNumber("+15555550100")
+    .onSuccess { phoneNumber ->
         newPhoneNumber = phoneNumber
         // Use the returned resource to send an OTP
         newPhoneNumber.prepareVerification()
-    }
-    ?.onFailure { error ->
-        Log.e("Clerk", "Phone number creation failed: ${error.message}")
     }
 
 // After collecting the OTP code from the user, attempt verification
@@ -345,12 +321,10 @@ newPhoneNumber.attemptVerification(code = "123456")
 import com.clerk.User
 import com.clerk.network.model.oauth.OAuthProvider
 
-Clerk.user?.createExternalAccount(
+Clerk.user.createExternalAccount(
     User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
-)?.onSuccess { externalAccount ->
+).onSuccess { externalAccount ->
     externalAccount.reauthorize()
-}?.onFailure { error ->
-    Log.e("Clerk", "External account linking failed: ${error.message}")
 }
 ```
 
@@ -358,7 +332,7 @@ Clerk.user?.createExternalAccount(
 
 ```kotlin
 // Get the current session token for API calls
-Clerk.session?.fetchToken()?.jwt?.let { token ->
+Clerk.session.fetchToken().jwt.let { token ->
     // Use the token in your API requests
     val headers = mutableMapOf<String, String>()
     headers["Authorization"] = "Bearer $token"
@@ -378,7 +352,7 @@ Clerk.session?.fetchToken()?.jwt?.let { token ->
 - Check that your publishable key is correct
 
 **OAuth deep linking not working:**
-- Verify your redirect URLs match your Clerk Dashboard configuration
+- Verify your configuration in the Clerk Dashboard
 
 **ProGuard/R8 issues:**
 - The SDK includes ProGuard rules automatically
