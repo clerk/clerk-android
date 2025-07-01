@@ -9,6 +9,7 @@ import retrofit2.Converter
 import retrofit2.Retrofit
 
 private const val ENVIRONMENT_TYPE = "com.clerk.network.model.environment.Environment"
+private const val TOKEN_TYPE = "com.clerk.network.model.token.TokenResource"
 
 /**  */
 internal object ClerkApiResultConverterFactory : Converter.Factory() {
@@ -67,7 +68,7 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
     val rawType = getRawType(successType)
 
     // Don't wrap the Environment type
-    if (rawType.name == ENVIRONMENT_TYPE) {
+    if (rawType.name == ENVIRONMENT_TYPE || rawType.name == TOKEN_TYPE) {
       return false
     }
 
@@ -97,7 +98,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
             result
           }
 
-        ClerkLog.d("Final unwrapped result: $unwrappedResult")
         @Suppress("UNCHECKED_CAST") ClerkResult.success(unwrappedResult as Any)
       }
         ?: run {

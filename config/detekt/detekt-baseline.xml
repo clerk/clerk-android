@@ -8,6 +8,7 @@
     <ID>MagicNumber:DeviceAttestationHelper.kt$DeviceAttestationHelper.LRUCache.&lt;no name provided>$16</ID>
     <ID>NestedBlockDepth:ClientSyncingMiddleware.kt$ClientSyncingMiddleware$override fun intercept(chain: Interceptor.Chain): Response</ID>
     <ID>ReturnCount:DeviceAssertionMiddleware.kt$DeviceAssertionInterceptor.DeviceAttestationManager$suspend fun performDeviceAssertion(request: Request, error: ClerkError): Boolean</ID>
+    <ID>SwallowedException:ClerkTest.kt$ClerkTest$e: Exception</ID>
     <ID>SwallowedException:PasskeyCredentialManagerTest.kt$PasskeyCredentialManagerTest$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ConfigurationManager.kt$ConfigurationManager$e: Exception</ID>
     <ID>TooGenericExceptionCaught:DeviceAssertionMiddleware.kt$DeviceAssertionInterceptor$e: Exception</ID>
