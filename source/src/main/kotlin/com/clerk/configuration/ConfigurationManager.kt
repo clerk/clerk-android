@@ -195,7 +195,9 @@ internal class ConfigurationManager {
 
     val currentSession = Clerk.session
     if (currentSession == null) {
-      ClerkLog.w("Cannot start token refresh - no active session")
+      if (debugMode) {
+        ClerkLog.w("Cannot start token refresh - no active session")
+      }
       return
     }
 
@@ -205,25 +207,25 @@ internal class ConfigurationManager {
     refreshJob?.cancel()
     refreshJob =
       scope.launch {
-        var refreshCount = 0
         while (isActive) {
-          ClerkLog.d("Token refresh cycle ${++refreshCount} - waiting ${REFRESH_TOKEN_INTERVAL}s")
           delay(REFRESH_TOKEN_INTERVAL.seconds)
 
           try {
             val session = Clerk.session
             if (session != null) {
-              ClerkLog.d("Refreshing token for session: ${session.id}")
+              if (Clerk.debugMode) {
+                ClerkLog.d("Refreshing token for session: ${session.id}")
+              }
               session.fetchToken(SessionGetTokenOptions(skipCache = false))
-              ClerkLog.d("Token refresh successful")
             } else {
-              ClerkLog.w("No session available for token refresh")
+              if (debugMode) {
+                ClerkLog.w("No session available for token refresh")
+              }
             }
           } catch (e: Exception) {
             ClerkLog.w("Token refresh failed: ${e.message}")
           }
         }
-        ClerkLog.d("Token refresh loop ended")
       }
   }
 

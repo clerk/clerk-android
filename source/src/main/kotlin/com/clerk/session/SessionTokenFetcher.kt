@@ -101,9 +101,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           ClerkLog.d("Cached token is expired for session ${session.id}")
         }
       }
-        ?: ClerkLog.d(
-          "No cached token found for session fetching from network session: ${session.id}"
-        )
     }
 
     // Fetch from network
