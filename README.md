@@ -163,12 +163,13 @@ user.setProfileImage(file: file)
 ```
 
 #### Add Phone Number
+
 ```kotlin
 // For saving the created phone number
 lateinit var newPhoneNumber: PhoneNumber
 
 // Create a new phone number on the user's account
-user.createPhoneNumber("5555550100)
+user.createPhoneNumber("5555550100")
     .onSuccess {
        newPhoneNumber = it
        // Use the returned resource to send an OTP
