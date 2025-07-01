@@ -110,7 +110,7 @@ internal object SSOService {
 
         val intent =
           Intent(Clerk.applicationContext?.get(), SSOReceiverActivity::class.java).apply {
-            Intent.setData = externalUrl.toUri()
+            data = externalUrl.toUri()
             addFlags(FLAG_ACTIVITY_NEW_TASK)
           }
         Clerk.applicationContext?.get()?.startActivity(intent)

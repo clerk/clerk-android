@@ -416,7 +416,25 @@ data class SignIn(
       override val strategy: String = RESET_PASSWORD_PHONE_CODE,
     ) : PrepareFirstFactorParams
 
-    data class Unknown(override val strategy: String = "Unknown") : PrepareFirstFactorParams
+    @AutoMap
+    @Serializable
+    data class OAuth(
+      override val strategy: String,
+      @SerialName("redirect_url")
+      val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+    ) : PrepareFirstFactorParams
+
+    @AutoMap
+    @Serializable
+    data class EnterpriseSSO(
+      override val strategy: String = ENTERPRISE_SSO,
+      @SerialName("redirect_url")
+      val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+    ) : PrepareFirstFactorParams
+
+    @AutoMap
+    @Serializable
+    data class Passkey(override val strategy: String = PASSKEY) : PrepareFirstFactorParams
   }
 
   /**
