@@ -20,7 +20,7 @@ import okhttp3.Response
  * error. This interceptor will automatically perform device attestation and retry the original
  * request.
  */
-class DeviceAssertionInterceptor : Interceptor {
+internal class DeviceAssertionInterceptor : Interceptor {
 
   override fun intercept(chain: Interceptor.Chain): Response = runBlocking {
     val originalRequest = chain.request()

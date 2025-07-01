@@ -8,7 +8,7 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
 
-interface DeviceAttestationApi {
+internal interface DeviceAttestationApi {
   @POST(Paths.ClientPath.DeviceAttestation.CHALLENGES) fun getChallenge()
 
   /** Verifies the given [token] for app attestation */
