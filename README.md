@@ -139,6 +139,7 @@ SignIn.create(Strategy.EmailCode("user@example.com"))
 // After collecting the OTP code from the user, attempt verification
 Clerk.signIn.attemptFirstFactor(Strategy.ResetPasswordEmailCode("123456"))
   .onSuccess { signIn ->
+
     // Set a new password to complete the process
     signIn.resetPassword(password = "********", signOutOfOtherSessions = true)
   }
@@ -176,7 +177,7 @@ user.createPhoneNumber("5555550100")
        newPhoneNumber.prepareVerification()
      }
 
-// After collectiong the OTP code from the user, attempt verification
+// After collecting the OTP code from the user, attempt verification
 newPhoneNumber.attemptVerification(code: "12345")
 ```
 
