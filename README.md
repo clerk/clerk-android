@@ -378,13 +378,7 @@ Clerk.session?.fetchToken()?.jwt?.let { token ->
 - Check that your publishable key is correct
 
 **OAuth deep linking not working:**
-- Ensure you've configured the proper intent filters in your `AndroidManifest.xml`
 - Verify your redirect URLs match your Clerk Dashboard configuration
-
-**Network errors:**
-- Check your internet connection
-- Verify your publishable key is valid and active
-- Ensure your app has `INTERNET` permission in `AndroidManifest.xml`
 
 **ProGuard/R8 issues:**
 - The SDK includes ProGuard rules automatically
