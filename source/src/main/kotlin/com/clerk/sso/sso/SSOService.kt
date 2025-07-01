@@ -12,7 +12,6 @@ import com.clerk.network.ClerkApi
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.longErrorMessageOrNull
-import com.clerk.signin.SignIn
 import com.clerk.signin.get
 import com.clerk.signup.SignUp
 import com.clerk.sso.RedirectConfiguration
@@ -60,7 +59,12 @@ internal object SSOService {
    *
    * The method automatically cancels any existing pending authentication to prevent conflicts.
    *
-   * @param params The [SignIn.AuthenticateWithRedirectParams] for the authentication request.
+   * @param strategy The OAuth strategy to use for authentication (e.g., "oauth_google",
+   *   "oauth_facebook")
+   * @param redirectUrl The URL to redirect to after authentication completes
+   * @param identifier Optional identifier for the authentication request
+   * @param emailAddress Optional email address for the authentication request
+   * @param legalAccepted Optional flag indicating if legal terms have been accepted
    * @return A [ClerkResult] containing the [OAuthResult] on success, or [ClerkErrorResponse] on
    *   failure
    */
