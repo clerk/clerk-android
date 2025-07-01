@@ -3,9 +3,9 @@ package com.clerk.user
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
 import com.clerk.emailaddress.EmailAddress
+import com.clerk.externalaccount.ExternalAccount
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.account.EnterpriseAccount
-import com.clerk.network.model.account.ExternalAccount
 import com.clerk.network.model.backupcodes.BackupCodeResource
 import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.error.ClerkErrorResponse
@@ -20,7 +20,7 @@ import com.clerk.phonenumber.PhoneNumber
 import com.clerk.session.Session
 import com.clerk.sso.OAuthProvider
 import com.clerk.sso.RedirectConfiguration
-import com.clerk.sso.SSOService
+import com.clerk.sso.sso.SSOService
 import com.clerk.user.User.CreateExternalAccountParams
 import com.clerk.user.User.UpdateParams
 import com.clerk.user.User.UpdatePasswordParams

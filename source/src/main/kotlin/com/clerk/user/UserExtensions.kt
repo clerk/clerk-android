@@ -1,7 +1,7 @@
 package com.clerk.user
 
 import com.clerk.Clerk
-import com.clerk.network.model.account.oauthProviderType
+import com.clerk.externalaccount.oauthProviderType
 import com.clerk.network.model.environment.allSocialProviders
 import com.clerk.sso.OAuthProvider
 

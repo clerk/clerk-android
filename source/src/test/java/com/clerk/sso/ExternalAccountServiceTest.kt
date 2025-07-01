@@ -2,9 +2,10 @@ package com.clerk.sso
 
 import android.content.Context
 import com.clerk.Clerk
+import com.clerk.externalaccount.ExternalAccount
+import com.clerk.externalaccount.ExternalAccountService
 import com.clerk.network.ClerkApi
 import com.clerk.network.api.UserApi
-import com.clerk.network.model.account.ExternalAccount
 import com.clerk.network.model.client.Client
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
@@ -31,7 +32,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Unit tests for [ExternalAccountService].
+ * Unit tests for [com.clerk.externalaccount.ExternalAccountService].
  *
  * These tests focus on external account connection functionality for existing users.
  */

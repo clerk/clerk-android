@@ -6,13 +6,13 @@
     <application android:supportsRtl="true">
 
         <activity
-            android:name="com.clerk.sso.SSOManagerActivity"
+            android:name="com.clerk.sso.sso.SSOManagerActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboard|keyboardHidden"
             android:exported="false"
             android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
         <activity
-            android:name="com.clerk.sso.SSOReceiverActivity"
+            android:name="com.clerk.sso.sso.SSOReceiverActivity"
             android:exported="true"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
             <intent-filter>

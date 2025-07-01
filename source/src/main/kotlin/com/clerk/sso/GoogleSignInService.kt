@@ -9,6 +9,9 @@ import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.signin.SignIn
 import com.clerk.signup.SignUp
+import com.clerk.sso.sso.OAuthResult
+import com.clerk.sso.sso.signInToOAuthResult
+import com.clerk.sso.sso.signUpToOAuthResult
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 
 /**

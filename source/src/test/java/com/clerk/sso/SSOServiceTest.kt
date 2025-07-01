@@ -3,10 +3,10 @@ package com.clerk.sso
 import android.content.Context
 import android.net.Uri
 import com.clerk.Clerk
+import com.clerk.externalaccount.ExternalAccount
 import com.clerk.network.ClerkApi
 import com.clerk.network.api.SignInApi
 import com.clerk.network.api.UserApi
-import com.clerk.network.model.account.ExternalAccount
 import com.clerk.network.model.client.Client
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.verification.Verification
@@ -14,6 +14,7 @@ import com.clerk.network.serialization.ClerkResult
 import com.clerk.session.Session
 import com.clerk.signin.SignIn
 import com.clerk.signup.SignUp
+import com.clerk.sso.sso.SSOService
 import com.clerk.user.User
 import io.mockk.coEvery
 import io.mockk.every
@@ -38,7 +39,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Unit tests for [SSOService].
+ * Unit tests for [com.clerk.sso.sso.SSOService].
  *
  * These tests focus on OAuth authentication flows and redirect handling. Tests for external account
  * connection functionality can be found in [ExternalAccountServiceTest].

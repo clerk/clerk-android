@@ -24,9 +24,9 @@ import com.clerk.passkeys.GoogleCredentialAuthenticationService
 import com.clerk.passkeys.PasskeyService
 import com.clerk.sso.GoogleSignInService
 import com.clerk.sso.OAuthProvider
-import com.clerk.sso.OAuthResult
 import com.clerk.sso.RedirectConfiguration
-import com.clerk.sso.SSOService
+import com.clerk.sso.sso.OAuthResult
+import com.clerk.sso.sso.SSOService
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

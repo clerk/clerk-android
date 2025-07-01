@@ -1,4 +1,4 @@
-package com.clerk.network.model.account
+package com.clerk.externalaccount
 
 import com.clerk.network.ClerkApi
 import com.clerk.network.model.deleted.DeletedObject

@@ -1,19 +1,19 @@
-package com.clerk.sso
+package com.clerk.externalaccount
 
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import androidx.core.net.toUri
 import com.clerk.Clerk
+import com.clerk.externalaccount.ExternalAccountService.connectExternalAccount
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
-import com.clerk.network.model.account.ExternalAccount
 import com.clerk.network.model.client.Client
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.longErrorMessageOrNull
 import com.clerk.network.serialization.onSuccess
-import com.clerk.user.User.CreateExternalAccountParams
+import com.clerk.sso.sso.SSOReceiverActivity
+import com.clerk.user.User
 import com.clerk.user.toMap
 import kotlinx.coroutines.CompletableDeferred
 
@@ -68,7 +68,7 @@ internal object ExternalAccountService {
    *   [ClerkErrorResponse] on failure
    */
   suspend fun connectExternalAccount(
-    params: CreateExternalAccountParams
+    params: User.CreateExternalAccountParams
   ): ClerkResult<ExternalAccount, ClerkErrorResponse> {
     // Clear any existing pending external account connections
     currentPendingExternalAccountConnection = null
@@ -91,7 +91,7 @@ internal object ExternalAccountService {
         val intent =
           Intent(Clerk.applicationContext?.get(), SSOReceiverActivity::class.java).apply {
             data = externalUrl.toUri()
-            addFlags(FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
           }
         Clerk.applicationContext?.get()?.startActivity(intent)
         completableDeferred.await()
@@ -130,7 +130,7 @@ internal object ExternalAccountService {
         return
       }
 
-      Client.get().onSuccess { client ->
+      Client.Companion.get().onSuccess { client ->
         val externalAccount =
           client.sessions
             .find { it.id == client.lastActiveSessionId }
@@ -150,13 +150,13 @@ internal object ExternalAccountService {
 
           else -> {
             ClerkLog.d("External account verified successfully")
-            pendingConnection.complete(ClerkResult.success(externalAccount))
+            pendingConnection.complete(ClerkResult.Companion.success(externalAccount))
           }
         }
       }
     } catch (e: Exception) {
       ClerkLog.e("Failed to complete external connection: ${e.message}")
-      currentPendingExternalAccountConnection?.complete(ClerkResult.unknownFailure(e))
+      currentPendingExternalAccountConnection?.complete(ClerkResult.Companion.unknownFailure(e))
     } finally {
       clearExternalConnectionState()
     }
@@ -181,7 +181,7 @@ internal object ExternalAccountService {
    */
   fun cancelPendingExternalAccountConnection() {
     currentPendingExternalAccountConnection?.complete(
-      ClerkResult.unknownFailure(Exception("External account connection cancelled"))
+      ClerkResult.Companion.unknownFailure(Exception("External account connection cancelled"))
     )
     clearExternalConnectionState()
   }
@@ -199,7 +199,7 @@ internal object ExternalAccountService {
     pendingConnection: CompletableDeferred<ClerkResult<ExternalAccount, ClerkErrorResponse>>,
     message: String,
   ) {
-    pendingConnection.complete(ClerkResult.unknownFailure(Exception(message)))
+    pendingConnection.complete(ClerkResult.Companion.unknownFailure(Exception(message)))
   }
 
   /**
@@ -227,11 +227,14 @@ internal object ExternalAccountService {
     initialResult: ClerkResult.Failure<ClerkErrorResponse>
   ): ClerkResult.Failure<ClerkErrorResponse> =
     when (initialResult.errorType) {
-      ClerkResult.Failure.ErrorType.API -> ClerkResult.apiFailure(initialResult.error)
+      ClerkResult.Failure.ErrorType.API -> ClerkResult.Companion.apiFailure(initialResult.error)
       ClerkResult.Failure.ErrorType.HTTP ->
-        ClerkResult.httpFailure(code = initialResult.code ?: -1, error = initialResult.error)
+        ClerkResult.Companion.httpFailure(
+          code = initialResult.code ?: -1,
+          error = initialResult.error,
+        )
 
       ClerkResult.Failure.ErrorType.UNKNOWN ->
-        ClerkResult.unknownFailure(error("${initialResult.longErrorMessageOrNull}"))
+        ClerkResult.Companion.unknownFailure(Exception("${initialResult.longErrorMessageOrNull}"))
     }
 }

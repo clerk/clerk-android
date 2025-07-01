@@ -4,7 +4,7 @@ package com.clerk.network.api
 
 import com.clerk.Clerk
 import com.clerk.emailaddress.EmailAddress
-import com.clerk.network.model.account.ExternalAccount
+import com.clerk.externalaccount.ExternalAccount
 import com.clerk.network.model.backupcodes.BackupCodeResource
 import com.clerk.network.model.deleted.DeletedObject
 import com.clerk.network.model.error.ClerkErrorResponse

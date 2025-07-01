@@ -1,4 +1,4 @@
-package com.clerk.sso
+package com.clerk.sso.sso
 
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult

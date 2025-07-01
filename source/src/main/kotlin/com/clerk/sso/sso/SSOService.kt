@@ -1,20 +1,22 @@
-package com.clerk.sso
+package com.clerk.sso.sso
 
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.Clerk
+import com.clerk.externalaccount.ExternalAccount
+import com.clerk.externalaccount.ExternalAccountService
 import com.clerk.log.ClerkLog
 import com.clerk.network.ClerkApi
-import com.clerk.network.model.account.ExternalAccount
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.longErrorMessageOrNull
 import com.clerk.signin.SignIn
 import com.clerk.signin.get
 import com.clerk.signup.SignUp
-import com.clerk.sso.SSOService.authenticateWithRedirect
+import com.clerk.sso.RedirectConfiguration
+import com.clerk.sso.sso.SSOService.authenticateWithRedirect
 import com.clerk.user.User.CreateExternalAccountParams
 import kotlinx.coroutines.CompletableDeferred
 
@@ -36,7 +38,7 @@ import kotlinx.coroutines.CompletableDeferred
  * - Error handling and logging throughout the flow
  *
  * For external account connections to existing users, see [ExternalAccountService]. For Google One
- * Tap authentication, see [GoogleSignInService].
+ * Tap authentication, see [com.clerk.sso.GoogleSignInService].
  */
 internal object SSOService {
   /**
@@ -108,7 +110,7 @@ internal object SSOService {
 
         val intent =
           Intent(Clerk.applicationContext?.get(), SSOReceiverActivity::class.java).apply {
-            data = externalUrl.toUri()
+            Intent.setData = externalUrl.toUri()
             addFlags(FLAG_ACTIVITY_NEW_TASK)
           }
         Clerk.applicationContext?.get()?.startActivity(intent)

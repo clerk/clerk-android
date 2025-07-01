@@ -10,9 +10,9 @@ import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.verification.Verification
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.sso.OAuthProvider
-import com.clerk.sso.OAuthResult
 import com.clerk.sso.RedirectConfiguration
-import com.clerk.sso.SSOService
+import com.clerk.sso.sso.OAuthResult
+import com.clerk.sso.sso.SSOService
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
