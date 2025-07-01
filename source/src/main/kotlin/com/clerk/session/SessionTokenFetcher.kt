@@ -43,6 +43,9 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     options: SessionGetTokenOptions = SessionGetTokenOptions(),
   ): TokenResource? {
     val cacheKey = session.tokenCacheKey(options.template)
+    ClerkLog.d(
+      "Fetching token for session ${session.id} with options: $options and cache key: $cacheKey"
+    )
 
     // Fast path: check if task already exists
     tokenTasks[cacheKey]?.let {
@@ -90,10 +93,17 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     // Check cache first (unless skipped)
     if (!options.skipCache) {
       SessionTokensCache.getToken(cacheKey)?.let { token ->
+        ClerkLog.d("Found cached token for session ${session.id}")
         if (isTokenValid(token, options.expirationBuffer)) {
+          ClerkLog.d("Cached token is still valid for session ${session.id}")
           return token
+        } else {
+          ClerkLog.d("Cached token is expired for session ${session.id}")
         }
       }
+        ?: ClerkLog.d(
+          "No cached token found for session fetching from network session: ${session.id}"
+        )
     }
 
     // Fetch from network
@@ -129,9 +139,13 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   private fun isTokenValid(token: TokenResource, bufferSeconds: Long): Boolean {
     return try {
       val expiresAt = jwtManager.createFromString(token.jwt).expiresAt
+      val currentTime = System.currentTimeMillis()
+      val bufferMs = bufferSeconds * Constants.Config.DEFAULT_EXPIRATION_BUFFER
+
       expiresAt?.let {
-        (it.time - System.currentTimeMillis()) >
-          bufferSeconds * Constants.Config.DEFAULT_EXPIRATION_BUFFER
+        val timeUntilExpiry = it.time - currentTime
+        val isValid = timeUntilExpiry > bufferMs
+        isValid
       } == true
     } catch (e: Exception) {
       ClerkLog.w("Failed to parse JWT expiration: ${e.message}")
@@ -158,7 +172,7 @@ data class SessionGetTokenOptions(
   val skipCache: Boolean = false,
 
   /** Buffer time in seconds before token expiration to consider it invalid */
-  val expirationBuffer: Long = 60, // seconds
+  val expirationBuffer: Long = 10, // seconds
 )
 
 /**
