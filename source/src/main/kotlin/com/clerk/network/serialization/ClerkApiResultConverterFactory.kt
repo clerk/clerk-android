@@ -98,7 +98,6 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
             result
           }
 
-        ClerkLog.d("Final unwrapped result: $unwrappedResult")
         @Suppress("UNCHECKED_CAST") ClerkResult.success(unwrappedResult as Any)
       }
         ?: run {
