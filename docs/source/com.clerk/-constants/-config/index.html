@@ -1,0 +1,206 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>Config</title>
+<link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../../styles/style.css" rel="Stylesheet">
+<link href="../../../../styles/main.css" rel="Stylesheet">
+<link href="../../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script>
+<link href="../../../../styles/multimodule.css" rel="Stylesheet"></head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+<a class="library-name--link" href="../../../../index.html">
+                            Clerk
+                    </a>            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":source:dokkaHtmlPartial/release">androidJvm</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="Clerk Android::com.clerk/Constants.Config///PointingToDeclaration//1059751064">
+  <div class="breadcrumbs"><a href="../../../index.html">Clerk Android</a><span class="delimiter">/</span><a href="../../index.html">com.clerk</a><span class="delimiter">/</span><a href="../index.html">Constants</a><span class="delimiter">/</span><span class="current">Config</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Config</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="index.html">Config</a></div><p class="paragraph">Configuration and timing constants</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="984080968%2FProperties%2F1059751064" anchor-label="API_TIMEOUT_SECONDS" id="984080968%2FProperties%2F1059751064" data-filterable-set=":source:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-a-p-i_-t-i-m-e-o-u-t_-s-e-c-o-n-d-s.html"><span><span>API_TIMEOUT_SECONDS</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="984080968%2FProperties%2F1059751064"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-a-p-i_-t-i-m-e-o-u-t_-s-e-c-o-n-d-s.html">API_TIMEOUT_SECONDS</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator"> = </span><span class="token constant">30</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1955502602%2FProperties%2F1059751064" anchor-label="BACKOFF_BASE_DELAY_SECONDS" id="1955502602%2FProperties%2F1059751064" data-filterable-set=":source:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-b-a-c-k-o-f-f_-b-a-s-e_-d-e-l-a-y_-s-e-c-o-n-d-s.html"><span><span>BACKOFF_BASE_DELAY_SECONDS</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1955502602%2FProperties%2F1059751064"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-b-a-c-k-o-f-f_-b-a-s-e_-d-e-l-a-y_-s-e-c-o-n-d-s.html">BACKOFF_BASE_DELAY_SECONDS</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator"> = </span><span class="token constant">5</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-572800413%2FProperties%2F1059751064" anchor-label="COMPRESSION_PERCENTAGE" id="-572800413%2FProperties%2F1059751064" data-filterable-set=":source:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-c-o-m-p-r-e-s-s-i-o-n_-p-e-r-c-e-n-t-a-g-e.html"><span><span>COMPRESSION_PERCENTAGE</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-572800413%2FProperties%2F1059751064"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-c-o-m-p-r-e-s-s-i-o-n_-p-e-r-c-e-n-t-a-g-e.html">COMPRESSION_PERCENTAGE</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">75</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="403149234%2FProperties%2F1059751064" anchor-label="DEFAULT_EXPIRATION_BUFFER" id="403149234%2FProperties%2F1059751064" data-filterable-set=":source:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-e-f-a-u-l-t_-e-x-p-i-r-a-t-i-o-n_-b-u-f-f-e-r.html"><span><span>DEFAULT_EXPIRATION_BUFFER</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="403149234%2FProperties%2F1059751064"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-d-e-f-a-u-l-t_-e-x-p-i-r-a-t-i-o-n_-b-u-f-f-e-r.html">DEFAULT_EXPIRATION_BUFFER</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator"> = </span><span class="token constant">1000</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-532225805%2FProperties%2F1059751064" anchor-label="EXPONENTIAL_BACKOFF_SHIFT" id="-532225805%2FProperties%2F1059751064" data-filterable-set=":source:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-e-x-p-o-n-e-n-t-i-a-l_-b-a-c-k-o-f-f_-s-h-i-f-t.html"><span><span>EXPONENTIAL_BACKOFF_SHIFT</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-532225805%2FProperties%2F1059751064"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-e-x-p-o-n-e-n-t-i-a-l_-b-a-c-k-o-f-f_-s-h-i-f-t.html">EXPONENTIAL_BACKOFF_SHIFT</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">1</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1355779896%2FProperties%2F1059751064" anchor-label="MAX_ATTESTATION_RETRIES" id="-1355779896%2FProperties%2F1059751064" data-filterable-set=":source:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-m-a-x_-a-t-t-e-s-t-a-t-i-o-n_-r-e-t-r-i-e-s.html"><span><span>MAX_ATTESTATION_RETRIES</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1355779896%2FProperties%2F1059751064"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-m-a-x_-a-t-t-e-s-t-a-t-i-o-n_-r-e-t-r-i-e-s.html">MAX_ATTESTATION_RETRIES</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">3</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1616319143%2FProperties%2F1059751064" anchor-label="REFRESH_TOKEN_INTERVAL" id="1616319143%2FProperties%2F1059751064" data-filterable-set=":source:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-r-e-f-r-e-s-h_-t-o-k-e-n_-i-n-t-e-r-v-a-l.html"><span><span>REFRESH_TOKEN_INTERVAL</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1616319143%2FProperties%2F1059751064"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-r-e-f-r-e-s-h_-t-o-k-e-n_-i-n-t-e-r-v-a-l.html">REFRESH_TOKEN_INTERVAL</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">5</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="496250903%2FProperties%2F1059751064" anchor-label="TIMEOUT_MULTIPLIER" id="496250903%2FProperties%2F1059751064" data-filterable-set=":source:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-t-i-m-e-o-u-t_-m-u-l-t-i-p-l-i-e-r.html"><span><span>TIMEOUT_MULTIPLIER</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="496250903%2FProperties%2F1059751064"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-t-i-m-e-o-u-t_-m-u-l-t-i-p-l-i-e-r.html">TIMEOUT_MULTIPLIER</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">1000</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -4,6 +4,7 @@ $dokka.linkExtension:html
 module:Clerk Android
 com.clerk
 com.clerk.emailaddress
+com.clerk.externalaccount
 com.clerk.network.api
 com.clerk.network.middleware.incoming
 com.clerk.network.model.account
@@ -15,7 +16,6 @@ com.clerk.network.model.error
 com.clerk.network.model.factor
 com.clerk.network.model.image
 com.clerk.network.model.organization
-com.clerk.network.model.response
 com.clerk.network.model.token
 com.clerk.network.model.totp
 com.clerk.network.model.userdata
@@ -27,4 +27,5 @@ com.clerk.session
 com.clerk.signin
 com.clerk.signup
 com.clerk.sso
+com.clerk.sso.sso
 com.clerk.user

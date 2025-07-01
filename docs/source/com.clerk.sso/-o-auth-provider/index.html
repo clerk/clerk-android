@@ -63,7 +63,7 @@
   <div class="breadcrumbs"><a href="../../index.html">Clerk Android</a><span class="delimiter">/</span><a href="../index.html">com.clerk.sso</a><span class="delimiter">/</span><span class="current">OAuthProvider</span></div>
   <div class="cover ">
     <h1 class="cover"><span>OAuth</span><wbr><span><span>Provider</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">enum </span><a href="index.html">OAuthProvider</a> : <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="index.html">OAuthProvider</a><span class="token operator">&gt; </span></div><p class="paragraph">Enum class representing supported OAuth providers for authentication. Each provider is associated with a specific strategy string used in Clerk API requests.</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">enum </span><a href="index.html">OAuthProvider</a> : <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="index.html">OAuthProvider</a><span class="token operator">&gt; </span></div><p class="paragraph">Enum class representing supported OAuth providers for authentication.</p><p class="paragraph">Each OAuth provider corresponds to a third-party authentication service that users can use to sign in to your application. The enum provides a type-safe way to reference OAuth providers and automatically handles the mapping to the appropriate strategy strings used in Clerk API requests.</p><h2 class="">Supported Providers</h2><p class="paragraph">The enum includes support for major OAuth providers such as:</p><ul><li><p class="paragraph"><strong>Social platforms</strong>: Facebook, Google, Twitter, Instagram, TikTok, Discord</p></li><li><p class="paragraph"><strong>Professional platforms</strong>: LinkedIn, Microsoft, Slack</p></li><li><p class="paragraph"><strong>Developer platforms</strong>: GitHub, GitLab, Bitbucket, Atlassian</p></li><li><p class="paragraph"><strong>Business platforms</strong>: HubSpot, Notion, Dropbox, Box, Xero</p></li><li><p class="paragraph"><strong>Entertainment platforms</strong>: Spotify, Twitch</p></li><li><p class="paragraph"><strong>AI platforms</strong>: Hugging Face</p></li><li><p class="paragraph"><strong>Custom providers</strong>: For enterprise or specialized OAuth implementations</p></li></ul><h2 class="">Usage</h2><p class="paragraph">OAuth providers are typically used when configuring sign-in flows or when processing authentication redirects from external services.</p><h3 class="">Example usage:</h3><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">// Use with sign-in authentication<br>SignIn.authenticateWithRedirect(<br>  AuthenticateWithRedirectParams.OAuth(strategy = OAuthProvider.GOOGLE)<br>)<br><br>// Convert from strategy string<br>val provider = OAuthProvider.fromStrategy("oauth_github")</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><h4 class="">See also</h4><div class="table"><div class="table-row" data-filterable-current=":source:dokkaHtmlPartial/release" data-filterable-set=":source:dokkaHtmlPartial/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-o-auth-provider-data/index.html"><span>OAuth</span><wbr><span>Provider</span><wbr><span><span>Data</span></span></a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button><button class="section-tab" data-togglable="ENTRY">Entries</button></div>
@@ -80,7 +80,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-f-a-c-e-b-o-o-k/index.html">FACEBOOK</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-f-a-c-e-b-o-o-k/index.html">FACEBOOK</a></div></div><div class="brief "><p class="paragraph">Facebook OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -95,7 +95,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-g-o-o-g-l-e/index.html">GOOGLE</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-g-o-o-g-l-e/index.html">GOOGLE</a></div></div><div class="brief "><p class="paragraph">Google OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -110,7 +110,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-h-u-b-s-p-o-t/index.html">HUBSPOT</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-h-u-b-s-p-o-t/index.html">HUBSPOT</a></div></div><div class="brief "><p class="paragraph">HubSpot OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -125,7 +125,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-g-i-t-h-u-b/index.html">GITHUB</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-g-i-t-h-u-b/index.html">GITHUB</a></div></div><div class="brief "><p class="paragraph">GitHub OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -140,7 +140,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-t-i-k-t-o-k/index.html">TIKTOK</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-t-i-k-t-o-k/index.html">TIKTOK</a></div></div><div class="brief "><p class="paragraph">TikTok OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -155,7 +155,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-g-i-t-l-a-b/index.html">GITLAB</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-g-i-t-l-a-b/index.html">GITLAB</a></div></div><div class="brief "><p class="paragraph">GitLab OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -170,7 +170,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-d-i-s-c-o-r-d/index.html">DISCORD</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-d-i-s-c-o-r-d/index.html">DISCORD</a></div></div><div class="brief "><p class="paragraph">Discord OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -185,7 +185,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-t-w-i-t-t-e-r/index.html">TWITTER</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-t-w-i-t-t-e-r/index.html">TWITTER</a></div></div><div class="brief "><p class="paragraph">Twitter OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -200,7 +200,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-t-w-i-t-c-h/index.html">TWITCH</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-t-w-i-t-c-h/index.html">TWITCH</a></div></div><div class="brief "><p class="paragraph">Twitch OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -215,7 +215,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-k-e-d-i-n/index.html">LINKEDIN</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-k-e-d-i-n/index.html">LINKEDIN</a></div></div><div class="brief "><p class="paragraph">LinkedIn OAuth authentication provider (legacy).</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -230,7 +230,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-k-e-d-i-n_-o-i-d-c/index.html">LINKEDIN_OIDC</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-k-e-d-i-n_-o-i-d-c/index.html">LINKEDIN_OIDC</a></div></div><div class="brief "><p class="paragraph">LinkedIn OpenID Connect authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -245,7 +245,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-d-r-o-p-b-o-x/index.html">DROPBOX</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-d-r-o-p-b-o-x/index.html">DROPBOX</a></div></div><div class="brief "><p class="paragraph">Dropbox OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -260,7 +260,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-a-t-l-a-s-s-i-a-n/index.html">ATLASSIAN</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-a-t-l-a-s-s-i-a-n/index.html">ATLASSIAN</a></div></div><div class="brief "><p class="paragraph">Atlassian OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -275,7 +275,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-b-i-t-b-u-c-k-e-t/index.html">BITBUCKET</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-b-i-t-b-u-c-k-e-t/index.html">BITBUCKET</a></div></div><div class="brief "><p class="paragraph">Bitbucket OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -290,7 +290,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-m-i-c-r-o-s-o-f-t/index.html">MICROSOFT</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-m-i-c-r-o-s-o-f-t/index.html">MICROSOFT</a></div></div><div class="brief "><p class="paragraph">Microsoft OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -305,7 +305,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-n-o-t-i-o-n/index.html">NOTION</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-n-o-t-i-o-n/index.html">NOTION</a></div></div><div class="brief "><p class="paragraph">Notion OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -320,7 +320,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-a-p-p-l-e/index.html">APPLE</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-a-p-p-l-e/index.html">APPLE</a></div></div><div class="brief "><p class="paragraph">Apple OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -335,7 +335,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-e/index.html">LINE</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-e/index.html">LINE</a></div></div><div class="brief "><p class="paragraph">LINE OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -350,7 +350,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-i-n-s-t-a-g-r-a-m/index.html">INSTAGRAM</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-i-n-s-t-a-g-r-a-m/index.html">INSTAGRAM</a></div></div><div class="brief "><p class="paragraph">Instagram OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -365,7 +365,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-c-o-i-n-b-a-s-e/index.html">COINBASE</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-c-o-i-n-b-a-s-e/index.html">COINBASE</a></div></div><div class="brief "><p class="paragraph">Coinbase OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -380,7 +380,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-s-p-o-t-i-f-y/index.html">SPOTIFY</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-s-p-o-t-i-f-y/index.html">SPOTIFY</a></div></div><div class="brief "><p class="paragraph">Spotify OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -395,7 +395,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-x-e-r-o/index.html">XERO</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-x-e-r-o/index.html">XERO</a></div></div><div class="brief "><p class="paragraph">Xero OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -410,7 +410,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-b-o-x/index.html">BOX</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-b-o-x/index.html">BOX</a></div></div><div class="brief "><p class="paragraph">Box OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -425,7 +425,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-s-l-a-c-k/index.html">SLACK</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-s-l-a-c-k/index.html">SLACK</a></div></div><div class="brief "><p class="paragraph">Slack OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -440,7 +440,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-e-a-r/index.html">LINEAR</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-e-a-r/index.html">LINEAR</a></div></div><div class="brief "><p class="paragraph">Linear OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -455,7 +455,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-h-u-g-g-i-n-g_-f-a-c-e/index.html">HUGGING_FACE</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-h-u-g-g-i-n-g_-f-a-c-e/index.html">HUGGING_FACE</a></div></div><div class="brief "><p class="paragraph">Hugging Face OAuth authentication provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -470,7 +470,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-c-u-s-t-o-m/index.html">CUSTOM</a></div></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-c-u-s-t-o-m/index.html">CUSTOM</a></div></div><div class="brief "><p class="paragraph">Custom OAuth authentication provider for enterprise or specialized implementations.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -523,7 +523,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html">OAuthProvider</a><span class="token punctuation">.</span><a href="../logo-url.html">logoUrl</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Convenience function to get the logoUrl for the given <a href="index.html">OAuthProvider</a></p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html">OAuthProvider</a><span class="token punctuation">.</span><a href="../logo-url.html">logoUrl</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Extension property to get the logo URL for the OAuth provider.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -538,7 +538,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html">OAuthProvider</a><span class="token punctuation">.</span><a href="../provider-name.html">providerName</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html">OAuthProvider</a><span class="token punctuation">.</span><a href="../provider-name.html">providerName</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Extension property to get the human-readable name of the OAuth provider.</p></div></div></div>
                 </div>
               </div>
             </div>
