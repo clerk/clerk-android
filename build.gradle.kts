@@ -90,6 +90,7 @@ subprojects {
   val sdkVersion = projectLibs.findVersion("clerk-sdk").get().toString()
 
   mavenPublishing {
+    publishToMavenCentral()
     coordinates("com.clerk", "clerk-android", sdkVersion)
 
     pom {
