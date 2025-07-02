@@ -91,6 +91,7 @@ subprojects {
 
   mavenPublishing {
     publishToMavenCentral()
+    signAllPublications()
     coordinates("com.clerk", "clerk-android", sdkVersion)
 
     pom {

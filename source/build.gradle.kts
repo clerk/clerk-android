@@ -29,35 +29,6 @@ android {
   buildFeatures { buildConfig = true }
 }
 
-mavenPublishing {
-  pom {
-    name.set("Clerk Android SDK")
-    description.set("Clerk SDK for Android")
-    inceptionYear.set("2025")
-    url.set("https://github.com/clerk/clerk-android")
-    licenses {
-      license {
-        name.set("MIT License")
-        url.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
-        distribution.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
-      }
-    }
-
-    developers {
-      developer {
-        id.set("clerk")
-        name.set("Clerk")
-        url.set("https://clerk.com")
-      }
-    }
-    scm {
-      url.set("https://github.com/clerk/clerk-android")
-      connection.set("scm:git:git://github.com/clerk/clerk-android.git")
-      developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
-    }
-  }
-}
-
 tasks.withType<DokkaTaskPartial>().configureEach {
   dependsOn(tasks.named("kspDebugKotlin"))
   dependsOn(tasks.named("kspReleaseKotlin"))
