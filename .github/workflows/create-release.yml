@@ -70,10 +70,6 @@ jobs:
         echo "$CHANGELOG" > changelog.txt
         echo "Generated changelog:"
         cat changelog.txt
-        
-    - name: Build and test
-      if: steps.check_release.outputs.EXISTS == 'false'
-      run: ./gradlew build test
       
     - name: Create Git tag
       if: steps.check_release.outputs.EXISTS == 'false'
