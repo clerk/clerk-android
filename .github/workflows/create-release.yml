@@ -20,7 +20,7 @@ jobs:
         distribution: 'temurin'
         
     - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
+      uses: gradle/gradle-build-action@v3
       
     - name: Extract version from libs.versions.toml
       id: extract_version
