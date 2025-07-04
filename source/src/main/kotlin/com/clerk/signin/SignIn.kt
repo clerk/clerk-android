@@ -512,8 +512,11 @@ data class SignIn(
        */
       @AutoMap
       @Serializable
-      data class Password(val identifier: String, override val strategy: String = PASSWORD) :
-        Strategy
+      data class Password(
+        val identifier: String,
+        val password: String,
+        override val strategy: String = PASSWORD,
+      ) : Strategy
 
       /**
        * Transfer strategy for account transfer scenarios.
