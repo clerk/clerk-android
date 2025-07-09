@@ -681,7 +681,7 @@ data class SignIn(
      * and Google One Tap. You can control which credentials are used by passing the correct
      * [SignIn.CredentialType]
      */
-    suspend fun authenticateWithGoogleCredentials(
+    suspend fun authenticateWithGoogleCredential(
       credentialTypes: List<CredentialType>
     ): ClerkResult<SignIn, ClerkErrorResponse> {
       return GoogleCredentialAuthenticationService.signInWithGoogleCredential(
