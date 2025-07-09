@@ -2,8 +2,6 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
-import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
   alias(libs.plugins.android.application) apply false
@@ -23,7 +21,6 @@ allprojects {
   apply(plugin = "org.jetbrains.dokka")
   apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
-  apply(plugin = "jacoco")
   configure<SpotlessExtension> {
     ratchetFrom("origin/main")
     format("misc") {
@@ -53,10 +50,6 @@ allprojects {
     allRules = true
   }
 
-  configure<JacocoPluginExtension> {
-    toolVersion = "0.8.11"
-  }
-
   val detektProjectBaseline by
     tasks.registering(DetektCreateBaselineTask::class) {
       description = "Overrides current baseline."
@@ -74,25 +67,6 @@ allprojects {
 }
 
 tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
-
-// JaCoCo multi-module report
-tasks.register<JacocoReport>("jacocoRootReport") {
-  group = "verification"
-  description = "Generate Jacoco coverage reports for all modules."
-  
-  dependsOn(subprojects.map { it.tasks.withType<Test>() })
-  
-  reports {
-    xml.required.set(true)
-    html.required.set(true)
-  }
-  
-  val sourceDirs = subprojects.map { it.file("src/main/java") } + subprojects.map { it.file("src/main/kotlin") }
-  
-  sourceDirectories.setFrom(sourceDirs)
-  classDirectories.setFrom(subprojects.map { it.file("build/tmp/kotlin-classes/debug") })
-  executionData.setFrom(subprojects.map { it.fileTree("build").include("**/*.exec", "**/*.ec") })
-}
 
 subprojects {
   plugins.withType<JavaPlugin> {
