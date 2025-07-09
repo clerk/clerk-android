@@ -5,7 +5,6 @@ module:Clerk Android
 com.clerk
 com.clerk.emailaddress
 com.clerk.externalaccount
-com.clerk.network.api
 com.clerk.network.middleware.incoming
 com.clerk.network.model.account
 com.clerk.network.model.backupcodes
