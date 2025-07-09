@@ -113,6 +113,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     "**/*\$\$serializer.*"
   )
 
+  val buildDir = layout.buildDirectory.get().asFile
   val debugTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
     exclude(fileFilter)
   }
@@ -122,9 +123,12 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 
   sourceDirectories.setFrom(files(mainSrc, kotlinSrc))
   classDirectories.setFrom(files(debugTree))
-  executionData.setFrom(fileTree(buildDir) {
-    include("**/*.exec", "**/*.ec")
-  })
+  
+  // Updated execution data paths for Android Gradle Plugin 8.x
+  executionData.setFrom(files(
+    "${buildDir}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+    "${buildDir}/jacoco/testDebugUnitTest.exec"
+  ).filter { it.exists() })
 }
 
 // Ensure jacocoTestReport runs after tests

@@ -80,7 +80,9 @@ tasks.register<JacocoReport>("jacocoRootReport") {
   group = "verification"
   description = "Generate Jacoco coverage reports for all modules."
   
+  // Depend on both test tasks and individual module jacocoTestReport tasks
   dependsOn(subprojects.map { it.tasks.withType<Test>() })
+  dependsOn(subprojects.map { it.tasks.named("jacocoTestReport") })
   
   reports {
     xml.required.set(true)
@@ -91,7 +93,14 @@ tasks.register<JacocoReport>("jacocoRootReport") {
   
   sourceDirectories.setFrom(sourceDirs)
   classDirectories.setFrom(subprojects.map { it.file("build/tmp/kotlin-classes/debug") })
-  executionData.setFrom(subprojects.map { it.fileTree("build").include("**/*.exec", "**/*.ec") })
+  
+  // Updated execution data paths for Android Gradle Plugin 8.x
+  executionData.setFrom(subprojects.flatMap { subproject ->
+    listOf(
+      subproject.file("build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"),
+      subproject.file("build/jacoco/testDebugUnitTest.exec")
+    ).filter { it.exists() }
+  })
 }
 
 subprojects {
