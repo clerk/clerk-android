@@ -2,6 +2,7 @@ package com.clerk.session
 
 import com.clerk.Clerk
 import com.clerk.network.ClerkApi
+import com.clerk.network.model.client.Client
 import com.clerk.network.model.error.ClerkErrorResponse
 import com.clerk.network.model.token.TokenResource
 import com.clerk.network.model.userdata.PublicUserData
@@ -141,19 +142,27 @@ data class SessionActivity(
 )
 
 /** Deletes the current session. */
-suspend fun Session.delete() {
-  ClerkApi.session.deleteSessions()
+suspend fun Session.delete(): ClerkResult<Client, ClerkErrorResponse> {
+  return ClerkApi.session.deleteSessions()
 }
 
 /**
  * Fetches a fresh JWT for the session.
  *
  * @param options The options to use when fetching the token.
- * @return The [TokenResource] if the token was fetched successfully, null otherwise.
+ * @return The [ClerkResult] containing the [TokenResource] if successful, or [ClerkErrorResponse]
+ *   if failed.
  * @see GetTokenOptions
  */
-suspend fun Session.fetchToken(options: GetTokenOptions = GetTokenOptions()): TokenResource? {
-  return SessionTokenFetcher().getToken(this, options)
+suspend fun Session.fetchToken(
+  options: GetTokenOptions = GetTokenOptions()
+): ClerkResult<TokenResource, ClerkErrorResponse> {
+  val token = SessionTokenFetcher().getToken(this, options)
+  return if (token != null) {
+    ClerkResult.success(token)
+  } else {
+    ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList(), clerkTraceId = "local-error"))
+  }
 }
 
 /**
