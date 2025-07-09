@@ -87,20 +87,38 @@ tasks.register<JacocoReport>("jacocoRootReport") {
   reports {
     xml.required.set(true)
     html.required.set(true)
+    csv.required.set(false)
   }
   
   val sourceDirs = subprojects.map { it.file("src/main/java") } + subprojects.map { it.file("src/main/kotlin") }
   
   sourceDirectories.setFrom(sourceDirs)
-  classDirectories.setFrom(subprojects.map { it.file("build/tmp/kotlin-classes/debug") })
   
-  // Updated execution data paths for Android Gradle Plugin 8.x
-  executionData.setFrom(subprojects.flatMap { subproject ->
+  // Class directories - handle both Kotlin and Java classes
+  val classDirectories = subprojects.flatMap { subproject ->
+    listOf(
+      subproject.file("build/tmp/kotlin-classes/debug"),
+      subproject.file("build/intermediates/javac/debug/classes")
+    ).filter { it.exists() }
+  }
+  classDirectories.setFrom(classDirectories)
+  
+  // Execution data - try multiple possible locations for each subproject
+  val executionDataFiles = subprojects.flatMap { subproject ->
     listOf(
       subproject.file("build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"),
-      subproject.file("build/jacoco/testDebugUnitTest.exec")
+      subproject.file("build/jacoco/testDebugUnitTest.exec"),
+      subproject.file("build/outputs/code_coverage/debugUnitTest/testDebugUnitTest.exec")
     ).filter { it.exists() }
-  })
+  }
+  executionData.setFrom(executionDataFiles)
+  
+  doFirst {
+    println("Root JaCoCo Task Configuration:")
+    println("Source directories: ${sourceDirectories.files}")
+    println("Class directories: ${this.classDirectories.files}")
+    println("Execution data files: ${executionData.files}")
+  }
 }
 
 subprojects {

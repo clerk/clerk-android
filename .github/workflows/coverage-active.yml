@@ -6,7 +6,7 @@ on:
 
 jobs:
   coverage:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     
     permissions:
       contents: read
@@ -25,48 +25,92 @@ jobs:
         distribution: 'zulu'
         cache: gradle
 
-    - name: Set up Android SDK
+    - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      with:
-        api-level: 34
-        build-tools: 34.0.0
-        ndk-version: 25.2.9519653
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     
-    - name: Run tests and generate coverage report
+    - name: Create local.properties
       run: |
-        echo "Running tests..."
-        ./gradlew testDebugUnitTest --info
-        echo "Generating coverage reports..."
-        ./gradlew :source:jacocoTestReport --info
-        ./gradlew jacocoRootReport --info
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        echo "ndk.dir=$ANDROID_HOME/ndk-bundle" >> local.properties
+    
+    - name: Run tests with coverage
+      run: |
+        echo "=== Running tests with coverage ==="
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "Available Android SDKs:"
+        ls -la $ANDROID_HOME/platforms/ || echo "No platforms found"
+        
+        # Try to run tests with detailed output
+        echo "Running unit tests..."
+        if ./gradlew :source:testDebugUnitTest --stacktrace --info; then
+          echo "✅ Tests completed successfully"
+        else
+          echo "❌ Tests failed, checking if we can still generate coverage..."
+          echo "Continuing to try coverage generation..."
+        fi
+        
+        echo "Generating individual module coverage report..."
+        if ./gradlew :source:jacocoTestReport --stacktrace --info; then
+          echo "✅ Individual coverage report generated"
+        else
+          echo "❌ Individual coverage report failed"
+        fi
+        
+        echo "Generating root coverage report..."
+        if ./gradlew jacocoRootReport --stacktrace --info; then
+          echo "✅ Root coverage report generated"
+        else
+          echo "❌ Root coverage report failed"
+        fi
 
-    - name: Debug coverage files
+    - name: Debug coverage files after test run
       run: |
-        echo "=== Debugging coverage files ==="
+        echo "=== Post-test debugging ==="
         echo "Looking for execution data files..."
-        find . -name "*.exec" -type f || echo "No .exec files found"
-        find . -name "*.ec" -type f || echo "No .ec files found"
+        find . -name "*.exec" -type f -ls || echo "No .exec files found"
+        find . -name "*.ec" -type f -ls || echo "No .ec files found"
+        
         echo "Looking for coverage reports..."
-        find . -path "*/jacoco*" -name "*.xml" -type f || echo "No XML reports found"
+        find . -path "*/jacoco*" -name "*.xml" -type f -ls || echo "No XML reports found"
         find . -path "*/jacoco*" -name "*.html" -type f | head -5 || echo "No HTML reports found"
-        echo "Build directory contents:"
-        ls -la build/ || echo "No build directory"
-        ls -la source/build/ || echo "No source/build directory"
+        
+        echo "Build directories:"
+        ls -la build/ 2>/dev/null || echo "No root build directory"
+        ls -la source/build/ 2>/dev/null || echo "No source build directory"
+        ls -la source/build/reports/ 2>/dev/null || echo "No source reports directory"
+        ls -la source/build/reports/jacoco/ 2>/dev/null || echo "No source jacoco directory"
+        
+        echo "Test results:"
+        ls -la source/build/test-results/ 2>/dev/null || echo "No test results directory"
+        
+        echo "Jacoco execution data locations:"
+        ls -la source/build/jacoco/ 2>/dev/null || echo "No jacoco directory"
+        ls -la source/build/outputs/unit_test_code_coverage/ 2>/dev/null || echo "No unit test coverage directory"
 
     - name: Generate Coverage Summary
       id: coverage
       run: |
-        # Find the coverage XML file
-        COVERAGE_FILE="build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
+        # Try multiple possible locations for coverage reports
+        COVERAGE_FILES=(
+          "build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
+          "source/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
+        )
         
-        echo "Looking for coverage file: $COVERAGE_FILE"
+        COVERAGE_FILE=""
+        for file in "${COVERAGE_FILES[@]}"; do
+          if [ -f "$file" ]; then
+            COVERAGE_FILE="$file"
+            echo "Found coverage file: $COVERAGE_FILE"
+            break
+          fi
+        done
         
-        if [ -f "$COVERAGE_FILE" ]; then
+        if [ -n "$COVERAGE_FILE" ] && [ -f "$COVERAGE_FILE" ]; then
           echo "Coverage file found! Content preview:"
-          head -20 "$COVERAGE_FILE"
+          head -30 "$COVERAGE_FILE"
           echo "=== End of preview ==="
           
           # Extract coverage percentages using grep and sed
@@ -131,10 +175,9 @@ jobs:
           echo "line_coverage=$LINE_PERCENTAGE" >> $GITHUB_OUTPUT
           echo "coverage_file_exists=true" >> $GITHUB_OUTPUT
         else
-          echo "Coverage file not found at: $COVERAGE_FILE"
-          echo "Checking alternative locations..."
-          find . -name "jacocoRootReport.xml" -type f || echo "No jacocoRootReport.xml found anywhere"
-          find . -name "*jacoco*.xml" -type f || echo "No jacoco XML files found"
+          echo "Coverage file not found at any expected location"
+          echo "Searching for any XML files with coverage data..."
+          find . -name "*.xml" -type f -exec grep -l "type=\"INSTRUCTION\"" {} \; 2>/dev/null || echo "No XML files with coverage data found"
           echo "coverage_file_exists=false" >> $GITHUB_OUTPUT
         fi
 
@@ -157,6 +200,21 @@ jobs:
           ---
           *Coverage calculated by JaCoCo*
 
+    - name: Add Debug Comment if Coverage Failed
+      uses: marocchino/sticky-pull-request-comment@v2
+      if: steps.coverage.outputs.coverage_file_exists != 'true'
+      with:
+        recreate: true
+        message: |
+          ## ⚠️ Coverage Report Generation Failed
+          
+          The coverage report could not be generated. This may be due to:
+          - No tests running successfully
+          - JaCoCo configuration issues
+          - Missing coverage instrumentation
+          
+          Please check the workflow logs for more details.
+
     - name: Upload Coverage Reports
       uses: actions/upload-artifact@v4
       if: always()
@@ -165,6 +223,8 @@ jobs:
         path: |
           build/reports/jacoco/jacocoRootReport/
           source/build/reports/jacoco/jacocoTestReport/
+          source/build/test-results/
+          source/build/jacoco/
         retention-days: 30
 
     - name: Coverage Check

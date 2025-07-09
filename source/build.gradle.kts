@@ -1,5 +1,7 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.gradle.testing.jacoco.tasks.JacocoTaskExtension
+import org.gradle.api.tasks.Test
 
 plugins {
   alias(libs.plugins.android.library)
@@ -33,6 +35,20 @@ android {
   }
 
   buildFeatures { buildConfig = true }
+  
+  testOptions {
+    unitTests {
+      isIncludeAndroidResources = true
+      all {
+        it.systemProperty("robolectric.enabledSdks", "34")
+        // Enable JaCoCo for test tasks
+        it.configure<JacocoTaskExtension> {
+          isIncludeNoLocationClasses = true
+          excludes = listOf("jdk.internal.*")
+        }
+      }
+    }
+  }
 }
 
 tasks.withType<DokkaTaskPartial>().configureEach {
@@ -99,6 +115,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
   reports {
     xml.required.set(true)
     html.required.set(true)
+    csv.required.set(false)
   }
 
   val fileFilter = listOf(
@@ -110,28 +127,52 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     "android/**/*.*",
     "**/*\$WhenMappings.*",
     "**/*\$serializer.*",
-    "**/*\$\$serializer.*"
+    "**/*\$\$serializer.*",
+    "**/*\$Companion.*"
   )
 
   val buildDir = layout.buildDirectory.get().asFile
-  val debugTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
-    exclude(fileFilter)
-  }
-
+  
+  // Source directories
   val mainSrc = "${project.projectDir}/src/main/java"
   val kotlinSrc = "${project.projectDir}/src/main/kotlin"
-
   sourceDirectories.setFrom(files(mainSrc, kotlinSrc))
-  classDirectories.setFrom(files(debugTree))
   
-  // Updated execution data paths for Android Gradle Plugin 8.x
-  executionData.setFrom(files(
+  // Class directories - include both Kotlin and Java compiled classes
+  val kotlinClasses = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+    exclude(fileFilter)
+  }
+  val javaClasses = fileTree("${buildDir}/intermediates/javac/debug/classes") {
+    exclude(fileFilter)
+  }
+  classDirectories.setFrom(files(kotlinClasses, javaClasses))
+  
+  // Execution data - try multiple possible locations
+  val executionDataFiles = files(
     "${buildDir}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
-    "${buildDir}/jacoco/testDebugUnitTest.exec"
-  ).filter { it.exists() })
+    "${buildDir}/jacoco/testDebugUnitTest.exec",
+    "${buildDir}/outputs/code_coverage/debugUnitTest/testDebugUnitTest.exec"
+  ).filter { it.exists() }
+  
+  executionData.setFrom(executionDataFiles)
+  
+  doFirst {
+    println("JaCoCo Task Configuration:")
+    println("Source directories: ${sourceDirectories.files}")
+    println("Class directories: ${classDirectories.files}")
+    println("Execution data files: ${executionData.files}")
+  }
 }
 
 // Ensure jacocoTestReport runs after tests
 tasks.named("check") {
   dependsOn("jacocoTestReport")
+}
+
+// Make sure testDebugUnitTest generates coverage data
+tasks.withType<Test> {
+  configure<JacocoTaskExtension> {
+    isIncludeNoLocationClasses = true
+    excludes = listOf("jdk.internal.*")
+  }
 }
