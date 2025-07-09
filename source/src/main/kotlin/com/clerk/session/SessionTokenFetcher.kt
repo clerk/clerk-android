@@ -40,7 +40,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
    */
   suspend fun getToken(
     session: Session,
-    options: SessionGetTokenOptions = SessionGetTokenOptions(),
+    options: GetTokenOptions = GetTokenOptions(),
   ): TokenResource? {
     val cacheKey = session.tokenCacheKey(options.template)
     ClerkLog.d(
@@ -84,10 +84,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
    * @param options Options controlling the fetch behavior
    * @return The token resource, or null if the fetch failed
    */
-  private suspend fun fetchToken(
-    session: Session,
-    options: SessionGetTokenOptions,
-  ): TokenResource? {
+  private suspend fun fetchToken(session: Session, options: GetTokenOptions): TokenResource? {
     val cacheKey = session.tokenCacheKey(options.template)
 
     // Check cache first (unless skipped)
@@ -161,7 +158,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
  * @property skipCache Whether to bypass the token cache and always fetch from network
  * @property expirationBuffer Buffer time in seconds before token expiration to consider it invalid
  */
-data class SessionGetTokenOptions(
+data class GetTokenOptions(
   /** Optional template name for custom token generation */
   val template: String? = null,
 

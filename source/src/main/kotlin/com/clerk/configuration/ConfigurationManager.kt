@@ -20,7 +20,7 @@ import com.clerk.network.model.environment.FraudSettings
 import com.clerk.network.serialization.ClerkResult
 import com.clerk.network.serialization.fold
 import com.clerk.network.serialization.successOrElse
-import com.clerk.session.SessionGetTokenOptions
+import com.clerk.session.GetTokenOptions
 import com.clerk.session.fetchToken
 import com.clerk.storage.StorageHelper
 import java.lang.ref.WeakReference
@@ -216,7 +216,7 @@ internal class ConfigurationManager {
               if (Clerk.debugMode) {
                 ClerkLog.d("Refreshing token for session: ${session.id}")
               }
-              session.fetchToken(SessionGetTokenOptions(skipCache = false))
+              session.fetchToken(GetTokenOptions(skipCache = false))
             } else {
               if (debugMode) {
                 ClerkLog.w("No session available for token refresh")

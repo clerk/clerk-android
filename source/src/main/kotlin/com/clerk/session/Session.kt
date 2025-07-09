@@ -150,11 +150,9 @@ suspend fun Session.delete() {
  *
  * @param options The options to use when fetching the token.
  * @return The [TokenResource] if the token was fetched successfully, null otherwise.
- * @see SessionGetTokenOptions
+ * @see GetTokenOptions
  */
-suspend fun Session.fetchToken(
-  options: SessionGetTokenOptions = SessionGetTokenOptions()
-): TokenResource? {
+suspend fun Session.fetchToken(options: GetTokenOptions = GetTokenOptions()): TokenResource? {
   return SessionTokenFetcher().getToken(this, options)
 }
 

@@ -136,7 +136,7 @@ class SessionTokenFetcherTest {
     // Given
     val template = "custom_template"
     val cacheKey = "session_123-custom_template"
-    val options = SessionGetTokenOptions(template = template)
+    val options = GetTokenOptions(template = template)
 
     coEvery { SessionTokensCache.getToken(cacheKey) } returns null
     coEvery { mockClerkApiService.tokens("session_123", template) } returns
@@ -155,7 +155,7 @@ class SessionTokenFetcherTest {
   @Test
   fun `getToken skips cache when skipCache is true`() = runTest {
     // Given
-    val options = SessionGetTokenOptions(skipCache = true)
+    val options = GetTokenOptions(skipCache = true)
     val cacheKey = "session_123"
 
     coEvery { mockClerkApiService.tokens("session_123") } returns
@@ -200,7 +200,7 @@ class SessionTokenFetcherTest {
   fun `getToken uses custom expiration buffer`() = runTest {
     // Given
     val customBuffer = 120L // 2 minutes
-    val options = SessionGetTokenOptions(expirationBuffer = customBuffer)
+    val options = GetTokenOptions(expirationBuffer = customBuffer)
     val cacheKey = "session_123"
     // Token expires in 90 seconds (less than 2-minute buffer)
     val soonExpiredTime = Date(System.currentTimeMillis() + 90000)
