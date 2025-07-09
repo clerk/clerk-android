@@ -80,7 +80,7 @@ tasks.register<JacocoReport>("jacocoRootReport") {
   group = "verification"
   description = "Generate Jacoco coverage reports for all modules."
   
-  // Depend on both test tasks and individual module jacocoTestReport tasks
+  // Depend on subproject test tasks and jacoco reports
   dependsOn(subprojects.map { it.tasks.withType<Test>() })
   dependsOn(subprojects.map { it.tasks.named("jacocoTestReport") })
   
@@ -94,29 +94,30 @@ tasks.register<JacocoReport>("jacocoRootReport") {
   
   sourceDirectories.setFrom(sourceDirs)
   
-  // Class directories - handle both Kotlin and Java classes
+  // Aggregate class directories from all subprojects
   val classDirectories = subprojects.flatMap { subproject ->
     listOf(
       subproject.file("build/tmp/kotlin-classes/debug"),
       subproject.file("build/intermediates/javac/debug/classes")
-    ).filter { it.exists() }
+    )
   }
-  classDirectories.setFrom(classDirectories)
+  this.classDirectories.setFrom(classDirectories)
   
-  // Execution data - try multiple possible locations for each subproject
+  // Aggregate execution data from all subprojects  
   val executionDataFiles = subprojects.flatMap { subproject ->
     listOf(
-      subproject.file("build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"),
       subproject.file("build/jacoco/testDebugUnitTest.exec"),
+      subproject.file("build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"),
       subproject.file("build/outputs/code_coverage/debugUnitTest/testDebugUnitTest.exec")
-    ).filter { it.exists() }
-  }
+    )
+  }.filter { it.exists() }
+  
   executionData.setFrom(executionDataFiles)
   
   doFirst {
     println("Root JaCoCo Task Configuration:")
     println("Source directories: ${sourceDirectories.files}")
-    println("Class directories: ${this.classDirectories.files}")
+    println("Class directories: ${classDirectories.map { it.absolutePath }}")
     println("Execution data files: ${executionData.files}")
   }
 }

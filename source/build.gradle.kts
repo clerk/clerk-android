@@ -1,7 +1,5 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.gradle.testing.jacoco.tasks.JacocoReport
-import org.gradle.testing.jacoco.tasks.JacocoTaskExtension
-import org.gradle.api.tasks.Test
 
 plugins {
   alias(libs.plugins.android.library)
@@ -25,8 +23,7 @@ android {
   buildTypes {
     debug { 
       isMinifyEnabled = false 
-      enableUnitTestCoverage = true
-      enableAndroidTestCoverage = true
+      isTestCoverageEnabled = true
     }
     release {
       isMinifyEnabled = false
@@ -39,13 +36,11 @@ android {
   testOptions {
     unitTests {
       isIncludeAndroidResources = true
+      isReturnDefaultValues = true
       all {
         it.systemProperty("robolectric.enabledSdks", "34")
-        // Enable JaCoCo for test tasks
-        it.configure<JacocoTaskExtension> {
-          isIncludeNoLocationClasses = true
-          excludes = listOf("jdk.internal.*")
-        }
+        it.systemProperty("robolectric.offline", "true")
+        it.jvmArgs("-noverify")
       }
     }
   }
@@ -105,13 +100,12 @@ dependencies {
   ksp(libs.clerk.automap.processor)
 }
 
-// JaCoCo configuration
+// Simple JaCoCo configuration for Robolectric tests
 tasks.register<JacocoReport>("jacocoTestReport") {
-  group = "verification"
-  description = "Generate Jacoco coverage reports for the debug build."
-
   dependsOn("testDebugUnitTest")
-  
+  group = "verification"
+  description = "Generate Jacoco coverage reports for unit tests"
+
   reports {
     xml.required.set(true)
     html.required.set(true)
@@ -120,7 +114,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 
   val fileFilter = listOf(
     "**/R.class",
-    "**/R\$*.class",
+    "**/R\$*.class", 
     "**/BuildConfig.*",
     "**/Manifest*.*",
     "**/*Test*.*",
@@ -131,48 +125,39 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     "**/*\$Companion.*"
   )
 
-  val buildDir = layout.buildDirectory.get().asFile
-  
-  // Source directories
-  val mainSrc = "${project.projectDir}/src/main/java"
-  val kotlinSrc = "${project.projectDir}/src/main/kotlin"
-  sourceDirectories.setFrom(files(mainSrc, kotlinSrc))
-  
-  // Class directories - include both Kotlin and Java compiled classes
-  val kotlinClasses = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+  val javaClasses = fileTree("${layout.buildDirectory.get().asFile}/intermediates/javac/debug/classes") {
     exclude(fileFilter)
   }
-  val javaClasses = fileTree("${buildDir}/intermediates/javac/debug/classes") {
+  
+  val kotlinClasses = fileTree("${layout.buildDirectory.get().asFile}/tmp/kotlin-classes/debug") {
     exclude(fileFilter)
   }
-  classDirectories.setFrom(files(kotlinClasses, javaClasses))
+
+  classDirectories.setFrom(files(javaClasses, kotlinClasses))
   
-  // Execution data - try multiple possible locations
+  sourceDirectories.setFrom(files(
+    "${project.projectDir}/src/main/java",
+    "${project.projectDir}/src/main/kotlin"
+  ))
+  
+  // Look for execution data in multiple locations
   val executionDataFiles = files(
-    "${buildDir}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
-    "${buildDir}/jacoco/testDebugUnitTest.exec",
-    "${buildDir}/outputs/code_coverage/debugUnitTest/testDebugUnitTest.exec"
+    "${layout.buildDirectory.get().asFile}/jacoco/testDebugUnitTest.exec",
+    "${layout.buildDirectory.get().asFile}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+    "${layout.buildDirectory.get().asFile}/outputs/code_coverage/debugUnitTest/testDebugUnitTest.exec"
   ).filter { it.exists() }
   
   executionData.setFrom(executionDataFiles)
   
   doFirst {
-    println("JaCoCo Task Configuration:")
-    println("Source directories: ${sourceDirectories.files}")
-    println("Class directories: ${classDirectories.files}")
-    println("Execution data files: ${executionData.files}")
+    println("JaCoCo configuration:")
+    println("Source dirs: ${sourceDirectories.files}")
+    println("Class dirs: ${classDirectories.files}")
+    println("Execution data: ${executionData.files}")
   }
 }
 
-// Ensure jacocoTestReport runs after tests
+// Ensure test report runs after check
 tasks.named("check") {
   dependsOn("jacocoTestReport")
-}
-
-// Make sure testDebugUnitTest generates coverage data
-tasks.withType<Test> {
-  configure<JacocoTaskExtension> {
-    isIncludeNoLocationClasses = true
-    excludes = listOf("jdk.internal.*")
-  }
 }
