@@ -1,4 +1,5 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
   alias(libs.plugins.android.library)
@@ -6,6 +7,7 @@ plugins {
   alias(libs.plugins.kotlin.plugin.serialization)
   alias(libs.plugins.ksp)
   alias(libs.plugins.mavenPublish)
+  jacoco
 }
 
 android {
@@ -19,7 +21,11 @@ android {
   }
 
   buildTypes {
-    debug { isMinifyEnabled = false }
+    debug { 
+      isMinifyEnabled = false 
+      enableUnitTestCoverage = true
+      enableAndroidTestCoverage = true
+    }
     release {
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -81,4 +87,47 @@ dependencies {
   androidTestImplementation(libs.robolectric)
 
   ksp(libs.clerk.automap.processor)
+}
+
+// JaCoCo configuration
+tasks.register<JacocoReport>("jacocoTestReport") {
+  group = "verification"
+  description = "Generate Jacoco coverage reports for the debug build."
+
+  dependsOn("testDebugUnitTest")
+  
+  reports {
+    xml.required.set(true)
+    html.required.set(true)
+  }
+
+  val fileFilter = listOf(
+    "**/R.class",
+    "**/R\$*.class",
+    "**/BuildConfig.*",
+    "**/Manifest*.*",
+    "**/*Test*.*",
+    "android/**/*.*",
+    "**/*\$WhenMappings.*",
+    "**/*\$serializer.*",
+    "**/*\$\$serializer.*"
+  )
+
+  val debugTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+    exclude(fileFilter)
+  }
+
+  val mainSrc = "${project.projectDir}/src/main/java"
+  val kotlinSrc = "${project.projectDir}/src/main/kotlin"
+
+  sourceDirectories.setFrom(files(mainSrc, kotlinSrc))
+  classDirectories.setFrom(files(debugTree))
+  executionData.setFrom(fileTree(buildDir) {
+    include("**/*.exec", "**/*.ec")
+  })
+}
+
+// Ensure jacocoTestReport runs after tests
+tasks.named("check") {
+  dependsOn("jacocoTestReport")
 }
