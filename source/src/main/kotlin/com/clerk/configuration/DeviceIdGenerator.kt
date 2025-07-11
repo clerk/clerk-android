@@ -4,60 +4,106 @@ import androidx.annotation.VisibleForTesting
 import com.clerk.log.ClerkLog
 import com.clerk.storage.StorageHelper
 import com.clerk.storage.StorageKey
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
 /**
- * Internal utility for generating and managing unique device identifiers.
+ * Internal utility for generating and managing unique device identifiers with improved performance.
  *
  * This object provides thread-safe generation and caching of device IDs that persist across
  * application sessions. The device ID is used for device attestation and analytics purposes.
+ *
+ * Key improvements:
+ * - Reduced synchronization scope using atomic operations
+ * - Asynchronous initialization to avoid blocking
+ * - Lazy loading with fallback mechanisms
+ * - Better error handling and recovery
  *
  * The device ID is generated once per device installation and stored in persistent storage.
  * If storage is unavailable, a temporary device ID is generated that will be replaced with
  * a persistent one when storage becomes available.
  */
 internal object DeviceIdGenerator {
-  @Volatile private var cachedDeviceId: String? = null
+  
+  private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+  private val deviceIdState = AtomicReference<String?>(null)
+  private val initializationMutex = Mutex()
+  private var initializationTask: Deferred<String>? = null
+
+  /**
+   * Asynchronously initializes the device ID generator and loads or creates a device ID.
+   *
+   * This method uses atomic operations and reduces synchronization scope for better performance.
+   * Multiple concurrent calls will share the same initialization task.
+   *
+   * @return Deferred<String> that will complete with the device ID
+   */
+  suspend fun initializeAsync(): Deferred<String> {
+    // Fast path: if already initialized, return cached value
+    deviceIdState.get()?.let { 
+      return scope.async { it }
+    }
+
+    // Check if initialization is already in progress
+    initializationTask?.let { return it }
+
+    return initializationMutex.withLock {
+      // Double check after acquiring lock
+      deviceIdState.get()?.let { 
+        return@withLock scope.async { it }
+      }
+
+      initializationTask?.let { return@withLock it }
+
+      // Start new initialization task
+      val task = scope.async {
+        try {
+          initializeDeviceIdInternal()
+        } catch (e: Exception) {
+          ClerkLog.w("Device ID initialization failed, generating temporary ID: ${e.message}")
+          generateTemporaryDeviceId()
+        }
+      }
+      
+      initializationTask = task
+      task
+    }
+  }
 
   /**
    * Initializes the device ID generator and loads or creates a device ID.
    *
    * This method should be called during app initialization to ensure the device ID is
-   * available when needed. It uses double-checked locking to ensure thread safety and
-   * prevent multiple device ID generation.
-   *
-   * If a device ID exists in storage, it will be loaded. Otherwise, a new UUID will be
-   * generated and saved to storage. If storage operations fail, the device ID will still
-   * be cached in memory for the current session.
+   * available when needed. It now uses improved atomic operations for better performance.
    */
-  // Call this during app initialization
   fun initialize() {
-    if (cachedDeviceId == null) {
-      synchronized(this) {
-        if (cachedDeviceId == null) {
-          try {
-            val storedId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
-            cachedDeviceId =
-              if (storedId.isNullOrEmpty()) {
-                UUID.randomUUID().toString().also { newId ->
-                  try {
-                    StorageHelper.saveValue(StorageKey.DEVICE_ID, newId)
-                    ClerkLog.d("Generated and saved new device ID")
-                  } catch (e: Exception) {
-                    ClerkLog.w("Failed to save device ID to storage: ${e.message}")
-                    // Continue with generated ID even if save fails
-                  }
-                }
-              } else {
-                ClerkLog.d("Loaded existing device ID from storage")
-                storedId
-              }
-          } catch (e: Exception) {
-            // If storage fails, generate a temporary device ID
-            ClerkLog.w("Storage not available, generating temporary device ID: ${e.message}")
-            cachedDeviceId = UUID.randomUUID().toString()
-          }
-        }
+    // Fast path: if already initialized, return
+    if (deviceIdState.get() != null) return
+
+    synchronized(this) {
+      // Double check after acquiring lock
+      if (deviceIdState.get() != null) return
+
+      try {
+        val deviceId = initializeDeviceIdBlocking()
+        deviceIdState.set(deviceId)
+        ClerkLog.d("Device ID initialized: ${deviceId.take(8)}...")
+      } catch (e: Exception) {
+        // If storage fails, generate a temporary device ID
+        ClerkLog.w("Storage not available, generating temporary device ID: ${e.message}")
+        val tempId = UUID.randomUUID().toString()
+        deviceIdState.set(tempId)
+        
+        // Try to persist asynchronously
+        tryPersistDeviceIdAsync(tempId)
       }
     }
   }
@@ -65,48 +111,114 @@ internal object DeviceIdGenerator {
   /**
    * Retrieves the current device ID.
    *
-   * This method assumes that [initialize] has been called previously. If the device ID
+   * This method assumes that initialization has been called previously. If the device ID
    * is not available, it will attempt to initialize it automatically.
    *
    * @return The device ID string
    * @throws IllegalStateException if device ID initialization fails
    */
   fun getDeviceId(): String {
-    return cachedDeviceId
-      ?: run {
-        // If not initialized yet, try to initialize now
-        initialize()
-        cachedDeviceId ?: error("Device ID initialization failed")
-      }
+    return deviceIdState.get() ?: run {
+      // Auto-initialize if not already done
+      initialize()
+      deviceIdState.get() ?: error("Device ID initialization failed")
+    }
   }
 
   /**
    * Retrieves the device ID, generating one if necessary.
    *
    * This method provides lazy initialization and can be called safely from anywhere
-   * without requiring prior initialization. If no device ID exists, it will generate
-   * a temporary one and attempt to persist it asynchronously when storage becomes available.
+   * without requiring prior initialization. Uses atomic operations for thread safety.
    *
    * @return The device ID string, either from cache, storage, or newly generated
    */
-  // Lazy initialization version that can be called safely from anywhere
   fun getOrGenerateDeviceId(): String {
-    return cachedDeviceId
-      ?: run {
-        synchronized(this) {
-          cachedDeviceId
-            ?: run {
-              val deviceId = UUID.randomUUID().toString()
-              cachedDeviceId = deviceId
-              ClerkLog.d("Generated temporary device ID (will persist when storage is ready)")
-
-              // Try to persist asynchronously if storage becomes available
-              tryPersistDeviceIdAsync(deviceId)
-
-              deviceId
-            }
-        }
+    return deviceIdState.get() ?: run {
+      // Use compareAndSet for atomic lazy initialization
+      val newDeviceId = UUID.randomUUID().toString()
+      if (deviceIdState.compareAndSet(null, newDeviceId)) {
+        ClerkLog.d("Generated temporary device ID (will persist when storage is ready)")
+        // Try to persist asynchronously
+        tryPersistDeviceIdAsync(newDeviceId)
+        newDeviceId
+      } else {
+        // Another thread beat us to it, use their value
+        deviceIdState.get() ?: newDeviceId
       }
+    }
+  }
+
+  /**
+   * Internal method to initialize device ID with proper storage access
+   */
+  private suspend fun initializeDeviceIdInternal(): String {
+    if (!StorageHelper.isInitialized()) {
+      ClerkLog.w("Storage not initialized for device ID generation")
+      return generateTemporaryDeviceId()
+    }
+
+    return withContext(Dispatchers.IO) {
+      val storedId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
+      
+      val deviceId = if (storedId.isNullOrEmpty()) {
+        val newId = UUID.randomUUID().toString()
+        try {
+          StorageHelper.saveValue(StorageKey.DEVICE_ID, newId)
+          ClerkLog.d("Generated and saved new device ID")
+          newId
+        } catch (e: Exception) {
+          ClerkLog.w("Failed to save device ID to storage: ${e.message}")
+          // Continue with generated ID even if save fails
+          newId
+        }
+      } else {
+        ClerkLog.d("Loaded existing device ID from storage")
+        storedId
+      }
+      
+      // Update atomic reference
+      deviceIdState.set(deviceId)
+      deviceId
+    }
+  }
+
+  /**
+   * Blocking version of device ID initialization for backward compatibility
+   */
+  private fun initializeDeviceIdBlocking(): String {
+    val storedId = try {
+      StorageHelper.loadValue(StorageKey.DEVICE_ID)
+    } catch (e: Exception) {
+      ClerkLog.w("Failed to load device ID from storage: ${e.message}")
+      null
+    }
+    
+    return if (storedId.isNullOrEmpty()) {
+      val newId = UUID.randomUUID().toString()
+      try {
+        StorageHelper.saveValue(StorageKey.DEVICE_ID, newId)
+        ClerkLog.d("Generated and saved new device ID")
+        newId
+      } catch (e: Exception) {
+        ClerkLog.w("Failed to save device ID to storage: ${e.message}")
+        // Continue with generated ID even if save fails
+        newId
+      }
+    } else {
+      ClerkLog.d("Loaded existing device ID from storage")
+      storedId
+    }
+  }
+
+  /**
+   * Generate a temporary device ID when storage is not available
+   */
+  private fun generateTemporaryDeviceId(): String {
+    val tempId = UUID.randomUUID().toString()
+    deviceIdState.set(tempId)
+    ClerkLog.d("Generated temporary device ID")
+    return tempId
   }
 
   /**
@@ -119,19 +231,28 @@ internal object DeviceIdGenerator {
    * @param deviceId The device ID to persist
    */
   private fun tryPersistDeviceIdAsync(deviceId: String) {
-    try {
-      // Try to save the device ID if storage is available
-      val existingId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
-      if (existingId.isNullOrEmpty()) {
-        StorageHelper.saveValue(StorageKey.DEVICE_ID, deviceId)
-        ClerkLog.d("Persisted device ID to storage")
-      } else if (existingId != deviceId) {
-        // Use the stored ID instead of the generated one
-        cachedDeviceId = existingId
-        ClerkLog.d("Updated cached device ID to match stored ID")
+    scope.async {
+      try {
+        if (!StorageHelper.isInitialized()) {
+          ClerkLog.d("Storage not ready, device ID will be persisted later")
+          return@async
+        }
+
+        withContext(Dispatchers.IO) {
+          // Check for existing ID to avoid conflicts
+          val existingId = StorageHelper.loadValue(StorageKey.DEVICE_ID)
+          if (existingId.isNullOrEmpty()) {
+            StorageHelper.saveValue(StorageKey.DEVICE_ID, deviceId)
+            ClerkLog.d("Persisted device ID to storage")
+          } else if (existingId != deviceId) {
+            // Use the stored ID instead of the generated one
+            deviceIdState.set(existingId)
+            ClerkLog.d("Updated cached device ID to match stored ID")
+          }
+        }
+      } catch (e: Exception) {
+        ClerkLog.w("Could not persist device ID: ${e.message}")
       }
-    } catch (e: Exception) {
-      ClerkLog.w("Could not persist device ID: ${e.message}")
     }
   }
 
@@ -143,6 +264,14 @@ internal object DeviceIdGenerator {
    */
   @VisibleForTesting
   internal fun clearCache() {
-    cachedDeviceId = null
+    deviceIdState.set(null)
+    initializationTask?.cancel()
+    initializationTask = null
   }
+
+  /**
+   * Check if device ID is currently cached (for testing/debugging)
+   */
+  @VisibleForTesting
+  internal fun isCached(): Boolean = deviceIdState.get() != null
 }

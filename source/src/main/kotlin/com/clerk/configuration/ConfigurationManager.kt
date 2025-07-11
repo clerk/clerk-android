@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withContext
 
 /**
  * Internal configuration manager responsible for Clerk SDK initialization and lifecycle management.
@@ -105,17 +106,6 @@ internal class ConfigurationManager {
   /** Internal job reference for ongoing device attestation operations. */
   private var attestationJob: Job? = null
 
-  /** Ensures storage is initialized when needed. */
-  private fun ensureStorageInitialized() {
-    if (!storageInitialized) {
-      context?.get()?.let { context ->
-        StorageHelper.initialize(context)
-        storageInitialized = true
-        ClerkLog.d("Storage initialized")
-      }
-    }
-  }
-
   /**
    * Configures the Clerk SDK with the provided application context and publishable key.
    *
@@ -146,13 +136,7 @@ internal class ConfigurationManager {
       this.context = WeakReference(context.applicationContext)
       this.publishableKey = publishableKey
 
-      // Initialize storage first since DeviceIdGenerator depends on it
-      ensureStorageInitialized()
-
-      // Initialize device ID - this should now work since storage is ready
-      DeviceIdGenerator.initialize()
-
-      // Extract base URL and configure API client
+      // Extract base URL and configure API client immediately (minimal sync work)
       val baseUrl = PublishableKeyHelper().extractApiUrl(publishableKey)
       Clerk.baseUrl = baseUrl
       ClerkApi.configure(Clerk.baseUrl, context.applicationContext)
@@ -162,8 +146,24 @@ internal class ConfigurationManager {
 
       // Start background initialization - don't do heavy work on main thread
       scope.launch {
-        // Start data refresh
-        refreshClientAndEnvironment(options)
+        try {
+          // Initialize storage asynchronously to avoid main thread blocking
+          StorageHelper.initializeAsync(context.applicationContext)
+          storageInitialized = true
+          ClerkLog.d("Storage initialized asynchronously")
+
+          // Initialize device ID asynchronously with better performance
+          val deviceIdDeferred = DeviceIdGenerator.initializeAsync()
+          val deviceId = deviceIdDeferred.await()
+          ClerkLog.d("Device ID initialized asynchronously: ${deviceId.take(8)}...")
+
+          // Start data refresh
+          refreshClientAndEnvironment(options)
+        } catch (e: Exception) {
+          ClerkLog.e("Failed to complete async initialization: ${e.message}")
+          // Fallback to synchronous initialization if async fails
+          fallbackToSyncInitialization(context, options)
+        }
       }
 
       // Set up lifecycle monitoring for automatic refresh
@@ -182,6 +182,52 @@ internal class ConfigurationManager {
       hasConfigured = false
       ClerkLog.e("Failed to configure ConfigurationManager: ${e.message}")
       throw e
+    }
+  }
+
+  /**
+   * Fallback method to ensure initialization completes even if async initialization fails
+   */
+  private suspend fun fallbackToSyncInitialization(context: Context, options: ClerkConfigurationOptions?) {
+    try {
+      ClerkLog.d("Starting fallback synchronous initialization")
+      
+      // Ensure storage is initialized
+      if (!storageInitialized) {
+        withContext(Dispatchers.IO) {
+          StorageHelper.initialize(context.applicationContext)
+          storageInitialized = true
+        }
+      }
+
+      // Initialize device ID if not already done
+      if (!DeviceIdGenerator.isCached()) {
+        withContext(Dispatchers.IO) {
+          DeviceIdGenerator.initialize()
+        }
+      }
+
+      // Start data refresh
+      refreshClientAndEnvironment(options)
+    } catch (e: Exception) {
+      ClerkLog.e("Fallback initialization also failed: ${e.message}")
+    }
+  }
+
+  /** Ensures storage is initialized when needed with improved async handling. */
+  private suspend fun ensureStorageInitialized() {
+    if (!storageInitialized) {
+      context?.get()?.let { context ->
+        withContext(Dispatchers.IO) {
+          if (StorageHelper.isInitialized()) {
+            storageInitialized = true
+          } else {
+            StorageHelper.initializeAsync(context)
+            storageInitialized = true
+          }
+        }
+        ClerkLog.d("Storage ensured and initialized")
+      }
     }
   }
 

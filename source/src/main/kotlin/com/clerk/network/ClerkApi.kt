@@ -10,11 +10,7 @@ import com.clerk.network.api.SessionApi
 import com.clerk.network.api.SignInApi
 import com.clerk.network.api.SignUpApi
 import com.clerk.network.api.UserApi
-import com.clerk.network.middleware.incoming.ClientSyncingMiddleware
-import com.clerk.network.middleware.incoming.DeviceAssertionInterceptor
-import com.clerk.network.middleware.incoming.DeviceTokenSavingMiddleware
-import com.clerk.network.middleware.outgoing.HeaderMiddleware
-import com.clerk.network.middleware.outgoing.UrlAppendingMiddleware
+import com.clerk.network.middleware.CombinedClerkInterceptor
 import com.clerk.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.network.serialization.ClerkApiResultConverterFactory
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -78,19 +74,23 @@ internal object ClerkApi {
     _deviceAttestationApi = retrofit.create(DeviceAttestationApi::class.java)
   }
 
-  /** Builds and configures the Retrofit instance. */
+  /** Builds and configures the Retrofit instance with optimized interceptor configuration. */
   private fun buildRetrofit(baseUrl: String, context: Context): Retrofit {
     val urlWithVersion = "$baseUrl/v1/"
 
     val client =
       OkHttpClient.Builder()
         .apply {
-          addInterceptor(ClientSyncingMiddleware(json = json))
-          addInterceptor(HeaderMiddleware())
-          addInterceptor(DeviceTokenSavingMiddleware())
-          addInterceptor(UrlAppendingMiddleware())
-          addInterceptor(DeviceAssertionInterceptor())
+          // Use the new combined interceptor for better performance
+          // This replaces the individual interceptors:
+          // - ClientSyncingMiddleware
+          // - HeaderMiddleware
+          // - DeviceTokenSavingMiddleware
+          // - UrlAppendingMiddleware
+          // - DeviceAssertionInterceptor
+          addInterceptor(CombinedClerkInterceptor(json))
 
+          // Only add debug interceptors in debug mode to minimize overhead
           if (Clerk.debugMode) {
             addInterceptor(
               HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
