@@ -48,6 +48,7 @@ jobs:
       run: |
         CURRENT_TAG="${{ steps.get_version.outputs.tag_name }}"
         PREVIOUS_TAG="${{ steps.get_previous_tag.outputs.previous_tag }}"
+        VERSION="${{ steps.get_version.outputs.version }}"
         
         echo "Generating release notes from $PREVIOUS_TAG to $CURRENT_TAG"
         
@@ -74,42 +75,38 @@ jobs:
           FILES_CHANGED=$(git ls-files | wc -l)
         fi
         
-        # Create release notes
-        cat > release_notes.md << 'EOF'
-        ## What's Changed
-        
+        # Build release notes directly
+        RELEASE_NOTES="## What's Changed
+
         $COMMITS
-        
+
         ### 📊 Stats
         - **$COMMIT_COUNT** commits since last release
         - **$FILES_CHANGED** files changed
-        
+
         ### 🚀 Installation
-        
-        Add to your `build.gradle`:
-        ```gradle
-        implementation("com.clerk:clerk-android:${{ steps.get_version.outputs.version }}")
-        ```
-        
+
+        Add to your \`build.gradle\`:
+        \`\`\`gradle
+        implementation(\"com.clerk:clerk-sdk:$VERSION\")
+        \`\`\`
+
         ### 👥 Contributors
-        $CONTRIBUTORS
+        $CONTRIBUTORS"
         
-        **Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...$CURRENT_TAG
-        EOF
+        # Add changelog link if we have a previous tag
+        if [ -n "$PREVIOUS_TAG" ]; then
+          RELEASE_NOTES="$RELEASE_NOTES
+
+        **Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...$CURRENT_TAG"
+        fi
         
-        # Replace variables in the file
-        sed -i "s/\$COMMITS/$COMMITS/g" release_notes.md
-        sed -i "s/\$COMMIT_COUNT/$COMMIT_COUNT/g" release_notes.md
-        sed -i "s/\$FILES_CHANGED/$FILES_CHANGED/g" release_notes.md
-        sed -i "s/\$CONTRIBUTORS/$CONTRIBUTORS/g" release_notes.md
-        sed -i "s/\$PREVIOUS_TAG/$PREVIOUS_TAG/g" release_notes.md
-        sed -i "s/\$CURRENT_TAG/$CURRENT_TAG/g" release_notes.md
-        
-        # Read the file content and set as output
-        RELEASE_NOTES=$(cat release_notes.md)
-        echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
-        echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        # Set output using heredoc
+        {
+          echo "RELEASE_NOTES<<EOF"
+          echo "$RELEASE_NOTES"
+          echo "EOF"
+        } >> $GITHUB_OUTPUT
         
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
