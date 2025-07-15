@@ -6,8 +6,126 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
+  create-release:
+    runs-on: macos-latest-xlarge
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      tag_name: ${{ steps.get_version.outputs.tag_name }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for tags
+        
+    - name: Get version from libs.versions.toml
+      id: get_version
+      run: |
+        VERSION=$(grep '^clerk-sdk = ' gradle/libs.versions.toml | sed 's/clerk-sdk = "\(.*\)"/\1/')
+        TAG_NAME="v$VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+        echo "Found version: $VERSION"
+        echo "Tag name: $TAG_NAME"
+        
+    - name: Create and push tag
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag ${{ steps.get_version.outputs.tag_name }}
+        git push origin ${{ steps.get_version.outputs.tag_name }}
+        
+    - name: Get previous tag
+      id: get_previous_tag
+      run: |
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+        echo "Previous tag: $PREVIOUS_TAG"
+        
+    - name: Generate release notes
+      id: generate_notes
+      run: |
+        CURRENT_TAG="${{ steps.get_version.outputs.tag_name }}"
+        PREVIOUS_TAG="${{ steps.get_previous_tag.outputs.previous_tag }}"
+        
+        echo "Generating release notes from $PREVIOUS_TAG to $CURRENT_TAG"
+        
+        # Get commit messages since last tag
+        if [ -n "$PREVIOUS_TAG" ]; then
+          COMMITS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)
+        else
+          COMMITS=$(git log --pretty=format:"- %s (%h)" HEAD)
+        fi
+        
+        # Get contributors since last tag
+        if [ -n "$PREVIOUS_TAG" ]; then
+          CONTRIBUTORS=$(git log --pretty=format:"%an" $PREVIOUS_TAG..HEAD | sort | uniq | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
+        else
+          CONTRIBUTORS=$(git log --pretty=format:"%an" HEAD | sort | uniq | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
+        fi
+        
+        # Count changes
+        if [ -n "$PREVIOUS_TAG" ]; then
+          COMMIT_COUNT=$(git rev-list --count $PREVIOUS_TAG..HEAD)
+          FILES_CHANGED=$(git diff --name-only $PREVIOUS_TAG..HEAD | wc -l)
+        else
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          FILES_CHANGED=$(git ls-files | wc -l)
+        fi
+        
+        # Create release notes
+        cat > release_notes.md << 'EOF'
+        ## What's Changed
+        
+        $COMMITS
+        
+        ### 📊 Stats
+        - **$COMMIT_COUNT** commits since last release
+        - **$FILES_CHANGED** files changed
+        
+        ### 🚀 Installation
+        
+        Add to your `build.gradle`:
+        ```gradle
+        implementation("com.clerk:clerk-android:${{ steps.get_version.outputs.version }}")
+        ```
+        
+        ### 👥 Contributors
+        $CONTRIBUTORS
+        
+        **Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...$CURRENT_TAG
+        EOF
+        
+        # Replace variables in the file
+        sed -i "s/\$COMMITS/$COMMITS/g" release_notes.md
+        sed -i "s/\$COMMIT_COUNT/$COMMIT_COUNT/g" release_notes.md
+        sed -i "s/\$FILES_CHANGED/$FILES_CHANGED/g" release_notes.md
+        sed -i "s/\$CONTRIBUTORS/$CONTRIBUTORS/g" release_notes.md
+        sed -i "s/\$PREVIOUS_TAG/$PREVIOUS_TAG/g" release_notes.md
+        sed -i "s/\$CURRENT_TAG/$CURRENT_TAG/g" release_notes.md
+        
+        # Read the file content and set as output
+        RELEASE_NOTES=$(cat release_notes.md)
+        echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
+        echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.get_version.outputs.tag_name }}
+        name: Release ${{ steps.get_version.outputs.tag_name }}
+        body: ${{ steps.generate_notes.outputs.RELEASE_NOTES }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   publish:
     runs-on: macos-latest-xlarge
+    needs: create-release
+    if: always() && (github.event_name == 'release' || needs.create-release.result == 'success')
     
     steps:
     - name: Checkout code
