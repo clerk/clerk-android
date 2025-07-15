@@ -518,6 +518,20 @@ data class SignIn(
         override val strategy: String = PASSWORD,
       ) : Strategy
 
+      @AutoMap
+      @Serializable
+      data class ResetPasswordEmailCode(
+        val identifier: String,
+        override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+      ) : Strategy
+
+      @AutoMap
+      @Serializable
+      data class ResetPasswordPhoneCode(
+        val identifier: String,
+        override val strategy: String = RESET_PASSWORD_PHONE_CODE,
+      ) : Strategy
+
       /**
        * Transfer strategy for account transfer scenarios.
        *
