@@ -46,6 +46,7 @@ dependencies {
   implementation(libs.coil)
   implementation(libs.coil.okhttp)
   implementation(libs.hilt.android)
+  implementation(libs.hilt.navigation.compose)
   implementation(libs.material3)
   implementation(libs.navigation.compose)
   implementation(projects.clerk.source)

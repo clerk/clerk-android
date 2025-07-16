@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
           ) {
             NavHost(navController = navController, startDestination = Route.Loading) {
               composable<Route.Loading> { LoadingScreen(state = state, navigateTo = ::navigateTo) }
-              composable<Route.SignIn> { SignInScreen(state = state, navigateTo = ::navigateTo) }
+              composable<Route.SignIn> { SignInScreen(navigateTo = ::navigateTo) }
               composable<Route.Home> { HomeScreen() }
             }
           }

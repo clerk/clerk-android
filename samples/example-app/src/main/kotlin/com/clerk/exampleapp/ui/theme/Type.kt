@@ -13,8 +13,8 @@ val ClerkAndroidSDKTypography =
       TextStyle(
         fontSize = 15.sp,
         lineHeight = 20.sp,
-        fontWeight = FontWeight.W400,
+        fontWeight = FontWeight.Normal,
         textAlign = TextAlign.Center,
       ),
-    labelLarge = TextStyle(fontSize = 17.sp, lineHeight = 22.sp, fontWeight = FontWeight.W400),
+    labelLarge = TextStyle(fontSize = 17.sp, lineHeight = 22.sp, fontWeight = FontWeight.Normal),
   )

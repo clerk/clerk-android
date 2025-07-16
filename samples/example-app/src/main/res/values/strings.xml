@@ -5,4 +5,8 @@
     <string name="enter_your_email">Enter your email</string>
     <string name="continue_text">Continue</string>
     <string name="welcome_back_please_sign_in_to_continue">Welcome back! Please sign in to continue.</string>
+    <string name="use_phone_number">Use phone number</string>
+    <string name="enter_your_phone_number">Enter your phone number</string>
+    <string name="use_email_address">Use email address</string>
+    <string name="enter_email_address">Enter your email</string>
 </resources>
