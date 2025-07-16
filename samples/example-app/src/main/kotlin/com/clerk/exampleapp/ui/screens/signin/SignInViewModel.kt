@@ -32,9 +32,7 @@ class SignInViewModel @Inject constructor() : ViewModel() {
         .onFailure {
           Log.e(
             "SignInViewModel",
-            "Failed to create" +
-              " sign in: ${it.error?.errors?.find { 
-                      error -> error.longMessage.isNotEmpty() }?.longMessage}",
+            "Failed to create sign in: ${it.longErrorMessageOrNull}",
             it.throwable,
           )
           withContext(Dispatchers.Main) { _state.value = SignInState.Error }
