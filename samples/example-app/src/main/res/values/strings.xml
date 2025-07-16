@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Clerk Example App</string>
+    <string name="application_logo">Application logo</string>
+    <string name="continue_to">Continue to %1$s</string>
+    <string name="enter_your_email">Enter your email</string>
+    <string name="continue_text">Continue</string>
+    <string name="welcome_back_please_sign_in_to_continue">Welcome back! Please sign in to continue.</string>
 </resources>

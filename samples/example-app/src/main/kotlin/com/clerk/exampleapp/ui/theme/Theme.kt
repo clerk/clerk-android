@@ -277,5 +277,9 @@ fun ClerkAndroidSDKTheme(
       else -> lightScheme
     }
 
-  MaterialTheme(colorScheme = colorScheme, typography = AppTypography, content = content)
+  MaterialTheme(
+    colorScheme = colorScheme,
+    typography = ClerkAndroidSDKTypography,
+    content = content,
+  )
 }
