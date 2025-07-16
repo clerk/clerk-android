@@ -321,18 +321,22 @@ data class SignUp(
      * Defines the available strategies for preparing verification. Each strategy corresponds to a
      * different verification method.
      */
-    enum class Strategy(val value: String) {
+    sealed interface Strategy {
+      val strategy: String
+
       /**
        * Send a text message with a unique token to input. The verification code will be sent via
        * SMS to the provided phone number.
        */
-      PHONE_CODE(AuthStrategy.PHONE_CODE),
+      data class PhoneCode(override val strategy: String = AuthStrategy.PHONE_CODE) :
+        PrepareVerificationParams.Strategy
 
       /**
        * Send an email with a unique token to input. The verification code will be sent to the
        * provided email address.
        */
-      EMAIL_CODE(AuthStrategy.EMAIL_CODE),
+      data class EmailCode(override val strategy: String = AuthStrategy.EMAIL_CODE) :
+        PrepareVerificationParams.Strategy
     }
   }
 
@@ -340,6 +344,8 @@ data class SignUp(
    * Represents the various strategies for initiating a `SignUp` request. This sealed interface
    * encapsulates the different ways to create a sign-up, such as using standard parameters (e.g.,
    * email, password) or creating without any parameters to inspect the signUp object first.
+   *
+   * If looking for OAuth or Enterprise SSO use `authenticateWithRedirect`
    */
   sealed interface CreateParams {
     /**
@@ -379,6 +385,9 @@ data class SignUp(
      * instead. This shouldn't be used for any other purpose.
      */
     object Transfer : CreateParams
+
+    /** The `SignUp` will be created with a ticket. */
+    @AutoMap @Serializable data class Ticket(val strategy: String = "ticket", val ticket: String)
 
     /**
      * The `SignUp` will be created using a Google One Tap token.
@@ -545,7 +554,7 @@ suspend fun SignUp.update(
 suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.signUp.prepareSignUpVerification(this.id, prepareVerification.value)
+  return ClerkApi.signUp.prepareSignUpVerification(this.id, prepareVerification.strategy)
 }
 
 /**
