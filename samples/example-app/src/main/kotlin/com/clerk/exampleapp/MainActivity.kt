@@ -20,6 +20,7 @@ import com.clerk.exampleapp.navigation.Route
 import com.clerk.exampleapp.ui.screens.HomeScreen
 import com.clerk.exampleapp.ui.screens.LoadingScreen
 import com.clerk.exampleapp.ui.screens.signin.SignInScreen
+import com.clerk.exampleapp.ui.screens.signup.SignUpScreen
 import com.clerk.exampleapp.ui.theme.ClerkAndroidSDKTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
               composable<Route.Loading> { LoadingScreen(state = state, navigateTo = ::navigateTo) }
               composable<Route.SignIn> { SignInScreen(navigateTo = ::navigateTo) }
               composable<Route.Home> { HomeScreen() }
+              composable<Route.SignUp> { SignUpScreen() }
             }
           }
         }

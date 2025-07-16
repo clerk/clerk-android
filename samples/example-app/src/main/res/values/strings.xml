@@ -9,4 +9,5 @@
     <string name="enter_your_phone_number">Enter your phone number</string>
     <string name="use_email_address">Use email address</string>
     <string name="enter_email_address">Enter your email</string>
+    <string name="don_t_have_an_account_sign_up">Don\'t have an account? Sign up</string>
 </resources>

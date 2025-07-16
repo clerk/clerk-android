@@ -1,6 +1,7 @@
 package com.clerk.exampleapp.ui.screens.signin
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -97,6 +98,11 @@ fun SignInScreen(
         color = onPrimaryLight,
       )
     }
+    Text(
+      modifier = Modifier.padding(top = 24.dp).clickable { navigateTo(Route.SignUp) },
+      text = stringResource(R.string.don_t_have_an_account_sign_up),
+      color = primaryLight,
+    )
     DividerRow()
     SocialProviderRow(onClick = { viewModel.authenticateWithRedirect(it) })
   }
