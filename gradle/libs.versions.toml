@@ -36,7 +36,7 @@ androidx-credentials = "androidx.credentials:credentials:1.5.0"
 androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationLayoutAndroid" }
 androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.2"
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
-androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.9.1"
+androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.9.2"
 androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2"
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.5.0"
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
