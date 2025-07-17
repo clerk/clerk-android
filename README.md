@@ -358,10 +358,8 @@ This repository includes a complete example app demonstrating phone authenticati
    - **Phone Authentication**: In Clerk Dashboard → **User & Authentication** → **Email, Phone, Username**
      - Enable **Phone number** as a contact method
      - Configure **SMS** verification method
-     - For production: Set up SMS provider (Twilio recommended)
    - **Social Providers**: In Clerk Dashboard → **User & Authentication** → **Social Connections**
      - Enable desired providers (Google, GitHub, Apple, etc.)
-     - Configure OAuth credentials for each provider
 
 3. **Run the Example App**:
    ```bash
