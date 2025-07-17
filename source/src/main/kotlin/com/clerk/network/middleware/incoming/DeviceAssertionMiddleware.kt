@@ -14,6 +14,7 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 
 /**
  * OkHttp interceptor that handles device assertion when API calls fail with "requires_assertion"
@@ -32,23 +33,30 @@ internal class DeviceAssertionInterceptor : Interceptor {
     }
 
     // Parse error response to check if it requires assertion
-    val errorBody = response.body?.string()
-    if (errorBody.isNullOrBlank()) {
+    val originalBody = response.body
+
+    // Read the response body content and create a copy for later use
+    val bodyString = originalBody.string()
+    if (bodyString.isBlank()) {
       return@runBlocking response
     }
 
+    // Create a new response with a fresh response body for downstream processing
+    val newResponseBody = bodyString.toResponseBody(originalBody.contentType())
+    val newResponse = response.newBuilder().body(newResponseBody).build()
+
     val clerkError =
       try {
-        ClerkApi.json.decodeFromString<ClerkErrorResponse>(errorBody)
+        ClerkApi.json.decodeFromString<ClerkErrorResponse>(bodyString)
       } catch (e: Exception) {
         ClerkLog.e("Failed to parse error response: $e")
-        return@runBlocking response
+        return@runBlocking newResponse
       }
 
     // Check if any error in the response requires device assertion
     val requiresAssertion = clerkError.errors.any { it.code == "requires_assertion" }
     if (!requiresAssertion) {
-      return@runBlocking response
+      return@runBlocking newResponse
     }
 
     // Get the specific assertion error
@@ -68,7 +76,7 @@ internal class DeviceAssertionInterceptor : Interceptor {
       response.close()
       chain.proceed(originalRequest)
     } else {
-      response
+      newResponse
     }
   }
 

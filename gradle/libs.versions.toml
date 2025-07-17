@@ -1,71 +1,77 @@
 [versions]
+activityKtx = "1.10.1"
 agp = "8.11.1"
 appcompat = "1.7.1"
+automap = "0.1.0"
+chucker = "4.2.0"
 clerk-sdk = "0.1.2"
+composeBom = "2025.06.01"
 coreKtxVersion = "1.6.1"
 detekt = "1.23.8"
 dokka = "1.9.20"
+foundationLayoutAndroid = "1.8.3"
+hiltAndroid = "2.56.2"
+hiltCompiler = "2.56.2"
+hiltNavigationCompose = "1.2.0"
 jdk = "17"
+jetbrainsKotlinJvm = "2.2.0"
 jvmTarget = "17"
 kotlin = "2.2.0"
 ksp = "2.2.0-2.0.2"
+lifecycleProcess = "2.9.1"
+material3 = "1.3.2"
 mavenPublish = "0.34.0"
+navigationCompose = "2.9.1"
 okhttp = "5.1.0"
 retrofit = "3.0.0"
 sortDependencies = "0.14"
 spotless = "7.1.0"
-lifecycleProcess = "2.9.1"
-jetbrainsKotlinJvm = "2.2.0"
-chucker = "4.2.0"
-foundationLayoutAndroid = "1.8.3"
-automap = "0.1.0"
 
 [libraries]
-
-androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.1"
-androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.9.1"
-androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.1"
-androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"
 androidx-browser = "androidx.browser:browser:1.8.0"
 androidx-credentials = "androidx.credentials:credentials:1.5.0"
+androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationLayoutAndroid" }
+androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.1"
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.9.1"
+androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.1"
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.5.0"
-google-identity = "com.google.android.libraries.identity.googleid:googleid:1.1.1"
-google-playIntegrity = "com.google.android.play:integrity:1.4.0"
-
-jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
-
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+chucker-debug = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
 clerk-automap-annotations = { module = "com.clerk:automap-annotations", version.ref = "automap" }
 clerk-automap-processor = { module = "com.clerk:automap-processor", version.ref = "automap" }
-
-chucker-debug = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
-
+coil = "io.coil-kt.coil3:coil-compose:3.2.0"
+coil-okhttp = "io.coil-kt.coil3:coil-network-okhttp:3.2.0"
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+compose-lints = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
-
+google-identity = "com.google.android.libraries.identity.googleid:googleid:1.1.1"
+google-playIntegrity = "com.google.android.play:integrity:1.4.0"
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltCompiler" }
+hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 junit = "junit:junit:4.13.2"
-
+jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
 kotlinx-coroutines-test = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"
 kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.7.1-0.6.x-compat"
 kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
-
 ksp-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
-
-
-mockk = "io.mockk:mockk:1.14.4"
+material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 mockito = "org.mockito:mockito-core:5.18.0"
-
+mockk = "io.mockk:mockk:1.14.4"
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
-
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-kotlinx = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
-
 robolectric = "org.robolectric:robolectric:4.15.1"
-
-androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationLayoutAndroid" }
-
 versioning-plugin = { module = "org.jetbrains.dokka:versioning-plugin", version.ref = "dokka" }
 
 [plugins]
@@ -73,12 +79,12 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroid" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "sortDependencies" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-

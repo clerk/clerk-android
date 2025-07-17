@@ -17,3 +17,5 @@ local.properties
 workbench/*
 /source/build/
 /buildSrc/build/
+/samples/build/
+/samples/example-app/build/

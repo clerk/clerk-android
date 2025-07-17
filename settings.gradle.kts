@@ -1,3 +1,5 @@
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 pluginManagement {
   repositories {
     google {
@@ -22,4 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Clerk"
 
-include(":source")
+include(":source", ":samples:example-app")
