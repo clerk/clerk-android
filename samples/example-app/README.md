@@ -44,6 +44,7 @@ cd clerk-android/samples/example-app
    - Navigate to **User & Authentication** → **Social Connections**
    - Enable desired providers (Google, GitHub, Apple, etc.)
    - Configure OAuth redirect URLs and API keys
+   - See detailed social provider setup below
 
 4. **SMS Provider Setup**:
    - For **development**: Clerk provides test SMS functionality
@@ -51,6 +52,48 @@ cd clerk-android/samples/example-app
      - Go to **Configure** → **SMS** 
      - Add your Twilio credentials or other SMS provider
      - Verify your sender phone number
+
+5. **Social Provider Setup** (Optional but Recommended):
+   Social authentication provides a seamless sign-in experience for users.
+
+   **In Clerk Dashboard:**
+   - Navigate to **User & Authentication** → **Social Connections**
+   - Enable providers you want to support
+   - Configure each provider with OAuth credentials
+
+   **Supported Providers:**
+   - **Google**: Most popular, recommended for all apps
+   - **GitHub**: Great for developer-focused applications
+   - **Apple**: Required for iOS App Store submission
+   - **Facebook/Meta**: Wide user base
+   - **Microsoft**: Enterprise applications
+   - **Discord**: Gaming and community apps
+   - **Twitter/X**: Social media integration
+   - **LinkedIn**: Professional applications
+
+   **Google Setup Example:**
+   1. Go to [Google Cloud Console](https://console.cloud.google.com)
+   2. Create/select a project
+   3. Enable Google+ API
+   4. Create OAuth 2.0 credentials
+   5. Add authorized redirect URIs:
+      - `https://your-clerk-app.clerk.accounts.dev/v1/oauth_callback`
+      - Replace `your-clerk-app` with your actual Clerk application name
+   6. Copy Client ID and Client Secret to Clerk Dashboard
+
+   **GitHub Setup Example:**
+   1. Go to GitHub → Settings → Developer settings → OAuth Apps
+   2. Create new OAuth App
+   3. Set Authorization callback URL:
+      - `https://your-clerk-app.clerk.accounts.dev/v1/oauth_callback`
+   4. Copy Client ID and Client Secret to Clerk Dashboard
+
+   **Apple Setup** (iOS apps):
+   1. Go to [Apple Developer Portal](https://developer.apple.com)
+   2. Create Sign in with Apple service
+   3. Configure bundle ID and redirect URLs
+   4. Generate private key and team ID
+   5. Add credentials to Clerk Dashboard
 
 ### 3. Configure Local Environment
 
@@ -124,6 +167,8 @@ src/main/kotlin/com/clerk/exampleapp/
 
 - **MainViewModel**: Manages global authentication state
 - **SignInOrUpViewModel**: Handles phone authentication and social sign-in
+- **SocialProviderRow**: Displays available social providers as buttons
+- **SocialButton**: Individual social provider button component
 - **Clerk Integration**: Automatic session management and state updates
 
 ### Phone Authentication Implementation
@@ -138,6 +183,27 @@ SignIn.create(SignIn.CreateParams.Strategy.PhoneCode(phoneNumber))
 signIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.PhoneCode(code))
     .onSuccess { /* User signed in */ }
 ```
+
+### Social Authentication Implementation
+
+```kotlin
+// Authenticate with social provider (Google, GitHub, Apple, etc.)
+fun authenticateWithRedirect(socialConfig: UserSettings.SocialConfig) {
+    SignIn.authenticateWithRedirect(
+        SignIn.AuthenticateWithRedirectParams.OAuth(
+            OAuthProvider.fromStrategy(socialConfig.strategy)
+        )
+    )
+    .onSuccess { /* User signed in successfully */ }
+    .onFailure { /* Handle authentication error */ }
+}
+```
+
+**Available Social Providers:**
+- Google, GitHub, Apple, Facebook/Meta
+- Microsoft, Discord, Twitter/X, LinkedIn
+- Automatically loaded from Clerk Dashboard configuration
+- One-tap authentication with provider-specific UI
 
 ## Configuration Options
 
@@ -176,6 +242,19 @@ For production testing:
 3. Test with international numbers if supported
 4. Verify rate limiting and error handling
 
+### Social Authentication Testing
+
+**Development Mode**:
+- Social providers work immediately after configuration
+- Test with real social accounts (Google, GitHub, etc.)
+- No special development credentials needed
+
+**Production Testing**:
+1. Verify OAuth redirect URLs are correct
+2. Test each enabled social provider
+3. Ensure proper error handling for declined permissions
+4. Test account linking when user has multiple sign-in methods
+
 ## Troubleshooting
 
 ### Common Issues
@@ -190,10 +269,14 @@ For production testing:
    - Check spam/blocked messages
    - Ensure SMS provider has sufficient credits
 
-3. **OAuth Not Working**:
-   - Verify redirect URLs in social provider configuration
-   - Check OAuth app configuration in provider dashboard
-   - Ensure proper deep linking setup
+3. **Social Authentication Not Working**:
+   - Verify OAuth app setup in provider dashboard (Google Cloud, GitHub, etc.)
+   - Check redirect URLs match exactly: `https://your-clerk-app.clerk.accounts.dev/v1/oauth_callback`
+   - Ensure Client ID and Client Secret are correctly entered in Clerk Dashboard
+   - For Google: Verify Google+ API is enabled and OAuth consent screen is configured
+   - For GitHub: Check OAuth app permissions and callback URL
+   - For Apple: Ensure Sign in with Apple is enabled and bundle ID matches
+   - Clear browser cache and cookies if authentication seems stuck
 
 4. **Build Errors**:
    - Clean and rebuild: `./gradlew clean build`

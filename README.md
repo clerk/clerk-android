@@ -355,11 +355,14 @@ This repository includes a complete example app demonstrating phone authenticati
    # Copy your publishable key
    ```
 
-2. **Configure Phone Authentication**:
-   - In Clerk Dashboard → **User & Authentication** → **Email, Phone, Username**
-   - Enable **Phone number** as a contact method
-   - Configure **SMS** verification method
-   - For production: Set up SMS provider (Twilio recommended)
+2. **Configure Authentication Methods**:
+   - **Phone Authentication**: In Clerk Dashboard → **User & Authentication** → **Email, Phone, Username**
+     - Enable **Phone number** as a contact method
+     - Configure **SMS** verification method
+     - For production: Set up SMS provider (Twilio recommended)
+   - **Social Providers**: In Clerk Dashboard → **User & Authentication** → **Social Connections**
+     - Enable desired providers (Google, GitHub, Apple, etc.)
+     - Configure OAuth credentials for each provider
 
 3. **Run the Example App**:
    ```bash
@@ -379,10 +382,11 @@ This repository includes a complete example app demonstrating phone authenticati
 | Feature | Implementation | Files |
 |---------|---------------|-------|
 | **Phone Authentication** | SMS OTP sign-in/up | `SignInOrUpViewModel.kt` |
-| **Social Authentication** | OAuth with Google, GitHub, etc. | `SocialProviderRow.kt` |
-| **Session Management** | Automatic state management | `MainViewModel.kt` |
-| **Phone Formatting** | US phone number formatting | `NanpVisualTransformation.kt` |
-| **Modern UI** | Material Design 3 with Compose | `ui/theme/` |
+| **Social Authentication** | OAuth with Google, GitHub, Apple, Facebook, Microsoft, Discord, LinkedIn | `SocialProviderRow.kt`, `SignInOrUpViewModel.kt` |
+| **Session Management** | Automatic state management and persistence | `MainViewModel.kt` |
+| **Phone Formatting** | US phone number formatting (XXX) XXX-XXXX | `NanpVisualTransformation.kt` |
+| **Modern UI** | Material Design 3 with Jetpack Compose | `ui/theme/`, `ui/common/` |
+| **Authentication States** | Loading, SignedOut, SignedIn, NeedsVerification | `AuthenticationState.kt` |
 
 ### Phone Authentication Setup
 
@@ -411,7 +415,38 @@ Dashboard → Configure → SMS
 - From Phone: [Verified Twilio number]
 ```
 
-#### 3. Test Phone Numbers
+#### 3. Configure Social Providers (Optional)
+Social authentication provides one-tap sign-in for users:
+
+**Enable in Clerk Dashboard**:
+```
+Dashboard → User & Authentication → Social Connections
+✅ Google (recommended - most popular)
+✅ GitHub (great for developer apps)  
+✅ Apple (required for iOS App Store)
+✅ Facebook, Microsoft, Discord, etc.
+```
+
+**OAuth Configuration Required**:
+Each social provider needs OAuth app setup:
+
+**Google Setup**:
+1. [Google Cloud Console](https://console.cloud.google.com) → Create project
+2. Enable Google+ API → Create OAuth credentials
+3. Authorized redirect URI: `https://your-app.clerk.accounts.dev/v1/oauth_callback`
+4. Copy Client ID/Secret to Clerk Dashboard
+
+**GitHub Setup**:
+1. GitHub → Settings → Developer settings → OAuth Apps
+2. Authorization callback URL: `https://your-app.clerk.accounts.dev/v1/oauth_callback`
+3. Copy Client ID/Secret to Clerk Dashboard
+
+**Apple Setup** (for iOS):
+1. [Apple Developer Portal](https://developer.apple.com) → Sign in with Apple
+2. Configure bundle ID and redirect URLs
+3. Generate private key and team ID → Add to Clerk
+
+#### 4. Test Phone Numbers
 
 **Development Mode** (no real SMS sent):
 ```
@@ -446,6 +481,26 @@ SignIn.create(SignIn.CreateParams.Strategy.PhoneCode(phoneNumber))
 signIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.PhoneCode(code))
 ```
 
+#### `SignInOrUpViewModel.kt` - Social Authentication
+```kotlin
+// Authenticate with social provider (Google, GitHub, Apple, etc.)
+fun authenticateWithRedirect(socialConfig: UserSettings.SocialConfig) {
+    SignIn.authenticateWithRedirect(
+        SignIn.AuthenticateWithRedirectParams.OAuth(
+            OAuthProvider.fromStrategy(socialConfig.strategy)
+        )
+    )
+    .onSuccess { /* User signed in successfully */ }
+}
+```
+
+#### `SocialProviderRow.kt` - Social Provider UI
+```kotlin
+// Display available social providers as buttons
+// Automatically loads enabled providers from Clerk configuration
+// Handles one-tap authentication flow
+```
+
 #### `gradle.properties` - Configuration
 ```properties
 CLERK_PUBLISHABLE_KEY=pk_test_your_actual_key_here
@@ -476,9 +531,13 @@ For complete setup instructions, troubleshooting, and advanced configuration, se
 - For development, use test numbers ending in 0000-0999
 - Check spam/blocked messages on device
 
-**OAuth deep linking not working:**
-- Verify your configuration in the Clerk Dashboard
-- Check redirect URLs in social provider settings
+**Social authentication not working:**
+- Verify OAuth app configuration in provider dashboard (Google Cloud, GitHub, etc.)
+- Check redirect URLs match exactly: `https://your-app.clerk.accounts.dev/v1/oauth_callback`
+- Ensure Client ID and Client Secret are correctly copied to Clerk Dashboard
+- For Google: Verify Google+ API is enabled in Google Cloud Console
+- For Apple: Ensure bundle ID matches your iOS app configuration
+- Check browser cookies and clear cache if authentication seems stuck
 
 **ProGuard/R8 issues:**
 - The SDK includes ProGuard rules automatically
