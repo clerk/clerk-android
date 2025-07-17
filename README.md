@@ -393,20 +393,6 @@ For complete setup instructions, troubleshooting, and advanced configuration, se
 - Verify the key format starts with `pk_test_` or `pk_live_`
 - Ensure the key is valid and from the correct Clerk application
 
-**SMS not received:**
-- Check SMS provider configuration in Clerk Dashboard
-- Verify phone number format (include country code: +1...)
-- For development, use test numbers ending in 0000-0999
-- Check spam/blocked messages on device
-
-**Social authentication not working:**
-- Verify OAuth app configuration in provider dashboard (Google Cloud, GitHub, etc.)
-- Check redirect URLs match exactly: `https://your-app.clerk.accounts.dev/v1/oauth_callback`
-- Ensure Client ID and Client Secret are correctly copied to Clerk Dashboard
-- For Google: Verify Google+ API is enabled in Google Cloud Console
-- For Apple: Ensure bundle ID matches your iOS app configuration
-- Check browser cookies and clear cache if authentication seems stuck
-
 **ProGuard/R8 issues:**
 - The SDK includes ProGuard rules automatically
 - If you encounter issues, check the `proguard-rules.pro` file in the SDK
