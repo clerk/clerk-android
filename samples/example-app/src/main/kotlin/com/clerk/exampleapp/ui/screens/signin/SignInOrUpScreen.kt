@@ -44,7 +44,7 @@ fun SignInOrUpScreen(
   var value by remember { mutableStateOf("") }
   val authState by signInOrUpViewModel.state.collectAsStateWithLifecycle()
   val context = LocalContext.current
-  var isSignUp by remember { mutableStateOf(true) }
+  var isSignUp by remember { mutableStateOf(false) }
 
   LaunchedEffect(authState) {
     if (authState is SignInOrUpState.Success) {
@@ -86,8 +86,8 @@ fun SignInOrUpScreen(
       )
     }
     val text =
-      if (isSignUp) stringResource(R.string.don_t_have_an_account_sign_up)
-      else stringResource(R.string.already_have_an_account_sign_in)
+      if (isSignUp) stringResource(R.string.already_have_an_account_sign_in)
+      else stringResource(R.string.don_t_have_an_account_sign_up)
     Text(
       modifier = Modifier.padding(top = 24.dp).clickable { isSignUp = !isSignUp },
       text = text,

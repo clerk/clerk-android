@@ -12,4 +12,5 @@
     <string name="don_t_have_an_account_sign_up">Don\'t have an account? Sign up</string>
     <string name="enter_your_code">Enter your code</string>
     <string name="already_have_an_account_sign_in">Already have an account? Sign in</string>
+    <string name="sign_out">Sign out</string>
 </resources>

@@ -33,6 +33,7 @@ class SignInOrUpViewModel @Inject constructor() : ViewModel() {
   var isSignUp: Boolean = false
 
   fun handlePhoneNumber(phoneNumber: String, isSignUp: Boolean) {
+    Log.d("SignInOrUpViewModel", "handlePhoneNumber: $phoneNumber, isSignUp: $isSignUp")
     this.isSignUp = isSignUp
     if (isSignUp) {
       createSignUp(phoneNumber)
@@ -96,11 +97,7 @@ class SignInOrUpViewModel @Inject constructor() : ViewModel() {
         .attemptFirstFactor(SignIn.AttemptFirstFactorParams.PhoneCode(code))
         .onSuccess { withContext(Dispatchers.Main) { _state.value = SignInOrUpState.Success } }
         .onFailure {
-          Log.e(
-            "SignInViewModel",
-            "Failed to verify code: ${it.longErrorMessageOrNull}",
-            it.throwable,
-          )
+          Log.e("SignInViewModel", "${it.longErrorMessageOrNull}", it.throwable)
           withContext(Dispatchers.Main) { _state.value = SignInOrUpState.Error }
         }
     }
@@ -121,11 +118,7 @@ class SignInOrUpViewModel @Inject constructor() : ViewModel() {
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            Log.e(
-              "SignUpViewModel",
-              "Failed to attempt verification: ${it.longErrorMessageOrNull}",
-              it.throwable,
-            )
+            Log.e("SignUpViewModel", "${it.longErrorMessageOrNull}", it.throwable)
             _state.value = SignInOrUpState.Error
           }
         }

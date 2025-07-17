@@ -1,7 +1,6 @@
 package com.clerk.signin
 
 import com.clerk.Clerk.signIn
-import com.clerk.Constants
 import com.clerk.Constants.Strategy.BACKUP_CODE
 import com.clerk.Constants.Strategy.EMAIL_CODE
 import com.clerk.Constants.Strategy.ENTERPRISE_SSO
@@ -682,7 +681,7 @@ data class SignIn(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return SSOService.authenticateWithRedirect(
-        strategy = params.toMap()[Constants.Strategy.STRATEGY_KEY]!!,
+        strategy = params.toMap()["provider"]!!,
         redirectUrl = params.redirectUrl,
         identifier = params.identifier,
         emailAddress = params.emailAddress,
