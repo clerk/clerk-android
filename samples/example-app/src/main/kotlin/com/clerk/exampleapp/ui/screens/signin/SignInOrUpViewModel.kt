@@ -24,14 +24,48 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * ViewModel for handling sign-in and sign-up flows with phone authentication.
+ * 
+ * This ViewModel manages:
+ * - Phone number authentication (both sign-in and sign-up)
+ * - SMS OTP verification
+ * - Social authentication with OAuth providers
+ * 
+ * Phone Authentication Flow:
+ * 1. User enters phone number
+ * 2. handlePhoneNumber() creates sign-in or sign-up
+ * 3. Clerk sends SMS OTP to the phone
+ * 4. User enters OTP code
+ * 5. verify() attempts verification
+ * 6. On success, user is signed in
+ */
 @HiltViewModel
 class SignInOrUpViewModel @Inject constructor() : ViewModel() {
 
   private val _state = MutableStateFlow<SignInOrUpState>(SignInOrUpState.SignedOut)
+  
+  /**
+   * Current state of the sign-in/up process.
+   * UI observes this to show appropriate screens and buttons.
+   */
   val state = _state.asStateFlow()
 
+  /**
+   * Tracks whether the current flow is sign-up (true) or sign-in (false).
+   * This determines which verification method to use.
+   */
   var isSignUp: Boolean = false
 
+  /**
+   * Initiates phone authentication flow.
+   * 
+   * @param phoneNumber The user's phone number (should include country code)
+   * @param isSignUp Whether this is a sign-up (true) or sign-in (false) flow
+   * 
+   * For sign-up: Creates a new user account and sends SMS verification
+   * For sign-in: Attempts to sign in existing user and sends SMS verification
+   */
   fun handlePhoneNumber(phoneNumber: String, isSignUp: Boolean) {
     Log.d("SignInOrUpViewModel", "handlePhoneNumber: $phoneNumber, isSignUp: $isSignUp")
     this.isSignUp = isSignUp
@@ -42,6 +76,16 @@ class SignInOrUpViewModel @Inject constructor() : ViewModel() {
     }
   }
 
+  /**
+   * Creates a new sign-up with phone number verification.
+   * 
+   * Process:
+   * 1. Create SignUp with phone number
+   * 2. Prepare phone code verification (triggers SMS)
+   * 3. Update UI state to show OTP input
+   * 
+   * @param phoneNumber User's phone number
+   */
   private fun createSignUp(phoneNumber: String) {
     viewModelScope.launch(Dispatchers.IO) {
       SignUp.Companion.create(SignUp.CreateParams.Standard(phoneNumber = phoneNumber)).flatMap {
@@ -64,6 +108,16 @@ class SignInOrUpViewModel @Inject constructor() : ViewModel() {
     }
   }
 
+  /**
+   * Creates a sign-in attempt with phone number verification.
+   * 
+   * Process:
+   * 1. Create SignIn with phone number strategy
+   * 2. Prepare first factor (phone code - triggers SMS)
+   * 3. Update UI state to show OTP input
+   * 
+   * @param phoneNumber User's phone number
+   */
   private fun createSignIn(phoneNumber: String) {
     viewModelScope.launch(Dispatchers.IO) {
       SignIn.create(SignIn.CreateParams.Strategy.PhoneCode(phoneNumber))
@@ -82,6 +136,13 @@ class SignInOrUpViewModel @Inject constructor() : ViewModel() {
     }
   }
 
+  /**
+   * Verifies the SMS OTP code entered by the user.
+   * 
+   * @param code The OTP code from SMS (typically 6 digits)
+   * 
+   * Routes to either sign-up or sign-in verification based on current flow.
+   */
   fun verify(code: String) {
     if (isSignUp) {
       verifySignUp(code)
@@ -90,6 +151,14 @@ class SignInOrUpViewModel @Inject constructor() : ViewModel() {
     }
   }
 
+  /**
+   * Verifies the OTP code for sign-in flow.
+   * 
+   * Uses the in-progress SignIn instance from Clerk.signIn to attempt
+   * first factor verification with the phone code.
+   * 
+   * @param code The SMS OTP code entered by the user
+   */
   private fun verifySignIn(code: String) {
     val inProgressSignIn = Clerk.signIn ?: return
     viewModelScope.launch(Dispatchers.IO) {
@@ -103,6 +172,14 @@ class SignInOrUpViewModel @Inject constructor() : ViewModel() {
     }
   }
 
+  /**
+   * Verifies the OTP code for sign-up flow.
+   * 
+   * Uses the in-progress SignUp instance from Clerk.signUp to attempt
+   * verification with the phone code. On success, checks if sign-up is complete.
+   * 
+   * @param code The SMS OTP code entered by the user
+   */
   private fun verifySignUp(code: String) {
     // Grab in progress sign up
     val inProgressSignUp = Clerk.signUp ?: return
@@ -125,6 +202,18 @@ class SignInOrUpViewModel @Inject constructor() : ViewModel() {
     }
   }
 
+  /**
+   * Initiates OAuth authentication with social providers.
+   * 
+   * This opens the browser/WebView for OAuth flow with providers like:
+   * - Google
+   * - GitHub
+   * - Apple
+   * - Facebook
+   * - And others configured in Clerk Dashboard
+   * 
+   * @param socialConfig Configuration for the social provider from Clerk
+   */
   fun authenticateWithRedirect(socialConfig: UserSettings.SocialConfig) {
     viewModelScope.launch(Dispatchers.IO) {
       SignIn.authenticateWithRedirect(
@@ -141,12 +230,26 @@ class SignInOrUpViewModel @Inject constructor() : ViewModel() {
   }
 }
 
+/**
+ * Represents the different states of the sign-in/up process.
+ * 
+ * UI components observe this state to show appropriate screens and inputs:
+ * 
+ * - SignedOut: Initial state, show phone number input
+ * - NeedsFirstFactor: SMS sent, show OTP code input  
+ * - Success: Authentication completed, navigate to home
+ * - Error: Something went wrong, show error message
+ */
 sealed interface SignInOrUpState {
+  /** User is signed out, needs to enter phone number */
   data object SignedOut : SignInOrUpState
 
+  /** Authentication was successful, user can proceed */
   data object Success : SignInOrUpState
 
+  /** SMS sent, user needs to enter verification code */
   data object NeedsFirstFactor : SignInOrUpState
 
+  /** An error occurred during authentication */
   data object Error : SignInOrUpState
 }

@@ -342,6 +342,45 @@ Clerk.session.fetchToken().jwt.let { token ->
 }
 ```
 
+## 📱 Example App
+
+This repository includes a complete example app demonstrating phone authentication with SMS OTP and social sign-in. The example app shows best practices for integrating Clerk into an Android application.
+
+
+1. **Setup Clerk Account**:
+   ```bash
+   # Visit https://dashboard.clerk.com
+   # Create a new application
+   # Copy your publishable key
+   ```
+
+2. **Configure Authentication Methods**:
+   - **Phone Authentication**: In Clerk Dashboard → **User & Authentication** → **Email, Phone, Username**
+     - Enable **Phone number** as a contact method
+     - Configure **SMS** verification method
+     - For production: Set up SMS provider (Twilio recommended)
+   - **Social Providers**: In Clerk Dashboard → **User & Authentication** → **Social Connections**
+     - Enable desired providers (Google, GitHub, Apple, etc.)
+     - Configure OAuth credentials for each provider
+
+3. **Run the Example App**:
+   ```bash
+   # Clone the repository
+   git clone https://github.com/clerk/clerk-android.git
+   cd clerk-android
+
+   # Add your publishable key to gradle.properties
+   echo "CLERK_PUBLISHABLE_KEY=pk_test_your_key_here" >> gradle.properties
+
+   # Build and run
+   ./gradlew :samples:example-app:installDebug
+   ```
+
+### Detailed Documentation
+
+For complete setup instructions, troubleshooting, and advanced configuration, see:
+**[📖 Example App Documentation](samples/example-app/README.md)**
+
 ## 🔧 Troubleshooting
 
 ### Common Issues
@@ -351,8 +390,24 @@ Clerk.session.fetchToken().jwt.let { token ->
 - Verify your Application class is registered in `AndroidManifest.xml`
 - Check that your publishable key is correct
 
-**OAuth deep linking not working:**
-- Verify your configuration in the Clerk Dashboard
+**"Missing CLERK_PUBLISHABLE_KEY" error:**
+- Add your publishable key to `gradle.properties`
+- Verify the key format starts with `pk_test_` or `pk_live_`
+- Ensure the key is valid and from the correct Clerk application
+
+**SMS not received:**
+- Check SMS provider configuration in Clerk Dashboard
+- Verify phone number format (include country code: +1...)
+- For development, use test numbers ending in 0000-0999
+- Check spam/blocked messages on device
+
+**Social authentication not working:**
+- Verify OAuth app configuration in provider dashboard (Google Cloud, GitHub, etc.)
+- Check redirect URLs match exactly: `https://your-app.clerk.accounts.dev/v1/oauth_callback`
+- Ensure Client ID and Client Secret are correctly copied to Clerk Dashboard
+- For Google: Verify Google+ API is enabled in Google Cloud Console
+- For Apple: Ensure bundle ID matches your iOS app configuration
+- Check browser cookies and clear cache if authentication seems stuck
 
 **ProGuard/R8 issues:**
 - The SDK includes ProGuard rules automatically
