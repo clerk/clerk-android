@@ -342,6 +342,120 @@ Clerk.session.fetchToken().jwt.let { token ->
 }
 ```
 
+## 📱 Example App
+
+This repository includes a complete example app demonstrating phone authentication with SMS OTP and social sign-in. The example app shows best practices for integrating Clerk into an Android application.
+
+### Quick Start
+
+1. **Setup Clerk Account**:
+   ```bash
+   # Visit https://dashboard.clerk.com
+   # Create a new application
+   # Copy your publishable key
+   ```
+
+2. **Configure Phone Authentication**:
+   - In Clerk Dashboard → **User & Authentication** → **Email, Phone, Username**
+   - Enable **Phone number** as a contact method
+   - Configure **SMS** verification method
+   - For production: Set up SMS provider (Twilio recommended)
+
+3. **Run the Example App**:
+   ```bash
+   # Clone the repository
+   git clone https://github.com/clerk/clerk-android.git
+   cd clerk-android
+
+   # Add your publishable key to gradle.properties
+   echo "CLERK_PUBLISHABLE_KEY=pk_test_your_key_here" >> gradle.properties
+
+   # Build and run
+   ./gradlew :samples:example-app:installDebug
+   ```
+
+### Example App Features
+
+| Feature | Implementation | Files |
+|---------|---------------|-------|
+| **Phone Authentication** | SMS OTP sign-in/up | `SignInOrUpViewModel.kt` |
+| **Social Authentication** | OAuth with Google, GitHub, etc. | `SocialProviderRow.kt` |
+| **Session Management** | Automatic state management | `MainViewModel.kt` |
+| **Phone Formatting** | US phone number formatting | `NanpVisualTransformation.kt` |
+| **Modern UI** | Material Design 3 with Compose | `ui/theme/` |
+
+### Phone Authentication Setup
+
+The example app requires specific Clerk Dashboard configuration for phone authentication:
+
+#### 1. Enable Phone Authentication
+```
+Dashboard → User & Authentication → Email, Phone, Username
+✅ Phone number (required)
+✅ Used for sign-in
+✅ Require verification
+```
+
+#### 2. Configure SMS Provider
+For **development/testing**:
+- Clerk provides test SMS functionality
+- Use phone numbers ending in `0000-0999`
+- Verification code: `424242`
+
+For **production**:
+```
+Dashboard → Configure → SMS
+- Provider: Twilio (recommended)
+- Account SID: [Your Twilio SID]
+- Auth Token: [Your Twilio Token]  
+- From Phone: [Verified Twilio number]
+```
+
+#### 3. Test Phone Numbers
+
+**Development Mode** (no real SMS sent):
+```
++1 555-000-0000  # Works with code 424242
++1 555-000-0001  # Works with code 424242
++1 555-000-####  # Any number ending 0000-0999
+```
+
+**Production Mode**:
+- Use real phone numbers
+- Real SMS will be sent
+- Standard carrier rates apply
+
+### Key Implementation Files
+
+#### `MainApplication.kt` - Clerk Initialization
+```kotlin
+Clerk.initialize(
+    this,
+    BuildConfig.CLERK_PUBLISHABLE_KEY,
+    options = ClerkConfigurationOptions(enableDebugMode = true)
+)
+```
+
+#### `SignInOrUpViewModel.kt` - Phone Authentication
+```kotlin
+// Create sign-in with phone
+SignIn.create(SignIn.CreateParams.Strategy.PhoneCode(phoneNumber))
+    .flatMap { it.prepareFirstFactor(SignIn.PrepareFirstFactorParams.PhoneCode()) }
+
+// Verify OTP code  
+signIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.PhoneCode(code))
+```
+
+#### `gradle.properties` - Configuration
+```properties
+CLERK_PUBLISHABLE_KEY=pk_test_your_actual_key_here
+```
+
+### Detailed Documentation
+
+For complete setup instructions, troubleshooting, and advanced configuration, see:
+**[📖 Example App Documentation](samples/example-app/README.md)**
+
 ## 🔧 Troubleshooting
 
 ### Common Issues
@@ -351,8 +465,20 @@ Clerk.session.fetchToken().jwt.let { token ->
 - Verify your Application class is registered in `AndroidManifest.xml`
 - Check that your publishable key is correct
 
+**"Missing CLERK_PUBLISHABLE_KEY" error:**
+- Add your publishable key to `gradle.properties`
+- Verify the key format starts with `pk_test_` or `pk_live_`
+- Ensure the key is valid and from the correct Clerk application
+
+**SMS not received:**
+- Check SMS provider configuration in Clerk Dashboard
+- Verify phone number format (include country code: +1...)
+- For development, use test numbers ending in 0000-0999
+- Check spam/blocked messages on device
+
 **OAuth deep linking not working:**
 - Verify your configuration in the Clerk Dashboard
+- Check redirect URLs in social provider settings
 
 **ProGuard/R8 issues:**
 - The SDK includes ProGuard rules automatically
