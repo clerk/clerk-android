@@ -19,6 +19,12 @@ android {
     compileSdk = 36
     versionCode = 1
     versionName = "1.0"
+
+    val clerkPublishableKey = project.findProperty("CLERK_PUBLISHABLE_KEY") as String?
+    if (clerkPublishableKey.isNullOrEmpty()) {
+      throw GradleException("Missing CLERK_PUBLISHABLE_KEY in gradle.properties")
+    }
+    buildConfigField("String", "CLERK_PUBLISHABLE_KEY", "\"${clerkPublishableKey}\"")
   }
 
   kotlin {
@@ -29,7 +35,10 @@ android {
       targetCompatibility = JavaVersion.VERSION_17
     }
 
-    buildFeatures { compose = true }
+    buildFeatures {
+      compose = true
+      buildConfig = true
+    }
     hilt {
       // stackoverflow.com/questions/78760124/issue-with-hilt-application-class-gradle-dependency-conflict
       enableAggregatingTask = false

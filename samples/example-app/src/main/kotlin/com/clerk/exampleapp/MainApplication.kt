@@ -12,7 +12,7 @@ class MainApplication : Application() {
 
     Clerk.initialize(
       this,
-      "pk_test_Z2xvd2luZy1zcXVpZC0xMS5jbGVyay5hY2NvdW50cy5kZXYk",
+      BuildConfig.CLERK_PUBLISHABLE_KEY,
       options = ClerkConfigurationOptions(enableDebugMode = true),
     )
   }
