@@ -368,7 +368,7 @@ This repository includes a complete example app demonstrating phone authenticati
    cd clerk-android
 
    # Add your publishable key to gradle.properties
-   echo "CLERK_PUBLISHABLE_KEY=pk_test_your_key_here" >> gradle.properties
+   "CLERK_PUBLISHABLE_KEY=pk_test_your_key_here" 
 
    # Build and run
    ./gradlew :samples:example-app:installDebug
