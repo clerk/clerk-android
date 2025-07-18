@@ -19,3 +19,4 @@ workbench/*
 /buildSrc/build/
 /samples/build/
 /samples/example-app/build/
+/samples/quickstart/build/

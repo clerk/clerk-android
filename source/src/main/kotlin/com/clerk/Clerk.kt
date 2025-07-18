@@ -2,6 +2,7 @@ package com.clerk
 
 import android.content.Context
 import com.clerk.configuration.ConfigurationManager
+import com.clerk.log.ClerkLog
 import com.clerk.network.model.client.Client
 import com.clerk.network.model.environment.Environment
 import com.clerk.network.model.environment.UserSettings
@@ -13,7 +14,9 @@ import com.clerk.signout.SignOutService
 import com.clerk.signup.SignUp
 import com.clerk.user.User
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Main entrypoint class for the Clerk SDK.
@@ -40,6 +43,7 @@ object Clerk {
    * Contains information about active sessions, sign-in attempts, and device-specific data.
    */
   lateinit var client: Client
+    private set
 
   /** Internal environment configuration containing display settings and authentication options. */
   internal lateinit var environment: Environment
@@ -56,6 +60,32 @@ object Clerk {
   internal var applicationContext: WeakReference<Context>? = null
 
   internal var applicationId: String? = null
+
+  // region Observable State
+
+  /** Internal mutable state flow for session changes. */
+  private val _session = MutableStateFlow<Session?>(null)
+
+  /**
+   * Reactive state for the currently active user session.
+   *
+   * Observe this StateFlow to react to session changes such as sign-in, sign-out, or session
+   * refresh. Emits null when no session is active.
+   */
+  val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
+
+  /** Internal mutable state flow for user changes. */
+  private val _user = MutableStateFlow<User?>(null)
+
+  /**
+   * Reactive state for the currently authenticated user.
+   *
+   * Observe this StateFlow to react to user changes such as sign-in, sign-out, or profile updates.
+   * Emits null when no user is signed in.
+   */
+  val user: StateFlow<User?> = _user.asStateFlow()
+
+  // endregion
 
   // region Computed Properties
 
@@ -151,15 +181,6 @@ object Clerk {
       } else null
 
   /**
-   * The currently authenticated user.
-   *
-   * Provides access to user profile information, email addresses, phone numbers, and other user
-   * data. Returns null when no user is signed in.
-   */
-  val user: User?
-    get() = session?.user
-
-  /**
    * Indicates whether a user is currently signed in.
    *
    * @return true if there is an active session with a user, false otherwise.
@@ -238,6 +259,37 @@ object Clerk {
    */
   internal fun updateEnvironment(environment: Environment) {
     this.environment = environment
+  }
+
+  /**
+   * Internal method to update the client and trigger state updates.
+   *
+   * Called by [ConfigurationManager] when client data is refreshed from the server.
+   *
+   * @param client The updated client configuration.
+   */
+  internal fun updateClient(client: Client) {
+    this.client = client
+    // Only update state if flows are initialized (not during static initialization)
+    try {
+      updateSessionAndUserState()
+    } catch (e: Exception) {
+      ClerkLog.e("${e.message}")
+    }
+  }
+
+  /**
+   * Internal method to update session and user state flows.
+   *
+   * Should be called whenever the client state changes that might affect the current session or
+   * user.
+   */
+  internal fun updateSessionAndUserState() {
+    val currentSession = if (::client.isInitialized) session else null
+    val currentUser = currentSession?.user
+
+    _session.value = currentSession
+    _user.value = currentUser
   }
 
   // endregion

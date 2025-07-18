@@ -4,16 +4,14 @@ plugins {
   alias(libs.plugins.android.application)
   kotlin("android")
   alias(libs.plugins.kotlin.compose)
-  alias(libs.plugins.hilt.android)
-  alias(libs.plugins.ksp)
   alias(libs.plugins.kotlin.plugin.serialization)
 }
 
 android {
-  namespace = "com.clerk.exampleapp"
+  namespace = "com.clerk.quickstart"
 
   defaultConfig {
-    applicationId = "com.clerk.exampleapp"
+    applicationId = "com.clerk.quickstart"
     minSdk = 28
     targetSdk = 36
     compileSdk = 36
@@ -21,14 +19,14 @@ android {
     versionName = "1.0"
 
     val isCI = System.getenv("CI")?.toBoolean() == true
-    val clerkPublishableKey = project.findProperty("SAMPLE_APP_CLERK_PUBLISHABLE_KEY") as String?
+    val clerkPublishableKey = project.findProperty("QUICKSTART_CLERK_PUBLISHABLE_KEY") as String?
 
     if (clerkPublishableKey.isNullOrEmpty() && !isCI) {
-      throw GradleException("Missing SAMPLE_APP_CLERK_PUBLISHABLE_KEY in gradle.properties")
+      throw GradleException("Missing CLERK_PUBLISHABLE_KEY in gradle.properties")
     }
 
     val keyValue = clerkPublishableKey ?: "pk_test_placeholder_for_ci"
-    buildConfigField("String", "SAMPLE_APP_CLERK_PUBLISHABLE_KEY", "\"${keyValue}\"")
+    buildConfigField("String", "QUICKSTART_CLERK_PUBLISHABLE_KEY", "\"${keyValue}\"")
   }
 
   kotlin {
@@ -43,28 +41,17 @@ android {
       compose = true
       buildConfig = true
     }
-    hilt {
-      // stackoverflow.com/questions/78760124/issue-with-hilt-application-class-gradle-dependency-conflict
-      enableAggregatingTask = false
-    }
   }
 }
 
 dependencies {
   implementation(platform(libs.compose.bom))
   implementation(libs.activity.compose)
+  implementation(libs.androidx.lifecycle.viewmodel)
+  implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling.preview)
-  implementation(libs.coil)
-  implementation(libs.coil.okhttp)
-  implementation(libs.hilt.android)
-  implementation(libs.hilt.navigation.compose)
   implementation(libs.material3)
-  implementation(libs.navigation.compose)
   implementation(projects.clerk.source)
-
-  ksp(libs.hilt.compiler)
-
-  lintChecks(libs.compose.lints)
 }
