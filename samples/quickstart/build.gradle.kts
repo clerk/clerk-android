@@ -21,14 +21,14 @@ android {
     versionName = "1.0"
 
     val isCI = System.getenv("CI")?.toBoolean() == true
-    val clerkPublishableKey = project.findProperty("CLERK_PUBLISHABLE_KEY") as String?
+    val clerkPublishableKey = project.findProperty("QUICKSTART_CLERK_PUBLISHABLE_KEY") as String?
 
     if (clerkPublishableKey.isNullOrEmpty() && !isCI) {
       throw GradleException("Missing CLERK_PUBLISHABLE_KEY in gradle.properties")
     }
 
     val keyValue = clerkPublishableKey ?: "pk_test_placeholder_for_ci"
-    buildConfigField("String", "CLERK_PUBLISHABLE_KEY", "\"${keyValue}\"")
+    buildConfigField("String", "QUICKSTART_CLERK_PUBLISHABLE_KEY", "\"${keyValue}\"")
   }
 
   kotlin {
