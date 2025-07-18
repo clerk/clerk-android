@@ -91,8 +91,6 @@ class ClerkTest {
 
       // Reset client if it's initialized
       try {
-        val clientField = clerkClass.getDeclaredField("client")
-        clientField.isAccessible = true
         // We can't unset a lateinit property, but we can set it to a mock that behaves as
         // uninitialized
         val uninitializedClient = mockk<Client>(relaxed = true)
@@ -100,7 +98,7 @@ class ClerkTest {
         every { uninitializedClient.lastActiveSessionId } returns null
         every { uninitializedClient.signIn } returns null
         every { uninitializedClient.signUp } returns null
-        clientField.set(Clerk, uninitializedClient)
+        Clerk.updateClient(uninitializedClient)
       } catch (e: Exception) {
         // Client not initialized, that's fine
       }
@@ -135,7 +133,7 @@ class ClerkTest {
   }
 
   private fun initializeClerkWithClient(client: Client) {
-    Clerk.client = client
+    Clerk.updateClient(client)
     Clerk.environment = mockEnvironment
   }
 
@@ -149,7 +147,7 @@ class ClerkTest {
     every { uninitializedClient.lastActiveSessionId } returns null
     every { uninitializedClient.signIn } returns null
     every { uninitializedClient.signUp } returns null
-    Clerk.client = uninitializedClient
+    Clerk.updateClient(uninitializedClient)
   }
 
   private fun simulateUninitializedEnvironment() {

@@ -512,7 +512,7 @@ internal class ConfigurationManager {
    * This method is called only when both client and environment data have been loaded successfully.
    */
   private fun updateClerkState(client: Client, environment: Environment) {
-    Clerk.client = client
+    Clerk.updateClient(client)
     Clerk.updateEnvironment(environment)
 
     if (Clerk.debugMode) {
