@@ -4,8 +4,6 @@ plugins {
   alias(libs.plugins.android.application)
   kotlin("android")
   alias(libs.plugins.kotlin.compose)
-  alias(libs.plugins.hilt.android)
-  alias(libs.plugins.ksp)
   alias(libs.plugins.kotlin.plugin.serialization)
 }
 
@@ -43,28 +41,17 @@ android {
       compose = true
       buildConfig = true
     }
-    hilt {
-      // stackoverflow.com/questions/78760124/issue-with-hilt-application-class-gradle-dependency-conflict
-      enableAggregatingTask = false
-    }
   }
 }
 
 dependencies {
   implementation(platform(libs.compose.bom))
   implementation(libs.activity.compose)
+  implementation(libs.androidx.lifecycle.viewmodel)
+  implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling.preview)
-  implementation(libs.coil)
-  implementation(libs.coil.okhttp)
-  implementation(libs.hilt.android)
-  implementation(libs.hilt.navigation.compose)
   implementation(libs.material3)
-  implementation(libs.navigation.compose)
   implementation(projects.clerk.source)
-
-  ksp(libs.hilt.compiler)
-
-  lintChecks(libs.compose.lints)
 }
