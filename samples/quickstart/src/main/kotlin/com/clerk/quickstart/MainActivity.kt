@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
         when (state) {
           MainUiState.Loading -> CircularProgressIndicator()
           MainUiState.SignedIn -> Text("Signed in")
-          MainUiState.SignedOut -> Text("Signed out")
+          MainUiState.SignedOut -> SignInOrUpView()
         }
       }
     }

@@ -29,7 +29,7 @@ fun SignInView(viewModel: SignInViewModel = viewModel()) {
     TextField(
       value = password,
       onValueChange = { password = it },
-      placeholder = { Text("password") },
+      placeholder = { Text("Password") },
       visualTransformation = PasswordVisualTransformation(),
     )
     Button(onClick = { viewModel.signIn(email, password) }) { Text("Sign In") }
