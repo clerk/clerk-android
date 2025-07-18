@@ -230,7 +230,7 @@ class ClerkTest {
     simulateUninitializedClient()
 
     // When
-    val user = Clerk.user
+    val user = Clerk.user.value
 
     // Then
     assertNull(user)
@@ -248,7 +248,7 @@ class ClerkTest {
     initializeClerkWithClient(mockClient)
 
     // When
-    val user = Clerk.user
+    val user = Clerk.user.value
 
     // Then
     assertEquals(mockUser, user)
