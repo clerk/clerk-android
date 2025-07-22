@@ -13,6 +13,7 @@ plugins {
   alias(libs.plugins.jetbrains.kotlin.jvm) apply false
   alias(libs.plugins.mavenPublish)
   alias(libs.plugins.dokka)
+  alias(libs.plugins.kotlin.compose) apply false
 }
 
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")

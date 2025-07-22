@@ -25,3 +25,5 @@ dependencyResolutionManagement {
 rootProject.name = "Clerk"
 
 include(":source", ":samples:example-app", ":samples:quickstart")
+
+include(":samples:custom-flows")
