@@ -20,3 +20,4 @@ workbench/*
 /samples/build/
 /samples/example-app/build/
 /samples/quickstart/build/
+/samples/custom-flows/build/
