@@ -39,7 +39,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
      * Combine initialization state with user state to determine UI state. This ensures we show
      * loading until Clerk is initialized and then react to user authentication changes.
      */
-    combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
+    combine(Clerk.isInitialized, Clerk.user) { isInitialized, user ->
         when {
           !isInitialized -> AuthenticationState.Loading
           user != null -> AuthenticationState.SignedIn
