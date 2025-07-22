@@ -1,5 +1,6 @@
 package com.clerk.customflows.emailpassword.signin
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.Clerk
@@ -14,16 +15,18 @@ import kotlinx.coroutines.launch
 
 class EmailPasswordSignInViewModel : ViewModel() {
   private val _uiState =
-    MutableStateFlow<EmailPasswordSignInUiState>(EmailPasswordSignInUiState.SignedOut)
+    MutableStateFlow<EmailPasswordSignInUiState>(EmailPasswordSignInUiState.Loading)
   val uiState = _uiState.asStateFlow()
 
   init {
     combine(Clerk.user, Clerk.isInitialized) { user, isInitialized ->
-        when {
-          !isInitialized -> EmailPasswordSignInUiState.Loading
-          user == null -> EmailPasswordSignInUiState.SignedOut
-          else -> EmailPasswordSignInUiState.SignedIn
-        }
+        Log.e("EmailPasswordSignInViewModel", "combine: $user, $isInitialized")
+        _uiState.value =
+          when {
+            !isInitialized -> EmailPasswordSignInUiState.Loading
+            user == null -> EmailPasswordSignInUiState.SignedOut
+            else -> EmailPasswordSignInUiState.SignedIn
+          }
       }
       .launchIn(viewModelScope)
   }
