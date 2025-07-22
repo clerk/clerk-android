@@ -48,7 +48,7 @@ chucker-debug = { group = "com.github.chuckerteam.chucker", name = "library", ve
 clerk-automap-annotations = { module = "com.clerk:automap-annotations", version.ref = "automap" }
 clerk-automap-processor = { module = "com.clerk:automap-processor", version.ref = "automap" }
 coil = "io.coil-kt.coil3:coil-compose:3.2.0"
-coil-okhttp = "io.coil-kt.coil3:coil-network-okhttp:3.2.0"
+coil-okhttp = "io.coil-kt.coil3:coil-network-okhttp:3.3.0"
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-lints = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
