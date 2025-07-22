@@ -19,9 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.clerk.customflows.emailpassword.signin.EmailPasswordSignInActivity
+import com.clerk.customflows.emailpassword.signup.EmailPasswordSignUpActivity
 import com.clerk.customflows.ui.theme.ClerkTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,14 +38,11 @@ class MainActivity : ComponentActivity() {
             verticalArrangement =
               Arrangement.spacedBy(24.dp, alignment = Alignment.CenterVertically),
           ) {
-            Button(
-              shape = RoundedCornerShape(8.dp),
-              modifier = Modifier.fillMaxWidth().height(48.dp),
-              onClick = {
-                context.startActivity(Intent(context, EmailPasswordSignInActivity::class.java))
-              },
-            ) {
-              Text("Email & Password Sign In")
+            LaunchCustomFlowButton(buttonText = stringResource(R.string.email_password_sign_in)) {
+              context.startActivity(Intent(context, EmailPasswordSignInActivity::class.java))
+            }
+            LaunchCustomFlowButton(buttonText = stringResource(R.string.email_password_sign_up)) {
+              context.startActivity(Intent(context, EmailPasswordSignUpActivity::class.java))
             }
           }
         }
@@ -54,12 +52,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-  Text(text = "Hello $name!", modifier = modifier)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-  ClerkTheme { Greeting("Android") }
+fun LaunchCustomFlowButton(modifier: Modifier = Modifier, buttonText: String, onClick: () -> Unit) {
+  Button(
+    shape = RoundedCornerShape(8.dp),
+    modifier = Modifier.fillMaxWidth().height(48.dp).then(modifier),
+    onClick = onClick,
+  ) {
+    Text(buttonText)
+  }
 }

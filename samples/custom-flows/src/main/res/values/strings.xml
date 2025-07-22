@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Clerk Custom Flows</string>
+    <string name="email_password_sign_in"><![CDATA[Email & Password Sign In]]></string>
+    <string name="email_password_sign_up"><![CDATA[Email & Password Sign Up]]></string>
 </resources>

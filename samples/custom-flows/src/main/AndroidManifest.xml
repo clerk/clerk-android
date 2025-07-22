@@ -22,6 +22,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".emailpassword.signin.EmailPasswordSignInActivity" />
+        <activity android:name=".emailpassword.signup.EmailPasswordSignUpActivity" />
     </application>
 
 </manifest>
