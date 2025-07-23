@@ -23,6 +23,7 @@
         </activity>
         <activity android:name=".emailpassword.signin.EmailPasswordSignInActivity" />
         <activity android:name=".emailpassword.signup.EmailPasswordSignUpActivity" />
+        <activity android:name=".emailpassword.mfa.MFASignInActivity" />
     </application>
 
 </manifest>
