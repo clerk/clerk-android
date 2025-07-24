@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.customflows.emailpassword.mfa.MFASignInActivity
 import com.clerk.customflows.emailpassword.signin.EmailPasswordSignInActivity
 import com.clerk.customflows.emailpassword.signup.EmailPasswordSignUpActivity
+import com.clerk.customflows.forgotpassword.emailaddress.ForgotPasswordPhoneNumberActivity
 import com.clerk.customflows.oauth.OAuthActivity
 import com.clerk.customflows.ui.theme.ClerkTheme
 
@@ -81,8 +82,11 @@ private fun SignedOutContent(modifier: Modifier = Modifier) {
     LaunchCustomFlowButton(buttonText = stringResource(R.string.email_password_mfa)) {
       context.startActivity(Intent(context, MFASignInActivity::class.java))
     }
-    LaunchCustomFlowButton(buttonText = "Sign in with OAuth") {
+    LaunchCustomFlowButton(buttonText = stringResource(R.string.sign_in_with_oauth)) {
       context.startActivity(Intent(context, OAuthActivity::class.java))
+    }
+    LaunchCustomFlowButton(buttonText = stringResource(R.string.forgot_password)) {
+      context.startActivity(Intent(context, ForgotPasswordPhoneNumberActivity::class.java))
     }
   }
 }

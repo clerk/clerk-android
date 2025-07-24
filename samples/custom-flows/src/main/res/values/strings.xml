@@ -4,4 +4,6 @@
     <string name="email_password_sign_up"><![CDATA[Email & Password Sign Up]]></string>
     <string name="email_password_mfa"><![CDATA[Email & Password MFA]]></string>
     <string name="sign_out">Sign out</string>
+    <string name="sign_in_with_oauth">Sign in with OAuth</string>
+    <string name="forgot_password">Forgot Password</string>
 </resources>
