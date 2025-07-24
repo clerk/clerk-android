@@ -356,14 +356,34 @@ Clerk.session.fetchToken().jwt.let { token ->
 }
 ```
 
-## 📱 Samples
+## 📱 Sample Applications
 
-`samples/quickstart`: This is a paired repo with the Android Quickstart guide. It provides a simple
-example of how to integrate Clerk into an Android application, demonstrating user sign-up, sign-in,
-and profile management.
-`samples/custom-flows`: This is a paired repo with the Custom Flows guide. It showcases how to
-implement custom authentication flows using Clerk, including advanced scenarios like multi-factor
-authentication and reset password.
+We provide two sample applications to help you get started with Clerk Android SDK:
+
+### 🚀 Quickstart Sample (`samples/quickstart`)
+
+A simple example that demonstrates the basics of integrating Clerk into an Android application. This sample covers:
+
+- Basic user sign-up flow with email verification
+- User sign-in functionality  
+- Simple session management and sign-out
+- Clean, minimal UI to get you started quickly
+
+Perfect for developers new to Clerk who want to understand the fundamental integration patterns.
+
+### ⚡ Custom Flows Sample (`samples/custom-flows`)
+
+An advanced example showcasing comprehensive authentication flows and custom implementations. This sample demonstrates:
+
+- **Multiple Sign-In Methods**: Email/password, OAuth providers
+- **Multi-Factor Authentication (MFA)**: TOTP and SMS-based MFA flows
+- **Account Management**: Adding email addresses and phone numbers to user accounts
+- **Password Recovery**: Forgot password flows via both email and SMS
+- **Custom UI Implementations**: Advanced authentication flows with custom user interfaces
+
+Ideal for developers who need to implement specific authentication requirements or want to see advanced use cases.
+
+### Getting Started with Sample Apps
 
 1. **Setup Clerk Account**:
    ```bash
@@ -373,30 +393,27 @@ authentication and reset password.
    ```
 
 2. **Configure Authentication Methods**:
-    - **Phone Authentication**: In Clerk Dashboard → **User & Authentication** → **Email, Phone,
-      Username**
+    - **Phone Authentication**: In Clerk Dashboard → **User & Authentication** → **Email, Phone, Username**
         - Enable **Phone number** as a contact method
         - Configure **SMS** verification method
     - **Social Providers**: In Clerk Dashboard → **User & Authentication** → **Social Connections**
         - Enable desired providers (Google, GitHub, Apple, etc.)
 
-3. **Run the Example App**:
+3. **Run a Sample App**:
    ```bash
    # Clone the repository
    git clone https://github.com/clerk/clerk-android.git
    cd clerk-android
 
    # Add your publishable key to gradle.properties
-   "CLERK_PUBLISHABLE_KEY=pk_test_your_key_here" 
+   echo "CLERK_PUBLISHABLE_KEY=pk_test_your_key_here" >> gradle.properties
 
-   # Build and run
-   ./gradlew :samples:example-app:installDebug
+   # Build and run the quickstart sample
+   ./gradlew :samples:quickstart:installDebug
+   
+   # Or build and run the custom flows sample
+   ./gradlew :samples:custom-flows:installDebug
    ```
-
-### Detailed Documentation
-
-For complete setup instructions, troubleshooting, and advanced configuration, see:
-**[📖 Example App Documentation](samples/example-app/README.md)**
 
 ## 🔧 Troubleshooting
 
