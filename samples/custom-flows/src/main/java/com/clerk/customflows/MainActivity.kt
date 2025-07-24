@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.customflows.addemail.AddEmailActivity
+import com.clerk.customflows.addphone.AddPhoneActivity
 import com.clerk.customflows.emailpassword.mfa.MFASignInActivity
 import com.clerk.customflows.emailpassword.signin.EmailPasswordSignInActivity
 import com.clerk.customflows.emailpassword.signup.EmailPasswordSignUpActivity
@@ -73,6 +74,9 @@ private fun SignedInContent(modifier: Modifier = Modifier, onSignOut: () -> Unit
   ) {
     LaunchCustomFlowButton(buttonText = stringResource(R.string.add_email_address)) {
       context.startActivity(Intent(context, AddEmailActivity::class.java))
+    }
+    LaunchCustomFlowButton(buttonText = stringResource(R.string.add_phone_number)) {
+      context.startActivity(Intent(context, AddPhoneActivity::class.java))
     }
     Button(
       shape = RoundedCornerShape(8.dp),

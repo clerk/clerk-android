@@ -28,6 +28,7 @@
         <activity android:name=".forgotpassword.phone.ForgotPasswordPhoneNumberActivity" />
         <activity android:name=".forgotpassword.emailaddress.ForgotPasswordEmailActivity" />
         <activity android:name=".addemail.AddEmailActivity" />
+        <activity android:name=".addphone.AddPhoneActivity" />
     </application>
 
 </manifest>
