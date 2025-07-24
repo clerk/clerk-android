@@ -24,7 +24,8 @@
 
 **Clerk is Hiring!**
 
-Would you like to work on Open Source software and help maintain this repository? [Apply today!](https://jobs.ashbyhq.com/clerk)
+Would you like to work on Open Source software and help maintain this
+repository? [Apply today!](https://jobs.ashbyhq.com/clerk)
 
 ---
 
@@ -38,25 +39,32 @@ Would you like to work on Open Source software and help maintain this repository
 ## �🚀 Get Started with Clerk
 
 ### 1. Create a Clerk Application
+
 1. [Sign up for an account](https://dashboard.clerk.com/sign-up?utm_source=github&utm_medium=clerk_android_repo_readme)
 2. Create an application in your Clerk dashboard
 3. Copy your **Publishable Key** from the API Keys section
 
 ### 2. Install the SDK
+
 Add the Clerk Android SDK to your project following the installation instructions below.
 
 ### 3. Initialize Clerk
+
 Configure Clerk in your application class with your publishable key.
 
 ### 4. Add Authentication
+
 Use Clerk's authentication methods to enable sign-up, sign-in, and user management.
 
 ## 🧑‍💻 Installation
 
-The Clerk Android SDK is distributed via Maven Central. 
+The Clerk Android SDK is distributed via Maven Central.
 
 ### Add Repository
-First, ensure you have added [mavenCentral](https://docs.gradle.org/current/userguide/declaring_repositories.html) to your project's `build.gradle(.kts)`:
+
+First, ensure you have
+added [mavenCentral](https://docs.gradle.org/current/userguide/declaring_repositories.html) to your
+project's `build.gradle(.kts)`:
 
 ```gradle
 repositories {
@@ -65,6 +73,7 @@ repositories {
 ```
 
 ### Add Dependency
+
 Add the Clerk SDK to your application's dependencies:
 
 ```gradle
@@ -74,19 +83,22 @@ dependencies {
 ```
 
 **Kotlin DSL:**
+
 ```kotlin
 dependencies {
     implementation("com.clerk:clerk-android:0.1.0")
 }
 ```
 
-> 💡 **Tip:** Check [Maven Central](https://central.sonatype.com/artifact/com.clerk/clerk-android) for the latest version.
+> 💡 **Tip:** Check [Maven Central](https://central.sonatype.com/artifact/com.clerk/clerk-android)
+> for the latest version.
 
 ## 🛠️ Usage
 
 ### Initialization
 
-Before using any part of the SDK, you must call `Clerk.initialize()` in your Application class with your publishable key and application context:
+Before using any part of the SDK, you must call `Clerk.initialize()` in your Application class with
+your publishable key and application context:
 
 ```kotlin
 import com.clerk.Clerk
@@ -94,7 +106,7 @@ import com.clerk.Clerk
 class YourApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        
+
         Clerk.initialize(
             context = this,
             publishableKey = "pk_test_..." // Your publishable key from Clerk Dashboard
@@ -104,10 +116,10 @@ class YourApplication : Application() {
 ```
 
 **Don't forget to register your Application class in `AndroidManifest.xml`:**
+
 ```xml
-<application
-    android:name=".YourApplication"
-    android:label="@string/app_name"
+
+<application android:name=".YourApplication" android:label="@string/app_name"
     android:theme="@style/AppTheme">
     <!-- ... -->
 </application>
@@ -129,7 +141,9 @@ if (Clerk.user != null) {
 
 ### Authentication
 
-All authentication functions follow a consistent parameter pattern where function parameters are exposed as data classes named after the function itself (e.g., `SignUp.Create` parameters are `SignUp.SignUpCreateParams`).
+All authentication functions follow a consistent parameter pattern where function parameters are
+exposed as data classes named after the function itself (e.g., `SignUp.Create` parameters are
+`SignUp.SignUpCreateParams`).
 
 #### Sign Up with Email and Verification
 
@@ -142,10 +156,10 @@ SignUp.create(SignUp.CreateParams.Standard(emailAddress = "user@example.com"))
         // Check if the SignUp needs the email address verified and send an OTP code via email
         if (signUp.unverifiedFields.contains("email_address")) {
             signUp.prepareVerification(SignUp.PrepareVerificationParams.EMAIL_CODE)
-                .onSuccess { 
+                .onSuccess {
                     // OTP sent successfully
                 }
-                .onFailure { 
+                .onFailure {
                     // Handle error
                 }
         }
@@ -157,7 +171,7 @@ SignUp.create(SignUp.CreateParams.Standard(emailAddress = "user@example.com"))
 
 // After collecting the OTP from the user
 Clerk.signUp?.attemptVerification(SignUp.AttemptVerificationParams.EmailCode(code = "123456"))
-    .onSuccess { 
+    .onSuccess {
         // User is signed in successfully
     }
 ```
@@ -171,7 +185,7 @@ var signIn: SignIn? = null
 
 // Create the sign in
 SignIn.create(SignIn.CreateParams.Strategy.EmailCode("email@example.com"))
-    .onSuccess { 
+    .onSuccess {
         signIn = it
         // OTP code sent to email
     }
@@ -217,17 +231,17 @@ import com.clerk.passkeys.CredentialType
 
 SignIn.authenticateWithGoogleCredentialManager(
     credentialTypes = listOf(
-        CredentialType.PASSKEY, 
-        CredentialType.PASSWORD, 
+        CredentialType.PASSKEY,
+        CredentialType.PASSWORD,
         CredentialType.GOOGLE
     )
 )
-.onSuccess {
-    // Authentication successful
-}
-.onFailure { error ->
-    Log.e("Clerk", "Credential Manager auth failed: ${error.message}")
-}
+    .onSuccess {
+        // Authentication successful
+    }
+    .onFailure { error ->
+        Log.e("Clerk", "Credential Manager auth failed: ${error.message}")
+    }
 ```
 
 #### Forgot Password
@@ -243,12 +257,12 @@ SignIn.create(SignIn.CreateParams.Strategy.EmailCode("user@example.com"))
             .onSuccess { verifiedSignIn ->
                 // Set a new password to complete the process
                 verifiedSignIn.resetPassword(
-                    password = "newSecurePassword123!", 
+                    password = "newSecurePassword123!",
                     signOutOfOtherSessions = true
                 )
-                .onSuccess {
-                    // Password reset successful
-                }
+                    .onSuccess {
+                        // Password reset successful
+                    }
             }
     }
 ```
@@ -273,10 +287,10 @@ Clerk.signOut()
 import com.clerk.User
 
 Clerk.user.update(
-    User.UpdateParams(firstName = "Walter", lastName = "Johnson"))
-        .onSuccess {
-           updatedUser -> // User updated
-        }
+    User.UpdateParams(firstName = "Walter", lastName = "Johnson")
+)
+    .onSuccess { updatedUser -> // User updated
+    }
 ```
 
 #### Update User Profile Image
@@ -284,10 +298,10 @@ Clerk.user.update(
 ```kotlin
 // After getting a java.io.File object to upload
 val imageFile: File = // ... your image file
-Clerk.user.setProfileImage(file = imageFile)
-    .onSuccess { 
-        // Profile image updated successfully
-    }
+    Clerk.user.setProfileImage(file = imageFile)
+        .onSuccess {
+            // Profile image updated successfully
+        }
 ```
 
 #### Add Phone Number
@@ -336,16 +350,20 @@ Clerk.session.fetchToken().jwt.let { token ->
     // Use the token in your API requests
     val headers = mutableMapOf<String, String>()
     headers["Authorization"] = "Bearer $token"
-    
+
     // Make your authenticated API call
     // ...
 }
 ```
 
-## 📱 Example App
+## 📱 Samples
 
-This repository includes a complete example app demonstrating phone authentication with SMS OTP and social sign-in. The example app shows best practices for integrating Clerk into an Android application.
-
+`samples/quickstart`: This is a paired repo with the Android Quickstart guide. It provides a simple
+example of how to integrate Clerk into an Android application, demonstrating user sign-up, sign-in,
+and profile management.
+`samples/custom-flows`: This is a paired repo with the Custom Flows guide. It showcases how to
+implement custom authentication flows using Clerk, including advanced scenarios like multi-factor
+authentication and reset password.
 
 1. **Setup Clerk Account**:
    ```bash
@@ -355,11 +373,12 @@ This repository includes a complete example app demonstrating phone authenticati
    ```
 
 2. **Configure Authentication Methods**:
-   - **Phone Authentication**: In Clerk Dashboard → **User & Authentication** → **Email, Phone, Username**
-     - Enable **Phone number** as a contact method
-     - Configure **SMS** verification method
-   - **Social Providers**: In Clerk Dashboard → **User & Authentication** → **Social Connections**
-     - Enable desired providers (Google, GitHub, Apple, etc.)
+    - **Phone Authentication**: In Clerk Dashboard → **User & Authentication** → **Email, Phone,
+      Username**
+        - Enable **Phone number** as a contact method
+        - Configure **SMS** verification method
+    - **Social Providers**: In Clerk Dashboard → **User & Authentication** → **Social Connections**
+        - Enable desired providers (Google, GitHub, Apple, etc.)
 
 3. **Run the Example App**:
    ```bash
@@ -384,16 +403,19 @@ For complete setup instructions, troubleshooting, and advanced configuration, se
 ### Common Issues
 
 **"Clerk not initialized" error:**
+
 - Make sure you've called `Clerk.initialize()` in your Application class
 - Verify your Application class is registered in `AndroidManifest.xml`
 - Check that your publishable key is correct
 
 **"Missing CLERK_PUBLISHABLE_KEY" error:**
+
 - Add your publishable key to `gradle.properties`
 - Verify the key format starts with `pk_test_` or `pk_live_`
 - Ensure the key is valid and from the correct Clerk application
 
 **ProGuard/R8 issues:**
+
 - The SDK includes ProGuard rules automatically
 - If you encounter issues, check the `proguard-rules.pro` file in the SDK
 
@@ -412,29 +434,31 @@ For complete setup instructions, troubleshooting, and advanced configuration, se
 
 ## ✅ Supported Features
 
-| Feature | Android Support | Notes |
-| --- | :---: | --- |
-| Email/Phone/Username Authentication | ✅ | Full support |
-| Email Code Verification | ✅ | OTP via email |
-| SMS Code Verification | ✅ | OTP via SMS |
-| Multi-Factor Authentication (TOTP / SMS) | ✅ | TOTP and SMS |
-| Sign in / Sign up with OAuth | ✅ | Google, GitHub, Apple, etc. |
-| Native Sign in with Google | ✅ | Google One Tap |
-| Session Management | ✅ | Full session lifecycle |
-| Forgot Password | ✅ | Email-based reset |
-| User Management | ✅ | Profile, phone, email management |
-| Passkeys | ✅ | WebAuthn support |
-| Enterprise SSO (SAML) | ✅ | Enterprise authentication |
-| Device Attestation | ✅ | Android Play Integrity |
-| Multi-Session Applications | ❌ | Coming soon |
-| Organizations | ❌ | Coming soon |
-| Prebuilt UI Components | ❌ | Coming soon |
-| Magic Links | ❌ | Planned |
-| Web3 Wallet | ❌ | Planned |
+| Feature                                  | Android Support | Notes                            |
+|------------------------------------------|:---------------:|----------------------------------|
+| Email/Phone/Username Authentication      |        ✅        | Full support                     |
+| Email Code Verification                  |        ✅        | OTP via email                    |
+| SMS Code Verification                    |        ✅        | OTP via SMS                      |
+| Multi-Factor Authentication (TOTP / SMS) |        ✅        | TOTP and SMS                     |
+| Sign in / Sign up with OAuth             |        ✅        | Google, GitHub, Apple, etc.      |
+| Native Sign in with Google               |        ✅        | Google One Tap                   |
+| Session Management                       |        ✅        | Full session lifecycle           |
+| Forgot Password                          |        ✅        | Email-based reset                |
+| User Management                          |        ✅        | Profile, phone, email management |
+| Passkeys                                 |        ✅        | WebAuthn support                 |
+| Enterprise SSO (SAML)                    |        ✅        | Enterprise authentication        |
+| Device Attestation                       |        ✅        | Android Play Integrity           |
+| Multi-Session Applications               |        ❌        | Coming soon                      |
+| Organizations                            |        ❌        | Coming soon                      |
+| Prebuilt UI Components                   |        ❌        | Coming soon                      |
+| Magic Links                              |        ❌        | Planned                          |
+| Web3 Wallet                              |        ❌        | Planned                          |
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](https://github.com/clerk/clerk-android/blob/main/CONTRIBUTING.md) for details.
+We welcome contributions! Please see
+our [Contributing Guidelines](https://github.com/clerk/clerk-android/blob/main/CONTRIBUTING.md) for
+details.
 
 ### Development Setup
 
