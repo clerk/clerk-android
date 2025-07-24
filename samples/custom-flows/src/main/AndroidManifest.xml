@@ -25,7 +25,7 @@
         <activity android:name=".emailpassword.signup.EmailPasswordSignUpActivity" />
         <activity android:name=".emailpassword.mfa.MFASignInActivity" />
         <activity android:name=".oauth.OAuthActivity" />
-        <activity android:name=".forgotpassword.emailaddress.ForgotPasswordPhoneNumberActivity"/>
+        <activity android:name=".forgotpassword.phone.ForgotPasswordPhoneNumberActivity"/>
     </application>
 
 </manifest>

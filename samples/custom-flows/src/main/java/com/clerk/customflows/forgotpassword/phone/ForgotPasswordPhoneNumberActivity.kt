@@ -1,4 +1,4 @@
-package com.clerk.customflows.forgotpassword.emailaddress
+package com.clerk.customflows.forgotpassword.phone
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

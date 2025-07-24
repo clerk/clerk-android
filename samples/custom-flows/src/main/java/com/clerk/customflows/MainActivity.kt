@@ -29,7 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.customflows.emailpassword.mfa.MFASignInActivity
 import com.clerk.customflows.emailpassword.signin.EmailPasswordSignInActivity
 import com.clerk.customflows.emailpassword.signup.EmailPasswordSignUpActivity
-import com.clerk.customflows.forgotpassword.emailaddress.ForgotPasswordPhoneNumberActivity
+import com.clerk.customflows.forgotpassword.phone.ForgotPasswordPhoneNumberActivity
 import com.clerk.customflows.oauth.OAuthActivity
 import com.clerk.customflows.ui.theme.ClerkTheme
 
