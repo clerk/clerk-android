@@ -52,14 +52,22 @@ class ClerkTest {
 
     // Create mocks
     mockContext = mockk(relaxed = true)
-    mockClient = mockk(relaxed = true)
-    mockEnvironment = mockk(relaxed = true)
-    mockDisplayConfig = mockk(relaxed = true)
-    mockUserSettings = mockk(relaxed = true)
+    mockClient = mockk()
+    mockEnvironment = mockk()
+    mockDisplayConfig = mockk()
+    mockUserSettings = mockk()
     mockSession = mockk(relaxed = true)
     mockUser = mockk(relaxed = true)
     mockSignIn = mockk(relaxed = true)
     mockSignUp = mockk(relaxed = true)
+
+    // Set up basic client mock properties
+    every { mockClient.sessions } returns emptyList()
+    every { mockClient.lastActiveSessionId } returns null
+    every { mockClient.signIn } returns null
+    every { mockClient.signUp } returns null
+    every { mockClient.id } returns null
+    every { mockClient.updatedAt } returns null
 
     // Set up environment mock with display config and user settings
     every { mockEnvironment.displayConfig } returns mockDisplayConfig
@@ -93,11 +101,13 @@ class ClerkTest {
       try {
         // We can't unset a lateinit property, but we can set it to a mock that behaves as
         // uninitialized
-        val uninitializedClient = mockk<Client>(relaxed = true)
+        val uninitializedClient = mockk<Client>()
         every { uninitializedClient.sessions } returns emptyList()
         every { uninitializedClient.lastActiveSessionId } returns null
         every { uninitializedClient.signIn } returns null
         every { uninitializedClient.signUp } returns null
+        every { uninitializedClient.id } returns null
+        every { uninitializedClient.updatedAt } returns null
         Clerk.updateClient(uninitializedClient)
       } catch (e: Exception) {
         // Client not initialized, that's fine
@@ -108,9 +118,9 @@ class ClerkTest {
         val environmentField = clerkClass.getDeclaredField("environment")
         environmentField.isAccessible = true
         // We can't unset a lateinit property, so we set it to a mock that behaves as uninitialized
-        val uninitializedEnvironment = mockk<Environment>(relaxed = true)
-        val uninitializedDisplayConfig = mockk<DisplayConfig>(relaxed = true)
-        val uninitializedUserSettings = mockk<UserSettings>(relaxed = true)
+        val uninitializedEnvironment = mockk<Environment>()
+        val uninitializedDisplayConfig = mockk<DisplayConfig>()
+        val uninitializedUserSettings = mockk<UserSettings>()
         every { uninitializedEnvironment.displayConfig } returns uninitializedDisplayConfig
         every { uninitializedEnvironment.userSettings } returns uninitializedUserSettings
         every { uninitializedDisplayConfig.logoImageUrl } returns ""
@@ -127,6 +137,14 @@ class ClerkTest {
       } catch (e: Exception) {
         // Environment not initialized, that's fine
       }
+
+      // Reset StateFlow values to ensure clean state between tests
+      try {
+        // Force update session and user state to null by triggering state update with empty client
+        Clerk.updateSessionAndUserState()
+      } catch (e: Exception) {
+        // Ignore if method is not accessible or other issues
+      }
     } catch (e: Exception) {
       // Ignore reflection errors - they mean the fields weren't accessible
     }
@@ -142,11 +160,13 @@ class ClerkTest {
   }
 
   private fun simulateUninitializedClient() {
-    val uninitializedClient = mockk<Client>(relaxed = true)
+    val uninitializedClient = mockk<Client>()
     every { uninitializedClient.sessions } returns emptyList()
     every { uninitializedClient.lastActiveSessionId } returns null
     every { uninitializedClient.signIn } returns null
     every { uninitializedClient.signUp } returns null
+    every { uninitializedClient.id } returns null
+    every { uninitializedClient.updatedAt } returns null
     Clerk.updateClient(uninitializedClient)
   }
 
@@ -230,7 +250,7 @@ class ClerkTest {
     simulateUninitializedClient()
 
     // When
-    val user = Clerk.user
+    val user = Clerk.user.value
 
     // Then
     assertNull(user)
@@ -248,7 +268,7 @@ class ClerkTest {
     initializeClerkWithClient(mockClient)
 
     // When
-    val user = Clerk.user
+    val user = Clerk.user.value
 
     // Then
     assertEquals(mockUser, user)
