@@ -1,8 +1,10 @@
 package com.clerk.customflows
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.Clerk
+import com.clerk.network.serialization.onFailure
 import com.clerk.network.serialization.onSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +19,7 @@ class MainViewModel : ViewModel() {
 
   init {
     combine(Clerk.isInitialized, Clerk.user) { isInitialized, user ->
+        Log.e("QQQ", "isInitialized: $isInitialized, user: $user")
         _uiState.value =
           when {
             !isInitialized -> UiState.Loading
@@ -28,7 +31,14 @@ class MainViewModel : ViewModel() {
   }
 
   fun signOut() {
-    viewModelScope.launch { Clerk.signOut().onSuccess { _uiState.value = UiState.SignedOut } }
+    viewModelScope.launch {
+      Clerk.signOut()
+        .onSuccess { _uiState.value = UiState.SignedOut }
+        .onFailure {
+          // See https://clerk.com/docs/custom-flows/error-handling
+          // for more info on error handling
+        }
+    }
   }
 
   sealed interface UiState {
