@@ -9,7 +9,7 @@ class CustomFlowsApplication : Application() {
     super.onCreate()
     Clerk.initialize(
       this,
-      publishableKey = "pk_test_ZWxlZ2FudC1tdXNrcmF0LTg3LmNsZXJrLmFjY291bnRzLmRldiQ",
+      publishableKey = BuildConfig.CUSTOM_FLOWS_CLERK_PUBLISHABLE_KEY,
       options = ClerkConfigurationOptions(enableDebugMode = true),
     )
   }
