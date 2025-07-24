@@ -7,4 +7,5 @@
     <string name="sign_in_with_oauth">Sign in with OAuth</string>
     <string name="reset_password_phone">Reset password with phone code</string>
     <string name="reset_password_email">Reset password with email code</string>
+    <string name="add_email_address">Add email address</string>
 </resources>

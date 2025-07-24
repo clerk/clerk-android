@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,10 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.clerk.customflows.addemail.AddEmailActivity
 import com.clerk.customflows.emailpassword.mfa.MFASignInActivity
 import com.clerk.customflows.emailpassword.signin.EmailPasswordSignInActivity
 import com.clerk.customflows.emailpassword.signup.EmailPasswordSignUpActivity
@@ -46,16 +49,10 @@ class MainActivity : ComponentActivity() {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
           Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             when (state) {
-              MainViewModel.UiState.Loading -> {
+              MainViewModel.UiState.Loading -> CircularProgressIndicator()
 
-                CircularProgressIndicator()
-              }
-
-              MainViewModel.UiState.SignedIn -> {
-                Button(onClick = { viewModel.signOut() }) {
-                  Text(stringResource(R.string.sign_out))
-                }
-              }
+              MainViewModel.UiState.SignedIn ->
+                SignedInContent(modifier = Modifier.padding(innerPadding), viewModel::signOut)
 
               MainViewModel.UiState.SignedOut ->
                 SignedOutContent(modifier = Modifier.padding(innerPadding))
@@ -63,6 +60,27 @@ class MainActivity : ComponentActivity() {
           }
         }
       }
+    }
+  }
+}
+
+@Composable
+private fun SignedInContent(modifier: Modifier = Modifier, onSignOut: () -> Unit) {
+  val context = LocalContext.current
+  Column(
+    modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp).then(modifier),
+    verticalArrangement = Arrangement.spacedBy(24.dp, alignment = Alignment.CenterVertically),
+  ) {
+    LaunchCustomFlowButton(buttonText = stringResource(R.string.add_email_address)) {
+      context.startActivity(Intent(context, AddEmailActivity::class.java))
+    }
+    Button(
+      shape = RoundedCornerShape(8.dp),
+      colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+      modifier = Modifier.fillMaxWidth().height(48.dp),
+      onClick = { onSignOut() },
+    ) {
+      Text(stringResource(R.string.sign_out), color = Color.White)
     }
   }
 }
