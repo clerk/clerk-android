@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Clerk Custom Flows</string>
+    <string name="email_password_sign_in"><![CDATA[Email & Password Sign In]]></string>
+    <string name="email_password_sign_up"><![CDATA[Email & Password Sign Up]]></string>
+    <string name="email_password_mfa"><![CDATA[Email & Password MFA]]></string>
+    <string name="sign_out">Sign out</string>
+    <string name="sign_in_with_oauth">Sign in with OAuth</string>
+    <string name="reset_password_phone">Reset password with phone code</string>
+    <string name="reset_password_email">Reset password with email code</string>
+    <string name="add_email_address">Add email address</string>
+    <string name="add_phone_number">Add phone number</string>
+</resources>
