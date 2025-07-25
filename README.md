@@ -76,7 +76,8 @@ class YourApplication : Application() {
 
 ```xml
 
-<application android:name=".YourApplication" android:label="@string/app_name"
+<application
+    android:name=".YourApplication" 
     android:theme="@style/AppTheme">
     <!-- ... -->
 </application>
