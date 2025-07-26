@@ -1,4 +1,4 @@
-package com.clerk.slackclone.ui.theme
+package com.clerk.linearclone.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

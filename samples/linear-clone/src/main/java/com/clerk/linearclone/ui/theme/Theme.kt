@@ -1,4 +1,4 @@
-package com.clerk.slackclone.ui.theme
+package com.clerk.linearclone.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
