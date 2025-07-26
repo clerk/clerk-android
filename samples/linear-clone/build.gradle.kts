@@ -43,6 +43,7 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime)
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.graphics)
+  implementation(libs.androidx.ui.tooling)
   implementation(libs.androidx.ui.tooling.preview)
   implementation(libs.coil)
   implementation(libs.coil.okhttp)
