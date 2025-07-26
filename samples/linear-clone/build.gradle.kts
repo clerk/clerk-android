@@ -4,6 +4,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.kotlin.plugin.serialization)
 }
 
 android {
@@ -11,7 +12,7 @@ android {
   compileSdk = 36
 
   defaultConfig {
-    applicationId = "com.clerk.slackclone"
+    applicationId = "com.clerk.linearclone"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
@@ -43,16 +44,8 @@ dependencies {
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling.preview)
+  implementation(libs.kotlinx.serialization)
   implementation(libs.material3)
+  implementation(libs.navigation.compose)
   implementation(projects.source)
-
-  debugImplementation(libs.androidx.ui.test.manifest)
-  debugImplementation(libs.androidx.ui.tooling)
-
-  testImplementation(libs.junit)
-
-  androidTestImplementation(platform(libs.compose.bom))
-  androidTestImplementation(libs.androidx.espresso.core)
-  androidTestImplementation(libs.androidx.junit)
-  androidTestImplementation(libs.androidx.ui.test.junit4)
 }
