@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Linear Clone</string>
+    <string name="logo">Logo</string>
+    <string name="welcome_to">Welcome to</string>
+    <string name="clerk">Clerk</string>
+    <string name="get_started">Get Started</string>
 </resources>
