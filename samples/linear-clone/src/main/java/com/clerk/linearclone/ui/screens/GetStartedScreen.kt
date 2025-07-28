@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,7 +36,7 @@ fun GetStartedScreen(onGetStartedClick: () -> Unit) {
       Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.primary).padding(32.dp)
   ) {
     Column(
-      modifier = Modifier.padding(top = 100.dp).navigationBarsPadding().systemBarsPadding(),
+      modifier = Modifier.padding(top = 100.dp).navigationBarsPadding(),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       Image(
@@ -62,7 +61,12 @@ fun GetStartedScreen(onGetStartedClick: () -> Unit) {
 
     Button(
       onClick = onGetStartedClick,
-      modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(48.dp),
+      modifier =
+        Modifier.align(Alignment.BottomCenter)
+          .fillMaxWidth()
+          .navigationBarsPadding()
+          .padding(bottom = 16.dp)
+          .height(60.dp),
       shape = RoundedCornerShape(8.dp),
       colors =
         ButtonDefaults.buttonColors(

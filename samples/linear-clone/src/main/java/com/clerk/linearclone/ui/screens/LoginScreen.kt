@@ -23,8 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.clerk.linearclone.ui.theme.LinearCloneTheme
 
 @Composable
 fun LoginScreen() {
@@ -76,4 +78,10 @@ fun LoginScreen() {
       Text(text = "Other sign-in options", color = MaterialTheme.colorScheme.primary)
     }
   }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewLoginScreen() {
+  LinearCloneTheme { LoginScreen() }
 }
