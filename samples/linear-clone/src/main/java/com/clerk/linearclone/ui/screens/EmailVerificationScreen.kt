@@ -10,35 +10,35 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clerk.linearclone.R
-import com.clerk.linearclone.ui.button.LinearCloneButton
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
-import com.clerk.linearclone.ui.theme.PrimaryGrey
 import com.clerk.linearclone.ui.theme.PrimaryWhite
-import com.clerk.linearclone.ui.theme.TertiaryGrey
-import com.clerk.linearclone.ui.theme.TextBoxColor
+import com.clerk.linearclone.ui.theme.SecondaryGrey
 
 @Composable
-fun EmailEntryScreen(modifier: Modifier = Modifier) {
-  var email by remember { mutableStateOf("") }
+fun EmailVerificationScreen(
+  email: String,
+  modifier: Modifier = Modifier,
+  onNavigateToLogin: () -> Unit,
+) {
+
   Column(
     modifier =
       Modifier.fillMaxSize()
@@ -56,56 +56,42 @@ fun EmailEntryScreen(modifier: Modifier = Modifier) {
     )
 
     Text(
-      text = "What's your email address?",
+      text = stringResource(R.string.check_your_email),
       color = PrimaryWhite,
       fontSize = 20.sp,
       fontWeight = FontWeight.Medium,
       textAlign = TextAlign.Center,
-      modifier = Modifier.padding(bottom = 8.dp),
+    )
+
+    Text(
+      text =
+        buildAnnotatedString {
+          append(
+            stringResource(R.string.we_ve_sent_you_a_temporary_login_code_please_check_you_inbox_at)
+          )
+          withStyle(style = SpanStyle(color = Color.White, fontWeight = FontWeight.Bold)) {
+            append(email)
+          }
+        },
+      color = SecondaryGrey,
+      fontSize = 12.sp,
+      style = TextStyle(lineHeight = 14.sp),
+      fontWeight = FontWeight.Medium,
+      textAlign = TextAlign.Center,
     )
 
     InputContent(
+      contentTypeValue = ContentType.SmsOtpCode,
       buttonText = stringResource(R.string.continue_with_email),
       placeholder = stringResource(R.string.enter_your_email_address),
-      value = email,
-      onValueChange = { email = it },
+      navigateToLogin = onNavigateToLogin,
+      onClick = {},
     )
   }
-}
-
-@Composable
-fun InputContent(
-  buttonText: String,
-  placeholder: String,
-  value: String,
-  modifier: Modifier = Modifier,
-  buttonColor: Color = PrimaryGrey,
-  onValueChange: (String) -> Unit,
-) {
-  OutlinedTextField(
-    colors =
-      OutlinedTextFieldDefaults.colors(
-        unfocusedContainerColor = TextBoxColor,
-        focusedContainerColor = TextBoxColor,
-        unfocusedBorderColor = PrimaryGrey,
-        focusedBorderColor = MaterialTheme.colorScheme.secondary,
-      ),
-    modifier = Modifier.fillMaxWidth().then(modifier),
-    value = value,
-    onValueChange = onValueChange,
-    placeholder = { Text(fontSize = 14.sp, text = placeholder, color = TertiaryGrey) },
-  )
-
-  LinearCloneButton(
-    backgroundColor = buttonColor,
-    onClick = {},
-    buttonText = buttonText,
-    textColor = PrimaryWhite,
-  )
 }
 
 @PreviewLightDark
 @Composable
 private fun PreviewEmailEntryScreen() {
-  LinearCloneTheme() { EmailEntryScreen() }
+  LinearCloneTheme { EmailVerificationScreen(onNavigateToLogin = {}, email = "sam@clerk.dev") }
 }
