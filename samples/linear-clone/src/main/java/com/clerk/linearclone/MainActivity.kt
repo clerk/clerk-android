@@ -28,6 +28,7 @@ import com.clerk.linearclone.ui.chooseloginmethod.ChooseLoginMethodScreen
 import com.clerk.linearclone.ui.emailverification.EmailVerificationScreen
 import com.clerk.linearclone.ui.enteremail.EnterEmailScreen
 import com.clerk.linearclone.ui.getstarted.GetStartedScreen
+import com.clerk.linearclone.ui.home.HomeScreen
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
 
 class MainActivity : ComponentActivity() {
@@ -47,22 +48,13 @@ class MainActivity : ComponentActivity() {
           when (state) {
             MainViewModel.UiState.Loading ->
               CircularProgressIndicator(color = MaterialTheme.colorScheme.secondary)
-            MainViewModel.UiState.SignedIn -> PostAuthNavigationGraph(navController)
+            MainViewModel.UiState.SignedIn -> HomeScreen(onSignOutClick = viewModel::signOut)
             MainViewModel.UiState.SignedOut -> AuthNavigationGraph(navController)
           }
         }
       }
     }
   }
-}
-
-@Composable
-private fun PostAuthNavigationGraph(navController: NavHostController) {
-  NavHost(
-    navController = navController,
-    startDestination = GetStartedRoute,
-    modifier = Modifier.fillMaxSize(),
-  ) {}
 }
 
 @Composable

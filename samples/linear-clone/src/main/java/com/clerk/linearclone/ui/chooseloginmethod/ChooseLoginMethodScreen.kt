@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.linearclone.R
 import com.clerk.linearclone.ui.button.LinearCloneButton
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
@@ -28,7 +29,12 @@ import com.clerk.linearclone.ui.theme.PrimaryPurple
 import com.clerk.linearclone.ui.theme.PrimaryWhite
 
 @Composable
-fun ChooseLoginMethodScreen(modifier: Modifier = Modifier, onClickUseEmail: () -> Unit) {
+fun ChooseLoginMethodScreen(
+  modifier: Modifier = Modifier,
+  viewModel: ChooseLoginViewModel = viewModel(),
+  onClickUseEmail: () -> Unit,
+) {
+
   Column(
     modifier =
       Modifier.fillMaxSize()
@@ -55,7 +61,7 @@ fun ChooseLoginMethodScreen(modifier: Modifier = Modifier, onClickUseEmail: () -
 
     LinearCloneButton(
       backgroundColor = PrimaryPurple,
-      onClick = {},
+      onClick = { viewModel.authWithGoogle() },
       buttonText = stringResource(R.string.continue_with_google),
       textColor = PrimaryWhite,
       leadingIcon = R.drawable.ic_google,
