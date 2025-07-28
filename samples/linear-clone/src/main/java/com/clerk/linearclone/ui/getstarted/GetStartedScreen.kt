@@ -1,4 +1,4 @@
-package com.clerk.linearclone.ui.screens
+package com.clerk.linearclone.ui.getstarted
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

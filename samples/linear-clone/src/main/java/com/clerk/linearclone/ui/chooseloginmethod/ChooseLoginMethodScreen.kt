@@ -1,4 +1,4 @@
-package com.clerk.linearclone.ui.screens
+package com.clerk.linearclone.ui.chooseloginmethod
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,7 +28,7 @@ import com.clerk.linearclone.ui.theme.PrimaryPurple
 import com.clerk.linearclone.ui.theme.PrimaryWhite
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier, onClickUseEmail: () -> Unit) {
+fun ChooseLoginMethodScreen(modifier: Modifier = Modifier, onClickUseEmail: () -> Unit) {
   Column(
     modifier =
       Modifier.fillMaxSize()
@@ -79,5 +79,5 @@ fun LoginScreen(modifier: Modifier = Modifier, onClickUseEmail: () -> Unit) {
 @PreviewLightDark
 @Composable
 private fun PreviewLoginScreen() {
-  LinearCloneTheme { LoginScreen(onClickUseEmail = {}) }
+  LinearCloneTheme { ChooseLoginMethodScreen(onClickUseEmail = {}) }
 }

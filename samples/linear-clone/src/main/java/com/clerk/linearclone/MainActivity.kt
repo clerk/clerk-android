@@ -14,10 +14,10 @@ import com.clerk.linearclone.navigation.EmailEntryRoute
 import com.clerk.linearclone.navigation.EmailVerificationRoute
 import com.clerk.linearclone.navigation.GetStartedRoute
 import com.clerk.linearclone.navigation.LoginRoute
-import com.clerk.linearclone.ui.screens.EmailVerificationScreen
-import com.clerk.linearclone.ui.screens.EnterEmailScreen
-import com.clerk.linearclone.ui.screens.GetStartedScreen
-import com.clerk.linearclone.ui.screens.LoginScreen
+import com.clerk.linearclone.ui.chooseloginmethod.ChooseLoginMethodScreen
+import com.clerk.linearclone.ui.emailverification.EmailVerificationScreen
+import com.clerk.linearclone.ui.enteremail.EnterEmailScreen
+import com.clerk.linearclone.ui.getstarted.GetStartedScreen
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
 
 class MainActivity : ComponentActivity() {
@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
           }
 
           composable<LoginRoute> {
-            LoginScreen(onClickUseEmail = { navController.navigate(EmailEntryRoute) })
+            ChooseLoginMethodScreen(onClickUseEmail = { navController.navigate(EmailEntryRoute) })
           }
           composable<EmailEntryRoute> {
             EnterEmailScreen(

@@ -1,4 +1,4 @@
-package com.clerk.linearclone.ui.screens
+package com.clerk.linearclone.ui.emailverification
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clerk.linearclone.R
+import com.clerk.linearclone.ui.enteremail.InputContent
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
 import com.clerk.linearclone.ui.theme.PrimaryWhite
 import com.clerk.linearclone.ui.theme.SecondaryGrey
