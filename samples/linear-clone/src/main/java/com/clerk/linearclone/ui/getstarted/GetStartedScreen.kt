@@ -30,35 +30,41 @@ import com.clerk.linearclone.ui.theme.LinearCloneTheme
 import com.clerk.linearclone.ui.theme.SecondaryGrey
 
 @Composable
-fun GetStartedScreen(onGetStartedClick: () -> Unit) {
+fun GetStartedScreen(modifier: Modifier = Modifier, onGetStartedClick: () -> Unit) {
   Box(
     modifier =
-      Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.primary).padding(32.dp)
+      Modifier.fillMaxSize()
+        .background(color = MaterialTheme.colorScheme.primary)
+        .padding(32.dp)
+        .then(modifier)
   ) {
-    Column(
-      modifier = Modifier.padding(top = 100.dp).navigationBarsPadding(),
-      horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+      modifier = Modifier.fillMaxSize().padding(bottom = 76.dp),
+      contentAlignment = Alignment.Center,
     ) {
-      Image(
-        modifier = Modifier.fillMaxWidth().size(300.dp),
-        contentDescription = stringResource(R.string.logo),
-        painter = painterResource(R.mipmap.ic_launcher_foreground),
-      )
+      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Image(
+          modifier = Modifier.size(300.dp),
+          contentDescription = stringResource(R.string.logo),
+          painter = painterResource(R.mipmap.ic_launcher_foreground),
+        )
 
-      Text(
-        text = stringResource(R.string.welcome_to),
-        color = SecondaryGrey,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-      )
-      Text(
-        text = stringResource(R.string.clerk),
-        color = Color.White,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-      )
+        Text(
+          text = stringResource(R.string.welcome_to),
+          color = SecondaryGrey,
+          fontWeight = FontWeight.SemiBold,
+          fontSize = 18.sp,
+        )
+        Text(
+          text = stringResource(R.string.clerk),
+          color = Color.White,
+          fontWeight = FontWeight.SemiBold,
+          fontSize = 24.sp,
+        )
+      }
     }
 
+    // Bottom button
     Button(
       onClick = onGetStartedClick,
       modifier =
