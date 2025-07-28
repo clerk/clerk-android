@@ -8,4 +8,5 @@
     <string name="continue_with_email">Continue with email</string>
     <string name="continue_with_google">Continue with Google</string>
     <string name="add_an_account">Add an account</string>
+    <string name="enter_your_email_address">Enter your email address...</string>
 </resources>

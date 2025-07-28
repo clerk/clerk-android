@@ -6,13 +6,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -24,16 +32,19 @@ import com.clerk.linearclone.R
 import com.clerk.linearclone.ui.button.LinearCloneButton
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
 import com.clerk.linearclone.ui.theme.PrimaryGrey
-import com.clerk.linearclone.ui.theme.PrimaryPurple
 import com.clerk.linearclone.ui.theme.PrimaryWhite
+import com.clerk.linearclone.ui.theme.TertiaryGrey
+import com.clerk.linearclone.ui.theme.TextBoxColor
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier, onClickUseEmail: () -> Unit) {
+fun EmailEntryScreen(modifier: Modifier = Modifier) {
+  var email by remember { mutableStateOf("") }
   Column(
     modifier =
       Modifier.fillMaxSize()
         .background(color = MaterialTheme.colorScheme.primary)
-        .padding(horizontal = 50.dp)
+        .padding(horizontal = 60.dp)
+        .imePadding()
         .then(modifier),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
@@ -45,7 +56,7 @@ fun LoginScreen(modifier: Modifier = Modifier, onClickUseEmail: () -> Unit) {
     )
 
     Text(
-      text = stringResource(R.string.add_an_account),
+      text = "What's your email address?",
       color = PrimaryWhite,
       fontSize = 20.sp,
       fontWeight = FontWeight.Medium,
@@ -53,31 +64,48 @@ fun LoginScreen(modifier: Modifier = Modifier, onClickUseEmail: () -> Unit) {
       modifier = Modifier.padding(bottom = 8.dp),
     )
 
-    LinearCloneButton(
-      backgroundColor = PrimaryPurple,
-      onClick = {},
-      buttonText = stringResource(R.string.continue_with_google),
-      textColor = PrimaryWhite,
-      leadingIcon = R.drawable.ic_google,
-    )
-
-    LinearCloneButton(
-      backgroundColor = PrimaryGrey,
-      onClick = onClickUseEmail,
+    InputContent(
       buttonText = stringResource(R.string.continue_with_email),
-      textColor = PrimaryWhite,
-    )
-    LinearCloneButton(
-      backgroundColor = PrimaryGrey,
-      onClick = {},
-      buttonText = stringResource(R.string.continue_with_passkey),
-      textColor = PrimaryWhite,
+      placeholder = stringResource(R.string.enter_your_email_address),
+      value = email,
+      onValueChange = { email = it },
     )
   }
 }
 
+@Composable
+fun InputContent(
+  buttonText: String,
+  placeholder: String,
+  value: String,
+  modifier: Modifier = Modifier,
+  buttonColor: Color = PrimaryGrey,
+  onValueChange: (String) -> Unit,
+) {
+  OutlinedTextField(
+    colors =
+      OutlinedTextFieldDefaults.colors(
+        unfocusedContainerColor = TextBoxColor,
+        focusedContainerColor = TextBoxColor,
+        unfocusedBorderColor = PrimaryGrey,
+        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+      ),
+    modifier = Modifier.fillMaxWidth().then(modifier),
+    value = value,
+    onValueChange = onValueChange,
+    placeholder = { Text(fontSize = 14.sp, text = placeholder, color = TertiaryGrey) },
+  )
+
+  LinearCloneButton(
+    backgroundColor = buttonColor,
+    onClick = {},
+    buttonText = buttonText,
+    textColor = PrimaryWhite,
+  )
+}
+
 @PreviewLightDark
 @Composable
-private fun PreviewLoginScreen() {
-  LinearCloneTheme { LoginScreen(onClickUseEmail = {}) }
+private fun PreviewEmailEntryScreen() {
+  LinearCloneTheme() { EmailEntryScreen() }
 }

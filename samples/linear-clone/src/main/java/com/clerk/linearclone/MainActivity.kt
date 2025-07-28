@@ -9,8 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.clerk.linearclone.navigation.EmailEntryRoute
 import com.clerk.linearclone.navigation.GetStartedRoute
 import com.clerk.linearclone.navigation.LoginRoute
+import com.clerk.linearclone.ui.screens.EmailEntryScreen
 import com.clerk.linearclone.ui.screens.GetStartedScreen
 import com.clerk.linearclone.ui.screens.LoginScreen
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
@@ -32,7 +34,10 @@ class MainActivity : ComponentActivity() {
             GetStartedScreen(onGetStartedClick = { navController.navigate(LoginRoute) })
           }
 
-          composable<LoginRoute> { LoginScreen() }
+          composable<LoginRoute> {
+            LoginScreen(onClickUseEmail = { navController.navigate(EmailEntryRoute) })
+          }
+          composable<EmailEntryRoute> { EmailEntryScreen() }
         }
       }
     }
