@@ -1,82 +1,78 @@
 package com.clerk.linearclone.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.clerk.linearclone.R
+import com.clerk.linearclone.ui.button.LinearCloneButton
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
+import com.clerk.linearclone.ui.theme.PrimaryGrey
+import com.clerk.linearclone.ui.theme.PrimaryPurple
+import com.clerk.linearclone.ui.theme.PrimaryWhite
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(modifier: Modifier = Modifier) {
   Column(
-    modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.primary),
+    modifier =
+      Modifier.fillMaxSize()
+        .background(color = MaterialTheme.colorScheme.primary)
+        .padding(horizontal = 50.dp)
+        .then(modifier),
     horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.Center,
+    verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
   ) {
-    Icon(
-      imageVector = Icons.Default.AccountCircle,
-      contentDescription = null,
-      modifier = Modifier.size(80.dp).padding(bottom = 24.dp),
-      tint = MaterialTheme.colorScheme.primary,
+    Image(
+      modifier = Modifier.fillMaxWidth().size(100.dp),
+      contentDescription = stringResource(R.string.logo),
+      painter = painterResource(R.mipmap.ic_launcher_foreground),
     )
 
     Text(
-      text = "Sign in to continue",
-      fontSize = 24.sp,
-      fontWeight = FontWeight.Bold,
+      text = stringResource(R.string.add_an_account),
+      color = PrimaryWhite,
+      fontSize = 20.sp,
+      fontWeight = FontWeight.Medium,
       textAlign = TextAlign.Center,
       modifier = Modifier.padding(bottom = 8.dp),
     )
 
-    Text(
-      text = "Access your Linear Clone workspace",
-      fontSize = 16.sp,
-      textAlign = TextAlign.Center,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
-      modifier = Modifier.padding(bottom = 48.dp),
+    LinearCloneButton(
+      backgroundColor = PrimaryPurple,
+      onClick = {},
+      buttonText = stringResource(R.string.continue_with_google),
+      textColor = PrimaryWhite,
+      leadingIcon = com.clerk.linearclone.R.drawable.ic_google,
     )
 
-    OutlinedButton(
+    LinearCloneButton(
+      backgroundColor = PrimaryGrey,
       onClick = {},
-      modifier = Modifier.fillMaxWidth().height(48.dp),
-      border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp),
-    ) {
-      Row(
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Text(text = "🔍", fontSize = 18.sp, modifier = Modifier.padding(end = 8.dp))
-        Text(text = "Sign in with Google", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-      }
-    }
-
-    Spacer(modifier = Modifier.height(16.dp))
-
-    TextButton(onClick = {}) {
-      Text(text = "Other sign-in options", color = MaterialTheme.colorScheme.primary)
-    }
+      buttonText = stringResource(R.string.continue_with_email),
+      textColor = PrimaryWhite,
+    )
+    LinearCloneButton(
+      backgroundColor = PrimaryGrey,
+      onClick = {},
+      buttonText = stringResource(R.string.continue_with_passkey),
+      textColor = PrimaryWhite,
+    )
   }
 }
 

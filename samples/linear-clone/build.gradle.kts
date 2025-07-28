@@ -51,4 +51,5 @@ dependencies {
   implementation(libs.material3)
   implementation(libs.navigation.compose)
   implementation(projects.source)
+  lintChecks(libs.compose.lints)
 }

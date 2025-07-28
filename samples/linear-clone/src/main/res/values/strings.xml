@@ -4,4 +4,8 @@
     <string name="welcome_to">Welcome to</string>
     <string name="clerk">Clerk</string>
     <string name="get_started">Get Started</string>
+    <string name="continue_with_passkey">Continue with Passkey</string>
+    <string name="continue_with_email">Continue with email</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="add_an_account">Add an account</string>
 </resources>
