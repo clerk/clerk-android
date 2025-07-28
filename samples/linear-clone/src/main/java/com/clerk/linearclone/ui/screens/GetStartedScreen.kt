@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,15 +27,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clerk.linearclone.R
-import com.clerk.linearclone.ui.theme.ClerkTheme
-import com.clerk.linearclone.ui.theme.PrimaryBlack
+import com.clerk.linearclone.ui.theme.LinearCloneTheme
 import com.clerk.linearclone.ui.theme.SecondaryGrey
 
 @Composable
 fun GetStartedScreen(onGetStartedClick: () -> Unit) {
-  Box(modifier = Modifier.fillMaxSize().background(color = PrimaryBlack).padding(32.dp)) {
+  Box(
+    modifier =
+      Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.primary).padding(32.dp)
+  ) {
     Column(
-      modifier = Modifier.padding(top = 100.dp),
+      modifier = Modifier.padding(top = 100.dp).navigationBarsPadding().systemBarsPadding(),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       Image(
@@ -78,5 +82,5 @@ fun GetStartedScreen(onGetStartedClick: () -> Unit) {
 @Preview
 @Composable
 private fun PreviewGetStartedScreen() {
-  ClerkTheme { GetStartedScreen {} }
+  LinearCloneTheme { GetStartedScreen {} }
 }

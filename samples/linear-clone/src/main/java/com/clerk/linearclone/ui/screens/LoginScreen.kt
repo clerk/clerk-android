@@ -1,5 +1,6 @@
 package com.clerk.linearclone.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,7 +29,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun LoginScreen() {
   Column(
-    modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp),
+    modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.primary),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
   ) {

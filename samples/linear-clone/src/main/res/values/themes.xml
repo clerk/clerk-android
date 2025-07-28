@@ -2,4 +2,5 @@
 <resources>
 
     <style name="Theme.Clerk" parent="android:Theme.Material.Light.NoActionBar" />
+    
 </resources>
