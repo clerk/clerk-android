@@ -27,17 +27,20 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.linearclone.R
 import com.clerk.linearclone.ui.enteremail.InputContent
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
+import com.clerk.linearclone.ui.theme.PrimaryPurple
 import com.clerk.linearclone.ui.theme.PrimaryWhite
 import com.clerk.linearclone.ui.theme.SecondaryGrey
 
 @Composable
 fun EmailVerificationScreen(
   email: String,
-  modifier: Modifier = Modifier,
   onNavigateToLogin: () -> Unit,
+  modifier: Modifier = Modifier,
+  viewModel: EmailVerificationViewModel = viewModel(),
 ) {
 
   Column(
@@ -83,10 +86,11 @@ fun EmailVerificationScreen(
 
     InputContent(
       contentTypeValue = ContentType.SmsOtpCode,
-      buttonText = stringResource(R.string.continue_with_email),
-      placeholder = stringResource(R.string.enter_your_email_address),
+      buttonText = stringResource(R.string.continue_with_login_code),
+      placeholder = stringResource(R.string.enter_code),
+      buttonColor = PrimaryPurple,
       navigateToLogin = onNavigateToLogin,
-      onClick = {},
+      onClick = viewModel::verify,
     )
   }
 }

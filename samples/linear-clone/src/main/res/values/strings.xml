@@ -12,4 +12,6 @@
     <string name="what_s_your_email_address">What\'s your email address?</string>
     <string name="we_ve_sent_you_a_temporary_login_code_please_check_you_inbox_at">"We've sent you a temporary login code.\nPlease check you inbox at "</string>
     <string name="check_your_email">Check your email</string>
+    <string name="continue_with_login_code">Continue with login code</string>
+    <string name="enter_code">Enter code</string>
 </resources>
