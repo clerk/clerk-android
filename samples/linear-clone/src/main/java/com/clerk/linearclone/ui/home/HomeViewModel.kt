@@ -14,7 +14,7 @@ import kotlinx.coroutines.withContext
 
 class HomeViewModel : ViewModel() {
 
-  private val _uiState = MutableStateFlow<UiState>(UiState.SignedIn)
+  private val _uiState = MutableStateFlow<UiState>(UiState.SignedIn())
 
   val uiState = _uiState.asStateFlow()
 
@@ -27,16 +27,22 @@ class HomeViewModel : ViewModel() {
     viewModelScope.launch(Dispatchers.IO) {
       currentUser
         .createPasskey()
-        .onSuccess { withContext(Dispatchers.Main) { _uiState.value = UiState.PasskeySuccess } }
-        .onFailure { withContext(Dispatchers.Main) { _uiState.value = UiState.PasskeyFailure } }
+        .onSuccess {
+          withContext(Dispatchers.Main) { _uiState.value = UiState.SignedIn(PasskeyResult.Success) }
+        }
+        .onFailure {
+          withContext(Dispatchers.Main) { _uiState.value = UiState.SignedIn(PasskeyResult.Failure) }
+        }
     }
   }
 
   sealed interface UiState {
-    data object SignedIn : UiState
-
-    data object PasskeySuccess : UiState
-
-    data object PasskeyFailure : UiState
+    data class SignedIn(val passkeyResult: PasskeyResult? = null) : UiState
   }
+}
+
+sealed interface PasskeyResult {
+  data object Success : PasskeyResult
+
+  data object Failure : PasskeyResult
 }

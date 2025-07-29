@@ -16,4 +16,6 @@
     <string name="enter_code">Enter code</string>
     <string name="sign_out">Sign out</string>
     <string name="create_a_passkey">Create a passkey</string>
+    <string name="passkey_creation_failed">Passkey creation failed</string>
+    <string name="passkey_created_successfully">Passkey created successfully</string>
 </resources>

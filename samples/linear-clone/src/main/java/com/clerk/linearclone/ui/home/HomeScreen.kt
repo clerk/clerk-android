@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -24,16 +25,24 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeViewModel = viewMod
   val state by viewModel.uiState.collectAsState()
   val context = LocalContext.current
   when (state) {
-    HomeViewModel.UiState.PasskeyFailure ->
-      Toast.makeText(context, "Passkey failure", Toast.LENGTH_SHORT).show()
-    HomeViewModel.UiState.PasskeySuccess ->
-      Toast.makeText(context, "Passkey success", Toast.LENGTH_SHORT).show()
-    HomeViewModel.UiState.SignedIn ->
+    is HomeViewModel.UiState.SignedIn -> {
       HomeScreenContent(
         modifier = modifier,
         onSignOut = viewModel::signOut,
         onCreatePasskey = viewModel::createPasskey,
       )
+
+      (state as HomeViewModel.UiState.SignedIn).passkeyResult?.let { result ->
+        LaunchedEffect(key1 = result) {
+          val message =
+            when (result) {
+              PasskeyResult.Failure -> context.getString(R.string.passkey_creation_failed)
+              PasskeyResult.Success -> context.getString(R.string.passkey_created_successfully)
+            }
+          Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+      }
+    }
   }
 }
 

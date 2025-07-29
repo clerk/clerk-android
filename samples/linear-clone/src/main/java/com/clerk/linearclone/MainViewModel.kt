@@ -16,7 +16,9 @@ class MainViewModel : ViewModel() {
 
   init {
     combine(Clerk.isInitialized, Clerk.sessionFlow) { isInitialized, session ->
-        Log.e("MainViewModel", "isInitialized: $isInitialized, session: $session")
+        Log.d("MainViewModel", "isInitialized: $isInitialized")
+        Log.d("MainViewModel", "session: $session")
+        Log.d("MainViewModel", "user: ${Clerk.user.value}")
         _uiState.value =
           when {
             !isInitialized -> UiState.Loading
