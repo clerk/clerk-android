@@ -61,7 +61,7 @@ fun ChooseLoginMethodScreen(
 
     LinearCloneButton(
       backgroundColor = PrimaryPurple,
-      onClick = { viewModel.authWithGoogle() },
+      onClick = viewModel::authWithGoogle,
       buttonText = stringResource(R.string.continue_with_google),
       textColor = PrimaryWhite,
       leadingIcon = R.drawable.ic_google,
@@ -75,7 +75,7 @@ fun ChooseLoginMethodScreen(
     )
     LinearCloneButton(
       backgroundColor = PrimaryGrey,
-      onClick = {},
+      onClick = viewModel::authenticateWithPasskey,
       buttonText = stringResource(R.string.continue_with_passkey),
       textColor = PrimaryWhite,
     )

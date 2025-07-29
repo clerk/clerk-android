@@ -1,6 +1,5 @@
 package com.clerk.linearclone
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.Clerk
@@ -16,9 +15,6 @@ class MainViewModel : ViewModel() {
 
   init {
     combine(Clerk.isInitialized, Clerk.sessionFlow) { isInitialized, session ->
-        Log.d("MainViewModel", "isInitialized: $isInitialized")
-        Log.d("MainViewModel", "session: $session")
-        Log.d("MainViewModel", "user: ${Clerk.user.value}")
         _uiState.value =
           when {
             !isInitialized -> UiState.Loading
