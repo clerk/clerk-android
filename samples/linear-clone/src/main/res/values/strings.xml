@@ -18,4 +18,5 @@
     <string name="create_a_passkey">Create a passkey</string>
     <string name="passkey_creation_failed">Passkey creation failed</string>
     <string name="passkey_created_successfully">Passkey created successfully</string>
+    <string name="something_went_wrong">Something went wrong</string>
 </resources>

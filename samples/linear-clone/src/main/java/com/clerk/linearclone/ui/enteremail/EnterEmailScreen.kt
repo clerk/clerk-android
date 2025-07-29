@@ -1,6 +1,5 @@
 package com.clerk.linearclone.ui.enteremail
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
@@ -53,11 +51,10 @@ fun EnterEmailScreen(
   onNavigateToEmailVerification: (String) -> Unit,
 ) {
   val state by viewModel.uiState.collectAsState()
-  val context = LocalContext.current
 
   when (state) {
     EnterEmailViewModel.UiState.Error -> {
-      Toast.makeText(context, "Something went wrong", Toast.LENGTH_SHORT).show()
+      // Show error
     }
     is EnterEmailViewModel.UiState.NeedsEmailCode ->
       onNavigateToEmailVerification((state as EnterEmailViewModel.UiState.NeedsEmailCode).email)
