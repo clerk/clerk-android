@@ -25,11 +25,11 @@ import com.clerk.linearclone.ui.theme.PrimaryWhite
 
 @Composable
 fun LinearCloneButton(
-  backgroundColor: Color,
   onClick: () -> Unit,
   buttonText: String,
   textColor: Color,
   modifier: Modifier = Modifier,
+  backgroundColor: Color = PrimaryGrey,
   @DrawableRes leadingIcon: Int? = null,
 ) {
   Button(

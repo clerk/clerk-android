@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
     setContent {
       val state by viewModel.uiState.collectAsState()
       val navController = rememberNavController()
+
       LinearCloneTheme {
         Box(
           modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.primary),
@@ -48,7 +49,7 @@ class MainActivity : ComponentActivity() {
           when (state) {
             MainViewModel.UiState.Loading ->
               CircularProgressIndicator(color = MaterialTheme.colorScheme.secondary)
-            MainViewModel.UiState.SignedIn -> HomeScreen(onSignOutClick = viewModel::signOut)
+            MainViewModel.UiState.SignedIn -> HomeScreen()
             MainViewModel.UiState.SignedOut -> AuthNavigationGraph(navController)
           }
         }

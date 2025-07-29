@@ -14,4 +14,6 @@
     <string name="check_your_email">Check your email</string>
     <string name="continue_with_login_code">Continue with login code</string>
     <string name="enter_code">Enter code</string>
+    <string name="sign_out">Sign out</string>
+    <string name="create_a_passkey">Create a passkey</string>
 </resources>
