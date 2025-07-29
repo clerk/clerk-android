@@ -140,12 +140,6 @@ authentication and reset password.
    # Build and run
    ./gradlew :samples:custom-flows:installDebug
    ```
-### Getting Help
-
-- [Documentation](https://clerk.com/docs)
-- [Discord Community](https://clerk.com/discord)
-- [Support](https://clerk.com/support)
-- [Report Issues](https://github.com/clerk/clerk-android/issues)
 
 ## Documentation
 
@@ -153,42 +147,8 @@ authentication and reset password.
 - [Clerk Docs](https://clerk.com/docs)
 - [Android Integration Guide](https://clerk.com/docs/quickstarts/android)
 
-## ✅ Supported Features
-
-| Feature                                  | Android Support | Notes                            |
-|------------------------------------------|:---------------:|----------------------------------|
-| Email/Phone/Username Authentication      |        ✅        | Full support                     |
-| Email Code Verification                  |        ✅        | OTP via email                    |
-| SMS Code Verification                    |        ✅        | OTP via SMS                      |
-| Multi-Factor Authentication (TOTP / SMS) |        ✅        | TOTP and SMS                     |
-| Sign in / Sign up with OAuth             |        ✅        | Google, GitHub, Apple, etc.      |
-| Native Sign in with Google               |        ✅        | Google One Tap                   |
-| Session Management                       |        ✅        | Full session lifecycle           |
-| Forgot Password                          |        ✅        | Email-based reset                |
-| User Management                          |        ✅        | Profile, phone, email management |
-| Passkeys                                 |        ✅        | WebAuthn support                 |
-| Enterprise SSO (SAML)                    |        ✅        | Enterprise authentication        |
-| Device Attestation                       |        ✅        | Android Play Integrity           |
-| Multi-Session Applications               |        ❌        | Coming soon                      |
-| Organizations                            |        ❌        | Coming soon                      |
-| Prebuilt UI Components                   |        ❌        | Coming soon                      |
-| Magic Links                              |        ❌        | Planned                          |
-| Web3 Wallet                              |        ❌        | Planned                          |
-
-## 🤝 Contributing
-
-We welcome contributions! Please see
-our [Contributing Guidelines](https://github.com/clerk/clerk-android/blob/main/CONTRIBUTING.md) for
-details.
-
 ## 📝 License
 
 This project is licensed under the **MIT license**.
 
 See [LICENSE](https://github.com/clerk/clerk-android/blob/main/LICENSE) for more information.
-
----
-
-<p align="center">
-  Made with ❤️ by <a href="https://clerk.com">Clerk</a>
-</p>
