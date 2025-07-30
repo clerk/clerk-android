@@ -117,36 +117,6 @@ authentication and reset password. See the README for more info
 `samples/linear-clone`: This is an example that shows how you might integrate with compose navigation, it is a native recreation of the Linear auth flow (which is web based)
 and includes Sign in with Google, Passkey authentication, Sign out, and Email Code Authentication. See the README for more info. 
 
-**Run the Example Apps**:
-<br/>
-### Quickstart
-
-   ```bash
-   # Clone the repository
-   git clone https://github.com/clerk/clerk-android.git
-   cd clerk-android
-
-   # Add your publishable key to gradle.properties
-   QUICKSTART_CLERK_PUBLISHABLE_KEY=your_pk_key_here
-   
-
-   # Build and run
-   ./gradlew :samples:quickstart:installDebug
-   ```
-### Custom flows
- ```bash
-   # Clone the repository
-   git clone https://github.com/clerk/clerk-android.git
-   cd clerk-android
-
-   # Add your publishable key to gradle.properties
-   CUSTOM_FLOWS_CLERK_PUBLISHABLE_KEY=your_pk_key_here
-   
-
-   # Build and run
-   ./gradlew :samples:custom-flows:installDebug
-   ```
-
 ## Documentation
 
 - [Reference Documentation](https://clerk-android.clerkstage.dev)
