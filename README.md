@@ -98,16 +98,16 @@ class YourApplication : Application() {
 #### Quickstart
 `samples/quickstart`: This is a paired repo with the [Android Quickstart guide](https://clerk.com/docs/quickstarts/android). It provides a simple
 example of how to integrate Clerk into an Android application, demonstrating user sign-up, sign-in,
-and profile management. See the README for more info
+and profile management. See the [README](samples/quickstart/README.md) for more info
 
 #### Custom flows
 `samples/custom-flows`: This is a paired repo with the [Custom Flows guide](https://clerk.com/docs/custom-flows/overview). It showcases how to
 implement custom authentication flows using Clerk, including advanced scenarios like multi-factor
-authentication and reset password. See the README for more info
+authentication and reset password. See the [README](samples/custom-flows/README.md) for more info
 
 #### Linear Clone
 `samples/linear-clone`: This is an example that shows how you might integrate with compose navigation, it is a native recreation of the Linear auth flow (which is web based)
-and includes Sign in with Google, Passkey authentication, Sign out, and Email Code Authentication. See the README for more info. 
+and includes Sign in with Google, Passkey authentication, Sign out, and Email Code Authentication. See the [README](samples/linear-clone/README.md) for more info. 
 
 ## Documentation
 
