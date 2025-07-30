@@ -2,7 +2,7 @@
 
 This sample app demonstrates advanced authentication flows using the Clerk Android SDK. It showcases how to implement custom authentication patterns including multi-factor authentication, OAuth integration, password reset flows, and user profile management.
 
-## 🔧 Clerk Dashboard Setup
+## Clerk Dashboard Setup
 
 1. **Create a Clerk Application**
    - Sign up for a Clerk account at [dashboard.clerk.com](https://dashboard.clerk.com/sign-up)
@@ -52,7 +52,7 @@ This sample app demonstrates advanced authentication flows using the Clerk Andro
    
    > ⚠️ **Important**: Replace `pk_test_your_publishable_key_here` with your actual publishable key from the Clerk dashboard.
 
-## 🏃‍♂️ How to Run
+## How to Run
 
 1. **Using Android Studio**:
    - Open the project in Android Studio
