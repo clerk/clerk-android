@@ -22,13 +22,6 @@
 
 ---
 
-## Requirements
-
-- **Android API Level 24 (Android 7.0)** or higher
-- **Kotlin 2.0.0** or higher
-- **Java 17** or higher
-- **Android Gradle Plugin 8.11.0** or higher
-
 ## Usage
 
 ### Creating a Clerk Application
