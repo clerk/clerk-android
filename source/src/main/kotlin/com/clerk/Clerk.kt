@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 object Clerk {
 
+  // region Configuration & Initialization
+
   /** Internal configuration manager responsible for SDK initialization and API client setup. */
   private val configurationManager = ConfigurationManager()
 
@@ -36,17 +38,6 @@ object Clerk {
    */
   var debugMode: Boolean = false
     private set
-
-  /**
-   * The Client object representing the current device and its authentication state.
-   *
-   * Contains information about active sessions, sign-in attempts, and device-specific data.
-   */
-  lateinit var client: Client
-    private set
-
-  /** Internal environment configuration containing display settings and authentication options. */
-  internal lateinit var environment: Environment
 
   /**
    * The base URL for the Clerk API.
@@ -61,33 +52,24 @@ object Clerk {
 
   internal var applicationId: String? = null
 
-  // region Observable State
-
-  /** Internal mutable state flow for session changes. */
-  private val _session = MutableStateFlow<Session?>(null)
+  /** Internal environment configuration containing display settings and authentication options. */
+  internal lateinit var environment: Environment
 
   /**
-   * Reactive state for the currently active user session.
+   * The Client object representing the current device and its authentication state.
    *
-   * Observe this StateFlow to react to session changes such as sign-in, sign-out, or session
-   * refresh. Emits null when no session is active.
+   * Contains information about active sessions, sign-in attempts, and device-specific data.
    */
-  val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
-
-  /** Internal mutable state flow for user changes. */
-  private val _user = MutableStateFlow<User?>(null)
+  lateinit var client: Client
+    private set
 
   /**
-   * Reactive state for the currently authenticated user.
+   * Reactive state indicating whether the Clerk SDK has completed initialization.
    *
-   * Observe this StateFlow to react to user changes such as sign-in, sign-out, or profile updates.
-   * Emits null when no user is signed in.
+   * Observe this StateFlow to know when the SDK is ready for authentication operations. The SDK
+   * must be initialized before calling authentication methods.
    */
-  val user: StateFlow<User?> = _user.asStateFlow()
-
-  // endregion
-
-  // region Computed Properties
+  val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized
 
   val applicationName: String?
     get() = if (::environment.isInitialized) environment.displayConfig.applicationName else null
@@ -100,6 +82,63 @@ object Clerk {
    */
   val logoUrl: String?
     get() = if (::environment.isInitialized) environment.displayConfig.logoImageUrl else null
+
+  // endregion
+
+  // region Session Management
+
+  /** Internal mutable state flow for session changes. */
+  private val _session = MutableStateFlow<Session?>(null)
+
+  /**
+   * Reactive state for the currently active user session.
+   *
+   * Observe this StateFlow to react to session changes such as sign-in, sign-out, or session
+   * refresh. Emits null when no session is active.
+   */
+  val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
+
+  /**
+   * The currently active user session.
+   *
+   * Represents an authenticated session and is guaranteed to be one of the sessions in
+   * [Client.sessions]. Returns null when no session is active.
+   */
+  val session: Session?
+    get() =
+      if (::client.isInitialized) {
+        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
+      } else null
+
+  /**
+   * Indicates whether a user is currently signed in.
+   *
+   * @return true if there is an active session with a user, false otherwise.
+   */
+  val isSignedIn: Boolean
+    get() = session != null
+
+  // endregion
+
+  // region User Management
+
+  /** Internal mutable state flow for user changes. */
+  private val _userFlow = MutableStateFlow<User?>(null)
+
+  /**
+   * Reactive state for the currently authenticated user.
+   *
+   * Observe this StateFlow to react to user changes such as sign-in, sign-out, or profile updates.
+   * Emits null when no user is signed in.
+   */
+  val userFlow: StateFlow<User?> = _userFlow.asStateFlow()
+
+  /** The current user for the active session. */
+  val user: User? = session?.user
+
+  // endregion
+
+  // region Authentication Features & Settings
 
   /**
    * Map of available social authentication providers configured for this application.
@@ -142,13 +181,9 @@ object Clerk {
   val lastNameIsEnabled: Boolean
     get() = if (::environment.isInitialized) environment.lastNameIsEnabled else false
 
-  /**
-   * Reactive state indicating whether the Clerk SDK has completed initialization.
-   *
-   * Observe this StateFlow to know when the SDK is ready for authentication operations. The SDK
-   * must be initialized before calling authentication methods.
-   */
-  val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized
+  // endregion
+
+  // region Sign In/Sign Up
 
   /**
    * The current sign-in attempt, if one is in progress.
@@ -167,26 +202,6 @@ object Clerk {
    */
   val signUp: SignUp?
     get() = if (::client.isInitialized) client.signUp else null
-
-  /**
-   * The currently active user session.
-   *
-   * Represents an authenticated session and is guaranteed to be one of the sessions in
-   * [Client.sessions]. Returns null when no session is active.
-   */
-  val session: Session?
-    get() =
-      if (::client.isInitialized) {
-        client.sessions.firstOrNull { it.id == client.lastActiveSessionId }
-      } else null
-
-  /**
-   * Indicates whether a user is currently signed in.
-   *
-   * @return true if there is an active session with a user, false otherwise.
-   */
-  val isSignedIn: Boolean
-    get() = session != null
 
   // endregion
 
@@ -289,7 +304,7 @@ object Clerk {
     val currentUser = currentSession?.user
 
     _session.value = currentSession
-    _user.value = currentUser
+    _userFlow.value = currentUser
   }
 
   // endregion

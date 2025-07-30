@@ -20,7 +20,7 @@ class MainViewModel : ViewModel() {
 
   init {
     // Combine initialization state with user state to determine UI state
-    combine(Clerk.isInitialized, Clerk.user) { isInitialized, user ->
+    combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
         when {
           !isInitialized -> MainUiState.Loading
           user != null -> MainUiState.SignedIn

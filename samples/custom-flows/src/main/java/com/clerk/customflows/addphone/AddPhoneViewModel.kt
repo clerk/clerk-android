@@ -23,7 +23,7 @@ class AddPhoneViewModel : ViewModel() {
   val uiState = _uiState.asStateFlow()
 
   init {
-    combine(Clerk.isInitialized, Clerk.user) { isInitialized, user ->
+    combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
         _uiState.value =
           when {
             !isInitialized -> UiState.Loading
@@ -35,7 +35,7 @@ class AddPhoneViewModel : ViewModel() {
   }
 
   fun createPhoneNumber(phoneNumber: String) {
-    val user = requireNotNull(Clerk.user.value)
+    val user = requireNotNull(Clerk.userFlow.value)
 
     // Add an unverified phone number to the user,
     // then send the user an SMS with the verification code

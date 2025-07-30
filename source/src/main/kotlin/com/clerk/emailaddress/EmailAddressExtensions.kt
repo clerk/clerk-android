@@ -5,7 +5,7 @@ import com.clerk.network.model.verification.Verification
 
 /** Convenience function to tell whether the email is the user's primary email. */
 val EmailAddress.isPrimary: Boolean
-  get() = Clerk.user.value?.primaryEmailAddressId == id
+  get() = Clerk.userFlow.value?.primaryEmailAddressId == id
 
 /** Convenience function to tell whether the email is verified. */
 val EmailAddress.isVerified: Boolean
