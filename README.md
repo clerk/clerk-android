@@ -37,7 +37,7 @@ Add the Clerk Android SDK to your app's `build.gradle(.kts)`
 
 ```kotlin
 dependencies {
-    implementation("com.clerk:clerk-android:0.1.0")
+    implementation("com.clerk:clerk-android:0.1.4")
 }
 ```
 
