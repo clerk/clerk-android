@@ -21,6 +21,7 @@ ksp = "2.2.0-2.0.2"
 lifecycleProcess = "2.9.2"
 material3 = "1.3.2"
 mavenPublish = "0.34.0"
+metro = "0.5.2"
 navigationCompose = "2.9.2"
 okhttp = "5.1.0"
 retrofit = "3.0.0"
@@ -97,3 +98,4 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "sortDependencies" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+metro = { id = "dev.zacsweers.metro", version.ref = "metro" }

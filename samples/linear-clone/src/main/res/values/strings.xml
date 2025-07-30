@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Linear Clone</string>
+    <string name="logo">Logo</string>
+    <string name="welcome_to">Welcome to</string>
+    <string name="clerk">Clerk</string>
+    <string name="get_started">Get Started</string>
+    <string name="continue_with_passkey">Continue with Passkey</string>
+    <string name="continue_with_email">Continue with email</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="add_an_account">Add an account</string>
+    <string name="enter_your_email_address">Enter your email address...</string>
+    <string name="what_s_your_email_address">What\'s your email address?</string>
+    <string name="we_ve_sent_you_a_temporary_login_code_please_check_you_inbox_at">"We've sent you a temporary login code.\nPlease check you inbox at "</string>
+    <string name="check_your_email">Check your email</string>
+    <string name="continue_with_login_code">Continue with login code</string>
+    <string name="enter_code">Enter code</string>
+    <string name="sign_out">Sign out</string>
+    <string name="create_a_passkey">Create a passkey</string>
+    <string name="passkey_creation_failed">Passkey creation failed</string>
+    <string name="passkey_created_successfully">Passkey created successfully</string>
+    <string name="something_went_wrong">Something went wrong</string>
+</resources>

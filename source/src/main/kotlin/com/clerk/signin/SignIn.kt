@@ -647,7 +647,7 @@ data class SignIn(
      * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
      *   failure.
      */
-    suspend fun authenticateWithGoogle(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return GoogleSignInService().signInWithGoogle()
     }
 
