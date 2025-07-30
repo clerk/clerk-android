@@ -106,8 +106,7 @@ class YourApplication : Application() {
 `samples/quickstart`: This is a paired repo with the [Android Quickstart guide](https://clerk.com/docs/quickstarts/android). It provides a simple
 example of how to integrate Clerk into an Android application, demonstrating user sign-up, sign-in,
 and profile management. See the README for more info
-<br />
-<br />
+
 ### Custom flows
 `samples/custom-flows`: This is a paired repo with the [Custom Flows guide](https://clerk.com/docs/custom-flows/overview). It showcases how to
 implement custom authentication flows using Clerk, including advanced scenarios like multi-factor
