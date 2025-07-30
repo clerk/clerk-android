@@ -67,7 +67,7 @@ This sample app demonstrates advanced authentication flows using the Clerk Andro
 3. **Launch the app** on your device or emulator
 
 
-## �� Related Documentation
+## Related Documentation
 
 - [Custom Flows Overview](https://clerk.com/docs/custom-flows/overview)
 - [Email/Password Authentication](https://clerk.com/docs/custom-flows/email-password)
