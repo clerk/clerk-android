@@ -2,7 +2,7 @@
 
 This sample app demonstrates the basic integration of Clerk authentication in an Android application. It provides a simple example of user sign-up, sign-in, and profile management using the Clerk Android SDK.
 
-## 🔧 Clerk Dashboard Setup
+## Clerk Dashboard Setup
 
 1. **Create a Clerk Application**
    - Sign up for a Clerk account at [dashboard.clerk.com](https://dashboard.clerk.com/sign-up)
@@ -51,7 +51,7 @@ This sample app demonstrates the basic integration of Clerk authentication in an
 
 3. **Launch the app** on your device or emulator
 
-## 📖 Related Documentation
+## Related Documentation
 
 - [Clerk Android SDK Reference](https://clerk-android.clerkstage.dev)
 - [Clerk Documentation](https://clerk.com/docs)
