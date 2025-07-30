@@ -63,10 +63,6 @@ This sample app is a native Android recreation of Linear's authentication flow, 
    ./gradlew :samples:linear-clone:installDebug
    ```
 
-3. **Launch the app** on your device or emulator
-
-> **Note**: Passkeys are not compatible with emulators. You must test Passkey authentication on a physical device.
-
 ## Related Documentation
 
 - [Passkeys Documentation](https://clerk.com/docs/references/android/passkeys)
