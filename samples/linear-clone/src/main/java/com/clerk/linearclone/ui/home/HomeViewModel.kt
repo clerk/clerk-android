@@ -23,7 +23,7 @@ class HomeViewModel : ViewModel() {
   }
 
   fun createPasskey() {
-    val currentUser = Clerk.user.value ?: return
+    val currentUser = Clerk.userFlow.value ?: return
     viewModelScope.launch(Dispatchers.IO) {
       currentUser
         .createPasskey()

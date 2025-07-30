@@ -21,7 +21,7 @@ class ForgotPasswordPhoneViewModel : ViewModel() {
   val uiState = _uiState.asStateFlow()
 
   init {
-    combine(Clerk.isInitialized, Clerk.user) { isInitialized, user ->
+    combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
         _uiState.value =
           when {
             !isInitialized -> UiState.Loading

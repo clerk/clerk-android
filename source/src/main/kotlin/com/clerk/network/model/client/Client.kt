@@ -38,6 +38,10 @@ data class Client(
   @SerialName("updated_at") val updatedAt: Long? = null,
 ) {
 
+  /** Current active sessions. */
+  fun activeSessions(): List<Session> =
+    sessions.filter { it.status == Session.SessionStatus.ACTIVE }
+
   companion object {
     /** Fetches the current client object from the Clerk API. */
     suspend fun get(): ClerkResult<Client, ClerkErrorResponse> = ClerkApi.client.get()

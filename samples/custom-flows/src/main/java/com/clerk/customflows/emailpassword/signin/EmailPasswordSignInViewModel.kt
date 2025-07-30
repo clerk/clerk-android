@@ -19,7 +19,7 @@ class EmailPasswordSignInViewModel : ViewModel() {
   val uiState = _uiState.asStateFlow()
 
   init {
-    combine(Clerk.user, Clerk.isInitialized) { user, isInitialized ->
+    combine(Clerk.userFlow, Clerk.isInitialized) { user, isInitialized ->
         Log.e("EmailPasswordSignInViewModel", "combine: $user, $isInitialized")
         _uiState.value =
           when {

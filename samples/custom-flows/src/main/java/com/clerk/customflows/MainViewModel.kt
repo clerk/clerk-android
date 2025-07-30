@@ -18,7 +18,7 @@ class MainViewModel : ViewModel() {
   val uiState = _uiState.asStateFlow()
 
   init {
-    combine(Clerk.isInitialized, Clerk.user) { isInitialized, user ->
+    combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
         Log.e("QQQ", "isInitialized: $isInitialized, user: $user")
         _uiState.value =
           when {
