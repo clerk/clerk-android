@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+private val linearCloneKey = "LINEAR_CLONE_CLERK_PUBLISHABLE_KEY"
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
@@ -18,22 +20,27 @@ android {
     versionCode = 1
     versionName = "1.0"
 
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    val isCI = System.getenv("CI")?.toBoolean() == true
+    val clerkPublishableKey = project.findProperty(linearCloneKey) as String?
+
+    if (clerkPublishableKey.isNullOrEmpty() && !isCI) {
+      throw GradleException("Missing $linearCloneKey in gradle.properties")
+    }
+
+    val keyValue = clerkPublishableKey ?: "pk_test_placeholder_for_ci"
+    buildConfigField("String", linearCloneKey, "\"${keyValue}\"")
   }
 
-  buildTypes {
-    release {
-      isMinifyEnabled = false
-      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-    }
-  }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
   kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }
 
-  buildFeatures { compose = true }
+  buildFeatures {
+    compose = true
+    buildConfig = true
+  }
 }
 
 dependencies {

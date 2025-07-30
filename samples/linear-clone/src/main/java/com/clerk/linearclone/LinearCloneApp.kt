@@ -10,7 +10,7 @@ class LinearCloneApp : Application() {
     super.onCreate()
     Clerk.initialize(
       this,
-      "pk_test_c3VpdGVkLXBvbGxpd29nLTg5LmNsZXJrLmFjY291bnRzLmRldiQ",
+      BuildConfig.LINEAR_CLONE_CLERK_PUBLISHABLE_KEY,
       ClerkConfigurationOptions(enableDebugMode = true),
     )
   }
