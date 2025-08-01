@@ -36,7 +36,7 @@ internal class DeviceAssertionInterceptor : Interceptor {
     val originalBody = response.body
 
     // Read the response body content and create a copy for later use
-    val bodyString = originalBody.string()
+    val bodyString = originalBody?.string() ?: return@runBlocking response
     if (bodyString.isBlank()) {
       return@runBlocking response
     }

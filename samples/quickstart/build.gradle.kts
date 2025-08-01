@@ -30,7 +30,7 @@ android {
   }
 
   kotlin {
-    target { compilerOptions { jvmTarget.value(JvmTarget.JVM_24) } }
+    target { compilerOptions { jvmTarget.value(JvmTarget.JVM_17) } }
 
     compileOptions {
       sourceCompatibility = JavaVersion.VERSION_17
