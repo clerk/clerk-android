@@ -9,6 +9,7 @@ import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
@@ -62,7 +63,7 @@ class PasskeyAuthenticationServiceTest {
 
     // Mock ClerkApi and its nested objects
     mockkObject(ClerkApi)
-    val mockSignInApi = mockk<com.clerk.network.api.SignInApi>(relaxed = true)
+    val mockSignInApi = mockk<SignInApi>(relaxed = true)
     every { ClerkApi.signIn } returns mockSignInApi
 
     // Set up the mock credential manager in the service
