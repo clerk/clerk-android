@@ -1,15 +1,14 @@
 package com.clerk.api.network.serialization
 
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.response.ClientPiggybackedResponse
+import com.clerk.api.network.model.token.TokenResource
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
-
-private const val ENVIRONMENT_TYPE = "com.clerk.network.model.environment.Environment"
-private const val TOKEN_TYPE = "com.clerk.network.model.token.TokenResource"
 
 /**  */
 internal object ClerkApiResultConverterFactory : Converter.Factory() {
@@ -68,11 +67,7 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
     val rawType = getRawType(successType)
 
     // Don't wrap the Environment type
-    if (rawType.name == ENVIRONMENT_TYPE || rawType.name == TOKEN_TYPE) {
-      return false
-    }
-
-    return true
+    return rawType.name !in getExcludedTypeNames()
   }
 
   private fun createParameterizedType(rawType: Class<*>, typeArgument: Type): ParameterizedType {
@@ -106,4 +101,8 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
         }
     }
   }
+}
+
+internal fun getExcludedTypeNames(): List<String> {
+  return listOf(Environment::class.qualifiedName ?: "", TokenResource::class.qualifiedName ?: "")
 }

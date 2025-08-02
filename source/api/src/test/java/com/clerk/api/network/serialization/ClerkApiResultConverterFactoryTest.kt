@@ -110,15 +110,6 @@ class ClerkApiResultConverterFactoryTest {
   }
 
   @Test
-  fun `shouldWrapInClientPiggybackedResponse returns false for Environment type`() {
-    // Test the logic indirectly by checking if Environment type is handled specially
-    val environmentType = Environment::class.java
-
-    // Environment type name should match the constant in the converter factory
-    assertEquals("com.clerk.network.model.environment.Environment", environmentType.name)
-  }
-
-  @Test
   fun `shouldWrapInClientPiggybackedResponse returns false for List of Session`() {
     // Given a List<Session> type
     val sessionListType = createParameterizedType(List::class.java, Session::class.java)
