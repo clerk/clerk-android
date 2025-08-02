@@ -3,10 +3,10 @@ package com.clerk.quickstart.signin
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.network.serialization.longErrorMessageOrNull
-import com.clerk.network.serialization.onFailure
-import com.clerk.network.serialization.onSuccess
-import com.clerk.signin.SignIn
+import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.onFailure
+import com.clerk.api.network.serialization.onSuccess
+import com.clerk.api.signin.SignIn
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch

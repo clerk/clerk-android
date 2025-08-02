@@ -21,7 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.emailaddress.EmailAddress
+import com.clerk.api.emailaddress.EmailAddress
 
 class AddEmailActivity : ComponentActivity() {
   val viewModel: AddEmailViewModel by viewModels()

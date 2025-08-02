@@ -1,7 +1,5 @@
 package com.clerk.api.user
 
-import com.clerk.api.automap.annotations.AutoMap
-import com.clerk.api.automap.annotations.MapProperty
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.network.ClerkApi
@@ -24,6 +22,8 @@ import com.clerk.api.sso.sso.SSOService
 import com.clerk.api.user.User.CreateExternalAccountParams
 import com.clerk.api.user.User.UpdateParams
 import com.clerk.api.user.User.UpdatePasswordParams
+import com.clerk.automap.annotations.AutoMap
+import com.clerk.automap.annotations.MapProperty
 import java.io.File
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

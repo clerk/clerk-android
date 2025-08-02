@@ -2,9 +2,9 @@ package com.clerk.linearclone.ui.emailverification
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.Clerk
-import com.clerk.signin.SignIn
-import com.clerk.signin.attemptFirstFactor
+import com.clerk.api.Clerk
+import com.clerk.api.signin.SignIn
+import com.clerk.api.signin.attemptFirstFactor
 import kotlinx.coroutines.launch
 
 class EmailVerificationViewModel : ViewModel() {

@@ -23,7 +23,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.Clerk
+import com.clerk.api.Clerk
 
 class ForgotPasswordPhoneNumberActivity : ComponentActivity() {
   val viewModel: ForgotPasswordPhoneViewModel by viewModels()

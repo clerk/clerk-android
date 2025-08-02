@@ -3,8 +3,6 @@
 package com.clerk.api.signup
 
 import com.clerk.api.Constants.Strategy as AuthStrategy
-import com.clerk.api.automap.annotations.AutoMap
-import com.clerk.api.automap.annotations.MapProperty
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
@@ -13,6 +11,8 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.sso.OAuthResult
 import com.clerk.api.sso.sso.SSOService
+import com.clerk.automap.annotations.AutoMap
+import com.clerk.automap.annotations.MapProperty
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject

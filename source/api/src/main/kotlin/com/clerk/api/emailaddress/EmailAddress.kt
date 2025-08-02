@@ -2,12 +2,12 @@ package com.clerk.api.emailaddress
 
 import com.clerk.api.Constants.Strategy.EMAIL_CODE
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
-import com.clerk.api.automap.annotations.AutoMap
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.automap.annotations.AutoMap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
