@@ -3,6 +3,7 @@ import com.clerk.api.Constants.Attestation.SHA256_HEX_LENGTH
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.DeviceAttestationApi
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.ClerkResult
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.StandardIntegrityManager
@@ -88,7 +89,7 @@ class DeviceAttestationHelperTest {
     // Given
     val token = "test-token"
     val applicationId = "com.example.app"
-    val mockClient = mockk<com.clerk.network.model.client.Client>()
+    val mockClient = mockk<Client>()
 
     coEvery { mockDeviceAttestationApi.verify(any(), any()) } returns
       ClerkResult.success(mockClient)
