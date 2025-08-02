@@ -2,8 +2,8 @@ package com.clerk.linearclone.ui.chooseloginmethod
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.signin.SignIn
-import com.clerk.sso.OAuthProvider
+import com.clerk.api.signin.SignIn
+import com.clerk.api.sso.OAuthProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

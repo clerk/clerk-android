@@ -2,13 +2,13 @@ package com.clerk.customflows.emailpassword.signup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.Clerk
-import com.clerk.network.serialization.flatMap
-import com.clerk.network.serialization.onFailure
-import com.clerk.network.serialization.onSuccess
-import com.clerk.signup.SignUp
-import com.clerk.signup.attemptVerification
-import com.clerk.signup.prepareVerification
+import com.clerk.api.Clerk
+import com.clerk.api.network.serialization.flatMap
+import com.clerk.api.network.serialization.onFailure
+import com.clerk.api.network.serialization.onSuccess
+import com.clerk.api.signup.SignUp
+import com.clerk.api.signup.attemptVerification
+import com.clerk.api.signup.prepareVerification
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine

@@ -1,8 +1,8 @@
 package com.clerk.linearclone
 
 import android.app.Application
-import com.clerk.Clerk
-import com.clerk.ClerkConfigurationOptions
+import com.clerk.api.Clerk
+import com.clerk.api.ClerkConfigurationOptions
 
 class LinearCloneApp : Application() {
 

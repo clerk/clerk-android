@@ -2,10 +2,10 @@ package com.clerk.linearclone.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.Clerk
-import com.clerk.network.serialization.onFailure
-import com.clerk.network.serialization.onSuccess
-import com.clerk.user.createPasskey
+import com.clerk.api.Clerk
+import com.clerk.api.network.serialization.onFailure
+import com.clerk.api.network.serialization.onSuccess
+import com.clerk.api.user.createPasskey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

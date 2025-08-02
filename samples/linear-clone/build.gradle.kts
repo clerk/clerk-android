@@ -57,6 +57,6 @@ dependencies {
   implementation(libs.kotlinx.serialization)
   implementation(libs.material3)
   implementation(libs.navigation.compose)
-  implementation(projects.source)
+  implementation(projects.source.api)
   lintChecks(libs.compose.lints)
 }

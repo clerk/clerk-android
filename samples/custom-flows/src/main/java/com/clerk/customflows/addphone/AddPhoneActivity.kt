@@ -21,7 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.phonenumber.PhoneNumber
+import com.clerk.api.phonenumber.PhoneNumber
 
 class AddPhoneActivity : ComponentActivity() {
   val viewModel: AddPhoneViewModel by viewModels()

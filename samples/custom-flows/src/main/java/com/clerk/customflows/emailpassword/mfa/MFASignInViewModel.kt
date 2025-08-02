@@ -2,11 +2,11 @@ package com.clerk.customflows.emailpassword.mfa
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.Clerk
-import com.clerk.network.serialization.onFailure
-import com.clerk.network.serialization.onSuccess
-import com.clerk.signin.SignIn
-import com.clerk.signin.attemptSecondFactor
+import com.clerk.api.Clerk
+import com.clerk.api.network.serialization.onFailure
+import com.clerk.api.network.serialization.onSuccess
+import com.clerk.api.signin.SignIn
+import com.clerk.api.signin.attemptSecondFactor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch

@@ -13,7 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.sso.OAuthProvider
+import com.clerk.api.sso.OAuthProvider
 
 class OAuthActivity : ComponentActivity() {
   val viewModel: OAuthViewModel by viewModels()

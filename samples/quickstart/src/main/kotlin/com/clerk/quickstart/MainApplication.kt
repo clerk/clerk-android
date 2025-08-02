@@ -1,7 +1,7 @@
 package com.clerk.quickstart
 
 import android.app.Application
-import com.clerk.Clerk
+import com.clerk.api.Clerk
 
 class MainApplication : Application() {
   override fun onCreate() {

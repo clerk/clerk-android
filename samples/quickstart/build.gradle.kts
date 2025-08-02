@@ -53,5 +53,5 @@ dependencies {
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling.preview)
   implementation(libs.material3)
-  implementation(projects.clerk.source)
+  implementation(projects.clerk.source.api)
 }
