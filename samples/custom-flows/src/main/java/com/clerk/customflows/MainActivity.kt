@@ -36,6 +36,8 @@ import com.clerk.customflows.emailpassword.signup.EmailPasswordSignUpActivity
 import com.clerk.customflows.forgotpassword.emailaddress.ForgotPasswordEmailViewModel
 import com.clerk.customflows.forgotpassword.phone.ForgotPasswordPhoneNumberActivity
 import com.clerk.customflows.oauth.OAuthActivity
+import com.clerk.customflows.otp.signin.SMSOTPSignInActivity
+import com.clerk.customflows.otp.signup.SMSOTPSignUpActivity
 import com.clerk.customflows.ui.theme.ClerkTheme
 
 class MainActivity : ComponentActivity() {
@@ -113,6 +115,12 @@ private fun SignedOutContent(modifier: Modifier = Modifier) {
     }
     LaunchCustomFlowButton(buttonText = stringResource(R.string.reset_password_email)) {
       context.startActivity(Intent(context, ForgotPasswordEmailViewModel::class.java))
+    }
+    LaunchCustomFlowButton(buttonText = "SMS/OTP SignUp") {
+      context.startActivity(Intent(context, SMSOTPSignUpActivity::class.java))
+    }
+    LaunchCustomFlowButton(buttonText = "SMS/OTP Sign In") {
+      context.startActivity(Intent(context, SMSOTPSignInActivity::class.java))
     }
   }
 }

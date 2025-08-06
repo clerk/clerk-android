@@ -29,6 +29,8 @@
         <activity android:name=".forgotpassword.emailaddress.ForgotPasswordEmailActivity" />
         <activity android:name=".addemail.AddEmailActivity" />
         <activity android:name=".addphone.AddPhoneActivity" />
+        <activity android:name=".otp.signin.SMSOTPSignInActivity" />
+        <activity android:name=".otp.signup.SMSOTPSignUpActivity" />
     </application>
 
 </manifest>
