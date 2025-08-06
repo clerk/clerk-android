@@ -21,10 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.customflows.otp.signin.SMSOTPSignInViewModel
 
 class SMSOTPSignUpActivity : ComponentActivity() {
-  val viewModel: SMSOTPSignInViewModel by viewModels()
+  val viewModel: SMSOTPSignUpViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -37,23 +36,23 @@ class SMSOTPSignUpActivity : ComponentActivity() {
 
 @Composable
 fun SMSOTPSignUpView(
-  state: SMSOTPSignInViewModel.UiState,
+  state: SMSOTPSignUpViewModel.UiState,
   onSubmit: (String) -> Unit,
   onVerify: (String) -> Unit,
 ) {
   Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
     when (state) {
-      SMSOTPSignInViewModel.UiState.Unverified -> {
+      SMSOTPSignUpViewModel.UiState.Unverified -> {
         InputContent(
           placeholder = "Enter your phone number",
           buttonText = "Continue",
           onClick = onSubmit,
         )
       }
-      SMSOTPSignInViewModel.UiState.Verified -> {
+      SMSOTPSignUpViewModel.UiState.Verified -> {
         Text("Verified")
       }
-      SMSOTPSignInViewModel.UiState.Verifying -> {
+      SMSOTPSignUpViewModel.UiState.Verifying -> {
         InputContent(
           placeholder = "Enter your verification code",
           buttonText = "Verify",
@@ -61,7 +60,7 @@ fun SMSOTPSignUpView(
         )
       }
 
-      SMSOTPSignInViewModel.UiState.Loading -> {
+      SMSOTPSignUpViewModel.UiState.Loading -> {
         CircularProgressIndicator()
       }
     }
