@@ -18,7 +18,7 @@ import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.session.Session
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.RedirectConfiguration
-import com.clerk.api.sso.sso.SSOService
+import com.clerk.api.sso.SSOService
 import com.clerk.api.user.User.CreateExternalAccountParams
 import com.clerk.api.user.User.UpdateParams
 import com.clerk.api.user.User.UpdatePasswordParams

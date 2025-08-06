@@ -1,4 +1,4 @@
-package com.clerk.api.sso.sso
+package com.clerk.api.sso
 
 import android.content.ActivityNotFoundException
 import android.content.Context

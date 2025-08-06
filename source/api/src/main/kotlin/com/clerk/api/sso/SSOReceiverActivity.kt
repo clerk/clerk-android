@@ -1,4 +1,4 @@
-package com.clerk.api.sso.sso
+package com.clerk.api.sso
 
 import android.app.Activity
 import android.os.Bundle

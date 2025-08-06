@@ -12,7 +12,7 @@ import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.longErrorMessageOrNull
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.sso.sso.SSOReceiverActivity
+import com.clerk.api.sso.SSOReceiverActivity
 import com.clerk.api.user.User
 import com.clerk.api.user.toMap
 import kotlinx.coroutines.CompletableDeferred

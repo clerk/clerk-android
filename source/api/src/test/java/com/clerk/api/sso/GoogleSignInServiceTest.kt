@@ -14,7 +14,6 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
-import com.clerk.api.sso.sso.ResultType
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import io.mockk.coEvery
 import io.mockk.every

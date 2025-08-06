@@ -1,4 +1,4 @@
-package com.clerk.api.sso.sso
+package com.clerk.api.sso
 
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
@@ -14,8 +14,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.longErrorMessageOrNull
 import com.clerk.api.signin.get
 import com.clerk.api.signup.SignUp
-import com.clerk.api.sso.RedirectConfiguration
-import com.clerk.api.sso.sso.SSOService.authenticateWithRedirect
+import com.clerk.api.sso.SSOService.authenticateWithRedirect
 import com.clerk.api.user.User.CreateExternalAccountParams
 import kotlinx.coroutines.CompletableDeferred
 
