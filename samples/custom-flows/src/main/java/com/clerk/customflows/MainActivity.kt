@@ -33,7 +33,7 @@ import com.clerk.customflows.addphone.AddPhoneActivity
 import com.clerk.customflows.emailpassword.mfa.MFASignInActivity
 import com.clerk.customflows.emailpassword.signin.EmailPasswordSignInActivity
 import com.clerk.customflows.emailpassword.signup.EmailPasswordSignUpActivity
-import com.clerk.customflows.forgotpassword.emailaddress.ForgotPasswordEmailViewModel
+import com.clerk.customflows.forgotpassword.emailaddress.ForgotPasswordEmailActivity
 import com.clerk.customflows.forgotpassword.phone.ForgotPasswordPhoneNumberActivity
 import com.clerk.customflows.oauth.OAuthActivity
 import com.clerk.customflows.otp.signin.SMSOTPSignInActivity
@@ -114,7 +114,7 @@ private fun SignedOutContent(modifier: Modifier = Modifier) {
       context.startActivity(Intent(context, ForgotPasswordPhoneNumberActivity::class.java))
     }
     LaunchCustomFlowButton(buttonText = stringResource(R.string.reset_password_email)) {
-      context.startActivity(Intent(context, ForgotPasswordEmailViewModel::class.java))
+      context.startActivity(Intent(context, ForgotPasswordEmailActivity::class.java))
     }
     LaunchCustomFlowButton(buttonText = "SMS/OTP SignUp") {
       context.startActivity(Intent(context, SMSOTPSignUpActivity::class.java))
