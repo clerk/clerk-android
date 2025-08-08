@@ -19,7 +19,6 @@ plugins {
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 allprojects {
-  apply(plugin = "org.jetbrains.dokka")
   apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
@@ -67,7 +66,23 @@ allprojects {
     }
 }
 
-tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
+// Configure Dokka to only generate documentation for the :source:api module
+configure(listOf(project(":source:api"))) {
+  apply(plugin = "org.jetbrains.dokka")
+}
+
+// Create a task to generate documentation only for the API module
+tasks.register("dokkaHtmlApi") {
+  group = "documentation"
+  description = "Generate HTML documentation for the API module only"
+  dependsOn(":source:api:dokkaGeneratePublicationHtml")
+  doLast {
+    copy {
+      from(project(":source:api").layout.buildDirectory.dir("dokka/html"))
+      into(rootDir.resolve("docs/"))
+    }
+  }
+}
 
 subprojects {
   plugins.withType<JavaPlugin> {
