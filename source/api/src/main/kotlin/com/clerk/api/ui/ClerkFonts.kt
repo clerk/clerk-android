@@ -1,4 +1,4 @@
-package com.clerk.ui
+package com.clerk.api.ui
 
 /**
  * A container for a complete typography scale used by Clerk UI components.

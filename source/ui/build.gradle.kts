@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.android.library)
+  alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -26,11 +27,15 @@ android {
     targetCompatibility = JavaVersion.VERSION_17
   }
   kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }
+
+  buildFeatures { compose = true }
 }
 
 dependencies {
   implementation(platform(libs.compose.bom))
   implementation(libs.androidx.appcompat)
+  implementation(libs.androidx.compose.foundation)
+  implementation(libs.androidx.compose.runtime)
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.ui)
   implementation(libs.material)

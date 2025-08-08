@@ -1,4 +1,4 @@
-package com.clerk.ui
+package com.clerk.api.ui
 
 /**
  * Represents the design configuration for Clerk UI components.

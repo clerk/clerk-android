@@ -1,4 +1,4 @@
-package com.clerk.ui
+package com.clerk.api.ui
 
 /**
  * Aggregated theme definition used throughout the Clerk UI layer.

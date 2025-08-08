@@ -186,7 +186,7 @@ object Clerk {
 
   // region Theme settings
   /** Clerk theme configuration for customizing the appearance of authentication UI components. */
-  var clerkTheme: ClerkTheme? = null
+  var customTheme: ClerkTheme? = null
 
   // endregion
 
@@ -241,7 +241,7 @@ object Clerk {
     )
     this.applicationContext = WeakReference(context)
     this.applicationId = options?.deviceAttestationOptions?.applicationId
-    this.clerkTheme = themeConfig
+    this.customTheme = themeConfig
   }
 
   /**

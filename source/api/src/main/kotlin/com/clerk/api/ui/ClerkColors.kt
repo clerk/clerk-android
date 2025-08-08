@@ -1,4 +1,4 @@
-package com.clerk.ui
+package com.clerk.api.ui
 
 /**
  * A collection of themed colors used throughout Clerkʼs design system.
@@ -31,6 +31,8 @@ data class ClerkColors(
   val inputForeground: ThemeColor,
   /** Neutral gray used for borders or separators. */
   val neutral: ThemeColor,
+  /** Border color used for input fields and other elements. */
+  val border: ThemeColor,
   /** Stroke color used for focus rings. */
   val ring: ThemeColor,
   /** Muted background color for minimal emphasis surfaces. */
@@ -87,5 +89,24 @@ data class ThemeColor(
     private const val ALPHA_SHIFT = 24
     private const val RED_SHIFT = 16
     private const val GREEN_SHIFT = 8
+
+    fun defaultLight() =
+      ClerkColors(
+        primary = ThemeColor(0xFF2F3037),
+        background = ThemeColor(0xFFFFFFFF),
+        input = ThemeColor(0xFFFFFFFF),
+        danger = ThemeColor(0xFFEF4444),
+        success = ThemeColor(0xFF22C543),
+        warning = ThemeColor(0xFFF36B16),
+        foreground = ThemeColor(0xFF212126),
+        mutedForeground = ThemeColor(0xFF747686),
+        primaryForeground = ThemeColor(0xFFFFFFFF),
+        inputForeground = ThemeColor(0xFF212126),
+        neutral = ThemeColor(0xFF000000),
+        border = ThemeColor(0xFF000000),
+        shadow = ThemeColor(0xFF000000),
+        ring = ThemeColor(0xFF000000),
+        muted = ThemeColor(0xFFF7F7F7),
+      )
   }
 }
