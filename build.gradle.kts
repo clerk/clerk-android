@@ -19,7 +19,7 @@ plugins {
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 allprojects {
-  apply(plugin = "org.jetbrains.dokka")
+  // Dokka is not applied globally; only root and selected modules opt-in.
   apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
@@ -67,6 +67,7 @@ allprojects {
     }
 }
 
+// Root multi-module Dokka output
 tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
 
 subprojects {
