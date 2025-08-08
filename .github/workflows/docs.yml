@@ -26,9 +26,17 @@ jobs:
       with:
         distribution: zulu
         java-version: 17
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v3
+      with:
+        gradle-version: wrapper
+        build-root-directory: main
+    - name: Grant execute permission for gradlew
+      working-directory: main
+      run: chmod +x gradlew
     - name: Generate docs
       working-directory: main
-      run: ./gradlew dokkaHtmlMultiModule
+      run: ./gradlew dokkaHtmlMultiModule --no-daemon --stacktrace
     - name: Zip docs site
       run: |
         cd main/docs
@@ -50,15 +58,16 @@ jobs:
       with:
         ref: docs
         path: docs
-    - uses: actions/download-artifact@v5.0.0
+    - uses: actions/download-artifact@v4
       with:
+        name: "main"
         path: artifacts
     - name: Unzip
       run: |
         mkdir unzipped-docs
         unzipped_path="unzipped-docs/main"
         mkdir -p "$unzipped_path"
-        unzip "artifacts/main/Docs.zip" -d "$unzipped_path"
+        unzip "artifacts/Docs.zip" -d "$unzipped_path"
         echo "extracting to root"
         rsync -a "$unzipped_path/" docs/docs
     - name: Update git config
@@ -67,8 +76,9 @@ jobs:
         git config --local user.name "swolfand"
         git config --local user.email "sam@clerk.dev"
     - name: Commit
-      working-directory: main
+      working-directory: docs
       run: |
+        cd ../main
         current_sha="$(git rev-parse @)"
         cd ../docs
         if [[ -z $(git status --porcelain) ]]; then exit 0; fi
