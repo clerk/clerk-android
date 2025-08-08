@@ -2,8 +2,9 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>LongParameterList:ClerkComposeTheme.kt$ClerkComposeTheme$( val primary: Color, val background: Color, val input: Color, val danger: Color, val success: Color, val warning: Color, val foreground: Color, val mutedForeground: Color, val primaryForeground: Color, val inputForeground: Color, val neutral: Color, val border: Color, val shadow: Color, val ring: Color, val muted: Color, )</ID>
-    <ID>LongParameterList:ClerkFonts.kt$ClerkFonts$( /** Largest title style, e.g. 34 sp Semibold. */ val largeTitle: Font, /** Base title style. */ val title: Font, /** Second-level title style. */ val title2: Font, /** Third-level title style. */ val title3: Font, /** Prominent body style suitable for headlines. */ val headline: Font, /** Default body text style. */ val body: Font, /** Slightly smaller than body for tertiary content. */ val callout: Font, /** Label for grouped content sections. */ val subhead: Font, /** Auxiliary notes such as table footers. */ val footnote: Font, /** Smallest style for image captions etc. */ val caption: Font, /** Even smaller variant of [caption] when required. */ val caption2: Font, )</ID>
+    <ID>CyclomaticComplexMethod:ClerkComposeTheme.kt$@Composable fun ClerkTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit)</ID>
+    <ID>LongMethod:ClerkComposeTheme.kt$@Composable fun ClerkTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit)</ID>
+    <ID>LongParameterList:ClerkTypography.kt$ClerkTypography$( val displayLarge: Font, val displayMedium: Font, val displaySmall: Font, val headlineLarge: Font, val headlineMedium: Font, val headlineSmall: Font, val titleLarge: Font, val titleMedium: Font, val titleSmall: Font, val bodyLarge: Font, val bodyMedium: Font, val bodySmall: Font, val labelLarge: Font, val labelMedium: Font, val labelSmall: Font, )</ID>
     <ID>MagicNumber:ClerkColors.kt$ThemeColor.Companion$0xFF000000</ID>
     <ID>MagicNumber:ClerkColors.kt$ThemeColor.Companion$0xFF212126</ID>
     <ID>MagicNumber:ClerkColors.kt$ThemeColor.Companion$0xFF22C543</ID>

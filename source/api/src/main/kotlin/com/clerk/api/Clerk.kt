@@ -12,8 +12,8 @@ import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
-import com.clerk.ui.ClerkTheme
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
