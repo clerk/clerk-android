@@ -26,8 +26,11 @@ import com.clerk.api.ui.Font as ClerkFont
 import com.clerk.api.ui.ThemeColor
 import com.clerk.ui.colors.BaseColors
 import com.clerk.ui.colors.ColorPalettes
+<<<<<<<< HEAD:source/ui/src/main/java/com/clerk/ui/theme/ClerkCompositionLocals.kt
 import com.clerk.ui.colors.LocalComputedColors
 import com.clerk.ui.colors.toComputed
+========
+>>>>>>>> d3cf861 (move into packages):source/ui/src/main/java/com/clerk/ui/theme/ClerkComposeTheme.kt
 import com.clerk.ui.design.LocalClerkDesign
 
 @SuppressLint("ComposeCompositionLocalUsage")
