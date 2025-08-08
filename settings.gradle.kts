@@ -24,4 +24,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "Clerk"
 
-include(":source:api", ":samples:quickstart", ":samples:custom-flows", ":samples:linear-clone")
+include(
+  ":samples:quickstart",
+  ":samples:custom-flows",
+  ":samples:linear-clone",
+  ":source:api",
+  ":source:ui",
+)

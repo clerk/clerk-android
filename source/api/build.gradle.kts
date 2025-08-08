@@ -14,7 +14,6 @@ android {
 
   defaultConfig {
     minSdk = 24
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.sdk.get()}\"")
   }
 
