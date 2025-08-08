@@ -12,6 +12,7 @@ import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -183,6 +184,12 @@ object Clerk {
 
   // endregion
 
+  // region Theme settings
+  /** Clerk theme configuration for customizing the appearance of authentication UI components. */
+  var customTheme: ClerkTheme? = null
+
+  // endregion
+
   // region Sign In/Sign Up
 
   /**
@@ -206,7 +213,6 @@ object Clerk {
   // endregion
 
   // region Public Methods
-
   /**
    * Initializes the Clerk SDK with the provided configuration.
    *
@@ -216,30 +222,16 @@ object Clerk {
    * @param context The application context used for initialization and storage setup.
    * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
    *   Clerk.
-   * @throws IllegalArgumentException if the publishable key format is invalid.
-   */
-  fun initialize(context: Context, publishableKey: String) {
-    this.debugMode = false
-    configurationManager.configure(context, publishableKey, null)
-    this.applicationContext = WeakReference(context)
-  }
-
-  /**
-   * Initializes the Clerk SDK with the provided configuration.
-   *
-   * This method must be called before using any other Clerk functionality. It configures the API
-   * client, initializes local storage, and begins the authentication state setup.
-   *
-   * @param context The application context used for initialization and storage setup.
-   * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
-   *   Clerk.
-   * @param options Enable additional options for the Clerk SDK. See [ClerkOptions] for details.
+   * @param options Enable additional options for the Clerk SDK. See [ClerkConfigurationOptions] for
+   *   details.
+   * @param themeConfig Customize the appearance of Clerk UI components. See [ClerkTheme] for
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
   fun initialize(
     context: Context,
     publishableKey: String,
     options: ClerkConfigurationOptions? = null,
+    themeConfig: ClerkTheme? = null,
   ) {
     this.debugMode = options?.enableDebugMode == true
     configurationManager.configure(
@@ -249,6 +241,7 @@ object Clerk {
     )
     this.applicationContext = WeakReference(context)
     this.applicationId = options?.deviceAttestationOptions?.applicationId
+    this.customTheme = themeConfig
   }
 
   /**
