@@ -7,7 +7,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import com.clerk.api.ui.ClerkDesign
 
 @SuppressLint("ComposeCompositionLocalUsage")
-val LocalClerkDesign = staticCompositionLocalOf<ClerkDesign> { error("No ClerkDesign provided") }
+internal val LocalClerkDesign =
+  staticCompositionLocalOf<ClerkDesign> { error("No ClerkDesign provided") }
 
-val clerkDesign: ClerkDesign
+internal val clerkDesign: ClerkDesign
   @Composable @ReadOnlyComposable get() = LocalClerkDesign.current

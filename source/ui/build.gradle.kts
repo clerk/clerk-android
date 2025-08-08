@@ -1,9 +1,12 @@
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.dokka)
 }
 
 android {
@@ -29,6 +32,13 @@ android {
   kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }
 
   buildFeatures { compose = true }
+}
+
+tasks.withType<DokkaTaskPartial>().configureEach {
+  dependencies { dokkaPlugin(libs.versioning.plugin) }
+  moduleName.set("Clerk Android UI")
+  suppressInheritedMembers.set(true)
+  dokkaSourceSets.configureEach { reportUndocumented.set(true) }
 }
 
 dependencies {

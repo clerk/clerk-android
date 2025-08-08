@@ -60,3 +60,5 @@ dependencies {
   implementation(projects.source.api)
   lintChecks(libs.compose.lints)
 }
+
+tasks.matching { it.name.startsWith("dokka") }.configureEach { enabled = false }
