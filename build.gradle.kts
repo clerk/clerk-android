@@ -19,8 +19,6 @@ plugins {
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 allprojects {
-  apply(plugin = "org.jetbrains.dokka")
-  apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
     ratchetFrom("origin/main")
@@ -67,9 +65,23 @@ allprojects {
     }
 }
 
-tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
+tasks.dokkaHtmlMultiModule { 
+  outputDirectory.set(rootDir.resolve("docs/"))
+  // Ensure library module dokkaHtmlPartial tasks run first (exclude sample apps)
+  dependsOn(subprojects.filter { subproject ->
+    subproject.name != "quickstart" && subproject.name != "custom-flows" && subproject.name != "linear-clone"
+  }.mapNotNull { subproject ->
+    subproject.tasks.findByName("dokkaHtmlPartial")
+  })
+}
 
 subprojects {
+  // Only apply dokka and maven publish to library modules (not sample apps)
+  if (name != "quickstart" && name != "custom-flows" && name != "linear-clone") {
+    apply(plugin = "org.jetbrains.dokka")
+    apply(plugin = "com.vanniktech.maven.publish")
+  }
+
   plugins.withType<JavaPlugin> {
     the<JavaPluginExtension>().toolchain {
       languageVersion.set(libs.versions.jdk.map(JavaLanguageVersion::of))
@@ -88,9 +100,11 @@ subprojects {
     compilerOptions { jvmTarget.set(libs.versions.jvmTarget.map(JvmTarget::fromTarget)) }
   }
 
-  val sdkVersion = projectLibs.findVersion("clerk-sdk").get().toString()
+  // Only configure maven publishing for library modules
+  if (name != "quickstart" && name != "custom-flows" && name != "linear-clone") {
+    val sdkVersion = projectLibs.findVersion("clerk-sdk").get().toString()
 
-  mavenPublishing {
+    mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
     coordinates("com.clerk", "clerk-android", sdkVersion)
@@ -120,6 +134,7 @@ subprojects {
         connection.set("scm:git:git://github.com/clerk/clerk-android.git")
         developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
       }
+    }
     }
   }
 }
