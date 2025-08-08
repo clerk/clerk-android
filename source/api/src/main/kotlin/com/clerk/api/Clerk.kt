@@ -13,6 +13,7 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
 import com.clerk.api.user.User
+import com.clerk.ui.ClerkThemeConfig
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -180,6 +181,12 @@ object Clerk {
   /** Indicates whether last name is enabled in user settings for this application. */
   val lastNameIsEnabled: Boolean
     get() = if (::environment.isInitialized) environment.lastNameIsEnabled else false
+
+  // endregion
+
+  // region Theme settings
+  /** Clerk theme configuration for customizing the appearance of authentication UI components. */
+  var clerkThemeConfig: ClerkThemeConfig? = null
 
   // endregion
 

@@ -29,9 +29,14 @@ android {
 }
 
 dependencies {
+  implementation(platform(libs.compose.bom))
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.core.ktx)
+  implementation(libs.androidx.ui)
   implementation(libs.material)
+  implementation(libs.material3)
+
+  compileOnly(projects.clerk.source.api)
 
   testImplementation(libs.junit)
 
