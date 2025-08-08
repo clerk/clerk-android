@@ -25,10 +25,13 @@ import com.clerk.api.ui.ThemeColor
 import com.clerk.ui.colors.ColorPalettes
 
 @SuppressLint("ComposeCompositionLocalUsage")
-val LocalClerkTheme = staticCompositionLocalOf<ClerkTheme> { error("No theme provided") }
+internal val LocalClerkTheme = staticCompositionLocalOf<ClerkTheme> { error("No theme provided") }
 
 @Composable
-fun ClerkTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+internal fun ClerkTheme(
+  darkTheme: Boolean = isSystemInDarkTheme(),
+  content: @Composable () -> Unit,
+) {
 
   val colorScheme =
     if (darkTheme) {
