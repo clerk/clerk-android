@@ -13,7 +13,7 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
 import com.clerk.api.user.User
-import com.clerk.ui.ClerkThemeConfig
+import com.clerk.ui.ClerkTheme
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -186,7 +186,7 @@ object Clerk {
 
   // region Theme settings
   /** Clerk theme configuration for customizing the appearance of authentication UI components. */
-  var clerkThemeConfig: ClerkThemeConfig? = null
+  var clerkTheme: ClerkTheme? = null
 
   // endregion
 
@@ -224,14 +224,14 @@ object Clerk {
    *   Clerk.
    * @param options Enable additional options for the Clerk SDK. See [ClerkConfigurationOptions] for
    *   details.
-   * @param themeConfig Customize the appearance of Clerk UI components. See [ClerkThemeConfig] for
+   * @param themeConfig Customize the appearance of Clerk UI components. See [ClerkTheme] for
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
   fun initialize(
     context: Context,
     publishableKey: String,
     options: ClerkConfigurationOptions? = null,
-    themeConfig: ClerkThemeConfig? = null,
+    themeConfig: ClerkTheme? = null,
   ) {
     this.debugMode = options?.enableDebugMode == true
     configurationManager.configure(
@@ -241,7 +241,7 @@ object Clerk {
     )
     this.applicationContext = WeakReference(context)
     this.applicationId = options?.deviceAttestationOptions?.applicationId
-    this.clerkThemeConfig = themeConfig
+    this.clerkTheme = themeConfig
   }
 
   /**
