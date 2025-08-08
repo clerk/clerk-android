@@ -26,9 +26,12 @@ jobs:
       with:
         distribution: zulu
         java-version: 17
+        cache: gradle
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
     - name: Generate docs
       working-directory: main
-      run: ./gradlew dokkaHtmlMultiModule
+      run: ./gradlew dokkaHtmlApi
     - name: Zip docs site
       run: |
         cd main/docs
