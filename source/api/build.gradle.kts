@@ -16,7 +16,7 @@ android {
 
   defaultConfig {
     minSdk = 24
-    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.sdk.get()}\"")
+    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.api.get()}\"")
   }
 
   buildTypes {
@@ -43,6 +43,36 @@ tasks.withType<DokkaTaskPartial>().configureEach {
   dokkaSourceSets.configureEach {
     includes.from(listOf("module.md"))
     reportUndocumented.set(true)
+  }
+}
+
+mavenPublishing {
+  coordinates("com.clerk", "clerk-android", libs.versions.clerk.api.get())
+
+  pom {
+    name.set("Clerk Android UI")
+    description.set("UI components for Clerk Android SDK")
+    inceptionYear.set("2025")
+    url.set("https://github.com/clerk/clerk-android")
+    licenses {
+      license {
+        name.set("MIT License")
+        url.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+        distribution.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+      }
+    }
+    developers {
+      developer {
+        id.set("clerk")
+        name.set("Clerk")
+        url.set("https://clerk.com")
+      }
+    }
+    scm {
+      url.set("https://github.com/clerk/clerk-android")
+      connection.set("scm:git:git://github.com/clerk/clerk-android.git")
+      developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
+    }
   }
 }
 
