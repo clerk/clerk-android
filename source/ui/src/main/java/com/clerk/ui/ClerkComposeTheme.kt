@@ -30,7 +30,6 @@ class ClerkComposeTheme(
   val shadow: Color,
   val ring: Color,
   val muted: Color,
-  val isDark: Boolean,
 ) {
   companion object Companion {
     fun light() =
@@ -50,7 +49,6 @@ class ClerkComposeTheme(
         shadow = ColorPalettes.Light.shadow,
         ring = ColorPalettes.Light.ring,
         muted = ColorPalettes.Light.muted,
-        isDark = false,
       )
 
     fun dark() =
@@ -70,7 +68,6 @@ class ClerkComposeTheme(
         shadow = ColorPalettes.Dark.shadow,
         ring = ColorPalettes.Dark.ring,
         muted = ColorPalettes.Dark.muted,
-        isDark = true,
       )
 
     fun clerk() =
@@ -90,7 +87,6 @@ class ClerkComposeTheme(
         shadow = ColorPalettes.Clerk.shadow,
         ring = ColorPalettes.Clerk.ring,
         muted = ColorPalettes.Clerk.muted,
-        isDark = false, // Clerk theme is light-based
       )
   }
 }
