@@ -1,5 +1,6 @@
 package com.clerk.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -23,6 +24,7 @@ import com.clerk.api.ui.Font as ClerkFont
 import com.clerk.api.ui.ThemeColor
 import com.clerk.ui.colors.ColorPalettes
 
+@SuppressLint("ComposeCompositionLocalUsage")
 val LocalClerkTheme = staticCompositionLocalOf<ClerkTheme> { error("No theme provided") }
 
 @Composable

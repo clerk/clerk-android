@@ -1,10 +1,12 @@
 package com.clerk.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.clerk.api.ui.ClerkDesign
 
+@SuppressLint("ComposeCompositionLocalUsage")
 val LocalClerkDesign = staticCompositionLocalOf<ClerkDesign> { error("No ClerkDesign provided") }
 
 val clerkDesign: ClerkDesign

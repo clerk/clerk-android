@@ -47,4 +47,6 @@ dependencies {
 
   androidTestImplementation(libs.androidx.espresso.core)
   androidTestImplementation(libs.androidx.junit)
+
+  lintChecks(libs.compose.lints)
 }
