@@ -12,11 +12,11 @@ plugins {
 
 android {
   namespace = "com.clerk.sdk"
-  compileSdk = libs.versions.compileSdk.get().toInt()
+  compileSdk = 36
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
-    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.sdk.get()}\"")
+    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.api.get()}\"")
   }
 
   buildTypes {
@@ -47,7 +47,7 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 }
 
 mavenPublishing {
-  coordinates("com.clerk", "clerk-android", libs.versions.clerk.sdk.get())
+  coordinates("com.clerk", "clerk-android", libs.versions.clerk.api.get())
 
   pom {
     name.set("Clerk Android UI")
