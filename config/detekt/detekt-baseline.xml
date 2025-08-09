@@ -2,13 +2,12 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:ClerkComposeTheme.kt$@Composable internal fun ClerkTheme( darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit, )</ID>
-    <ID>LongMethod:ClerkComposeTheme.kt$@Composable internal fun ClerkTheme( darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit, )</ID>
+    <ID>CyclomaticComplexMethod:ClerkCompositionLocals.kt$@Composable private fun computeColorScheme(darkTheme: Boolean): ColorScheme</ID>
+    <ID>CyclomaticComplexMethod:ClerkCompositionLocals.kt$@Composable private fun computeTypography(): Typography</ID>
+    <ID>LongMethod:ClerkCompositionLocals.kt$@Composable private fun computeBaseColors(darkTheme: Boolean): BaseColors</ID>
     <ID>LongParameterList:ClerkTypography.kt$ClerkTypography$( val displayLarge: Font, val displayMedium: Font, val displaySmall: Font, val headlineLarge: Font, val headlineMedium: Font, val headlineSmall: Font, val titleLarge: Font, val titleMedium: Font, val titleSmall: Font, val bodyLarge: Font, val bodyMedium: Font, val bodySmall: Font, val labelLarge: Font, val labelMedium: Font, val labelSmall: Font, )</ID>
     <ID>MagicNumber:DeviceAttestationHelper.kt$DeviceAttestationHelper$8</ID>
     <ID>NestedBlockDepth:ClientSyncingMiddleware.kt$ClientSyncingMiddleware$override fun intercept(chain: Interceptor.Chain): Response</ID>
-    <ID>NewLineAtEndOfFile:MainApplication.kt$com.clerk.compatibility.MainApplication.kt</ID>
-    <ID>NewLineAtEndOfFile:build.gradle.kts$.build.gradle.kts</ID>
     <ID>ReturnCount:DeviceAssertionMiddleware.kt$DeviceAssertionInterceptor.DeviceAttestationManager$suspend fun performDeviceAssertion(request: Request, error: ClerkError): Boolean</ID>
     <ID>SwallowedException:ClerkTest.kt$ClerkTest$e: Exception</ID>
     <ID>SwallowedException:PasskeyCredentialManagerTest.kt$PasskeyCredentialManagerTest$e: Exception</ID>
@@ -17,7 +16,5 @@
     <ID>TooManyFunctions:User.kt$com.clerk.api.user.User.kt</ID>
     <ID>UnusedPrivateClass:ClerkApiResultCallAdapterFactory.kt$ApiException : Exception</ID>
     <ID>UnusedPrivateProperty:build.gradle.kts$val detektProjectBaseline by tasks.registering(DetektCreateBaselineTask::class) { description = "Overrides current baseline." buildUponDefaultConfig.set(true) ignoreFailures.set(true) parallel.set(true) setSource(files(rootDir)) config.setFrom(files("$rootDir/config/detekt/detekt.yml")) baseline.set(file("$rootDir/config/detekt/detekt-baseline.xml")) include("**/*.kt") include("**/*.kts") exclude("**/resources/**") exclude("**/build/**") }</ID>
-    <ID>WildcardImport:ExampleInstrumentedTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ExampleUnitTest.kt$import org.junit.Assert.*</ID>
   </CurrentIssues>
 </SmellBaseline>

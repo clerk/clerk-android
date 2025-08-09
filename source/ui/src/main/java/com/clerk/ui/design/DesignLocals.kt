@@ -1,4 +1,4 @@
-package com.clerk.ui
+package com.clerk.ui.design
 
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
