@@ -1,7 +1,7 @@
 name: Build Android App
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "sam/clerk-ui" ]
 
 jobs:
   build:
@@ -20,4 +20,4 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
-      run: ./gradlew :source:api:assembleDebug
+      run: ./gradlew :source:api:assembleDebug && ./gradlew :source:ui:assembleDebug

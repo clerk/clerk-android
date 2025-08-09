@@ -1,8 +1,10 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 
 plugins {
-  alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.android)
+  alias(libs.plugins.android.library)
+  alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.dokka)
   alias(libs.plugins.kotlin.plugin.serialization)
   alias(libs.plugins.ksp)
   alias(libs.plugins.mavenPublish)
@@ -14,8 +16,7 @@ android {
 
   defaultConfig {
     minSdk = 24
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.sdk.get()}\"")
+    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.api.get()}\"")
   }
 
   buildTypes {
@@ -37,11 +38,41 @@ tasks.withType<DokkaTaskPartial>().configureEach {
   dependsOn(tasks.named("kspDebugKotlin"))
   dependsOn(tasks.named("kspReleaseKotlin"))
   dependencies { dokkaPlugin(libs.versioning.plugin) }
-  moduleName.set("Clerk Android")
+  moduleName.set("Clerk Android API")
   suppressInheritedMembers.set(true)
   dokkaSourceSets.configureEach {
     includes.from(listOf("module.md"))
     reportUndocumented.set(true)
+  }
+}
+
+mavenPublishing {
+  coordinates("com.clerk", "clerk-android", libs.versions.clerk.api.get())
+
+  pom {
+    name.set("Clerk Android UI")
+    description.set("UI components for Clerk Android SDK")
+    inceptionYear.set("2025")
+    url.set("https://github.com/clerk/clerk-android")
+    licenses {
+      license {
+        name.set("MIT License")
+        url.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+        distribution.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+      }
+    }
+    developers {
+      developer {
+        id.set("clerk")
+        name.set("Clerk")
+        url.set("https://clerk.com")
+      }
+    }
+    scm {
+      url.set("https://github.com/clerk/clerk-android")
+      connection.set("scm:git:git://github.com/clerk/clerk-android.git")
+      developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
+    }
   }
 }
 
