@@ -1,6 +1,6 @@
 package com.clerk.api.ui
 
-import androidx.annotation.FontRes
+import androidx.compose.ui.text.TextStyle
 
 /**
  * Platform-agnostic description of a complete typography scale used by Clerk UI components.
@@ -27,54 +27,15 @@ import androidx.annotation.FontRes
  *   in [ClerkFontWeights] instead of using hard-coded numbers.
  */
 class ClerkTypography(
-  val displaySmall: Font,
-  val headlineLarge: Font,
-  val headlineMedium: Font,
-  val headlineSmall: Font,
-  val titleMedium: Font,
-  val titleSmall: Font,
-  val bodyLarge: Font,
-  val bodyMedium: Font,
-  val bodySmall: Font,
-  val labelMedium: Font,
-  val labelSmall: Font,
+  val displaySmall: TextStyle? = null,
+  val headlineLarge: TextStyle? = null,
+  val headlineMedium: TextStyle? = null,
+  val headlineSmall: TextStyle? = null,
+  val titleMedium: TextStyle? = null,
+  val titleSmall: TextStyle? = null,
+  val bodyLarge: TextStyle? = null,
+  val bodyMedium: TextStyle? = null,
+  val bodySmall: TextStyle? = null,
+  val labelMedium: TextStyle? = null,
+  val labelSmall: TextStyle? = null,
 )
-
-/**
- * A simple value object describing a font for a given typography slot.
- *
- * @property fontResId Android font resource ID (e.g., `R.font.inter_regular`). The resource should
- *   be packaged with the app. Alternate platforms can adapt this field as needed.
- * @property size Nominal text size (e.g., in points). UI layers should convert to appropriate
- *   display units (e.g., sp) when constructing platform text styles.
- * @property weight Semantic weight for the style. See [ClerkFontWeight] and [ClerkFontWeights].
- */
-data class Font(@FontRes val fontResId: Int? = null, val size: Double, val weight: ClerkFontWeight)
-
-/** Named constants for font weight values to avoid magic numbers. */
-object ClerkFontWeights {
-  const val THIN = 100
-  const val EXTRA_LIGHT = 200
-  const val LIGHT = 300
-  const val REGULAR = 400
-  const val MEDIUM = 500
-  const val SEMI_BOLD = 600
-  const val BOLD = 700
-  const val EXTRA_BOLD = 800
-  const val BLACK = 900
-}
-
-/**
- * Semantic font weights used across the typography scale. Backed by values from [ClerkFontWeights].
- */
-enum class ClerkFontWeight(val value: Int) {
-  Thin(ClerkFontWeights.THIN),
-  ExtraLight(ClerkFontWeights.EXTRA_LIGHT),
-  Light(ClerkFontWeights.LIGHT),
-  Regular(ClerkFontWeights.REGULAR),
-  Medium(ClerkFontWeights.MEDIUM),
-  SemiBold(ClerkFontWeights.SEMI_BOLD),
-  Bold(ClerkFontWeights.BOLD),
-  ExtraBold(ClerkFontWeights.EXTRA_BOLD),
-  Black(ClerkFontWeights.BLACK),
-}
