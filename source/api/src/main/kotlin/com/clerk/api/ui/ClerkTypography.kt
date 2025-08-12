@@ -27,19 +27,15 @@ import androidx.annotation.FontRes
  *   in [ClerkFontWeights] instead of using hard-coded numbers.
  */
 class ClerkTypography(
-  val displayLarge: Font,
-  val displayMedium: Font,
   val displaySmall: Font,
   val headlineLarge: Font,
   val headlineMedium: Font,
   val headlineSmall: Font,
-  val titleLarge: Font,
   val titleMedium: Font,
   val titleSmall: Font,
   val bodyLarge: Font,
   val bodyMedium: Font,
   val bodySmall: Font,
-  val labelLarge: Font,
   val labelMedium: Font,
   val labelSmall: Font,
 )
@@ -53,7 +49,7 @@ class ClerkTypography(
  *   display units (e.g., sp) when constructing platform text styles.
  * @property weight Semantic weight for the style. See [ClerkFontWeight] and [ClerkFontWeights].
  */
-data class Font(@FontRes val fontResId: Int, val size: Double, val weight: ClerkFontWeight)
+data class Font(@FontRes val fontResId: Int? = null, val size: Double, val weight: ClerkFontWeight)
 
 /** Named constants for font weight values to avoid magic numbers. */
 object ClerkFontWeights {
