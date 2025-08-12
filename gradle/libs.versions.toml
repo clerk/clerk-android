@@ -12,8 +12,6 @@ detekt = "1.23.8"
 dokka = "1.9.20"
 foundationLayoutAndroid = "1.8.3"
 hiltAndroid = "2.57"
-hiltCompiler = "2.57"
-hiltNavigationCompose = "1.2.0"
 jdk = "17"
 jvmTarget = "17"
 kotlin = "2.1.0"
@@ -61,9 +59,6 @@ compose-lints = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.1.1"
 google-playIntegrity = "com.google.android.play:integrity:1.4.0"
-hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltCompiler" }
-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 junit = "junit:junit:4.13.2"
 jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
@@ -85,9 +80,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junit" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-clerk-ui = { module = "com.clerk:ui", version.ref = "clerk-ui" }
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
 
 [plugins]
