@@ -9,7 +9,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeAccess
 
@@ -31,7 +30,7 @@ fun ClerkButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
           containerColor = MaterialTheme.colorScheme.primary,
           contentColor = MaterialTheme.colorScheme.onPrimary,
         ),
-      shape = RoundedCornerShape(ClerkThemeAccess.design.borderRadius.dp),
+      shape = RoundedCornerShape(ClerkThemeAccess.design.borderRadius),
     ) {
       Text(text = text)
     }
@@ -40,7 +39,6 @@ fun ClerkButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
 
 @PreviewLightDark
 @Composable
-private fun Preview() {
-
+private fun PreviewButton() {
   ClerkButton("Continue", onClick = {})
 }
