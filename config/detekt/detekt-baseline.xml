@@ -2,10 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:ClerkCompositionLocals.kt$@Composable private fun computeColorScheme(darkTheme: Boolean): ColorScheme</ID>
-    <ID>CyclomaticComplexMethod:ClerkCompositionLocals.kt$@Composable private fun computeTypography(): Typography</ID>
-    <ID>LongMethod:ClerkCompositionLocals.kt$@Composable private fun computeBaseColors(darkTheme: Boolean): BaseColors</ID>
-    <ID>LongParameterList:ClerkTypography.kt$ClerkTypography$( val displayLarge: Font, val displayMedium: Font, val displaySmall: Font, val headlineLarge: Font, val headlineMedium: Font, val headlineSmall: Font, val titleLarge: Font, val titleMedium: Font, val titleSmall: Font, val bodyLarge: Font, val bodyMedium: Font, val bodySmall: Font, val labelLarge: Font, val labelMedium: Font, val labelSmall: Font, )</ID>
+    <ID>LongParameterList:ClerkTypography.kt$ClerkTypography$( val displaySmall: Font, val headlineLarge: Font, val headlineMedium: Font, val headlineSmall: Font, val titleMedium: Font, val titleSmall: Font, val bodyLarge: Font, val bodyMedium: Font, val bodySmall: Font, val labelMedium: Font, val labelSmall: Font, )</ID>
     <ID>MagicNumber:DeviceAttestationHelper.kt$DeviceAttestationHelper$8</ID>
     <ID>NestedBlockDepth:ClientSyncingMiddleware.kt$ClientSyncingMiddleware$override fun intercept(chain: Interceptor.Chain): Response</ID>
     <ID>ReturnCount:DeviceAssertionMiddleware.kt$DeviceAssertionInterceptor.DeviceAttestationManager$suspend fun performDeviceAssertion(request: Request, error: ClerkError): Boolean</ID>
