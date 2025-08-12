@@ -40,7 +40,6 @@ fun ClerkButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
 
 @PreviewLightDark
 @Composable
-private fun Preview() {
-
+private fun PreviewButton() {
   ClerkButton("Continue", onClick = {})
 }

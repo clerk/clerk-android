@@ -59,19 +59,15 @@ fun ClerkMaterialTheme(clerkTheme: ClerkTheme? = null, content: @Composable () -
     val clerkTypography = ClerkThemeAccess.typography
     val materialTypography =
       Typography(
-        displayLarge = clerkTypography.displayLarge.toTextStyle(),
-        displayMedium = clerkTypography.displayMedium.toTextStyle(),
         displaySmall = clerkTypography.displaySmall.toTextStyle(),
         headlineLarge = clerkTypography.headlineLarge.toTextStyle(),
         headlineMedium = clerkTypography.headlineMedium.toTextStyle(),
         headlineSmall = clerkTypography.headlineSmall.toTextStyle(),
-        titleLarge = clerkTypography.titleLarge.toTextStyle(),
         titleMedium = clerkTypography.titleMedium.toTextStyle(),
         titleSmall = clerkTypography.titleSmall.toTextStyle(),
         bodyLarge = clerkTypography.bodyLarge.toTextStyle(),
         bodyMedium = clerkTypography.bodyMedium.toTextStyle(),
         bodySmall = clerkTypography.bodySmall.toTextStyle(),
-        labelLarge = clerkTypography.labelLarge.toTextStyle(),
         labelMedium = clerkTypography.labelMedium.toTextStyle(),
         labelSmall = clerkTypography.labelSmall.toTextStyle(),
       )
