@@ -1,14 +1,24 @@
 package com.clerk.ui.core
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
+import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.R as ClerkR
+import com.clerk.ui.colors.DefaultColors
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeAccess
 
@@ -32,7 +42,21 @@ fun ClerkButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
         ),
       shape = RoundedCornerShape(ClerkThemeAccess.design.borderRadius),
     ) {
-      Text(text = text)
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+      ) {
+        Icon(
+          painter = painterResource(ClerkR.drawable.ic_triangle_right),
+          contentDescription = null,
+        )
+        Text(text = text)
+        Icon(
+          painter = painterResource(ClerkR.drawable.ic_triangle_right),
+          contentDescription = null,
+        )
+      }
     }
   }
 }
@@ -41,4 +65,12 @@ fun ClerkButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
 @Composable
 private fun PreviewButton() {
   ClerkButton("Continue", onClick = {})
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewButtonWithCustomTheme() {
+  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
+
+  ClerkButton("Custom Theme", onClick = {})
 }
