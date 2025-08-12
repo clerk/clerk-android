@@ -1,4 +1,4 @@
-package com.clerk.ui.components
+package com.clerk.ui.core
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
