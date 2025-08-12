@@ -20,6 +20,7 @@ android {
   }
 
   buildTypes {
+    debug { isMinifyEnabled = false }
     release {
       isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -83,6 +84,7 @@ dependencies {
   implementation(libs.androidx.ui.tooling.preview.android)
   implementation(libs.material)
   implementation(libs.material3)
+  implementation(libs.materialKolor)
 
   compileOnly(projects.clerk.source.api)
 

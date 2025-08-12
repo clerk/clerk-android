@@ -241,14 +241,14 @@ object Clerk {
    *   Clerk.
    * @param options Enable additional options for the Clerk SDK. See [ClerkConfigurationOptions] for
    *   details.
-   * @param clerkTheme Customize the appearance of Clerk UI components. See [ClerkTheme] for
+   * @param theme Customize the appearance of Clerk UI components. See [ClerkTheme] for
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
   fun initialize(
     context: Context,
     publishableKey: String,
     options: ClerkConfigurationOptions? = null,
-    clerkTheme: ClerkTheme? = null,
+    theme: ClerkTheme? = null,
   ) {
     this.debugMode = options?.enableDebugMode == true
     configurationManager.configure(
@@ -258,7 +258,7 @@ object Clerk {
     )
     this.applicationContext = WeakReference(context)
     this.applicationId = options?.deviceAttestationOptions?.applicationId
-    this.customTheme = clerkTheme
+    this.customTheme = theme
   }
 
   /**
