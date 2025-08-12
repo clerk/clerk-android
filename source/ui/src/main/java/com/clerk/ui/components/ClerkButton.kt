@@ -4,11 +4,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeAccess
 
@@ -27,10 +27,10 @@ fun ClerkButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
       modifier = modifier.fillMaxWidth(),
       colors =
         ButtonDefaults.buttonColors(
-          containerColor = ClerkThemeAccess.compose.primary,
-          contentColor = ClerkThemeAccess.compose.primaryForeground,
+          containerColor = MaterialTheme.colorScheme.primary,
+          contentColor = MaterialTheme.colorScheme.onPrimary,
         ),
-      shape = RoundedCornerShape(ClerkThemeAccess.clerkDesign.borderRadius.dp),
+      shape = RoundedCornerShape(ClerkThemeAccess.design.borderRadius),
     ) {
       Text(text = text)
     }
