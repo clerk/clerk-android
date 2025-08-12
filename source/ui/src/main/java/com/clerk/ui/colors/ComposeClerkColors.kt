@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.clerk.api.ui.ClerkColors
 import com.clerk.ui.theme.toComposeColor
 
-data class ComposeClerkColors(
+public data class ComposeClerkColors(
   val primary: Color,
   val background: Color,
   val input: Color,
@@ -22,7 +22,7 @@ data class ComposeClerkColors(
   val muted: Color,
 ) {
   companion object {
-    val light =
+    internal val light =
       ComposeClerkColors(
         primary = Color(0xFF2F3037),
         background = Color(0xFFFFFFFF),
@@ -41,7 +41,7 @@ data class ComposeClerkColors(
         muted = Color(0xFFF7F7F7),
       )
 
-    val dark =
+    internal val dark =
       ComposeClerkColors(
         primary = Color(0xFFFAFAFB),
         background = Color(0xFF131316),
@@ -50,7 +50,7 @@ data class ComposeClerkColors(
         success = Color(0xFF22C543),
         warning = Color(0xFFF36B16),
         foreground = Color(0xFFFFFFFF),
-        mutedForeground = Color(0xFFB7BBC2),
+        mutedForeground = Color(0xFFB7B8C2),
         primaryForeground = Color(0xFF000000),
         inputForeground = Color(0xFFFFFFFF),
         neutral = Color(0xFFFFFFFF),
@@ -62,7 +62,24 @@ data class ComposeClerkColors(
   }
 }
 
-fun ClerkColors.toComposeClerkColors() =
+public data class ComputedColors(
+  val primaryPressed: Color,
+  val border: Color,
+  val buttonBorder: Color,
+  val inputBorder: Color,
+  val inputBorderFocused: Color,
+  val dangerInputBorder: Color,
+  val dangerInputBorderFocused: Color,
+  val backgroundTransparent: Color,
+  val backgroundSuccess: Color,
+  val borderSuccess: Color,
+  val backgroundDanger: Color,
+  val borderDanger: Color,
+  val backgroundWarning: Color,
+  val borderWarning: Color,
+)
+
+public fun ClerkColors.toComposeClerkColors() =
   ComposeClerkColors(
     primary = this.primary.toComposeColor(),
     background = this.background.toComposeColor(),

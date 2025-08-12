@@ -1,5 +1,6 @@
 package com.clerk.ui.theme
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -12,13 +13,12 @@ import com.clerk.api.ui.ClerkTypography
 import com.clerk.api.ui.Font
 import com.clerk.ui.colors.ComposeClerkColors
 
-// Composition Locals
+@SuppressLint("ComposeCompositionLocalUsage")
 val LocalClerkColors = compositionLocalOf<ClerkColors> { error("ClerkColors not provided") }
 
+@SuppressLint("ComposeCompositionLocalUsage")
 val LocalClerkTypography =
   compositionLocalOf<ClerkTypography> { error("ClerkTypography not provided") }
-
-val LocalClerkDesign = compositionLocalOf<ClerkDesign> { error("ClerkDesign not provided") }
 
 /**
  * Provides Clerk theme values through composition locals.
@@ -27,7 +27,7 @@ val LocalClerkDesign = compositionLocalOf<ClerkDesign> { error("ClerkDesign not 
  * @param content The composable content that will have access to the theme.
  */
 @Composable
-fun ClerkThemeProvider(theme: ClerkTheme? = null, content: @Composable () -> Unit) {
+internal fun ClerkThemeProvider(theme: ClerkTheme? = null, content: @Composable () -> Unit) {
   val isDarkTheme = isSystemInDarkTheme()
 
   // Use ComposeClerkColors defaults and convert to ClerkColors
@@ -40,21 +40,17 @@ fun ClerkThemeProvider(theme: ClerkTheme? = null, content: @Composable () -> Uni
   CompositionLocalProvider(
     LocalClerkColors provides colors,
     LocalClerkTypography provides typography,
-    LocalClerkDesign provides design,
     content = content,
   )
 }
 
 /** Object providing easy access to current theme values within composables. */
-object ClerkThemeAccess {
+internal object ClerkThemeApiAccess {
   val colors: ClerkColors
     @Composable get() = LocalClerkColors.current
 
   val typography: ClerkTypography
     @Composable get() = LocalClerkTypography.current
-
-  val design: ClerkDesign
-    @Composable get() = LocalClerkDesign.current
 }
 
 // Extension function to convert ComposeClerkColors to ClerkColors
