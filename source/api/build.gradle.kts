@@ -77,6 +77,7 @@ mavenPublishing {
 }
 
 dependencies {
+  implementation(platform(libs.compose.bom))
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.browser)
   implementation(libs.androidx.credentials)
@@ -98,6 +99,8 @@ dependencies {
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
   implementation(libs.retrofit.kotlinx)
+
+  compileOnly(libs.androidx.compose.foundation)
 
   testImplementation(kotlin("test"))
   testImplementation(libs.androidx.arch.test)
