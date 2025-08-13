@@ -1,5 +1,4 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   alias(libs.plugins.kotlin.android)
@@ -7,14 +6,15 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.dokka)
   id("com.vanniktech.maven.publish")
+  alias(libs.plugins.paparazzi)
 }
 
 android {
   namespace = "com.clerk.ui"
-  compileSdk = 36
+  compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
-    minSdk = 24
+    minSdk = libs.versions.minSdk.get().toInt()
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -30,9 +30,11 @@ android {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
-  kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }
+  kotlin { jvmToolchain(17) }
 
   buildFeatures { compose = true }
+
+  testOptions { unitTests.isIncludeAndroidResources = true }
 }
 
 // Configure Maven publishing for this module
@@ -89,6 +91,8 @@ dependencies {
   compileOnly(projects.clerk.source.api)
 
   testImplementation(libs.junit)
+  testImplementation(projects.clerk.source.api)
+  //  testImplementation(libs.paparazzi)
 
   androidTestImplementation(libs.androidx.espresso.core)
   androidTestImplementation(libs.androidx.junit)
