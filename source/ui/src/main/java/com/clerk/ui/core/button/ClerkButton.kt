@@ -72,9 +72,7 @@ fun ClerkButton(
       buildButtonTokens(
         style = buttonStyle,
         config = buttonConfig,
-        colors = ClerkThemeAccess.colors,
         computed = ClerkThemeAccess.computed,
-        typography = ClerkThemeAccess.typography,
         design = ClerkThemeAccess.design,
         isPressed = pressed,
       )
