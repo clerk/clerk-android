@@ -17,7 +17,6 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
-import com.clerk.api.ui.ClerkTypography
 import com.clerk.ui.colors.ComputedColors
 import com.materialkolor.ktx.darken
 import com.materialkolor.ktx.lighten
@@ -59,15 +58,10 @@ internal fun ClerkMaterialTheme(
   content: @Composable () -> Unit,
 ) {
   ClerkThemeProvider(theme = clerkTheme) {
-    val colors = ClerkThemeApiAccess.colors
-    val typography = ClerkThemeApiAccess.typography
-    val design = ClerkThemeApiAccess.design
+    val colors = ClerkThemeProviderAccess.colors
+    val design = ClerkThemeProviderAccess.design
 
-    // Map Clerk colors to Material colors
     val materialColors = computeColorScheme(colors)
-
-    // Map Clerk typography to Material typography
-    val materialTypography = computeTypography(typography)
 
     val computedColors = generateComputedColors(colors)
 
@@ -76,26 +70,14 @@ internal fun ClerkMaterialTheme(
       LocalComputedColors provides computedColors,
       LocalClerkDesign provides design,
     ) {
-      MaterialTheme(colorScheme = materialColors, typography = materialTypography) { content() }
+      MaterialTheme(
+        colorScheme = materialColors,
+        typography = ClerkThemeProviderAccess.typography,
+      ) {
+        content()
+      }
     }
   }
-}
-
-@Composable
-private fun computeTypography(typography: ClerkTypography?): Typography {
-  return Typography(
-    displaySmall = typography?.displaySmall ?: Typography().displaySmall,
-    headlineLarge = typography?.headlineLarge ?: Typography().headlineLarge,
-    headlineMedium = typography?.headlineMedium ?: Typography().headlineMedium,
-    headlineSmall = typography?.headlineSmall ?: Typography().headlineSmall,
-    titleMedium = typography?.titleMedium ?: Typography().titleMedium,
-    titleSmall = typography?.titleSmall ?: Typography().titleSmall,
-    bodyLarge = typography?.bodyLarge ?: Typography().bodyLarge,
-    bodyMedium = typography?.bodyMedium ?: Typography().bodyMedium,
-    bodySmall = typography?.bodySmall ?: Typography().bodySmall,
-    labelMedium = typography?.labelMedium ?: Typography().labelMedium,
-    labelSmall = typography?.labelSmall ?: Typography().labelSmall,
-  )
 }
 
 @Composable
@@ -165,8 +147,8 @@ internal object ClerkThemeAccess {
   internal val colors: ClerkColors
     @Composable get() = LocalComposeColors.current
 
-  internal val typography: ClerkTypography?
-    @Composable get() = ClerkThemeApiAccess.typography
+  internal val typography: Typography
+    @Composable get() = ClerkThemeProviderAccess.typography
 
   internal val design: ClerkDesign
     @Composable get() = LocalClerkDesign.current
