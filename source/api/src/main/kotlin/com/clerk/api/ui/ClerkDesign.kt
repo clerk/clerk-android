@@ -8,4 +8,4 @@ import androidx.compose.ui.unit.dp
  *
  * @property borderRadius The corner radius for the design elements.
  */
-data class ClerkDesign(val borderRadius: Dp = 6.dp)
+data class ClerkDesign(val borderRadius: Dp = 8.dp)
