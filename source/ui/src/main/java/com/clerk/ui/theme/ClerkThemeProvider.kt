@@ -130,7 +130,7 @@ internal val LocalClerkColors =
 
 @SuppressLint("ComposeCompositionLocalUsage")
 internal val LocalClerkTypography =
-  compositionLocalOf<ClerkTypography> { error("ClerkTypography not provided") }
+  compositionLocalOf<ClerkTypography?> { error("ClerkTypography not provided") }
 
 /**
  * Provides Clerk theme values through composition locals.
@@ -146,36 +146,33 @@ internal fun ClerkThemeProvider(theme: ClerkTheme? = null, content: @Composable 
 
   // Resolve typography - use provided values or defaults
   val defaultTypography = DefaultClerkTypography.defaultTypography
-  val typography = generateTypography(theme, defaultTypography)
+  val typography = generateTypography(theme)
 
   val design = theme?.design ?: ClerkDesign()
 
   CompositionLocalProvider(
     LocalClerkColors provides colors,
-    LocalClerkTypography provides typography,
+    LocalClerkTypography provides theme?.typography,
     LocalClerkDesign provides design,
     content = content,
   )
 }
 
 @Composable
-private fun generateTypography(
-  theme: ClerkTheme?,
-  defaultTypography: ClerkTypography,
-): ClerkTypography {
+private fun generateTypography(theme: ClerkTheme?): ClerkTypography {
   val typography =
     ClerkTypography(
-      displaySmall = theme?.typography?.displaySmall ?: defaultTypography.displaySmall,
-      headlineLarge = theme?.typography?.headlineLarge ?: defaultTypography.headlineLarge,
-      headlineMedium = theme?.typography?.headlineMedium ?: defaultTypography.headlineMedium,
-      headlineSmall = theme?.typography?.headlineSmall ?: defaultTypography.headlineSmall,
-      titleMedium = theme?.typography?.titleMedium ?: defaultTypography.titleMedium,
-      titleSmall = theme?.typography?.titleSmall ?: defaultTypography.titleSmall,
-      bodyLarge = theme?.typography?.bodyLarge ?: defaultTypography.bodyLarge,
-      bodyMedium = theme?.typography?.bodyMedium ?: defaultTypography.bodyMedium,
-      bodySmall = theme?.typography?.bodySmall ?: defaultTypography.bodySmall,
-      labelMedium = theme?.typography?.labelMedium ?: defaultTypography.labelMedium,
-      labelSmall = theme?.typography?.labelSmall ?: defaultTypography.labelSmall,
+      displaySmall = theme?.typography?.displaySmall,
+      headlineLarge = theme?.typography?.headlineLarge,
+      headlineMedium = theme?.typography?.headlineMedium,
+      headlineSmall = theme?.typography?.headlineSmall,
+      titleMedium = theme?.typography?.titleMedium,
+      titleSmall = theme?.typography?.titleSmall,
+      bodyLarge = theme?.typography?.bodyLarge,
+      bodyMedium = theme?.typography?.bodyMedium,
+      bodySmall = theme?.typography?.bodySmall,
+      labelMedium = theme?.typography?.labelMedium,
+      labelSmall = theme?.typography?.labelSmall,
     )
   return typography
 }
@@ -210,7 +207,7 @@ internal object ClerkThemeApiAccess {
   internal val colors: ClerkColors
     @Composable get() = LocalClerkColors.current
 
-  internal val typography: ClerkTypography
+  internal val typography: ClerkTypography?
     @Composable get() = LocalClerkTypography.current
 
   internal val design: ClerkDesign
