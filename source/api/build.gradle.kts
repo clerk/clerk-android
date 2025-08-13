@@ -12,7 +12,7 @@ plugins {
 
 android {
   namespace = "com.clerk.sdk"
-  compileSdk = 36
+  compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
