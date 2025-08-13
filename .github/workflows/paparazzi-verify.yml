@@ -6,7 +6,7 @@ on:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest-xlarge
 
     permissions:
       contents: read
@@ -19,7 +19,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: zulu
           java-version: 17
 
       - name: Setup Gradle
