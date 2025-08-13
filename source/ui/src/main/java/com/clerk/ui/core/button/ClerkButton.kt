@@ -31,11 +31,27 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeAccess
 
 /**
- * A button component that uses Clerk's design system.
+ * Clerk-styled button composable.
  *
- * @param text The text to display on the button
- * @param onClick The callback when the button is clicked
- * @param modifier Modifier to be applied to the button
+ * Renders a Material3 `Button` themed with Clerk tokens and variants.
+ *
+ * @param text Label displayed on the button.
+ * @param onClick Invoked when the button is pressed.
+ * @param modifier Compose `Modifier` for layout and semantics.
+ * @param buttonConfig Configuration controlling size, emphasis, and other visuals.
+ * @param isEnabled When false, applies disabled styling and prevents clicks.
+ * @param leadingIcon Optional drawable resource shown before the text.
+ * @param trailingIcon Optional drawable resource shown after the text.
+ * @param buttonStyle Visual style variant (e.g., `ButtonStyle.Primary`).
+ *
+ * Example:
+ * ```kotlin
+ * ClerkButton(
+ *   text = "Continue",
+ *   onClick = { /* action */ },
+ *   buttonStyle = ButtonStyle.Primary
+ * )
+ * ```
  */
 @Composable
 fun ClerkButton(
@@ -96,7 +112,6 @@ fun ClerkButton(
 @PreviewLightDark
 @Composable
 private fun PreviewButton() {
-  //  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
   ClerkMaterialTheme {
     LazyColumn(
       modifier =

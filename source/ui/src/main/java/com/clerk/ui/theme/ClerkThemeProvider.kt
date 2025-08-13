@@ -125,10 +125,11 @@ private object DefaultClerkTypography {
 }
 
 @SuppressLint("ComposeCompositionLocalUsage")
-val LocalClerkColors = compositionLocalOf<ClerkColors> { error("ClerkColors not provided") }
+internal val LocalClerkColors =
+  compositionLocalOf<ClerkColors> { error("ClerkColors not provided") }
 
 @SuppressLint("ComposeCompositionLocalUsage")
-val LocalClerkTypography =
+internal val LocalClerkTypography =
   compositionLocalOf<ClerkTypography> { error("ClerkTypography not provided") }
 
 /**
@@ -206,12 +207,12 @@ private fun generateColors(theme: ClerkTheme?): ClerkColors {
 
 /** Object providing easy access to current theme values within composables. */
 internal object ClerkThemeApiAccess {
-  val colors: ClerkColors
+  internal val colors: ClerkColors
     @Composable get() = LocalClerkColors.current
 
-  val typography: ClerkTypography
+  internal val typography: ClerkTypography
     @Composable get() = LocalClerkTypography.current
 
-  val design: ClerkDesign
+  internal val design: ClerkDesign
     @Composable get() = LocalClerkDesign.current
 }

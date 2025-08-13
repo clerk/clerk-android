@@ -12,7 +12,7 @@ import com.clerk.api.ui.ClerkTypography
 import com.clerk.ui.colors.ComputedColors
 
 @Immutable
-data class ButtonStyleTokens(
+internal data class ButtonStyleTokens(
   val textStyle: TextStyle,
   val foreground: Color,
   val height: Dp,
@@ -24,7 +24,7 @@ data class ButtonStyleTokens(
 )
 
 @Composable
-fun buildButtonTokens(
+internal fun buildButtonTokens(
   style: ButtonStyle,
   config: ClerkButtonConfig,
   colors: ClerkColors,

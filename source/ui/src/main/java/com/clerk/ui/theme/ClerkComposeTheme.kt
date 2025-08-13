@@ -54,7 +54,7 @@ internal val LocalClerkDesign =
  * @param content The composable content.
  */
 @Composable
-fun ClerkMaterialTheme(
+internal fun ClerkMaterialTheme(
   clerkTheme: ClerkTheme? = Clerk.customTheme,
   content: @Composable () -> Unit,
 ) {
@@ -165,19 +165,19 @@ private fun computeColorScheme(colors: ClerkColors): ColorScheme {
 }
 
 /** Object providing easy access to all theme values within composables. */
-object ClerkThemeAccess {
+internal object ClerkThemeAccess {
 
   // Direct Clerk theme object access
-  val colors: ClerkColors
+  internal val colors: ClerkColors
     @Composable get() = LocalComposeColors.current
 
-  val typography: ClerkTypography
+  internal val typography: ClerkTypography
     @Composable get() = ClerkThemeApiAccess.typography
 
-  val design: ClerkDesign
+  internal val design: ClerkDesign
     @Composable get() = LocalClerkDesign.current
 
   // Computed color variants
-  val computed: ComputedColors
+  internal val computed: ComputedColors
     @Composable get() = LocalComputedColors.current
 }
