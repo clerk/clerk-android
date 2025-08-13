@@ -22,18 +22,18 @@ private object DefaultClerkColors {
       primary = Color(0xFF2F3037),
       background = Color(0xFFFFFFFF),
       input = Color(0xFFFFFFFF),
-      danger = Color(0xFFDC2626),
+      danger = Color(0xFFEF4444),
       success = Color(0xFF22C543),
       warning = Color(0xFFF36B16),
-      foreground = Color(0xFF2F3037),
-      mutedForeground = Color(0xFF878BC2),
+      foreground = Color(0xFF212126),
+      mutedForeground = Color(0xFF747686),
       primaryForeground = Color(0xFFFFFFFF),
-      inputForeground = Color(0xFF2F3037),
-      neutral = Color(0xFF2F3037),
-      border = Color(0xFFE5E7EB),
-      ring = Color(0xFF3366FF),
-      muted = Color(0xFFF8FAFC),
-      shadow = Color(0x1A000000),
+      inputForeground = Color(0xFF212126),
+      neutral = Color(0xFF000000),
+      border = Color(0xFF000000),
+      ring = Color(0xFF000000),
+      muted = Color(0xFFF7F7F7),
+      shadow = Color(0xFF000000),
     )
 
   val darkColors =
@@ -41,18 +41,18 @@ private object DefaultClerkColors {
       primary = Color(0xFFFAFAFB),
       background = Color(0xFF131316),
       input = Color(0xFF212126),
-      danger = Color(0xFFDC2626),
+      danger = Color(0xFFEF4444),
       success = Color(0xFF22C543),
       warning = Color(0xFFF36B16),
-      foreground = Color(0xFFFAFAFB),
+      foreground = Color(0xFFFFFFFF),
       mutedForeground = Color(0xFFB7B8C2),
       primaryForeground = Color(0xFF000000),
-      inputForeground = Color(0xFFFAFAFB),
-      neutral = Color(0xFFFAFAFB),
-      border = Color(0xFF3A3A42),
-      ring = Color(0xFF5B8DEF),
+      inputForeground = Color(0xFFFFFFFF),
+      neutral = Color(0xFFFFFFFF),
+      border = Color(0xFFFFFFFF),
+      ring = Color(0xFFFFFFFF),
       muted = Color(0xFF1A1A1D),
-      shadow = Color(0x33000000),
+      shadow = Color(0xFFFFFFFF),
     )
 }
 
@@ -125,10 +125,11 @@ private object DefaultClerkTypography {
 }
 
 @SuppressLint("ComposeCompositionLocalUsage")
-val LocalClerkColors = compositionLocalOf<ClerkColors> { error("ClerkColors not provided") }
+internal val LocalClerkColors =
+  compositionLocalOf<ClerkColors> { error("ClerkColors not provided") }
 
 @SuppressLint("ComposeCompositionLocalUsage")
-val LocalClerkTypography =
+internal val LocalClerkTypography =
   compositionLocalOf<ClerkTypography> { error("ClerkTypography not provided") }
 
 /**
@@ -206,12 +207,12 @@ private fun generateColors(theme: ClerkTheme?): ClerkColors {
 
 /** Object providing easy access to current theme values within composables. */
 internal object ClerkThemeApiAccess {
-  val colors: ClerkColors
+  internal val colors: ClerkColors
     @Composable get() = LocalClerkColors.current
 
-  val typography: ClerkTypography
+  internal val typography: ClerkTypography
     @Composable get() = LocalClerkTypography.current
 
-  val design: ClerkDesign
+  internal val design: ClerkDesign
     @Composable get() = LocalClerkDesign.current
 }
