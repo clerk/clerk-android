@@ -33,7 +33,7 @@ internal fun buildButtonTokens(
   val text =
     when (config.size) {
       ClerkButtonConfig.Size.Small -> MaterialTheme.typography.titleSmall
-      ClerkButtonConfig.Size.Large -> MaterialTheme.typography.bodyLarge
+      ClerkButtonConfig.Size.Large -> MaterialTheme.typography.titleMedium
     }
 
   val height =
