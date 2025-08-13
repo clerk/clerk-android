@@ -1,6 +1,7 @@
 package com.clerk.ui.core.button
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -43,6 +44,7 @@ fun ClerkButton(
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
   buttonConfig: ClerkButtonConfig = ClerkButtonConfig(),
+  isEnabled: Boolean = true,
   @DrawableRes leadingIcon: Int? = null,
   @DrawableRes trailingIcon: Int? = null,
   buttonStyle: ButtonStyle = ButtonStyle.Primary,
@@ -51,46 +53,33 @@ fun ClerkButton(
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
 
-    val resolvedStyle =
-      when (buttonStyle) {
-        ButtonStyle.Primary ->
-          PrimaryButtonStyle(
-            config = buttonConfig,
-            clerkColors = ClerkThemeAccess.colors,
-            clerkDesign = ClerkThemeAccess.design,
-            clerkTypography = ClerkThemeAccess.typography,
-            computedColors = ClerkThemeAccess.computed,
-            isPressed = pressed,
-          )
-        ButtonStyle.Secondary ->
-          SecondaryButtonStyle(
-            config = buttonConfig,
-            clerkColors = ClerkThemeAccess.colors,
-            clerkDesign = ClerkThemeAccess.design,
-            clerkTypography = ClerkThemeAccess.typography,
-            computedColors = ClerkThemeAccess.computed,
-            isPressed = pressed,
-          )
-        ButtonStyle.Negative ->
-          NegativeButtonStyle(
-            config = buttonConfig,
-            clerkColors = ClerkThemeAccess.colors,
-            clerkDesign = ClerkThemeAccess.design,
-            clerkTypography = ClerkThemeAccess.typography,
-            computedColors = ClerkThemeAccess.computed,
-            isPressed = pressed,
-          )
-      }
-
-    val container = resolvedStyle.backgroundColor()
-    val content = resolvedStyle.foregroundColor()
+    val tokens =
+      buildButtonTokens(
+        style = buttonStyle,
+        config = buttonConfig,
+        colors = ClerkThemeAccess.colors,
+        computed = ClerkThemeAccess.computed,
+        typography = ClerkThemeAccess.typography,
+        design = ClerkThemeAccess.design,
+        isPressed = pressed,
+      )
 
     Button(
       onClick = onClick,
-      modifier = Modifier.height(resolvedStyle.height()).fillMaxWidth().then(modifier),
+      modifier = Modifier.height(tokens.height).fillMaxWidth().then(modifier),
       interactionSource = interactionSource,
-      colors = ButtonDefaults.buttonColors(containerColor = container, contentColor = content),
-      shape = RoundedCornerShape(ClerkThemeAccess.design.borderRadius),
+      colors =
+        ButtonDefaults.buttonColors(
+          containerColor =
+            if (isEnabled) tokens.backgroundColor else tokens.backgroundColor.copy(alpha = 0.5f),
+          contentColor = if (isEnabled) tokens.foreground else tokens.foreground.copy(alpha = 0.5f),
+        ),
+      border = BorderStroke(tokens.borderWidth, tokens.borderColor),
+      shape = RoundedCornerShape(tokens.cornerRadius),
+      elevation =
+        if (tokens.hasShadow)
+          ButtonDefaults.buttonElevation(defaultElevation = 1.dp, pressedElevation = 1.dp)
+        else null,
     ) {
       Row(
         modifier = Modifier.fillMaxWidth(),
@@ -98,7 +87,7 @@ fun ClerkButton(
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
       ) {
         leadingIcon?.let { Icon(painter = painterResource(it), contentDescription = null) }
-        Text(text = text, style = resolvedStyle.textStyle())
+        Text(text = text, style = tokens.textStyle)
         trailingIcon?.let { Icon(painter = painterResource(it), contentDescription = null) }
       }
     }
@@ -140,6 +129,17 @@ private fun PreviewButton() {
             trailingIcon = ClerkR.drawable.ic_triangle_right,
           )
         }
+        item {
+          ClerkButton(
+            text = "Primary • High • Large • Disabled",
+            buttonConfig = ClerkButtonConfig(size = ClerkButtonConfig.Size.Large),
+            onClick = {},
+            isEnabled = false,
+            buttonStyle = ButtonStyle.Primary,
+            leadingIcon = ClerkR.drawable.ic_triangle_right,
+            trailingIcon = ClerkR.drawable.ic_triangle_right,
+          )
+        }
         // Primary - Low
         item {
           ClerkButton(
@@ -163,6 +163,21 @@ private fun PreviewButton() {
                 emphasis = ClerkButtonConfig.Emphasis.Low,
                 size = ClerkButtonConfig.Size.Small,
               ),
+            onClick = {},
+            buttonStyle = ButtonStyle.Primary,
+            leadingIcon = ClerkR.drawable.ic_triangle_right,
+            trailingIcon = ClerkR.drawable.ic_triangle_right,
+          )
+        }
+        item {
+          ClerkButton(
+            text = "Primary • Low • Large • Disabled",
+            buttonConfig =
+              ClerkButtonConfig(
+                emphasis = ClerkButtonConfig.Emphasis.Low,
+                size = ClerkButtonConfig.Size.Large,
+              ),
+            isEnabled = false,
             onClick = {},
             buttonStyle = ButtonStyle.Primary,
             leadingIcon = ClerkR.drawable.ic_triangle_right,
@@ -199,6 +214,22 @@ private fun PreviewButton() {
           )
         }
 
+        item {
+          ClerkButton(
+            text = "Primary • None • Large • Disabled",
+            buttonConfig =
+              ClerkButtonConfig(
+                emphasis = ClerkButtonConfig.Emphasis.None,
+                size = ClerkButtonConfig.Size.Large,
+              ),
+            isEnabled = false,
+            onClick = {},
+            buttonStyle = ButtonStyle.Primary,
+            leadingIcon = ClerkR.drawable.ic_triangle_right,
+            trailingIcon = ClerkR.drawable.ic_triangle_right,
+          )
+        }
+
         // Secondary - High
         item {
           ClerkButton(
@@ -219,6 +250,17 @@ private fun PreviewButton() {
             trailingIcon = ClerkR.drawable.ic_triangle_right,
           )
         }
+        item {
+          ClerkButton(
+            text = "Secondary • High • Large • Disabled",
+            onClick = {},
+            isEnabled = false,
+            buttonStyle = ButtonStyle.Secondary,
+            leadingIcon = ClerkR.drawable.ic_triangle_right,
+            trailingIcon = ClerkR.drawable.ic_triangle_right,
+          )
+        }
+
         // Secondary - Low
         item {
           ClerkButton(
@@ -293,6 +335,16 @@ private fun PreviewButton() {
             text = "Negative • High • Small",
             buttonConfig = ClerkButtonConfig(size = ClerkButtonConfig.Size.Small),
             onClick = {},
+            buttonStyle = ButtonStyle.Negative,
+            leadingIcon = ClerkR.drawable.ic_triangle_right,
+            trailingIcon = ClerkR.drawable.ic_triangle_right,
+          )
+        }
+        item {
+          ClerkButton(
+            text = "Negative • High • Large • Disabled",
+            onClick = {},
+            isEnabled = false,
             buttonStyle = ButtonStyle.Negative,
             leadingIcon = ClerkR.drawable.ic_triangle_right,
             trailingIcon = ClerkR.drawable.ic_triangle_right,
