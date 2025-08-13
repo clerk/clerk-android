@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
@@ -53,7 +54,10 @@ internal val LocalClerkDesign =
  * @param content The composable content.
  */
 @Composable
-fun ClerkMaterialTheme(clerkTheme: ClerkTheme? = null, content: @Composable () -> Unit) {
+internal fun ClerkMaterialTheme(
+  clerkTheme: ClerkTheme? = Clerk.customTheme,
+  content: @Composable () -> Unit,
+) {
   ClerkThemeProvider(theme = clerkTheme) {
     val colors = ClerkThemeApiAccess.colors
     val typography = ClerkThemeApiAccess.typography
@@ -161,19 +165,19 @@ private fun computeColorScheme(colors: ClerkColors): ColorScheme {
 }
 
 /** Object providing easy access to all theme values within composables. */
-object ClerkThemeAccess {
+internal object ClerkThemeAccess {
 
   // Direct Clerk theme object access
-  val colors: ClerkColors
+  internal val colors: ClerkColors
     @Composable get() = LocalComposeColors.current
 
-  val typography: ClerkTypography
+  internal val typography: ClerkTypography
     @Composable get() = ClerkThemeApiAccess.typography
 
-  val design: ClerkDesign
+  internal val design: ClerkDesign
     @Composable get() = LocalClerkDesign.current
 
   // Computed color variants
-  val computed: ComputedColors
+  internal val computed: ComputedColors
     @Composable get() = LocalComputedColors.current
 }
