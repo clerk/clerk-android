@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,7 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.clerk.ui.R as ClerkR
+import com.clerk.ui.R
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeAccess
 
@@ -99,315 +98,227 @@ fun ClerkButton(
 private fun PreviewButton() {
   //  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
   ClerkMaterialTheme {
-    Column(
+    LazyColumn(
       modifier =
         Modifier.fillMaxSize()
           .background(color = MaterialTheme.colorScheme.background)
-          .padding(16.dp)
+          .padding(16.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
     ) {
-      LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
-      ) {
-        // Primary - High
-        item {
-          ClerkButton(
-            text = "Primary • High • Large",
-            onClick = {},
-            buttonStyle = ButtonStyle.Primary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Primary • High • Small",
-            buttonConfig = ClerkButtonConfig(size = ClerkButtonConfig.Size.Small),
-            onClick = {},
-            buttonStyle = ButtonStyle.Primary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Primary • High • Large • Disabled",
-            buttonConfig = ClerkButtonConfig(size = ClerkButtonConfig.Size.Large),
-            onClick = {},
-            isEnabled = false,
-            buttonStyle = ButtonStyle.Primary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        // Primary - Low
-        item {
-          ClerkButton(
-            text = "Primary • Low • Large",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Large,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Primary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Primary • Low • Small",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Small,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Primary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Primary • Low • Large • Disabled",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Large,
-              ),
-            isEnabled = false,
-            onClick = {},
-            buttonStyle = ButtonStyle.Primary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        // Primary - None
-        item {
-          ClerkButton(
-            text = "Primary • None • Large",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Large,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Primary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Primary • None • Small",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Small,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Primary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-
-        item {
-          ClerkButton(
-            text = "Primary • None • Large • Disabled",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Large,
-              ),
-            isEnabled = false,
-            onClick = {},
-            buttonStyle = ButtonStyle.Primary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-
-        // Secondary - High
-        item {
-          ClerkButton(
-            text = "Secondary • High • Large",
-            onClick = {},
-            buttonStyle = ButtonStyle.Secondary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Secondary • High • Small",
-            buttonConfig = ClerkButtonConfig(size = ClerkButtonConfig.Size.Small),
-            onClick = {},
-            buttonStyle = ButtonStyle.Secondary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Secondary • High • Large • Disabled",
-            onClick = {},
-            isEnabled = false,
-            buttonStyle = ButtonStyle.Secondary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-
-        // Secondary - Low
-        item {
-          ClerkButton(
-            text = "Secondary • Low • Large",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Large,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Secondary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Secondary • Low • Small",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Small,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Secondary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        // Secondary - None
-        item {
-          ClerkButton(
-            text = "Secondary • None • Large",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Large,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Secondary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Secondary • None • Small",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Small,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Secondary,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-
-        // Negative - High
-        item {
-          ClerkButton(
-            text = "Negative • High • Large",
-            onClick = {},
-            buttonStyle = ButtonStyle.Negative,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Negative • High • Small",
-            buttonConfig = ClerkButtonConfig(size = ClerkButtonConfig.Size.Small),
-            onClick = {},
-            buttonStyle = ButtonStyle.Negative,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Negative • High • Large • Disabled",
-            onClick = {},
-            isEnabled = false,
-            buttonStyle = ButtonStyle.Negative,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        // Negative - Low
-        item {
-          ClerkButton(
-            text = "Negative • Low • Large",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Large,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Negative,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Negative • Low • Small",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Small,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Negative,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        // Negative - None
-        item {
-          ClerkButton(
-            text = "Negative • None • Large",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Large,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Negative,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
-        item {
-          ClerkButton(
-            text = "Negative • None • Small",
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Small,
-              ),
-            onClick = {},
-            buttonStyle = ButtonStyle.Negative,
-            leadingIcon = ClerkR.drawable.ic_triangle_right,
-            trailingIcon = ClerkR.drawable.ic_triangle_right,
-          )
-        }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          buttonStyle = ButtonStyle.Primary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          isEnabled = false,
+          onClick = {},
+          buttonStyle = ButtonStyle.Primary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
+          buttonStyle = ButtonStyle.Primary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          isEnabled = false,
+          onClick = {},
+          buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
+          buttonStyle = ButtonStyle.Primary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.Low,
+              size = ClerkButtonConfig.Size.Small,
+            ),
+          buttonStyle = ButtonStyle.Primary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          isEnabled = false,
+          onClick = {},
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.Low,
+              size = ClerkButtonConfig.Size.Small,
+            ),
+          buttonStyle = ButtonStyle.Primary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.None,
+              size = ClerkButtonConfig.Size.Small,
+            ),
+          buttonStyle = ButtonStyle.Primary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          isEnabled = false,
+          onClick = {},
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.None,
+              size = ClerkButtonConfig.Size.Small,
+            ),
+          buttonStyle = ButtonStyle.Primary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.High,
+              size = ClerkButtonConfig.Size.Large,
+            ),
+          buttonStyle = ButtonStyle.Secondary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          isEnabled = false,
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.High,
+              size = ClerkButtonConfig.Size.Large,
+            ),
+          buttonStyle = ButtonStyle.Secondary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.None,
+              size = ClerkButtonConfig.Size.Large,
+            ),
+          buttonStyle = ButtonStyle.Secondary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          isEnabled = false,
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.None,
+              size = ClerkButtonConfig.Size.Large,
+            ),
+          buttonStyle = ButtonStyle.Secondary,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.High,
+              size = ClerkButtonConfig.Size.Large,
+            ),
+          buttonStyle = ButtonStyle.Negative,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          isEnabled = false,
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.High,
+              size = ClerkButtonConfig.Size.Large,
+            ),
+          buttonStyle = ButtonStyle.Negative,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.None,
+              size = ClerkButtonConfig.Size.Large,
+            ),
+          buttonStyle = ButtonStyle.Negative,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
+      }
+      item {
+        ClerkButton(
+          text = "Continue",
+          onClick = {},
+          isEnabled = false,
+          buttonConfig =
+            ClerkButtonConfig(
+              emphasis = ClerkButtonConfig.Emphasis.None,
+              size = ClerkButtonConfig.Size.Large,
+            ),
+          buttonStyle = ButtonStyle.Negative,
+          leadingIcon = R.drawable.ic_triangle_right,
+          trailingIcon = R.drawable.ic_triangle_right,
+        )
       }
     }
   }
