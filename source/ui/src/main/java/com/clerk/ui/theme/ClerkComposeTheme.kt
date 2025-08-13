@@ -139,9 +139,6 @@ private fun computeColorScheme(colors: ClerkColors): ColorScheme {
       outline = colors.border!!,
       secondary = colors.muted!!,
       tertiary = colors.neutral!!,
-      surfaceVariant = colors.muted!!,
-      onSecondary = colors.foreground!!,
-      onTertiary = colors.foreground!!,
       onSurfaceVariant = colors.mutedForeground!!,
     )
   } else {
@@ -156,9 +153,6 @@ private fun computeColorScheme(colors: ClerkColors): ColorScheme {
       outline = colors.border!!,
       secondary = colors.muted!!,
       tertiary = colors.neutral!!,
-      surfaceVariant = colors.muted!!,
-      onSecondary = colors.foreground!!,
-      onTertiary = colors.foreground!!,
       onSurfaceVariant = colors.mutedForeground!!,
     )
   }
