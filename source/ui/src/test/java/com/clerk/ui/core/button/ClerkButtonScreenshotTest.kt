@@ -52,6 +52,15 @@ class ClerkButtonScreenshotTest {
 
           ClerkButton(
             text = "Continue",
+            onClick = {},
+            isPressed = true,
+            buttonStyle = ButtonStyle.Primary,
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
+          )
+
+          ClerkButton(
+            text = "Continue",
             isEnabled = false,
             onClick = {},
             buttonStyle = ButtonStyle.Primary,
@@ -62,6 +71,16 @@ class ClerkButtonScreenshotTest {
           ClerkButton(
             text = "Continue",
             onClick = {},
+            buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
+            buttonStyle = ButtonStyle.Primary,
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
+          )
+
+          ClerkButton(
+            text = "Continue",
+            onClick = {},
+            isPressed = true,
             buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
             buttonStyle = ButtonStyle.Primary,
             leadingIcon = R.drawable.ic_triangle_right,
@@ -93,6 +112,20 @@ class ClerkButtonScreenshotTest {
 
           ClerkButton(
             text = "Continue",
+            onClick = {},
+            isPressed = true,
+            buttonConfig =
+              ClerkButtonConfig(
+                emphasis = ClerkButtonConfig.Emphasis.Low,
+                size = ClerkButtonConfig.Size.Small,
+              ),
+            buttonStyle = ButtonStyle.Primary,
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
+          )
+
+          ClerkButton(
+            text = "Continue",
             isEnabled = false,
             onClick = {},
             buttonConfig =
@@ -108,6 +141,20 @@ class ClerkButtonScreenshotTest {
           ClerkButton(
             text = "Continue",
             onClick = {},
+            buttonConfig =
+              ClerkButtonConfig(
+                emphasis = ClerkButtonConfig.Emphasis.None,
+                size = ClerkButtonConfig.Size.Small,
+              ),
+            buttonStyle = ButtonStyle.Primary,
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
+          )
+
+          ClerkButton(
+            text = "Continue",
+            onClick = {},
+            isPressed = true,
             buttonConfig =
               ClerkButtonConfig(
                 emphasis = ClerkButtonConfig.Emphasis.None,
@@ -148,6 +195,20 @@ class ClerkButtonScreenshotTest {
           ClerkButton(
             text = "Continue",
             onClick = {},
+            isPressed = true,
+            buttonConfig =
+              ClerkButtonConfig(
+                emphasis = ClerkButtonConfig.Emphasis.High,
+                size = ClerkButtonConfig.Size.Large,
+              ),
+            buttonStyle = ButtonStyle.Secondary,
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
+          )
+
+          ClerkButton(
+            text = "Continue",
+            onClick = {},
             isEnabled = false,
             buttonConfig =
               ClerkButtonConfig(
@@ -162,6 +223,20 @@ class ClerkButtonScreenshotTest {
           ClerkButton(
             text = "Continue",
             onClick = {},
+            buttonConfig =
+              ClerkButtonConfig(
+                emphasis = ClerkButtonConfig.Emphasis.None,
+                size = ClerkButtonConfig.Size.Large,
+              ),
+            buttonStyle = ButtonStyle.Secondary,
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
+          )
+
+          ClerkButton(
+            text = "Continue",
+            onClick = {},
+            isPressed = true,
             buttonConfig =
               ClerkButtonConfig(
                 emphasis = ClerkButtonConfig.Emphasis.None,
@@ -202,6 +277,20 @@ class ClerkButtonScreenshotTest {
           ClerkButton(
             text = "Continue",
             onClick = {},
+            isPressed = true,
+            buttonConfig =
+              ClerkButtonConfig(
+                emphasis = ClerkButtonConfig.Emphasis.High,
+                size = ClerkButtonConfig.Size.Large,
+              ),
+            buttonStyle = ButtonStyle.Negative,
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
+          )
+
+          ClerkButton(
+            text = "Continue",
+            onClick = {},
             isEnabled = false,
             buttonConfig =
               ClerkButtonConfig(
@@ -216,6 +305,20 @@ class ClerkButtonScreenshotTest {
           ClerkButton(
             text = "Continue",
             onClick = {},
+            buttonConfig =
+              ClerkButtonConfig(
+                emphasis = ClerkButtonConfig.Emphasis.None,
+                size = ClerkButtonConfig.Size.Large,
+              ),
+            buttonStyle = ButtonStyle.Negative,
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
+          )
+
+          ClerkButton(
+            text = "Continue",
+            onClick = {},
+            isPressed = true,
             buttonConfig =
               ClerkButtonConfig(
                 emphasis = ClerkButtonConfig.Emphasis.None,

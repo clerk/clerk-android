@@ -98,7 +98,7 @@ private fun generateForeground(
     ButtonStyle.Secondary ->
       when (config.emphasis) {
         ClerkButtonConfig.Emphasis.None ->
-          if (isPressed) MaterialTheme.colorScheme.primary
+          if (isPressed) MaterialTheme.colorScheme.onBackground
           else MaterialTheme.colorScheme.onSurfaceVariant
         ClerkButtonConfig.Emphasis.Low,
         ClerkButtonConfig.Emphasis.High -> MaterialTheme.colorScheme.onBackground
