@@ -19,7 +19,7 @@ plugins {
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 allprojects {
-  apply(plugin = "org.jetbrains.dokka")
+  // Dokka is not applied globally; only root and selected modules opt-in.
   apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
@@ -67,6 +67,7 @@ allprojects {
     }
 }
 
+// Root multi-module Dokka output
 tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
 
 subprojects {
@@ -86,40 +87,5 @@ subprojects {
   // Kotlin configuration
   tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     compilerOptions { jvmTarget.set(libs.versions.jvmTarget.map(JvmTarget::fromTarget)) }
-  }
-
-  val sdkVersion = projectLibs.findVersion("clerk-sdk").get().toString()
-
-  mavenPublishing {
-    publishToMavenCentral()
-    signAllPublications()
-    coordinates("com.clerk", "clerk-android", sdkVersion)
-
-    pom {
-      name.set("Clerk Android SDK")
-      description.set("Clerk SDK for Android")
-      inceptionYear.set("2025")
-      url.set("https://github.com/clerk/clerk-android")
-      licenses {
-        license {
-          name.set("MIT License")
-          url.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
-          distribution.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
-        }
-      }
-
-      developers {
-        developer {
-          id.set("clerk")
-          name.set("Clerk")
-          url.set("https://clerk.com")
-        }
-      }
-      scm {
-        url.set("https://github.com/clerk/clerk-android")
-        connection.set("scm:git:git://github.com/clerk/clerk-android.git")
-        developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
-      }
-    }
   }
 }
