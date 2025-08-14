@@ -6,9 +6,12 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.ui.colors.ComputedColors
+import com.clerk.ui.core.dimens.dp0
+import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp32
+import com.clerk.ui.core.dimens.dp48
 
 @Immutable
 internal data class ButtonStyleTokens(
@@ -38,8 +41,8 @@ internal fun buildButtonTokens(
 
   val height =
     when (config.size) {
-      ClerkButtonConfig.Size.Small -> 32.dp
-      ClerkButtonConfig.Size.Large -> 48.dp
+      ClerkButtonConfig.Size.Small -> dp32
+      ClerkButtonConfig.Size.Large -> dp48
     }
 
   val hasShadow =
@@ -51,9 +54,9 @@ internal fun buildButtonTokens(
 
   val borderWidth =
     when (config.emphasis) {
-      ClerkButtonConfig.Emphasis.None -> 0.dp
+      ClerkButtonConfig.Emphasis.None -> dp0
       ClerkButtonConfig.Emphasis.Low,
-      ClerkButtonConfig.Emphasis.High -> 1.dp
+      ClerkButtonConfig.Emphasis.High -> dp1
     }
 
   val borderColor =
