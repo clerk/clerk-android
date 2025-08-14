@@ -25,8 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp16
+import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeAccess
 
@@ -91,13 +93,13 @@ fun ClerkButton(
       shape = RoundedCornerShape(tokens.cornerRadius),
       elevation =
         if (tokens.hasShadow)
-          ButtonDefaults.buttonElevation(defaultElevation = 1.dp, pressedElevation = 1.dp)
+          ButtonDefaults.buttonElevation(defaultElevation = dp1, pressedElevation = dp1)
         else null,
     ) {
       Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(dp6, Alignment.CenterHorizontally),
       ) {
         leadingIcon?.let { Icon(painter = painterResource(it), contentDescription = null) }
         Text(text = text, style = tokens.textStyle)
@@ -115,9 +117,9 @@ private fun PreviewButton() {
       modifier =
         Modifier.fillMaxSize()
           .background(color = MaterialTheme.colorScheme.background)
-          .padding(16.dp),
+          .padding(dp16),
       horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+      verticalArrangement = Arrangement.spacedBy(dp16, Alignment.CenterVertically),
     ) {
       item {
         ClerkButton(
