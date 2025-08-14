@@ -88,7 +88,7 @@ fun ClerkButton(
 }
 
 @Composable
-private fun ClerkButton(
+internal fun ClerkButton(
   text: String,
   onClick: () -> Unit,
   isPressed: Boolean,
