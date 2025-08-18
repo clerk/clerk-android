@@ -19,7 +19,6 @@ plugins {
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 allprojects {
-  apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
     ratchetFrom("origin/main")
@@ -66,6 +65,7 @@ allprojects {
     }
 }
 
+// Root multi-module Dokka output
 tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
 
 subprojects {

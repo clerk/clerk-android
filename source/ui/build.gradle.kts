@@ -84,6 +84,8 @@ dependencies {
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.tooling)
   implementation(libs.androidx.ui.tooling.preview.android)
+  implementation(libs.coil)
+  implementation(libs.coil.okhttp)
   implementation(libs.material)
   implementation(libs.material3)
   implementation(libs.materialKolor)
@@ -92,8 +94,8 @@ dependencies {
 
   testImplementation(libs.junit)
   testImplementation(projects.clerk.source.api)
-  //  testImplementation(libs.paparazzi)
 
+  //  testImplementation(libs.paparazzi)
   androidTestImplementation(libs.androidx.espresso.core)
   androidTestImplementation(libs.androidx.junit)
 
