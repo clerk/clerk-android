@@ -1,18 +1,24 @@
 package com.clerk.ui.core.button.social
 
 import android.annotation.SuppressLint
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -26,6 +32,7 @@ import com.clerk.api.sso.providerName
 import com.clerk.api.sso.setLogoUrl
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp3
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp6
@@ -40,6 +47,48 @@ fun SocialButton(
   isEnabled: Boolean = true,
   onClick: (OAuthProvider) -> Unit = {},
 ) {
+  val interactionSource = remember { MutableInteractionSource() }
+  val pressed by interactionSource.collectIsPressedAsState()
+  SocialButtonImpl(
+    provider = provider,
+    isEnabled = isEnabled,
+    isPressedCombined = pressed,
+    interactionSource = interactionSource,
+    modifier = modifier,
+    onClick = onClick,
+  )
+}
+
+@Composable
+@VisibleForTesting
+internal fun SocialButton(
+  provider: OAuthProvider,
+  isPressed: Boolean,
+  modifier: Modifier = Modifier,
+  isEnabled: Boolean = true,
+  onClick: (OAuthProvider) -> Unit = {},
+) {
+  val interactionSource = remember { MutableInteractionSource() }
+  val pressed by interactionSource.collectIsPressedAsState()
+  SocialButtonImpl(
+    provider = provider,
+    isEnabled = isEnabled,
+    isPressedCombined = pressed || isPressed,
+    interactionSource = interactionSource,
+    modifier = modifier,
+    onClick = onClick,
+  )
+}
+
+@Composable
+private fun SocialButtonImpl(
+  provider: OAuthProvider,
+  isEnabled: Boolean,
+  isPressedCombined: Boolean,
+  interactionSource: MutableInteractionSource,
+  modifier: Modifier = Modifier,
+  onClick: (OAuthProvider) -> Unit = {},
+) {
   ClerkMaterialTheme {
     val design = LocalClerkDesign.current
     val colors = LocalClerkColors.current
@@ -49,11 +98,13 @@ fun SocialButton(
       enabled = isEnabled,
       onClick = { onClick(provider) },
       shape = shape,
+      interactionSource = interactionSource,
       elevation = ButtonDefaults.buttonElevation(defaultElevation = dp3),
       colors =
         ButtonDefaults.buttonColors(
-          // keep the container opaque; dim only content when disabled
-          containerColor = MaterialTheme.colorScheme.background,
+          containerColor =
+            if (isPressedCombined) MaterialTheme.colorScheme.secondary
+            else MaterialTheme.colorScheme.background,
           contentColor = MaterialTheme.colorScheme.onBackground,
           disabledContainerColor = MaterialTheme.colorScheme.background,
           disabledContentColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
@@ -65,7 +116,7 @@ fun SocialButton(
             elevation = dp3,
             shape = shape,
             clip = true,
-            spotColor = colors.shadow!!.copy(alpha = 0.8f),
+            spotColor = colors.shadow?.copy(alpha = 0.8f) ?: Color.Black.copy(alpha = 0.08f),
           )
           .defaultMinSize(minHeight = dp48),
     ) {
@@ -80,6 +131,7 @@ fun SocialButton(
           contentDescription = null,
           fallback = painterResource(R.drawable.ic_google),
           alpha = if (isEnabled) 1f else 0.5f,
+          modifier = Modifier.size(dp24),
         )
         Text(text = provider.providerName, style = MaterialTheme.typography.titleMedium)
       }
@@ -99,6 +151,7 @@ private fun PreviewSocialButton() {
       verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
     ) {
       SocialButton(provider = provider)
+      SocialButton(provider = provider, isPressed = true)
       SocialButton(provider = provider, isEnabled = false)
     }
   }

@@ -19,27 +19,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import app.cash.paparazzi.DeviceConfig
-import app.cash.paparazzi.Paparazzi
-import com.android.ide.common.rendering.api.SessionParams
 import com.clerk.api.Clerk
+import com.clerk.base.BaseScreenshotTest
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
 import com.materialkolor.ktx.toHex
-import org.junit.Rule
 import org.junit.Test
 
-class ClerkThemeScreenshotTest {
-
-  @get:Rule
-  val paparazzi =
-    Paparazzi(
-      deviceConfig = DeviceConfig.Companion.PIXEL_6_PRO,
-      theme = "android:Theme.Material.Light.NoActionBar",
-      renderingMode = SessionParams.RenderingMode.V_SCROLL,
-    )
+class ClerkThemeScreenshotTest : BaseScreenshotTest() {
 
   @Test
   fun clerkDefaultTheme() {
