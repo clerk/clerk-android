@@ -83,27 +83,33 @@ internal fun ClerkMaterialTheme(
 @Composable
 private fun generateComputedColors(colors: ClerkColors): ComputedColors {
 
-  return ComputedColors(
-    primaryPressed =
-      if (isSystemInDarkTheme())
-        colors.primary?.lighten(PRIMARY_PRESSED_FACTOR) ?: Color.Transparent
-      else colors.primary?.darken(PRIMARY_PRESSED_FACTOR) ?: Color.Transparent,
-    border = colors.border?.copy(alpha = BORDER_ALPHA_SUBTLE) ?: Color.Transparent,
-    buttonBorder = colors.border?.copy(alpha = BUTTON_BORDER_ALPHA) ?: Color.Transparent,
-    inputBorder = colors.border?.copy(alpha = INPUT_BORDER_ALPHA) ?: Color.Transparent,
-    inputBorderFocused = colors.ring?.copy(alpha = INPUT_BORDER_FOCUSED_ALPHA) ?: Color.Transparent,
-    dangerInputBorder = colors.danger?.copy(alpha = DANGER_INPUT_BORDER_ALPHA) ?: Color.Transparent,
-    dangerInputBorderFocused =
-      colors.danger?.copy(alpha = DANGER_INPUT_BORDER_FOCUSED_ALPHA) ?: Color.Transparent,
-    backgroundTransparent =
-      colors.background?.copy(alpha = BACKGROUND_TRANSPARENT_ALPHA) ?: Color.Transparent,
-    backgroundSuccess = colors.success?.copy(alpha = SUCCESS_BACKGROUND_ALPHA) ?: Color.Transparent,
-    borderSuccess = colors.success?.copy(alpha = SUCCESS_BORDER_ALPHA) ?: Color.Transparent,
-    backgroundDanger = colors.danger?.copy(alpha = DANGER_BACKGROUND_ALPHA) ?: Color.Transparent,
-    borderDanger = colors.danger?.copy(alpha = DANGER_BORDER_ALPHA) ?: Color.Transparent,
-    backgroundWarning = colors.warning?.copy(alpha = WARNING_BACKGROUND_ALPHA) ?: Color.Transparent,
-    borderWarning = colors.warning?.copy(alpha = WARNING_BORDER_ALPHA) ?: Color.Transparent,
-  )
+  val computed =
+    ComputedColors(
+      primaryPressed =
+        if (isSystemInDarkTheme())
+          colors.primary?.lighten(PRIMARY_PRESSED_FACTOR) ?: Color.Transparent
+        else colors.primary?.darken(PRIMARY_PRESSED_FACTOR) ?: Color.Transparent,
+      border = colors.border?.copy(alpha = BORDER_ALPHA_SUBTLE) ?: Color.Transparent,
+      buttonBorder = colors.border?.copy(alpha = BUTTON_BORDER_ALPHA) ?: Color.Transparent,
+      inputBorder = colors.border?.copy(alpha = INPUT_BORDER_ALPHA) ?: Color.Transparent,
+      inputBorderFocused =
+        colors.ring?.copy(alpha = INPUT_BORDER_FOCUSED_ALPHA) ?: Color.Transparent,
+      dangerInputBorder =
+        colors.danger?.copy(alpha = DANGER_INPUT_BORDER_ALPHA) ?: Color.Transparent,
+      dangerInputBorderFocused =
+        colors.danger?.copy(alpha = DANGER_INPUT_BORDER_FOCUSED_ALPHA) ?: Color.Transparent,
+      backgroundTransparent =
+        colors.background?.copy(alpha = BACKGROUND_TRANSPARENT_ALPHA) ?: Color.Transparent,
+      backgroundSuccess =
+        colors.success?.copy(alpha = SUCCESS_BACKGROUND_ALPHA) ?: Color.Transparent,
+      borderSuccess = colors.success?.copy(alpha = SUCCESS_BORDER_ALPHA) ?: Color.Transparent,
+      backgroundDanger = colors.danger?.copy(alpha = DANGER_BACKGROUND_ALPHA) ?: Color.Transparent,
+      borderDanger = colors.danger?.copy(alpha = DANGER_BORDER_ALPHA) ?: Color.Transparent,
+      backgroundWarning =
+        colors.warning?.copy(alpha = WARNING_BACKGROUND_ALPHA) ?: Color.Transparent,
+      borderWarning = colors.warning?.copy(alpha = WARNING_BORDER_ALPHA) ?: Color.Transparent,
+    )
+  return computed
 }
 
 @Composable
