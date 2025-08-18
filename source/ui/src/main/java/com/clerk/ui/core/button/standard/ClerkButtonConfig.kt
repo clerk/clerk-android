@@ -1,4 +1,4 @@
-package com.clerk.ui.core.button
+package com.clerk.ui.core.button.standard
 
 import androidx.annotation.DrawableRes
 

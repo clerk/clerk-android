@@ -16,6 +16,8 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.colors.DefaultColors
+import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.button.standard.ClerkButtonConfig
 import com.clerk.ui.theme.ClerkMaterialTheme
 import org.junit.Rule
 import org.junit.Test

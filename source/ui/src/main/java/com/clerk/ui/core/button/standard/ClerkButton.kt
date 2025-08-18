@@ -1,4 +1,4 @@
-package com.clerk.ui.core.button
+package com.clerk.ui.core.button.standard
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -53,7 +53,7 @@ import com.clerk.ui.theme.ClerkThemeAccess
  * ClerkButton(
  *   text = "Continue",
  *   onClick = { /* action */ },
- *   buttonStyle = _root_ide_package_.com.clerk.ui.core.button.ClerkButtonConfig.ButtonStyle.Primary
+ *   buttonStyle = _root_ide_package_.com.clerk.ui.core.button.standard.ClerkButtonConfig.ButtonStyle.Primary
  * )
  * ```
  */

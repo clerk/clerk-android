@@ -1,4 +1,4 @@
-package com.clerk.ui.core.button
+package com.clerk.ui.core.button.standard
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
