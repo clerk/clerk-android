@@ -9,7 +9,6 @@ import androidx.compose.ui.unit.Dp
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.ui.colors.ComputedColors
 import com.clerk.ui.core.dimens.dp0
-import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp48
 
@@ -49,14 +48,14 @@ internal fun buildButtonTokens(
     when (config.emphasis) {
       ClerkButtonConfig.Emphasis.None -> false
       ClerkButtonConfig.Emphasis.Low,
-      ClerkButtonConfig.Emphasis.High -> true
+      ClerkButtonConfig.Emphasis.High -> !(isPressed && style == ButtonStyle.Negative)
     }
 
   val borderWidth =
     when (config.emphasis) {
       ClerkButtonConfig.Emphasis.None -> dp0
       ClerkButtonConfig.Emphasis.Low,
-      ClerkButtonConfig.Emphasis.High -> dp1
+      ClerkButtonConfig.Emphasis.High -> dp0
     }
 
   val borderColor =
