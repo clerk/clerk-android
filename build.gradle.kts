@@ -11,7 +11,7 @@ plugins {
   alias(libs.plugins.detekt) apply false
   alias(libs.plugins.sortDependencies) apply false
   alias(libs.plugins.jetbrains.kotlin.jvm) apply false
-  alias(libs.plugins.mavenPublish)
+  alias(libs.plugins.mavenPublish) apply false
   alias(libs.plugins.dokka)
   alias(libs.plugins.kotlin.compose) apply false
 }
@@ -19,8 +19,6 @@ plugins {
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 allprojects {
-  // Dokka is not applied globally; only root and selected modules opt-in.
-  apply(plugin = "com.vanniktech.maven.publish")
   apply(plugin = "com.diffplug.spotless")
   configure<SpotlessExtension> {
     ratchetFrom("origin/main")
