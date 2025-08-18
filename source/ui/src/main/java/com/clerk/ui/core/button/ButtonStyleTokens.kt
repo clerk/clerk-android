@@ -26,7 +26,6 @@ internal data class ButtonStyleTokens(
 
 @Composable
 internal fun buildButtonTokens(
-  style: ButtonStyle,
   config: ClerkButtonConfig,
   computed: ComputedColors,
   design: ClerkDesign,
@@ -48,7 +47,8 @@ internal fun buildButtonTokens(
     when (config.emphasis) {
       ClerkButtonConfig.Emphasis.None -> false
       ClerkButtonConfig.Emphasis.Low,
-      ClerkButtonConfig.Emphasis.High -> !(isPressed && style == ButtonStyle.Negative)
+      ClerkButtonConfig.Emphasis.High ->
+        !(isPressed && config.style == ClerkButtonConfig.ButtonStyle.Negative)
     }
 
   val borderWidth =
@@ -65,8 +65,8 @@ internal fun buildButtonTokens(
       ClerkButtonConfig.Emphasis.High -> computed.buttonBorder
     }
 
-  val foreground = generateForeground(style, config, isPressed)
-  val background = generateBackground(style, config, isPressed, computed)
+  val foreground = generateForeground(config, isPressed)
+  val background = generateBackground(config, isPressed, computed)
 
   return ButtonStyleTokens(
     textStyle = text,
@@ -81,20 +81,16 @@ internal fun buildButtonTokens(
 }
 
 @Composable
-private fun generateForeground(
-  style: ButtonStyle,
-  config: ClerkButtonConfig,
-  isPressed: Boolean,
-): Color =
-  when (style) {
-    ButtonStyle.Primary ->
+private fun generateForeground(config: ClerkButtonConfig, isPressed: Boolean): Color =
+  when (config.style) {
+    ClerkButtonConfig.ButtonStyle.Primary ->
       when (config.emphasis) {
         ClerkButtonConfig.Emphasis.High -> MaterialTheme.colorScheme.onPrimary
         ClerkButtonConfig.Emphasis.Low,
         ClerkButtonConfig.Emphasis.None -> MaterialTheme.colorScheme.primary
       }
 
-    ButtonStyle.Secondary ->
+    ClerkButtonConfig.ButtonStyle.Secondary ->
       when (config.emphasis) {
         ClerkButtonConfig.Emphasis.None ->
           if (isPressed) MaterialTheme.colorScheme.onBackground
@@ -103,7 +99,7 @@ private fun generateForeground(
         ClerkButtonConfig.Emphasis.High -> MaterialTheme.colorScheme.onBackground
       }
 
-    ButtonStyle.Negative ->
+    ClerkButtonConfig.ButtonStyle.Negative ->
       when (config.emphasis) {
         ClerkButtonConfig.Emphasis.High -> MaterialTheme.colorScheme.onPrimary
         ClerkButtonConfig.Emphasis.Low,
@@ -113,13 +109,12 @@ private fun generateForeground(
 
 @Composable
 private fun generateBackground(
-  style: ButtonStyle,
   config: ClerkButtonConfig,
   isPressed: Boolean,
   computed: ComputedColors,
 ): Color =
-  when (style) {
-    ButtonStyle.Primary ->
+  when (config.style) {
+    ClerkButtonConfig.ButtonStyle.Primary ->
       when (config.emphasis) {
         ClerkButtonConfig.Emphasis.High ->
           if (isPressed) computed.primaryPressed else MaterialTheme.colorScheme.primary
@@ -129,7 +124,7 @@ private fun generateBackground(
           else MaterialTheme.colorScheme.background
       }
 
-    ButtonStyle.Secondary ->
+    ClerkButtonConfig.ButtonStyle.Secondary ->
       when (config.emphasis) {
         ClerkButtonConfig.Emphasis.None,
         ClerkButtonConfig.Emphasis.Low,
@@ -138,7 +133,7 @@ private fun generateBackground(
           else MaterialTheme.colorScheme.background
       }
 
-    ButtonStyle.Negative ->
+    ClerkButtonConfig.ButtonStyle.Negative ->
       when (config.emphasis) {
         ClerkButtonConfig.Emphasis.High ->
           if (isPressed) computed.backgroundDanger else MaterialTheme.colorScheme.error

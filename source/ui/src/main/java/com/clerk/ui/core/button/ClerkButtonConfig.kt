@@ -1,6 +1,12 @@
 package com.clerk.ui.core.button
 
-data class ClerkButtonConfig(val emphasis: Emphasis = Emphasis.High, val size: Size = Size.Large) {
+import androidx.annotation.DrawableRes
+
+data class ClerkButtonConfig(
+  val style: ButtonStyle = ButtonStyle.Primary,
+  val emphasis: Emphasis = Emphasis.High,
+  val size: Size = Size.Large,
+) {
   enum class Emphasis {
     None,
     Low,
@@ -11,10 +17,15 @@ data class ClerkButtonConfig(val emphasis: Emphasis = Emphasis.High, val size: S
     Small,
     Large,
   }
+
+  enum class ButtonStyle {
+    Primary,
+    Secondary,
+    Negative,
+  }
 }
 
-enum class ButtonStyle {
-  Primary,
-  Secondary,
-  Negative,
-}
+data class ClerkButtonIconConfig(
+  @DrawableRes val leadingIcon: Int? = null,
+  @DrawableRes val trailingIcon: Int? = null,
+)
