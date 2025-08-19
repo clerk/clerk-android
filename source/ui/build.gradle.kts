@@ -86,6 +86,7 @@ dependencies {
   implementation(libs.androidx.ui.tooling.preview.android)
   implementation(libs.coil)
   implementation(libs.coil.okhttp)
+  implementation(libs.kotlinx.immutable)
   implementation(libs.material)
   implementation(libs.material3)
   implementation(libs.materialKolor)
