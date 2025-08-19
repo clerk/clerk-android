@@ -40,8 +40,21 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.LocalClerkColors
 import com.clerk.ui.theme.LocalClerkDesign
 
+/**
+ * A composable button for social authentication with a specific [OAuthProvider].
+ *
+ * This button displays the provider's logo and name, and handles click events to initiate the
+ * social login flow.
+ *
+ * @param provider The [OAuthProvider] to display and use for authentication.
+ * @param modifier Optional [Modifier] for theming and styling.
+ * @param isEnabled Controls the enabled state of the button. When `false`, this button will not be
+ *   clickable.
+ * @param onClick Lambda to be invoked when the button is clicked, passing the selected
+ *   [OAuthProvider].
+ */
 @Composable
-fun SocialButton(
+fun ClerkSocialButton(
   provider: OAuthProvider,
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
@@ -49,7 +62,7 @@ fun SocialButton(
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
-  SocialButtonImpl(
+  ClerkSocialButtonImpl(
     provider = provider,
     isEnabled = isEnabled,
     isPressedCombined = pressed,
@@ -59,9 +72,19 @@ fun SocialButton(
   )
 }
 
+/**
+ * Internal composable for [ClerkSocialButton] that allows for direct control of the pressed state.
+ * This is primarily used for UI testing and previews.
+ *
+ * @param provider The [OAuthProvider] to display.
+ * @param isPressed Manually controls the visual pressed state of the button.
+ * @param modifier Optional [Modifier] for theming and styling.
+ * @param isEnabled Controls the enabled state of the button.
+ * @param onClick Lambda to be invoked when the button is clicked.
+ */
 @Composable
 @VisibleForTesting
-internal fun SocialButton(
+internal fun ClerkSocialButton(
   provider: OAuthProvider,
   isPressed: Boolean,
   modifier: Modifier = Modifier,
@@ -70,7 +93,7 @@ internal fun SocialButton(
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
-  SocialButtonImpl(
+  ClerkSocialButtonImpl(
     provider = provider,
     isEnabled = isEnabled,
     isPressedCombined = pressed || isPressed,
@@ -80,8 +103,21 @@ internal fun SocialButton(
   )
 }
 
+/**
+ * Private implementation composable for the ClerkSocialButton. This function contains the core UI
+ * logic and styling for the social button. This exists so that it's possible to preview the button
+ * with a forced pressed state.
+ *
+ * @param provider The [OAuthProvider] to display.
+ * @param isEnabled Controls the enabled state of the button.
+ * @param isPressedCombined Reflects the combined pressed state (either actual interaction or forced
+ *   via testing).
+ * @param interactionSource [MutableInteractionSource] for tracking user interactions.
+ * @param modifier Optional [Modifier] for theming and styling.
+ * @param onClick Lambda to be invoked when the button is clicked.
+ */
 @Composable
-private fun SocialButtonImpl(
+private fun ClerkSocialButtonImpl(
   provider: OAuthProvider,
   isEnabled: Boolean,
   isPressedCombined: Boolean,
@@ -128,7 +164,7 @@ private fun SocialButtonImpl(
       ) {
         AsyncImage(
           model = provider.logoUrl,
-          contentDescription = null,
+          contentDescription = null, // Decorative, providerName serves as text alternative
           fallback = painterResource(R.drawable.ic_google),
           alpha = if (isEnabled) 1f else 0.5f,
           modifier = Modifier.size(dp24),
@@ -139,20 +175,24 @@ private fun SocialButtonImpl(
   }
 }
 
+/**
+ * Preview composable for showcasing [ClerkSocialButton] in different states. Displays the button
+ * normally, pressed, and disabled.
+ */
 @SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable
 private fun PreviewSocialButton() {
   val provider = OAuthProvider.GOOGLE
-  provider.setLogoUrl(null)
+  provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
   ClerkMaterialTheme {
     Column(
       Modifier.background(MaterialTheme.colorScheme.background).padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
     ) {
-      SocialButton(provider = provider)
-      SocialButton(provider = provider, isPressed = true)
-      SocialButton(provider = provider, isEnabled = false)
+      ClerkSocialButton(provider = provider)
+      ClerkSocialButton(provider = provider, isPressed = true)
+      ClerkSocialButton(provider = provider, isEnabled = false)
     }
   }
 }

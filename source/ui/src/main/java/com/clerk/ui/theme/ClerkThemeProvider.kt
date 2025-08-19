@@ -31,7 +31,7 @@ internal object DefaultColors {
       shadow = Color(0xFF000000),
     )
 
-  val darkColors =
+  val dark =
     ClerkColors(
       primary = Color(0xFFFAFAFB),
       background = Color(0xFF131316),
@@ -123,8 +123,7 @@ private fun generateTypography(theme: ClerkTheme?): Typography {
 
 @Composable
 private fun generateColors(theme: ClerkTheme?): ClerkColors {
-  val defaultColors =
-    if (isSystemInDarkTheme()) DefaultColors.darkColors else DefaultColors.lightColors
+  val defaultColors = if (isSystemInDarkTheme()) DefaultColors.dark else DefaultColors.lightColors
   val colors =
     ClerkColors(
       primary = theme?.colors?.primary ?: defaultColors.primary,
