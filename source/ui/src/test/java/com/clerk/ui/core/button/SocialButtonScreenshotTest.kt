@@ -13,7 +13,7 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.setLogoUrl
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseScreenshotTest
-import com.clerk.ui.core.button.social.SocialButton
+import com.clerk.ui.core.button.social.ClerkSocialButton
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
@@ -33,9 +33,9 @@ class SocialButtonScreenshotTest : BaseScreenshotTest() {
           horizontalAlignment = Alignment.CenterHorizontally,
           verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
         ) {
-          SocialButton(provider = provider)
-          SocialButton(provider = provider, isPressed = true)
-          SocialButton(provider = provider, isEnabled = false)
+          ClerkSocialButton(provider = provider)
+          ClerkSocialButton(provider = provider, isPressed = true)
+          ClerkSocialButton(provider = provider, isEnabled = false)
         }
       }
     }
@@ -53,9 +53,9 @@ class SocialButtonScreenshotTest : BaseScreenshotTest() {
           horizontalAlignment = Alignment.CenterHorizontally,
           verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
         ) {
-          SocialButton(provider = provider)
-          SocialButton(provider = provider, isPressed = true)
-          SocialButton(provider = provider, isEnabled = false)
+          ClerkSocialButton(provider = provider)
+          ClerkSocialButton(provider = provider, isPressed = true)
+          ClerkSocialButton(provider = provider, isEnabled = false)
         }
       }
     }
