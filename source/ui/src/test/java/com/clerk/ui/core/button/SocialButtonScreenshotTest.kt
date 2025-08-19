@@ -43,7 +43,7 @@ class SocialButtonScreenshotTest : BaseScreenshotTest() {
 
   @Test
   fun socialButtonScreenshotTestDark() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.darkColors)
+    Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
     val provider = OAuthProvider.GOOGLE
     provider.setLogoUrl(null)
     paparazzi.snapshot {
