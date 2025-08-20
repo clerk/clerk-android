@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
-import com.clerk.base.BaseScreenshotTest
+import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfig
@@ -20,7 +20,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
 
-class ClerkStandardButtonScreenshotTest : BaseScreenshotTest() {
+class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun clerkButtonGallery() {

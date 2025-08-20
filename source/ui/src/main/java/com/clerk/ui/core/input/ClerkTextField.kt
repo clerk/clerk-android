@@ -100,7 +100,7 @@ fun ClerkTextField(
         },
       trailingIcon = {
         if (trailingIcon != null || isError) {
-          val resId = trailingIcon ?: R.drawable.ic_warning
+          val resId = if (isError) R.drawable.ic_warning else trailingIcon!!
           val tint =
             if (trailingIcon != null) MaterialTheme.colorScheme.onSurfaceVariant
             else MaterialTheme.colorScheme.error

@@ -12,17 +12,17 @@ import com.clerk.api.Clerk
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.setLogoUrl
 import com.clerk.api.ui.ClerkTheme
-import com.clerk.base.BaseScreenshotTest
+import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.button.social.ClerkSocialButton
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
 
-class SocialButtonScreenshotTest : BaseScreenshotTest() {
+class SocialButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
-  fun socialButtonScreenshotTestLight() {
+  fun socialButtonSnapshotTestLight() {
     Clerk.customTheme = null
     val provider = OAuthProvider.GOOGLE
     provider.setLogoUrl(null)
@@ -42,7 +42,7 @@ class SocialButtonScreenshotTest : BaseScreenshotTest() {
   }
 
   @Test
-  fun socialButtonScreenshotTestDark() {
+  fun socialButtonSnapshotTestDark() {
     Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
     val provider = OAuthProvider.GOOGLE
     provider.setLogoUrl(null)
