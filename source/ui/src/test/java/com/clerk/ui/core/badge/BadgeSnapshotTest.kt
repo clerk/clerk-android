@@ -9,17 +9,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
-import com.clerk.base.BaseScreenshotTest
+import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
 
-class BadgeScreenshotTest : BaseScreenshotTest() {
+class BadgeSnapshotTest : BaseSnapshotTest() {
 
   @Test
-  fun badgeScreenShotTestLight() {
+  fun badgeSnapshotTestLight() {
     paparazzi.snapshot {
       ClerkMaterialTheme {
         Column(
@@ -41,7 +41,7 @@ class BadgeScreenshotTest : BaseScreenshotTest() {
   }
 
   @Test
-  fun badgeScreenShotTestDark() {
+  fun badgeSnapshotTestDark() {
     Clerk.customTheme = ClerkTheme(DefaultColors.dark)
     paparazzi.snapshot {
       ClerkMaterialTheme {

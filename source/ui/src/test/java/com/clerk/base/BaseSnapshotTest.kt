@@ -5,7 +5,7 @@ import app.cash.paparazzi.Paparazzi
 import com.android.ide.common.rendering.api.SessionParams
 import org.junit.Rule
 
-abstract class BaseScreenshotTest {
+abstract class BaseSnapshotTest {
   @get:Rule
   val paparazzi =
     Paparazzi(

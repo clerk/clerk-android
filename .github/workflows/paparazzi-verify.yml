@@ -26,7 +26,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       # ⬇️ replace :source:ui with your module path(s)
-      - name: Verify Paparazzi screenshots
+      - name: Verify Paparazzi snapshots
         run: ./gradlew :source:ui:verifyPaparazziDebug --stacktrace
 
       # Upload HTML report + image diffs when verification fails
@@ -47,7 +47,7 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            ❌ Paparazzi found screenshot diffs.
+            ❌ Paparazzi found snapshot diffs.
             - Download the **paparazzi-report** artifact from this workflow to see the HTML report and image diffs.
             - If the changes are expected, re-record locally and commit the updated golden images.
 
