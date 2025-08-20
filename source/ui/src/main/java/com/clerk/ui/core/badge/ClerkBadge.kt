@@ -20,9 +20,9 @@ import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.LocalClerkColors
 import com.clerk.ui.theme.LocalClerkDesign
 import com.clerk.ui.theme.LocalComputedColors
+import com.clerk.ui.theme.LocalThemeColors
 
 @Composable
 fun Badge(
@@ -31,7 +31,7 @@ fun Badge(
   badgeType: ClerkBadgeType = ClerkBadgeType.Primary,
 ) {
   val design = LocalClerkDesign.current
-  val colors = LocalClerkColors.current
+  val colors = LocalThemeColors.current
   val computedColors = LocalComputedColors.current
   val (backgroundColor, contentColor) =
     when (badgeType) {

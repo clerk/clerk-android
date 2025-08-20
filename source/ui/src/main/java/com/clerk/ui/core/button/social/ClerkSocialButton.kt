@@ -37,8 +37,8 @@ import com.clerk.ui.core.dimens.dp3
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.LocalClerkColors
 import com.clerk.ui.theme.LocalClerkDesign
+import com.clerk.ui.theme.LocalThemeColors
 
 /**
  * A composable button for social authentication with a specific [OAuthProvider].
@@ -127,7 +127,7 @@ private fun ClerkSocialButtonImpl(
 ) {
   ClerkMaterialTheme {
     val design = LocalClerkDesign.current
-    val colors = LocalClerkColors.current
+    val colors = LocalThemeColors.current
     val shape = RoundedCornerShape(design.borderRadius)
 
     Button(
