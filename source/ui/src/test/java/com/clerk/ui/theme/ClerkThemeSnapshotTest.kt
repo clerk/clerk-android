@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
-import com.clerk.base.BaseScreenshotTest
+import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
@@ -28,7 +28,7 @@ import com.clerk.ui.core.dimens.dp6
 import com.materialkolor.ktx.toHex
 import org.junit.Test
 
-class ClerkThemeScreenshotTest : BaseScreenshotTest() {
+class ClerkThemeSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun clerkDefaultTheme() {
