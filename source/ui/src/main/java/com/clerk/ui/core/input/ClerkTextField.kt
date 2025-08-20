@@ -17,14 +17,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
+import com.clerk.ui.colors.ComputedColors
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
@@ -36,7 +40,6 @@ import com.clerk.ui.theme.LocalComputedColors
 @Composable
 fun ClerkTextField(
   value: String,
-  onValueChange: (String) -> Unit,
   modifier: Modifier = Modifier,
   @DrawableRes leadingIcon: Int? = null,
   @DrawableRes trailingIcon: Int? = null,
@@ -50,23 +53,14 @@ fun ClerkTextField(
   leadingIconContentDescription: String? = null,
   trailingIconContentDescription: String? = null,
 ) {
+  var inputValue by remember { mutableStateOf(value) }
   val computedColors = LocalComputedColors.current
   val design = LocalClerkDesign.current
 
   val interactionSource = remember { MutableInteractionSource() }
   val isFocused by interactionSource.collectIsFocusedAsState()
 
-  val textFieldColors =
-    OutlinedTextFieldDefaults.colors(
-      focusedBorderColor = MaterialTheme.colorScheme.primary,
-      focusedLabelColor = MaterialTheme.colorScheme.primary,
-      unfocusedBorderColor = computedColors.inputBorder,
-      unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-      unfocusedContainerColor = MaterialTheme.colorScheme.background,
-      focusedContainerColor = MaterialTheme.colorScheme.background,
-      errorBorderColor = MaterialTheme.colorScheme.error,
-      errorSupportingTextColor = MaterialTheme.colorScheme.error,
-    )
+  val textFieldColors = setTextFieldColors(computedColors)
 
   val labelStyle =
     if (isFocused || value.isNotEmpty()) MaterialTheme.typography.bodySmall
@@ -82,8 +76,8 @@ fun ClerkTextField(
     OutlinedTextField(
       interactionSource = interactionSource,
       modifier = modifier.fillMaxWidth(),
-      value = value,
-      onValueChange = onValueChange,
+      value = inputValue,
+      onValueChange = { inputValue = it },
       enabled = enabled,
       shape = RoundedCornerShape(design.borderRadius),
       isError = isError,
@@ -99,18 +93,7 @@ fun ClerkTextField(
           }
         },
       trailingIcon = {
-        if (trailingIcon != null || isError) {
-          val resId = if (isError) R.drawable.ic_warning else trailingIcon!!
-          val tint =
-            if (isError) MaterialTheme.colorScheme.error
-            else MaterialTheme.colorScheme.onSurfaceVariant
-          ClickableIcon(
-            resId = resId,
-            onClick = onTrailingIconClick,
-            tint = tint,
-            contentDescription = trailingIconContentDescription,
-          )
-        }
+        TrailingIcon(trailingIcon, isError, onTrailingIconClick, trailingIconContentDescription)
       },
       placeholder = placeholder?.let { ph -> { Text(ph) } },
       label = label?.let { text -> { Text(text = text, style = labelStyle, color = labelColor) } },
@@ -131,6 +114,39 @@ fun ClerkTextField(
     )
   }
 }
+
+@Composable
+private fun TrailingIcon(
+  trailingIcon: Int?,
+  isError: Boolean,
+  onTrailingIconClick: () -> Unit,
+  trailingIconContentDescription: String?,
+) {
+  if (trailingIcon != null || isError) {
+    val resId = if (isError) R.drawable.ic_warning else trailingIcon!!
+    val tint =
+      if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+    ClickableIcon(
+      resId = resId,
+      onClick = onTrailingIconClick,
+      tint = tint,
+      contentDescription = trailingIconContentDescription,
+    )
+  }
+}
+
+@Composable
+private fun setTextFieldColors(computedColors: ComputedColors): TextFieldColors =
+  OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    focusedLabelColor = MaterialTheme.colorScheme.primary,
+    unfocusedBorderColor = computedColors.inputBorder,
+    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+    focusedContainerColor = MaterialTheme.colorScheme.background,
+    errorBorderColor = MaterialTheme.colorScheme.error,
+    errorSupportingTextColor = MaterialTheme.colorScheme.error,
+  )
 
 @Composable
 private fun ClickableIcon(
@@ -158,7 +174,6 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "Input",
-          onValueChange = {},
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
           supportingText = "Supporting text",
@@ -167,7 +182,6 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "",
-          onValueChange = {},
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
           supportingText = "Supporting text",
@@ -176,7 +190,6 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "Input",
-          onValueChange = {},
           placeholder = "Placeholder",
           label = "Label",
           supportingText = "Supporting text",
@@ -185,7 +198,6 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "",
-          onValueChange = {},
           label = "Label",
           supportingText = "Supporting text",
           leadingIcon = R.drawable.ic_search,
@@ -194,7 +206,6 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "Input",
-          onValueChange = {},
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
           leadingIcon = R.drawable.ic_search,
@@ -204,21 +215,13 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "",
-          onValueChange = {},
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
           leadingIcon = R.drawable.ic_search,
           supportingText = "Supporting text",
         )
       }
-      item {
-        ClerkTextField(
-          value = "Input",
-          onValueChange = {},
-          label = "Label",
-          supportingText = "Supporting text",
-        )
-      }
+      item { ClerkTextField(value = "Input", label = "Label", supportingText = "Supporting text") }
     }
   }
 }
@@ -233,7 +236,6 @@ private fun PreviewClerkTextFieldError() {
     ) {
       ClerkTextField(
         value = "Input",
-        onValueChange = {},
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
         supportingText = "Supporting text",
@@ -242,7 +244,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "",
-        onValueChange = {},
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
         supportingText = "Supporting text",
@@ -251,7 +252,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "Input",
-        onValueChange = {},
         placeholder = "Placeholder",
         label = "Label",
         supportingText = "Supporting text",
@@ -260,7 +260,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "",
-        onValueChange = {},
         label = "Label",
         supportingText = "Supporting text",
         leadingIcon = R.drawable.ic_search,
@@ -269,7 +268,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "Input",
-        onValueChange = {},
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
         leadingIcon = R.drawable.ic_search,
@@ -279,7 +277,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "",
-        onValueChange = {},
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
         leadingIcon = R.drawable.ic_search,
@@ -289,7 +286,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "Input",
-        onValueChange = {},
         label = "Label",
         supportingText = "Supporting text",
         isError = true,
