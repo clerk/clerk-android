@@ -12,9 +12,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.ui.graphics.Color
 import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.colors.ComputedColors
@@ -38,7 +36,7 @@ private const val WARNING_BACKGROUND_ALPHA = 0.12F
 private const val WARNING_BORDER_ALPHA = 0.77F
 
 internal val LocalComposeColors =
-  compositionLocalOf<ClerkColors> { error("ComposeColors not provided") }
+  compositionLocalOf<ResolvedClerkColors> { error("ComposeColors not provided") }
 
 internal val LocalComputedColors =
   compositionLocalOf<ComputedColors> { error("ComputedColors not provided") }
@@ -81,67 +79,60 @@ internal fun ClerkMaterialTheme(
 }
 
 @Composable
-private fun generateComputedColors(colors: ClerkColors): ComputedColors {
+private fun generateComputedColors(colors: ResolvedClerkColors): ComputedColors {
 
   val computed =
     ComputedColors(
       primaryPressed =
-        if (isSystemInDarkTheme())
-          colors.primary?.lighten(PRIMARY_PRESSED_FACTOR) ?: Color.Transparent
-        else colors.primary?.darken(PRIMARY_PRESSED_FACTOR) ?: Color.Transparent,
-      border = colors.border?.copy(alpha = BORDER_ALPHA_SUBTLE) ?: Color.Transparent,
-      buttonBorder = colors.border?.copy(alpha = BUTTON_BORDER_ALPHA) ?: Color.Transparent,
-      inputBorder = colors.border?.copy(alpha = INPUT_BORDER_ALPHA) ?: Color.Transparent,
-      inputBorderFocused =
-        colors.ring?.copy(alpha = INPUT_BORDER_FOCUSED_ALPHA) ?: Color.Transparent,
-      dangerInputBorder =
-        colors.danger?.copy(alpha = DANGER_INPUT_BORDER_ALPHA) ?: Color.Transparent,
-      dangerInputBorderFocused =
-        colors.danger?.copy(alpha = DANGER_INPUT_BORDER_FOCUSED_ALPHA) ?: Color.Transparent,
-      backgroundTransparent =
-        colors.background?.copy(alpha = BACKGROUND_TRANSPARENT_ALPHA) ?: Color.Transparent,
-      backgroundSuccess =
-        colors.success?.copy(alpha = SUCCESS_BACKGROUND_ALPHA) ?: Color.Transparent,
-      borderSuccess = colors.success?.copy(alpha = SUCCESS_BORDER_ALPHA) ?: Color.Transparent,
-      backgroundDanger = colors.danger?.copy(alpha = DANGER_BACKGROUND_ALPHA) ?: Color.Transparent,
-      borderDanger = colors.danger?.copy(alpha = DANGER_BORDER_ALPHA) ?: Color.Transparent,
-      backgroundWarning =
-        colors.warning?.copy(alpha = WARNING_BACKGROUND_ALPHA) ?: Color.Transparent,
-      borderWarning = colors.warning?.copy(alpha = WARNING_BORDER_ALPHA) ?: Color.Transparent,
+        if (isSystemInDarkTheme()) colors.primary.lighten(PRIMARY_PRESSED_FACTOR)
+        else colors.primary.darken(PRIMARY_PRESSED_FACTOR),
+      border = colors.border.copy(alpha = BORDER_ALPHA_SUBTLE),
+      buttonBorder = colors.border.copy(alpha = BUTTON_BORDER_ALPHA),
+      inputBorder = colors.border.copy(alpha = INPUT_BORDER_ALPHA),
+      inputBorderFocused = colors.ring.copy(alpha = INPUT_BORDER_FOCUSED_ALPHA),
+      dangerInputBorder = colors.danger.copy(alpha = DANGER_INPUT_BORDER_ALPHA),
+      dangerInputBorderFocused = colors.danger.copy(alpha = DANGER_INPUT_BORDER_FOCUSED_ALPHA),
+      backgroundTransparent = colors.background.copy(alpha = BACKGROUND_TRANSPARENT_ALPHA),
+      backgroundSuccess = colors.success.copy(alpha = SUCCESS_BACKGROUND_ALPHA),
+      borderSuccess = colors.success.copy(alpha = SUCCESS_BORDER_ALPHA),
+      backgroundDanger = colors.danger.copy(alpha = DANGER_BACKGROUND_ALPHA),
+      borderDanger = colors.danger.copy(alpha = DANGER_BORDER_ALPHA),
+      backgroundWarning = colors.warning.copy(alpha = WARNING_BACKGROUND_ALPHA),
+      borderWarning = colors.warning.copy(alpha = WARNING_BORDER_ALPHA),
     )
   return computed
 }
 
 @Composable
-private fun computeColorScheme(colors: ClerkColors): ColorScheme {
+private fun computeColorScheme(colors: ResolvedClerkColors): ColorScheme {
 
   return if (isSystemInDarkTheme()) {
     darkColorScheme(
-      primary = colors.primary!!,
-      background = colors.background!!,
-      surface = colors.input!!,
-      error = colors.danger!!,
-      onPrimary = colors.primaryForeground!!,
-      onBackground = colors.foreground!!,
-      onSurface = colors.inputForeground!!,
-      outline = colors.border!!,
-      secondary = colors.muted!!,
-      tertiary = colors.neutral!!,
-      onSurfaceVariant = colors.mutedForeground!!,
+      primary = colors.primary,
+      background = colors.background,
+      surface = colors.input,
+      error = colors.danger,
+      onPrimary = colors.primaryForeground,
+      onBackground = colors.foreground,
+      onSurface = colors.inputForeground,
+      outline = colors.border,
+      secondary = colors.muted,
+      tertiary = colors.neutral,
+      onSurfaceVariant = colors.mutedForeground,
     )
   } else {
     lightColorScheme(
-      primary = colors.primary!!,
-      background = colors.background!!,
-      surface = colors.input!!,
-      error = colors.danger!!,
-      onPrimary = colors.primaryForeground!!,
-      onBackground = colors.foreground!!,
-      onSurface = colors.inputForeground!!,
-      outline = colors.border!!,
-      secondary = colors.muted!!,
-      tertiary = colors.neutral!!,
-      onSurfaceVariant = colors.mutedForeground!!,
+      primary = colors.primary,
+      background = colors.background,
+      surface = colors.input,
+      error = colors.danger,
+      onPrimary = colors.primaryForeground,
+      onBackground = colors.foreground,
+      onSurface = colors.inputForeground,
+      outline = colors.border,
+      secondary = colors.muted,
+      tertiary = colors.neutral,
+      onSurfaceVariant = colors.mutedForeground,
     )
   }
 }
@@ -150,7 +141,7 @@ private fun computeColorScheme(colors: ClerkColors): ColorScheme {
 internal object ClerkThemeAccess {
 
   // Direct Clerk theme object access
-  internal val colors: ClerkColors
+  internal val colors: ResolvedClerkColors
     @Composable get() = LocalComposeColors.current
 
   internal val typography: Typography

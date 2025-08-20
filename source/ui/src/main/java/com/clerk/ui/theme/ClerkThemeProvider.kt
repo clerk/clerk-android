@@ -11,6 +11,24 @@ import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
 
+internal data class ResolvedClerkColors(
+  val primary: Color,
+  val background: Color,
+  val input: Color,
+  val danger: Color,
+  val success: Color,
+  val warning: Color,
+  val foreground: Color,
+  val mutedForeground: Color,
+  val primaryForeground: Color,
+  val inputForeground: Color,
+  val neutral: Color,
+  val border: Color,
+  val ring: Color,
+  val muted: Color,
+  val shadow: Color,
+)
+
 internal object DefaultColors {
   val lightColors =
     ClerkColors(
@@ -66,12 +84,13 @@ internal object DefaultColors {
       shadow = Color(0xFF2B2B34),
       ring = Color(0xFF6C47FF),
       muted = Color(0xFFF9F9F9),
+      primaryForeground = Color(0xFF000000),
     )
 }
 
 @SuppressLint("ComposeCompositionLocalUsage")
-internal val LocalThemeColors =
-  compositionLocalOf<ClerkColors> { error("ClerkColors not provided") }
+internal val LocalClerkThemeColors =
+  compositionLocalOf<ResolvedClerkColors> { error("ClerkColors not provided") }
 
 @SuppressLint("ComposeCompositionLocalUsage")
 internal val LocalClerkTypography =
@@ -95,7 +114,7 @@ internal fun ClerkThemeProvider(theme: ClerkTheme? = null, content: @Composable 
   val design = theme?.design ?: ClerkDesign()
 
   CompositionLocalProvider(
-    LocalThemeColors provides colors,
+    LocalClerkThemeColors provides colors,
     LocalClerkTypography provides typography,
     LocalClerkDesign provides design,
     content = content,
@@ -122,33 +141,34 @@ private fun generateTypography(theme: ClerkTheme?): Typography {
 }
 
 @Composable
-private fun generateColors(theme: ClerkTheme?): ClerkColors {
+private fun generateColors(theme: ClerkTheme?): ResolvedClerkColors {
   val defaultColors = if (isSystemInDarkTheme()) DefaultColors.dark else DefaultColors.lightColors
+  val t = theme?.colors
   val colors =
-    ClerkColors(
-      primary = theme?.colors?.primary ?: defaultColors.primary,
-      background = theme?.colors?.background ?: defaultColors.background,
-      input = theme?.colors?.input ?: defaultColors.input,
-      danger = theme?.colors?.danger ?: defaultColors.danger,
-      success = theme?.colors?.success ?: defaultColors.success,
-      warning = theme?.colors?.warning ?: defaultColors.warning,
-      foreground = theme?.colors?.foreground ?: defaultColors.foreground,
-      mutedForeground = theme?.colors?.mutedForeground ?: defaultColors.mutedForeground,
-      primaryForeground = theme?.colors?.primaryForeground ?: defaultColors.primaryForeground,
-      inputForeground = theme?.colors?.inputForeground ?: defaultColors.inputForeground,
-      neutral = theme?.colors?.neutral ?: defaultColors.neutral,
-      border = theme?.colors?.border ?: defaultColors.border,
-      ring = theme?.colors?.ring ?: defaultColors.ring,
-      muted = theme?.colors?.muted ?: defaultColors.muted,
-      shadow = theme?.colors?.shadow ?: defaultColors.shadow,
+    ResolvedClerkColors(
+      primary = t?.primary ?: defaultColors.primary!!,
+      background = t?.background ?: defaultColors.background!!,
+      input = t?.input ?: defaultColors.input!!,
+      danger = t?.danger ?: defaultColors.danger!!,
+      success = t?.success ?: defaultColors.success!!,
+      warning = t?.warning ?: defaultColors.warning!!,
+      foreground = t?.foreground ?: defaultColors.foreground!!,
+      mutedForeground = t?.mutedForeground ?: defaultColors.mutedForeground!!,
+      primaryForeground = t?.primaryForeground ?: defaultColors.primaryForeground!!,
+      inputForeground = t?.inputForeground ?: defaultColors.inputForeground!!,
+      neutral = t?.neutral ?: defaultColors.neutral!!,
+      border = t?.border ?: defaultColors.border!!,
+      ring = t?.ring ?: defaultColors.ring!!,
+      muted = t?.muted ?: defaultColors.muted!!,
+      shadow = t?.shadow ?: defaultColors.shadow!!,
     )
   return colors
 }
 
 /** Object providing easy access to current theme values within composables. */
 internal object ClerkThemeProviderAccess {
-  internal val colors: ClerkColors
-    @Composable get() = LocalThemeColors.current
+  internal val colors: ResolvedClerkColors
+    @Composable get() = LocalClerkThemeColors.current
 
   internal val typography: Typography
     @Composable get() = LocalClerkTypography.current

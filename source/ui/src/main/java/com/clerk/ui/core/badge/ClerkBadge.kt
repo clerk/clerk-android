@@ -21,8 +21,8 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.LocalClerkDesign
+import com.clerk.ui.theme.LocalClerkThemeColors
 import com.clerk.ui.theme.LocalComputedColors
-import com.clerk.ui.theme.LocalThemeColors
 
 @Composable
 fun Badge(
@@ -31,25 +31,24 @@ fun Badge(
   badgeType: ClerkBadgeType = ClerkBadgeType.Primary,
 ) {
   val design = LocalClerkDesign.current
-  val colors = LocalThemeColors.current
+  val colors = LocalClerkThemeColors.current
   val computedColors = LocalComputedColors.current
   val (backgroundColor, contentColor) =
     when (badgeType) {
-      ClerkBadgeType.Primary ->
-        MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.onPrimary
-      ClerkBadgeType.Secondary -> MaterialTheme.colorScheme.secondary to colors.mutedForeground!!
-      ClerkBadgeType.Positive -> computedColors.backgroundSuccess to colors.success!!
-      ClerkBadgeType.Negative -> computedColors.backgroundDanger to MaterialTheme.colorScheme.error
-      ClerkBadgeType.Warning -> computedColors.backgroundWarning to colors.warning!!
+      ClerkBadgeType.Primary -> colors.primary to colors.primaryForeground
+      ClerkBadgeType.Secondary -> colors.muted to colors.mutedForeground
+      ClerkBadgeType.Positive -> computedColors.backgroundSuccess to colors.success
+      ClerkBadgeType.Negative -> computedColors.backgroundDanger to colors.danger
+      ClerkBadgeType.Warning -> computedColors.backgroundWarning to colors.warning
     }
 
   val borderColor =
     when (badgeType) {
       ClerkBadgeType.Primary -> Color.Transparent
       ClerkBadgeType.Secondary -> computedColors.buttonBorder
-      ClerkBadgeType.Positive -> colors.success!!
-      ClerkBadgeType.Negative -> colors.danger!!
-      ClerkBadgeType.Warning -> colors.warning!!
+      ClerkBadgeType.Positive -> colors.success
+      ClerkBadgeType.Negative -> colors.danger
+      ClerkBadgeType.Warning -> colors.warning
     }
 
   ClerkMaterialTheme {
