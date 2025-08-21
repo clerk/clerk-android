@@ -55,3 +55,5 @@ dependencies {
   implementation(libs.material3)
   implementation(projects.clerk.source.api)
 }
+
+tasks.matching { it.name.startsWith("dokka") }.configureEach { enabled = false }

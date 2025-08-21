@@ -65,6 +65,7 @@ allprojects {
     }
 }
 
+// Root multi-module Dokka output
 tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
 
 subprojects {
