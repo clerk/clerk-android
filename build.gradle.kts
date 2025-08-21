@@ -18,6 +18,8 @@ plugins {
 
 val projectLibs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
+// Dependency Analysis plugin not applied by default; rake tasks will work when advice exists
+
 allprojects {
   apply(plugin = "org.jetbrains.dokka")
   apply(plugin = "com.vanniktech.maven.publish")
@@ -122,4 +124,42 @@ subprojects {
       }
     }
   }
+
+  // Build identifier map from version catalog (group:name -> libs.alias)
+  val rootCatalog = rootProject.extensions.getByType<VersionCatalogsExtension>().named("libs")
+  val identifierMapProvider = providers.provider {
+    rootCatalog.libraryAliases.associateNotNull<String, String> { alias: String ->
+      val depProvider = rootCatalog.findLibrary(alias).orElse(null) ?: return@associateNotNull null
+      val dep = depProvider.get()
+      val module = dep.module
+      val group = module.group
+      val name = module.name
+      "$group:$name" to "libs.$alias"
+    }
+  }
+
+  // Register rakeDependencies task reading advice from dependency-analysis
+  tasks.register<foundry.gradle.dependencyrake.RakeDependencies>("rakeDependencies") {
+    identifierMap.set(identifierMapProvider)
+    buildFileProperty.set(layout.projectDirectory.file("build.gradle.kts"))
+    noApi.set(false)
+    missingIdentifiersFile.set(layout.buildDirectory.file("rake/missing_identifiers.txt"))
+    // Ensure rake runs after advice is generated
+    mustRunAfter(tasks.matching { it.name.startsWith("advice") })
+  }
+}
+
+// Aggregate rake task to run rake across all subprojects
+tasks.register("rakeAll") {
+  dependsOn(subprojects.map { it.path + ":rakeDependencies" })
+}
+
+// Helper to associate not null in Kotlin DSL
+fun <K, V> Iterable<K>.associateNotNull(transform: (K) -> Pair<K, V>?): Map<K, V> {
+  val result = mutableMapOf<K, V>()
+  for (element in this) {
+    val pair = transform(element)
+    if (pair != null) result[pair.first] = pair.second
+  }
+  return result
 }
