@@ -1,4 +1,4 @@
-package com.clerk.api.network.model.organization
+package com.clerk.api.organizations
 
 import com.clerk.api.network.model.userdata.PublicUserData
 import kotlinx.serialization.Serializable

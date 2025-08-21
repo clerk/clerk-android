@@ -172,6 +172,15 @@ internal object Paths {
   }
 }
 
+internal object Organizations {
+  internal const val ORGANIZATIONS_PATH = "organizations"
+  internal const val ORGANIZATIONS_WITH_ID = "$ORGANIZATIONS_PATH/{organization_id}"
+
+  object Roles {
+    const val GET_ROLES = "${ORGANIZATIONS_WITH_ID}/roles"
+  }
+}
+
 /**
  * Common parameter names used in API paths and requests.
  *
