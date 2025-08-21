@@ -150,6 +150,7 @@ subprojects {
     tasks.register<foundry.gradle.dependencyrake.RakeDependencies>("rakeDependencies") {
       identifierMap.set(identifierMapProvider)
       buildFileProperty.set(buildScriptFile)
+      // Input is defaulted in task; leave unset here to avoid script API mismatch
       noApi.set(false)
       missingIdentifiersFile.set(layout.buildDirectory.file("rake/missing_identifiers.txt"))
       mustRunAfter(tasks.matching { it.name.startsWith("advice") })

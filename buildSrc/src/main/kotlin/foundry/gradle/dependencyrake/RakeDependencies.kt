@@ -96,6 +96,9 @@ constructor(objects: ObjectFactory, providers: ProviderFactory) : AbstractPostPr
 
   init {
     group = "rake"
+    // Default to the standard dependency-analysis report file
+    // This avoids configuration errors when not explicitly set from the build script
+    input.set(project.layout.buildDirectory.file("reports/dependency-analysis/advice-all-dependencies.json"))
   }
 
   @TaskAction
