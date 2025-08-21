@@ -82,6 +82,8 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 }
 
 dependencies {
+  api(projects.clerk.source.api)
+
   implementation(platform(libs.compose.bom))
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.compose.foundation)
@@ -97,8 +99,6 @@ dependencies {
   implementation(libs.material)
   implementation(libs.material3)
   implementation(libs.materialKolor)
-
-  compileOnly(projects.clerk.source.api)
 
   testImplementation(libs.junit)
   testImplementation(projects.clerk.source.api)
