@@ -139,19 +139,30 @@ subprojects {
   }
 
   // Register rakeDependencies task reading advice from dependency-analysis
-  tasks.register<foundry.gradle.dependencyrake.RakeDependencies>("rakeDependencies") {
-    identifierMap.set(identifierMapProvider)
-    buildFileProperty.set(layout.projectDirectory.file("build.gradle.kts"))
-    noApi.set(false)
-    missingIdentifiersFile.set(layout.buildDirectory.file("rake/missing_identifiers.txt"))
-    // Ensure rake runs after advice is generated
-    mustRunAfter(tasks.matching { it.name.startsWith("advice") })
+  // Only register for projects that have a build script
+  if (project.file("build.gradle.kts").exists() || project.file("build.gradle").exists()) {
+    val buildScriptFile =
+      if (project.file("build.gradle.kts").exists()) {
+        layout.projectDirectory.file("build.gradle.kts")
+      } else {
+        layout.projectDirectory.file("build.gradle")
+      }
+    tasks.register<foundry.gradle.dependencyrake.RakeDependencies>("rakeDependencies") {
+      identifierMap.set(identifierMapProvider)
+      buildFileProperty.set(buildScriptFile)
+      noApi.set(false)
+      missingIdentifiersFile.set(layout.buildDirectory.file("rake/missing_identifiers.txt"))
+      mustRunAfter(tasks.matching { it.name.startsWith("advice") })
+    }
   }
 }
 
 // Aggregate rake task to run rake across all subprojects
 tasks.register("rakeAll") {
-  dependsOn(subprojects.map { it.path + ":rakeDependencies" })
+  val rakeTargets = subprojects.filter {
+    it.file("build.gradle.kts").exists() || it.file("build.gradle").exists()
+  }.map { it.path + ":rakeDependencies" }
+  dependsOn(rakeTargets)
 }
 
 // Helper to associate not null in Kotlin DSL
