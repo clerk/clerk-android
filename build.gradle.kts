@@ -138,15 +138,9 @@ subprojects {
     }
   }
 
-  // Register rakeDependencies task reading advice from dependency-analysis
-  // Only register for projects that have a build script
-  if (project.file("build.gradle.kts").exists() || project.file("build.gradle").exists()) {
-    val buildScriptFile =
-      if (project.file("build.gradle.kts").exists()) {
-        layout.projectDirectory.file("build.gradle.kts")
-      } else {
-        layout.projectDirectory.file("build.gradle")
-      }
+  // Register rakeDependencies only for projects with an actual build script on disk
+  if (project.buildFile.exists()) {
+    val buildScriptFile = layout.projectDirectory.file(project.buildFile.name)
     tasks.register<foundry.gradle.dependencyrake.RakeDependencies>("rakeDependencies") {
       identifierMap.set(identifierMapProvider)
       buildFileProperty.set(buildScriptFile)
@@ -159,9 +153,8 @@ subprojects {
 
 // Aggregate rake task to run rake across all subprojects
 tasks.register("rakeAll") {
-  val rakeTargets = subprojects.filter {
-    it.file("build.gradle.kts").exists() || it.file("build.gradle").exists()
-  }.map { it.path + ":rakeDependencies" }
+  val rakeTargets = subprojects.filter { it.buildFile.exists() }
+    .map { it.path + ":rakeDependencies" }
   dependsOn(rakeTargets)
 }
 
