@@ -35,6 +35,12 @@ android {
   buildFeatures { compose = true }
 
   testOptions { unitTests.isIncludeAndroidResources = true }
+
+  kotlin {
+    compilerOptions {
+      freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+    }
+  }
 }
 
 // Configure Maven publishing for this module
