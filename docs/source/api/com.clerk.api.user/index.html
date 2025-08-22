@@ -1,0 +1,423 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>com.clerk.api.user</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script>
+<link href="../../../styles/multimodule.css" rel="Stylesheet"></head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+<a class="library-name--link" href="../../../index.html">
+                            Clerk
+                    </a>            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":source:api:dokkaHtmlPartial/release">androidJvm</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="package" id="content" pageids="Clerk Android API::com.clerk.api.user////PointingToDeclaration//65241848">
+  <div class="breadcrumbs"><a href="../index.html">Clerk Android API</a><span class="delimiter">/</span><span class="current">com.clerk.api.user</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="FUNCTION,EXTENSION_FUNCTION">Functions</button><button class="section-tab" data-togglable="PROPERTY,EXTENSION_PROPERTY">Properties</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="10399932%2FClasslikes%2F65241848" anchor-label="User" id="10399932%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-user/index.html"><span><span>User</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="10399932%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="-user/index.html">User</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>backupCodeEnabled<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>createdAt<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>createOrganizationEnabled<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>createOrganizationsLimit<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>deleteSelfEnabled<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>emailAddresses<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.emailaddress/-email-address/index.html">EmailAddress</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>enterpriseAccounts<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.network.model.account/-enterprise-account/index.html">EnterpriseAccount</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>externalAccounts<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.externalaccount/-external-account/index.html">ExternalAccount</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>firstName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>hasImage<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>id<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>imageUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>lastSignInAt<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>lastName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>legalAcceptedAt<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>organizationMemberships<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.network.model.organization/-organization-membership/index.html">OrganizationMembership</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>passkeys<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.passkeys/-passkey/index.html">Passkey</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>passwordEnabled<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>phoneNumbers<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.phonenumber/-phone-number/index.html">PhoneNumber</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>primaryEmailAddressId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>primaryPhoneNumberId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>publicMetadata<span class="token operator">: </span><span data-unresolved-link="kotlinx.serialization.json/JsonObject///PointingToDeclaration/">JsonObject</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>privateMetadata<span class="token operator">: </span><span data-unresolved-link="kotlinx.serialization.json/JsonObject///PointingToDeclaration/">JsonObject</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>totpEnabled<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>twoFactorEnabled<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>updatedAt<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>unsafeMetadata<span class="token operator">: </span><span data-unresolved-link="kotlinx.serialization.json/JsonObject///PointingToDeclaration/">JsonObject</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>username<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">The <a href="-user/index.html">User</a> object holds all of the information for a single user of your application and provides a set of methods to manage their account.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="EXTENSION_PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-872849206%2FProperties%2F65241848" anchor-label="unconnectedProviders" id="-872849206%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="unconnected-providers.html"><span>unconnected</span><wbr><span><span>Providers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-872849206%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="unconnected-providers.html">unconnectedProviders</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.sso/-o-auth-provider/index.html">OAuthProvider</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Extension property that returns a list of OAuth providers that the user has not yet connected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="EXTENSION_FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-667883941%2FFunctions%2F65241848" anchor-label="activeSessions" id="-667883941%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="active-sessions.html"><span>active</span><wbr><span><span>Sessions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-667883941%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="active-sessions.html"><span class="token function">activeSessions</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.session/-session/index.html">Session</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves the active sessions for the current user or the user with the given session ID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="802475276%2FFunctions%2F65241848" anchor-label="allSessions" id="802475276%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="all-sessions.html"><span>all</span><wbr><span><span>Sessions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="802475276%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="all-sessions.html"><span class="token function">allSessions</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.session/-session/index.html">Session</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all sessions for the current user or the user with the given session ID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-501156297%2FFunctions%2F65241848" anchor-label="attemptTOTPVerification" id="-501156297%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="attempt-t-o-t-p-verification.html"><span>attempt</span><wbr><span><span>TOTPVerification</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-501156297%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="attempt-t-o-t-p-verification.html"><span class="token function">attemptTOTPVerification</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">code<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.network.model.totp/-t-o-t-p-resource/index.html">TOTPResource</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Verifies a TOTP (Time-based One-Time Password) code to complete the TOTP setup process.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1117763670%2FFunctions%2F65241848" anchor-label="createBackupCodes" id="1117763670%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-backup-codes.html"><span>create</span><wbr><span>Backup</span><wbr><span><span>Codes</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1117763670%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="create-backup-codes.html"><span class="token function">createBackupCodes</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.network.model.backupcodes/-backup-code-resource/index.html">BackupCodeResource</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Generates backup codes for the current user's account.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="166366360%2FFunctions%2F65241848" anchor-label="createEmailAddress" id="166366360%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-email-address.html"><span>create</span><wbr><span>Email</span><wbr><span><span>Address</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="166366360%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="create-email-address.html"><span class="token function">createEmailAddress</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">email<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.emailaddress/-email-address/index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a new email address for the current user or the user with the given session ID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="501599452%2FFunctions%2F65241848" anchor-label="createExternalAccount" id="501599452%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-external-account.html"><span>create</span><wbr><span>External</span><wbr><span><span>Account</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="501599452%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="create-external-account.html"><span class="token function">createExternalAccount</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">params<span class="token operator">: </span><a href="-user/-create-external-account-params/index.html">User.CreateExternalAccountParams</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.externalaccount/-external-account/index.html">ExternalAccount</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Adds an external account for the user. A new <a href="../com.clerk.api.externalaccount/-external-account/index.html">ExternalAccount</a> will be created and associated with the user. This method is useful if you want to allow an already signed-in user to connect their account with an external provider, such as Facebook, GitHub, etc., so that they can sign in with that provider in the future.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2022001408%2FFunctions%2F65241848" anchor-label="createPasskey" id="-2022001408%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-passkey.html"><span>create</span><wbr><span><span>Passkey</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2022001408%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="create-passkey.html"><span class="token function">createPasskey</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.passkeys/-passkey/index.html">Passkey</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a new passkey for the current user or the user with the given session ID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2025779589%2FFunctions%2F65241848" anchor-label="createPhoneNumber" id="-2025779589%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-phone-number.html"><span>create</span><wbr><span>Phone</span><wbr><span><span>Number</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2025779589%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="create-phone-number.html"><span class="token function">createPhoneNumber</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">phoneNumber<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.phonenumber/-phone-number/index.html">PhoneNumber</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a new phone number for the current user or the user with the given session ID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2014369717%2FFunctions%2F65241848" anchor-label="createTOTP" id="-2014369717%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create-t-o-t-p.html"><span>create</span><wbr><span><span>TOTP</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2014369717%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="create-t-o-t-p.html"><span class="token function">createTOTP</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.network.model.totp/-t-o-t-p-resource/index.html">TOTPResource</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a new TOTP (Time-based One-Time Password) configuration for the current user.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1555104579%2FFunctions%2F65241848" anchor-label="delete" id="1555104579%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="delete.html"><span><span>delete</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1555104579%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="delete.html"><span class="token function">delete</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.network.model.deleted/-deleted-object/index.html">DeletedObject</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Deletes the current user, or the user with the given session ID, from the Clerk API.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-78377530%2FFunctions%2F65241848" anchor-label="deletePassword" id="-78377530%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="delete-password.html"><span>delete</span><wbr><span><span>Password</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-78377530%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="delete-password.html"><span class="token function">deletePassword</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">currentPassword<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="-user/index.html">User</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Deletes the current user's password, or the user with the given session ID, using the Clerk API.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="650785941%2FFunctions%2F65241848" anchor-label="deleteProfileImage" id="650785941%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="delete-profile-image.html"><span>delete</span><wbr><span>Profile</span><wbr><span><span>Image</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="650785941%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="delete-profile-image.html"><span class="token function">deleteProfileImage</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.network.model.deleted/-deleted-object/index.html">DeletedObject</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Deletes the current user's profile image, or the user with the given session ID, from the Clerk API.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-635083910%2FFunctions%2F65241848" anchor-label="deleteTOTP" id="-635083910%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="delete-t-o-t-p.html"><span>delete</span><wbr><span><span>TOTP</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-635083910%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="delete-t-o-t-p.html"><span class="token function">deleteTOTP</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.network.model.deleted/-deleted-object/index.html">DeletedObject</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Deletes the TOTP (Time-based One-Time Password) configuration for the current user.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1492630018%2FFunctions%2F65241848" anchor-label="emailAddresses" id="-1492630018%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="email-addresses.html"><span>email</span><wbr><span><span>Addresses</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1492630018%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="email-addresses.html"><span class="token function">emailAddresses</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.emailaddress/-email-address/index.html">EmailAddress</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all email addresses associated with the current user or the user with the given session ID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1702172654%2FFunctions%2F65241848" anchor-label="fullName" id="-1702172654%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="full-name.html"><span>full</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1702172654%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="full-name.html"><span class="token function">fullName</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Extension function that returns the user's full name by combining first and last names.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1148986876%2FFunctions%2F65241848" anchor-label="get" id="-1148986876%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get.html"><span><span>get</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1148986876%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="get.html"><span class="token function">get</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="-user/index.html">User</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves the current user, or the user with the given session ID, from the Clerk API.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1199263956%2FFunctions%2F65241848" anchor-label="phoneNumbers" id="1199263956%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="phone-numbers.html"><span>phone</span><wbr><span><span>Numbers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1199263956%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="phone-numbers.html"><span class="token function">phoneNumbers</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../com.clerk.api.phonenumber/-phone-number/index.html">PhoneNumber</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all phone numbers associated with the current user or the user with the given session ID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="885740234%2FFunctions%2F65241848" anchor-label="setProfileImage" id="885740234%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-profile-image.html"><span>set</span><wbr><span>Profile</span><wbr><span><span>Image</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="885740234%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="set-profile-image.html"><span class="token function">setProfileImage</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">file<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/io/File.html">File</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.network.model.image/-image-resource/index.html">ImageResource</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Update the current user's profile image, or the user with the given session ID, with the provided image data.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1811198040%2FFunctions%2F65241848" anchor-label="update" id="1811198040%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="update.html"><span><span>update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1811198040%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="update.html"><span class="token function">update</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">params<span class="token operator">: </span><a href="-user/-update-params/index.html">User.UpdateParams</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="-user/index.html">User</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Updates the current user, or the user with the given session ID, with the provided parameters.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1348586312%2FFunctions%2F65241848" anchor-label="updatePassword" id="-1348586312%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="update-password.html"><span>update</span><wbr><span><span>Password</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1348586312%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-user/index.html">User</a><span class="token punctuation">.</span><a href="update-password.html"><span class="token function">updatePassword</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">params<span class="token operator">: </span><a href="-user/-update-password-params/index.html">User.UpdatePasswordParams</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="-user/index.html">User</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Updates the current user's password, or the user with the given session ID, using the Clerk API.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,420 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>Clerk</title>
+<link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../../styles/style.css" rel="Stylesheet">
+<link href="../../../../styles/main.css" rel="Stylesheet">
+<link href="../../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script>
+<link href="../../../../styles/multimodule.css" rel="Stylesheet"></head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+<a class="library-name--link" href="../../../../index.html">
+                            Clerk
+                    </a>            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":source:api:dokkaHtmlPartial/release">androidJvm</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="Clerk Android API::com.clerk.api/Clerk///PointingToDeclaration//65241848">
+  <div class="breadcrumbs"><a href="../../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="../index.html">com.clerk.api</a><span class="delimiter">/</span><span class="current">Clerk</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Clerk</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="index.html">Clerk</a></div><p class="paragraph">Main entrypoint class for the Clerk SDK.</p><p class="paragraph">Provides access to authentication state, user information, and core functionality for managing user sessions and sign-in flows.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="234968919%2FProperties%2F65241848" anchor-label="applicationName" id="234968919%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="application-name.html"><span>application</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="234968919%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="application-name.html">applicationName</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="807893885%2FProperties%2F65241848" anchor-label="client" id="807893885%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="client.html"><span><span>client</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="807893885%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">lateinit </span><span class="token keyword">var </span><a href="client.html">client</a><span class="token operator">: </span><a href="../../com.clerk.api.network.model.client/-client/index.html">Client</a></div><div class="brief "><p class="paragraph">The Client object representing the current device and its authentication state.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1177149220%2FProperties%2F65241848" anchor-label="debugMode" id="-1177149220%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="debug-mode.html"><span>debug</span><wbr><span><span>Mode</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1177149220%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="debug-mode.html">debugMode</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Enable for additional debugging signals and logging.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-585833396%2FProperties%2F65241848" anchor-label="firstNameIsEnabled" id="-585833396%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="first-name-is-enabled.html"><span>first</span><wbr><span>Name</span><wbr><span>Is</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-585833396%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="first-name-is-enabled.html">firstNameIsEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether first name is enabled in user settings for this application.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2081312728%2FProperties%2F65241848" anchor-label="isInitialized" id="-2081312728%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-initialized.html"><span>is</span><wbr><span><span>Initialized</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2081312728%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="is-initialized.html">isInitialized</a><span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines.flow/StateFlow///PointingToDeclaration/">StateFlow</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Reactive state indicating whether the Clerk SDK has completed initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1587456739%2FProperties%2F65241848" anchor-label="isSignedIn" id="-1587456739%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-signed-in.html"><span>is</span><wbr><span>Signed</span><wbr><span><span>In</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1587456739%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="is-signed-in.html">isSignedIn</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether a user is currently signed in.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1390810364%2FProperties%2F65241848" anchor-label="lastNameIsEnabled" id="1390810364%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="last-name-is-enabled.html"><span>last</span><wbr><span>Name</span><wbr><span>Is</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1390810364%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="last-name-is-enabled.html">lastNameIsEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether last name is enabled in user settings for this application.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-765974354%2FProperties%2F65241848" anchor-label="logoUrl" id="-765974354%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="logo-url.html"><span>logo</span><wbr><span><span>Url</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-765974354%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="logo-url.html">logoUrl</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The image URL for the application logo used in authentication UI components.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-349300697%2FProperties%2F65241848" anchor-label="mfaAuthenticatorAppIsEnabled" id="-349300697%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="mfa-authenticator-app-is-enabled.html"><span>mfa</span><wbr><span>Authenticator</span><wbr><span>App</span><wbr><span>Is</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-349300697%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="mfa-authenticator-app-is-enabled.html">mfaAuthenticatorAppIsEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether authenticator app MFA is enabled for this application.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1768105511%2FProperties%2F65241848" anchor-label="mfaIsEnabled" id="-1768105511%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="mfa-is-enabled.html"><span>mfa</span><wbr><span>Is</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1768105511%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="mfa-is-enabled.html">mfaIsEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether multi-factor authentication (MFA) is enabled for this application.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1649150367%2FProperties%2F65241848" anchor-label="passkeyIsEnabled" id="1649150367%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="passkey-is-enabled.html"><span>passkey</span><wbr><span>Is</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1649150367%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="passkey-is-enabled.html">passkeyIsEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether passkey authentication is enabled for this application.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="793113302%2FProperties%2F65241848" anchor-label="passwordIsEnabled" id="793113302%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="password-is-enabled.html"><span>password</span><wbr><span>Is</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="793113302%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="password-is-enabled.html">passwordIsEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether password authentication is enabled for this application.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1879197156%2FProperties%2F65241848" anchor-label="session" id="-1879197156%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="session.html"><span><span>session</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1879197156%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="session.html">session</a><span class="token operator">: </span><a href="../../com.clerk.api.session/-session/index.html">Session</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The currently active user session.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-495914738%2FProperties%2F65241848" anchor-label="sessionFlow" id="-495914738%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="session-flow.html"><span>session</span><wbr><span><span>Flow</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-495914738%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="session-flow.html">sessionFlow</a><span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines.flow/StateFlow///PointingToDeclaration/">StateFlow</span><span class="token operator">&lt;</span><a href="../../com.clerk.api.session/-session/index.html">Session</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Reactive state for the currently active user session.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1301813094%2FProperties%2F65241848" anchor-label="signIn" id="1301813094%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-in.html"><span>sign</span><wbr><span><span>In</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1301813094%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="sign-in.html">signIn</a><span class="token operator">: </span><a href="../../com.clerk.api.signin/-sign-in/index.html">SignIn</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The current sign-in attempt, if one is in progress.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="18319024%2FProperties%2F65241848" anchor-label="signUp" id="18319024%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-up.html"><span>sign</span><wbr><span><span>Up</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="18319024%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="sign-up.html">signUp</a><span class="token operator">: </span><a href="../../com.clerk.api.signup/-sign-up/index.html">SignUp</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The current sign-up attempt, if one is in progress.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1921293533%2FProperties%2F65241848" anchor-label="socialProviders" id="1921293533%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="social-providers.html"><span>social</span><wbr><span><span>Providers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1921293533%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="social-providers.html">socialProviders</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.environment/-user-settings/-social-config/index.html">UserSettings.SocialConfig</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Map of available social authentication providers configured for this application.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1348391485%2FProperties%2F65241848" anchor-label="user" id="1348391485%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="user.html"><span><span>user</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1348391485%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="user.html">user</a><span class="token operator">: </span><a href="../../com.clerk.api.user/-user/index.html">User</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The current user for the active session.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-564719441%2FProperties%2F65241848" anchor-label="userFlow" id="-564719441%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="user-flow.html"><span>user</span><wbr><span><span>Flow</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-564719441%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="user-flow.html">userFlow</a><span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines.flow/StateFlow///PointingToDeclaration/">StateFlow</span><span class="token operator">&lt;</span><a href="../../com.clerk.api.user/-user/index.html">User</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Reactive state for the currently authenticated user.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1298559569%2FProperties%2F65241848" anchor-label="usernameIsEnabled" id="1298559569%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="username-is-enabled.html"><span>username</span><wbr><span>Is</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1298559569%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="username-is-enabled.html">usernameIsEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether username authentication is enabled for this application.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-505699817%2FFunctions%2F65241848" anchor-label="initialize" id="-505699817%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initialize.html"><span><span>initialize</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-505699817%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="initialize.html"><span class="token function">initialize</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">publishableKey<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="initialize.html"><span class="token function">initialize</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">publishableKey<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">options<span class="token operator">: </span><a href="../-clerk-configuration-options/index.html">ClerkConfigurationOptions</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Initializes the Clerk SDK with the provided configuration.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-88280895%2FFunctions%2F65241848" anchor-label="signOut" id="-88280895%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-out.html"><span>sign</span><wbr><span><span>Out</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-88280895%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="sign-out.html"><span class="token function">signOut</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs out the currently authenticated user.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

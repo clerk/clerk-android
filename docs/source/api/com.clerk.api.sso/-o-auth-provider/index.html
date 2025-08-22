@@ -1,0 +1,593 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>OAuthProvider</title>
+<link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../../styles/style.css" rel="Stylesheet">
+<link href="../../../../styles/main.css" rel="Stylesheet">
+<link href="../../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script>
+<link href="../../../../styles/multimodule.css" rel="Stylesheet"></head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+<a class="library-name--link" href="../../../../index.html">
+                            Clerk
+                    </a>            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":source:api:dokkaHtmlPartial/release">androidJvm</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="Clerk Android API::com.clerk.api.sso/OAuthProvider///PointingToDeclaration//65241848">
+  <div class="breadcrumbs"><a href="../../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="../index.html">com.clerk.api.sso</a><span class="delimiter">/</span><span class="current">OAuthProvider</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>OAuth</span><wbr><span><span>Provider</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">enum </span><a href="index.html">OAuthProvider</a> : <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="index.html">OAuthProvider</a><span class="token operator">&gt; </span></div><p class="paragraph">Enum class representing supported OAuth providers for authentication.</p><p class="paragraph">Each OAuth provider corresponds to a third-party authentication service that users can use to sign in to your application. The enum provides a type-safe way to reference OAuth providers and automatically handles the mapping to the appropriate strategy strings used in Clerk API requests.</p><h2 class="">Supported Providers</h2><p class="paragraph">The enum includes support for major OAuth providers such as:</p><ul><li><p class="paragraph"><strong>Social platforms</strong>: Facebook, Google, Twitter, Instagram, TikTok, Discord</p></li><li><p class="paragraph"><strong>Professional platforms</strong>: LinkedIn, Microsoft, Slack</p></li><li><p class="paragraph"><strong>Developer platforms</strong>: GitHub, GitLab, Bitbucket, Atlassian</p></li><li><p class="paragraph"><strong>Business platforms</strong>: HubSpot, Notion, Dropbox, Box, Xero</p></li><li><p class="paragraph"><strong>Entertainment platforms</strong>: Spotify, Twitch</p></li><li><p class="paragraph"><strong>AI platforms</strong>: Hugging Face</p></li><li><p class="paragraph"><strong>Custom providers</strong>: For enterprise or specialized OAuth implementations</p></li></ul><h2 class="">Usage</h2><p class="paragraph">OAuth providers are typically used when configuring sign-in flows or when processing authentication redirects from external services.</p><h3 class="">Example usage:</h3><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">// Use with sign-in authentication<br>SignIn.authenticateWithRedirect(<br>  AuthenticateWithRedirectParams.OAuth(strategy = OAuthProvider.GOOGLE)<br>)<br><br>// Convert from strategy string<br>val provider = OAuthProvider.fromStrategy("oauth_github")</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><h4 class="">See also</h4><div class="table"><div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-o-auth-provider-data/index.html"><span>OAuth</span><wbr><span>Provider</span><wbr><span><span>Data</span></span></a></div></span></div><div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button><button class="section-tab" data-togglable="ENTRY">Entries</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="ENTRY">
+        <h2 class="">Entries</h2>
+        <div class="table"><a data-name="1152485050%2FClasslikes%2F65241848" anchor-label="FACEBOOK" id="1152485050%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-f-a-c-e-b-o-o-k/index.html">FACEBOOK</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1152485050%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-f-a-c-e-b-o-o-k/index.html">FACEBOOK</a></div></div><div class="brief "><p class="paragraph">Facebook OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="535205613%2FClasslikes%2F65241848" anchor-label="GOOGLE" id="535205613%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-g-o-o-g-l-e/index.html">GOOGLE</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="535205613%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-g-o-o-g-l-e/index.html">GOOGLE</a></div></div><div class="brief "><p class="paragraph">Google OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1526550987%2FClasslikes%2F65241848" anchor-label="HUBSPOT" id="1526550987%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-h-u-b-s-p-o-t/index.html">HUBSPOT</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1526550987%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-h-u-b-s-p-o-t/index.html">HUBSPOT</a></div></div><div class="brief "><p class="paragraph">HubSpot OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1403983639%2FClasslikes%2F65241848" anchor-label="GITHUB" id="1403983639%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-g-i-t-h-u-b/index.html">GITHUB</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1403983639%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-g-i-t-h-u-b/index.html">GITHUB</a></div></div><div class="brief "><p class="paragraph">GitHub OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1351215634%2FClasslikes%2F65241848" anchor-label="TIKTOK" id="-1351215634%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-t-i-k-t-o-k/index.html">TIKTOK</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1351215634%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-t-i-k-t-o-k/index.html">TIKTOK</a></div></div><div class="brief "><p class="paragraph">TikTok OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1060628911%2FClasslikes%2F65241848" anchor-label="GITLAB" id="1060628911%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-g-i-t-l-a-b/index.html">GITLAB</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1060628911%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-g-i-t-l-a-b/index.html">GITLAB</a></div></div><div class="brief "><p class="paragraph">GitLab OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="696851648%2FClasslikes%2F65241848" anchor-label="DISCORD" id="696851648%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-i-s-c-o-r-d/index.html">DISCORD</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="696851648%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-d-i-s-c-o-r-d/index.html">DISCORD</a></div></div><div class="brief "><p class="paragraph">Discord OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1741471687%2FClasslikes%2F65241848" anchor-label="TWITTER" id="1741471687%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-t-w-i-t-t-e-r/index.html">TWITTER</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1741471687%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-t-w-i-t-t-e-r/index.html">TWITTER</a></div></div><div class="brief "><p class="paragraph">Twitter OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="467388167%2FClasslikes%2F65241848" anchor-label="TWITCH" id="467388167%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-t-w-i-t-c-h/index.html">TWITCH</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="467388167%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-t-w-i-t-c-h/index.html">TWITCH</a></div></div><div class="brief "><p class="paragraph">Twitch OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="742533874%2FClasslikes%2F65241848" anchor-label="LINKEDIN" id="742533874%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-l-i-n-k-e-d-i-n/index.html">LINKEDIN</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="742533874%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-k-e-d-i-n/index.html">LINKEDIN</a></div></div><div class="brief "><p class="paragraph">LinkedIn OAuth authentication provider (legacy).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-412300882%2FClasslikes%2F65241848" anchor-label="LINKEDIN_OIDC" id="-412300882%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-l-i-n-k-e-d-i-n_-o-i-d-c/index.html">LINKEDIN_OIDC</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-412300882%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-k-e-d-i-n_-o-i-d-c/index.html">LINKEDIN_OIDC</a></div></div><div class="brief "><p class="paragraph">LinkedIn OpenID Connect authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-568154096%2FClasslikes%2F65241848" anchor-label="DROPBOX" id="-568154096%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-r-o-p-b-o-x/index.html">DROPBOX</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-568154096%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-d-r-o-p-b-o-x/index.html">DROPBOX</a></div></div><div class="brief "><p class="paragraph">Dropbox OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1468288990%2FClasslikes%2F65241848" anchor-label="ATLASSIAN" id="-1468288990%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-a-t-l-a-s-s-i-a-n/index.html">ATLASSIAN</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1468288990%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-a-t-l-a-s-s-i-a-n/index.html">ATLASSIAN</a></div></div><div class="brief "><p class="paragraph">Atlassian OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="358120331%2FClasslikes%2F65241848" anchor-label="BITBUCKET" id="358120331%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-b-i-t-b-u-c-k-e-t/index.html">BITBUCKET</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="358120331%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-b-i-t-b-u-c-k-e-t/index.html">BITBUCKET</a></div></div><div class="brief "><p class="paragraph">Bitbucket OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1383445762%2FClasslikes%2F65241848" anchor-label="MICROSOFT" id="1383445762%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-m-i-c-r-o-s-o-f-t/index.html">MICROSOFT</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1383445762%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-m-i-c-r-o-s-o-f-t/index.html">MICROSOFT</a></div></div><div class="brief "><p class="paragraph">Microsoft OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-546510839%2FClasslikes%2F65241848" anchor-label="NOTION" id="-546510839%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-n-o-t-i-o-n/index.html">NOTION</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-546510839%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-n-o-t-i-o-n/index.html">NOTION</a></div></div><div class="brief "><p class="paragraph">Notion OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="69433966%2FClasslikes%2F65241848" anchor-label="APPLE" id="69433966%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-a-p-p-l-e/index.html">APPLE</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="69433966%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-a-p-p-l-e/index.html">APPLE</a></div></div><div class="brief "><p class="paragraph">Apple OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2092607336%2FClasslikes%2F65241848" anchor-label="LINE" id="2092607336%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-l-i-n-e/index.html">LINE</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2092607336%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-e/index.html">LINE</a></div></div><div class="brief "><p class="paragraph">LINE OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-937743162%2FClasslikes%2F65241848" anchor-label="INSTAGRAM" id="-937743162%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-i-n-s-t-a-g-r-a-m/index.html">INSTAGRAM</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-937743162%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-i-n-s-t-a-g-r-a-m/index.html">INSTAGRAM</a></div></div><div class="brief "><p class="paragraph">Instagram OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="570361814%2FClasslikes%2F65241848" anchor-label="COINBASE" id="570361814%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-c-o-i-n-b-a-s-e/index.html">COINBASE</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="570361814%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-c-o-i-n-b-a-s-e/index.html">COINBASE</a></div></div><div class="brief "><p class="paragraph">Coinbase OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="167899598%2FClasslikes%2F65241848" anchor-label="SPOTIFY" id="167899598%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-s-p-o-t-i-f-y/index.html">SPOTIFY</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="167899598%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-s-p-o-t-i-f-y/index.html">SPOTIFY</a></div></div><div class="brief "><p class="paragraph">Spotify OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="402633438%2FClasslikes%2F65241848" anchor-label="XERO" id="402633438%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-x-e-r-o/index.html">XERO</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="402633438%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-x-e-r-o/index.html">XERO</a></div></div><div class="brief "><p class="paragraph">Xero OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-901017313%2FClasslikes%2F65241848" anchor-label="BOX" id="-901017313%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-b-o-x/index.html">BOX</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-901017313%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-b-o-x/index.html">BOX</a></div></div><div class="brief "><p class="paragraph">Box OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2041361372%2FClasslikes%2F65241848" anchor-label="SLACK" id="-2041361372%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-s-l-a-c-k/index.html">SLACK</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2041361372%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-s-l-a-c-k/index.html">SLACK</a></div></div><div class="brief "><p class="paragraph">Slack OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-400665895%2FClasslikes%2F65241848" anchor-label="LINEAR" id="-400665895%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-l-i-n-e-a-r/index.html">LINEAR</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-400665895%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-l-i-n-e-a-r/index.html">LINEAR</a></div></div><div class="brief "><p class="paragraph">Linear OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-987338085%2FClasslikes%2F65241848" anchor-label="HUGGING_FACE" id="-987338085%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-h-u-g-g-i-n-g_-f-a-c-e/index.html">HUGGING_FACE</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-987338085%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-h-u-g-g-i-n-g_-f-a-c-e/index.html">HUGGING_FACE</a></div></div><div class="brief "><p class="paragraph">Hugging Face OAuth authentication provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-514313691%2FClasslikes%2F65241848" anchor-label="CUSTOM" id="-514313691%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-c-u-s-t-o-m/index.html">CUSTOM</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-514313691%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><div class="block"><a href="-c-u-s-t-o-m/index.html">CUSTOM</a></div></div><div class="brief "><p class="paragraph">Custom OAuth authentication provider for enterprise or specialized implementations.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="-1739307099%2FClasslikes%2F65241848" anchor-label="Companion" id="-1739307099%2FClasslikes%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1739307099%2FClasslikes%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-210343922%2FProperties%2F65241848" anchor-label="entries" id="-210343922%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="entries.html"><span><span>entries</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-210343922%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="entries.html">entries</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.enums/-enum-entries/index.html">EnumEntries</a><span class="token operator">&lt;</span><a href="index.html">OAuthProvider</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a representation of an immutable list of all enum entries, in the order they're declared.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2009163389%2FProperties%2F65241848" anchor-label="logoUrl" id="2009163389%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../logo-url.html"><span>logo</span><wbr><span><span>Url</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2009163389%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html">OAuthProvider</a><span class="token punctuation">.</span><a href="../logo-url.html">logoUrl</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Extension property to get the logo URL for the OAuth provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="712280095%2FProperties%2F65241848" anchor-label="providerName" id="712280095%2FProperties%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../provider-name.html"><span>provider</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="712280095%2FProperties%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html">OAuthProvider</a><span class="token punctuation">.</span><a href="../provider-name.html">providerName</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Extension property to get the human-readable name of the OAuth provider.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="1310686286%2FFunctions%2F65241848" anchor-label="valueOf" id="1310686286%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="value-of.html"><span>value</span><wbr><span><span>Of</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1310686286%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="value-of.html"><span class="token function">valueOf</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">OAuthProvider</a></div><div class="brief "><p class="paragraph">Returns the enum constant of this type with the specified name. The string must match exactly an identifier used to declare an enum constant in this type. (Extraneous whitespace characters are not permitted.)</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1302776282%2FFunctions%2F65241848" anchor-label="values" id="1302776282%2FFunctions%2F65241848" data-filterable-set=":source:api:dokkaHtmlPartial/release"></a>
+          <div class="table-row" data-filterable-current=":source:api:dokkaHtmlPartial/release" data-filterable-set=":source:api:dokkaHtmlPartial/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="values.html"><span><span>values</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1302776282%2FFunctions%2F65241848"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api:dokkaHtmlPartial/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="values.html"><span class="token function">values</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="index.html">OAuthProvider</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns an array containing the constants of this enum type, in the order they're declared.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
