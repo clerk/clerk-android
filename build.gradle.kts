@@ -1,6 +1,7 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
+import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -65,7 +66,16 @@ allprojects {
     }
 }
 
-tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
+tasks.named<DokkaMultiModuleTask>("dokkaHtmlMultiModule") {
+  outputDirectory.set(rootDir.resolve("docs/"))
+
+  // Ensure dependencies on subproject Dokka tasks to avoid implicit output usage
+  val childAggregator = project.findProject(":source")?.tasks?.findByName("dokkaHtmlMultiModule")
+  if (childAggregator != null) {
+    dependsOn(childAggregator)
+  }
+  dependsOn(subprojects.mapNotNull { it.tasks.findByName("dokkaHtmlPartial") })
+}
 
 subprojects {
   plugins.withType<JavaPlugin> {
