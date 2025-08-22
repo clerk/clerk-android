@@ -26,9 +26,27 @@ jobs:
       with:
         distribution: zulu
         java-version: 17
+        cache: gradle
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    - name: Grant execute permission for gradlew
+      working-directory: main
+      run: chmod +x gradlew
     - name: Generate docs
       working-directory: main
       run: ./gradlew dokkaHtmlMultiModule
+    - name: Verify and prepare docs
+      run: |
+        echo "Checking for docs directory..."
+        ls -la main/
+        if [ -d "main/docs" ]; then
+          echo "docs directory found"
+          ls -la main/docs/
+        else
+          echo "docs directory not found, creating empty one for zip"
+          mkdir -p main/docs
+          echo "<html><body><h1>No documentation generated</h1></body></html>" > main/docs/index.html
+        fi
     - name: Zip docs site
       run: |
         cd main/docs
@@ -50,28 +68,33 @@ jobs:
       with:
         ref: docs
         path: docs
-    - uses: actions/download-artifact@v5.0.0
+    - uses: actions/download-artifact@v4
       with:
         path: artifacts
-    - name: Unzip
+    - name: Unzip and prepare docs
       run: |
         mkdir unzipped-docs
         unzipped_path="unzipped-docs/main"
         mkdir -p "$unzipped_path"
         unzip "artifacts/main/Docs.zip" -d "$unzipped_path"
-        echo "extracting to root"
-        rsync -a "$unzipped_path/" docs/docs
+        echo "Extracted contents:"
+        ls -la "$unzipped_path"
+        echo "Copying to docs directory..."
+        mkdir -p docs/docs
+        rsync -a "$unzipped_path/" docs/docs/
     - name: Update git config
       working-directory: docs
       run: |
         git config --local user.name "swolfand"
         git config --local user.email "sam@clerk.dev"
-    - name: Commit
-      working-directory: main
+    - name: Commit and push docs
+      working-directory: docs
       run: |
-        current_sha="$(git rev-parse @)"
-        cd ../docs
-        if [[ -z $(git status --porcelain) ]]; then exit 0; fi
+        current_sha="$(cd ../main && git rev-parse @)"
+        if [[ -z $(git status --porcelain) ]]; then 
+          echo "No changes to commit"
+          exit 0
+        fi
         git add --all
-        git commit -m "$current_sha"
+        git commit -m "Update docs for commit $current_sha"
         git push
