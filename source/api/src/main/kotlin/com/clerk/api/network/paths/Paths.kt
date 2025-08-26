@@ -101,6 +101,11 @@ internal object Paths {
     const val ME = "me"
     const val PROFILE_IMAGE = "${ME}/profile_image"
 
+    const val ACCEPT_ORGANIZATION_INVITATION =
+      "${ME}/organization_invitations/{invitation_id}/accept"
+    const val ACCEPT_ORGANIZATION_SUGGESTION =
+      "${ME}/organization_suggestions/{suggestion_id}/accept"
+
     /** Password management endpoints. */
     internal object Password {
       const val UPDATE = "${ME}/change_password"
@@ -174,9 +179,6 @@ internal object Paths {
   internal object Organizations {
     const val ORGANIZATIONS = "organizations"
     const val ROLES = "${ORGANIZATIONS}/{organization_id}/roles"
-
-    const val ACCEPT_USER_INVITATION =
-      "${ORGANIZATIONS}/organization_invitations/{invitation_id}/accept"
   }
 }
 
