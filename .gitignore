@@ -14,7 +14,6 @@
 .externalNativeBuild
 .cxx
 local.properties
-workbench/*
 /source/build/
 /buildSrc/build/
 /samples/build/
