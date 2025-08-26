@@ -11,6 +11,7 @@ import com.clerk.api.network.model.image.ImageResource
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.passkeys.Passkey
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.phonenumber.PhoneNumber
