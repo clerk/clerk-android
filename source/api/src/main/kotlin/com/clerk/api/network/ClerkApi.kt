@@ -6,6 +6,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.DeviceAttestationApi
 import com.clerk.api.network.api.EnvironmentApi
+import com.clerk.api.network.api.OrganizationApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.api.SignUpApi
@@ -66,6 +67,10 @@ internal object ClerkApi {
   val deviceAttestationApi: DeviceAttestationApi
     get() = _deviceAttestationApi ?: error("ClerkApi is not configured.")
 
+  private var _organizationApi: OrganizationApi? = null
+  val organizationApi: OrganizationApi
+    get() = _organizationApi ?: error("ClerkApi is not configured.")
+
   /** Initializes the API client with the given [baseUrl]. */
   fun configure(baseUrl: String, context: Context) {
     val retrofit = buildRetrofit(baseUrl, context)
@@ -76,6 +81,7 @@ internal object ClerkApi {
     _signUp = retrofit.create(SignUpApi::class.java)
     _user = retrofit.create(UserApi::class.java)
     _deviceAttestationApi = retrofit.create(DeviceAttestationApi::class.java)
+    _organizationApi = retrofit.create(OrganizationApi::class.java)
   }
 
   /** Builds and configures the Retrofit instance. */
