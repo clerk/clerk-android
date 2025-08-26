@@ -12,11 +12,9 @@ android {
 
   defaultConfig {
     applicationId = "com.clerk.quickstart"
-    minSdk = 28
-    targetSdk = 36
-    compileSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    minSdk = libs.versions.minSdk.get().toInt()
+    targetSdk = libs.versions.compileSdk.get().toInt()
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     val isCI = System.getenv("CI")?.toBoolean() == true
     val clerkPublishableKey = project.findProperty("QUICKSTART_CLERK_PUBLISHABLE_KEY") as String?
