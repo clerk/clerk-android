@@ -170,6 +170,11 @@ internal object Paths {
     /** Backup codes endpoint */
     const val BACKUP_CODES = "${ME}/backup_codes"
   }
+
+  internal object Organizations {
+    const val ORGANIZATIONS = "organizations"
+    const val ROLES = "${ORGANIZATIONS}/{organization_id}/roles"
+  }
 }
 
 /**
