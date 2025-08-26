@@ -215,7 +215,7 @@ internal object DeviceAttestationHelper {
 
     return try {
       ClerkLog.d("Performing device assertion with token")
-      val result = ClerkApi.deviceAttestationApi.verify(packageName = applicationId, token = token)
+      val result = ClerkApi.deviceAttestation.verify(packageName = applicationId, token = token)
 
       when (result) {
         is ClerkResult.Success -> {
