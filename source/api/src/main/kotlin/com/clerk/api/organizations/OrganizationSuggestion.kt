@@ -1,6 +1,9 @@
 package com.clerk.api.organizations
 
+import kotlinx.serialization.Serializable
+
 /** An interface representing an organization suggestion. */
+@Serializable
 data class OrganizationSuggestion(
   /** The unique identifier of the suggestion. */
   val id: String,
