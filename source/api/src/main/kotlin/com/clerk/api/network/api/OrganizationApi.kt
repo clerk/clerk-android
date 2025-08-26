@@ -18,9 +18,15 @@ interface OrganizationApi {
     @Query("offset") offset: Int? = null,
   ): ClerkResult<List<Role>, ClerkErrorResponse>
 
-  @POST(Paths.Organizations.ACCEPT_USER_INVITATION)
+  @POST(Paths.UserPath.ACCEPT_ORGANIZATION_INVITATION)
   suspend fun acceptUserOrganizationInvitation(
     @Path("invitation_id") invitationId: String,
+    @Query("_clerk_session_id") sessionId: String? = null,
+  )
+
+  @POST(Paths.UserPath.ACCEPT_ORGANIZATION_SUGGESTION)
+  suspend fun acceptOrganizationSuggestion(
+    @Path("suggestion_id") suggestionId: String,
     @Query("_clerk_session_id") sessionId: String? = null,
   )
 }

@@ -37,7 +37,11 @@ data class UserOrganizationInvitation(
   }
 }
 
-/** Accepts the invitation to the organization. */
+/**
+ * Accepts this user organization invitation.
+ *
+ * @param invitationId The identifier of the invitation to accept.
+ */
 suspend fun UserOrganizationInvitation.accept(invitationId: String) {
   ClerkApi.organization.acceptUserOrganizationInvitation(
     invitationId = invitationId,

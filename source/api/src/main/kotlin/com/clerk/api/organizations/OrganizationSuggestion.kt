@@ -1,5 +1,7 @@
 package com.clerk.api.organizations
 
+import com.clerk.api.Clerk
+import com.clerk.api.network.ClerkApi
 import kotlinx.serialization.Serializable
 
 /** An interface representing an organization suggestion. */
@@ -16,3 +18,15 @@ data class OrganizationSuggestion(
   /** The timestamp when the suggestion was last updated. */
   val updatedAt: Long,
 )
+
+/**
+ * Accepts this organization suggestion.
+ *
+ * @param invitationId The identifier of the invitation to accept.
+ */
+suspend fun OrganizationSuggestion.accept(invitationId: String) {
+  ClerkApi.organization.acceptOrganizationSuggestion(
+    suggestionId = invitationId,
+    sessionId = Clerk.session?.id,
+  )
+}
