@@ -51,6 +51,8 @@ class MainActivity : ComponentActivity() {
         MainContent(
           onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
+          onClickFirstItem = {},
+          onClickSecondItem = {},
         )
       }
     }
@@ -59,7 +61,12 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainContent(onClear: () -> Unit, onSave: (String) -> Unit) {
+private fun MainContent(
+  onClear: () -> Unit,
+  onSave: (String) -> Unit,
+  onClickFirstItem: () -> Unit,
+  onClickSecondItem: () -> Unit,
+) {
   var showBottomSheet by remember { mutableStateOf(false) }
 
   Scaffold(
@@ -81,7 +88,7 @@ private fun MainContent(onClear: () -> Unit, onSave: (String) -> Unit) {
       Spacer(modifier = Modifier.height(Spacing.large))
       InstructionsCard()
       Spacer(modifier = Modifier.height(Spacing.large))
-      TestOptionsCard(onClickFirstItem = {}, onClickSecondItem = {})
+      TestOptionsCard(onClickFirstItem = onClickFirstItem, onClickSecondItem = onClickSecondItem)
     }
   }
 
@@ -258,7 +265,9 @@ private object Spacing {
 @PreviewLightDark
 @Composable
 private fun MainContentPreview() {
-  ClerkTheme { MainContent(onSave = {}, onClear = {}) }
+  ClerkTheme {
+    MainContent(onSave = {}, onClear = {}, onClickFirstItem = {}, onClickSecondItem = {})
+  }
 }
 
 @PreviewLightDark
