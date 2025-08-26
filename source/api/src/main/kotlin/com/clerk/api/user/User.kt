@@ -8,10 +8,10 @@ import com.clerk.api.network.model.backupcodes.BackupCodeResource
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.image.ImageResource
-import com.clerk.api.network.model.organization.OrganizationMembership
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.passkeys.Passkey
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.phonenumber.PhoneNumber
