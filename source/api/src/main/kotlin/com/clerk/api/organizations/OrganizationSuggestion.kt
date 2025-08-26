@@ -2,6 +2,8 @@ package com.clerk.api.organizations
 
 import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
 
 /** An interface representing an organization suggestion. */
@@ -24,8 +26,10 @@ data class OrganizationSuggestion(
  *
  * @param invitationId The identifier of the invitation to accept.
  */
-suspend fun OrganizationSuggestion.accept(invitationId: String) {
-  ClerkApi.organization.acceptOrganizationSuggestion(
+suspend fun OrganizationSuggestion.accept(
+  invitationId: String
+): ClerkResult<OrganizationSuggestion, ClerkErrorResponse> {
+  return ClerkApi.organization.acceptOrganizationSuggestion(
     suggestionId = invitationId,
     sessionId = Clerk.session?.id,
   )
