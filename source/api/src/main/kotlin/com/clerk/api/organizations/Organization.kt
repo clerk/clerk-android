@@ -1,5 +1,9 @@
 package com.clerk.api.organizations
 
+import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.deleted.DeletedObject
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -37,3 +41,18 @@ data class Organization(
    */
   val publicMetadata: JsonElement,
 )
+
+suspend fun Organization.update(
+  name: String? = null,
+  slug: String? = null,
+): ClerkResult<Organization, ClerkErrorResponse> {
+  return ClerkApi.organization.updateOrganization(
+    organizationId = this.id,
+    name = name,
+    slug = slug,
+  )
+}
+
+suspend fun Organization.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+  return ClerkApi.organization.deleteOrganization(organizationId = this.id)
+}

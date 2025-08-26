@@ -1,5 +1,6 @@
 package com.clerk.api.network.api
 
+import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.paths.Paths
 import com.clerk.api.network.serialization.ClerkResult
@@ -63,7 +64,7 @@ interface OrganizationApi {
   @DELETE(Paths.Organizations.WithId.ORGANIZATIONS_WITH_ID)
   suspend fun deleteOrganization(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String
-  ): ClerkResult<Organization, ClerkErrorResponse>
+  ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   @Multipart
   @PUT(Paths.Organizations.WithId.LOGO)
