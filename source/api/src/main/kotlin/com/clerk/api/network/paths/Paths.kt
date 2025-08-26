@@ -174,6 +174,9 @@ internal object Paths {
   internal object Organizations {
     const val ORGANIZATIONS = "organizations"
     const val ROLES = "${ORGANIZATIONS}/{organization_id}/roles"
+
+    const val ACCEPT_USER_INVITATION =
+      "${ORGANIZATIONS}/organization_invitations/{invitation_id}/accept"
   }
 }
 

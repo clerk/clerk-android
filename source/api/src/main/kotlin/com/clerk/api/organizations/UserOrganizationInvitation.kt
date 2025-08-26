@@ -1,5 +1,7 @@
 package com.clerk.api.organizations
 
+import com.clerk.api.Clerk
+import com.clerk.api.network.ClerkApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -27,11 +29,20 @@ data class UserOrganizationInvitation(
   val updatedAt: Long,
   val createdAt: Long,
 ) {
+  @Serializable
   enum class Status {
     Pending,
     Accepted,
     Revoked,
   }
+}
+
+/** Accepts the invitation to the organization. */
+suspend fun UserOrganizationInvitation.accept(invitationId: String) {
+  ClerkApi.organization.acceptUserOrganizationInvitation(
+    invitationId = invitationId,
+    sessionId = Clerk.session?.id,
+  )
 }
 
 @Serializable
