@@ -39,16 +39,11 @@ data class UserOrganizationInvitation(
   }
 }
 
-/**
- * Accepts this user organization invitation.
- *
- * @param invitationId The identifier of the invitation to accept.
- */
-suspend fun UserOrganizationInvitation.accept(
-  invitationId: String
-): ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
+/** Accepts this user organization invitation. */
+suspend fun UserOrganizationInvitation.accept():
+  ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
   return ClerkApi.organization.acceptUserOrganizationInvitation(
-    invitationId = invitationId,
+    invitationId = this.id,
     sessionId = Clerk.session?.id,
   )
 }

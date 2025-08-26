@@ -21,16 +21,11 @@ data class OrganizationSuggestion(
   val updatedAt: Long,
 )
 
-/**
- * Accepts this organization suggestion.
- *
- * @param invitationId The identifier of the invitation to accept.
- */
-suspend fun OrganizationSuggestion.accept(
-  invitationId: String
-): ClerkResult<OrganizationSuggestion, ClerkErrorResponse> {
+/** Accepts this organization suggestion. */
+suspend fun OrganizationSuggestion.accept():
+  ClerkResult<OrganizationSuggestion, ClerkErrorResponse> {
   return ClerkApi.organization.acceptOrganizationSuggestion(
-    suggestionId = invitationId,
+    suggestionId = this.id,
     sessionId = Clerk.session?.id,
   )
 }
