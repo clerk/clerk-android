@@ -49,7 +49,7 @@ interface OrganizationApi {
   ): ClerkResult<Organization, ClerkErrorResponse>
 
   @GET(Paths.Organizations.WithId.ORGANIZATIONS_WITH_ID)
-  fun getOrganization(
+  suspend fun getOrganization(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String
   ): ClerkResult<Organization, ClerkErrorResponse>
 
@@ -68,13 +68,13 @@ interface OrganizationApi {
 
   @Multipart
   @PUT(Paths.Organizations.WithId.LOGO)
-  fun updateOrganizationLogo(
+  suspend fun updateOrganizationLogo(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
     @Part file: MultipartBody.Part,
   ): ClerkResult<Organization, ClerkErrorResponse>
 
   @DELETE(Paths.Organizations.WithId.LOGO)
-  fun deleteOrganizationLogo(
+  suspend fun deleteOrganizationLogo(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String
   ): ClerkResult<Organization, ClerkErrorResponse>
 }
