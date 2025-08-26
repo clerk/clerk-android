@@ -1,9 +1,11 @@
 package com.clerk.api.organizations
 
+import com.clerk.api.image.ImageService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import java.io.File
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -55,4 +57,9 @@ suspend fun Organization.update(
 
 suspend fun Organization.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.organization.deleteOrganization(organizationId = this.id)
+}
+
+suspend fun Organization.updateLogo(file: File): ClerkResult<Organization, ClerkErrorResponse> {
+  val body = ImageService().createMultipartBody(file)
+  return ClerkApi.organization.updateOrganizationLogo(organizationId = this.id, file = body)
 }
