@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+private val workbenchKey = "WORKBENCH_CLERK_PUBLISHABLE_KEY"
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
@@ -14,6 +16,16 @@ android {
     applicationId = "com.clerk.workbench"
     minSdk = libs.versions.minSdk.get().toInt()
     targetSdk = libs.versions.compileSdk.get().toInt()
+
+    val isCI = System.getenv("CI")?.toBoolean() == true
+    val clerkPublishableKey = project.findProperty(workbenchKey) as String?
+
+    if (clerkPublishableKey.isNullOrEmpty() && !isCI) {
+      throw GradleException("Missing $workbenchKey in gradle.properties")
+    }
+
+    val keyValue = clerkPublishableKey ?: "pk_test_placeholder_for_ci"
+    buildConfigField("String", workbenchKey, "\"${keyValue}\"")
   }
 
   compileOptions {
@@ -21,7 +33,10 @@ android {
     targetCompatibility = JavaVersion.VERSION_17
   }
   kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
-  buildFeatures { compose = true }
+  buildFeatures {
+    compose = true
+    buildConfig = true
+  }
 }
 
 dependencies {
