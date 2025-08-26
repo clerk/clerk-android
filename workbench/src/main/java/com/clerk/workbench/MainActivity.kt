@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,13 +46,20 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
-    setContent { ClerkTheme { MainContent() } }
+    setContent {
+      ClerkTheme {
+        MainContent(
+          onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
+          onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
+        )
+      }
+    }
   }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainContent() {
+private fun MainContent(onClear: () -> Unit, onSave: (String) -> Unit) {
   var showBottomSheet by remember { mutableStateOf(false) }
 
   Scaffold(
@@ -79,7 +87,13 @@ private fun MainContent() {
 
   if (showBottomSheet) {
     ModalBottomSheet(onDismissRequest = { showBottomSheet = false }) {
-      SettingsBottomSheetContent(onSave = { publishableKey -> showBottomSheet = false })
+      SettingsBottomSheetContent(
+        onSave = { publishableKey ->
+          showBottomSheet = false
+          onSave(publishableKey)
+        },
+        onClear = onClear,
+      )
     }
   }
 }
@@ -162,8 +176,9 @@ private fun ClickableTestItem(text: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun SettingsBottomSheetContent(onSave: (String) -> Unit) {
-  var publishableKey by remember { mutableStateOf("") }
+private fun SettingsBottomSheetContent(onSave: (String) -> Unit, onClear: () -> Unit) {
+  val publicKey = StorageHelper.loadValue(StorageKey.PUBLIC_KEY) ?: ""
+  var publishableKey by remember { mutableStateOf(publicKey) }
 
   Column(
     modifier =
@@ -195,6 +210,16 @@ private fun SettingsBottomSheetContent(onSave: (String) -> Unit) {
     Spacer(modifier = Modifier.height(Spacing.medium))
     Button(onClick = { onSave(publishableKey) }, modifier = Modifier.fillMaxWidth()) {
       Text(WorkbenchConstants.SAVE_BUTTON_TEXT)
+    }
+    Button(
+      modifier = Modifier.fillMaxWidth(),
+      onClick = {
+        publishableKey = ""
+        onClear()
+      },
+      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+    ) {
+      Text("Clear")
     }
   }
 }
@@ -233,5 +258,11 @@ private object Spacing {
 @PreviewLightDark
 @Composable
 private fun MainContentPreview() {
-  ClerkTheme { MainContent() }
+  ClerkTheme { MainContent(onSave = {}, onClear = {}) }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewSettingsBottomSheet() {
+  ClerkTheme { SettingsBottomSheetContent(onClear = {}, onSave = {}) }
 }

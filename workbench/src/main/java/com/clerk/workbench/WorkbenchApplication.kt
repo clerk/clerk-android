@@ -8,6 +8,7 @@ class WorkbenchApplication : Application() {
 
   override fun onCreate() {
     super.onCreate()
+    StorageHelper.initialize(this)
     Clerk.initialize(
       this,
       BuildConfig.WORKBENCH_CLERK_PUBLISHABLE_KEY,
