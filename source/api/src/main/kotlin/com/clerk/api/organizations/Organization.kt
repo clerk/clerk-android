@@ -150,3 +150,37 @@ suspend fun Organization.getRoles(
 ): ClerkResult<List<Role>, ClerkErrorResponse> {
   return ClerkApi.organization.getRoles(organizationId = this.id, limit = limit, offset = offset)
 }
+
+suspend fun Organization.createDomain(
+  name: String
+): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
+  return ClerkApi.organization.createOrganizationDomain(organizationId = this.id, name = name)
+}
+
+suspend fun Organization.getDomains(
+  limit: Int = 20,
+  offset: Int = 0,
+  enrollmentMode: String? = null,
+): ClerkResult<List<OrganizationDomain>, ClerkErrorResponse> {
+  return ClerkApi.organization.getAllOrganizationDomains(
+    organizationId = this.id,
+    limit = limit,
+    offset = offset,
+    enrollmentMode = enrollmentMode,
+  )
+}
+
+suspend fun Organization.getDomain(
+  domainId: String
+): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
+  return ClerkApi.organization.getOrganizationDomain(organizationId = this.id, domainId = domainId)
+}
+
+suspend fun Organization.deleteDomain(
+  domainId: String
+): ClerkResult<DeletedObject, ClerkErrorResponse> {
+  return ClerkApi.organization.deleteOrganizationDomain(
+    organizationId = this.id,
+    domainId = domainId,
+  )
+}
