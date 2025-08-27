@@ -5,6 +5,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.paths.Paths
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
+import com.clerk.api.organizations.OrganizationDomain
 import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.Role
@@ -77,4 +78,57 @@ interface OrganizationApi {
   suspend fun deleteOrganizationLogo(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String
   ): ClerkResult<Organization, ClerkErrorResponse>
+
+  @FormUrlEncoded
+  @POST(Paths.Organizations.WithId.DomainPath.DOMAINS)
+  suspend fun createOrganizationDomain(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Field("name") name: String,
+  ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
+
+  @GET(Paths.Organizations.WithId.DomainPath.DOMAINS)
+  suspend fun getAllOrganizationDomains(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Query("limit") limit: Int? = null,
+    @Query("offset") offset: Int? = null,
+    @Query("verified") verified: Boolean? = null,
+    @Query("enrollment_mode") enrollmentMode: String? = null,
+  ): ClerkResult<List<OrganizationDomain>, ClerkErrorResponse>
+
+  @GET(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  suspend fun getOrganizationDomain(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+  ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
+
+  @DELETE(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  suspend fun deleteOrganizationDomain(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+  ): ClerkResult<DeletedObject, ClerkErrorResponse>
+
+  @FormUrlEncoded
+  @POST(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  suspend fun updateEnrollmentMode(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Field("enrollment_mode") enrollmentMode: String,
+    @Field("delete_pending") deletePending: Boolean? = null,
+  ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
+
+  @FormUrlEncoded
+  @POST(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  suspend fun prepareAffiliationVerification(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Field("affiliation_email_address") affiliationEmailAddress: String,
+  ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
+
+  @FormUrlEncoded
+  @POST(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  suspend fun attemptAffiliationVerification(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Field("code") code: String,
+  ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 }
