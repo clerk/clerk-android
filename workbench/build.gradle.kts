@@ -41,8 +41,6 @@ android {
 
 dependencies {
   implementation(platform(libs.compose.bom))
-  implementation("io.github.vinceglb:filekit-core:0.10.0")
-  implementation("io.github.vinceglb:filekit-dialogs-compose:0.10.0")
   implementation(libs.activity.compose)
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime)
