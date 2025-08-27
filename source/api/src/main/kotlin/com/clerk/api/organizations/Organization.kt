@@ -161,7 +161,7 @@ suspend fun Organization.getDomains(
   limit: Int = 20,
   offset: Int = 0,
   enrollmentMode: String? = null,
-): ClerkResult<List<OrganizationDomain>, ClerkErrorResponse> {
+): ClerkResult<OrganizationDomainCollection, ClerkErrorResponse> {
   return ClerkApi.organization.getAllOrganizationDomains(
     organizationId = this.id,
     limit = limit,

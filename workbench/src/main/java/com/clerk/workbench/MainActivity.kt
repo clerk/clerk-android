@@ -58,8 +58,13 @@ class MainActivity : ComponentActivity() {
     setContent {
       val uiState by viewModel.uiState.collectAsStateWithLifecycle()
       val context = LocalContext.current
-      if (uiState is OrgDomainViewModel.OrgDomainUiState.DomainCreated) {
-        Toast.makeText(context, "Domain created", Toast.LENGTH_SHORT).show()
+      if (uiState is OrgDomainViewModel.OrgDomainUiState.DomainsFetched) {
+        Toast.makeText(
+            context,
+            "${(uiState as OrgDomainViewModel.OrgDomainUiState.DomainsFetched).domains.map { it.id }}",
+            Toast.LENGTH_SHORT,
+          )
+          .show()
       }
 
       ClerkTheme {
@@ -67,7 +72,7 @@ class MainActivity : ComponentActivity() {
           onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
           onClickFirstItem = { viewModel.createOrgDomain() },
-          onClickSecondItem = { viewModel.setActive() },
+          onClickSecondItem = { viewModel.getAllDomains() },
         )
       }
     }

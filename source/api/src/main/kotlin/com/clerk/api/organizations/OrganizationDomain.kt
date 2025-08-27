@@ -122,3 +122,12 @@ suspend fun OrganizationDomain.updateEnrollmentMode(
     deletePending = deletePending,
   )
 }
+
+/**
+ * When the Clerk API returns a collection of objects it uses a top level data tag in the JSON. This
+ * class represents that JSON structure since we can't pass the list type to the clerk result.
+ *
+ * EX: Invalid: ClerkResult<List<OrganizationDomain>, ClerkErrorResponse> Valid:
+ * ClerkResult<OrganizationMembershipCollection, ClerkErrorResponse>
+ */
+@Serializable data class OrganizationDomainCollection(val data: List<OrganizationDomain>)

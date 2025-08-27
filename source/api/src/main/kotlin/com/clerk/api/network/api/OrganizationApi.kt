@@ -6,6 +6,7 @@ import com.clerk.api.network.paths.Paths
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationDomain
+import com.clerk.api.organizations.OrganizationDomainCollection
 import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.Role
@@ -201,7 +202,7 @@ interface OrganizationApi {
     @Query("offset") offset: Int? = null,
     @Query("verified") verified: Boolean? = null,
     @Query("enrollment_mode") enrollmentMode: String? = null,
-  ): ClerkResult<List<OrganizationDomain>, ClerkErrorResponse>
+  ): ClerkResult<OrganizationDomainCollection, ClerkErrorResponse>
 
   /**
    * Retrieves a specific organization domain by its ID.
