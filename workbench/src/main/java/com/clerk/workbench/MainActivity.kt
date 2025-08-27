@@ -1,9 +1,13 @@
 package com.clerk.workbench
 
+import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -36,23 +40,52 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.workbench.ui.theme.Clerk
 import com.clerk.workbench.ui.theme.ClerkTheme
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : ComponentActivity() {
+  val viewModel: MainViewModel by viewModels()
+
+  private val filePickerLauncher =
+    registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+      uri?.let { selectedUri ->
+        val inputStream = contentResolver.openInputStream(selectedUri)
+        inputStream?.let { stream ->
+          val file = File(cacheDir, "selected_image.jpg")
+          FileOutputStream(file).use { output -> stream.copyTo(output) }
+          viewModel.updateOrgLogo(file)
+        }
+      }
+    }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
+      val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+      val context = LocalContext.current
+
+      if (uiState is MainUiState.OrgUpdated) {
+        Toast.makeText(
+            context,
+            (uiState as MainUiState.OrgUpdated).organization.name,
+            Toast.LENGTH_SHORT,
+          )
+          .show()
+      }
       ClerkTheme {
         MainContent(
           onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
-          onClickFirstItem = {},
-          onClickSecondItem = {},
+          onClickFirstItem = { viewModel.deleteOrg() },
+          onClickSecondItem = { filePickerLauncher.launch("image/*") },
         )
       }
     }

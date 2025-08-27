@@ -105,6 +105,7 @@ data class Session(
 
     /** Unknown session status. */
     @SerialName("unknown") UNKNOWN,
+    @SerialName("pending") PENDING,
   }
 }
 
