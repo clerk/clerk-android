@@ -4,7 +4,11 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.paths.Paths
 import com.clerk.api.network.serialization.ClerkResult
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
 
 /**
  * Internal API interface for client-related operations.
@@ -27,4 +31,23 @@ internal interface ClientApi {
    *   failure
    */
   @GET(Paths.ClientPath.CLIENT) suspend fun get(): ClerkResult<Client, ClerkErrorResponse>
+
+  /**
+   * Sets a session as active for this client.
+   *
+   * This method activates a specific session on the current client, making it the primary
+   * authenticated session. When a session is set as active, it becomes the session used for
+   * subsequent API requests and authentication operations.
+   *
+   * @param sessionId The unique identifier of the session to activate
+   * @param organizationId Optional organization ID to set as the active organization context for
+   *   the session. If provided, the session will be scoped to this organization.
+   * @return A [ClerkResult] with [Unit] on success, or a [ClerkErrorResponse] on failure
+   */
+  @FormUrlEncoded
+  @POST(Paths.ClientPath.Sessions.WithId.SET_ACTIVE)
+  suspend fun setActive(
+    @Path("id") sessionId: String,
+    @Field("active_organization_id") organizationId: String?,
+  ): ClerkResult<Unit, ClerkErrorResponse>
 }

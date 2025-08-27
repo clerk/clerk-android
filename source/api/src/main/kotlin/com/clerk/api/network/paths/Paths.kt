@@ -48,6 +48,8 @@ internal object Paths {
         internal const val REMOVE = "${SESSIONS_WITH_ID}/remove"
         internal const val TOKENS = "${SESSIONS_WITH_ID}/tokens"
         internal const val TEMPLATE = "${TOKENS}/{template}"
+
+        internal const val SET_ACTIVE = "$SESSIONS_WITH_ID/touch"
       }
     }
 
