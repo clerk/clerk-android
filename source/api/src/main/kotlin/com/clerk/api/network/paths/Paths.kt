@@ -178,7 +178,14 @@ internal object Paths {
 
   internal object Organizations {
     const val ORGANIZATIONS = "organizations"
+    const val ORGANIZATION_ID = "organization_id"
     const val ROLES = "${ORGANIZATIONS}/{organization_id}/roles"
+
+    internal object WithId {
+      const val ORGANIZATIONS_WITH_ID = "${ORGANIZATIONS}/{$ORGANIZATION_ID}"
+
+      const val LOGO = "$ORGANIZATIONS_WITH_ID/logo"
+    }
   }
 }
 

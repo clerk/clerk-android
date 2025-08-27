@@ -2,6 +2,8 @@ package com.clerk.api.organizations
 
 import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -37,14 +39,11 @@ data class UserOrganizationInvitation(
   }
 }
 
-/**
- * Accepts this user organization invitation.
- *
- * @param invitationId The identifier of the invitation to accept.
- */
-suspend fun UserOrganizationInvitation.accept(invitationId: String) {
-  ClerkApi.organization.acceptUserOrganizationInvitation(
-    invitationId = invitationId,
+/** Accepts this user organization invitation. */
+suspend fun UserOrganizationInvitation.accept():
+  ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
+  return ClerkApi.organization.acceptUserOrganizationInvitation(
+    invitationId = this.id,
     sessionId = Clerk.session?.id,
   )
 }
