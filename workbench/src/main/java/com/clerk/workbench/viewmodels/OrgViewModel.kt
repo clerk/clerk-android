@@ -1,4 +1,4 @@
-package com.clerk.workbench
+package com.clerk.workbench.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -18,15 +18,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
+class OrgViewModel : ViewModel() {
 
-  private val _uiState = MutableStateFlow<MainUiState>(MainUiState.SignedOut)
+  private val _uiState = MutableStateFlow<OrgUiState>(OrgUiState.SignedOut)
   val uiState = _uiState.asStateFlow()
 
+  // region Top level org functions
   fun signIn(email: String, password: String) {
     viewModelScope.launch {
       SignIn.create(SignIn.CreateParams.Strategy.Password(identifier = email, password = password))
-        .onSuccess { _uiState.value = MainUiState.SignedIn }
+        .onSuccess { _uiState.value = OrgUiState.SignedIn }
         .onFailure { Log.e("SignInViewModel", "${it.longErrorMessageOrNull}", it.throwable) }
     }
   }
@@ -38,7 +39,7 @@ class MainViewModel : ViewModel() {
   fun getOrg() {
     viewModelScope.launch {
       Organization.get("org_31qVA5lAwmdNaa2DDMNANzLViDu")
-        .onSuccess { _uiState.value = MainUiState.OrgFetched(it) }
+        .onSuccess { _uiState.value = OrgUiState.OrgFetched(it) }
         .onFailure { Log.e("MainViewModel", "${it.longErrorMessageOrNull}", it.throwable) }
     }
   }
@@ -47,7 +48,7 @@ class MainViewModel : ViewModel() {
     viewModelScope.launch {
       Organization.get("org_31qVA5lAwmdNaa2DDMNANzLViDu")
         .flatMap { it.update("Crispy Sunglasses Org") }
-        .onSuccess { _uiState.value = MainUiState.OrgUpdated(it) }
+        .onSuccess { _uiState.value = OrgUiState.OrgUpdated(it) }
         .onFailure { Log.e("MainViewModel", "${it.longErrorMessageOrNull}", it.throwable) }
     }
   }
@@ -56,7 +57,7 @@ class MainViewModel : ViewModel() {
     viewModelScope.launch {
       Organization.get("org_31qVA5lAwmdNaa2DDMNANzLViDu")
         .flatMap { it.updateLogo(file) }
-        .onSuccess { _uiState.value = MainUiState.LogoUpdated(it) }
+        .onSuccess { _uiState.value = OrgUiState.LogoUpdated(it) }
     }
   }
 
@@ -71,16 +72,18 @@ class MainViewModel : ViewModel() {
       Organization.get("org_31qVA5lAwmdNaa2DDMNANzLViDu").flatMap { it.delete() }
     }
   }
-}
 
-sealed interface MainUiState {
-  data object SignedOut : MainUiState
+  // endregion
 
-  data object SignedIn : MainUiState
+  sealed interface OrgUiState {
+    data object SignedOut : OrgUiState
 
-  data class OrgFetched(val organization: Organization) : MainUiState
+    data object SignedIn : OrgUiState
 
-  data class OrgUpdated(val organization: Organization) : MainUiState
+    data class OrgFetched(val organization: Organization) : OrgUiState
 
-  data class LogoUpdated(val organization: Organization) : MainUiState
+    data class OrgUpdated(val organization: Organization) : OrgUiState
+
+    data class LogoUpdated(val organization: Organization) : OrgUiState
+  }
 }

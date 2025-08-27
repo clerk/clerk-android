@@ -4,6 +4,7 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.paths.Paths
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.session.Session
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -49,5 +50,5 @@ internal interface ClientApi {
   suspend fun setActive(
     @Path("id") sessionId: String,
     @Field("active_organization_id") organizationId: String?,
-  ): ClerkResult<Unit, ClerkErrorResponse>
+  ): ClerkResult<Session, ClerkErrorResponse>
 }

@@ -192,8 +192,11 @@ object Clerk {
    * @param organizationId The organization ID to be as active in the current session. If null, the
    *   currently active organization is removed as active.
    */
-  suspend fun setActive(sessionId: String, organizationId: String? = null) {
-    ClerkApi.client.setActive(sessionId, organizationId)
+  suspend fun setActive(
+    sessionId: String,
+    organizationId: String? = null,
+  ): ClerkResult<Session, ClerkErrorResponse> {
+    return ClerkApi.client.setActive(sessionId, organizationId)
   }
 
   // region Sign In/Sign Up

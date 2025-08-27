@@ -32,11 +32,13 @@ data class OrganizationDomain(
   val name: String,
   val organizationId: String,
   val enrollmentMode: String,
-  val verification: Verification,
+  val verification: Verification? = null,
   val affiliationEmailAddress: String? = null,
   val totalPendingInvitations: Int,
   val createdAt: Long,
   val updatedAt: Long,
+  val publicOrganizationData: PublicOrganizationData? = null,
+  val totalPendingSuggestions: Int,
 ) {
   /**
    * Represents the verification details for an organization domain.
