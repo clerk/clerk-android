@@ -8,6 +8,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationDomain
+import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.Role
 import okhttp3.MultipartBody
@@ -339,4 +340,69 @@ interface OrganizationApi {
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.USER_ID) userId: String,
   ): ClerkResult<OrganizationMembership, ClerkErrorResponse>
+
+  /**
+   * Create an invitation for a user to join an organization.
+   *
+   * @param organizationId The id of the organization for which the invitation will be created
+   * @param emailAddress The email address the invitation will be sent to.
+   * @param role The role that will be assigned to the user after joining. This can be one of the
+   *   predefined roles "org:admin", "org:member" or a custom role.
+   */
+  @FormUrlEncoded
+  @POST(ApiPaths.Organization.Invitations.BASE)
+  fun createOrganizationInvitation(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Field("email_address") emailAddress: String,
+    @Field(ApiParams.ROLE) role: String,
+  ): ClerkResult<OrganizationInvitation, ClerkErrorResponse>
+
+  /**
+   * Retrieve all invitations for an organization. The current user must have permissions to manage
+   * the members of the organization.
+   *
+   * @param organizationId The id of the organization for which the invitation will be retrieved.
+   * @param limit
+   * @param offset
+   * @param status
+   */
+  @GET(ApiPaths.Organization.Invitations.BASE)
+  fun getAllOrganizationInvitations(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Query(ApiParams.LIMIT) limit: Int? = null,
+    @Query(ApiParams.OFFSET) offset: Int? = null,
+    @Query("status") status: String? = null,
+  ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse>
+
+  /**
+   * Bulk create an invitation for a user to join an organization.
+   *
+   * The current user must have permissions to manage the members of the organization.
+   *
+   * @param organizationId The id of the organization for which the invitations will be created.
+   * @param emailAddress An array of email addresses the invitations will be sent to.
+   * @param role The role that will be assigned to each of the users after joining. This can be one
+   *   of the predefined roles (org:admin, org:basic_member) or a custom role.
+   */
+  @FormUrlEncoded
+  @POST(ApiPaths.Organization.Invitations.BULK_CREATE)
+  fun bulkCreateOrganizationInvitations(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Field("email_address") emailAddress: List<String>,
+    @Field("role") role: String,
+  ): ClerkResult<List<OrganizationInvitation>, ClerkErrorResponse>
+
+  /**
+   * Revoke a pending organization invitation.
+   *
+   * The current user must have permissions to manage the members of the organization.
+   *
+   * @param organizationId The id of the organization for which the invitations will be retrieved.
+   * @param invitationId The id of the invitation to be revoked.
+   */
+  @POST(ApiPaths.Organization.Invitations.REVOKE)
+  fun revokeOrganizationInvitation(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.INVITATION_ID) invitationId: String,
+  ): ClerkResult<OrganizationInvitation, ClerkErrorResponse>
 }
