@@ -2,12 +2,12 @@ package com.clerk.api.network.api
 
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationDomain
-import com.clerk.api.organizations.OrganizationDomainCollection
 import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
@@ -204,7 +204,7 @@ interface OrganizationApi {
     @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query("verified") verified: Boolean? = null,
     @Query("enrollment_mode") enrollmentMode: String? = null,
-  ): ClerkResult<OrganizationDomainCollection, ClerkErrorResponse>
+  ): ClerkResult<ClerkPaginatedResponse<OrganizationDomain>, ClerkErrorResponse>
 
   /**
    * Retrieves a specific organization domain by its ID.
@@ -308,10 +308,10 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.MEMBERSHIPS)
-  fun createMembership(
+  suspend fun createMembership(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field(ApiParams.ROLE) role: String?,
-    @Field(ApiParams.USER_ID) userId: String,
+    @Field(ApiParams.USER_ID) userId: String?,
   ): ClerkResult<OrganizationMembership, ClerkErrorResponse>
 
   /**
@@ -329,7 +329,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.getMemberships
    */
   @GET(ApiPaths.Organization.MEMBERSHIPS)
-  fun getMemberships(
+  suspend fun getMembers(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.LIMIT) limit: Int?,
     @Query(ApiParams.OFFSET) offset: Int?,
@@ -337,7 +337,7 @@ interface OrganizationApi {
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Query(ApiParams.ROLE) role: String? = null,
     @Query("query") query: String? = null,
-  ): ClerkResult<List<OrganizationMembership>, ClerkErrorResponse>
+  ): ClerkResult<ClerkPaginatedResponse<OrganizationMembership>, ClerkErrorResponse>
 
   /**
    * Updates the role of an existing member in an organization.
@@ -350,11 +350,11 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.updateMembership
    */
   @PATCH(ApiPaths.Organization.MEMBERSHIP_WITH_USER_ID)
-  fun updateMembership(
+  suspend fun updateMembership(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.USER_ID) userId: String,
     @Field(ApiParams.ROLE) role: String,
-  ): ClerkResult<OrganizationMembership, ClerkErrorResponse>
+  ): ClerkResult<Organization, ClerkErrorResponse>
 
   /**
    * Removes a member from an organization.
@@ -366,7 +366,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.removeMember
    */
   @DELETE(ApiPaths.Organization.MEMBERSHIP_WITH_USER_ID)
-  fun removeMember(
+  suspend fun removeMember(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.USER_ID) userId: String,
   ): ClerkResult<OrganizationMembership, ClerkErrorResponse>

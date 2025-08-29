@@ -1,6 +1,9 @@
 package com.clerk.api.organizations
 
+import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.userdata.PublicUserData
+import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -32,3 +35,35 @@ data class OrganizationMembership(
   /** The timestamp when the organization membership was last updated */
   val updatedAt: Long,
 )
+
+/**
+ * Updates the role of a member within the organization.
+ *
+ * @param userId The unique identifier of the user whose membership role should be updated
+ * @param role The new role to assign to the user (e.g., "admin", "basic_member")
+ * @return A [ClerkResult] containing the updated [Organization] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun OrganizationMembership.updateMembership(
+  userId: String,
+  role: String,
+): ClerkResult<Organization, ClerkErrorResponse> {
+  return ClerkApi.organization.updateMembership(
+    organizationId = this.organization.id,
+    userId = userId,
+    role = role,
+  )
+}
+
+/**
+ * Removes a member from the organization.
+ *
+ * @param userId The unique identifier of the user to remove from the organization
+ * @return A [ClerkResult] containing the removed [OrganizationMembership] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun Organization.removeMember(
+  userId: String
+): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
+  return ClerkApi.organization.removeMember(organizationId = this.id, userId = userId)
+}
