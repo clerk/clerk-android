@@ -9,6 +9,7 @@
     <ID>SwallowedException:PasskeyCredentialManagerTest.kt$PasskeyCredentialManagerTest$e: Exception</ID>
     <ID>TooGenericExceptionThrown:DeviceAttestationHelper.kt$DeviceAttestationHelper$throw RuntimeException("Failed to hash clientId", e)</ID>
     <ID>TooManyFunctions:ConfigurationManager.kt$ConfigurationManager</ID>
+    <ID>TooManyFunctions:Organization.kt$com.clerk.api.organizations.Organization.kt</ID>
     <ID>TooManyFunctions:OrganizationApi.kt$OrganizationApi</ID>
     <ID>TooManyFunctions:User.kt$com.clerk.api.user.User.kt</ID>
     <ID>UnusedPrivateClass:ClerkApiResultCallAdapterFactory.kt$ApiException : Exception</ID>

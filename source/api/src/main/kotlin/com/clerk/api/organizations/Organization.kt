@@ -268,8 +268,8 @@ suspend fun Organization.getOrganizationMemberships(
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun Organization.createMembership(
-  role: String? = null,
-  userId: String? = null,
+  role: String,
+  userId: String,
 ): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
   return ClerkApi.organization.createMembership(
     organizationId = this.id,

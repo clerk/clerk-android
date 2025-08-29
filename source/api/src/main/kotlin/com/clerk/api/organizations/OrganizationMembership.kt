@@ -47,7 +47,7 @@ data class OrganizationMembership(
 suspend fun OrganizationMembership.updateMembership(
   userId: String,
   role: String,
-): ClerkResult<Organization, ClerkErrorResponse> {
+): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
   return ClerkApi.organization.updateMembership(
     organizationId = this.organization.id,
     userId = userId,

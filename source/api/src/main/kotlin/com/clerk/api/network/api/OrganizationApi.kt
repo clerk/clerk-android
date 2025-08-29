@@ -349,12 +349,13 @@ interface OrganizationApi {
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.updateMembership
    */
+  @FormUrlEncoded
   @PATCH(ApiPaths.Organization.MEMBERSHIP_WITH_USER_ID)
   suspend fun updateMembership(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.USER_ID) userId: String,
     @Field(ApiParams.ROLE) role: String,
-  ): ClerkResult<Organization, ClerkErrorResponse>
+  ): ClerkResult<OrganizationMembership, ClerkErrorResponse>
 
   /**
    * Removes a member from an organization.
