@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -37,15 +36,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.clerk.workbench.ui.theme.Clerk
+import com.clerk.workbench.ui.theme.ClerkPrimary
 import com.clerk.workbench.ui.theme.ClerkTheme
 
 class MainActivity : ComponentActivity() {
-
-  val viewModel: OrgViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -55,7 +53,7 @@ class MainActivity : ComponentActivity() {
         MainContent(
           onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
-          onClickFirstItem = { viewModel.createInvite() },
+          onClickFirstItem = {},
           onClickSecondItem = {},
         )
       }
@@ -76,7 +74,11 @@ private fun MainContent(
   Scaffold(
     modifier = Modifier.fillMaxSize(),
     floatingActionButton = {
-      FloatingActionButton(onClick = { showBottomSheet = true }) {
+      FloatingActionButton(
+        onClick = { showBottomSheet = true },
+        containerColor = ClerkPrimary,
+        contentColor = Color.White,
+      ) {
         Icon(imageVector = Icons.Filled.Settings, contentDescription = "Settings")
       }
     },
@@ -182,7 +184,7 @@ private fun WorkbenchDivider() {
 @Composable
 private fun ClickableTestItem(text: String, onClick: () -> Unit) {
   Row(modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(8.dp)) {
-    Text(text = text, color = Clerk, style = MaterialTheme.typography.titleMedium)
+    Text(text = text, color = ClerkPrimary, style = MaterialTheme.typography.titleMedium)
   }
 }
 

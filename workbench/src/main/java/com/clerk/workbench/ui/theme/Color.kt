@@ -26,7 +26,7 @@ val Border = Color(0xFF000000)
 val Shadow = Color(0xFF000000)
 val Ring = Color(0xFF000000)
 val Muted = Color(0xFFF9F9F9)
-val Clerk = Color(0xFF6C47FF)
+val ClerkPrimary = Color(0xFF6C47FF)
 
 // Design System Colors - Dark Theme
 val PrimaryDark = Color(0xFFFAFAFB)
