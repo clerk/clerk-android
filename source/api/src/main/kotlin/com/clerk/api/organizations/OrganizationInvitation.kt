@@ -1,6 +1,8 @@
 package com.clerk.api.organizations
 
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -42,8 +44,9 @@ data class OrganizationInvitation(
   }
 }
 
-suspend fun OrganizationInvitation.revoke() {
-  ClerkApi.organization.revokeOrganizationInvitation(
+suspend fun OrganizationInvitation.revoke():
+  ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
+  return ClerkApi.organization.revokeOrganizationInvitation(
     organizationId = this.organizationId!!,
     invitationId = this.id,
   )

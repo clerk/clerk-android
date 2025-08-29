@@ -326,7 +326,7 @@ suspend fun Organization.getInvitations(
     organizationId = this.id,
     limit = limit,
     offset = offset,
-    status = status.name,
+    status = status.name.lowercase(),
   )
 }
 
