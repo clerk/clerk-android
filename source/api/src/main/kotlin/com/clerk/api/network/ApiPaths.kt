@@ -68,6 +68,8 @@ internal object ApiPaths {
     internal const val BACKUP_CODES = "${BASE}/backup_codes"
 
     internal const val ORGANIZATION_MEMBERSHIPS = "${BASE}/organization_memberships"
+    internal const val ORGANIZATION_MEMBERSHIP_WITH_ID =
+      "${ORGANIZATION_MEMBERSHIPS}/{organization_id}"
 
     /** Password management */
     internal object Password {

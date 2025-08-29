@@ -8,9 +8,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationDomain
-import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.Role
 import okhttp3.MultipartBody
 import retrofit2.http.DELETE
@@ -51,36 +49,6 @@ interface OrganizationApi {
     @Query("limit") limit: Int? = null,
     @Query("offset") offset: Int? = null,
   ): ClerkResult<List<Role>, ClerkErrorResponse>
-
-  /**
-   * Accepts a user organization invitation.
-   *
-   * @param invitationId The unique identifier of the invitation to accept
-   * @param sessionId Optional session ID for the operation
-   * @return A [ClerkResult] containing either the accepted [OrganizationInvitation] on success or a
-   *   [ClerkErrorResponse] on failure
-   * @see com.clerk.api.organizations.acceptInvitation
-   */
-  @POST(ApiPaths.User.ACCEPT_ORGANIZATION_INVITATION)
-  suspend fun acceptUserOrganizationInvitation(
-    @Path("invitation_id") invitationId: String,
-    @Query("_clerk_session_id") sessionId: String? = null,
-  ): ClerkResult<OrganizationInvitation, ClerkErrorResponse>
-
-  /**
-   * Accepts an organization suggestion for a user.
-   *
-   * @param suggestionId The unique identifier of the suggestion to accept
-   * @param sessionId Optional session ID for the operation
-   * @return A [ClerkResult] containing either the accepted [OrganizationSuggestion] on success or a
-   *   [ClerkErrorResponse] on failure
-   * @see com.clerk.api.organizations.acceptSuggestion
-   */
-  @POST(ApiPaths.User.ACCEPT_ORGANIZATION_SUGGESTION)
-  suspend fun acceptOrganizationSuggestion(
-    @Path("suggestion_id") suggestionId: String,
-    @Query("_clerk_session_id") sessionId: String? = null,
-  ): ClerkResult<OrganizationSuggestion, ClerkErrorResponse>
 
   /**
    * Creates a new organization.

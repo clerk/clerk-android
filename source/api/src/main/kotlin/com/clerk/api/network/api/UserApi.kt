@@ -7,12 +7,16 @@ import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.backupcodes.BackupCodeResource
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.image.ImageResource
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.organizations.OrganizationInvitation
+import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.passkeys.Passkey
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.session.Session
@@ -243,4 +247,64 @@ internal interface UserApi {
 
   @POST(ApiPaths.User.BACKUP_CODES)
   suspend fun createBackupCodes(): ClerkResult<BackupCodeResource, ClerkErrorResponse>
+
+  /**
+   * Accepts a user organization invitation.
+   *
+   * @param invitationId The unique identifier of the invitation to accept
+   * @param sessionId Optional session ID for the operation
+   * @return A [ClerkResult] containing either the accepted [OrganizationInvitation] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.acceptInvitation
+   */
+  @POST(ApiPaths.User.ACCEPT_ORGANIZATION_INVITATION)
+  suspend fun acceptUserOrganizationInvitation(
+    @Path("invitation_id") invitationId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
+  ): ClerkResult<OrganizationInvitation, ClerkErrorResponse>
+
+  /**
+   * Accepts an organization suggestion for a user.
+   *
+   * @param suggestionId The unique identifier of the suggestion to accept
+   * @param sessionId Optional session ID for the operation
+   * @return A [ClerkResult] containing either the accepted [OrganizationSuggestion] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.acceptSuggestion
+   */
+  @POST(ApiPaths.User.ACCEPT_ORGANIZATION_SUGGESTION)
+  suspend fun acceptOrganizationSuggestion(
+    @Path("suggestion_id") suggestionId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
+  ): ClerkResult<OrganizationSuggestion, ClerkErrorResponse>
+
+  @GET(ApiPaths.User.ORGANIZATION_MEMBERSHIPS)
+  suspend fun getOrganizationMemberships(
+    @Query(ApiParams.LIMIT) limit: Int? = null,
+    @Query(ApiParams.OFFSET) offset: Int? = null,
+    @Query("paginated") paginated: Boolean = true,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
+  ): ClerkResult<ClerkPaginatedResponse<OrganizationMembership>, ClerkErrorResponse>
+
+  @DELETE(ApiPaths.User.ORGANIZATION_MEMBERSHIP_WITH_ID)
+  fun deleteMembership(
+    @Path("organization_id") organizationId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
+  ): ClerkResult<DeletedObject, ClerkErrorResponse>
+
+  @GET(ApiPaths.User.ORGANIZATION_INVITATIONS)
+  fun getOrganizationInvitations(
+    @Query("status") status: String? = null,
+    @Query(ApiParams.LIMIT) limit: Int? = null,
+    @Query(ApiParams.OFFSET) offset: Int? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
+  ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse>
+
+  @GET(ApiPaths.User.ORGANIZATION_SUGGESTIONS)
+  fun getOrganizationSuggestions(
+    @Query("status") status: String? = null,
+    @Query(ApiParams.LIMIT) limit: Int? = null,
+    @Query(ApiParams.OFFSET) offset: Int? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
+  ): ClerkResult<ClerkPaginatedResponse<OrganizationSuggestion>, ClerkErrorResponse>
 }
