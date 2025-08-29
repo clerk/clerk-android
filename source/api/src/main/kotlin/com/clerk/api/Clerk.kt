@@ -3,6 +3,7 @@ package com.clerk.api
 import android.content.Context
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
@@ -134,7 +135,8 @@ object Clerk {
   val userFlow: StateFlow<User?> = _userFlow.asStateFlow()
 
   /** The current user for the active session. */
-  val user: User? = session?.user
+  val user: User?
+    get() = session?.user
 
   // endregion
 
@@ -182,6 +184,20 @@ object Clerk {
     get() = if (::environment.isInitialized) environment.lastNameIsEnabled else false
 
   // endregion
+
+  /**
+   * Sets the active session, useful for multi-session applications.
+   *
+   * @param sessionId The session ID to be set as active
+   * @param organizationId The organization ID to be as active in the current session. If null, the
+   *   currently active organization is removed as active.
+   */
+  suspend fun setActive(
+    sessionId: String,
+    organizationId: String? = null,
+  ): ClerkResult<Session, ClerkErrorResponse> {
+    return ClerkApi.client.setActive(sessionId, organizationId)
+  }
 
   // region Sign In/Sign Up
 

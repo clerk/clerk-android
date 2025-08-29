@@ -48,6 +48,8 @@ internal object Paths {
         internal const val REMOVE = "${SESSIONS_WITH_ID}/remove"
         internal const val TOKENS = "${SESSIONS_WITH_ID}/tokens"
         internal const val TEMPLATE = "${TOKENS}/{template}"
+
+        internal const val SET_ACTIVE = "$SESSIONS_WITH_ID/touch"
       }
     }
 
@@ -179,12 +181,27 @@ internal object Paths {
   internal object Organizations {
     const val ORGANIZATIONS = "organizations"
     const val ORGANIZATION_ID = "organization_id"
+
+    const val DOMAIN_ID = "domain_id"
     const val ROLES = "${ORGANIZATIONS}/{organization_id}/roles"
 
     internal object WithId {
       const val ORGANIZATIONS_WITH_ID = "${ORGANIZATIONS}/{$ORGANIZATION_ID}"
 
       const val LOGO = "$ORGANIZATIONS_WITH_ID/logo"
+
+      internal object DomainPath {
+        const val DOMAINS = "$ORGANIZATIONS_WITH_ID/domains"
+
+        internal object WithId {
+          const val DOMAIN_WITH_ID = "${DOMAINS}/{$DOMAIN_ID}"
+
+          const val UPDATE_ENROLLMENT_MODE = "${DOMAIN_WITH_ID}/update_enrollment_mode"
+
+          const val PREPARE_AFFILIATION = "${DOMAIN_WITH_ID}/prepare_affiliation_verification"
+          const val ATTEMPT_AFFILIATION = "${DOMAIN_WITH_ID}/attempt_affiliation_verification"
+        }
+      }
     }
   }
 }

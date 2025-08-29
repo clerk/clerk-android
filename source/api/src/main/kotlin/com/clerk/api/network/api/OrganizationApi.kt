@@ -5,6 +5,8 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.paths.Paths
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
+import com.clerk.api.organizations.OrganizationDomain
+import com.clerk.api.organizations.OrganizationDomainCollection
 import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.Role
@@ -21,8 +23,26 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
+/**
+ * Retrofit API interface for organization-related operations in the Clerk system.
+ *
+ * This interface defines all HTTP endpoints for managing organizations, domains, invitations,
+ * roles, and other organization-related functionality.
+ *
+ * @see com.clerk.api.organizations
+ */
 interface OrganizationApi {
 
+  /**
+   * Retrieves roles for a specific organization.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param limit Maximum number of roles to return (optional)
+   * @param offset Number of roles to skip for pagination (optional)
+   * @return A [ClerkResult] containing either a list of [Role]s on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.getRoles
+   */
   @GET(Paths.Organizations.ROLES)
   suspend fun getRoles(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
@@ -30,29 +50,73 @@ interface OrganizationApi {
     @Query("offset") offset: Int? = null,
   ): ClerkResult<List<Role>, ClerkErrorResponse>
 
+  /**
+   * Accepts a user organization invitation.
+   *
+   * @param invitationId The unique identifier of the invitation to accept
+   * @param sessionId Optional session ID for the operation
+   * @return A [ClerkResult] containing either the accepted [OrganizationInvitation] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.acceptInvitation
+   */
   @POST(Paths.UserPath.ACCEPT_ORGANIZATION_INVITATION)
   suspend fun acceptUserOrganizationInvitation(
     @Path("invitation_id") invitationId: String,
     @Query("_clerk_session_id") sessionId: String? = null,
   ): ClerkResult<OrganizationInvitation, ClerkErrorResponse>
 
+  /**
+   * Accepts an organization suggestion for a user.
+   *
+   * @param suggestionId The unique identifier of the suggestion to accept
+   * @param sessionId Optional session ID for the operation
+   * @return A [ClerkResult] containing either the accepted [OrganizationSuggestion] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.acceptSuggestion
+   */
   @POST(Paths.UserPath.ACCEPT_ORGANIZATION_SUGGESTION)
   suspend fun acceptOrganizationSuggestion(
     @Path("suggestion_id") suggestionId: String,
     @Query("_clerk_session_id") sessionId: String? = null,
   ): ClerkResult<OrganizationSuggestion, ClerkErrorResponse>
 
+  /**
+   * Creates a new organization.
+   *
+   * @param name The name of the organization to create
+   * @return A [ClerkResult] containing either the created [Organization] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.create
+   */
   @FormUrlEncoded
   @POST(Paths.Organizations.ORGANIZATIONS)
   suspend fun createOrganization(
     @Field("name") name: String
   ): ClerkResult<Organization, ClerkErrorResponse>
 
+  /**
+   * Retrieves a specific organization by its ID.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @return A [ClerkResult] containing either the [Organization] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.get
+   */
   @GET(Paths.Organizations.WithId.ORGANIZATIONS_WITH_ID)
   suspend fun getOrganization(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String
   ): ClerkResult<Organization, ClerkErrorResponse>
 
+  /**
+   * Updates an existing organization.
+   *
+   * @param organizationId The unique identifier of the organization to update
+   * @param name The new name for the organization (optional)
+   * @param slug The new slug for the organization (optional)
+   * @return A [ClerkResult] containing either the updated [Organization] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.update
+   */
   @FormUrlEncoded
   @PATCH(Paths.Organizations.WithId.ORGANIZATIONS_WITH_ID)
   suspend fun updateOrganization(
@@ -61,11 +125,28 @@ interface OrganizationApi {
     @Field("slug") slug: String? = null,
   ): ClerkResult<Organization, ClerkErrorResponse>
 
+  /**
+   * Deletes an organization.
+   *
+   * @param organizationId The unique identifier of the organization to delete
+   * @return A [ClerkResult] containing either a [DeletedObject] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.delete
+   */
   @DELETE(Paths.Organizations.WithId.ORGANIZATIONS_WITH_ID)
   suspend fun deleteOrganization(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
+  /**
+   * Updates the logo for an organization.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param file The logo file to upload as a multipart body
+   * @return A [ClerkResult] containing either the updated [Organization] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.updateLogo
+   */
   @Multipart
   @PUT(Paths.Organizations.WithId.LOGO)
   suspend fun updateOrganizationLogo(
@@ -73,8 +154,143 @@ interface OrganizationApi {
     @Part file: MultipartBody.Part,
   ): ClerkResult<Organization, ClerkErrorResponse>
 
+  /**
+   * Deletes the logo for an organization.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @return A [ClerkResult] containing either the updated [Organization] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.deleteLogo
+   */
   @DELETE(Paths.Organizations.WithId.LOGO)
   suspend fun deleteOrganizationLogo(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String
   ): ClerkResult<Organization, ClerkErrorResponse>
+
+  /**
+   * Creates a new domain for an organization.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param name The domain name to create
+   * @return A [ClerkResult] containing either the created [OrganizationDomain] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.createDomain
+   */
+  @FormUrlEncoded
+  @POST(Paths.Organizations.WithId.DomainPath.DOMAINS)
+  suspend fun createOrganizationDomain(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Field("name") name: String,
+  ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
+
+  /**
+   * Retrieves all domains for an organization with optional filtering and pagination.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param limit Maximum number of domains to return (optional)
+   * @param offset Number of domains to skip for pagination (optional)
+   * @param verified Filter by verification status (optional)
+   * @param enrollmentMode Filter by enrollment mode (optional)
+   * @return A [ClerkResult] containing either a list of [OrganizationDomain]s on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.getDomains
+   */
+  @GET(Paths.Organizations.WithId.DomainPath.DOMAINS)
+  suspend fun getAllOrganizationDomains(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Query("limit") limit: Int? = null,
+    @Query("offset") offset: Int? = null,
+    @Query("verified") verified: Boolean? = null,
+    @Query("enrollment_mode") enrollmentMode: String? = null,
+  ): ClerkResult<OrganizationDomainCollection, ClerkErrorResponse>
+
+  /**
+   * Retrieves a specific organization domain by its ID.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param domainId The unique identifier of the domain
+   * @return A [ClerkResult] containing either the [OrganizationDomain] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.getDomain
+   */
+  @GET(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  suspend fun getOrganizationDomain(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+  ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
+
+  /**
+   * Deletes an organization domain.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param domainId The unique identifier of the domain to delete
+   * @return A [ClerkResult] containing either a [DeletedObject] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.deleteDomain
+   */
+  @DELETE(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  suspend fun deleteOrganizationDomain(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+  ): ClerkResult<DeletedObject, ClerkErrorResponse>
+
+  /**
+   * Updates the enrollment mode for an organization domain.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param domainId The unique identifier of the domain
+   * @param enrollmentMode The new enrollment mode to set
+   * @param deletePending Whether to delete pending invitations (optional)
+   * @return A [ClerkResult] containing either the updated [OrganizationDomain] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.updateEnrollmentMode
+   */
+  @FormUrlEncoded
+  @POST(Paths.Organizations.WithId.DomainPath.WithId.UPDATE_ENROLLMENT_MODE)
+  suspend fun updateEnrollmentMode(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Field("enrollment_mode") enrollmentMode: String,
+    @Field("delete_pending") deletePending: Boolean? = null,
+  ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
+
+  /**
+   * Prepares affiliation verification for an organization domain by sending a verification email.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param domainId The unique identifier of the domain
+   * @param affiliationEmailAddress The email address to send the verification code to
+   * @return A [ClerkResult] containing either the updated [OrganizationDomain] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.prepareAffiliationVerification
+   */
+  @FormUrlEncoded
+  @POST(Paths.Organizations.WithId.DomainPath.WithId.PREPARE_AFFILIATION)
+  suspend fun prepareAffiliationVerification(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Field("affiliation_email_address") affiliationEmailAddress: String,
+  ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
+
+  /**
+   * Attempts to verify the affiliation of an organization domain using a verification code.
+   *
+   * **Note:** You must call [prepareAffiliationVerification] first to receive the verification code
+   * via email.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param domainId The unique identifier of the domain
+   * @param code The verification code received via email after calling
+   *   [prepareAffiliationVerification]
+   * @return A [ClerkResult] containing either the updated [OrganizationDomain] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.attemptAffiliationVerification
+   */
+  @FormUrlEncoded
+  @POST(Paths.Organizations.WithId.DomainPath.WithId.ATTEMPT_AFFILIATION)
+  suspend fun attemptAffiliationVerification(
+    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Field("code") code: String,
+  ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 }
