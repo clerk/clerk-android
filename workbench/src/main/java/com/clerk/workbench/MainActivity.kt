@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -42,11 +41,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.clerk.workbench.ui.theme.Clerk
 import com.clerk.workbench.ui.theme.ClerkTheme
-import com.clerk.workbench.viewmodels.OrganizationMembershipViewModel
 
 class MainActivity : ComponentActivity() {
-
-  val orgMembersViewModel: OrganizationMembershipViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -56,7 +52,7 @@ class MainActivity : ComponentActivity() {
         MainContent(
           onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
-          onClickFirstItem = { orgMembersViewModel.createMembership() },
+          onClickFirstItem = {},
           onClickSecondItem = {},
         )
       }

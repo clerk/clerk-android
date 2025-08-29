@@ -1,6 +1,7 @@
 package com.clerk.api.organizations
 
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.userdata.PublicUserData
 import com.clerk.api.network.serialization.ClerkResult
@@ -41,7 +42,7 @@ data class OrganizationMembership(
  *
  * @param userId The unique identifier of the user whose membership role should be updated
  * @param role The new role to assign to the user (e.g., "admin", "basic_member")
- * @return A [ClerkResult] containing the updated [Organization] on success, or a
+ * @return A [ClerkResult] containing the updated [OrganizationMembership] on success, or a
  *   [ClerkErrorResponse] on failure
  */
 suspend fun OrganizationMembership.updateMembership(
@@ -56,14 +57,11 @@ suspend fun OrganizationMembership.updateMembership(
 }
 
 /**
- * Removes a member from the organization.
+ * Deletes the organization membership for the current user.
  *
- * @param userId The unique identifier of the user to remove from the organization
- * @return A [ClerkResult] containing the removed [OrganizationMembership] on success, or a
- *   [ClerkErrorResponse] on failure
+ * @return A [ClerkResult] containing a [DeletedObject] on success, or a [ClerkErrorResponse] on
+ *   failure
  */
-suspend fun Organization.removeMember(
-  userId: String
-): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
-  return ClerkApi.organization.removeMember(organizationId = this.id, userId = userId)
+suspend fun OrganizationMembership.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
+  return ClerkApi.user.deleteMembership(this.organization.id)
 }

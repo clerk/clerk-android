@@ -24,7 +24,7 @@ data class OrganizationSuggestion(
 /** Accepts this organization suggestion. */
 suspend fun OrganizationSuggestion.accept():
   ClerkResult<OrganizationSuggestion, ClerkErrorResponse> {
-  return ClerkApi.organization.acceptOrganizationSuggestion(
+  return ClerkApi.user.acceptOrganizationSuggestion(
     suggestionId = this.id,
     sessionId = Clerk.session?.id,
   )

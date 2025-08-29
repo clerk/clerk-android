@@ -1,8 +1,10 @@
 package com.clerk.api.user
 
+import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.account.EnterpriseAccount
 import com.clerk.api.network.model.backupcodes.BackupCodeResource
 import com.clerk.api.network.model.deleted.DeletedObject
@@ -11,7 +13,9 @@ import com.clerk.api.network.model.image.ImageResource
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.passkeys.Passkey
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.phonenumber.PhoneNumber
@@ -237,6 +241,68 @@ data class User(
     /** Optional OpenID Connect login hint parameter to pre-fill the user's identifier. */
     @SerialName("oidc_login_hint") val oidcLoginHint: String? = null,
   )
+
+  companion object {
+    /**
+     * Retrieves organization invitations for the current user.
+     *
+     * Organization invitations are formal requests for the user to join specific organizations.
+     * These invitations are typically sent by organization administrators or members with
+     * invitation privileges. The user can accept or decline these invitations to become a member of
+     * the organization.
+     *
+     * @param limit The maximum number of organization invitations to retrieve per request. Default
+     *   is 20.
+     * @param offset The number of organization invitations to skip before starting to return
+     *   results. Used for pagination. Default is 0.
+     * @param status Optional filter to retrieve invitations by their status (e.g., "pending",
+     *   "accepted", "declined"). If null, invitations of all statuses are returned.
+     * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationInvitation]
+     *   objects on success, or a [ClerkErrorResponse] on failure
+     */
+    suspend fun getOrganizationInvitations(
+      limit: Int = 20,
+      offset: Int = 0,
+      status: String? = null,
+    ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse> {
+      return ClerkApi.user.getOrganizationInvitations(
+        limit = limit,
+        offset = offset,
+        status = status,
+        sessionId = Clerk.session?.id,
+      )
+    }
+
+    /**
+     * Retrieves organization suggestions for the current user.
+     *
+     * Organization suggestions are recommendations for organizations that the user might want to
+     * join based on various factors like domain matching, existing connections, or administrative
+     * settings. These suggestions can help users discover relevant organizations within their
+     * ecosystem.
+     *
+     * @param limit The maximum number of organization suggestions to retrieve per request. Default
+     *   is 20.
+     * @param offset The number of organization suggestions to skip before starting to return
+     *   results. Used for pagination. Default is 0.
+     * @param status Optional filter to retrieve suggestions by their status (e.g., "pending",
+     *   "accepted"). If null, suggestions of all statuses are returned.
+     * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationSuggestion]
+     *   objects on success, or a [ClerkErrorResponse] on failure
+     */
+    suspend fun getOrganizationSuggestions(
+      limit: Int = 20,
+      offset: Int = 0,
+      status: String? = null,
+    ): ClerkResult<ClerkPaginatedResponse<OrganizationSuggestion>, ClerkErrorResponse> {
+      return ClerkApi.user.getOrganizationSuggestions(
+        limit = limit,
+        offset = offset,
+        status = status,
+        sessionId = Clerk.session?.id,
+      )
+    }
+  }
 
   val verifiedExternalAccounts: List<ExternalAccount>
     get() = externalAccounts.filter { it.verification?.status == Verification.Status.VERIFIED }
@@ -504,4 +570,29 @@ suspend fun User.attemptTOTPVerification(
  */
 suspend fun User.createBackupCodes(): ClerkResult<BackupCodeResource, ClerkErrorResponse> {
   return ClerkApi.user.createBackupCodes()
+}
+
+/**
+ * Retrieves the organization memberships for the current user.
+ *
+ * This method returns a paginated list of organizations where the user is a member. Organization
+ * memberships represent the user's active participation in organizations, including their role and
+ * permissions within each organization.
+ *
+ * @param limit The maximum number of organization memberships to retrieve per request. Default
+ *   is 20.
+ * @param offset The number of organization memberships to skip before starting to return results.
+ *   Used for pagination. Default is 0.
+ * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationMembership] objects
+ *   on success, or a [ClerkErrorResponse] on failure
+ */
+suspend fun User.getOrganizationMemberships(
+  limit: Int = 20,
+  offset: Int = 0,
+): ClerkResult<ClerkPaginatedResponse<OrganizationMembership>, ClerkErrorResponse> {
+  return ClerkApi.user.getOrganizationMemberships(
+    limit = limit,
+    offset = offset,
+    sessionId = Clerk.session?.id,
+  )
 }
