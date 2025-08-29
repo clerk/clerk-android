@@ -240,6 +240,9 @@ internal object GoogleCredentialAuthenticationService {
         SignIn.CredentialType.PASSWORD -> requestOptions.add(GetPasswordOption())
         SignIn.CredentialType.GOOGLE ->
           requestOptions.add(googleCredentialManager.getGoogleIdOption())
+        SignIn.CredentialType.UNKNOWN -> {
+          // Skip unknown credential types
+        }
       }
     }
 
