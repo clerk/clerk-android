@@ -277,3 +277,16 @@ suspend fun Organization.createMembership(
     userId = userId,
   )
 }
+
+/**
+ * Removes a member from the organization.
+ *
+ * @param userId The unique identifier of the user to remove from the organization
+ * @return A [ClerkResult] containing the removed [OrganizationMembership] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun Organization.removeMember(
+  userId: String
+): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
+  return ClerkApi.organization.removeMember(organizationId = this.id, userId = userId)
+}
