@@ -9,11 +9,11 @@ internal data class FraudSettings(val native: Native) {
   /** Native platform specific fraud prevention settings. */
   @Serializable
   data class Native(
-    @SerialName("device_attestation_mode") val deviceAttestationMode: DeviceAttestationMode
+    @SerialName("device_attestation_mode") val deviceAttestationMode: DeviceAttestationMode = DeviceAttestationMode.UNKNOWN
   )
 
   /** Enum representing the device attestation mode. */
-  @Serializable(with = DeviceAttestationModeSerializer::class)
+  @Serializable
   enum class DeviceAttestationMode {
     @SerialName("disabled") DISABLED,
     @SerialName("onboarding") ONBOARDING,
@@ -21,12 +21,3 @@ internal data class FraudSettings(val native: Native) {
     @SerialName("unknown") UNKNOWN,
   }
 }
-
-/**
- * Custom serializer for DeviceAttestationMode that provides fallback to UNKNOWN.
- */
-internal object DeviceAttestationModeSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<FraudSettings.DeviceAttestationMode>(
-  "DeviceAttestationMode",
-  FraudSettings.DeviceAttestationMode.UNKNOWN,
-  FraudSettings.DeviceAttestationMode.entries.toTypedArray()
-)

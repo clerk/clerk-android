@@ -81,7 +81,7 @@ data class SignIn(
   val id: String,
 
   /** The status of the current sign-in. */
-  val status: Status,
+  val status: Status = Status.UNKNOWN,
 
   /** Array of all the authentication identifiers that are supported for this sign in. */
   @SerialName("supported_identifiers") val supportedIdentifiers: List<String>? = null,
@@ -170,7 +170,7 @@ data class SignIn(
    *
    * Each status indicates the current state of the sign-in flow and what action is required next.
    */
-  @Serializable(with = SignInStatusSerializer::class)
+  @Serializable
   enum class Status {
     /** The sign-in process is complete. */
     @SerialName("complete") COMPLETE,
@@ -555,7 +555,7 @@ data class SignIn(
   }
 
   /** Enumerates the types of credential requests supported by the service. */
-  @Serializable(with = CredentialTypeSerializer::class)
+  @Serializable
   enum class CredentialType {
     /** Request for a public key credential (passkey). */
     PASSKEY,
@@ -865,21 +865,3 @@ suspend fun SignIn.get(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
-
-/**
- * Custom serializer for SignIn.Status that provides fallback to UNKNOWN.
- */
-object SignInStatusSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<SignIn.Status>(
-  "SignInStatus",
-  SignIn.Status.UNKNOWN,
-  SignIn.Status.entries.toTypedArray()
-)
-
-/**
- * Custom serializer for SignIn.CredentialType that provides fallback to UNKNOWN.
- */
-object CredentialTypeSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<SignIn.CredentialType>(
-  "CredentialType",
-  SignIn.CredentialType.UNKNOWN,
-  SignIn.CredentialType.entries.toTypedArray()
-)

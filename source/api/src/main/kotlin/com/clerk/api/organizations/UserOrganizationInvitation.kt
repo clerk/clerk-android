@@ -27,11 +27,11 @@ data class UserOrganizationInvitation(
    * as well.
    */
   val role: String,
-  val status: Status,
+  val status: Status = Status.UNKNOWN,
   val updatedAt: Long,
   val createdAt: Long,
 ) {
-  @Serializable(with = UserOrganizationInvitationStatusSerializer::class)
+  @Serializable
   enum class Status {
     Pending,
     Accepted,
@@ -60,13 +60,4 @@ data class PublicOrganizationData(
   val name: String,
   /** Slug of the organization */
   val slug: String?,
-)
-
-/**
- * Custom serializer for UserOrganizationInvitation.Status that provides fallback to UNKNOWN.
- */
-object UserOrganizationInvitationStatusSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<UserOrganizationInvitation.Status>(
-  "UserOrganizationInvitationStatus",
-  UserOrganizationInvitation.Status.UNKNOWN,
-  UserOrganizationInvitation.Status.entries.toTypedArray()
 )

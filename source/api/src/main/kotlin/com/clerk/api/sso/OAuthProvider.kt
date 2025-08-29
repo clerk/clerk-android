@@ -36,7 +36,7 @@ import com.clerk.api.Clerk
  *
  * @see [OAuthProviderData]
  */
-@kotlinx.serialization.Serializable(with = OAuthProviderSerializer::class)
+@kotlinx.serialization.Serializable
 enum class OAuthProvider {
   /** Facebook OAuth authentication provider. */
   FACEBOOK,
@@ -295,12 +295,3 @@ val OAuthProvider.logoUrl: String?
       ?.logoUrl
       ?.trim()
       ?.takeIf { it.isNotEmpty() }
-
-/**
- * Custom serializer for OAuthProvider that provides fallback to UNKNOWN.
- */
-object OAuthProviderSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<OAuthProvider>(
-  "OAuthProvider",
-  OAuthProvider.UNKNOWN,
-  OAuthProvider.entries.toTypedArray()
-)

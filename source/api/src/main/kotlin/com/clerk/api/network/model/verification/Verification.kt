@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Verification(
   /** The state of the verification. */
-  val status: Status,
+  val status: Status = Status.UNKNOWN,
   /** The strategy pertaining to the parent sign-up or sign-in attempt. */
   val strategy: String? = null,
   /** The number of attempts related to the verification. */
@@ -23,7 +23,7 @@ data class Verification(
   val nonce: String? = null,
 ) {
   /** The state of the verification. */
-  @Serializable(with = VerificationStatusSerializer::class)
+  @Serializable
   enum class Status {
     @SerialName("unverified") UNVERIFIED,
     @SerialName("verified") VERIFIED,
@@ -33,12 +33,3 @@ data class Verification(
     @SerialName("state_unknown") UNKNOWN,
   }
 }
-
-/**
- * Custom serializer for Verification.Status that provides fallback to UNKNOWN.
- */
-object VerificationStatusSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<Verification.Status>(
-  "VerificationStatus",
-  Verification.Status.UNKNOWN,
-  Verification.Status.entries.toTypedArray()
-)

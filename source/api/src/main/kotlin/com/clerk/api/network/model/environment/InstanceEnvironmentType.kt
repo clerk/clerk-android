@@ -1,7 +1,5 @@
 package com.clerk.api.network.model.environment
 
-import com.clerk.api.network.serialization.FallbackEnumSerializer
-import com.clerk.api.network.serialization.createFallbackEnumSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -11,7 +9,7 @@ import kotlinx.serialization.Serializable
  * This is used to distinguish between production and development environments, allowing for
  * environment-specific configurations and behaviors.
  */
-@Serializable(with = InstanceEnvironmentTypeSerializer::class)
+@Serializable
 enum class InstanceEnvironmentType {
 
   /** Represents a production environment. */
@@ -23,12 +21,3 @@ enum class InstanceEnvironmentType {
   /** Used as a fallback in case of decoding error. */
   @SerialName("unknown") UNKNOWN,
 }
-
-/**
- * Custom serializer for InstanceEnvironmentType that provides fallback to UNKNOWN.
- */
-object InstanceEnvironmentTypeSerializer : FallbackEnumSerializer<InstanceEnvironmentType>(
-  "InstanceEnvironmentType",
-  InstanceEnvironmentType.UNKNOWN,
-  InstanceEnvironmentType.entries.toTypedArray()
-)

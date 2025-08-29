@@ -23,13 +23,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class DisplayConfig(
   /** The type of environment (development, staging, production) */
-  @SerialName("instance_environment_type") val instanceEnvironmentType: InstanceEnvironmentType,
+  @SerialName("instance_environment_type") val instanceEnvironmentType: InstanceEnvironmentType = InstanceEnvironmentType.UNKNOWN,
 
   /** The display name of the application */
   @SerialName("application_name") val applicationName: String,
 
   /** The preferred sign-in strategy for the application */
-  @SerialName("preferred_sign_in_strategy") val preferredSignInStrategy: PreferredSignInStrategy,
+  @SerialName("preferred_sign_in_strategy") val preferredSignInStrategy: PreferredSignInStrategy = PreferredSignInStrategy.UNKNOWN,
 
   /** Whether the application uses Clerk branding */
   @SerialName("branded") val branded: Boolean,
@@ -56,7 +56,7 @@ internal data class DisplayConfig(
  * This enum defines the different sign-in methods that can be set as the preferred option for users
  * when they authenticate with the application.
  */
-@Serializable(with = PreferredSignInStrategySerializer::class)
+@Serializable
 internal enum class PreferredSignInStrategy {
   /** Password-based authentication is preferred */
   @SerialName("password") PASSWORD,
@@ -67,12 +67,3 @@ internal enum class PreferredSignInStrategy {
   /** Unknown or unspecified strategy */
   @SerialName("unknown") UNKNOWN,
 }
-
-/**
- * Custom serializer for PreferredSignInStrategy that provides fallback to UNKNOWN.
- */
-internal object PreferredSignInStrategySerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<PreferredSignInStrategy>(
-  "PreferredSignInStrategy",
-  PreferredSignInStrategy.UNKNOWN,
-  PreferredSignInStrategy.entries.toTypedArray()
-)
