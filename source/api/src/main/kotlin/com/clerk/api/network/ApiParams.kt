@@ -16,6 +16,7 @@ internal object ApiParams {
   internal const val EXTERNAL_ACCOUNT_ID = "external_account_id"
   internal const val ORGANIZATION_ID = "organization_id"
   internal const val DOMAIN_ID = "domain_id"
+  internal const val USER_ID = "user_id"
   internal const val INVITATION_ID = "invitation_id"
   internal const val SUGGESTION_ID = "suggestion_id"
   internal const val TEMPLATE = "template"
@@ -24,4 +25,10 @@ internal object ApiParams {
   internal const val STRATEGY = "strategy"
   internal const val CODE = "code"
   internal const val CLERK_SESSION_ID = "_clerk_session_id"
+
+  internal const val ROLE = "role"
+
+  // Query parameters
+  internal const val LIMIT = "limit"
+  internal const val OFFSET = "offset"
 }

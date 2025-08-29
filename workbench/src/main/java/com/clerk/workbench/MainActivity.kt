@@ -1,7 +1,6 @@
 package com.clerk.workbench
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -38,40 +37,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.workbench.ui.theme.Clerk
 import com.clerk.workbench.ui.theme.ClerkTheme
-import com.clerk.workbench.viewmodels.OrgDomainViewModel
-import com.clerk.workbench.viewmodels.OrgViewModel
+import com.clerk.workbench.viewmodels.OrganizationMembershipViewModel
 
 class MainActivity : ComponentActivity() {
-  val viewModel: OrgDomainViewModel by viewModels()
-  val orgViewModel: OrgViewModel by viewModels()
+
+  val orgMembersViewModel: OrganizationMembershipViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
-      val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-      val context = LocalContext.current
-      if (uiState is OrgDomainViewModel.OrgDomainUiState.DomainsFetched) {
-        Toast.makeText(
-            context,
-            "${(uiState as OrgDomainViewModel.OrgDomainUiState.DomainsFetched).domains.map { it.id }}",
-            Toast.LENGTH_SHORT,
-          )
-          .show()
-      }
-
       ClerkTheme {
         MainContent(
           onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
-          onClickFirstItem = {},
+          onClickFirstItem = { orgMembersViewModel.createMembership() },
           onClickSecondItem = {},
         )
       }

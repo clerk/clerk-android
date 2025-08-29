@@ -1,7 +1,9 @@
 package com.clerk.api.organizations
 
+import com.clerk.api.Clerk
 import com.clerk.api.image.ImageService
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -151,17 +153,38 @@ suspend fun Organization.getRoles(
   return ClerkApi.organization.getRoles(organizationId = this.id, limit = limit, offset = offset)
 }
 
+/**
+ * Creates a new domain for this organization.
+ *
+ * Domains allow organization members to join automatically when they sign up with an email address
+ * that matches the domain. This can help streamline the onboarding process for organization
+ * members.
+ *
+ * @param name The domain name to create (e.g., "example.com").
+ * @return A [ClerkResult] containing the created [OrganizationDomain] on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
 suspend fun Organization.createDomain(
   name: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
   return ClerkApi.organization.createOrganizationDomain(organizationId = this.id, name = name)
 }
 
+/**
+ * Retrieves all domains associated with this organization.
+ *
+ * @param limit The maximum number of domains to return per request. Default is 20.
+ * @param offset The number of domains to skip when paginating through results. Default is 0.
+ * @param enrollmentMode Filter domains by enrollment mode. Can be "manual_invitation" or
+ *   "automatic_invitation". If null, all domains are returned.
+ * @return A [ClerkResult] containing a paginated response of [OrganizationDomain] objects on
+ *   success, or a [ClerkErrorResponse] on failure.
+ */
 suspend fun Organization.getDomains(
   limit: Int = 20,
   offset: Int = 0,
   enrollmentMode: String? = null,
-): ClerkResult<OrganizationDomainCollection, ClerkErrorResponse> {
+): ClerkResult<ClerkPaginatedResponse<OrganizationDomain>, ClerkErrorResponse> {
   return ClerkApi.organization.getAllOrganizationDomains(
     organizationId = this.id,
     limit = limit,
@@ -170,17 +193,87 @@ suspend fun Organization.getDomains(
   )
 }
 
+/**
+ * Retrieves a specific domain by its unique identifier.
+ *
+ * @param domainId The unique identifier of the domain to retrieve.
+ * @return A [ClerkResult] containing the [OrganizationDomain] on success, or a [ClerkErrorResponse]
+ *   on failure.
+ */
 suspend fun Organization.getDomain(
   domainId: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
   return ClerkApi.organization.getOrganizationDomain(organizationId = this.id, domainId = domainId)
 }
 
+/**
+ * Deletes a domain from this organization.
+ *
+ * Note: This operation is irreversible. Once deleted, users with email addresses matching this
+ * domain will no longer be able to automatically join the organization.
+ *
+ * @param domainId The unique identifier of the domain to delete.
+ * @return A [ClerkResult] containing a [DeletedObject] confirmation on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
 suspend fun Organization.deleteDomain(
   domainId: String
 ): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.organization.deleteOrganizationDomain(
     organizationId = this.id,
     domainId = domainId,
+  )
+}
+
+/**
+ * Retrieves the memberships for this organization.
+ *
+ * This method returns all memberships associated with the organization, including information about
+ * the users and their roles within the organization.
+ *
+ * @param query Optional search query to filter memberships by user name or email.
+ * @param role Filter memberships by role. Only memberships with the specified role will be
+ *   returned.
+ * @param limit The maximum number of memberships to return per request. Default is 20.
+ * @param offset The number of memberships to skip when paginating through results. Default is 0.
+ * @return A [ClerkResult] containing a paginated response of [OrganizationMembership] objects on
+ *   success, or a [ClerkErrorResponse] on failure.
+ */
+suspend fun Organization.getOrganizationMemberships(
+  query: String? = null,
+  role: String? = null,
+  limit: Int = 20,
+  offset: Int = 0,
+): ClerkResult<ClerkPaginatedResponse<OrganizationMembership>, ClerkErrorResponse> {
+  return ClerkApi.organization.getMembers(
+    sessionId = Clerk.session?.id,
+    limit = limit,
+    offset = offset,
+    organizationId = id,
+    query = query,
+    role = role,
+  )
+}
+
+/**
+ * Creates a new membership for this organization.
+ *
+ * This method adds a user to the organization with the specified role. The user will gain access to
+ * the organization's resources based on their assigned role permissions.
+ *
+ * @param role The role to assign to the new member. If null, the default role will be assigned.
+ * @param userId The unique identifier of the user to add to the organization. If null, the current
+ *   user will be added.
+ * @return A [ClerkResult] containing the created [OrganizationMembership] on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun Organization.createMembership(
+  role: String,
+  userId: String,
+): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
+  return ClerkApi.organization.createMembership(
+    organizationId = this.id,
+    role = role,
+    userId = userId,
   )
 }

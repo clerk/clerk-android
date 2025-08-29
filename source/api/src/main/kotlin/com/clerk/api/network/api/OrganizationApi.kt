@@ -2,13 +2,14 @@ package com.clerk.api.network.api
 
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationDomain
-import com.clerk.api.organizations.OrganizationDomainCollection
 import com.clerk.api.organizations.OrganizationInvitation
+import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.Role
 import okhttp3.MultipartBody
@@ -199,11 +200,11 @@ interface OrganizationApi {
   @GET(ApiPaths.Organization.Domain.BASE)
   suspend fun getAllOrganizationDomains(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
-    @Query("limit") limit: Int? = null,
-    @Query("offset") offset: Int? = null,
+    @Query(ApiParams.LIMIT) limit: Int? = null,
+    @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query("verified") verified: Boolean? = null,
     @Query("enrollment_mode") enrollmentMode: String? = null,
-  ): ClerkResult<OrganizationDomainCollection, ClerkErrorResponse>
+  ): ClerkResult<ClerkPaginatedResponse<OrganizationDomain>, ClerkErrorResponse>
 
   /**
    * Retrieves a specific organization domain by its ID.
@@ -294,4 +295,80 @@ interface OrganizationApi {
     @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Field("code") code: String,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
+
+  /**
+   * Creates a new membership for a user in an organization.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param role The role to assign to the user in the organization (optional)
+   * @param userId The unique identifier of the user to add as a member
+   * @return A [ClerkResult] containing either the created [OrganizationMembership] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.createMembership
+   */
+  @FormUrlEncoded
+  @POST(ApiPaths.Organization.MEMBERSHIPS)
+  suspend fun createMembership(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Field(ApiParams.ROLE) role: String?,
+    @Field(ApiParams.USER_ID) userId: String?,
+  ): ClerkResult<OrganizationMembership, ClerkErrorResponse>
+
+  /**
+   * Retrieves memberships for an organization with optional filtering and pagination.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param limit Maximum number of memberships to return (optional)
+   * @param offset Number of memberships to skip for pagination (optional)
+   * @param paginated Whether to return paginated results (defaults to true)
+   * @param sessionId Optional session ID for the operation
+   * @param role Filter memberships by role (optional)
+   * @param query Search query to filter memberships (optional)
+   * @return A [ClerkResult] containing either a list of [OrganizationMembership]s on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.getMemberships
+   */
+  @GET(ApiPaths.Organization.MEMBERSHIPS)
+  suspend fun getMembers(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Query(ApiParams.LIMIT) limit: Int?,
+    @Query(ApiParams.OFFSET) offset: Int?,
+    @Query("paginated") paginated: Boolean = true,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
+    @Query(ApiParams.ROLE) role: String? = null,
+    @Query("query") query: String? = null,
+  ): ClerkResult<ClerkPaginatedResponse<OrganizationMembership>, ClerkErrorResponse>
+
+  /**
+   * Updates the role of an existing member in an organization.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param userId The unique identifier of the user whose membership to update
+   * @param role The new role to assign to the user
+   * @return A [ClerkResult] containing either the updated [OrganizationMembership] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.updateMembership
+   */
+  @FormUrlEncoded
+  @PATCH(ApiPaths.Organization.MEMBERSHIP_WITH_USER_ID)
+  suspend fun updateMembership(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.USER_ID) userId: String,
+    @Field(ApiParams.ROLE) role: String,
+  ): ClerkResult<OrganizationMembership, ClerkErrorResponse>
+
+  /**
+   * Removes a member from an organization.
+   *
+   * @param organizationId The unique identifier of the organization
+   * @param userId The unique identifier of the user to remove from the organization
+   * @return A [ClerkResult] containing either the removed [OrganizationMembership] on success or a
+   *   [ClerkErrorResponse] on failure
+   * @see com.clerk.api.organizations.removeMember
+   */
+  @DELETE(ApiPaths.Organization.MEMBERSHIP_WITH_USER_ID)
+  suspend fun removeMember(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.USER_ID) userId: String,
+  ): ClerkResult<OrganizationMembership, ClerkErrorResponse>
 }

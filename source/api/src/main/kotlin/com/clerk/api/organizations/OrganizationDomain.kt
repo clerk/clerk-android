@@ -132,4 +132,3 @@ suspend fun OrganizationDomain.updateEnrollmentMode(
  * EX: Invalid: ClerkResult<List<OrganizationDomain>, ClerkErrorResponse> Valid:
  * ClerkResult<OrganizationMembershipCollection, ClerkErrorResponse>
  */
-@Serializable data class OrganizationDomainCollection(val data: List<OrganizationDomain>)

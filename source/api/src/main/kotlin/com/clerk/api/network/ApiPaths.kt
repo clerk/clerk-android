@@ -122,6 +122,10 @@ internal object ApiPaths {
     internal const val LOGO = "${WITH_ID}/logo"
     internal const val ROLES = "${WITH_ID}/roles"
 
+    internal const val MEMBERSHIPS = "${WITH_ID}/memberships"
+
+    internal const val MEMBERSHIP_WITH_USER_ID = "${MEMBERSHIPS}/{user_id}"
+
     /** Domain management */
     internal object Domain {
       internal const val BASE = "${Organization.WITH_ID}/domains"
