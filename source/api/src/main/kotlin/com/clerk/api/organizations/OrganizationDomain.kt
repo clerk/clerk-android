@@ -25,6 +25,8 @@ import kotlinx.serialization.Serializable
  *   milliseconds)
  * @property updatedAt The date when the organization domain was last updated (Unix timestamp in
  *   milliseconds)
+ * @property totalPendingSuggestions The number of pending suggestions for the organization domain.
+ * @property publicOrganizationData The data's public organization.
  */
 @Serializable
 data class OrganizationDomain(
@@ -45,7 +47,7 @@ data class OrganizationDomain(
    *
    * @property status The current verification status of the domain
    * @property strategy The verification strategy being used
-   * @property attempt The current attempt number for verification
+   * @property attempts The current attempt number for verification
    * @property expireAt The expiration time for the verification attempt (Unix timestamp in
    *   milliseconds), null if no expiration
    */
@@ -53,7 +55,7 @@ data class OrganizationDomain(
   data class Verification(
     val status: String,
     val strategy: String,
-    val attempt: Int,
+    val attempts: Int,
     val expireAt: Long? = null,
   )
 }

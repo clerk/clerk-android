@@ -4,11 +4,13 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.longErrorMessageOrNull
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.organizations.OrganizationDomain
 import com.clerk.api.organizations.createDomain
+import com.clerk.api.organizations.delete
 import com.clerk.api.organizations.getDomains
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,22 +33,16 @@ class OrgDomainViewModel : ViewModel() {
     }
   }
 
-  fun getAllDomains() {
+  fun deleteOrgDomain() {
     viewModelScope.launch {
       val org = Clerk.user?.organizationMemberships?.first()!!.organization
       org
         .getDomains()
-        .onSuccess { _uiState.value = OrgDomainUiState.DomainsFetched(it.data) }
+        .flatMap { it.data.first().delete() }
+        .onSuccess { _uiState.value = OrgDomainUiState.DomainDeleted }
         .onFailure {
           Log.e("OrgDomainViewModel", "Failed to fetch domains: ${it.longErrorMessageOrNull}")
         }
-    }
-  }
-
-  fun setActive() {
-    viewModelScope.launch {
-      val session = Clerk.client.sessions.first()
-      Clerk.setActive(session.id, organizationId = "org_31qYzhGqspBIUkeg0FYWzC3P0dY")
     }
   }
 
@@ -56,5 +52,7 @@ class OrgDomainViewModel : ViewModel() {
     data object Idle : OrgDomainUiState
 
     data object DomainCreated : OrgDomainUiState
+
+    data object DomainDeleted : OrgDomainUiState
   }
 }

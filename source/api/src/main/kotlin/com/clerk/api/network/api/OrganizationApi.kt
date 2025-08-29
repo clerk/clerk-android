@@ -246,7 +246,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.updateEnrollmentMode
    */
   @FormUrlEncoded
-  @POST(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  @POST(Paths.Organizations.WithId.DomainPath.WithId.UPDATE_ENROLLMENT_MODE)
   suspend fun updateEnrollmentMode(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
     @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
@@ -265,7 +265,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.prepareAffiliationVerification
    */
   @FormUrlEncoded
-  @POST(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  @POST(Paths.Organizations.WithId.DomainPath.WithId.PREPARE_AFFILIATION)
   suspend fun prepareAffiliationVerification(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
     @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
@@ -287,7 +287,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.attemptAffiliationVerification
    */
   @FormUrlEncoded
-  @POST(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  @POST(Paths.Organizations.WithId.DomainPath.WithId.ATTEMPT_AFFILIATION)
   suspend fun attemptAffiliationVerification(
     @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
     @Path(Paths.Organizations.DOMAIN_ID) domainId: String,

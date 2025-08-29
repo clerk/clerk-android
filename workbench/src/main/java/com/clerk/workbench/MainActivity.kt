@@ -71,8 +71,8 @@ class MainActivity : ComponentActivity() {
         MainContent(
           onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
-          onClickFirstItem = { viewModel.createOrgDomain() },
-          onClickSecondItem = { viewModel.getAllDomains() },
+          onClickFirstItem = {},
+          onClickSecondItem = {},
         )
       }
     }

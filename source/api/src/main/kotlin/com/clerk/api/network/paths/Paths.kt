@@ -194,8 +194,12 @@ internal object Paths {
         const val DOMAINS = "$ORGANIZATIONS_WITH_ID/domains"
 
         internal object WithId {
-
           const val DOMAIN_WITH_ID = "${DOMAINS}/{$DOMAIN_ID}"
+
+          const val UPDATE_ENROLLMENT_MODE = "${DOMAIN_WITH_ID}/update_enrollment_mode"
+
+          const val PREPARE_AFFILIATION = "${DOMAIN_WITH_ID}/prepare_affiliation_verification"
+          const val ATTEMPT_AFFILIATION = "${DOMAIN_WITH_ID}/attempt_affiliation_verification"
         }
       }
     }
