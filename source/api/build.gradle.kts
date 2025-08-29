@@ -16,7 +16,7 @@ android {
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
-    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.sdk.get()}\"")
+    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.api.get()}\"")
   }
 
   buildTypes {
@@ -47,7 +47,7 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 }
 
 mavenPublishing {
-  coordinates("com.clerk", "clerk-android", libs.versions.clerk.sdk.get())
+  coordinates("com.clerk", "clerk-android", libs.versions.clerk.api.get())
 
   pom {
     name.set("Clerk Android UI")
@@ -77,6 +77,7 @@ mavenPublishing {
 }
 
 dependencies {
+  implementation(platform(libs.compose.bom))
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.browser)
   implementation(libs.androidx.credentials)
@@ -98,6 +99,8 @@ dependencies {
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
   implementation(libs.retrofit.kotlinx)
+
+  compileOnly(libs.androidx.compose.foundation)
 
   testImplementation(kotlin("test"))
   testImplementation(libs.androidx.arch.test)
