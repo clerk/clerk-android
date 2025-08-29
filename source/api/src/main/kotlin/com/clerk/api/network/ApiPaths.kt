@@ -126,6 +126,13 @@ internal object ApiPaths {
   internal object Organization {
     internal const val BASE = "organizations"
     internal const val WITH_ID = "${BASE}/{organization_id}"
+
+    internal object Invitations {
+      internal const val BASE = "${Organization.WITH_ID}/invitations"
+      internal const val BULK_CREATE = "${BASE}/bulk"
+      internal const val REVOKE = "${BASE}/{invitation_id}/revoke"
+    }
+
     internal const val LOGO = "${WITH_ID}/logo"
     internal const val ROLES = "${WITH_ID}/roles"
 
