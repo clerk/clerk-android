@@ -242,6 +242,68 @@ data class User(
     @SerialName("oidc_login_hint") val oidcLoginHint: String? = null,
   )
 
+  companion object {
+    /**
+     * Retrieves organization invitations for the current user.
+     *
+     * Organization invitations are formal requests for the user to join specific organizations.
+     * These invitations are typically sent by organization administrators or members with
+     * invitation privileges. The user can accept or decline these invitations to become a member of
+     * the organization.
+     *
+     * @param limit The maximum number of organization invitations to retrieve per request. Default
+     *   is 20.
+     * @param offset The number of organization invitations to skip before starting to return
+     *   results. Used for pagination. Default is 0.
+     * @param status Optional filter to retrieve invitations by their status (e.g., "pending",
+     *   "accepted", "declined"). If null, invitations of all statuses are returned.
+     * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationInvitation]
+     *   objects on success, or a [ClerkErrorResponse] on failure
+     */
+    suspend fun getOrganizationInvitations(
+      limit: Int = 20,
+      offset: Int = 0,
+      status: String? = null,
+    ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse> {
+      return ClerkApi.user.getOrganizationInvitations(
+        limit = limit,
+        offset = offset,
+        status = status,
+        sessionId = Clerk.session?.id,
+      )
+    }
+
+    /**
+     * Retrieves organization suggestions for the current user.
+     *
+     * Organization suggestions are recommendations for organizations that the user might want to
+     * join based on various factors like domain matching, existing connections, or administrative
+     * settings. These suggestions can help users discover relevant organizations within their
+     * ecosystem.
+     *
+     * @param limit The maximum number of organization suggestions to retrieve per request. Default
+     *   is 20.
+     * @param offset The number of organization suggestions to skip before starting to return
+     *   results. Used for pagination. Default is 0.
+     * @param status Optional filter to retrieve suggestions by their status (e.g., "pending",
+     *   "accepted"). If null, suggestions of all statuses are returned.
+     * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationSuggestion]
+     *   objects on success, or a [ClerkErrorResponse] on failure
+     */
+    suspend fun getOrganizationSuggestions(
+      limit: Int = 20,
+      offset: Int = 0,
+      status: String? = null,
+    ): ClerkResult<ClerkPaginatedResponse<OrganizationSuggestion>, ClerkErrorResponse> {
+      return ClerkApi.user.getOrganizationSuggestions(
+        limit = limit,
+        offset = offset,
+        status = status,
+        sessionId = Clerk.session?.id,
+      )
+    }
+  }
+
   val verifiedExternalAccounts: List<ExternalAccount>
     get() = externalAccounts.filter { it.verification?.status == Verification.Status.VERIFIED }
 }
@@ -531,65 +593,6 @@ suspend fun User.getOrganizationMemberships(
   return ClerkApi.user.getOrganizationMemberships(
     limit = limit,
     offset = offset,
-    sessionId = Clerk.session?.id,
-  )
-}
-
-/**
- * Retrieves organization suggestions for the current user.
- *
- * Organization suggestions are recommendations for organizations that the user might want to join
- * based on various factors like domain matching, existing connections, or administrative settings.
- * These suggestions can help users discover relevant organizations within their ecosystem.
- *
- * @param limit The maximum number of organization suggestions to retrieve per request. Default
- *   is 20.
- * @param offset The number of organization suggestions to skip before starting to return results.
- *   Used for pagination. Default is 0.
- * @param status Optional filter to retrieve suggestions by their status (e.g., "pending",
- *   "accepted"). If null, suggestions of all statuses are returned.
- * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationSuggestion] objects
- *   on success, or a [ClerkErrorResponse] on failure
- */
-suspend fun User.getOrganizationSuggestions(
-  limit: Int = 20,
-  offset: Int = 0,
-  status: String? = null,
-): ClerkResult<ClerkPaginatedResponse<OrganizationSuggestion>, ClerkErrorResponse> {
-  return ClerkApi.user.getOrganizationSuggestions(
-    limit = limit,
-    offset = offset,
-    status = status,
-    sessionId = Clerk.session?.id,
-  )
-}
-
-/**
- * Retrieves organization invitations for the current user.
- *
- * Organization invitations are formal requests for the user to join specific organizations. These
- * invitations are typically sent by organization administrators or members with invitation
- * privileges. The user can accept or decline these invitations to become a member of the
- * organization.
- *
- * @param limit The maximum number of organization invitations to retrieve per request. Default
- *   is 20.
- * @param offset The number of organization invitations to skip before starting to return results.
- *   Used for pagination. Default is 0.
- * @param status Optional filter to retrieve invitations by their status (e.g., "pending",
- *   "accepted", "declined"). If null, invitations of all statuses are returned.
- * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationInvitation] objects
- *   on success, or a [ClerkErrorResponse] on failure
- */
-suspend fun User.getOrganizationInvitations(
-  limit: Int = 20,
-  offset: Int = 0,
-  status: String? = null,
-): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse> {
-  return ClerkApi.user.getOrganizationInvitations(
-    limit = limit,
-    offset = offset,
-    status = status,
     sessionId = Clerk.session?.id,
   )
 }

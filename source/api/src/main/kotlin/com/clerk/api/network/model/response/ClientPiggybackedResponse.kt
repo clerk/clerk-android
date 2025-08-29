@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
  * @property client The client object associated with the response, if available.
  */
 @Serializable
-internal data class ClientPiggybackedResponse<T>(
+data class ClientPiggybackedResponse<T>(
   @SerialName("response") val response: T,
   val client: Client? = null,
 )

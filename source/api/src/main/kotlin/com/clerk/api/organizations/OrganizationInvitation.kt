@@ -1,5 +1,9 @@
 package com.clerk.api.organizations
 
+import com.clerk.api.Clerk
+import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -10,7 +14,7 @@ data class OrganizationInvitation(
   /** The email address the invitation has been sent to. */
   val emailAddress: String,
   /** The organization ID of the organization this invitation is for. */
-  val organizationId: String,
+  val organizationId: String? = null,
   /**
    * Metadata that can be read from the Frontend API and Backend API and can be set only from the
    * Backend API.
@@ -29,4 +33,14 @@ data class OrganizationInvitation(
   val createdAt: Long,
   /** The timestamp when the invitation was last updated. */
   val updatedAt: Long,
+  val publicOrganizationData: PublicOrganizationData? = null,
 )
+
+/** Accepts this user organization invitation. */
+suspend fun OrganizationInvitation.accept():
+  ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
+  return ClerkApi.user.acceptUserOrganizationInvitation(
+    invitationId = this.id,
+    sessionId = Clerk.session?.id,
+  )
+}
