@@ -10,6 +10,7 @@ import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationDomain
 import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.organizations.OrganizationMembershipRequest
 import com.clerk.api.organizations.Role
 import okhttp3.MultipartBody
 import retrofit2.http.DELETE
@@ -362,16 +363,18 @@ interface OrganizationApi {
    * the members of the organization.
    *
    * @param organizationId The id of the organization for which the invitation will be retrieved.
-   * @param limit
-   * @param offset
-   * @param status
+   * @param limit Applies a limit to the number of results returned. Can be used for paginating the
+   *   results together with offset.
+   * @param offset Skip the first offset results when paginating. Needs to be an integer greater or
+   *   equal to zero. To be used in conjunction with limit.
+   * @param status The status to filter by. See: [OrganizationInvitation.Status]
    */
   @GET(ApiPaths.Organization.Invitations.BASE)
   suspend fun getAllInvitations(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
-    @Query("status") status: String? = null,
+    @Query(ApiParams.STATUS) status: String? = null,
   ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse>
 
   /**
@@ -389,7 +392,7 @@ interface OrganizationApi {
   suspend fun bulkCreateInvitations(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("email_address") emailAddresses: List<String>,
-    @Field("role") role: String,
+    @Field(ApiParams.ROLE) role: String,
   ): ClerkResult<List<OrganizationInvitation>, ClerkErrorResponse>
 
   /**
@@ -400,9 +403,54 @@ interface OrganizationApi {
    * @param organizationId The id of the organization for which the invitations will be retrieved.
    * @param invitationId The id of the invitation to be revoked.
    */
-  @POST(ApiPaths.Organization.Invitations.REVOKE)
+  @POST(ApiPaths.Organization.MembershipRequests.BASE)
   suspend fun revokeOrganizationInvitation(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.INVITATION_ID) invitationId: String,
   ): ClerkResult<OrganizationInvitation, ClerkErrorResponse>
+
+  /**
+   * Retrieve a list of all membership requests of an organization. The current user must have
+   * permissions to manage the members of the organization.
+   *
+   * @param organizationId The organization ID.
+   * @param limit Applies a limit to the number of results returned. Can be used for paginating the
+   *   results together with offset.
+   * @param offset Skip the first offset results when paginating. Needs to be an integer greater or
+   *   equal to zero. To be used in conjunction with limit.
+   * @param status The status to filter by.
+   */
+  @GET(ApiPaths.Organization.Invitations.BASE)
+  suspend fun getMembershipRequests(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Query(ApiParams.LIMIT) limit: Int? = null,
+    @Query(ApiParams.OFFSET) offset: Int? = null,
+    @Query(ApiParams.STATUS) status: String? = null,
+  ): ClerkResult<ClerkPaginatedResponse<OrganizationMembershipRequest>, ClerkErrorResponse>
+
+  /**
+   * Accepts an organization membership request. The current user must have permissions to manage
+   * the members of the organization.
+   *
+   * @param organizationId The organization ID.
+   * @param membershipRequestId The request ID.
+   */
+  @POST(ApiPaths.Organization.MembershipRequests.ACCEPT)
+  suspend fun acceptMembershipRequest(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Path("request_id") membershipRequestId: String,
+  ): ClerkResult<OrganizationMembershipRequest, ClerkErrorResponse>
+
+  /**
+   * Rejects an organization membership request. The current user must have permissions to manage
+   * the members of the organization.
+   *
+   * @param organizationId The organization ID.
+   * @param membershipRequestId The request Id.
+   */
+  @POST(ApiPaths.Organization.MembershipRequests.REJECT)
+  suspend fun rejectMembershipRequest(
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Path("request_id") membershipRequestId: String,
+  ): ClerkResult<OrganizationMembershipRequest, ClerkErrorResponse>
 }

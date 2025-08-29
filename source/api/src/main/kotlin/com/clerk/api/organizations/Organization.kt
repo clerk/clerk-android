@@ -349,3 +349,30 @@ suspend fun Organization.bulkCreateInvitations(
     role = role,
   )
 }
+
+/**
+ * Retrieves all membership requests for this organization.
+ *
+ * Membership requests are created when users request to join an organization that requires
+ * approval. This method allows organization administrators to view and manage pending requests from
+ * users who want to join the organization.
+ *
+ * @param limit The maximum number of membership requests to return per request. Default is 20.
+ * @param offset The number of membership requests to skip when paginating through results. Default
+ *   is 0.
+ * @param status Filter requests by status (e.g., "pending", "accepted", "rejected").
+ * @return A [ClerkResult] containing a paginated response of [OrganizationMembershipRequest]
+ *   objects on success, or a [ClerkErrorResponse] on failure.
+ */
+suspend fun Organization.getMembershipRequests(
+  limit: Int = 20,
+  offset: Int = 0,
+  status: String,
+): ClerkResult<ClerkPaginatedResponse<OrganizationMembershipRequest>, ClerkErrorResponse> {
+  return ClerkApi.organization.getMembershipRequests(
+    organizationId = this.id,
+    limit = limit,
+    offset = offset,
+    status = status,
+  )
+}

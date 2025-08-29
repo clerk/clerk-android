@@ -28,6 +28,8 @@ internal object ApiParams {
 
   internal const val ROLE = "role"
 
+  internal const val STATUS = "status"
+
   // Query parameters
   internal const val LIMIT = "limit"
   internal const val OFFSET = "offset"

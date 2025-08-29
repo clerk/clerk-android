@@ -133,6 +133,12 @@ internal object ApiPaths {
       internal const val REVOKE = "${BASE}/{invitation_id}/revoke"
     }
 
+    internal object MembershipRequests {
+      internal const val BASE = "${Organization.WITH_ID}/membership_requests"
+      internal const val ACCEPT = "${BASE}/{request_id}/accept"
+      internal const val REJECT = "${BASE}/{request_id}/reject"
+    }
+
     internal const val LOGO = "${WITH_ID}/logo"
     internal const val ROLES = "${WITH_ID}/roles"
 
