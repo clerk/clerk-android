@@ -351,7 +351,7 @@ interface OrganizationApi {
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.Invitations.BASE)
-  fun createOrganizationInvitation(
+  suspend fun createInvitation(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("email_address") emailAddress: String,
     @Field(ApiParams.ROLE) role: String,
@@ -367,7 +367,7 @@ interface OrganizationApi {
    * @param status
    */
   @GET(ApiPaths.Organization.Invitations.BASE)
-  fun getAllOrganizationInvitations(
+  suspend fun getAllInvitations(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
@@ -380,15 +380,15 @@ interface OrganizationApi {
    * The current user must have permissions to manage the members of the organization.
    *
    * @param organizationId The id of the organization for which the invitations will be created.
-   * @param emailAddress An array of email addresses the invitations will be sent to.
+   * @param emailAddresses An array of email addresses the invitations will be sent to.
    * @param role The role that will be assigned to each of the users after joining. This can be one
    *   of the predefined roles (org:admin, org:basic_member) or a custom role.
    */
   @FormUrlEncoded
   @POST(ApiPaths.Organization.Invitations.BULK_CREATE)
-  fun bulkCreateOrganizationInvitations(
+  suspend fun bulkCreateInvitations(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
-    @Field("email_address") emailAddress: List<String>,
+    @Field("email_address") emailAddresses: List<String>,
     @Field("role") role: String,
   ): ClerkResult<List<OrganizationInvitation>, ClerkErrorResponse>
 
@@ -401,7 +401,7 @@ interface OrganizationApi {
    * @param invitationId The id of the invitation to be revoked.
    */
   @POST(ApiPaths.Organization.Invitations.REVOKE)
-  fun revokeOrganizationInvitation(
+  suspend fun revokeOrganizationInvitation(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.INVITATION_ID) invitationId: String,
   ): ClerkResult<OrganizationInvitation, ClerkErrorResponse>

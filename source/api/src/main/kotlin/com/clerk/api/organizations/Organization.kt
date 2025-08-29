@@ -290,3 +290,62 @@ suspend fun Organization.removeMember(
 ): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
   return ClerkApi.organization.removeMember(organizationId = this.id, userId = userId)
 }
+
+/**
+ * Create an invitation for a user to join an organization. *
+ *
+ * @param emailAddress The email address the invitation will be sent to.
+ * @param role The role that will be assigned to the user after joining. This can be one of the
+ *   predefined roles "org:admin", "org:member" or a custom role.
+ */
+suspend fun Organization.createInvitation(
+  emailAddress: String,
+  role: String,
+): ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
+  return ClerkApi.organization.createInvitation(
+    organizationId = this.id,
+    emailAddress = emailAddress,
+    role = role,
+  )
+}
+
+/**
+ * Retrieve all invitations for an organization. The current user must have permissions to manage
+ * the members of the organization.
+ *
+ * @param limit
+ * @param offset
+ * @param status
+ */
+suspend fun Organization.getInvitations(
+  limit: Int = 20,
+  offset: Int = 0,
+  status: OrganizationInvitation.Status,
+): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse> {
+  return ClerkApi.organization.getAllInvitations(
+    organizationId = this.id,
+    limit = limit,
+    offset = offset,
+    status = status.name,
+  )
+}
+
+/**
+ * Bulk create an invitation for a user to join an organization.
+ *
+ * The current user must have permissions to manage the members of the organization.
+ *
+ * @param emailAddresses An array of email addresses the invitations will be sent to.
+ * @param role The role that will be assigned to each of the users after joining. This can be one of
+ *   the predefined roles (org:admin, org:basic_member) or a custom role.
+ */
+suspend fun Organization.bulkCreateInvitations(
+  emailAddresses: List<String>,
+  role: String,
+): ClerkResult<List<OrganizationInvitation>, ClerkErrorResponse> {
+  return ClerkApi.organization.bulkCreateInvitations(
+    organizationId = this.id,
+    emailAddresses = emailAddresses,
+    role = role,
+  )
+}

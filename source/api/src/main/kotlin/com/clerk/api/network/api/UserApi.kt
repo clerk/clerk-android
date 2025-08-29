@@ -17,6 +17,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
+import com.clerk.api.organizations.UserOrganizationInvitation
 import com.clerk.api.passkeys.Passkey
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.session.Session
@@ -533,7 +534,7 @@ internal interface UserApi {
   suspend fun acceptUserOrganizationInvitation(
     @Path("invitation_id") invitationId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
-  ): ClerkResult<OrganizationInvitation, ClerkErrorResponse>
+  ): ClerkResult<UserOrganizationInvitation, ClerkErrorResponse>
 
   /**
    * Accepts an organization suggestion for a user.
@@ -588,7 +589,7 @@ internal interface UserApi {
    * @param limit Maximum number of invitations to return
    * @param offset Number of invitations to skip for pagination
    * @param sessionId Optional session ID for the operation
-   * @return [ClerkResult] containing paginated [OrganizationInvitation] list on success or
+   * @return [ClerkResult] containing paginated [UserOrganizationInvitation] list on success or
    *   [ClerkErrorResponse] on failure
    */
   @GET(ApiPaths.User.ORGANIZATION_INVITATIONS)
@@ -597,7 +598,7 @@ internal interface UserApi {
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
-  ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse>
+  ): ClerkResult<ClerkPaginatedResponse<UserOrganizationInvitation>, ClerkErrorResponse>
 
   /**
    * Retrieves organization suggestions for the current user.

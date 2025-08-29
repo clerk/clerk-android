@@ -13,9 +13,9 @@ import com.clerk.api.network.model.image.ImageResource
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
+import com.clerk.api.organizations.UserOrganizationInvitation
 import com.clerk.api.passkeys.Passkey
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.phonenumber.PhoneNumber
@@ -257,14 +257,14 @@ data class User(
      *   results. Used for pagination. Default is 0.
      * @param status Optional filter to retrieve invitations by their status (e.g., "pending",
      *   "accepted", "declined"). If null, invitations of all statuses are returned.
-     * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationInvitation]
+     * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [UserOrganizationInvitation]
      *   objects on success, or a [ClerkErrorResponse] on failure
      */
     suspend fun getOrganizationInvitations(
       limit: Int = 20,
       offset: Int = 0,
       status: String? = null,
-    ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse> {
+    ): ClerkResult<ClerkPaginatedResponse<UserOrganizationInvitation>, ClerkErrorResponse> {
       return ClerkApi.user.getOrganizationInvitations(
         limit = limit,
         offset = offset,

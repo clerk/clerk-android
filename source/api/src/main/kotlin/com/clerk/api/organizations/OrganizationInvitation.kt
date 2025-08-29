@@ -1,9 +1,6 @@
 package com.clerk.api.organizations
 
-import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -35,21 +32,19 @@ data class OrganizationInvitation(
   /** The timestamp when the invitation was last updated. */
   val updatedAt: Long,
   val publicOrganizationData: PublicOrganizationData? = null,
-)
-
-/** Accepts this user organization invitation. */
-suspend fun OrganizationInvitation.accept():
-  ClerkResult<OrganizationInvitation, ClerkErrorResponse> {
-  return ClerkApi.user.acceptUserOrganizationInvitation(
-    invitationId = this.id,
-    sessionId = Clerk.session?.id,
-  )
+) {
+  enum class Status {
+    @SerialName("pending") Pending,
+    @SerialName("accepted") Accepted,
+    @SerialName("revoked") Revoked,
+    @SerialName("invalid") Invalid,
+    @SerialName("completed") Completed,
+  }
 }
 
-enum class Status {
-  @SerialName("pending") Pending,
-  @SerialName("accepted") Accepted,
-  @SerialName("revoked") Revoked,
-  @SerialName("invalid") Invalid,
-  @SerialName("completed") Completed,
+suspend fun OrganizationInvitation.revoke() {
+  ClerkApi.organization.revokeOrganizationInvitation(
+    organizationId = this.organizationId!!,
+    invitationId = this.id,
+  )
 }
