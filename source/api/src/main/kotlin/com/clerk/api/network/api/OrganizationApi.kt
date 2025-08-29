@@ -1,9 +1,9 @@
 package com.clerk.api.network.api
 
+import com.clerk.api.network.ApiParams
+import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.ApiPaths
-import com.clerk.api.network.ApiParams
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationDomain

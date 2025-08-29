@@ -1,10 +1,10 @@
 package com.clerk.api.network.api
 
+import com.clerk.api.network.ApiParams
+import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
-import com.clerk.api.network.ApiPaths
-import com.clerk.api.network.ApiParams
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import retrofit2.http.DELETE
@@ -32,8 +32,7 @@ internal interface SessionApi {
    *
    * @return A [ClerkResult] with Unit on success, or a [ClerkErrorResponse] on failure
    */
-  @GET(ApiPaths.Client.Sessions.BASE)
-  suspend fun sessions(): ClerkResult<Unit, ClerkErrorResponse>
+  @GET(ApiPaths.Client.Sessions.BASE) suspend fun sessions(): ClerkResult<Unit, ClerkErrorResponse>
 
   /**
    * Removes a specific session from the client.

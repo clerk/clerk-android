@@ -1,8 +1,8 @@
 package com.clerk.api.network.api
 
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.ApiParams
+import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signup.SignUp
 import retrofit2.http.Field
