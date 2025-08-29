@@ -13,7 +13,7 @@ internal data class FraudSettings(val native: Native) {
   )
 
   /** Enum representing the device attestation mode. */
-  @Serializable
+  @Serializable(with = DeviceAttestationModeSerializer::class)
   enum class DeviceAttestationMode {
     @SerialName("disabled") DISABLED,
     @SerialName("onboarding") ONBOARDING,
@@ -21,3 +21,12 @@ internal data class FraudSettings(val native: Native) {
     @SerialName("unknown") UNKNOWN,
   }
 }
+
+/**
+ * Custom serializer for DeviceAttestationMode that provides fallback to UNKNOWN.
+ */
+internal object DeviceAttestationModeSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<FraudSettings.DeviceAttestationMode>(
+  "DeviceAttestationMode",
+  FraudSettings.DeviceAttestationMode.UNKNOWN,
+  FraudSettings.DeviceAttestationMode.entries.toTypedArray()
+)

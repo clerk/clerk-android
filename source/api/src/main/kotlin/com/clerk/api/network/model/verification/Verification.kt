@@ -23,7 +23,7 @@ data class Verification(
   val nonce: String? = null,
 ) {
   /** The state of the verification. */
-  @Serializable
+  @Serializable(with = VerificationStatusSerializer::class)
   enum class Status {
     @SerialName("unverified") UNVERIFIED,
     @SerialName("verified") VERIFIED,
@@ -33,3 +33,12 @@ data class Verification(
     @SerialName("state_unknown") UNKNOWN,
   }
 }
+
+/**
+ * Custom serializer for Verification.Status that provides fallback to UNKNOWN.
+ */
+object VerificationStatusSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<Verification.Status>(
+  "VerificationStatus",
+  Verification.Status.UNKNOWN,
+  Verification.Status.entries.toTypedArray()
+)

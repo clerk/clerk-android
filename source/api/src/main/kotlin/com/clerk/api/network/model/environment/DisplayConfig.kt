@@ -56,7 +56,7 @@ internal data class DisplayConfig(
  * This enum defines the different sign-in methods that can be set as the preferred option for users
  * when they authenticate with the application.
  */
-@Serializable
+@Serializable(with = PreferredSignInStrategySerializer::class)
 internal enum class PreferredSignInStrategy {
   /** Password-based authentication is preferred */
   @SerialName("password") PASSWORD,
@@ -67,3 +67,12 @@ internal enum class PreferredSignInStrategy {
   /** Unknown or unspecified strategy */
   @SerialName("unknown") UNKNOWN,
 }
+
+/**
+ * Custom serializer for PreferredSignInStrategy that provides fallback to UNKNOWN.
+ */
+internal object PreferredSignInStrategySerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<PreferredSignInStrategy>(
+  "PreferredSignInStrategy",
+  PreferredSignInStrategy.UNKNOWN,
+  PreferredSignInStrategy.entries.toTypedArray()
+)

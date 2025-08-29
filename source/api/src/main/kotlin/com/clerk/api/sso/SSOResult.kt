@@ -27,7 +27,18 @@ data class OAuthResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {
     get() = if (signIn != null) ResultType.SIGN_IN else ResultType.SIGN_UP
 }
 
+@kotlinx.serialization.Serializable(with = ResultTypeSerializer::class)
 enum class ResultType {
   SIGN_IN,
   SIGN_UP,
+  UNKNOWN,
 }
+
+/**
+ * Custom serializer for ResultType that provides fallback to UNKNOWN.
+ */
+object ResultTypeSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<ResultType>(
+  "ResultType",
+  ResultType.UNKNOWN,
+  ResultType.entries.toTypedArray()
+)

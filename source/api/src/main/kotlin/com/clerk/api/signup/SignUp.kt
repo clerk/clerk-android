@@ -178,7 +178,7 @@ data class SignUp(
    * The Status enum defines the possible states of a sign-up flow. Each state indicates a specific
    * requirement or completion level in the sign-up process.
    */
-  @Serializable
+  @Serializable(with = SignUpStatusSerializer::class)
   enum class Status {
     /**
      * The sign-up has been inactive for over 24 hours. Once abandoned, the sign-up process cannot
@@ -588,3 +588,12 @@ suspend fun SignUp.attemptVerification(
  * @return An [OAuthResult] containing this [SignUp] object.
  */
 internal fun SignUp.toOAuthResult() = OAuthResult(signUp = this)
+
+/**
+ * Custom serializer for SignUp.Status that provides fallback to UNKNOWN.
+ */
+object SignUpStatusSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<SignUp.Status>(
+  "SignUpStatus",
+  SignUp.Status.UNKNOWN,
+  SignUp.Status.entries.toTypedArray()
+)

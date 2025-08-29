@@ -170,7 +170,7 @@ data class SignIn(
    *
    * Each status indicates the current state of the sign-in flow and what action is required next.
    */
-  @Serializable
+  @Serializable(with = SignInStatusSerializer::class)
   enum class Status {
     /** The sign-in process is complete. */
     @SerialName("complete") COMPLETE,
@@ -555,6 +555,7 @@ data class SignIn(
   }
 
   /** Enumerates the types of credential requests supported by the service. */
+  @Serializable(with = CredentialTypeSerializer::class)
   enum class CredentialType {
     /** Request for a public key credential (passkey). */
     PASSKEY,
@@ -564,6 +565,9 @@ data class SignIn(
 
     /** Request for a Google ID token credential. */
     GOOGLE,
+
+    /** Unknown credential type - used as fallback for unrecognized types. */
+    UNKNOWN,
   }
 
   companion object {
@@ -861,3 +865,21 @@ suspend fun SignIn.get(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
+
+/**
+ * Custom serializer for SignIn.Status that provides fallback to UNKNOWN.
+ */
+object SignInStatusSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<SignIn.Status>(
+  "SignInStatus",
+  SignIn.Status.UNKNOWN,
+  SignIn.Status.entries.toTypedArray()
+)
+
+/**
+ * Custom serializer for SignIn.CredentialType that provides fallback to UNKNOWN.
+ */
+object CredentialTypeSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<SignIn.CredentialType>(
+  "CredentialType",
+  SignIn.CredentialType.UNKNOWN,
+  SignIn.CredentialType.entries.toTypedArray()
+)

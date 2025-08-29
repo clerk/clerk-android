@@ -78,7 +78,7 @@ data class Session(
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
   /** Represents the status of a session. */
-  @Serializable
+  @Serializable(with = SessionStatusSerializer::class)
   enum class SessionStatus {
     /** The session was abandoned client-side. */
     @SerialName("abandoned") ABANDONED,
@@ -185,3 +185,12 @@ suspend fun Session.revoke(): ClerkResult<Session, ClerkErrorResponse> {
  */
 val Session.isThisDevice: Boolean
   get() = this.id == Clerk.session?.id
+
+/**
+ * Custom serializer for Session.SessionStatus that provides fallback to UNKNOWN.
+ */
+object SessionStatusSerializer : com.clerk.api.network.serialization.FallbackEnumSerializer<Session.SessionStatus>(
+  "SessionStatus",
+  Session.SessionStatus.UNKNOWN,
+  Session.SessionStatus.entries.toTypedArray()
+)
