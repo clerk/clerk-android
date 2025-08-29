@@ -120,7 +120,7 @@ class PasskeyHelperTest {
 
   @Test
   fun `constants have expected values`() {
-    assertEquals("strategy", STRATEGY_KEY)
+    assertEquals("strategy", com.clerk.api.Constants.Fields.STRATEGY)
     assertEquals("passkey", PasskeyHelper.passkeyStrategy)
   }
 }

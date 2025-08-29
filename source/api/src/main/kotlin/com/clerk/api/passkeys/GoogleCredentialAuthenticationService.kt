@@ -12,7 +12,7 @@ import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
-import com.clerk.api.Constants.Passkey.STRATEGY_KEY
+import com.clerk.api.Constants.Fields.STRATEGY
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -153,7 +153,7 @@ internal object GoogleCredentialAuthenticationService {
    *   authentication, or a [ClerkErrorResponse] if session creation fails.
    */
   private suspend fun createSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
-    return ClerkApi.signIn.createSignIn(mapOf(STRATEGY_KEY to PasskeyHelper.passkeyStrategy))
+    return ClerkApi.signIn.createSignIn(mapOf(STRATEGY to PasskeyHelper.passkeyStrategy))
   }
 
   /**

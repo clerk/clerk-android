@@ -502,7 +502,7 @@ data class SignUp(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return SSOService.authenticateWithRedirect(
-        strategy = params.toMap()[AuthStrategy.STRATEGY_KEY]!!,
+        strategy = params.toMap()[com.clerk.api.Constants.Fields.STRATEGY]!!,
         redirectUrl = params.redirectUrl,
         identifier = params.identifier,
         emailAddress = params.emailAddress,

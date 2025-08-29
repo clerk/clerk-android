@@ -18,8 +18,6 @@ object Constants {
     const val TICKET = "ticket"
     const val TRANSFER = "transfer"
     const val ENTERPRISE_SSO = "enterprise_sso"
-
-    const val STRATEGY_KEY = "strategy"
   }
 
   /** HTTP and API related constants */
@@ -69,14 +67,12 @@ object Constants {
 
   /** Passkey related constants */
   object Passkey {
-    const val STRATEGY_KEY = "strategy"
     const val PASSKEY_STRATEGY_VALUE = "passkey"
   }
 
-  /** URL path patterns (internal use) */
-  internal object Paths {
-    const val SESSIONS_WITH_ID = "client/sessions/{id}"
-    const val SIGN_UP_WITH_ID = "client/sign_ups/{id}"
+  /** Parameter and field names */
+  object Fields {
+    const val STRATEGY = "strategy"
   }
 
   /** Test constants (only available in test builds) */

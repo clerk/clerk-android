@@ -3,7 +3,7 @@ package com.clerk.api.network.middleware.outgoing
 import com.clerk.api.Clerk
 import com.clerk.api.Constants
 import com.clerk.api.configuration.DeviceIdGenerator
-import com.clerk.api.network.paths.Paths
+import com.clerk.api.network.ApiPaths
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import okhttp3.Interceptor
@@ -40,7 +40,7 @@ internal class HeaderMiddleware : Interceptor {
     }
 
     // See: https://community.cloudflare.com/t/cannot-seem-to-send-multipart-form-data/163491
-    if (request.url.encodedPath.contains(Paths.UserPath.PROFILE_IMAGE)) {
+    if (request.url.encodedPath.contains(ApiPaths.User.PROFILE_IMAGE)) {
       newRequestBuilder.removeHeader("Content-Type")
     }
 
