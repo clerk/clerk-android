@@ -3,8 +3,8 @@ package com.clerk.api.network.api
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
-import com.clerk.api.network.paths.CommonParams
-import com.clerk.api.network.paths.Paths
+import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.ApiParams
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import retrofit2.http.DELETE
@@ -32,7 +32,7 @@ internal interface SessionApi {
    *
    * @return A [ClerkResult] with Unit on success, or a [ClerkErrorResponse] on failure
    */
-  @GET(Paths.ClientPath.Sessions.SESSIONS)
+  @GET(ApiPaths.Client.Sessions.BASE)
   suspend fun sessions(): ClerkResult<Unit, ClerkErrorResponse>
 
   /**
@@ -45,9 +45,9 @@ internal interface SessionApi {
    * @return A [ClerkResult] containing the removed [Session] on success, or a [ClerkErrorResponse]
    *   on failure
    */
-  @POST(Paths.ClientPath.Sessions.WithId.REMOVE)
+  @POST(ApiPaths.Client.Sessions.REMOVE)
   suspend fun removeSession(
-    @Path(CommonParams.ID) id: String
+    @Path(ApiParams.ID) id: String
   ): ClerkResult<Session, ClerkErrorResponse>
 
   /**
@@ -59,7 +59,7 @@ internal interface SessionApi {
    * @return A [ClerkResult] containing the updated [Client] on success, or a [ClerkErrorResponse]
    *   on failure
    */
-  @DELETE(Paths.ClientPath.Sessions.SESSIONS)
+  @DELETE(ApiPaths.Client.Sessions.BASE)
   suspend fun deleteSessions(): ClerkResult<Client, ClerkErrorResponse>
 
   /**
@@ -72,9 +72,9 @@ internal interface SessionApi {
    * @return A [ClerkResult] containing the [TokenResource] on success, or a [ClerkErrorResponse] on
    *   failure
    */
-  @POST(Paths.ClientPath.Sessions.WithId.TOKENS)
+  @POST(ApiPaths.Client.Sessions.TOKENS)
   suspend fun tokens(
-    @Path(CommonParams.ID) sessionId: String
+    @Path(ApiParams.ID) sessionId: String
   ): ClerkResult<TokenResource, ClerkErrorResponse>
 
   /**
@@ -88,9 +88,9 @@ internal interface SessionApi {
    * @return A [ClerkResult] containing the [TokenResource] on success, or a [ClerkErrorResponse] on
    *   failure
    */
-  @POST(Paths.ClientPath.Sessions.WithId.TEMPLATE)
+  @POST(ApiPaths.Client.Sessions.TOKEN_TEMPLATE)
   suspend fun tokens(
-    @Path(CommonParams.ID) userId: String,
+    @Path(ApiParams.ID) userId: String,
     @Path("template") templateType: String,
   ): ClerkResult<TokenResource, ClerkErrorResponse>
 
@@ -105,9 +105,9 @@ internal interface SessionApi {
    * @return A [ClerkResult] containing the revoked [Session] on success, or a [ClerkErrorResponse]
    *   on failure
    */
-  @POST(Paths.UserPath.Sessions.REVOKE)
+  @POST(ApiPaths.User.Sessions.REVOKE)
   suspend fun revokeSession(
-    @Query(CommonParams.CLERK_SESSION_ID) sessionId: String? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
     @Path("session_id") sessionIdToRevoke: String,
   ): ClerkResult<Session, ClerkErrorResponse>
 }

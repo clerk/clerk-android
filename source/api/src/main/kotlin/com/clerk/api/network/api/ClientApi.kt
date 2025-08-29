@@ -2,7 +2,7 @@ package com.clerk.api.network.api
 
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.paths.Paths
+import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import retrofit2.http.Field
@@ -31,7 +31,7 @@ internal interface ClientApi {
    * @return A [ClerkResult] containing the [Client] object on success, or a [ClerkErrorResponse] on
    *   failure
    */
-  @GET(Paths.ClientPath.CLIENT) suspend fun get(): ClerkResult<Client, ClerkErrorResponse>
+  @GET(ApiPaths.Client.BASE) suspend fun get(): ClerkResult<Client, ClerkErrorResponse>
 
   /**
    * Sets a session as active for this client.
@@ -46,7 +46,7 @@ internal interface ClientApi {
    * @return A [ClerkResult] with [Unit] on success, or a [ClerkErrorResponse] on failure
    */
   @FormUrlEncoded
-  @POST(Paths.ClientPath.Sessions.WithId.SET_ACTIVE)
+  @POST(ApiPaths.Client.Sessions.SET_ACTIVE)
   suspend fun setActive(
     @Path("id") sessionId: String,
     @Field("active_organization_id") organizationId: String?,

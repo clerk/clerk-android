@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
 /** Strategy key used in API requests to identify the authentication method */
-internal const val STRATEGY_KEY = "strategy"
+// This constant is now centralized in Constants.Fields.STRATEGY
 
 /**
  * Helper utilities for passkey operations.

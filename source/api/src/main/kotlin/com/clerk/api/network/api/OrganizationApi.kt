@@ -2,7 +2,8 @@ package com.clerk.api.network.api
 
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.paths.Paths
+import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.ApiParams
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationDomain
@@ -43,9 +44,9 @@ interface OrganizationApi {
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.getRoles
    */
-  @GET(Paths.Organizations.ROLES)
+  @GET(ApiPaths.Organization.ROLES)
   suspend fun getRoles(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query("limit") limit: Int? = null,
     @Query("offset") offset: Int? = null,
   ): ClerkResult<List<Role>, ClerkErrorResponse>
@@ -59,7 +60,7 @@ interface OrganizationApi {
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.acceptInvitation
    */
-  @POST(Paths.UserPath.ACCEPT_ORGANIZATION_INVITATION)
+  @POST(ApiPaths.User.ACCEPT_ORGANIZATION_INVITATION)
   suspend fun acceptUserOrganizationInvitation(
     @Path("invitation_id") invitationId: String,
     @Query("_clerk_session_id") sessionId: String? = null,
@@ -74,7 +75,7 @@ interface OrganizationApi {
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.acceptSuggestion
    */
-  @POST(Paths.UserPath.ACCEPT_ORGANIZATION_SUGGESTION)
+  @POST(ApiPaths.User.ACCEPT_ORGANIZATION_SUGGESTION)
   suspend fun acceptOrganizationSuggestion(
     @Path("suggestion_id") suggestionId: String,
     @Query("_clerk_session_id") sessionId: String? = null,
@@ -89,7 +90,7 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.create
    */
   @FormUrlEncoded
-  @POST(Paths.Organizations.ORGANIZATIONS)
+  @POST(ApiPaths.Organization.BASE)
   suspend fun createOrganization(
     @Field("name") name: String
   ): ClerkResult<Organization, ClerkErrorResponse>
@@ -102,9 +103,9 @@ interface OrganizationApi {
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.get
    */
-  @GET(Paths.Organizations.WithId.ORGANIZATIONS_WITH_ID)
+  @GET(ApiPaths.Organization.WITH_ID)
   suspend fun getOrganization(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String
   ): ClerkResult<Organization, ClerkErrorResponse>
 
   /**
@@ -118,9 +119,9 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.update
    */
   @FormUrlEncoded
-  @PATCH(Paths.Organizations.WithId.ORGANIZATIONS_WITH_ID)
+  @PATCH(ApiPaths.Organization.WITH_ID)
   suspend fun updateOrganization(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("name") name: String? = null,
     @Field("slug") slug: String? = null,
   ): ClerkResult<Organization, ClerkErrorResponse>
@@ -133,9 +134,9 @@ interface OrganizationApi {
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.delete
    */
-  @DELETE(Paths.Organizations.WithId.ORGANIZATIONS_WITH_ID)
+  @DELETE(ApiPaths.Organization.WITH_ID)
   suspend fun deleteOrganization(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   /**
@@ -148,9 +149,9 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.updateLogo
    */
   @Multipart
-  @PUT(Paths.Organizations.WithId.LOGO)
+  @PUT(ApiPaths.Organization.LOGO)
   suspend fun updateOrganizationLogo(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Part file: MultipartBody.Part,
   ): ClerkResult<Organization, ClerkErrorResponse>
 
@@ -162,9 +163,9 @@ interface OrganizationApi {
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.deleteLogo
    */
-  @DELETE(Paths.Organizations.WithId.LOGO)
+  @DELETE(ApiPaths.Organization.LOGO)
   suspend fun deleteOrganizationLogo(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String
   ): ClerkResult<Organization, ClerkErrorResponse>
 
   /**
@@ -177,9 +178,9 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.createDomain
    */
   @FormUrlEncoded
-  @POST(Paths.Organizations.WithId.DomainPath.DOMAINS)
+  @POST(ApiPaths.Organization.Domain.BASE)
   suspend fun createOrganizationDomain(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("name") name: String,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 
@@ -195,9 +196,9 @@ interface OrganizationApi {
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.getDomains
    */
-  @GET(Paths.Organizations.WithId.DomainPath.DOMAINS)
+  @GET(ApiPaths.Organization.Domain.BASE)
   suspend fun getAllOrganizationDomains(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query("limit") limit: Int? = null,
     @Query("offset") offset: Int? = null,
     @Query("verified") verified: Boolean? = null,
@@ -213,10 +214,10 @@ interface OrganizationApi {
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.getDomain
    */
-  @GET(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  @GET(ApiPaths.Organization.Domain.WITH_ID)
   suspend fun getOrganizationDomain(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
-    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.DOMAIN_ID) domainId: String,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 
   /**
@@ -228,10 +229,10 @@ interface OrganizationApi {
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.deleteDomain
    */
-  @DELETE(Paths.Organizations.WithId.DomainPath.WithId.DOMAIN_WITH_ID)
+  @DELETE(ApiPaths.Organization.Domain.WITH_ID)
   suspend fun deleteOrganizationDomain(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
-    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.DOMAIN_ID) domainId: String,
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   /**
@@ -246,10 +247,10 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.updateEnrollmentMode
    */
   @FormUrlEncoded
-  @POST(Paths.Organizations.WithId.DomainPath.WithId.UPDATE_ENROLLMENT_MODE)
+  @POST(ApiPaths.Organization.Domain.UPDATE_ENROLLMENT_MODE)
   suspend fun updateEnrollmentMode(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
-    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Field("enrollment_mode") enrollmentMode: String,
     @Field("delete_pending") deletePending: Boolean? = null,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
@@ -265,10 +266,10 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.prepareAffiliationVerification
    */
   @FormUrlEncoded
-  @POST(Paths.Organizations.WithId.DomainPath.WithId.PREPARE_AFFILIATION)
+  @POST(ApiPaths.Organization.Domain.PREPARE_AFFILIATION)
   suspend fun prepareAffiliationVerification(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
-    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Field("affiliation_email_address") affiliationEmailAddress: String,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 
@@ -287,10 +288,10 @@ interface OrganizationApi {
    * @see com.clerk.api.organizations.attemptAffiliationVerification
    */
   @FormUrlEncoded
-  @POST(Paths.Organizations.WithId.DomainPath.WithId.ATTEMPT_AFFILIATION)
+  @POST(ApiPaths.Organization.Domain.ATTEMPT_AFFILIATION)
   suspend fun attemptAffiliationVerification(
-    @Path(Paths.Organizations.ORGANIZATION_ID) organizationId: String,
-    @Path(Paths.Organizations.DOMAIN_ID) domainId: String,
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Field("code") code: String,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 }
