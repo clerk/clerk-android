@@ -9,7 +9,8 @@ internal data class FraudSettings(val native: Native) {
   /** Native platform specific fraud prevention settings. */
   @Serializable
   data class Native(
-    @SerialName("device_attestation_mode") val deviceAttestationMode: DeviceAttestationMode = DeviceAttestationMode.UNKNOWN
+    @SerialName("device_attestation_mode")
+    val deviceAttestationMode: DeviceAttestationMode = DeviceAttestationMode.UNKNOWN
   )
 
   /** Enum representing the device attestation mode. */

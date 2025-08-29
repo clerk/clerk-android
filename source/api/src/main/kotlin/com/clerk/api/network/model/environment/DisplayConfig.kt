@@ -23,13 +23,15 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class DisplayConfig(
   /** The type of environment (development, staging, production) */
-  @SerialName("instance_environment_type") val instanceEnvironmentType: InstanceEnvironmentType = InstanceEnvironmentType.UNKNOWN,
+  @SerialName("instance_environment_type")
+  val instanceEnvironmentType: InstanceEnvironmentType = InstanceEnvironmentType.UNKNOWN,
 
   /** The display name of the application */
   @SerialName("application_name") val applicationName: String,
 
   /** The preferred sign-in strategy for the application */
-  @SerialName("preferred_sign_in_strategy") val preferredSignInStrategy: PreferredSignInStrategy = PreferredSignInStrategy.UNKNOWN,
+  @SerialName("preferred_sign_in_strategy")
+  val preferredSignInStrategy: PreferredSignInStrategy = PreferredSignInStrategy.UNKNOWN,
 
   /** Whether the application uses Clerk branding */
   @SerialName("branded") val branded: Boolean,
