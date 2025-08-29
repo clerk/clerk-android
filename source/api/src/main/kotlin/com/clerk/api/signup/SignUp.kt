@@ -43,7 +43,7 @@ data class SignUp(
    * The status of the current sign-up. Indicates the current state of the sign-up process (e.g.,
    * complete, missing requirements, etc.).
    */
-  val status: Status,
+  val status: Status = Status.UNKNOWN,
 
   /**
    * An array of all the required fields that need to be supplied and verified in order for this

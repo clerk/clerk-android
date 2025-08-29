@@ -27,7 +27,7 @@ data class UserOrganizationInvitation(
    * as well.
    */
   val role: String,
-  val status: Status,
+  val status: Status = Status.UNKNOWN,
   val updatedAt: Long,
   val createdAt: Long,
 ) {
@@ -36,6 +36,7 @@ data class UserOrganizationInvitation(
     Pending,
     Accepted,
     Revoked,
+    UNKNOWN,
   }
 }
 

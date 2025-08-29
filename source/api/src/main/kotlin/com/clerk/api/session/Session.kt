@@ -42,7 +42,7 @@ data class Session(
   val id: String,
 
   /** The current state of the session. */
-  val status: SessionStatus,
+  val status: SessionStatus = SessionStatus.UNKNOWN,
 
   /** The time the session expires and will cease to be active. */
   @SerialName("expire_at") val expireAt: Long,

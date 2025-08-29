@@ -36,6 +36,7 @@ import com.clerk.api.Clerk
  *
  * @see [OAuthProviderData]
  */
+@kotlinx.serialization.Serializable
 enum class OAuthProvider {
   /** Facebook OAuth authentication provider. */
   FACEBOOK,
@@ -116,7 +117,10 @@ enum class OAuthProvider {
   HUGGING_FACE,
 
   /** Custom OAuth authentication provider for enterprise or specialized implementations. */
-  CUSTOM;
+  CUSTOM,
+
+  /** Unknown OAuth provider - used as fallback for unrecognized providers. */
+  UNKNOWN;
 
   companion object {
     /**
@@ -226,7 +230,8 @@ enum class OAuthProvider {
             strategy = "oauth_huggingface",
             name = "Hugging Face",
           )
-        CUSTOM -> OAuthProviderData(provider = "", strategy = this.providerData.strategy, name = "")
+        CUSTOM -> OAuthProviderData(provider = "custom", strategy = "oauth_custom", name = "Custom")
+        UNKNOWN -> OAuthProviderData(provider = "unknown", strategy = "oauth_unknown", name = "Unknown")
       }
 }
 

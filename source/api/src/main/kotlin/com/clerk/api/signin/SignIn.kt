@@ -81,7 +81,7 @@ data class SignIn(
   val id: String,
 
   /** The status of the current sign-in. */
-  val status: Status,
+  val status: Status = Status.UNKNOWN,
 
   /** Array of all the authentication identifiers that are supported for this sign in. */
   @SerialName("supported_identifiers") val supportedIdentifiers: List<String>? = null,
@@ -555,6 +555,7 @@ data class SignIn(
   }
 
   /** Enumerates the types of credential requests supported by the service. */
+  @Serializable
   enum class CredentialType {
     /** Request for a public key credential (passkey). */
     PASSKEY,
@@ -564,6 +565,9 @@ data class SignIn(
 
     /** Request for a Google ID token credential. */
     GOOGLE,
+
+    /** Unknown credential type - used as fallback for unrecognized types. */
+    UNKNOWN,
   }
 
   companion object {
