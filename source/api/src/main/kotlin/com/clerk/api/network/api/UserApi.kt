@@ -287,13 +287,13 @@ internal interface UserApi {
   ): ClerkResult<ClerkPaginatedResponse<OrganizationMembership>, ClerkErrorResponse>
 
   @DELETE(ApiPaths.User.ORGANIZATION_MEMBERSHIP_WITH_ID)
-  fun deleteMembership(
+  suspend fun deleteMembership(
     @Path("organization_id") organizationId: String,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   @GET(ApiPaths.User.ORGANIZATION_INVITATIONS)
-  fun getOrganizationInvitations(
+  suspend fun getOrganizationInvitations(
     @Query("status") status: String? = null,
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
@@ -301,7 +301,7 @@ internal interface UserApi {
   ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse>
 
   @GET(ApiPaths.User.ORGANIZATION_SUGGESTIONS)
-  fun getOrganizationSuggestions(
+  suspend fun getOrganizationSuggestions(
     @Query("status") status: String? = null,
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
