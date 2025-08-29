@@ -58,9 +58,9 @@ internal object ApiPaths {
   internal object User {
     internal const val BASE = "me"
     internal const val PROFILE_IMAGE = "${BASE}/profile_image"
-    internal const val ACCEPT_ORG_INVITATION =
+    internal const val ACCEPT_ORGANIZATION_INVITATION =
       "${BASE}/organization_invitations/{invitation_id}/accept"
-    internal const val ACCEPT_ORG_SUGGESTION =
+    internal const val ACCEPT_ORGANIZATION_SUGGESTION =
       "${BASE}/organization_suggestions/{suggestion_id}/accept"
     internal const val BACKUP_CODES = "${BASE}/backup_codes"
 
