@@ -6,7 +6,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
-import com.clerk.api.ui.ClerkDesign
 import com.clerk.ui.colors.ComputedColors
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp32
@@ -20,7 +19,6 @@ internal data class ButtonStyleTokens(
   val backgroundColor: Color,
   val borderWidth: Dp,
   val borderColor: Color,
-  val cornerRadius: Dp,
   val hasShadow: Boolean,
 )
 
@@ -28,7 +26,6 @@ internal data class ButtonStyleTokens(
 internal fun buildButtonTokens(
   config: ClerkButtonConfig,
   computed: ComputedColors,
-  design: ClerkDesign,
   isPressed: Boolean,
 ): ButtonStyleTokens {
   val text =
@@ -75,7 +72,6 @@ internal fun buildButtonTokens(
     backgroundColor = background,
     borderWidth = borderWidth,
     borderColor = borderColor,
-    cornerRadius = design.borderRadius,
     hasShadow = hasShadow,
   )
 }

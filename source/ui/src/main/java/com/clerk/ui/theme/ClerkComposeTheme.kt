@@ -4,6 +4,7 @@ package com.clerk.ui.theme
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -11,6 +12,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.clerk.api.Clerk
@@ -47,10 +49,54 @@ internal val LocalClerkDesign =
   compositionLocalOf<ClerkDesign> { error("ClerkDesign not provided") }
 
 /**
- * Provides both Clerk theme and Material3 theme integration.
+ * Clerk Theming refers to the customization of your Clerk components to better reflect your
+ * product's brand.
  *
- * @param clerkTheme The Clerk theme to apply. If null, uses system defaults.
- * @param content The composable content.
+ * Clerk components such as [com.clerk.ui.core.button.standard.ClerkButton] and
+ * [com.clerk.ui.core.input.ClerkTextField] use values provided here when retrieving default values.
+ * This theme system seamlessly integrates with Material3 theming while providing Clerk-specific
+ * design tokens and computed colors.
+ *
+ * All values may be set by providing this component with a [ClerkTheme]. Use this to configure the
+ * overall theme of elements within this ClerkMaterialTheme.
+ *
+ * Any values that are not set will inherit the current value from the theme, falling back to the
+ * defaults if there is no parent ClerkMaterialTheme. This allows using a ClerkMaterialTheme at the
+ * top of your application, and then separate ClerkMaterialTheme(s) for different screens / parts of
+ * your UI, overriding only the parts of the theme definition that need to change.
+ *
+ * The theme automatically computes Material3 color schemes from Clerk colors and provides
+ * additional computed color variants optimized for common UI patterns like pressed states, borders,
+ * and semantic colors.
+ *
+ * ## Theme Access
+ *
+ * Use the [ClerkMaterialTheme] object to access theme values within your composables:
+ * ```kotlin
+ * @Composable
+ * fun MyComponent() {
+ *   ClerkMaterialTheme {
+ *     val primary = ClerkMaterialTheme.colors.primary
+ *     val pressedColor = ClerkMaterialTheme.computed.primaryPressed
+ *     val borderRadius = ClerkMaterialTheme.design.cornerRadius
+ *
+ *     // Use the values in your component
+ *     Box(
+ *       modifier = Modifier.background(primary),
+ *       content = content
+ *     )
+ *   }
+ * }
+ * ```
+ *
+ * ## Integration with Material3
+ *
+ * This theme provider automatically configures Material3's [MaterialTheme] with colors derived from
+ * your Clerk theme, ensuring seamless integration between Clerk and Material components.
+ *
+ * @param clerkTheme The Clerk theme to apply. If null, uses the globally configured theme from
+ *   [Clerk.customTheme] or system defaults.
+ * @param content The composable content that will have access to the themed values.
  */
 @Composable
 internal fun ClerkMaterialTheme(
@@ -62,7 +108,6 @@ internal fun ClerkMaterialTheme(
     val design = ClerkThemeProviderAccess.design
 
     val materialColors = computeColorScheme(colors)
-
     val computedColors = generateComputedColors(colors)
 
     CompositionLocalProvider(
@@ -80,6 +125,80 @@ internal fun ClerkMaterialTheme(
   }
 }
 
+/**
+ * Contains functions to access the current theme values provided at the call site's position in the
+ * hierarchy.
+ *
+ * This object provides a clean API for accessing Clerk theme values, similar to how MaterialTheme
+ * exposes its values. Use these properties within @Composable functions to access the current theme
+ * configuration.
+ */
+object ClerkMaterialTheme {
+
+  /**
+   * Retrieves the current [ClerkColors] at the call site's position in the hierarchy.
+   *
+   * These are the base Clerk colors defined in the theme configuration, including primary,
+   * background, foreground, and semantic colors like success, danger, and warning.
+   */
+  val colors: ClerkColors
+    @Composable @ReadOnlyComposable get() = LocalComposeColors.current
+
+  /**
+   * Retrieves the current [Typography] at the call site's position in the hierarchy.
+   *
+   * This returns the Material3 Typography that has been configured for the Clerk theme, providing
+   * consistent text styling across all components.
+   */
+  val typography: Typography
+    @Composable get() = ClerkThemeProviderAccess.typography
+
+  /**
+   * Retrieves the current [ClerkDesign] at the call site's position in the hierarchy.
+   *
+   * This provides access to design tokens like corner radius, spacing, and other layout properties
+   * that define the visual structure of Clerk components.
+   */
+  val design: ClerkDesign
+    @Composable @ReadOnlyComposable get() = LocalClerkDesign.current
+
+  /**
+   * Retrieves a [RoundedCornerShape] computed from the current design's border radius.
+   *
+   * This provides a convenient way to access a consistent rounded corner shape based on the theme's
+   * configured border radius, commonly used for buttons, cards, and input fields.
+   */
+  val shape: RoundedCornerShape
+    @Composable @ReadOnlyComposable get() = RoundedCornerShape(design.borderRadius)
+
+  /**
+   * Retrieves the current [ComputedColors] at the call site's position in the hierarchy.
+   *
+   * These are derived color variants calculated from the base Clerk colors, optimized for common UI
+   * patterns like pressed states, focus indicators, borders, and semantic backgrounds. These colors
+   * automatically adapt to light/dark themes and provide consistent visual feedback across
+   * components.
+   *
+   * Examples include:
+   * - `primaryPressed` - Primary color in pressed state
+   * - `inputBorderFocused` - Border color for focused input fields
+   * - `backgroundSuccess` - Background color for success states
+   * - `dangerInputBorder` - Border color for error/danger states
+   */
+  val computed: ComputedColors
+    @Composable @ReadOnlyComposable get() = LocalComputedColors.current
+}
+
+/**
+ * Generates computed color variants from the base Clerk colors.
+ *
+ * This function creates derived colors that are commonly needed in UI components, such as pressed
+ * states, various border opacities, and semantic color backgrounds. The computed colors
+ * automatically adapt to the current theme (light/dark) and provide consistent visual patterns.
+ *
+ * @param colors The base ClerkColors to derive variants from.
+ * @return A [ComputedColors] object containing all the derived color variants.
+ */
 @Composable
 private fun generateComputedColors(colors: ClerkColors): ComputedColors {
 
@@ -112,6 +231,16 @@ private fun generateComputedColors(colors: ClerkColors): ComputedColors {
   return computed
 }
 
+/**
+ * Computes a Material3 ColorScheme from Clerk colors.
+ *
+ * This function maps Clerk's semantic color system to Material3's color roles, ensuring that
+ * standard Material components work seamlessly within Clerk's themed environment while maintaining
+ * visual consistency.
+ *
+ * @param colors The ClerkColors to map to Material3 color roles.
+ * @return A [ColorScheme] configured for the current theme (light/dark).
+ */
 @Composable
 private fun computeColorScheme(colors: ClerkColors): ColorScheme {
 
@@ -144,22 +273,4 @@ private fun computeColorScheme(colors: ClerkColors): ColorScheme {
       onSurfaceVariant = colors.mutedForeground!!,
     )
   }
-}
-
-/** Object providing easy access to all theme values within composables. */
-internal object ClerkThemeAccess {
-
-  // Direct Clerk theme object access
-  internal val colors: ClerkColors
-    @Composable get() = LocalComposeColors.current
-
-  internal val typography: Typography
-    @Composable get() = ClerkThemeProviderAccess.typography
-
-  internal val design: ClerkDesign
-    @Composable get() = LocalClerkDesign.current
-
-  // Computed color variants
-  internal val computed: ComputedColors
-    @Composable get() = LocalComputedColors.current
 }
