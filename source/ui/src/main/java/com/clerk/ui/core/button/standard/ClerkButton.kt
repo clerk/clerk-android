@@ -12,12 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,7 +31,6 @@ import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.ClerkThemeAccess
 import com.clerk.ui.theme.DefaultColors
 
 /**
@@ -119,8 +116,7 @@ private fun ClerkButtonImpl(
     val tokens =
       buildButtonTokens(
         config = buttonConfig,
-        computed = ClerkThemeAccess.computed,
-        design = ClerkThemeAccess.design,
+        computed = ClerkMaterialTheme.computed,
         isPressed = isPressedCombined,
       )
 
@@ -138,7 +134,7 @@ private fun ClerkButtonImpl(
           disabledContentColor = tokens.foreground.copy(alpha = 0.5f),
         ),
       border = BorderStroke(tokens.borderWidth, tokens.borderColor),
-      shape = RoundedCornerShape(tokens.cornerRadius),
+      shape = ClerkMaterialTheme.shape,
       elevation =
         if (tokens.hasShadow)
           ButtonDefaults.buttonElevation(defaultElevation = dp1, pressedElevation = dp1)
@@ -169,7 +165,7 @@ private fun PreviewButton() {
     LazyColumn(
       modifier =
         Modifier.fillMaxSize()
-          .background(color = MaterialTheme.colorScheme.background)
+          .background(color = ClerkMaterialTheme.colors.background)
           .padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
       horizontalAlignment = Alignment.CenterHorizontally,
