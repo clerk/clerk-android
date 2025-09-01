@@ -6,11 +6,11 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
-import com.clerk.api.ui.ClerkDesign
 import com.clerk.ui.colors.ComputedColors
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Immutable
 internal data class ButtonStyleTokens(
@@ -20,7 +20,6 @@ internal data class ButtonStyleTokens(
   val backgroundColor: Color,
   val borderWidth: Dp,
   val borderColor: Color,
-  val cornerRadius: Dp,
   val hasShadow: Boolean,
 )
 
@@ -28,7 +27,6 @@ internal data class ButtonStyleTokens(
 internal fun buildButtonTokens(
   config: ClerkButtonConfig,
   computed: ComputedColors,
-  design: ClerkDesign,
   isPressed: Boolean,
 ): ButtonStyleTokens {
   val text =
@@ -75,7 +73,6 @@ internal fun buildButtonTokens(
     backgroundColor = background,
     borderWidth = borderWidth,
     borderColor = borderColor,
-    cornerRadius = design.borderRadius,
     hasShadow = hasShadow,
   )
 }
@@ -85,25 +82,25 @@ private fun generateForeground(config: ClerkButtonConfig, isPressed: Boolean): C
   when (config.style) {
     ClerkButtonConfig.ButtonStyle.Primary ->
       when (config.emphasis) {
-        ClerkButtonConfig.Emphasis.High -> MaterialTheme.colorScheme.onPrimary
+        ClerkButtonConfig.Emphasis.High -> ClerkMaterialTheme.colors.primaryForeground
         ClerkButtonConfig.Emphasis.Low,
-        ClerkButtonConfig.Emphasis.None -> MaterialTheme.colorScheme.primary
+        ClerkButtonConfig.Emphasis.None -> ClerkMaterialTheme.colors.primary
       }
 
     ClerkButtonConfig.ButtonStyle.Secondary ->
       when (config.emphasis) {
         ClerkButtonConfig.Emphasis.None ->
-          if (isPressed) MaterialTheme.colorScheme.onBackground
-          else MaterialTheme.colorScheme.onSurfaceVariant
+          if (isPressed) ClerkMaterialTheme.colors.foreground
+          else ClerkMaterialTheme.colors.mutedForeground
         ClerkButtonConfig.Emphasis.Low,
-        ClerkButtonConfig.Emphasis.High -> MaterialTheme.colorScheme.onBackground
+        ClerkButtonConfig.Emphasis.High -> ClerkMaterialTheme.colors.foreground
       }
 
     ClerkButtonConfig.ButtonStyle.Negative ->
       when (config.emphasis) {
-        ClerkButtonConfig.Emphasis.High -> MaterialTheme.colorScheme.onPrimary
+        ClerkButtonConfig.Emphasis.High -> ClerkMaterialTheme.colors.primaryForeground
         ClerkButtonConfig.Emphasis.Low,
-        ClerkButtonConfig.Emphasis.None -> MaterialTheme.colorScheme.error
+        ClerkButtonConfig.Emphasis.None -> ClerkMaterialTheme.colors.danger
       }
   }
 
@@ -117,11 +114,10 @@ private fun generateBackground(
     ClerkButtonConfig.ButtonStyle.Primary ->
       when (config.emphasis) {
         ClerkButtonConfig.Emphasis.High ->
-          if (isPressed) computed.primaryPressed else MaterialTheme.colorScheme.primary
+          if (isPressed) computed.primaryPressed else ClerkMaterialTheme.colors.primary
         ClerkButtonConfig.Emphasis.Low,
         ClerkButtonConfig.Emphasis.None ->
-          if (isPressed) MaterialTheme.colorScheme.secondary
-          else MaterialTheme.colorScheme.background
+          if (isPressed) ClerkMaterialTheme.colors.muted else ClerkMaterialTheme.colors.background
       }
 
     ClerkButtonConfig.ButtonStyle.Secondary ->
@@ -129,16 +125,15 @@ private fun generateBackground(
         ClerkButtonConfig.Emphasis.None,
         ClerkButtonConfig.Emphasis.Low,
         ClerkButtonConfig.Emphasis.High ->
-          if (isPressed) MaterialTheme.colorScheme.secondary
-          else MaterialTheme.colorScheme.background
+          if (isPressed) ClerkMaterialTheme.colors.muted else ClerkMaterialTheme.colors.background
       }
 
     ClerkButtonConfig.ButtonStyle.Negative ->
       when (config.emphasis) {
         ClerkButtonConfig.Emphasis.High ->
-          if (isPressed) computed.backgroundDanger else MaterialTheme.colorScheme.error
+          if (isPressed) computed.backgroundDanger else ClerkMaterialTheme.colors.danger
         ClerkButtonConfig.Emphasis.Low,
         ClerkButtonConfig.Emphasis.None ->
-          if (isPressed) computed.backgroundDanger else MaterialTheme.colorScheme.background
+          if (isPressed) computed.backgroundDanger else ClerkMaterialTheme.colors.background
       }
   }
