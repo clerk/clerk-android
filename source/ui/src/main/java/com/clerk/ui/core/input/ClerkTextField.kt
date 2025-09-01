@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -30,8 +29,6 @@ import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.LocalClerkDesign
-import com.clerk.ui.theme.LocalComputedColors
 
 @Composable
 fun ClerkTextField(
@@ -50,32 +47,29 @@ fun ClerkTextField(
   leadingIconContentDescription: String? = null,
   trailingIconContentDescription: String? = null,
 ) {
-  val computedColors = LocalComputedColors.current
-  val design = LocalClerkDesign.current
-
   val interactionSource = remember { MutableInteractionSource() }
   val isFocused by interactionSource.collectIsFocusedAsState()
 
   val textFieldColors =
     OutlinedTextFieldDefaults.colors(
-      focusedBorderColor = MaterialTheme.colorScheme.primary,
-      focusedLabelColor = MaterialTheme.colorScheme.primary,
-      unfocusedBorderColor = computedColors.inputBorder,
-      unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-      unfocusedContainerColor = MaterialTheme.colorScheme.background,
-      focusedContainerColor = MaterialTheme.colorScheme.background,
-      errorBorderColor = MaterialTheme.colorScheme.error,
-      errorSupportingTextColor = MaterialTheme.colorScheme.error,
+      focusedBorderColor = ClerkMaterialTheme.colors.primary,
+      focusedLabelColor = ClerkMaterialTheme.colors.primary,
+      unfocusedBorderColor = ClerkMaterialTheme.computed.inputBorder,
+      unfocusedTextColor = ClerkMaterialTheme.colors.foreground,
+      unfocusedContainerColor = ClerkMaterialTheme.colors.background,
+      focusedContainerColor = ClerkMaterialTheme.colors.background,
+      errorBorderColor = ClerkMaterialTheme.colors.danger,
+      errorSupportingTextColor = ClerkMaterialTheme.colors.danger,
     )
 
   val labelStyle =
-    if (isFocused || value.isNotEmpty()) MaterialTheme.typography.bodySmall
+    if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
     else MaterialTheme.typography.bodyLarge
   val labelColor =
     when {
-      isError -> MaterialTheme.colorScheme.error
-      isFocused -> MaterialTheme.colorScheme.primary
-      else -> MaterialTheme.colorScheme.onSurfaceVariant
+      isError -> ClerkMaterialTheme.colors.danger
+      isFocused -> ClerkMaterialTheme.colors.primary
+      else -> ClerkMaterialTheme.colors.mutedForeground
     }
 
   ClerkMaterialTheme {
@@ -85,7 +79,7 @@ fun ClerkTextField(
       value = value,
       onValueChange = onValueChange,
       enabled = enabled,
-      shape = RoundedCornerShape(design.borderRadius),
+      shape = ClerkMaterialTheme.shape,
       isError = isError,
       colors = textFieldColors,
       leadingIcon =
@@ -102,8 +96,8 @@ fun ClerkTextField(
         if (trailingIcon != null || isError) {
           val resId = if (isError) R.drawable.ic_warning else trailingIcon!!
           val tint =
-            if (isError) MaterialTheme.colorScheme.error
-            else MaterialTheme.colorScheme.onSurfaceVariant
+            if (isError) ClerkMaterialTheme.colors.danger
+            else ClerkMaterialTheme.colors.mutedForeground
           ClickableIcon(
             resId = resId,
             onClick = onTrailingIconClick,
@@ -114,17 +108,17 @@ fun ClerkTextField(
       },
       placeholder = placeholder?.let { ph -> { Text(ph) } },
       label = label?.let { text -> { Text(text = text, style = labelStyle, color = labelColor) } },
-      textStyle = MaterialTheme.typography.bodyLarge,
+      textStyle = ClerkMaterialTheme.typography.bodyLarge,
       supportingText =
         supportingText?.let { support ->
           {
             Text(
               modifier = Modifier.padding(top = dp4),
               text = support,
-              style = MaterialTheme.typography.bodySmall,
+              style = ClerkMaterialTheme.typography.bodySmall,
               color =
-                if (isError) MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.onSurfaceVariant,
+                if (isError) ClerkMaterialTheme.colors.danger
+                else ClerkMaterialTheme.colors.mutedForeground,
             )
           }
         },
@@ -136,7 +130,7 @@ fun ClerkTextField(
 private fun ClickableIcon(
   @DrawableRes resId: Int,
   onClick: () -> Unit,
-  tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurfaceVariant,
+  tint: androidx.compose.ui.graphics.Color = ClerkMaterialTheme.colors.mutedForeground,
   contentDescription: String? = null,
 ) {
   Icon(
@@ -152,7 +146,7 @@ private fun ClickableIcon(
 private fun PreviewClerkTextField() {
   ClerkMaterialTheme {
     LazyColumn(
-      modifier = Modifier.background(color = MaterialTheme.colorScheme.background).padding(dp12),
+      modifier = Modifier.background(color = ClerkMaterialTheme.colors.background).padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp20, alignment = Alignment.CenterVertically),
     ) {
       item {
@@ -228,7 +222,7 @@ private fun PreviewClerkTextField() {
 private fun PreviewClerkTextFieldError() {
   ClerkMaterialTheme {
     Column(
-      modifier = Modifier.background(color = MaterialTheme.colorScheme.background).padding(dp12),
+      modifier = Modifier.background(color = ClerkMaterialTheme.colors.background).padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp20, alignment = Alignment.CenterVertically),
     ) {
       ClerkTextField(
