@@ -97,6 +97,7 @@ fun ClerkPhoneNumberField(modifier: Modifier = Modifier) {
         computedColors = computedColors,
         value = phoneNumber,
         onValueChange = { phoneNumber = it },
+        countryCode = selectedCountry.countryShortName,
       )
     }
   }
@@ -107,6 +108,7 @@ private fun PhoneNumberInput(
   computedColors: ComputedColors,
   value: String,
   onValueChange: (String) -> Unit,
+  countryCode: String,
 ) {
 
   val interactionSource = remember { MutableInteractionSource() }
@@ -125,8 +127,14 @@ private fun PhoneNumberInput(
       ),
     interactionSource = interactionSource,
     value = value,
-    onValueChange = onValueChange,
-    label = { Text("Enter your phone number", style = MaterialTheme.typography.bodyMedium) },
+    onValueChange = { onValueChange(PhoneInputUtils().keepDialableCapped(it)) },
+    visualTransformation = phoneVisualTransformation(countryCode),
+    label = {
+      Text(
+        stringResource(R.string.enter_your_phone_number),
+        style = MaterialTheme.typography.bodyMedium,
+      )
+    },
     shape = ClerkMaterialTheme.shape,
     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
     singleLine = true,
@@ -146,7 +154,7 @@ private fun CountrySelector(
     modifier =
       Modifier.padding(top = dp8).heightIn(min = dp56).clickable { isExpanded = !isExpanded }
   ) {
-    TextWithIcon(modifier, selectedCountry)
+    TextWithIcon(modifier = modifier, selectedCountry = selectedCountry)
     Text(
       modifier =
         Modifier.align(Alignment.TopStart)
@@ -197,7 +205,7 @@ private fun CountrySelector(
 }
 
 @Composable
-private fun TextWithIcon(modifier: Modifier, selectedCountry: CountryInfo) {
+private fun TextWithIcon(selectedCountry: CountryInfo, modifier: Modifier = Modifier) {
   Row(
     modifier =
       Modifier.background(color = ClerkMaterialTheme.colors.background)
