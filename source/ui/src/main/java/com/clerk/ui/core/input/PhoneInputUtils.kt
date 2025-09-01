@@ -7,6 +7,7 @@ import com.google.i18n.phonenumbers.AsYouTypeFormatter
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import java.util.Locale
 
+/** Data class representing country information for phone number formatting. */
 internal data class CountryInfo(val flag: String, val code: Int, val countryShortName: String) {
   val getPhonePrefix: String
     get() = "+$code"
@@ -51,8 +52,15 @@ internal class DefaultLogger : Logger {
   }
 }
 
-private const val E164_MAX_DIGITS = 15
-
+/**
+ * Utility class for phone number input handling and country detection.
+ *
+ * This class provides functionality to:
+ * - Detect country from system locale or telephony information
+ * - Format phone numbers as-you-type
+ * - Generate country lists with flags
+ * - Validate and cap phone number input
+ */
 internal class PhoneInputUtils(
   private val phoneNumberUtilProvider: PhoneNumberUtilProvider = DefaultPhoneNumberUtilProvider(),
   private val localeProvider: LocaleProvider = DefaultLocaleProvider(),
@@ -65,6 +73,7 @@ internal class PhoneInputUtils(
     private const val REGIONAL_INDICATOR_SYMBOL_A = 0x1F1E6
     private const val FLAG_EMOJI_CODEPOINT_COUNT = 2
     private const val LOG_TAG = "PhoneInputUtils"
+    private const val E164_MAX_DIGITS = 15
 
     // Backward compatibility - default instance
     private val defaultInstance = PhoneInputUtils()
@@ -80,6 +89,12 @@ internal class PhoneInputUtils(
 
   private val phoneUtil: PhoneNumberUtil by lazy { phoneNumberUtilProvider.getPhoneNumberUtil() }
 
+  /**
+   * Detects the country based on system locale first, then falls back to telephony information.
+   *
+   * @param context Android context for accessing telephony services
+   * @return CountryInfo if detection succeeds, null otherwise
+   */
   fun detectCountry(context: Context): CountryInfo? {
     return try {
       // Try system locale first, then telephony manager for SIM and network country
@@ -90,7 +105,13 @@ internal class PhoneInputUtils(
     }
   }
 
-  internal fun keepDialableCapped(input: String): String {
+  /**
+   * Filters input to keep only dialable characters (+ and digits) and caps to E164 limit.
+   *
+   * @param input Raw input string
+   * @return Filtered string with only dialable characters, capped to E164 limits
+   */
+  fun keepDialableCapped(input: String): String {
     val out = StringBuilder(input.length)
     var seenPlus = false
     var digits = 0
@@ -109,6 +130,62 @@ internal class PhoneInputUtils(
     return out.toString()
   }
 
+  /**
+   * Formats a phone number as the user types using the specified region.
+   *
+   * @param regionIso ISO country code for formatting
+   * @param raw Raw phone number input
+   * @return Formatted phone number string
+   */
+  fun formatAsYouType(regionIso: String, raw: String): String {
+    // Keep '+' and digits only; AsYouType handles punctuation
+    val filtered =
+      buildString(raw.length) { raw.forEach { ch -> if (ch == '+' || ch.isDigit()) append(ch) } }
+
+    val fmt: AsYouTypeFormatter = phoneUtil.getAsYouTypeFormatter(regionIso)
+    fmt.clear()
+    var out = ""
+    filtered.forEach { ch -> out = fmt.inputDigit(ch) }
+    return out
+  }
+
+  /**
+   * Gets all supported countries with their flag emojis and phone codes.
+   *
+   * @return List of CountryInfo sorted by country short name
+   */
+  fun getAllCountries(): List<CountryInfo> {
+    return phoneUtil.supportedRegions
+      .filter { it.length == 2 } // Filter out non-standard region codes
+      .map { region ->
+        CountryInfo(
+          flag = regionToFlagEmoji(region),
+          code = phoneUtil.getCountryCodeForRegion(region),
+          countryShortName = region,
+        )
+      }
+      .sortedBy { it.countryShortName }
+  }
+
+  /**
+   * Detects the country code (phone prefix) based on system locale or telephony info.
+   *
+   * @param context Android context for accessing telephony services
+   * @return Country phone code if detection succeeds, null otherwise
+   */
+  fun detectCountryCode(context: Context): Int? {
+    return detectCountry(context)?.code
+  }
+
+  /**
+   * Returns the default country (US) as fallback.
+   *
+   * @return CountryInfo for United States
+   */
+  fun getDefaultCountry(): CountryInfo {
+    return CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US")
+  }
+
   private fun detectFromLocale(): CountryInfo? {
     val locale = localeProvider.getDefaultLocale()
     val countryCode = locale.country
@@ -124,17 +201,6 @@ internal class PhoneInputUtils(
     } else {
       null
     }
-  }
-
-  fun formatAsYouType(regionIso: String, raw: String): String {
-    // Keep '+' and digits only; AsYouType handles punctuation
-    val filtered =
-      buildString(raw.length) { raw.forEach { ch -> if (ch == '+' || ch.isDigit()) append(ch) } }
-    val fmt: AsYouTypeFormatter = phoneUtil.getAsYouTypeFormatter(regionIso)
-    fmt.clear()
-    var out = ""
-    filtered.forEach { ch -> out = fmt.inputDigit(ch) }
-    return out
   }
 
   private fun detectFromTelephony(context: Context): CountryInfo? {
@@ -172,26 +238,5 @@ internal class PhoneInputUtils(
     } else {
       ""
     }
-  }
-
-  fun getAllCountries(): List<CountryInfo> {
-    return phoneUtil.supportedRegions
-      .filter { it.length == 2 } // Filter out non-standard region codes
-      .map { region ->
-        CountryInfo(
-          flag = regionToFlagEmoji(region),
-          code = phoneUtil.getCountryCodeForRegion(region),
-          countryShortName = region,
-        )
-      }
-      .sortedBy { it.countryShortName }
-  }
-
-  fun detectCountryCode(context: Context): Int? {
-    return detectCountry(context)?.code
-  }
-
-  fun getDefaultCountry(): CountryInfo {
-    return CountryInfo(flag = "\uD83C\uDDFA\uD83C\uDDF8", code = 1, countryShortName = "US")
   }
 }

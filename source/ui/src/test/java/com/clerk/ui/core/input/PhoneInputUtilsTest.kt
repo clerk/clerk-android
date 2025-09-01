@@ -49,6 +49,7 @@ class PhoneInputUtilsTest {
       )
   }
 
+  // Country Detection Tests
   @Test
   fun `detectCountry returns CountryInfo when locale detection succeeds`() {
     // Given
@@ -192,6 +193,90 @@ class PhoneInputUtilsTest {
 
     // Then
     assertNull(result)
+  }
+
+  @Test
+  fun `keepDialableCapped preserves valid phone characters`() {
+    // Given
+    val input = "+1234567890"
+
+    // When
+    val result = phoneInputUtils.keepDialableCapped(input)
+
+    // Then
+    assertEquals("+1234567890", result)
+  }
+
+  @Test
+  fun `keepDialableCapped filters out non-dialable characters`() {
+    // Given
+    val input = "+1 (234) 567-890 ext.123"
+
+    // When
+    val result = phoneInputUtils.keepDialableCapped(input)
+
+    // Then
+    assertEquals("+1234567890123", result)
+  }
+
+  @Test
+  fun `keepDialableCapped allows only one plus at the beginning`() {
+    // Given
+    val input = "++123+456+789"
+
+    // When
+    val result = phoneInputUtils.keepDialableCapped(input)
+
+    // Then
+    assertEquals("+123456789", result)
+  }
+
+  @Test
+  fun `keepDialableCapped ignores plus not at beginning`() {
+    // Given
+    val input = "123+456+789"
+
+    // When
+    val result = phoneInputUtils.keepDialableCapped(input)
+
+    // Then
+    assertEquals("123456789", result)
+  }
+
+  @Test
+  fun `keepDialableCapped caps digits to E164 limit`() {
+    // Given - 20 digits, should be capped to 15
+    val input = "+12345678901234567890"
+
+    // When
+    val result = phoneInputUtils.keepDialableCapped(input)
+
+    // Then
+    assertEquals("+123456789012345", result) // 15 digits + plus sign
+  }
+
+  @Test
+  fun `keepDialableCapped handles empty input`() {
+    // Given
+    val input = ""
+
+    // When
+    val result = phoneInputUtils.keepDialableCapped(input)
+
+    // Then
+    assertEquals("", result)
+  }
+
+  @Test
+  fun `keepDialableCapped handles only non-dialable characters`() {
+    // Given
+    val input = "abc-def ()"
+
+    // When
+    val result = phoneInputUtils.keepDialableCapped(input)
+
+    // Then
+    assertEquals("", result)
   }
 
   @Test
