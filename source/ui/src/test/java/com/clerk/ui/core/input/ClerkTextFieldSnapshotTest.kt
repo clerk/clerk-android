@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.clerk.base.BaseSnapshotTest
@@ -22,7 +21,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
       ClerkMaterialTheme {
         Column(
           modifier =
-            Modifier.background(color = MaterialTheme.colorScheme.background).padding(dp12),
+            Modifier.background(color = ClerkMaterialTheme.colors.background).padding(dp12),
           verticalArrangement = Arrangement.spacedBy(dp20, alignment = Alignment.CenterVertically),
         ) {
           ClerkTextField(
@@ -92,7 +91,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
       ClerkMaterialTheme {
         Column(
           modifier =
-            Modifier.background(color = MaterialTheme.colorScheme.background).padding(dp12),
+            Modifier.background(color = ClerkMaterialTheme.colors.background).padding(dp12),
           verticalArrangement = Arrangement.spacedBy(dp20, alignment = Alignment.CenterVertically),
         ) {
           ClerkTextField(

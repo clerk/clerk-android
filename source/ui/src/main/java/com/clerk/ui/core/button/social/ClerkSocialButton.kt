@@ -11,10 +11,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,8 +35,6 @@ import com.clerk.ui.core.dimens.dp3
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.LocalClerkColors
-import com.clerk.ui.theme.LocalClerkDesign
 
 /**
  * A composable button for social authentication with a specific [OAuthProvider].
@@ -126,33 +122,29 @@ private fun ClerkSocialButtonImpl(
   onClick: (OAuthProvider) -> Unit = {},
 ) {
   ClerkMaterialTheme {
-    val design = LocalClerkDesign.current
-    val colors = LocalClerkColors.current
-    val shape = RoundedCornerShape(design.borderRadius)
-
     Button(
       enabled = isEnabled,
       onClick = { onClick(provider) },
-      shape = shape,
+      shape = ClerkMaterialTheme.shape,
       interactionSource = interactionSource,
       elevation = ButtonDefaults.buttonElevation(defaultElevation = dp3),
       colors =
         ButtonDefaults.buttonColors(
           containerColor =
-            if (isPressedCombined) MaterialTheme.colorScheme.secondary
-            else MaterialTheme.colorScheme.background,
-          contentColor = MaterialTheme.colorScheme.onBackground,
-          disabledContainerColor = MaterialTheme.colorScheme.background,
-          disabledContentColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+            if (isPressedCombined) ClerkMaterialTheme.colors.muted
+            else ClerkMaterialTheme.colors.background,
+          contentColor = ClerkMaterialTheme.colors.foreground,
+          disabledContainerColor = ClerkMaterialTheme.colors.background,
+          disabledContentColor = ClerkMaterialTheme.colors.foreground.copy(alpha = 0.5f),
         ),
       contentPadding = ButtonDefaults.ContentPadding,
       modifier =
         modifier
           .shadow(
             elevation = dp3,
-            shape = shape,
+            shape = ClerkMaterialTheme.shape,
             clip = true,
-            spotColor = colors.shadow?.copy(alpha = 0.8f) ?: Color.Black.copy(alpha = 0.08f),
+            spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.8f),
           )
           .defaultMinSize(minHeight = dp48),
     ) {
@@ -169,7 +161,7 @@ private fun ClerkSocialButtonImpl(
           alpha = if (isEnabled) 1f else 0.5f,
           modifier = Modifier.size(dp24),
         )
-        Text(text = provider.providerName, style = MaterialTheme.typography.titleMedium)
+        Text(text = provider.providerName, style = ClerkMaterialTheme.typography.titleMedium)
       }
     }
   }
@@ -187,7 +179,7 @@ private fun PreviewSocialButton() {
   provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
   ClerkMaterialTheme {
     Column(
-      Modifier.background(MaterialTheme.colorScheme.background).padding(dp12),
+      Modifier.background(ClerkMaterialTheme.colors.background).padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
     ) {
       ClerkSocialButton(provider = provider)
