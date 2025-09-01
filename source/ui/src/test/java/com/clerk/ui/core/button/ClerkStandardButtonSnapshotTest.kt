@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,7 +30,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           modifier =
             Modifier.fillMaxSize()
               .padding(16.dp)
-              .background(color = MaterialTheme.colorScheme.background),
+              .background(color = ClerkMaterialTheme.colors.background),
           verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
           horizontalAlignment = Alignment.CenterHorizontally,
         ) {
