@@ -187,7 +187,7 @@ object ClerkMaterialTheme {
    * - `backgroundSuccess` - Background color for success states
    * - `dangerInputBorder` - Border color for error/danger states
    */
-  val computed: ComputedColors
+  val computedColors: ComputedColors
     @Composable @ReadOnlyComposable get() = LocalComputedColors.current
 }
 
@@ -376,5 +376,5 @@ internal object ClerkThemeAccess {
 
   // Computed color variants
   internal val computed: ComputedColors
-    @Composable get() = ClerkMaterialTheme.computed
+    @Composable get() = ClerkMaterialTheme.computedColors
 }
