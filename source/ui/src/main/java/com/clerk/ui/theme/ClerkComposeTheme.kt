@@ -135,7 +135,7 @@ internal fun ClerkMaterialTheme(
  * exposes its values. Use these properties within @Composable functions to access the current theme
  * configuration.
  */
-object ClerkMaterialTheme {
+internal object ClerkMaterialTheme {
 
   /**
    * Retrieves the current [ClerkThemeColors] at the call site's position in the hierarchy.
