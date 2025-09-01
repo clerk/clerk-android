@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.clerk.api.Clerk
@@ -25,7 +24,7 @@ class BadgeSnapshotTest : BaseSnapshotTest() {
         Column(
           modifier =
             Modifier.padding(dp8)
-              .background(color = MaterialTheme.colorScheme.background)
+              .background(color = ClerkMaterialTheme.colors.background)
               .padding(dp8),
           horizontalAlignment = Alignment.CenterHorizontally,
           verticalArrangement = Arrangement.spacedBy(dp12, alignment = Alignment.CenterVertically),
@@ -48,7 +47,7 @@ class BadgeSnapshotTest : BaseSnapshotTest() {
         Column(
           modifier =
             Modifier.padding(dp8)
-              .background(color = MaterialTheme.colorScheme.background)
+              .background(color = ClerkMaterialTheme.colors.background)
               .padding(dp8),
           horizontalAlignment = Alignment.CenterHorizontally,
           verticalArrangement = Arrangement.spacedBy(dp12, alignment = Alignment.CenterVertically),

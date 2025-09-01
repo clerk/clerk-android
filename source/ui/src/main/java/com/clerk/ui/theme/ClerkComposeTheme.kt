@@ -40,7 +40,7 @@ private const val WARNING_BACKGROUND_ALPHA = 0.12F
 private const val WARNING_BORDER_ALPHA = 0.77F
 
 internal val LocalComposeColors =
-  compositionLocalOf<ClerkColors> { error("ComposeColors not provided") }
+  compositionLocalOf<ClerkThemeColors> { error("ComposeColors not provided") }
 
 internal val LocalComputedColors =
   compositionLocalOf<ComputedColors> { error("ComputedColors not provided") }
@@ -78,7 +78,7 @@ internal val LocalClerkDesign =
  *   ClerkMaterialTheme {
  *     val primary = ClerkMaterialTheme.colors.primary
  *     val pressedColor = ClerkMaterialTheme.computed.primaryPressed
- *     val borderRadius = ClerkMaterialTheme.design.cornerRadius
+ *     val borderRadius = ClerkMaterialTheme.design.borderRadius
  *
  *     // Use the values in your component
  *     Box(
@@ -110,8 +110,10 @@ internal fun ClerkMaterialTheme(
     val materialColors = computeColorScheme(colors)
     val computedColors = generateComputedColors(colors)
 
+    val themeColors = ClerkThemeColors(colors)
+
     CompositionLocalProvider(
-      LocalComposeColors provides colors,
+      LocalComposeColors provides themeColors,
       LocalComputedColors provides computedColors,
       LocalClerkDesign provides design,
     ) {
@@ -136,12 +138,12 @@ internal fun ClerkMaterialTheme(
 object ClerkMaterialTheme {
 
   /**
-   * Retrieves the current [ClerkColors] at the call site's position in the hierarchy.
+   * Retrieves the current [ClerkThemeColors] at the call site's position in the hierarchy.
    *
    * These are the base Clerk colors defined in the theme configuration, including primary,
    * background, foreground, and semantic colors like success, danger, and warning.
    */
-  val colors: ClerkColors
+  val colors: ClerkThemeColors
     @Composable @ReadOnlyComposable get() = LocalComposeColors.current
 
   /**
@@ -187,6 +189,76 @@ object ClerkMaterialTheme {
    */
   val computed: ComputedColors
     @Composable @ReadOnlyComposable get() = LocalComputedColors.current
+}
+
+/**
+ * Non-nullable wrapper for ClerkColors within the theme context.
+ *
+ * This class provides safe, non-nullable access to all color properties by wrapping the underlying
+ * ClerkColors instance. Since colors are guaranteed to be non-null within a ClerkMaterialTheme
+ * context (they fall back to defaults), this wrapper eliminates the need for null checks and !!
+ * operators in UI components.
+ */
+class ClerkThemeColors internal constructor(private val colors: ClerkColors) {
+  /** Main brand color used for primary actions and highlights. */
+  val primary: Color
+    get() = colors.primary!!
+
+  /** Default surface background. */
+  val background: Color
+    get() = colors.background!!
+
+  /** Background for input fields such as TextField. */
+  val input: Color
+    get() = colors.input!!
+
+  /** Color used to convey destructive or error states. */
+  val danger: Color
+    get() = colors.danger!!
+
+  /** Color used to convey success states. */
+  val success: Color
+    get() = colors.success!!
+
+  /** Color used to convey warning states. */
+  val warning: Color
+    get() = colors.warning!!
+
+  /** Default foreground (text/icon) color. */
+  val foreground: Color
+    get() = colors.foreground!!
+
+  /** A slightly subdued foreground color for secondary content. */
+  val mutedForeground: Color
+    get() = colors.mutedForeground!!
+
+  /** Foreground color that pairs with primary. */
+  val primaryForeground: Color
+    get() = colors.primaryForeground!!
+
+  /** Foreground color that pairs with input. */
+  val inputForeground: Color
+    get() = colors.inputForeground!!
+
+  /** Neutral gray used for borders or separators. */
+  val neutral: Color
+    get() = colors.neutral!!
+
+  /** Border color used for input fields and other elements. */
+  val border: Color
+    get() = colors.border!!
+
+  /** Stroke color used for focus rings. */
+  val ring: Color
+    get() = colors.ring!!
+
+  /** Muted background color for minimal emphasis surfaces. */
+  val muted: Color
+    get() = colors.muted!!
+
+  /** Shadow color used when drawing elevation overlays. */
+  val shadow: Color
+    get() = colors.shadow!!
 }
 
 /**
@@ -273,4 +345,36 @@ private fun computeColorScheme(colors: ClerkColors): ColorScheme {
       onSurfaceVariant = colors.mutedForeground!!,
     )
   }
+}
+
+/**
+ * @deprecated Use [ClerkMaterialTheme] object instead for accessing theme values. This object is
+ *   maintained for backwards compatibility but will be removed in a future version.
+ *
+ * Migration guide:
+ * - `ClerkThemeAccess.colors` → `ClerkMaterialTheme.colors`
+ * - `ClerkThemeAccess.typography` → `ClerkMaterialTheme.typography`
+ * - `ClerkThemeAccess.design` → `ClerkMaterialTheme.design`
+ * - `ClerkThemeAccess.computed` → `ClerkMaterialTheme.computed`
+ */
+@Deprecated(
+  message = "Use ClerkMaterialTheme object instead for accessing theme values",
+  replaceWith = ReplaceWith("ClerkMaterialTheme", "com.clerk.ui.theme.ClerkMaterialTheme"),
+  level = DeprecationLevel.WARNING,
+)
+internal object ClerkThemeAccess {
+
+  // Direct Clerk theme object access
+  internal val colors: ClerkThemeColors
+    @Composable get() = ClerkMaterialTheme.colors
+
+  internal val typography: Typography
+    @Composable get() = ClerkMaterialTheme.typography
+
+  internal val design: ClerkDesign
+    @Composable get() = ClerkMaterialTheme.design
+
+  // Computed color variants
+  internal val computed: ComputedColors
+    @Composable get() = ClerkMaterialTheme.computed
 }

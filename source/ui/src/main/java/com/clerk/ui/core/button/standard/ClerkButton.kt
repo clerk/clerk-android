@@ -16,7 +16,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -118,7 +117,6 @@ private fun ClerkButtonImpl(
       buildButtonTokens(
         config = buttonConfig,
         computed = ClerkMaterialTheme.computed,
-        design = ClerkMaterialTheme.design,
         isPressed = isPressedCombined,
       )
 
@@ -167,7 +165,7 @@ private fun PreviewButton() {
     LazyColumn(
       modifier =
         Modifier.fillMaxSize()
-          .background(color = MaterialTheme.colorScheme.background)
+          .background(color = ClerkMaterialTheme.colors.background)
           .padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
       horizontalAlignment = Alignment.CenterHorizontally,
