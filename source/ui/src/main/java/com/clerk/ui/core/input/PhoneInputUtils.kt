@@ -8,12 +8,17 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil
 import java.util.Locale
 
 /** Data class representing country information for phone number formatting. */
-internal data class CountryInfo(val flag: String, val code: Int, val countryShortName: String) {
+internal data class CountryInfo(
+  val flag: String,
+  val code: Int,
+  val countryShortName: String,
+  val countryFullName: String,
+) {
   val getPhonePrefix: String
     get() = "+$code"
 
   val getSelectorText: String
-    get() = "$flag $countryShortName"
+    get() = "$flag $countryFullName +$code"
 }
 
 internal interface PhoneNumberUtilProvider {
@@ -79,8 +84,6 @@ internal class PhoneInputUtils(
     private val defaultInstance = PhoneInputUtils()
 
     fun detectCountry(context: Context): CountryInfo? = defaultInstance.detectCountry(context)
-
-    fun detectCountryCode(context: Context): Int? = defaultInstance.detectCountryCode(context)
 
     fun getAllCountries(): List<CountryInfo> = defaultInstance.getAllCountries()
 
@@ -162,9 +165,10 @@ internal class PhoneInputUtils(
           flag = regionToFlagEmoji(region),
           code = phoneUtil.getCountryCodeForRegion(region),
           countryShortName = region,
+          countryFullName = Locale.Builder().setRegion(region).build().displayCountry,
         )
       }
-      .sortedBy { it.countryShortName }
+      .sortedBy { it.countryFullName }
   }
 
   /**
@@ -183,7 +187,7 @@ internal class PhoneInputUtils(
    * @return CountryInfo for United States
    */
   fun getDefaultCountry(): CountryInfo {
-    return CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US")
+    return CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
   }
 
   private fun detectFromLocale(): CountryInfo? {
@@ -197,6 +201,7 @@ internal class PhoneInputUtils(
         flag = regionToFlagEmoji(regionCode),
         code = phoneCode,
         countryShortName = regionCode,
+        countryFullName = locale.displayCountry,
       )
     } else {
       null
@@ -221,6 +226,7 @@ internal class PhoneInputUtils(
         flag = regionToFlagEmoji(countryCode),
         code = phoneCode,
         countryShortName = countryCode,
+        countryFullName = Locale.Builder().setRegion(countryCode).build().displayCountry,
       )
     } else {
       null

@@ -33,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -55,6 +57,8 @@ import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.theme.LocalComputedColors
+
+private const val DROPDOWN_HEIGHT_DIVISOR = 3
 
 @Composable
 fun ClerkPhoneNumberField(modifier: Modifier = Modifier) {
@@ -148,7 +152,6 @@ private fun CountrySelector(
   onSelect: (CountryInfo) -> Unit,
 ) {
   var isExpanded by remember { mutableStateOf(false) }
-  val context = LocalContext.current
 
   Box(
     modifier =
@@ -167,39 +170,70 @@ private fun CountrySelector(
       color = ClerkMaterialTheme.colors.mutedForeground,
       style = MaterialTheme.typography.bodySmall,
     )
-    DropdownMenu(isExpanded, onDismissRequest = { isExpanded = false }) {
-      val allCountries = PhoneInputUtils.getAllCountries()
 
-      // Get detected country from system
-      val detectedCountry = PhoneInputUtils.detectCountry(context)
+    CountryDropdownContent(
+      isExpanded = isExpanded,
+      onDismissRequest = { isExpanded = false },
+      onSelect = onSelect,
+    )
+  }
+}
 
-      // Show detected country first if it exists and is different from current selection
-      if (detectedCountry != null) {
-        DropdownMenuItem(
-          text = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Text(text = detectedCountry.getSelectorText)
-            }
-          },
-          onClick = {
-            isExpanded = false
-            onSelect(detectedCountry)
-          },
-        )
+@Composable
+private fun CountryDropdownContent(
+  isExpanded: Boolean,
+  onDismissRequest: () -> Unit,
+  onSelect: (CountryInfo) -> Unit,
+) {
+  val windowInfo = LocalWindowInfo.current
+  val density = LocalDensity.current
+  val thirdScreenHeightDp =
+    with(density) {
+      ((windowInfo.containerSize.height / density.density) / DROPDOWN_HEIGHT_DIVISOR).dp
+    }
+  val context = LocalContext.current
 
-        HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.inputBorder)
+  DropdownMenu(
+    isExpanded,
+    onDismissRequest = onDismissRequest,
+    modifier = Modifier.heightIn(max = thirdScreenHeightDp),
+    shape = ClerkMaterialTheme.shape,
+  ) {
+    val allCountries = PhoneInputUtils.getAllCountries()
+    val detectedCountry = PhoneInputUtils.detectCountry(context)
 
-        // Show all countries
-        allCountries.forEach { country ->
-          DropdownMenuItem(
-            text = { Text(text = country.getSelectorText) },
-            onClick = {
-              isExpanded = false
-              onSelect(country)
-            },
-          )
-        }
-      }
+    // Show detected country first if it exists
+    if (detectedCountry != null) {
+      Text(
+        modifier = Modifier.padding(start = dp12),
+        text = "Default",
+        style = ClerkMaterialTheme.typography.labelSmall,
+        color = ClerkMaterialTheme.colors.mutedForeground,
+      )
+      DropdownMenuItem(
+        text = { Text(text = detectedCountry.getSelectorText) },
+        onClick = {
+          onDismissRequest()
+          onSelect(detectedCountry)
+        },
+      )
+
+      HorizontalDivider(
+        modifier = Modifier.padding(horizontal = dp4),
+        thickness = dp1,
+        color = ClerkMaterialTheme.computedColors.inputBorder,
+      )
+    }
+
+    // Show all countries
+    allCountries.forEach { country ->
+      DropdownMenuItem(
+        text = { Text(text = country.getSelectorText) },
+        onClick = {
+          onDismissRequest()
+          onSelect(country)
+        },
+      )
     }
   }
 }
