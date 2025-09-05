@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Clerk">
         <activity
+            android:name=".PhoneInputActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Clerk">

@@ -1,5 +1,6 @@
 package com.clerk.api.sso
 
+import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
 
 /**
@@ -267,6 +268,9 @@ data class OAuthProviderData(val provider: String, val strategy: String, val nam
 val OAuthProvider.providerName: String
   get() = this.providerData.name
 
+// In-memory override store used for tests to inject logo URLs
+private val logoUrlOverrides: MutableMap<OAuthProvider, String?> = mutableMapOf()
+
 /**
  * Extension property to get the logo URL for the OAuth provider.
  *
@@ -290,8 +294,25 @@ val OAuthProvider.providerName: String
  */
 val OAuthProvider.logoUrl: String?
   get() =
-    Clerk.environment.userSettings.social.values
-      .find { it.strategy == this.providerData.strategy }
-      ?.logoUrl
-      ?.trim()
-      ?.takeIf { it.isNotEmpty() }
+    // Test override takes precedence when present
+    logoUrlOverrides[this]?.let { it?.trim()?.takeIf { trimmed -> trimmed.isNotEmpty() } }
+      ?: Clerk.socialProviders.values
+        .find { it.strategy == this.providerData.strategy }
+        ?.logoUrl
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+
+@VisibleForTesting
+fun OAuthProvider.setLogoUrl(url: String?) {
+  val trimmed = url?.trim()
+  if (trimmed.isNullOrEmpty()) {
+    logoUrlOverrides.remove(this)
+  } else {
+    logoUrlOverrides[this] = trimmed
+  }
+}
+
+@VisibleForTesting
+fun OAuthProvider.clearLogoUrlOverride() {
+  this.setLogoUrl(null)
+}
