@@ -33,17 +33,17 @@ fun Badge(
       ClerkBadgeType.Secondary ->
         ClerkMaterialTheme.colors.muted to ClerkMaterialTheme.colors.mutedForeground
       ClerkBadgeType.Positive ->
-        ClerkMaterialTheme.computed.backgroundSuccess to ClerkMaterialTheme.colors.success
+        ClerkMaterialTheme.computedColors.backgroundSuccess to ClerkMaterialTheme.colors.success
       ClerkBadgeType.Negative ->
-        ClerkMaterialTheme.computed.backgroundDanger to ClerkMaterialTheme.colors.danger
+        ClerkMaterialTheme.computedColors.backgroundDanger to ClerkMaterialTheme.colors.danger
       ClerkBadgeType.Warning ->
-        ClerkMaterialTheme.computed.backgroundWarning to ClerkMaterialTheme.colors.warning
+        ClerkMaterialTheme.computedColors.backgroundWarning to ClerkMaterialTheme.colors.warning
     }
 
   val borderColor =
     when (badgeType) {
       ClerkBadgeType.Primary -> Color.Transparent
-      ClerkBadgeType.Secondary -> ClerkMaterialTheme.computed.buttonBorder
+      ClerkBadgeType.Secondary -> ClerkMaterialTheme.computedColors.buttonBorder
       ClerkBadgeType.Positive -> ClerkMaterialTheme.colors.success
       ClerkBadgeType.Negative -> ClerkMaterialTheme.colors.danger
       ClerkBadgeType.Warning -> ClerkMaterialTheme.colors.warning

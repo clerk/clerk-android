@@ -92,6 +92,7 @@ dependencies {
   implementation(libs.androidx.ui.tooling.preview.android)
   implementation(libs.coil)
   implementation(libs.coil.okhttp)
+  implementation(libs.google.libphonenumber)
   implementation(libs.kotlinx.immutable)
   implementation(libs.material)
   implementation(libs.material3)
@@ -99,7 +100,11 @@ dependencies {
 
   compileOnly(projects.clerk.source.api)
 
+  testImplementation("androidx.test:core:1.5.0")
+  testImplementation("androidx.test.ext:junit:1.1.5")
+  testImplementation("org.robolectric:robolectric:4.11.1")
   testImplementation(libs.junit)
+  testImplementation(libs.mockk)
   testImplementation(projects.clerk.source.api)
 
   //  testImplementation(libs.paparazzi)

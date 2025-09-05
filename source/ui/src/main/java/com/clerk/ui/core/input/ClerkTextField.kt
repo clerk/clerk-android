@@ -54,7 +54,7 @@ fun ClerkTextField(
     OutlinedTextFieldDefaults.colors(
       focusedBorderColor = ClerkMaterialTheme.colors.primary,
       focusedLabelColor = ClerkMaterialTheme.colors.primary,
-      unfocusedBorderColor = ClerkMaterialTheme.computed.inputBorder,
+      unfocusedBorderColor = ClerkMaterialTheme.computedColors.inputBorder,
       unfocusedTextColor = ClerkMaterialTheme.colors.foreground,
       unfocusedContainerColor = ClerkMaterialTheme.colors.background,
       focusedContainerColor = ClerkMaterialTheme.colors.background,
