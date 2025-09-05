@@ -116,7 +116,7 @@ private fun ClerkButtonImpl(
     val tokens =
       buildButtonTokens(
         config = buttonConfig,
-        computed = ClerkMaterialTheme.computed,
+        computed = ClerkMaterialTheme.computedColors,
         isPressed = isPressedCombined,
       )
 

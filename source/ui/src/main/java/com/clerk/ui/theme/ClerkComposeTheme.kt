@@ -135,7 +135,7 @@ internal fun ClerkMaterialTheme(
  * exposes its values. Use these properties within @Composable functions to access the current theme
  * configuration.
  */
-object ClerkMaterialTheme {
+internal object ClerkMaterialTheme {
 
   /**
    * Retrieves the current [ClerkThemeColors] at the call site's position in the hierarchy.
@@ -187,7 +187,7 @@ object ClerkMaterialTheme {
    * - `backgroundSuccess` - Background color for success states
    * - `dangerInputBorder` - Border color for error/danger states
    */
-  val computed: ComputedColors
+  val computedColors: ComputedColors
     @Composable @ReadOnlyComposable get() = LocalComputedColors.current
 }
 
@@ -376,5 +376,5 @@ internal object ClerkThemeAccess {
 
   // Computed color variants
   internal val computed: ComputedColors
-    @Composable get() = ClerkMaterialTheme.computed
+    @Composable get() = ClerkMaterialTheme.computedColors
 }
