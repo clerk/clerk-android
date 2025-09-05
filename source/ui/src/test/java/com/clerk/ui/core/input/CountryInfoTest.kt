@@ -8,7 +8,7 @@ class CountryInfoTest {
   @Test
   fun `getPhonePrefix returns formatted phone code with plus`() {
     // Given
-    val countryInfo = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US")
+    val countryInfo = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
 
     // When & Then
     assertEquals("+1", countryInfo.getPhonePrefix)
@@ -17,7 +17,8 @@ class CountryInfoTest {
   @Test
   fun `getPhonePrefix works with multi-digit codes`() {
     // Given
-    val countryInfo = CountryInfo(flag = "🇬🇧", code = 44, countryShortName = "GB")
+    val countryInfo =
+      CountryInfo(flag = "🇬🇧", code = 44, countryShortName = "GB", "United Kingdom")
 
     // When & Then
     assertEquals("+44", countryInfo.getPhonePrefix)
@@ -26,27 +27,27 @@ class CountryInfoTest {
   @Test
   fun `getSelectorText returns flag and country name`() {
     // Given
-    val countryInfo = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US")
+    val countryInfo = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
 
     // When & Then
-    assertEquals("🇺🇸 US", countryInfo.getSelectorText)
+    assertEquals("🇺🇸 United States +1", countryInfo.getSelectorText)
   }
 
   @Test
   fun `getSelectorText works with different countries`() {
     // Given
-    val countryInfo = CountryInfo(flag = "🇨🇦", code = 1, countryShortName = "CA")
+    val countryInfo = CountryInfo(flag = "🇨🇦", code = 1, countryShortName = "CA", "Canada")
 
     // When & Then
-    assertEquals("🇨🇦 CA", countryInfo.getSelectorText)
+    assertEquals("🇨🇦 Canada +1", countryInfo.getSelectorText)
   }
 
   @Test
   fun `data class equality works correctly`() {
     // Given
-    val country1 = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US")
-    val country2 = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US")
-    val country3 = CountryInfo(flag = "🇬🇧", code = 44, countryShortName = "GB")
+    val country1 = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
+    val country2 = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
+    val country3 = CountryInfo(flag = "🇬🇧", code = 44, countryShortName = "GB", "United Kingdom")
 
     // When & Then
     assertEquals(country1, country2)
@@ -57,7 +58,7 @@ class CountryInfoTest {
   @Test
   fun `toString returns expected format`() {
     // Given
-    val countryInfo = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US")
+    val countryInfo = CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
 
     // When
     val result = countryInfo.toString()

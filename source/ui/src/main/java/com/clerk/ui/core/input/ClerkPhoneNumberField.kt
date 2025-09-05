@@ -1,5 +1,6 @@
 package com.clerk.ui.core.input
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,13 +38,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.colors.ComputedColors
 import com.clerk.ui.core.dimens.dp1
@@ -55,23 +54,45 @@ import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.dimens.dp56
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.theme.LocalComputedColors
 
 private const val DROPDOWN_HEIGHT_DIVISOR = 3
 
 @Composable
-fun ClerkPhoneNumberField(modifier: Modifier = Modifier) {
+fun ClerkPhoneNumberField(
+  modifier: Modifier = Modifier,
+  errorText: String? = null,
+  @VisibleForTesting inputText: String? = null,
+) {
+  ClerkPhoneNumberFieldImpl(modifier, errorText = errorText, inputText = inputText)
+}
+
+private fun getInitialPhoneNumber(inputText: String?, country: CountryInfo): String {
+  return if (inputText.isNullOrEmpty()) {
+    country.getPhonePrefix
+  } else {
+    "${country.getPhonePrefix} $inputText"
+  }
+}
+
+@Composable
+internal fun ClerkPhoneNumberFieldImpl(
+  modifier: Modifier = Modifier,
+  inputText: String? = null,
+  errorText: String? = null,
+) {
   val defaultCountry = PhoneInputUtils.getDefaultCountry()
   var selectedCountry: CountryInfo by remember { mutableStateOf(defaultCountry) }
-  var phoneNumber: String by remember { mutableStateOf(selectedCountry.getPhonePrefix) }
+
+  val initialPhoneNumber = remember(inputText) { getInitialPhoneNumber(inputText, defaultCountry) }
+  var phoneNumber: String by remember { mutableStateOf(initialPhoneNumber) }
   val context = LocalContext.current
 
   LaunchedEffect(Unit) {
     val detectedCountry = PhoneInputUtils.detectCountry(context)
     if (detectedCountry != null) {
       selectedCountry = detectedCountry
-      phoneNumber = selectedCountry.getPhonePrefix
+      phoneNumber = getInitialPhoneNumber(inputText, detectedCountry)
     }
   }
 
@@ -86,23 +107,27 @@ fun ClerkPhoneNumberField(modifier: Modifier = Modifier) {
           .fillMaxWidth()
           .then(modifier),
       horizontalArrangement = Arrangement.spacedBy(dp12),
-      verticalAlignment = Alignment.CenterVertically,
+      verticalAlignment = Alignment.Top,
     ) {
-      CountrySelector(
-        selectedCountry = selectedCountry,
-        onSelect = { country ->
-          selectedCountry = country
-          // Reset phone number when country changes, keeping only the country code
-          phoneNumber = country.getPhonePrefix
-        },
-      )
+      Column {
+        CountrySelector(
+          selectedCountry = selectedCountry,
+          onSelect = { country ->
+            selectedCountry = country
+            phoneNumber = getInitialPhoneNumber(inputText, country)
+          },
+        )
+      }
 
-      PhoneNumberInput(
-        computedColors = computedColors,
-        value = phoneNumber,
-        onValueChange = { phoneNumber = it },
-        countryCode = selectedCountry.countryShortName,
-      )
+      Column(modifier = Modifier.weight(1f)) {
+        PhoneNumberInput(
+          computedColors = computedColors,
+          value = phoneNumber,
+          onValueChange = { phoneNumber = it },
+          errorText = errorText,
+          countryCode = selectedCountry.countryShortName,
+        )
+      }
     }
   }
 }
@@ -113,36 +138,67 @@ private fun PhoneNumberInput(
   value: String,
   onValueChange: (String) -> Unit,
   countryCode: String,
+  errorText: String? = null,
 ) {
 
   val interactionSource = remember { MutableInteractionSource() }
 
-  OutlinedTextField(
-    colors =
-      OutlinedTextFieldDefaults.colors(
-        unfocusedBorderColor = computedColors.inputBorder,
-        focusedBorderColor = ClerkMaterialTheme.colors.primary,
-        focusedContainerColor = ClerkMaterialTheme.colors.background,
-        unfocusedContainerColor = ClerkMaterialTheme.colors.background,
-        errorBorderColor = MaterialTheme.colorScheme.error,
-        focusedLabelColor = ClerkMaterialTheme.colors.primary,
-        unfocusedLabelColor = ClerkMaterialTheme.colors.mutedForeground,
-        errorLabelColor = MaterialTheme.colorScheme.error,
-      ),
-    interactionSource = interactionSource,
-    value = value,
-    onValueChange = { onValueChange(PhoneInputUtils().keepDialableCapped(it)) },
-    visualTransformation = phoneVisualTransformation(countryCode),
-    label = {
-      Text(
-        stringResource(R.string.enter_your_phone_number),
-        style = MaterialTheme.typography.bodyMedium,
-      )
-    },
-    shape = ClerkMaterialTheme.shape,
-    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-    singleLine = true,
-  )
+  Column {
+    OutlinedTextField(
+      colors =
+        OutlinedTextFieldDefaults.colors(
+          unfocusedBorderColor = computedColors.inputBorder,
+          focusedBorderColor = ClerkMaterialTheme.colors.primary,
+          focusedContainerColor = ClerkMaterialTheme.colors.background,
+          unfocusedContainerColor = ClerkMaterialTheme.colors.background,
+          errorBorderColor = MaterialTheme.colorScheme.error,
+          focusedLabelColor = ClerkMaterialTheme.colors.primary,
+          unfocusedLabelColor = ClerkMaterialTheme.colors.mutedForeground,
+          errorLabelColor = MaterialTheme.colorScheme.error,
+        ),
+      interactionSource = interactionSource,
+      value = value,
+      onValueChange = { onValueChange(PhoneInputUtils().keepDialableCapped(it)) },
+      visualTransformation = phoneVisualTransformation(countryCode),
+      isError = errorText != null,
+      label = {
+        val labelStyle =
+          if (value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
+          else MaterialTheme.typography.bodyMedium
+        val labelColor =
+          when {
+            errorText != null -> MaterialTheme.colorScheme.error
+            else -> ClerkMaterialTheme.colors.mutedForeground
+          }
+        Text(
+          stringResource(R.string.enter_your_phone_number),
+          style = labelStyle,
+          color = labelColor,
+        )
+      },
+      shape = ClerkMaterialTheme.shape,
+      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+      singleLine = true,
+    )
+    errorText?.let { errorText ->
+      Row(
+        modifier = Modifier.fillMaxWidth().padding(top = dp8),
+        horizontalArrangement = Arrangement.spacedBy(dp4, alignment = Alignment.Start),
+        verticalAlignment = Alignment.Top,
+      ) {
+        Icon(
+          painter = painterResource(R.drawable.ic_warning),
+          contentDescription = null,
+          tint = ClerkMaterialTheme.colors.danger,
+        )
+        Text(
+          text = errorText,
+          color = ClerkMaterialTheme.colors.danger,
+          style = ClerkMaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Normal),
+        )
+      }
+    }
+  }
 }
 
 @Composable
@@ -157,7 +213,7 @@ private fun CountrySelector(
     modifier =
       Modifier.padding(top = dp8).heightIn(min = dp56).clickable { isExpanded = !isExpanded }
   ) {
-    TextWithIcon(modifier = modifier, selectedCountry = selectedCountry)
+    TextWithIcon(modifier = modifier, selectedCountry = selectedCountry, isExpanded = isExpanded)
     Text(
       modifier =
         Modifier.align(Alignment.TopStart)
@@ -239,13 +295,19 @@ private fun CountryDropdownContent(
 }
 
 @Composable
-private fun TextWithIcon(selectedCountry: CountryInfo, modifier: Modifier = Modifier) {
+private fun TextWithIcon(
+  selectedCountry: CountryInfo,
+  isExpanded: Boolean,
+  modifier: Modifier = Modifier,
+) {
   Row(
     modifier =
       Modifier.background(color = ClerkMaterialTheme.colors.background)
         .border(
           width = dp1,
-          color = ClerkMaterialTheme.computedColors.inputBorder,
+          color =
+            if (isExpanded) ClerkMaterialTheme.colors.primary
+            else ClerkMaterialTheme.computedColors.inputBorder,
           shape = ClerkMaterialTheme.shape,
         )
         .padding(dp16)
@@ -282,25 +344,9 @@ private fun PreviewPhoneInput() {
       verticalArrangement = Arrangement.spacedBy(dp12),
     ) {
       ClerkPhoneNumberField()
-      ClerkPhoneNumberField()
-    }
-  }
-}
-
-@Preview
-@Composable
-private fun PreviewPhoneInputClerkTheme() {
-  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme {
-    Column(
-      modifier =
-        Modifier.background(color = MaterialTheme.colorScheme.background)
-          .fillMaxWidth()
-          .padding(dp12),
-      verticalArrangement = Arrangement.spacedBy(dp12),
-    ) {
-      ClerkPhoneNumberField()
-      ClerkPhoneNumberField()
+      ClerkPhoneNumberField(
+        errorText = "The value entered is in an invalid format. Please check and correct it."
+      )
     }
   }
 }
