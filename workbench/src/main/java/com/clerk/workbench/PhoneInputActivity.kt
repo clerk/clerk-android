@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.clerk.ui.core.input.ClerkPhoneNumberField
+import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 
 class PhoneInputActivity : ComponentActivity() {
@@ -33,7 +33,7 @@ fun MainContent(modifier: Modifier = Modifier) {
         .then(modifier),
     contentAlignment = Alignment.Center,
   ) {
-    ClerkPhoneNumberField()
+    ClerkCodeInputField(onOtpTextChange = {})
   }
 }
 
