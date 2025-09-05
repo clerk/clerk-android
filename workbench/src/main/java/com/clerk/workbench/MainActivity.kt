@@ -1,5 +1,6 @@
 package com.clerk.workbench
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -37,11 +38,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.clerk.workbench.ui.theme.ClerkPrimary
-import com.clerk.workbench.ui.theme.ClerkTheme
+import com.clerk.workbench.ui.theme.WorkbenchTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -49,11 +51,14 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
-      ClerkTheme {
+      val context = LocalContext.current
+      WorkbenchTheme {
         MainContent(
           onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
-          onClickFirstItem = {},
+          onClickFirstItem = {
+            context.startActivity(Intent(context, PhoneInputActivity::class.java))
+          },
           onClickSecondItem = {},
         )
       }
@@ -271,7 +276,7 @@ private object Spacing {
 @PreviewLightDark
 @Composable
 private fun MainContentPreview() {
-  ClerkTheme {
+  WorkbenchTheme {
     MainContent(onSave = {}, onClear = {}, onClickFirstItem = {}, onClickSecondItem = {})
   }
 }
@@ -279,5 +284,5 @@ private fun MainContentPreview() {
 @PreviewLightDark
 @Composable
 private fun PreviewSettingsBottomSheet() {
-  ClerkTheme { SettingsBottomSheetContent(onClear = {}, onSave = {}) }
+  WorkbenchTheme { SettingsBottomSheetContent(onClear = {}, onSave = {}) }
 }
