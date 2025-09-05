@@ -21,7 +21,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp12
@@ -44,6 +47,7 @@ fun ClerkTextField(
   enabled: Boolean = true,
   onLeadingIconClick: () -> Unit = {},
   onTrailingIconClick: () -> Unit = {},
+  inputContentType: ContentType = ContentType.Username,
   leadingIconContentDescription: String? = null,
   trailingIconContentDescription: String? = null,
 ) {
@@ -75,7 +79,7 @@ fun ClerkTextField(
   ClerkMaterialTheme {
     OutlinedTextField(
       interactionSource = interactionSource,
-      modifier = modifier.fillMaxWidth(),
+      modifier = modifier.fillMaxWidth().semantics { contentType = inputContentType },
       value = value,
       onValueChange = onValueChange,
       enabled = enabled,
