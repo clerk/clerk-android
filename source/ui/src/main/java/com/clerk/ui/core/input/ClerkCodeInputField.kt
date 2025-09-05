@@ -85,7 +85,7 @@ fun ClerkCodeInputField(
         cursorBrush = SolidColor(Color.Transparent),
         modifier = Modifier.semantics { contentType = ContentType.SmsOtpCode }.then(modifier),
         decorationBox = { innerTextField ->
-          OtpBoxesRow(
+          OtpBoxRow(
             otpText = otpText,
             otpLength = otpLength,
             isFocused = isFocused,
@@ -106,7 +106,7 @@ private fun rememberSelectionColors(): TextSelectionColors {
 }
 
 @Composable
-private fun OtpBoxesRow(
+private fun OtpBoxRow(
   otpText: String,
   otpLength: Int,
   isFocused: Boolean,
