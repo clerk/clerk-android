@@ -12,7 +12,7 @@ import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
 
 internal object DefaultColors {
-  val lightColors =
+  val light =
     ClerkColors(
       primary = Color(0xFF2F3037),
       background = Color(0xFFFFFFFF),
@@ -123,7 +123,7 @@ private fun generateTypography(theme: ClerkTheme?): Typography {
 
 @Composable
 private fun generateColors(theme: ClerkTheme?): ClerkColors {
-  val defaultColors = if (isSystemInDarkTheme()) DefaultColors.dark else DefaultColors.lightColors
+  val defaultColors = if (isSystemInDarkTheme()) DefaultColors.dark else DefaultColors.light
   val colors =
     ClerkColors(
       primary = theme?.colors?.primary ?: defaultColors.primary,

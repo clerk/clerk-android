@@ -68,6 +68,26 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 // Constants
 private const val CARET_HEIGHT_FRACTION = 0.45f
 
+/**
+ * A specialized input field component for entering one-time passwords (OTP) or verification codes.
+ *
+ * This component displays a row of individual boxes for each digit of the code, with visual
+ * feedback for different states including error, success, and verification in progress. It includes
+ * automatic resend functionality with countdown timer.
+ *
+ * @param onOtpTextChange Callback invoked when the OTP text changes. Receives the current OTP
+ *   string.
+ * @param secondsLeft Number of seconds remaining before the resend option becomes available. When >
+ *   0, shows countdown; when 0 or less, shows resend link.
+ * @param modifier Optional [Modifier] to be applied to the component.
+ * @param otpLength The expected length of the OTP code. Defaults to 6 digits.
+ * @param isError Whether the component should display an error state (red styling and error
+ *   message).
+ * @param isSuccess Whether the component should display a success state (green styling and success
+ *   message).
+ * @param isVerifying Whether the component should display a verifying state (loading indicator).
+ * @param onClickResend Callback invoked when the user clicks the resend code link.
+ */
 @Composable
 fun ClerkCodeInputField(
   onOtpTextChange: (String) -> Unit,
@@ -128,6 +148,13 @@ fun ClerkCodeInputField(
   }
 }
 
+/**
+ * Displays supporting text based on the state of the OTP input.
+ *
+ * @param isError Whether an error occurred.
+ * @param isSuccess Whether the OTP was successfully verified.
+ * @param isVerifying Whether the OTP is currently being verified.
+ */
 @Composable
 private fun SupportingText(isError: Boolean, isSuccess: Boolean, isVerifying: Boolean) {
   when {
@@ -154,6 +181,11 @@ private fun SupportingText(isError: Boolean, isSuccess: Boolean, isVerifying: Bo
   }
 }
 
+/**
+ * Displays a link to resend the verification code.
+ *
+ * @param onClick Callback invoked when the resend link is clicked.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ResendCodeText(onClick: () -> Unit) {
@@ -171,6 +203,7 @@ private fun ResendCodeText(onClick: () -> Unit) {
   )
 }
 
+/** Displays a row indicating that the verification code is being verified. */
 @Composable
 private fun VerifyingCodeRow() {
   Row(
@@ -191,6 +224,7 @@ private fun VerifyingCodeRow() {
   }
 }
 
+/** Returns the text selection colors for the OTP input field. */
 @Composable
 private fun rememberSelectionColors(): TextSelectionColors {
   return TextSelectionColors(
@@ -199,6 +233,15 @@ private fun rememberSelectionColors(): TextSelectionColors {
   )
 }
 
+/**
+ * Displays a row with an icon and text.
+ *
+ * @param text The text to display.
+ * @param modifier Optional [Modifier] to be applied to the component.
+ * @param leadingIconTint The color of the leading icon.
+ * @param leadingIconResId The resource ID of the leading icon.
+ * @param textColor The color of the text.
+ */
 @Composable
 private fun IconTextRow(
   text: String,
@@ -219,6 +262,15 @@ private fun IconTextRow(
   }
 }
 
+/**
+ * Displays a row of boxes for the OTP input.
+ *
+ * @param otpText The current OTP text.
+ * @param otpLength The expected length of the OTP code.
+ * @param isFocused Whether the OTP input field is focused.
+ * @param innerTextField The inner text field.
+ * @param isError Whether an error occurred.
+ */
 @Composable
 private fun OtpBoxRow(
   otpText: String,
@@ -244,6 +296,13 @@ private fun OtpBoxRow(
   }
 }
 
+/**
+ * Displays a single box for the OTP input.
+ *
+ * @param char The character to display in the box.
+ * @param isCurrentBox Whether this box is the current one.
+ * @param isError Whether an error occurred.
+ */
 @Composable
 private fun OtpBox(char: String, isCurrentBox: Boolean, isError: Boolean) {
   val boxShape = ClerkMaterialTheme.shape
@@ -275,6 +334,7 @@ private fun OtpBox(char: String, isCurrentBox: Boolean, isError: Boolean) {
   }
 }
 
+/** Displays a blinking caret in the OTP box. */
 @Composable
 private fun BlinkingCaret() {
   val blinkAlpha by

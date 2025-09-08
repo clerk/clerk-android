@@ -33,6 +33,30 @@ import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
 
+/**
+ * A customizable text input field component following Clerk's design system.
+ *
+ * This composable provides a styled `OutlinedTextField` with support for leading/trailing icons,
+ * labels, placeholders, supporting text, and error states. The component automatically handles
+ * focus states, theming, and accessibility features.
+ *
+ * @param value The current text value of the input field
+ * @param onValueChange Callback that is triggered when the input value changes
+ * @param modifier Modifier to be applied to the text field
+ * @param leadingIcon Optional drawable resource ID for an icon displayed at the start of the field
+ * @param trailingIcon Optional drawable resource ID for an icon displayed at the end of the field.
+ *   When [isError] is true, this will be overridden with a warning icon
+ * @param label Optional text label displayed above the input field
+ * @param placeholder Optional placeholder text shown when the field is empty
+ * @param supportingText Optional supporting/helper text displayed below the input field
+ * @param isError Whether the field should be displayed in an error state with error styling
+ * @param enabled Whether the text field is enabled and accepts user input
+ * @param onLeadingIconClick Callback triggered when the leading icon is clicked
+ * @param onTrailingIconClick Callback triggered when the trailing icon is clicked
+ * @param inputContentType The content type for autofill hints, defaults to [ContentType.Username]
+ * @param leadingIconContentDescription Content description for the leading icon for accessibility
+ * @param trailingIconContentDescription Content description for the trailing icon for accessibility
+ */
 @Composable
 fun ClerkTextField(
   value: String,
@@ -130,6 +154,14 @@ fun ClerkTextField(
   }
 }
 
+/**
+ * A clickable icon component used within the text field for leading and trailing icons.
+ *
+ * @param resId The drawable resource ID for the icon
+ * @param onClick Callback triggered when the icon is clicked
+ * @param tint The color tint to apply to the icon, defaults to muted foreground color
+ * @param contentDescription Content description for accessibility support
+ */
 @Composable
 private fun ClickableIcon(
   @DrawableRes resId: Int,
