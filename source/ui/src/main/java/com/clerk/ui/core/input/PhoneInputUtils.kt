@@ -98,7 +98,7 @@ internal class PhoneInputUtils(
    * @param context Android context for accessing telephony services
    * @return CountryInfo if detection succeeds, null otherwise
    */
-  fun detectCountry(context: Context): CountryInfo? {
+  internal fun detectCountry(context: Context): CountryInfo? {
     return try {
       // Try system locale first, then telephony manager for SIM and network country
       detectFromLocale() ?: detectFromTelephony(context)
@@ -114,7 +114,7 @@ internal class PhoneInputUtils(
    * @param input Raw input string
    * @return Filtered string with only dialable characters, capped to E164 limits
    */
-  fun keepDialableCapped(input: String): String {
+  internal fun keepDialableCapped(input: String): String {
     val out = StringBuilder(input.length)
     var seenPlus = false
     var digits = 0
@@ -140,7 +140,7 @@ internal class PhoneInputUtils(
    * @param raw Raw phone number input
    * @return Formatted phone number string
    */
-  fun formatAsYouType(regionIso: String, raw: String): String {
+  internal fun formatAsYouType(regionIso: String, raw: String): String {
     // Keep '+' and digits only; AsYouType handles punctuation
     val filtered =
       buildString(raw.length) { raw.forEach { ch -> if (ch == '+' || ch.isDigit()) append(ch) } }
@@ -157,7 +157,7 @@ internal class PhoneInputUtils(
    *
    * @return List of CountryInfo sorted by country short name
    */
-  fun getAllCountries(): List<CountryInfo> {
+  internal fun getAllCountries(): List<CountryInfo> {
     return phoneUtil.supportedRegions
       .filter { it.length == 2 } // Filter out non-standard region codes
       .map { region ->
@@ -177,7 +177,7 @@ internal class PhoneInputUtils(
    * @param context Android context for accessing telephony services
    * @return Country phone code if detection succeeds, null otherwise
    */
-  fun detectCountryCode(context: Context): Int? {
+  internal fun detectCountryCode(context: Context): Int? {
     return detectCountry(context)?.code
   }
 
@@ -186,7 +186,7 @@ internal class PhoneInputUtils(
    *
    * @return CountryInfo for United States
    */
-  fun getDefaultCountry(): CountryInfo {
+  internal fun getDefaultCountry(): CountryInfo {
     return CountryInfo(flag = "🇺🇸", code = 1, countryShortName = "US", "United States")
   }
 

@@ -59,8 +59,26 @@ import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.LocalComputedColors
 
+/**
+ * Divisor used to calculate the maximum height of the country dropdown menu as a fraction of screen
+ * height
+ */
 private const val DROPDOWN_HEIGHT_DIVISOR = 3
 
+/**
+ * A Clerk-styled phone number input field with country selection.
+ *
+ * This composable provides a complete phone number input experience with:
+ * - Country selection dropdown with flag icons
+ * - Automatic country detection based on locale
+ * - Phone number formatting based on selected country
+ * - Error state display
+ * - Accessibility support
+ *
+ * @param modifier [Modifier] to be applied to the component
+ * @param errorText Optional error message to display below the input field
+ * @param inputText Optional initial phone number text (without country code)
+ */
 @Composable
 fun ClerkPhoneNumberField(
   modifier: Modifier = Modifier,
@@ -70,6 +88,13 @@ fun ClerkPhoneNumberField(
   ClerkPhoneNumberFieldImpl(modifier, errorText = errorText, inputText = inputText)
 }
 
+/**
+ * Creates the initial phone number string by combining country prefix with input text.
+ *
+ * @param inputText The raw phone number input (may be null or empty)
+ * @param country The selected country information
+ * @return A formatted phone number string with country prefix
+ */
 private fun getInitialPhoneNumber(inputText: String?, country: CountryInfo): String {
   return if (inputText.isNullOrEmpty()) {
     country.getPhonePrefix
@@ -78,6 +103,16 @@ private fun getInitialPhoneNumber(inputText: String?, country: CountryInfo): Str
   }
 }
 
+/**
+ * Internal implementation of the Clerk phone number field.
+ *
+ * This composable handles the state management for country selection and phone number input,
+ * including automatic country detection and formatting.
+ *
+ * @param modifier [Modifier] to be applied to the component
+ * @param inputText Optional initial phone number text (without country code)
+ * @param errorText Optional error message to display below the input field
+ */
 @Composable
 internal fun ClerkPhoneNumberFieldImpl(
   modifier: Modifier = Modifier,
@@ -135,6 +170,21 @@ internal fun ClerkPhoneNumberFieldImpl(
   }
 }
 
+/**
+ * Phone number input text field with formatting and validation.
+ *
+ * This composable renders the actual text input field for phone numbers with:
+ * - Country-specific formatting via visual transformation
+ * - Error state styling
+ * - Proper keyboard type and input filtering
+ * - Accessibility semantics
+ *
+ * @param computedColors Theme colors for styling
+ * @param value Current phone number value
+ * @param onValueChange Callback when phone number changes
+ * @param countryCode Selected country code for formatting
+ * @param errorText Optional error message to display
+ */
 @Composable
 private fun PhoneNumberInput(
   computedColors: ComputedColors,
@@ -205,6 +255,19 @@ private fun PhoneNumberInput(
   }
 }
 
+/**
+ * Country selection component with dropdown menu.
+ *
+ * This composable provides a clickable country selector that displays:
+ * - Selected country flag and code
+ * - Expandable dropdown with all available countries
+ * - Auto-detected default country at the top
+ * - Proper theming and accessibility
+ *
+ * @param selectedCountry Currently selected country
+ * @param modifier [Modifier] to be applied to the component
+ * @param onSelect Callback when a country is selected
+ */
 @Composable
 private fun CountrySelector(
   selectedCountry: CountryInfo,
@@ -239,6 +302,19 @@ private fun CountrySelector(
   }
 }
 
+/**
+ * Dropdown menu content for country selection.
+ *
+ * This composable renders the expandable dropdown menu containing:
+ * - Auto-detected default country (if available) at the top
+ * - Horizontal divider separating default from full list
+ * - Complete list of all supported countries
+ * - Proper height constraints based on screen size
+ *
+ * @param isExpanded Whether the dropdown menu is currently expanded
+ * @param onDismissRequest Callback to dismiss the dropdown menu
+ * @param onSelect Callback when a country is selected from the dropdown
+ */
 @Composable
 private fun CountryDropdownContent(
   isExpanded: Boolean,
@@ -298,6 +374,19 @@ private fun CountryDropdownContent(
   }
 }
 
+/**
+ * Country selector display with flag, code, and dropdown icon.
+ *
+ * This composable renders the clickable country selection button showing:
+ * - Country flag emoji
+ * - Country code (e.g., "US", "GB")
+ * - Chevron down icon
+ * - Proper border styling based on focus state
+ *
+ * @param selectedCountry Currently selected country information
+ * @param isExpanded Whether the dropdown is currently expanded (affects border styling)
+ * @param modifier [Modifier] to be applied to the component
+ */
 @Composable
 private fun TextWithIcon(
   selectedCountry: CountryInfo,
