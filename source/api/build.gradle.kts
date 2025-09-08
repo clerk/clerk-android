@@ -20,11 +20,7 @@ android {
   }
 
   buildTypes {
-    debug {
-      isMinifyEnabled = false
-      enableUnitTestCoverage = true
-      enableAndroidTestCoverage = true
-    }
+    debug { isMinifyEnabled = false }
     release {
       isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -47,6 +43,7 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 }
 
 mavenPublishing {
+  signAllPublications()
   coordinates("com.clerk", "clerk-android", libs.versions.clerk.sdk.get())
 
   pom {
