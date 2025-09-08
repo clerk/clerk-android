@@ -45,6 +45,7 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 mavenPublishing {
   signAllPublications()
   coordinates("com.clerk", "clerk-android", libs.versions.clerk.sdk.get())
+  publishToMavenCentral()
 
   pom {
     name.set("Clerk Android UI")
