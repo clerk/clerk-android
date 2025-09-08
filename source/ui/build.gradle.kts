@@ -100,16 +100,13 @@ dependencies {
 
   compileOnly(projects.clerk.source.api)
 
-  testImplementation("androidx.test:core:1.5.0")
-  testImplementation("androidx.test.ext:junit:1.1.5")
-  testImplementation("org.robolectric:robolectric:4.11.1")
+  testImplementation(libs.androidx.core)
+  testImplementation(libs.androidx.junit)
   testImplementation(libs.junit)
   testImplementation(libs.mockk)
+  testImplementation(libs.paparazzi)
+  testImplementation(libs.robolectric)
   testImplementation(projects.clerk.source.api)
-
-  //  testImplementation(libs.paparazzi)
-  androidTestImplementation(libs.androidx.espresso.core)
-  androidTestImplementation(libs.androidx.junit)
 
   lintChecks(libs.compose.lints)
 }
