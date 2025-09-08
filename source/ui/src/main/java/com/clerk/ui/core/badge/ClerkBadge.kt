@@ -20,6 +20,17 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
+/**
+ * A badge component that displays text with various styling options.
+ *
+ * The badge supports different visual styles through [ClerkBadgeType], including primary,
+ * secondary, positive, negative, and warning variants. Each type has its own color scheme and
+ * border styling.
+ *
+ * @param text The text content to display inside the badge
+ * @param modifier Optional [Modifier] to be applied to the badge
+ * @param badgeType The visual style of the badge, defaults to [ClerkBadgeType.Primary]
+ */
 @Composable
 fun Badge(
   text: String,
@@ -70,11 +81,30 @@ fun Badge(
   }
 }
 
+/**
+ * Defines the visual styling options for [Badge] components.
+ *
+ * Each type corresponds to a different color scheme and border treatment:
+ * - [Primary]: Primary brand colors with no border
+ * - [Secondary]: Muted colors with visible border
+ * - [Positive]: Success/positive state colors with matching border
+ * - [Negative]: Error/danger state colors with matching border
+ * - [Warning]: Warning state colors with matching border
+ */
 enum class ClerkBadgeType {
+  /** Primary brand styling with no border */
   Primary,
+
+  /** Secondary styling with muted colors and border */
   Secondary,
+
+  /** Positive/success state styling with green color scheme */
   Positive,
+
+  /** Negative/error state styling with red color scheme */
   Negative,
+
+  /** Warning state styling with yellow/orange color scheme */
   Warning,
 }
 
