@@ -3,14 +3,12 @@ package com.clerk.ui.core.input
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
-import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
@@ -22,14 +20,28 @@ class ClerkCodeInputFieldSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       ClerkMaterialTheme {
         Column(
-          modifier =
-            Modifier.background(color = MaterialTheme.colorScheme.background)
-              .fillMaxWidth()
-              .padding(dp12),
-          verticalArrangement = Arrangement.spacedBy(dp12),
+          modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp16),
+          verticalArrangement = Arrangement.spacedBy(dp16),
         ) {
-          // Empty state
-          ClerkCodeInputField(onOtpTextChange = {})
+          ClerkCodeInputField(onOtpTextChange = {}, secondsLeft = 30, onClickResend = {})
+          ClerkCodeInputField(
+            onOtpTextChange = {},
+            isError = true,
+            secondsLeft = 30,
+            onClickResend = {},
+          )
+          ClerkCodeInputField(
+            onOtpTextChange = {},
+            isSuccess = true,
+            secondsLeft = 0,
+            onClickResend = {},
+          )
+          ClerkCodeInputField(
+            onOtpTextChange = {},
+            isVerifying = true,
+            secondsLeft = 0,
+            onClickResend = {},
+          )
         }
       }
     }
@@ -41,13 +53,28 @@ class ClerkCodeInputFieldSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       ClerkMaterialTheme {
         Column(
-          modifier =
-            Modifier.background(color = ClerkMaterialTheme.colors.background)
-              .fillMaxWidth()
-              .padding(dp12),
-          verticalArrangement = Arrangement.spacedBy(dp12),
+          modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp16),
+          verticalArrangement = Arrangement.spacedBy(dp16),
         ) {
-          ClerkCodeInputField(onOtpTextChange = {}, otpLength = 6)
+          ClerkCodeInputField(onOtpTextChange = {}, secondsLeft = 30, onClickResend = {})
+          ClerkCodeInputField(
+            onOtpTextChange = {},
+            isError = true,
+            secondsLeft = 30,
+            onClickResend = {},
+          )
+          ClerkCodeInputField(
+            onOtpTextChange = {},
+            isSuccess = true,
+            secondsLeft = 0,
+            onClickResend = {},
+          )
+          ClerkCodeInputField(
+            onOtpTextChange = {},
+            isVerifying = true,
+            secondsLeft = 0,
+            onClickResend = {},
+          )
         }
       }
     }
