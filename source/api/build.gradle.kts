@@ -46,6 +46,8 @@ mavenPublishing {
   signAllPublications()
   coordinates("com.clerk", "clerk-android", libs.versions.clerk.sdk.get())
 
+  publishToMavenCentral()
+
   pom {
     name.set("Clerk Android UI")
     description.set("UI components for Clerk Android SDK")
