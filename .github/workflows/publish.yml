@@ -80,10 +80,6 @@ jobs:
 
         $COMMITS
 
-        ### 📊 Stats
-        - **$COMMIT_COUNT** commits since last release
-        - **$FILES_CHANGED** files changed
-
         ### 🚀 Installation
 
         Add to your \`build.gradle\`:
