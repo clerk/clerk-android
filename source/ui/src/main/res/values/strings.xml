@@ -2,4 +2,7 @@
 <resources>
     <string name="country">Country</string>
     <string name="enter_your_phone_number">Enter your phone number</string>
+    <string name="incorrect_verification_code">Incorrect verification code</string>
+    <string name="success">Success</string>
+    <string name="didn_t_receive_a_code_resend">Didn\'t receive a code? Resend (%1$d)</string>
 </resources>
