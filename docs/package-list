@@ -5,6 +5,9 @@ module:Clerk Android API
 com.clerk.api
 com.clerk.api.emailaddress
 com.clerk.api.externalaccount
+com.clerk.api.image
+com.clerk.api.network
+com.clerk.api.network.api
 com.clerk.api.network.middleware.incoming
 com.clerk.api.network.model.account
 com.clerk.api.network.model.backupcodes
@@ -14,7 +17,6 @@ com.clerk.api.network.model.environment
 com.clerk.api.network.model.error
 com.clerk.api.network.model.factor
 com.clerk.api.network.model.image
-com.clerk.api.network.model.organization
 com.clerk.api.network.model.token
 com.clerk.api.network.model.totp
 com.clerk.api.network.model.userdata
