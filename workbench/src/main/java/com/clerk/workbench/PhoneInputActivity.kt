@@ -33,7 +33,7 @@ fun MainContent(modifier: Modifier = Modifier) {
         .then(modifier),
     contentAlignment = Alignment.Center,
   ) {
-    ClerkCodeInputField(onOtpTextChange = {})
+    ClerkCodeInputField(onOtpTextChange = {}, secondsLeft = 60, otpLength = 6, onClickResend = {})
   }
 }
 

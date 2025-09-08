@@ -15,7 +15,9 @@ import com.clerk.api.sso.setLogoUrl
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.button.social.ClerkSocialButton
+import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
@@ -97,6 +99,36 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
           ClerkSocialButton(provider = provider)
           ClerkSocialButton(provider = provider, isPressed = true)
           ClerkSocialButton(provider = provider, isEnabled = false)
+        }
+      }
+    }
+  }
+
+  @Test
+  fun socialRowSnapshotTestLight() {
+    Clerk.customTheme = ClerkTheme(colors = DefaultColors.light)
+    val provider = OAuthProvider.GOOGLE
+    provider.setLogoUrl(null)
+    paparazzi.snapshot {
+      ClerkMaterialTheme {
+        ClerkSocialRow(providers = listOf(provider, provider, provider, provider, provider))
+      }
+    }
+  }
+
+  @Test
+  fun socialRowSnapshotTestDark() {
+    Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
+    val provider = OAuthProvider.GOOGLE
+    provider.setLogoUrl(null)
+    paparazzi.snapshot {
+      ClerkMaterialTheme {
+        Column(
+          modifier =
+            Modifier.background(color = ClerkMaterialTheme.colors.background)
+              .padding(horizontal = dp4)
+        ) {
+          ClerkSocialRow(providers = listOf(provider, provider, provider, provider, provider))
         }
       }
     }

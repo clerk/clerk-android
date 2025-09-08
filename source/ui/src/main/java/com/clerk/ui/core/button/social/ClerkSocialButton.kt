@@ -38,6 +38,7 @@ import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp3
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp6
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**
@@ -118,12 +119,13 @@ internal fun ClerkSocialButton(
  * @param onClick Lambda to be invoked when the button is clicked.
  */
 @Composable
-private fun ClerkSocialButtonImpl(
+internal fun ClerkSocialButtonImpl(
   provider: OAuthProvider,
   isEnabled: Boolean,
   isPressedCombined: Boolean,
   interactionSource: MutableInteractionSource,
   modifier: Modifier = Modifier,
+  forceIconOnly: Boolean = false,
   onClick: (OAuthProvider) -> Unit = {},
 ) {
   ClerkMaterialTheme {
@@ -145,7 +147,7 @@ private fun ClerkSocialButtonImpl(
           )
           .defaultMinSize(minHeight = dp48, minWidth = 120.dp),
     ) {
-      SocialButtonContent(provider = provider, isEnabled = isEnabled)
+      SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = forceIconOnly)
     }
   }
 }
@@ -164,13 +166,21 @@ private fun getButtonColors(isPressedCombined: Boolean) =
 
 /** Displays the adaptive content of the social button based on available width. */
 @Composable
-private fun SocialButtonContent(provider: OAuthProvider, isEnabled: Boolean) {
-  BoxWithConstraints {
-    val availableWidth = LocalDensity.current.run { constraints.maxWidth.toDp() }
-    if (availableWidth > 180.dp) {
-      SocialButtonWithText(provider = provider, isEnabled = isEnabled)
-    } else {
-      SocialButtonIconOnly(provider = provider, isEnabled = isEnabled)
+private fun SocialButtonContent(
+  provider: OAuthProvider,
+  isEnabled: Boolean,
+  forceIconOnly: Boolean,
+) {
+  if (forceIconOnly) {
+    SocialButtonIconOnly(provider = provider, isEnabled = isEnabled)
+  } else {
+    BoxWithConstraints {
+      val availableWidth = LocalDensity.current.run { constraints.maxWidth.toDp() }
+      if (availableWidth > 180.dp) {
+        SocialButtonWithText(provider = provider, isEnabled = isEnabled)
+      } else {
+        SocialButtonIconOnly(provider = provider, isEnabled = isEnabled)
+      }
     }
   }
 }
@@ -251,6 +261,27 @@ private fun PreviewSocialButton() {
         isEnabled = false,
         modifier = Modifier.widthIn(min = 200.dp),
       )
+    }
+  }
+}
+
+/**
+ * Preview composable for showcasing [ClerkSocialButton] in different states and widths. Displays
+ * the button normally, pressed, disabled, and at different widths to show the adaptive
+ * text/icon-only behavior.
+ */
+@SuppressLint("VisibleForTests")
+@PreviewLightDark
+@Composable
+private fun PreviewSocialRow() {
+  val provider = OAuthProvider.GOOGLE
+  provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
+  ClerkMaterialTheme {
+    Column(
+      Modifier.background(ClerkMaterialTheme.colors.background).padding(dp8),
+      verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
+    ) {
+      ClerkSocialRow(listOf(provider, provider, provider, provider, provider))
     }
   }
 }
