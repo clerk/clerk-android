@@ -59,13 +59,6 @@ jobs:
           COMMITS=$(git log --pretty=format:"- %s (%h)" HEAD)
         fi
         
-        # Get contributors since last tag
-        if [ -n "$PREVIOUS_TAG" ]; then
-          CONTRIBUTORS=$(git log --pretty=format:"%an" $PREVIOUS_TAG..HEAD | sort | uniq | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
-        else
-          CONTRIBUTORS=$(git log --pretty=format:"%an" HEAD | sort | uniq | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
-        fi
-        
         # Count changes
         if [ -n "$PREVIOUS_TAG" ]; then
           COMMIT_COUNT=$(git rev-list --count $PREVIOUS_TAG..HEAD)
