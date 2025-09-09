@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Clerk">
         <activity
-            android:name=".PhoneInputActivity"
+            android:name=".UiActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
