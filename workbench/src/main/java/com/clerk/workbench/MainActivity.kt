@@ -56,9 +56,7 @@ class MainActivity : ComponentActivity() {
         MainContent(
           onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
-          onClickFirstItem = {
-            context.startActivity(Intent(context, PhoneInputActivity::class.java))
-          },
+          onClickFirstItem = { context.startActivity(Intent(context, UiActivity::class.java)) },
           onClickSecondItem = {},
         )
       }
