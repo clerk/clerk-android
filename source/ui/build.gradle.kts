@@ -85,6 +85,7 @@ dependencies {
   implementation(platform(libs.compose.bom))
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.compose.foundation)
+  implementation(libs.androidx.compose.icons)
   implementation(libs.androidx.compose.runtime)
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.ui)
