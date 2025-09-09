@@ -82,7 +82,7 @@ object Clerk {
    * This logo appears in sign-in screens, sign-up flows, and other authentication interfaces. The
    * URL is configured in your Clerk Dashboard under branding settings.
    */
-  val logoUrl: String?
+  val organizationLogoUrl: String?
     get() = if (::environment.isInitialized) environment.displayConfig.logoImageUrl else null
 
   // endregion
