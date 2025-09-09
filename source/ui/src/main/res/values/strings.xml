@@ -5,4 +5,5 @@
     <string name="incorrect_verification_code">Incorrect verification code</string>
     <string name="success">Success</string>
     <string name="didn_t_receive_a_code_resend">Didn\'t receive a code? Resend (%1$d)</string>
+    <string name="logo">Logo</string>
 </resources>
