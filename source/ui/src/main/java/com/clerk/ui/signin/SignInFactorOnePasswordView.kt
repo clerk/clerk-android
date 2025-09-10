@@ -38,6 +38,7 @@ import com.clerk.ui.theme.DefaultColors
 @Composable
 fun SignInFactorOnePasswordView(
   onContinue: (String) -> Unit,
+  email: String,
   modifier: Modifier = Modifier,
   onUseAnotherMethod: () -> Unit = {},
   onForgotPassword: () -> Unit = {},
@@ -62,7 +63,7 @@ fun SignInFactorOnePasswordView(
       )
       Spacer(Modifier.height(dp8))
       ClerkButton(
-        text = "example@gmail.com",
+        text = email,
         onClick = {},
         modifier = Modifier.wrapContentHeight(),
         buttonConfig = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
@@ -104,5 +105,5 @@ fun SignInFactorOnePasswordView(
 @Composable
 private fun PreviewSignInFactorOnePasswordView() {
   Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme { SignInFactorOnePasswordView(onContinue = {}) }
+  ClerkMaterialTheme { SignInFactorOnePasswordView(onContinue = {}, email = "sam@clerk.dev") }
 }

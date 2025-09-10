@@ -63,29 +63,27 @@ import com.clerk.ui.core.common.dimens.dp4
 import com.clerk.ui.core.common.dimens.dp52
 import com.clerk.ui.core.common.dimens.dp56
 import com.clerk.ui.core.common.dimens.dp8
+import com.clerk.ui.signin.VerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 // Constants
 private const val CARET_HEIGHT_FRACTION = 0.45f
+private const val DEFAULT_OTP_LENGTH = 6
 
 /**
  * A specialized input field component for entering one-time passwords (OTP) or verification codes.
  *
  * This component displays a row of individual boxes for each digit of the code, with visual
  * feedback for different states including error, success, and verification in progress. It includes
- * automatic resend functionality with countdown timer.
+ * automatic resend functionality with a countdown timer.
  *
  * @param onOtpTextChange Callback invoked when the OTP text changes. Receives the current OTP
  *   string.
  * @param secondsLeft Number of seconds remaining before the resend option becomes available. When >
  *   0, shows countdown; when 0 or less, shows resend link.
+ * @param verificationState The current state of the verification process (e.g., Default, Verifying,
+ *   Success, Error).
  * @param modifier Optional [Modifier] to be applied to the component.
- * @param otpLength The expected length of the OTP code. Defaults to 6 digits.
- * @param isError Whether the component should display an error state (red styling and error
- *   message).
- * @param isSuccess Whether the component should display a success state (green styling and success
- *   message).
- * @param isVerifying Whether the component should display a verifying state (loading indicator).
  * @param onClickResend Callback invoked when the user clicks the resend code link.
  */
 @Composable
@@ -93,10 +91,7 @@ fun ClerkCodeInputField(
   onOtpTextChange: (String) -> Unit,
   secondsLeft: Int,
   modifier: Modifier = Modifier,
-  otpLength: Int = 6,
-  isError: Boolean = false,
-  isSuccess: Boolean = false,
-  isVerifying: Boolean = false,
+  verificationState: VerificationState = VerificationState.Default,
   onClickResend: () -> Unit,
 ) {
   ClerkMaterialTheme {
@@ -115,7 +110,7 @@ fun ClerkCodeInputField(
           interactionSource = interactionSource,
           value = otpText,
           onValueChange = { newValue ->
-            val filtered = newValue.filter { it.isDigit() }.take(otpLength)
+            val filtered = newValue.filter { it.isDigit() }.take(DEFAULT_OTP_LENGTH)
             if (filtered != otpText) {
               otpText = filtered
               onOtpTextChange(filtered)
@@ -130,14 +125,14 @@ fun ClerkCodeInputField(
           decorationBox = { innerTextField ->
             OtpBoxRow(
               otpText = otpText,
-              otpLength = otpLength,
+              otpLength = DEFAULT_OTP_LENGTH,
               isFocused = isFocused,
               innerTextField = innerTextField,
-              isError = isError,
+              isError = verificationState is VerificationState.Error,
             )
           },
         )
-        SupportingText(isError, isSuccess, isVerifying)
+        SupportingText(verificationState)
         if (secondsLeft > 0) {
           IconTextRow(text = stringResource(R.string.didn_t_receive_a_code_resend, secondsLeft))
         } else {
@@ -149,16 +144,14 @@ fun ClerkCodeInputField(
 }
 
 /**
- * Displays supporting text based on the state of the OTP input.
+ * Displays supporting text based on the [VerificationState] of the OTP input.
  *
- * @param isError Whether an error occurred.
- * @param isSuccess Whether the OTP was successfully verified.
- * @param isVerifying Whether the OTP is currently being verified.
+ * @param verificationState The current state of the verification process.
  */
 @Composable
-private fun SupportingText(isError: Boolean, isSuccess: Boolean, isVerifying: Boolean) {
-  when {
-    isError -> {
+private fun SupportingText(verificationState: VerificationState) {
+  when (verificationState) {
+    is VerificationState.Error -> {
       IconTextRow(
         leadingIconResId = R.drawable.ic_warning,
         leadingIconTint = ClerkMaterialTheme.colors.danger,
@@ -167,7 +160,7 @@ private fun SupportingText(isError: Boolean, isSuccess: Boolean, isVerifying: Bo
       )
     }
 
-    isSuccess -> {
+    is VerificationState.Success -> {
       IconTextRow(
         leadingIconResId = R.drawable.ic_check_circle,
         leadingIconTint = ClerkMaterialTheme.colors.success,
@@ -175,9 +168,10 @@ private fun SupportingText(isError: Boolean, isSuccess: Boolean, isVerifying: Bo
       )
     }
 
-    isVerifying -> {
+    is VerificationState.Verifying -> {
       VerifyingCodeRow()
     }
+    else -> {}
   }
 }
 
@@ -370,19 +364,19 @@ private fun PreviewClerkCodeInputField() {
       ClerkCodeInputField(onOtpTextChange = {}, secondsLeft = 30, onClickResend = {})
       ClerkCodeInputField(
         onOtpTextChange = {},
-        isError = true,
+        verificationState = VerificationState.Error(""),
         secondsLeft = 30,
         onClickResend = {},
       )
       ClerkCodeInputField(
         onOtpTextChange = {},
-        isSuccess = true,
+        verificationState = VerificationState.Success,
         secondsLeft = 0,
         onClickResend = {},
       )
       ClerkCodeInputField(
         onOtpTextChange = {},
-        isVerifying = true,
+        verificationState = VerificationState.Verifying,
         secondsLeft = 0,
         onClickResend = {},
       )

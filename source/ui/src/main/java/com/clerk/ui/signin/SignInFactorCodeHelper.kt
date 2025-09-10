@@ -7,7 +7,7 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
 import com.clerk.ui.core.common.StrategyKeys
 
-internal class SignInFactorCodeHelper {
+internal object SignInFactorCodeHelper {
   internal fun getShowResendValue(verificationState: VerificationState): Boolean =
     when (verificationState) {
       VerificationState.Default,
@@ -18,7 +18,7 @@ internal class SignInFactorCodeHelper {
 
   internal fun showResend(factor: Factor, verificationState: VerificationState): Boolean {
     return when (factor.strategy) {
-      "totp" -> false
+      StrategyKeys.TOTP -> false
       else -> getShowResendValue(verificationState)
     }
   }
@@ -34,11 +34,23 @@ internal class SignInFactorCodeHelper {
   @Composable
   internal fun titleForStrategy(factor: Factor): String {
     return when (factor.strategy) {
+      StrategyKeys.EMAIL_CODE -> "Check your email"
+      StrategyKeys.PHONE_CODE -> "Check your phone"
+      StrategyKeys.RESET_PASSWORD_EMAIL_CODE,
+      StrategyKeys.RESET_PASSWORD_PHONE_CODE -> "Reset password"
+      StrategyKeys.TOTP -> "Two-step verification"
+      else -> ""
+    }
+  }
+
+  @Composable
+  internal fun subtitleForStrategy(factor: Factor): String {
+    return when (factor.strategy) {
       StrategyKeys.RESET_PASSWORD_EMAIL_CODE ->
         stringResource(R.string.first_enter_the_code_sent_to_your_email_address)
       StrategyKeys.RESET_PASSWORD_PHONE_CODE ->
         stringResource(R.string.first_enter_the_code_sent_to_your_phone)
-      "totp" ->
+      StrategyKeys.TOTP ->
         stringResource(
           R.string
             .to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app

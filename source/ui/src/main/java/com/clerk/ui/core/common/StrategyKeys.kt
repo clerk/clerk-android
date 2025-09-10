@@ -7,4 +7,5 @@ object StrategyKeys {
   const val PASSWORD = "password"
   const val PHONE_CODE = "phone_code"
   const val EMAIL_CODE = "email_code"
+  const val TOTP = "totp"
 }
