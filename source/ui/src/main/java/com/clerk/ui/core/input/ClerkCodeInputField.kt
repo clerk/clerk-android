@@ -184,13 +184,15 @@ private fun SupportingText(verificationState: VerificationState) {
 private fun ResendCodeText(onClick: () -> Unit) {
   val annotatedString = buildAnnotatedString {
     withStyle(style = SpanStyle(color = ClerkMaterialTheme.colors.mutedForeground)) {
-      append("Didn't receive a code? ")
+      append(stringResource(R.string.didn_t_receive_a_code))
     }
-    withStyle(style = SpanStyle(color = ClerkMaterialTheme.colors.primary)) { append("Resend") }
+    withStyle(style = SpanStyle(color = ClerkMaterialTheme.colors.primary)) {
+      append(stringResource(R.string.resend))
+    }
   }
 
   Text(
-    modifier = Modifier.clickable { onClick() }.padding(top = dp24),
+    modifier = Modifier.clickable { onClick() }.padding(vertical = dp24),
     text = annotatedString,
     style = ClerkMaterialTheme.typography.titleSmallEmphasized,
   )
@@ -210,7 +212,7 @@ private fun VerifyingCodeRow() {
       strokeWidth = dp1,
     )
     Text(
-      text = "Verifying...",
+      text = stringResource(R.string.verifying),
       color = ClerkMaterialTheme.colors.mutedForeground,
       style = ClerkMaterialTheme.typography.bodyMedium,
     )

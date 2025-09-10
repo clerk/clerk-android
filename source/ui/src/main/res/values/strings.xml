@@ -19,4 +19,6 @@
     <string name="to_continue">To continue</string>
     <string name="resend_with_pararm">Resend (%1$d)</string>
     <string name="resend">Resend</string>
+    <string name="didn_t_receive_a_code">"Didn't receive a code? "</string>
+    <string name="verifying">Verifying...</string>
 </resources>
