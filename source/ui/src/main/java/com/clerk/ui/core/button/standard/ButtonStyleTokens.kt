@@ -7,9 +7,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import com.clerk.ui.colors.ComputedColors
-import com.clerk.ui.core.dimens.dp0
-import com.clerk.ui.core.dimens.dp32
-import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.core.common.dimens.dp0
+import com.clerk.ui.core.common.dimens.dp32
+import com.clerk.ui.core.common.dimens.dp48
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Immutable

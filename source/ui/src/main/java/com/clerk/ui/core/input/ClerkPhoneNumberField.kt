@@ -48,14 +48,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.clerk.ui.R
 import com.clerk.ui.colors.ComputedColors
-import com.clerk.ui.core.dimens.dp1
-import com.clerk.ui.core.dimens.dp12
-import com.clerk.ui.core.dimens.dp14
-import com.clerk.ui.core.dimens.dp16
-import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp4
-import com.clerk.ui.core.dimens.dp56
-import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.common.dimens.dp1
+import com.clerk.ui.core.common.dimens.dp12
+import com.clerk.ui.core.common.dimens.dp14
+import com.clerk.ui.core.common.dimens.dp16
+import com.clerk.ui.core.common.dimens.dp24
+import com.clerk.ui.core.common.dimens.dp4
+import com.clerk.ui.core.common.dimens.dp56
+import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.LocalComputedColors
 

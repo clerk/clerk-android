@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp1
-import com.clerk.ui.core.dimens.dp6
+import com.clerk.ui.core.common.dimens.dp1
+import com.clerk.ui.core.common.dimens.dp6
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 

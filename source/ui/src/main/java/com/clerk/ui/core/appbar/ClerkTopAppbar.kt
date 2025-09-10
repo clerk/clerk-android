@@ -16,8 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.core.avatar.OrganizationAvatar
-import com.clerk.ui.core.dimens.dp40
-import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.common.dimens.dp40
+import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable

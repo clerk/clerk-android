@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.common.dimens.dp8
 
 /**
  * A composable row layout for displaying multiple social authentication buttons.

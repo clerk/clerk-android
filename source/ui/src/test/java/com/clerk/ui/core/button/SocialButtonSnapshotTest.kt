@@ -16,8 +16,8 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.button.social.ClerkSocialButton
 import com.clerk.ui.core.button.social.ClerkSocialRow
-import com.clerk.ui.core.dimens.dp12
-import com.clerk.ui.core.dimens.dp4
+import com.clerk.ui.core.common.dimens.dp12
+import com.clerk.ui.core.common.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test

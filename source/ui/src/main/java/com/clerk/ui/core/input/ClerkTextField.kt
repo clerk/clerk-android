@@ -27,10 +27,10 @@ import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp12
-import com.clerk.ui.core.dimens.dp20
-import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp4
+import com.clerk.ui.core.common.dimens.dp12
+import com.clerk.ui.core.common.dimens.dp20
+import com.clerk.ui.core.common.dimens.dp24
+import com.clerk.ui.core.common.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**
