@@ -14,9 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.OrganizationAvatar
-import com.clerk.ui.signin.SignInFactorOnePasswordView
+import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 
 class UiActivity : ComponentActivity() {
@@ -25,7 +26,10 @@ class UiActivity : ComponentActivity() {
     setContent {
       WorkbenchTheme {
         Scaffold { innerPadding ->
-          SignInFactorOnePasswordView(modifier = Modifier.padding(innerPadding))
+          SignInFactorCodeView(
+            factor = Factor(strategy = "email_code", safeIdentifier = "sam@clerk.dev"),
+            modifier = Modifier.padding(innerPadding),
+          )
         }
       }
     }

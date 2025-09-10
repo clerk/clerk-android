@@ -1,4 +1,4 @@
-package com.clerk.ui.core.badge
+package com.clerk.snapshot.badge
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +9,8 @@ import androidx.compose.ui.Modifier
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
+import com.clerk.ui.core.badge.Badge
+import com.clerk.ui.core.badge.ClerkBadgeType
 import com.clerk.ui.core.common.dimens.dp12
 import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
