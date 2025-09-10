@@ -8,6 +8,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -18,13 +20,20 @@ fun HeaderTextView(text: String, type: HeaderType, modifier: Modifier = Modifier
   val (style, color) =
     when (type) {
       HeaderType.Title ->
-        ClerkMaterialTheme.typography.titleLargeEmphasized to ClerkMaterialTheme.colors.foreground
+        ClerkMaterialTheme.typography.titleLargeEmphasized.copy(fontWeight = FontWeight.SemiBold) to
+          ClerkMaterialTheme.colors.foreground
       HeaderType.Subtitle ->
         ClerkMaterialTheme.typography.bodyLarge to ClerkMaterialTheme.colors.mutedForeground
     }
 
   ClerkMaterialTheme {
-    Text(text = text, style = style, color = color, modifier = Modifier.then(modifier))
+    Text(
+      text = text,
+      style = style,
+      color = color,
+      modifier = Modifier.then(modifier),
+      textAlign = TextAlign.Center,
+    )
   }
 }
 
