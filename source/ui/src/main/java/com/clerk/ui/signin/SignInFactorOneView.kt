@@ -12,7 +12,7 @@ fun SignInFactorOneComponent(factor: Factor, modifier: Modifier = Modifier) {
   ClerkMaterialTheme {
     when (factor.strategy) {
       "passkey" -> TODO()
-      "password" -> TODO()
+      "password" -> SignInFactorOnePasswordView(onContinue = {})
       "email_code",
       "phone_code",
       "reset_password_email_code",
