@@ -33,12 +33,12 @@ import com.clerk.api.sso.logoUrl
 import com.clerk.api.sso.providerName
 import com.clerk.api.sso.setLogoUrl
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp12
-import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp3
-import com.clerk.ui.core.dimens.dp48
-import com.clerk.ui.core.dimens.dp6
-import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.common.dimens.dp12
+import com.clerk.ui.core.common.dimens.dp24
+import com.clerk.ui.core.common.dimens.dp3
+import com.clerk.ui.core.common.dimens.dp48
+import com.clerk.ui.core.common.dimens.dp6
+import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**
