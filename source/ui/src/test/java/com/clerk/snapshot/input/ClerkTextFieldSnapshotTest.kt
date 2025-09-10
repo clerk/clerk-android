@@ -1,4 +1,4 @@
-package com.clerk.ui.core.input
+package com.clerk.snapshot.input
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +10,7 @@ import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.R
 import com.clerk.ui.core.common.dimens.dp12
 import com.clerk.ui.core.common.dimens.dp20
+import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 import org.junit.Test
 

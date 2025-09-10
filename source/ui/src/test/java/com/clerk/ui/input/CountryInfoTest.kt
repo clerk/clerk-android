@@ -1,5 +1,6 @@
-package com.clerk.ui.core.input
+package com.clerk.ui.input
 
+import com.clerk.ui.core.input.CountryInfo
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
