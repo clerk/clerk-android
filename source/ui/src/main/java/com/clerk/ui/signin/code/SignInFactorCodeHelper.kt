@@ -1,4 +1,4 @@
-package com.clerk.ui.signin
+package com.clerk.ui.signin.code
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource

@@ -752,11 +752,14 @@ suspend fun SignIn.prepareFirstFactor(
  *   verification on success, or a [ClerkErrorResponse] on failure.
  * @receiver The current [SignIn] object representing the sign-in session.
  */
-suspend fun SignIn.prepareSecondFactor(): ClerkResult<SignIn, ClerkErrorResponse> {
+suspend fun SignIn.prepareSecondFactor(
+  phoneNumberId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> {
   val params =
     SignIn.PrepareSecondFactorParams(
       phoneNumberId =
-        this.supportedSecondFactors?.find { it.strategy == "phone_code" }?.phoneNumberId
+        phoneNumberId
+          ?: this.supportedSecondFactors?.find { it.strategy == "phone_code" }?.phoneNumberId
     )
   return ClerkApi.signIn.prepareSecondFactor(id = this.id, params = params.toMap())
 }

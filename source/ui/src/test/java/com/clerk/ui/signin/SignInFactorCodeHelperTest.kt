@@ -2,6 +2,8 @@ package com.clerk.ui.signin
 
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.signin.code.SignInFactorCodeHelper
+import com.clerk.ui.signin.code.VerificationState
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before

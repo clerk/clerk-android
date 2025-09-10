@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.OrganizationAvatar
-import com.clerk.ui.signin.SignInFactorCodeView
+import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 
 class UiActivity : ComponentActivity() {

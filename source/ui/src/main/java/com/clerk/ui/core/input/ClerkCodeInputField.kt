@@ -63,7 +63,7 @@ import com.clerk.ui.core.common.dimens.dp4
 import com.clerk.ui.core.common.dimens.dp52
 import com.clerk.ui.core.common.dimens.dp56
 import com.clerk.ui.core.common.dimens.dp8
-import com.clerk.ui.signin.VerificationState
+import com.clerk.ui.signin.code.VerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 // Constants
