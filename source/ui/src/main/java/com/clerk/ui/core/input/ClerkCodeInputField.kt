@@ -125,7 +125,6 @@ fun ClerkCodeInputField(
           decorationBox = { innerTextField ->
             OtpBoxRow(
               otpText = otpText,
-              otpLength = DEFAULT_OTP_LENGTH,
               isFocused = isFocused,
               innerTextField = innerTextField,
               isError = verificationState is VerificationState.Error,
@@ -260,7 +259,6 @@ private fun IconTextRow(
  * Displays a row of boxes for the OTP input.
  *
  * @param otpText The current OTP text.
- * @param otpLength The expected length of the OTP code.
  * @param isFocused Whether the OTP input field is focused.
  * @param innerTextField The inner text field.
  * @param isError Whether an error occurred.
@@ -268,7 +266,6 @@ private fun IconTextRow(
 @Composable
 private fun OtpBoxRow(
   otpText: String,
-  otpLength: Int,
   isFocused: Boolean,
   innerTextField: @Composable () -> Unit,
   isError: Boolean,
@@ -277,9 +274,9 @@ private fun OtpBoxRow(
     horizontalArrangement = Arrangement.spacedBy(dp8),
     verticalAlignment = Alignment.CenterVertically,
   ) {
-    val showCaret = isFocused && otpText.length < otpLength
+    val showCaret = isFocused && otpText.length < DEFAULT_OTP_LENGTH
 
-    repeat(otpLength) { index ->
+    repeat(DEFAULT_OTP_LENGTH) { index ->
       val char = otpText.getOrNull(index)?.toString() ?: ""
       val isCurrentBox = if (showCaret) index == otpText.length else false
 
