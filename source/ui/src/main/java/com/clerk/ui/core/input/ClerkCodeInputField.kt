@@ -55,14 +55,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp1
-import com.clerk.ui.core.dimens.dp12
-import com.clerk.ui.core.dimens.dp16
-import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp4
-import com.clerk.ui.core.dimens.dp52
-import com.clerk.ui.core.dimens.dp56
-import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.common.dimens.dp1
+import com.clerk.ui.core.common.dimens.dp12
+import com.clerk.ui.core.common.dimens.dp16
+import com.clerk.ui.core.common.dimens.dp24
+import com.clerk.ui.core.common.dimens.dp4
+import com.clerk.ui.core.common.dimens.dp52
+import com.clerk.ui.core.common.dimens.dp56
+import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 // Constants
