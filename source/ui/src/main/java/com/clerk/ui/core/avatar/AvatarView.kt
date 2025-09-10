@@ -1,8 +1,6 @@
 package com.clerk.ui.core.avatar
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -21,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.Clerk
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp10
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
@@ -38,13 +35,7 @@ internal fun AvatarView(
       AvatarType.ORGANIZATION -> R.drawable.ic_organization
     }
 
-  Box(
-    modifier =
-      Modifier.wrapContentSize()
-        .background(color = ClerkMaterialTheme.colors.primaryForeground, shape = shape)
-        .padding(dp10),
-    contentAlignment = Alignment.Center,
-  ) {
+  Box(modifier = Modifier.wrapContentSize(), contentAlignment = Alignment.Center) {
     SubcomposeAsyncImage(
       model = imageUrl,
       contentDescription = stringResource(R.string.logo),
