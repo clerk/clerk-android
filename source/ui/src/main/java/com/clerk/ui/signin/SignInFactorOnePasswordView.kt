@@ -41,6 +41,7 @@ fun SignInFactorOnePasswordView(
   modifier: Modifier = Modifier,
   onUseAnotherMethod: () -> Unit = {},
   onForgotPassword: () -> Unit = {},
+  onBackPressed: () -> Unit = {},
 ) {
   var password by remember { mutableStateOf("") }
   ClerkMaterialTheme {
@@ -52,7 +53,7 @@ fun SignInFactorOnePasswordView(
           .then(modifier),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      ClerkTopAppBar {}
+      ClerkTopAppBar(onBackPressed = onBackPressed)
       HeaderTextView(type = HeaderType.Title, text = stringResource(R.string.enter_password))
       Spacer(Modifier.height(dp8))
       HeaderTextView(
