@@ -52,7 +52,7 @@ internal val LocalClerkDesign =
  * Clerk Theming refers to the customization of your Clerk components to better reflect your
  * product's brand.
  *
- * Clerk components such as [com.clerk.ui.core.button.standard.ClerkButton] and
+ * Clerk components such as [com.clerk.ui.core.button.standard.ClerkButtonWithPressedState] and
  * [com.clerk.ui.core.input.ClerkTextField] use values provided here when retrieving default values.
  * This theme system seamlessly integrates with Material3 theming while providing Clerk-specific
  * design tokens and computed colors.

@@ -15,6 +15,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfig
 import com.clerk.ui.core.button.standard.ClerkButtonIconConfig
+import com.clerk.ui.core.button.standard.ClerkButtonWithPressedState
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
@@ -44,7 +45,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ),
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -77,7 +78,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ),
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -116,7 +117,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ),
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -163,7 +164,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ),
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -211,7 +212,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ),
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -261,7 +262,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ),
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -311,7 +312,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ),
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -361,7 +362,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ),
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
