@@ -66,7 +66,6 @@ fun SignInFactorOnePasswordView(
         buttonConfig = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
         trailingIcon = R.drawable.ic_edit,
         trailingIconTint = ClerkMaterialTheme.colors.mutedForeground,
-        wrapHeight = true,
       )
       Spacer(Modifier.height(dp24))
       ClerkTextField(
