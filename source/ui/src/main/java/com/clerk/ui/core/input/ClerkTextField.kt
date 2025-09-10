@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -25,12 +26,13 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp12
-import com.clerk.ui.core.dimens.dp20
-import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp4
+import com.clerk.ui.core.common.dimens.dp12
+import com.clerk.ui.core.common.dimens.dp20
+import com.clerk.ui.core.common.dimens.dp24
+import com.clerk.ui.core.common.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**
@@ -74,21 +76,12 @@ fun ClerkTextField(
   inputContentType: ContentType = ContentType.Username,
   leadingIconContentDescription: String? = null,
   trailingIconContentDescription: String? = null,
+  visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val isFocused by interactionSource.collectIsFocusedAsState()
 
-  val textFieldColors =
-    OutlinedTextFieldDefaults.colors(
-      focusedBorderColor = ClerkMaterialTheme.colors.primary,
-      focusedLabelColor = ClerkMaterialTheme.colors.primary,
-      unfocusedBorderColor = ClerkMaterialTheme.computedColors.inputBorder,
-      unfocusedTextColor = ClerkMaterialTheme.colors.foreground,
-      unfocusedContainerColor = ClerkMaterialTheme.colors.background,
-      focusedContainerColor = ClerkMaterialTheme.colors.background,
-      errorBorderColor = ClerkMaterialTheme.colors.danger,
-      errorSupportingTextColor = ClerkMaterialTheme.colors.danger,
-    )
+  val textFieldColors = getTextFieldColors()
 
   val labelStyle =
     if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
@@ -110,6 +103,7 @@ fun ClerkTextField(
       shape = ClerkMaterialTheme.shape,
       isError = isError,
       colors = textFieldColors,
+      visualTransformation = visualTransformation,
       leadingIcon =
         leadingIcon?.let { resId ->
           {
@@ -153,6 +147,19 @@ fun ClerkTextField(
     )
   }
 }
+
+@Composable
+private fun getTextFieldColors(): TextFieldColors =
+  OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = ClerkMaterialTheme.colors.primary,
+    focusedLabelColor = ClerkMaterialTheme.colors.primary,
+    unfocusedBorderColor = ClerkMaterialTheme.computedColors.inputBorder,
+    unfocusedTextColor = ClerkMaterialTheme.colors.foreground,
+    unfocusedContainerColor = ClerkMaterialTheme.colors.background,
+    focusedContainerColor = ClerkMaterialTheme.colors.background,
+    errorBorderColor = ClerkMaterialTheme.colors.danger,
+    errorSupportingTextColor = ClerkMaterialTheme.colors.danger,
+  )
 
 /**
  * A clickable icon component used within the text field for leading and trailing icons.

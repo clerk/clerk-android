@@ -14,7 +14,7 @@ import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfig
-import com.clerk.ui.core.button.standard.ClerkButtonIconConfig
+import com.clerk.ui.core.button.standard.ClerkButtonWithPressedState
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
@@ -37,56 +37,41 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           ClerkButton(
             text = "Continue",
             onClick = {},
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
             text = "Continue",
             isEnabled = false,
             onClick = {},
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
             text = "Continue",
             onClick = {},
             buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
             buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -94,11 +79,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             isEnabled = false,
             onClick = {},
             buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -109,14 +91,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.Low,
                 size = ClerkButtonConfig.Size.Small,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -125,11 +104,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.Low,
                 size = ClerkButtonConfig.Size.Small,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -141,11 +117,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.Low,
                 size = ClerkButtonConfig.Size.Small,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -156,14 +129,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.None,
                 size = ClerkButtonConfig.Size.Small,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -172,11 +142,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.None,
                 size = ClerkButtonConfig.Size.Small,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -188,11 +155,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.None,
                 size = ClerkButtonConfig.Size.Small,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -204,14 +168,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.High,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -221,11 +182,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.High,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -238,11 +196,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.High,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -254,14 +209,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.None,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -271,11 +223,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.None,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -288,11 +237,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.None,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -304,14 +250,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.High,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -321,11 +264,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.High,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -338,11 +278,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.High,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -354,14 +291,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.None,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
-          ClerkButton(
+          ClerkButtonWithPressedState(
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -371,11 +305,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.None,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
 
           ClerkButton(
@@ -388,11 +319,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
                 emphasis = ClerkButtonConfig.Emphasis.None,
                 size = ClerkButtonConfig.Size.Large,
               ),
-            iconConfig =
-              ClerkButtonIconConfig(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
+            leadingIcon = R.drawable.ic_triangle_right,
+            trailingIcon = R.drawable.ic_triangle_right,
           )
         }
       }
