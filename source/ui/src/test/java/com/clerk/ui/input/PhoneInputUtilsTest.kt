@@ -1,8 +1,13 @@
-package com.clerk.ui.core.input
+package com.clerk.ui.input
 
 import android.content.Context
 import android.telephony.TelephonyManager
 import androidx.test.core.app.ApplicationProvider
+import com.clerk.ui.core.input.LocaleProvider
+import com.clerk.ui.core.input.Logger
+import com.clerk.ui.core.input.PhoneInputUtils
+import com.clerk.ui.core.input.PhoneNumberUtilProvider
+import com.clerk.ui.core.input.TelephonyManagerProvider
 import com.google.i18n.phonenumbers.AsYouTypeFormatter
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import io.mockk.every
@@ -388,7 +393,7 @@ class PhoneInputUtilsTest {
   fun `companion object methods delegate to default instance`() {
     // Test that companion object methods work for backward compatibility
     // These will use real implementations since they create a default instance
-    val result = PhoneInputUtils.getDefaultCountry()
+    val result = PhoneInputUtils.Companion.getDefaultCountry()
 
     assertEquals("US", result.countryShortName)
     assertEquals(1, result.code)

@@ -16,7 +16,7 @@ import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun SecuredByClerk(modifier: Modifier = Modifier) {
+internal fun SecuredByClerk(modifier: Modifier = Modifier) {
   ClerkMaterialTheme {
     Row(
       modifier = Modifier.then(modifier),

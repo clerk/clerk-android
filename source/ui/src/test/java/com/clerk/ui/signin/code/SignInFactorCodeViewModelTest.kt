@@ -1,0 +1,373 @@
+package com.clerk.ui.signin.code
+
+import app.cash.turbine.test
+import com.clerk.api.Clerk
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.signin.SignIn
+import com.clerk.ui.core.common.StrategyKeys
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkAll
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+/**
+ * Comprehensive test suite for SignInFactorCodeViewModel covering:
+ * - State management (Idle, Verifying, Success, Error transitions)
+ * - Prepare operations for different factor strategies (EMAIL_CODE, PHONE_CODE, etc.)
+ * - Attempt operations for different factor strategies and success/error scenarios
+ * - Error handling for missing sign-in context
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+class SignInFactorCodeViewModelTest {
+
+  private val mockAttemptHandler = mockk<SignInAttemptHandler>(relaxed = true)
+  private val mockPrepareHandler = mockk<SignInPrepareHandler>(relaxed = true)
+  private val mockSignIn = mockk<SignIn>(relaxed = true)
+  private val testDispatcher = StandardTestDispatcher()
+
+  private lateinit var viewModel: SignInFactorCodeViewModel
+
+  @Before
+  fun setUp() {
+    Dispatchers.setMain(testDispatcher)
+    mockkObject(Clerk)
+    every { Clerk.signIn } returns mockSignIn
+
+    viewModel =
+      SignInFactorCodeViewModel(
+        attemptHandler = mockAttemptHandler,
+        prepareHandler = mockPrepareHandler,
+      )
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
+    unmockkAll()
+  }
+
+  @Test
+  fun initialStateShouldBeIdle() = runTest {
+    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Idle, awaitItem()) }
+  }
+
+  @Test
+  fun prepareWithEmailCodeStrategyShouldCallPrepareForEmailCode() = runTest {
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_id")
+
+    viewModel.prepare(factor, isSecondFactor = false)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify { mockPrepareHandler.prepareForEmailCode(mockSignIn, factor) }
+    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem()) }
+  }
+
+  @Test
+  fun prepareWithPhoneCodeStrategyShouldCallPrepareForPhoneCode() = runTest {
+    val factor = Factor(strategy = StrategyKeys.PHONE_CODE, phoneNumberId = "phone_id")
+    val isSecondFactor = true
+
+    viewModel.prepare(factor, isSecondFactor)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify {
+      mockPrepareHandler.prepareForPhoneCode(
+        inProgressSignIn = mockSignIn,
+        factor = factor,
+        isSecondFactor = isSecondFactor,
+      )
+    }
+    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem()) }
+  }
+
+  @Test
+  fun prepareWithResetPasswordPhoneCodeStrategyShouldCallPrepareForResetPasswordWithPhone() =
+    runTest {
+      val factor =
+        Factor(strategy = StrategyKeys.RESET_PASSWORD_PHONE_CODE, phoneNumberId = "phone_id")
+
+      viewModel.prepare(factor, isSecondFactor = false)
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      coVerify { mockPrepareHandler.prepareForResetPasswordWithPhone(mockSignIn, factor) }
+      viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem()) }
+    }
+
+  @Test
+  fun prepareWithResetPasswordEmailCodeStrategyShouldCallPrepareForResetWithEmailCode() = runTest {
+    val factor =
+      Factor(strategy = StrategyKeys.RESET_PASSWORD_EMAIL_CODE, emailAddressId = "email_id")
+
+    viewModel.prepare(factor, isSecondFactor = false)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify { mockPrepareHandler.prepareForResetWithEmailCode(mockSignIn, factor) }
+    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem()) }
+  }
+
+  @Test
+  fun prepareShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
+    every { Clerk.signIn } returns null
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+
+    var thrownError: Throwable? = null
+    try {
+      viewModel.prepare(factor, isSecondFactor = false)
+      testDispatcher.scheduler.advanceUntilIdle()
+    } catch (e: Throwable) {
+      thrownError = e
+    }
+
+    assertTrue(thrownError is IllegalStateException)
+    assertEquals("No sign in in progress", thrownError?.message)
+  }
+
+  @Test
+  fun attemptWithEmailCodeStrategyShouldCallAttemptFirstFactorEmailCodeAndSetSuccessState() =
+    runTest {
+      val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+      val code = "123456"
+
+      coEvery {
+        mockAttemptHandler.attemptFirstFactorEmailCode(
+          inProgressSignIn = mockSignIn,
+          code = code,
+          onSuccessCallback = any(),
+          onErrorCallback = any(),
+        )
+      } coAnswers
+        {
+          val onSuccess = args[2] as suspend () -> Unit
+          onSuccess()
+        }
+
+      viewModel.attempt(factor, isSecondFactor = false, code)
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      coVerify {
+        mockAttemptHandler.attemptFirstFactorEmailCode(
+          inProgressSignIn = mockSignIn,
+          code = code,
+          onSuccessCallback = any(),
+          onErrorCallback = any(),
+        )
+      }
+      viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Success, awaitItem()) }
+    }
+
+  @Test
+  fun attemptWithPhoneCodeStrategyShouldCallAttemptFirstFactorPhoneCodeAndSetSuccessState() =
+    runTest {
+      val factor = Factor(strategy = StrategyKeys.PHONE_CODE)
+      val code = "654321"
+      val isSecondFactor = true
+
+      coEvery {
+        mockAttemptHandler.attemptFirstFactorPhoneCode(
+          inProgressSignIn = mockSignIn,
+          code = code,
+          isSecondFactor = isSecondFactor,
+          onSuccessCallback = any(),
+          onErrorCallback = any(),
+        )
+      } coAnswers
+        {
+          val onSuccess = args[3] as suspend () -> Unit
+          onSuccess()
+        }
+
+      viewModel.attempt(factor, isSecondFactor, code)
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      coVerify {
+        mockAttemptHandler.attemptFirstFactorPhoneCode(
+          inProgressSignIn = mockSignIn,
+          code = code,
+          isSecondFactor = isSecondFactor,
+          onSuccessCallback = any(),
+          onErrorCallback = any(),
+        )
+      }
+      viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Success, awaitItem()) }
+    }
+
+  @Test
+  fun attemptWithResetPasswordEmailCodeStrategyShouldCallAttemptResetForEmailCode() = runTest {
+    val factor = Factor(strategy = StrategyKeys.RESET_PASSWORD_EMAIL_CODE)
+    val code = "789012"
+
+    coEvery {
+      mockAttemptHandler.attemptResetForEmailCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
+    } coAnswers
+      {
+        val onSuccess = args[2] as suspend () -> Unit
+        onSuccess()
+      }
+
+    viewModel.attempt(factor, isSecondFactor = false, code)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify {
+      mockAttemptHandler.attemptResetForEmailCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
+    }
+    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Success, awaitItem()) }
+  }
+
+  @Test
+  fun attemptWithResetPasswordPhoneCodeStrategyShouldCallAttemptResetForPhoneCode() = runTest {
+    val factor = Factor(strategy = StrategyKeys.RESET_PASSWORD_PHONE_CODE)
+    val code = "345678"
+
+    coEvery {
+      mockAttemptHandler.attemptResetForPhoneCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
+    } coAnswers
+      {
+        val onSuccess = args[2] as suspend () -> Unit
+        onSuccess()
+      }
+
+    viewModel.attempt(factor, isSecondFactor = false, code)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify {
+      mockAttemptHandler.attemptResetForPhoneCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
+    }
+    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Success, awaitItem()) }
+  }
+
+  @Test
+  fun attemptWithTotpStrategyShouldCallAttemptForTotp() = runTest {
+    val factor = Factor(strategy = StrategyKeys.TOTP)
+    val code = "901234"
+
+    coEvery {
+      mockAttemptHandler.attemptForTotp(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
+    } coAnswers
+      {
+        val onSuccess = args[2] as suspend () -> Unit
+        onSuccess()
+      }
+
+    viewModel.attempt(factor, isSecondFactor = true, code)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify {
+      mockAttemptHandler.attemptForTotp(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
+    }
+    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Success, awaitItem()) }
+  }
+
+  @Test
+  fun attemptShouldSetErrorStateWhenHandlerCallsOnErrorCallback() = runTest {
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val code = "123456"
+    val mockError = mockk<ClerkErrorResponse>()
+
+    coEvery {
+      mockAttemptHandler.attemptFirstFactorEmailCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
+    } coAnswers
+      {
+        val onError = args[3] as suspend (ClerkErrorResponse?) -> Unit
+        onError(mockError)
+      }
+
+    viewModel.attempt(factor, isSecondFactor = false, code)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Error, awaitItem()) }
+  }
+
+  @Test
+  fun attemptShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
+    every { Clerk.signIn } returns null
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val code = "123456"
+
+    var thrownError: Throwable? = null
+    try {
+      viewModel.attempt(factor, isSecondFactor = false, code)
+      testDispatcher.scheduler.advanceUntilIdle()
+    } catch (e: Throwable) {
+      thrownError = e
+    }
+
+    assertTrue(thrownError is IllegalStateException)
+    assertEquals("No sign in in progress", thrownError?.message)
+  }
+
+  @Test
+  fun stateShouldTransitionFromIdleToVerifyingDuringPrepare() = runTest {
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_id")
+
+    viewModel.state.test {
+      assertEquals(SignInFactorCodeViewModel.State.Idle, awaitItem())
+
+      viewModel.prepare(factor, isSecondFactor = false)
+
+      assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem())
+    }
+  }
+
+  @Test
+  fun stateShouldTransitionFromIdleToVerifyingDuringAttempt() = runTest {
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val code = "123456"
+
+    viewModel.state.test {
+      assertEquals(SignInFactorCodeViewModel.State.Idle, awaitItem())
+
+      viewModel.attempt(factor, isSecondFactor = false, code)
+
+      assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem())
+    }
+  }
+}
