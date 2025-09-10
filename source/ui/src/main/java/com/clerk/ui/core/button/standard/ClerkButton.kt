@@ -22,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -46,17 +45,14 @@ import com.clerk.ui.theme.DefaultColors
  * @param modifier Compose `Modifier` for layout and semantics.
  * @param buttonConfig Configuration controlling size, emphasis, and other visuals.
  * @param isEnabled When false, applies disabled styling and prevents clicks.
- * @param trailingIcon Optional drawable resource ID for an icon displayed after the text.
- * @param leadingIcon Optional drawable resource ID for an icon displayed before the text.
- * @param trailingIconTint Tint color for the trailing icon. Defaults to no tint.
- * @param leadingIconTint Tint color for the leading icon. Defaults to no tint.
+ * @param icons Optional leading and trailing icons, including their colors.
  *
  * Example:
  * ```kotlin
  * ClerkButton(
  *   text = "Continue",
  *   onClick = { /* action */ },
- *   buttonStyle = _root_ide_package_.com.clerk.ui.core.button.standard.ClerkButtonConfig.ButtonStyle.Primary
+ *   buttonConfig = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Primary)
  * )
  * ```
  */
@@ -67,10 +63,7 @@ fun ClerkButton(
   modifier: Modifier = Modifier,
   buttonConfig: ClerkButtonConfig = ClerkButtonConfig(),
   isEnabled: Boolean = true,
-  trailingIcon: Int? = null,
-  leadingIcon: Int? = null,
-  trailingIconTint: Color = Color.Unspecified,
-  leadingIconTint: Color = Color.Unspecified,
+  icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
@@ -82,10 +75,7 @@ fun ClerkButton(
     isEnabled = isEnabled,
     isPressedCombined = pressed,
     interactionSource = interactionSource,
-    trailingIcon = trailingIcon,
-    leadingIcon = leadingIcon,
-    trailingIconTint = trailingIconTint,
-    leadingIconTint = leadingIconTint,
+    icons = icons,
   )
 }
 
@@ -96,11 +86,8 @@ internal fun ClerkButtonWithPressedState(
   isPressed: Boolean,
   modifier: Modifier = Modifier,
   buttonConfig: ClerkButtonConfig = ClerkButtonConfig(),
-  trailingIcon: Int? = null,
-  leadingIcon: Int? = null,
   isEnabled: Boolean = true,
-  trailingIconTint: Color = Color.Unspecified,
-  leadingIconTint: Color = Color.Unspecified,
+  icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
@@ -112,10 +99,7 @@ internal fun ClerkButtonWithPressedState(
     isEnabled = isEnabled,
     isPressedCombined = pressed || isPressed,
     interactionSource = interactionSource,
-    trailingIcon = trailingIcon,
-    leadingIcon = leadingIcon,
-    trailingIconTint = trailingIconTint,
-    leadingIconTint = leadingIconTint,
+    icons = icons,
   )
 }
 
@@ -128,10 +112,7 @@ private fun ClerkButtonImpl(
   isPressedCombined: Boolean,
   interactionSource: MutableInteractionSource,
   modifier: Modifier = Modifier,
-  trailingIcon: Int? = null,
-  leadingIcon: Int? = null,
-  trailingIconTint: Color = Color.Unspecified,
-  leadingIconTint: Color = Color.Unspecified,
+  icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
   ClerkMaterialTheme {
     val tokens =
@@ -166,12 +147,20 @@ private fun ClerkButtonImpl(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dp6, Alignment.CenterHorizontally),
       ) {
-        leadingIcon?.let {
-          Icon(painter = painterResource(it), contentDescription = null, tint = leadingIconTint)
+        icons.leadingIcon?.let {
+          Icon(
+            painter = painterResource(it),
+            contentDescription = null,
+            tint = icons.leadingIconColor,
+          )
         }
         Text(text = text, style = tokens.textStyle)
-        trailingIcon?.let {
-          Icon(painter = painterResource(it), contentDescription = null, tint = trailingIconTint)
+        icons.trailingIcon?.let {
+          Icon(
+            painter = painterResource(it),
+            contentDescription = null,
+            tint = icons.trailingIconColor,
+          )
         }
       }
     }
@@ -196,8 +185,11 @@ private fun PreviewButton() {
           modifier = Modifier.fillMaxWidth(),
           text = "High - Large - Primary",
           onClick = {},
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -207,8 +199,11 @@ private fun PreviewButton() {
           text = "High - Large - Primary - Pressed",
           onClick = {},
           isPressed = true,
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -218,8 +213,11 @@ private fun PreviewButton() {
           text = "High - Large - Primary - Disabled",
           isEnabled = false,
           onClick = {},
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -231,8 +229,11 @@ private fun PreviewButton() {
           text = "None - Large - Primary",
           onClick = {},
           buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -243,8 +244,11 @@ private fun PreviewButton() {
           onClick = {},
           isPressed = true,
           buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -255,8 +259,11 @@ private fun PreviewButton() {
           isEnabled = false,
           onClick = {},
           buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -272,8 +279,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.Low,
               size = ClerkButtonConfig.Size.Small,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -288,8 +298,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.Low,
               size = ClerkButtonConfig.Size.Small,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -304,8 +317,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.Low,
               size = ClerkButtonConfig.Size.Small,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -321,8 +337,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Small,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -337,8 +356,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Small,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -353,8 +375,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Small,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -371,8 +396,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.High,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -388,8 +416,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.High,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -405,8 +436,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.High,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -423,8 +457,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -440,8 +477,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -457,8 +497,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -475,8 +518,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.High,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -492,8 +538,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.High,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -509,8 +558,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.High,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -526,8 +578,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -543,8 +598,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
 
@@ -560,8 +618,11 @@ private fun PreviewButton() {
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Large,
             ),
-          leadingIcon = R.drawable.ic_triangle_right,
-          trailingIcon = R.drawable.ic_triangle_right,
+          icons =
+            ClerkButtonDefaults.icons( // Changed
+              leadingIcon = R.drawable.ic_triangle_right,
+              trailingIcon = R.drawable.ic_triangle_right,
+            ),
         )
       }
     }

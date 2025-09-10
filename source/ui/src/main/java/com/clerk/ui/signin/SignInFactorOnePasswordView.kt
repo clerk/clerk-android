@@ -24,6 +24,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfig
+import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.common.HeaderTextView
 import com.clerk.ui.core.common.HeaderType
 import com.clerk.ui.core.common.TextButton
@@ -64,8 +65,11 @@ fun SignInFactorOnePasswordView(
         onClick = {},
         modifier = Modifier.wrapContentHeight(),
         buttonConfig = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
-        trailingIcon = R.drawable.ic_edit,
-        trailingIconTint = ClerkMaterialTheme.colors.mutedForeground,
+        icons =
+          ClerkButtonDefaults.icons(
+            trailingIcon = R.drawable.ic_edit,
+            trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+          ),
       )
       Spacer(Modifier.height(dp24))
       ClerkTextField(
@@ -79,8 +83,11 @@ fun SignInFactorOnePasswordView(
         modifier = Modifier.fillMaxWidth(),
         onClick = { onContinue(password) },
         text = stringResource(R.string.continue_text),
-        trailingIcon = R.drawable.ic_triangle_right,
-        trailingIconTint = ClerkMaterialTheme.colors.primaryForeground,
+        icons =
+          ClerkButtonDefaults.icons(
+            trailingIcon = R.drawable.ic_triangle_right,
+            trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+          ),
       )
       Spacer(Modifier.height(dp24))
       Row(modifier = Modifier.fillMaxWidth().padding(horizontal = dp8)) {
