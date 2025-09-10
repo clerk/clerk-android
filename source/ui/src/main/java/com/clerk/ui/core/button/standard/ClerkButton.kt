@@ -29,7 +29,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.common.dimens.dp1
-import com.clerk.ui.core.common.dimens.dp4
+import com.clerk.ui.core.common.dimens.dp12
 import com.clerk.ui.core.common.dimens.dp6
 import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -143,7 +143,7 @@ private fun ClerkButtonImpl(
         else null,
     ) {
       Row(
-        modifier = Modifier.padding(horizontal = dp4, vertical = dp8),
+        modifier = Modifier.padding(horizontal = dp12, vertical = dp8),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dp6, Alignment.CenterHorizontally),
       ) {

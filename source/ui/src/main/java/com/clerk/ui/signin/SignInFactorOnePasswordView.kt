@@ -25,9 +25,9 @@ import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfig
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.button.standard.TextButton
 import com.clerk.ui.core.common.HeaderTextView
 import com.clerk.ui.core.common.HeaderType
-import com.clerk.ui.core.common.TextButton
 import com.clerk.ui.core.common.dimens.dp18
 import com.clerk.ui.core.common.dimens.dp24
 import com.clerk.ui.core.common.dimens.dp8
@@ -38,9 +38,30 @@ import com.clerk.ui.theme.DefaultColors
 @Composable
 fun SignInFactorOnePasswordView(
   onContinue: (String) -> Unit,
+  email: String,
   modifier: Modifier = Modifier,
   onUseAnotherMethod: () -> Unit = {},
   onForgotPassword: () -> Unit = {},
+  onBackPressed: () -> Unit = {},
+) {
+  SignInFactorOnePasswordViewImpl(
+    modifier = modifier,
+    onBackPressed = onBackPressed,
+    email = email,
+    onContinue = onContinue,
+    onUseAnotherMethod = onUseAnotherMethod,
+    onForgotPassword = onForgotPassword,
+  )
+}
+
+@Composable
+private fun SignInFactorOnePasswordViewImpl(
+  onBackPressed: () -> Unit,
+  email: String,
+  onContinue: (String) -> Unit,
+  onUseAnotherMethod: () -> Unit,
+  modifier: Modifier = Modifier,
+  onForgotPassword: () -> Unit,
 ) {
   var password by remember { mutableStateOf("") }
   ClerkMaterialTheme {
@@ -52,7 +73,7 @@ fun SignInFactorOnePasswordView(
           .then(modifier),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      ClerkTopAppBar {}
+      ClerkTopAppBar(onBackPressed = onBackPressed)
       HeaderTextView(type = HeaderType.Title, text = stringResource(R.string.enter_password))
       Spacer(Modifier.height(dp8))
       HeaderTextView(
@@ -61,7 +82,7 @@ fun SignInFactorOnePasswordView(
       )
       Spacer(Modifier.height(dp8))
       ClerkButton(
-        text = "example@gmail.com",
+        text = email,
         onClick = {},
         modifier = Modifier.wrapContentHeight(),
         buttonConfig = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
@@ -103,5 +124,5 @@ fun SignInFactorOnePasswordView(
 @Composable
 private fun PreviewSignInFactorOnePasswordView() {
   Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme { SignInFactorOnePasswordView(onContinue = {}) }
+  ClerkMaterialTheme { SignInFactorOnePasswordView(onContinue = {}, email = "sam@clerk.dev") }
 }
