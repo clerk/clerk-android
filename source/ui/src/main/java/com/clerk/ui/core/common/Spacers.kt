@@ -11,22 +11,22 @@ import com.clerk.ui.core.common.dimens.dp24
 import com.clerk.ui.core.common.dimens.dp32
 import com.clerk.ui.core.common.dimens.dp8
 
-object Spacers {
+internal object Spacers {
 
-  object Vertical {
+  internal object Vertical {
 
     @Composable
-    fun Spacer8() {
+    internal fun Spacer8() {
       Spacer(modifier = Modifier.height(dp8))
     }
 
     @Composable
-    fun Spacer24() {
+    internal fun Spacer24() {
       Spacer(modifier = Modifier.height(dp24))
     }
 
     @Composable
-    fun Spacer32() {
+    internal fun Spacer32() {
       Spacer(modifier = Modifier.height(dp32))
     }
   }

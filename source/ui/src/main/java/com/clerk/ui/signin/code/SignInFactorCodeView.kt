@@ -20,11 +20,11 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
+import com.clerk.ui.core.button.standard.TextButton
 import com.clerk.ui.core.common.AuthViewHeader
 import com.clerk.ui.core.common.SecuredByClerk
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
-import com.clerk.ui.core.common.TextButton
 import com.clerk.ui.core.common.dimens.dp18
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.theme.ClerkMaterialTheme

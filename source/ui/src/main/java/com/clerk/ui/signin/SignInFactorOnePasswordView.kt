@@ -25,9 +25,9 @@ import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfig
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.button.standard.TextButton
 import com.clerk.ui.core.common.HeaderTextView
 import com.clerk.ui.core.common.HeaderType
-import com.clerk.ui.core.common.TextButton
 import com.clerk.ui.core.common.dimens.dp18
 import com.clerk.ui.core.common.dimens.dp24
 import com.clerk.ui.core.common.dimens.dp8

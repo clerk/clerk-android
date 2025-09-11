@@ -15,7 +15,7 @@ import com.clerk.ui.signin.code.SignInFactorCodeHelper
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun AuthViewHeader(
+internal fun AuthViewHeader(
   factor: Factor,
   modifier: Modifier = Modifier,
   showOrganizationLogo: Boolean = true,

@@ -16,7 +16,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HeaderTextView(text: String, type: HeaderType, modifier: Modifier = Modifier) {
+internal fun HeaderTextView(text: String, type: HeaderType, modifier: Modifier = Modifier) {
   val (style, color) =
     when (type) {
       HeaderType.Title ->
