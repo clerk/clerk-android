@@ -15,7 +15,7 @@ import okhttp3.Response
  *
  * This is never intended to be used directly by the user.
  */
-internal class HeaderMiddleware : Interceptor {
+internal class VersioningUserAgentMiddleware : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val newRequestBuilder =
