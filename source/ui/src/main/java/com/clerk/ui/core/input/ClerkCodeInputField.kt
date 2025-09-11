@@ -90,9 +90,10 @@ private const val DEFAULT_OTP_LENGTH = 6
 fun ClerkCodeInputField(
   onOtpTextChange: (String) -> Unit,
   secondsLeft: Int,
+  onClickResend: () -> Unit,
   modifier: Modifier = Modifier,
   verificationState: VerificationState = VerificationState.Default,
-  onClickResend: () -> Unit,
+  showResend: Boolean = true,
 ) {
   ClerkMaterialTheme {
     var otpText by remember { mutableStateOf("") }
@@ -132,10 +133,12 @@ fun ClerkCodeInputField(
           },
         )
         SupportingText(verificationState)
-        if (secondsLeft > 0) {
-          IconTextRow(text = stringResource(R.string.didn_t_receive_a_code_resend, secondsLeft))
-        } else {
-          ResendCodeText(onClick = onClickResend)
+        if (showResend) {
+          if (secondsLeft > 0) {
+            IconTextRow(text = stringResource(R.string.didn_t_receive_a_code_resend, secondsLeft))
+          } else {
+            ResendCodeText(onClick = onClickResend)
+          }
         }
       }
     }

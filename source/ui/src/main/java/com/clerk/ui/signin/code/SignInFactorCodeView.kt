@@ -45,17 +45,23 @@ fun SignInFactorCodeView(
   factor: Factor,
   modifier: Modifier = Modifier,
   onBackPressed: () -> Unit = {},
+  onClickResend: () -> Unit = {},
 ) {
-
-  SignInFactorCodeViewImpl(factor = factor, modifier = modifier, onBackPressed = onBackPressed)
+  SignInFactorCodeViewImpl(
+    factor = factor,
+    modifier = modifier,
+    onBackPressed = onBackPressed,
+    onClickResend = onClickResend,
+  )
 }
 
 @Composable
 private fun SignInFactorCodeViewImpl(
   factor: Factor,
+  onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: SignInFactorCodeViewModel = viewModel(),
-  onBackPressed: () -> Unit,
+  onClickResend: () -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val verificationState = state.verificationState()
@@ -108,8 +114,9 @@ private fun SignInFactorCodeViewImpl(
             viewModel.attempt(factor, isSecondFactor = false, code = it)
           }
         },
+        showResend = SignInFactorCodeHelper.showResend(factor, verificationState),
         secondsLeft = timeLeft,
-        onClickResend = {},
+        onClickResend = onClickResend,
       )
     }
   }
