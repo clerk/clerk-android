@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,11 +21,7 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
-import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.button.standard.ClerkButtonConfig
-import com.clerk.ui.core.button.standard.ClerkButtonDefaults
-import com.clerk.ui.core.common.HeaderTextView
-import com.clerk.ui.core.common.HeaderType
+import com.clerk.ui.core.common.AuthViewHeader
 import com.clerk.ui.core.common.SecuredByClerk
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
@@ -86,7 +81,7 @@ private fun SignInFactorCodeViewImpl(
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       ClerkTopAppBar(onBackPressed = onBackPressed)
-      Header(factor)
+      AuthViewHeader(factor)
       Spacers.Vertical.Spacer32()
       ClerkCodeInputField(
         verificationState = verificationState,
@@ -110,28 +105,6 @@ private fun SignInFactorCodeViewImpl(
       SecuredByClerk()
     }
   }
-}
-
-@Composable
-private fun Header(factor: Factor) {
-  HeaderTextView(text = SignInFactorCodeHelper.titleForStrategy(factor), type = HeaderType.Title)
-  Spacers.Vertical.Spacer8()
-  HeaderTextView(
-    text = SignInFactorCodeHelper.subtitleForStrategy(factor),
-    type = HeaderType.Subtitle,
-  )
-  Spacers.Vertical.Spacer8()
-  ClerkButton(
-    text = factor.safeIdentifier.orEmpty(),
-    onClick = {},
-    modifier = Modifier.wrapContentHeight(),
-    buttonConfig = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
-    icons =
-      ClerkButtonDefaults.icons(
-        trailingIcon = R.drawable.ic_edit,
-        trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-      ),
-  )
 }
 
 private fun SignInFactorCodeViewModel.State.verificationState(): VerificationState {
