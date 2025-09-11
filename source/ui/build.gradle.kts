@@ -107,10 +107,11 @@ dependencies {
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.mockk)
-  testImplementation(libs.paparazzi)
   testImplementation(libs.robolectric)
   testImplementation(libs.turbine)
   testImplementation(projects.clerk.source.api)
+
+  testRuntimeOnly(libs.paparazzi)
 
   lintChecks(libs.compose.lints)
 }
