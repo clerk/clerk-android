@@ -231,7 +231,8 @@ enum class OAuthProvider {
             name = "Hugging Face",
           )
         CUSTOM -> OAuthProviderData(provider = "custom", strategy = "oauth_custom", name = "Custom")
-        UNKNOWN -> OAuthProviderData(provider = "unknown", strategy = "oauth_unknown", name = "Unknown")
+        UNKNOWN ->
+          OAuthProviderData(provider = "unknown", strategy = "oauth_unknown", name = "Unknown")
       }
 }
 
