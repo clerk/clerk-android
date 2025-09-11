@@ -44,6 +44,25 @@ fun SignInFactorOnePasswordView(
   onForgotPassword: () -> Unit = {},
   onBackPressed: () -> Unit = {},
 ) {
+  SignInFactorOnePasswordViewImpl(
+    modifier = modifier,
+    onBackPressed = onBackPressed,
+    email = email,
+    onContinue = onContinue,
+    onUseAnotherMethod = onUseAnotherMethod,
+    onForgotPassword = onForgotPassword,
+  )
+}
+
+@Composable
+private fun SignInFactorOnePasswordViewImpl(
+  onBackPressed: () -> Unit,
+  email: String,
+  onContinue: (String) -> Unit,
+  onUseAnotherMethod: () -> Unit,
+  modifier: Modifier = Modifier,
+  onForgotPassword: () -> Unit,
+) {
   var password by remember { mutableStateOf("") }
   ClerkMaterialTheme {
     Column(
