@@ -28,6 +28,7 @@ material = "1.13.0"
 uiToolingPreviewAndroid = "1.9.0"
 paparazziPlugin = "2.0.0-alpha02"
 activity = "1.10.1"
+turbineVersion = "1.2.0"
 
 # Build Versions -- Do not delete
 clerk-api = "0.1.9"
@@ -87,6 +88,7 @@ paparazzi = "app.cash.paparazzi:paparazzi:1.3.5"
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-kotlinx = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbineVersion" }
 versioning-plugin = { module = "org.jetbrains.dokka:versioning-plugin", version.ref = "dokka" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junit" }

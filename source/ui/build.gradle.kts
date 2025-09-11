@@ -109,6 +109,7 @@ dependencies {
   testImplementation(libs.mockk)
   testImplementation(libs.paparazzi)
   testImplementation(libs.robolectric)
+  testImplementation(libs.turbine)
   testImplementation(projects.clerk.source.api)
 
   lintChecks(libs.compose.lints)
