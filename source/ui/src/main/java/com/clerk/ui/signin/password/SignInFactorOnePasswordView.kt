@@ -1,4 +1,4 @@
-package com.clerk.ui.signin
+package com.clerk.ui.signin.password
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
