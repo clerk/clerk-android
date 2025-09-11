@@ -25,7 +25,7 @@ import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfig
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
-import com.clerk.ui.core.button.standard.TextButton
+import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.HeaderTextView
 import com.clerk.ui.core.common.HeaderType
 import com.clerk.ui.core.common.dimens.dp18
@@ -112,9 +112,12 @@ private fun SignInFactorOnePasswordViewImpl(
       )
       Spacer(Modifier.height(dp24))
       Row(modifier = Modifier.fillMaxWidth().padding(horizontal = dp8)) {
-        TextButton(text = stringResource(R.string.use_another_method), onClick = onUseAnotherMethod)
+        ClerkTextButton(
+          text = stringResource(R.string.use_another_method),
+          onClick = onUseAnotherMethod,
+        )
         Spacer(modifier = Modifier.weight(1f))
-        TextButton(text = stringResource(R.string.forgot_password), onClick = onForgotPassword)
+        ClerkTextButton(text = stringResource(R.string.forgot_password), onClick = onForgotPassword)
       }
     }
   }

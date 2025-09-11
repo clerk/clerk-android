@@ -27,6 +27,12 @@ object ClerkButtonDefaults {
       trailingIcon = trailingIcon,
       leadingIcon = leadingIcon,
     )
+
+  fun configuration(
+    style: ClerkButtonConfig.ButtonStyle = ClerkButtonConfig.ButtonStyle.Primary,
+    emphasis: ClerkButtonConfig.Emphasis = ClerkButtonConfig.Emphasis.High,
+    size: ClerkButtonConfig.Size = ClerkButtonConfig.Size.Large,
+  ) = ClerkButtonConfig(style = style, emphasis = emphasis, size = size)
 }
 
 /**
@@ -43,3 +49,26 @@ data class ClerkButtonIcons(
   val trailingIconColor: Color,
   val leadingIconColor: Color,
 )
+
+data class ClerkButtonConfig(
+  val style: ButtonStyle = ButtonStyle.Primary,
+  val emphasis: Emphasis = Emphasis.High,
+  val size: Size = Size.Large,
+) {
+  enum class Emphasis {
+    None,
+    Low,
+    High,
+  }
+
+  enum class Size {
+    Small,
+    Large,
+  }
+
+  enum class ButtonStyle {
+    Primary,
+    Secondary,
+    Negative,
+  }
+}

@@ -61,7 +61,7 @@ fun ClerkButton(
   text: String,
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
-  buttonConfig: ClerkButtonConfig = ClerkButtonConfig(),
+  buttonConfig: ClerkButtonConfig = ClerkButtonDefaults.configuration(),
   isEnabled: Boolean = true,
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {

@@ -21,4 +21,7 @@
     <string name="resend">Resend</string>
     <string name="didn_t_receive_a_code">"Didn't receive a code? "</string>
     <string name="verifying">Verifying...</string>
+    <string name="passkey_icon">Passkey icon</string>
+    <string name="using_your_passkey_confirms_it_s_you_your_device_may_ask_for_your_fingerprint_face_or_screen_lock">Using your passkey confirms it\'s you. Your device may ask for your fingerprint, face or screen lock.</string>
+    <string name="use_your_passkey">Use your passkey</string>
 </resources>
