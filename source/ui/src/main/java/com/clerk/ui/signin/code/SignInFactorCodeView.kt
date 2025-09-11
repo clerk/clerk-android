@@ -20,7 +20,6 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.common.AuthViewHeader
 import com.clerk.ui.core.common.SecuredByClerk
 import com.clerk.ui.core.common.Spacers
@@ -80,8 +79,7 @@ private fun SignInFactorCodeViewImpl(
           .then(modifier),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      ClerkTopAppBar(onBackPressed = onBackPressed)
-      AuthViewHeader(factor)
+      AuthViewHeader(factor, onBackPressed = onBackPressed)
       Spacers.Vertical.Spacer32()
       ClerkCodeInputField(
         verificationState = verificationState,

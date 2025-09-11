@@ -3,9 +3,11 @@ package com.clerk.ui.core.common
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
+import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfig
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
@@ -13,8 +15,14 @@ import com.clerk.ui.signin.code.SignInFactorCodeHelper
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun AuthViewHeader(factor: Factor, modifier: Modifier = Modifier) {
-  Column(modifier = Modifier.then(modifier)) {
+fun AuthViewHeader(
+  factor: Factor,
+  modifier: Modifier = Modifier,
+  showOrganizationLogo: Boolean = true,
+  onBackPressed: () -> Unit,
+) {
+  Column(modifier = Modifier.then(modifier), horizontalAlignment = Alignment.CenterHorizontally) {
+    ClerkTopAppBar(onBackPressed = onBackPressed, hasLogo = showOrganizationLogo)
     HeaderTextView(text = SignInFactorCodeHelper.titleForStrategy(factor), type = HeaderType.Title)
     Spacers.Vertical.Spacer8()
     HeaderTextView(
