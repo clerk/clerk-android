@@ -73,6 +73,8 @@ mavenPublishing {
 }
 
 dependencies {
+  api(libs.kotlinx.serialization)
+
   implementation(platform(libs.compose.bom))
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.browser)
@@ -89,7 +91,6 @@ dependencies {
   implementation(libs.jwt.decode)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
-  implementation(libs.kotlinx.serialization)
   implementation(libs.ksp.api)
   implementation(libs.okhttp)
   implementation(libs.okhttp.logging)
