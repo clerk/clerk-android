@@ -55,6 +55,7 @@ internal class SignInFactorCodeViewModel(
             onSuccessCallback = onSuccessCallback,
             onErrorCallback = onErrorCallback,
           )
+
         StrategyKeys.PHONE_CODE ->
           attemptHandler.attemptFirstFactorPhoneCode(
             inProgressSignIn = inProgressSignIn,
@@ -63,6 +64,7 @@ internal class SignInFactorCodeViewModel(
             onSuccessCallback = onSuccessCallback,
             onErrorCallback = onErrorCallback,
           )
+
         StrategyKeys.RESET_PASSWORD_EMAIL_CODE ->
           attemptHandler.attemptResetForEmailCode(
             inProgressSignIn = inProgressSignIn,
@@ -70,6 +72,7 @@ internal class SignInFactorCodeViewModel(
             onSuccessCallback = onSuccessCallback,
             onErrorCallback = onErrorCallback,
           )
+
         StrategyKeys.RESET_PASSWORD_PHONE_CODE ->
           attemptHandler.attemptResetForPhoneCode(
             inProgressSignIn = inProgressSignIn,
@@ -77,6 +80,7 @@ internal class SignInFactorCodeViewModel(
             onSuccessCallback = onSuccessCallback,
             onErrorCallback = onErrorCallback,
           )
+
         StrategyKeys.TOTP ->
           attemptHandler.attemptForTotp(
             inProgressSignIn = inProgressSignIn,
@@ -84,6 +88,7 @@ internal class SignInFactorCodeViewModel(
             onSuccessCallback = onSuccessCallback,
             onErrorCallback = onErrorCallback,
           )
+
         else -> error("Unsupported strategy: ${factor.strategy}")
       }
     }
