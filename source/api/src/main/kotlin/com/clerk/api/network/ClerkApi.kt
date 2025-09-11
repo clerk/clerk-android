@@ -14,8 +14,8 @@ import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.middleware.incoming.DeviceAssertionInterceptor
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
-import com.clerk.api.network.middleware.outgoing.HeaderMiddleware
 import com.clerk.api.network.middleware.outgoing.UrlAppendingMiddleware
+import com.clerk.api.network.middleware.outgoing.VersioningUserAgentMiddleware
 import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -92,7 +92,7 @@ internal object ClerkApi {
       OkHttpClient.Builder()
         .apply {
           addInterceptor(ClientSyncingMiddleware(json = json))
-          addInterceptor(HeaderMiddleware())
+          addInterceptor(VersioningUserAgentMiddleware())
           addInterceptor(DeviceTokenSavingMiddleware())
           addInterceptor(UrlAppendingMiddleware())
           addInterceptor(DeviceAssertionInterceptor())

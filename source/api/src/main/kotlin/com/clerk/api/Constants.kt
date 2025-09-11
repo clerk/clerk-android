@@ -24,7 +24,7 @@ object Constants {
   object Http {
     const val NO_CONTENT = 204
     const val RESET_CONTENT = 205
-    const val CURRENT_API_VERSION = "2024-10-01"
+    const val CURRENT_API_VERSION = "2025-04-10"
     const val CURRENT_SDK_VERSION = BuildConfig.SDK_VERSION
     const val IS_MOBILE_HEADER_VALUE = "1"
     const val AUTHORIZATION_HEADER = "Authorization"
