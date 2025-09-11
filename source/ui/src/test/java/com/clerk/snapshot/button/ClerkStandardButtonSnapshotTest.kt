@@ -1,4 +1,4 @@
-package com.clerk.ui.core.button
+package com.clerk.snapshot.button
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
