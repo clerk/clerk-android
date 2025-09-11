@@ -363,7 +363,7 @@ private fun PreviewClerkCodeInputField() {
       ClerkCodeInputField(onOtpTextChange = {}, secondsLeft = 30, onClickResend = {})
       ClerkCodeInputField(
         onOtpTextChange = {},
-        verificationState = VerificationState.Error(""),
+        verificationState = VerificationState.Error,
         secondsLeft = 30,
         onClickResend = {},
       )

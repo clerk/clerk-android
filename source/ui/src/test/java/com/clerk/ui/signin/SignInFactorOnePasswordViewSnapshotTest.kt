@@ -12,7 +12,7 @@ class SignInFactorOnePasswordViewSnapshotTest : BaseSnapshotTest() {
   fun testSignInFactorOnePasswordView() {
     paparazzi.snapshot {
       Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-      SignInFactorOnePasswordView(onContinue = {})
+      SignInFactorOnePasswordView(onContinue = {}, email = "sam@clerk.dev")
     }
   }
 }

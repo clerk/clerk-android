@@ -6,17 +6,11 @@ import com.clerk.ui.signin.code.SignInFactorCodeHelper
 import com.clerk.ui.signin.code.VerificationState
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 
 class SignInFactorCodeHelperTest {
 
-  private lateinit var helper: SignInFactorCodeHelper
-
-  @Before
-  fun setUp() {
-    helper = SignInFactorCodeHelper()
-  }
+  private val helper = SignInFactorCodeHelper
 
   // Tests for getShowResendValue
   @Test
@@ -26,7 +20,7 @@ class SignInFactorCodeHelperTest {
 
   @Test
   fun `getShowResendValue with Error state returns true`() {
-    assertTrue(helper.getShowResendValue(VerificationState.Error("Some error")))
+    assertTrue(helper.getShowResendValue(VerificationState.Error))
   }
 
   @Test
@@ -49,7 +43,7 @@ class SignInFactorCodeHelperTest {
   @Test
   fun `showResend with totp strategy returns false for Error state`() {
     val factor = Factor(strategy = "totp")
-    assertFalse(helper.showResend(factor, VerificationState.Error("error")))
+    assertFalse(helper.showResend(factor, VerificationState.Error))
   }
 
   @Test

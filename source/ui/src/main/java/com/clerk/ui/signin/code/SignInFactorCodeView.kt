@@ -16,6 +16,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
@@ -36,7 +38,6 @@ import com.clerk.ui.theme.DefaultColors
 import kotlinx.coroutines.delay
 
 private const val DEFAULT_TIMER_LENGTH = 60
-
 private const val DEFAULT_DELAY = 1000L
 
 @Composable
@@ -45,8 +46,23 @@ fun SignInFactorCodeView(
   modifier: Modifier = Modifier,
   onBackPressed: () -> Unit = {},
 ) {
+
+  SignInFactorCodeViewImpl(factor = factor, modifier = modifier, onBackPressed = onBackPressed)
+}
+
+@Composable
+private fun SignInFactorCodeViewImpl(
+  factor: Factor,
+  modifier: Modifier = Modifier,
+  viewModel: SignInFactorCodeViewModel = viewModel(),
+  onBackPressed: () -> Unit,
+) {
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  val verificationState = state.verificationState()
+
   var timeLeft by remember { mutableIntStateOf(DEFAULT_TIMER_LENGTH) }
   LaunchedEffect(Unit) {
+    viewModel.prepare(factor, isSecondFactor = false)
     while (timeLeft > 0) {
       delay(DEFAULT_DELAY)
       timeLeft--
@@ -85,8 +101,26 @@ fun SignInFactorCodeView(
           ),
       )
       Spacer(modifier = Modifier.height(dp32))
-      ClerkCodeInputField(onOtpTextChange = {}, secondsLeft = timeLeft, onClickResend = {})
+      ClerkCodeInputField(
+        verificationState = verificationState,
+        onOtpTextChange = {
+          if (it.length == 6) {
+            viewModel.attempt(factor, isSecondFactor = false, code = it)
+          }
+        },
+        secondsLeft = timeLeft,
+        onClickResend = {},
+      )
     }
+  }
+}
+
+private fun SignInFactorCodeViewModel.State.verificationState(): VerificationState {
+  return when (this) {
+    SignInFactorCodeViewModel.State.Error -> VerificationState.Error
+    SignInFactorCodeViewModel.State.Idle -> VerificationState.Default
+    SignInFactorCodeViewModel.State.Success -> VerificationState.Success
+    SignInFactorCodeViewModel.State.Verifying -> VerificationState.Verifying
   }
 }
 
@@ -106,5 +140,5 @@ sealed interface VerificationState {
 
   data object Success : VerificationState
 
-  data class Error(val message: String) : VerificationState
+  data object Error : VerificationState
 }
