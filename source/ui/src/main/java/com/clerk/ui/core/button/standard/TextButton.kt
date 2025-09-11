@@ -15,6 +15,19 @@ import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
+/**
+ * A simple composable that displays a clickable text.
+ *
+ * This button is styled to look like a hyperlink or a subtle action item. It uses a [Box] with a
+ * [Text] element inside, made clickable.
+ *
+ * @param text The string to display on the button.
+ * @param modifier The [Modifier] to be applied to the button's [Box] container.
+ * @param textColor The color of the text. Defaults to the primary color from [ClerkMaterialTheme].
+ * @param textStyle The style of the text. Defaults to `titleSmall` typography from
+ *   [ClerkMaterialTheme].
+ * @param onClick Lambda to be invoked when the button is clicked.
+ */
 @Composable
 fun TextButton(
   text: String,
