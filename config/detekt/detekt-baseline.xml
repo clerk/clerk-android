@@ -9,6 +9,8 @@
     <ID>SwallowedException:PasskeyCredentialManagerTest.kt$PasskeyCredentialManagerTest$e: Exception</ID>
     <ID>TooGenericExceptionThrown:DeviceAttestationHelper.kt$DeviceAttestationHelper$throw RuntimeException("Failed to hash clientId", e)</ID>
     <ID>TooManyFunctions:ConfigurationManager.kt$ConfigurationManager</ID>
+    <ID>TooManyFunctions:Organization.kt$com.clerk.api.organizations.Organization.kt</ID>
+    <ID>TooManyFunctions:OrganizationApi.kt$OrganizationApi</ID>
     <ID>TooManyFunctions:User.kt$com.clerk.api.user.User.kt</ID>
     <ID>UnusedPrivateClass:ClerkApiResultCallAdapterFactory.kt$ApiException : Exception</ID>
     <ID>UnusedPrivateProperty:build.gradle.kts$val detektProjectBaseline by tasks.registering(DetektCreateBaselineTask::class) { description = "Overrides current baseline." buildUponDefaultConfig.set(true) ignoreFailures.set(true) parallel.set(true) setSource(files(rootDir)) config.setFrom(files("$rootDir/config/detekt/detekt.yml")) baseline.set(file("$rootDir/config/detekt/detekt-baseline.xml")) include("**/*.kt") include("**/*.kts") exclude("**/resources/**") exclude("**/build/**") }</ID>

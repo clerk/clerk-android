@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Verification(
   /** The state of the verification. */
-  val status: Status,
+  val status: Status = Status.UNKNOWN,
   /** The strategy pertaining to the parent sign-up or sign-in attempt. */
   val strategy: String? = null,
   /** The number of attempts related to the verification. */

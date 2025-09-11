@@ -38,75 +38,45 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Session(
-  /** A unique identifier for the session. */
   val id: String,
-
-  /** The current state of the session. */
-  val status: SessionStatus,
-
-  /** The time the session expires and will cease to be active. */
+  val status: SessionStatus = SessionStatus.UNKNOWN,
   @SerialName("expire_at") val expireAt: Long,
 
-  /** The time when the session was abandoned by the user. */
-  @SerialName("abandon_at") val abandonAt: Long,
-
-  /** The time the session was last active on the client. */
+  // Can be null if session wasn’t abandoned
+  @SerialName("abandon_at") val abandonAt: Long? = null,
   @SerialName("last_active_at") val lastActiveAt: Long,
-
-  /** The latest activity associated with the session. */
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
-
-  /** The last active organization identifier. */
   @SerialName("last_active_organization_id") val lastActiveOrganizationId: String? = null,
 
-  /** The JWT actor for the session. */
-  val actor: String? = null,
-
-  /** The user associated with the session. */
+  // More future-proof than String?
+  val actor: kotlinx.serialization.json.JsonElement? = null,
   val user: User? = null,
-
-  /** Public information about the user that this session belongs to. */
   @SerialName("public_user_data") val publicUserData: PublicUserData? = null,
 
-  /** The time the session was created. */
+  // New: factor_verification_age
+  @SerialName("factor_verification_age") val factorVerificationAge: List<Int>? = null,
   @SerialName("created_at") val createdAt: Long,
-
-  /** The last time the session recorded activity of any kind. */
   @SerialName("updated_at") val updatedAt: Long,
 
-  /** The last active token for the session. */
+  // New: tasks
+  val tasks: List<SessionTask> = emptyList(),
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
-  /** Represents the status of a session. */
   @Serializable
   enum class SessionStatus {
-    /** The session was abandoned client-side. */
     @SerialName("abandoned") ABANDONED,
-
-    /** The session is valid, and all activity is allowed. */
     @SerialName("active") ACTIVE,
-
-    /** The user signed out of the session, but the Session remains in the Client object. */
     @SerialName("ended") ENDED,
-
-    /** The period of allowed activity for this session has passed. */
     @SerialName("expired") EXPIRED,
-
-    /** The user signed out of the session, and the Session was removed from the Client object. */
     @SerialName("removed") REMOVED,
-
-    /**
-     * The session has been replaced by another one, but the Session remains in the Client object.
-     */
     @SerialName("replaced") REPLACED,
-
-    /** The application ended the session, and the Session was removed from the Client object. */
     @SerialName("revoked") REVOKED,
-
-    /** Unknown session status. */
     @SerialName("unknown") UNKNOWN,
+    @SerialName("pending") PENDING,
   }
 }
+
+@Serializable data class SessionTask(val key: String)
 
 /**
  * A `SessionActivity` object will provide information about the user's location, device and

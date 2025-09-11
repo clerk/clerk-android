@@ -59,13 +59,6 @@ jobs:
           COMMITS=$(git log --pretty=format:"- %s (%h)" HEAD)
         fi
         
-        # Get contributors since last tag
-        if [ -n "$PREVIOUS_TAG" ]; then
-          CONTRIBUTORS=$(git log --pretty=format:"%an" $PREVIOUS_TAG..HEAD | sort | uniq | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
-        else
-          CONTRIBUTORS=$(git log --pretty=format:"%an" HEAD | sort | uniq | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
-        fi
-        
         # Count changes
         if [ -n "$PREVIOUS_TAG" ]; then
           COMMIT_COUNT=$(git rev-list --count $PREVIOUS_TAG..HEAD)
@@ -79,10 +72,6 @@ jobs:
         RELEASE_NOTES="## What's Changed
 
         $COMMITS
-
-        ### 📊 Stats
-        - **$COMMIT_COUNT** commits since last release
-        - **$FILES_CHANGED** files changed
 
         ### 🚀 Installation
 
@@ -129,7 +118,7 @@ jobs:
       uses: actions/checkout@v5
       
     - name: Set up JDK 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -146,4 +135,4 @@ jobs:
         ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
         ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
         ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
-      run: ./gradlew publishMavenPublicationToMavenCentralRepository --no-daemon --stacktrace
+      run: ./gradlew :source:api:publishMavenPublicationToMavenCentralRepository

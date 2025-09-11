@@ -39,7 +39,7 @@ class DeviceAttestationHelperTest {
 
     // Set up default behavior
     every { IntegrityManagerFactory.createStandard(any()) } returns mockIntegrityManager
-    every { ClerkApi.deviceAttestationApi } returns mockDeviceAttestationApi
+    every { ClerkApi.deviceAttestation } returns mockDeviceAttestationApi
 
     // Reset the helper state
     DeviceAttestationHelper.integrityManager = null

@@ -1,8 +1,10 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 
 plugins {
-  alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.android)
+  alias(libs.plugins.android.library)
+  alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.dokka)
   alias(libs.plugins.kotlin.plugin.serialization)
   alias(libs.plugins.ksp)
   alias(libs.plugins.mavenPublish)
@@ -10,20 +12,15 @@ plugins {
 
 android {
   namespace = "com.clerk.sdk"
-  compileSdk = 36
+  compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
-    minSdk = 24
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    minSdk = libs.versions.minSdk.get().toInt()
     buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.sdk.get()}\"")
   }
 
   buildTypes {
-    debug {
-      isMinifyEnabled = false
-      enableUnitTestCoverage = true
-      enableAndroidTestCoverage = true
-    }
+    debug { isMinifyEnabled = false }
     release {
       isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -37,11 +34,43 @@ tasks.withType<DokkaTaskPartial>().configureEach {
   dependsOn(tasks.named("kspDebugKotlin"))
   dependsOn(tasks.named("kspReleaseKotlin"))
   dependencies { dokkaPlugin(libs.versioning.plugin) }
-  moduleName.set("Clerk Android")
+  moduleName.set("Clerk Android API")
   suppressInheritedMembers.set(true)
   dokkaSourceSets.configureEach {
     includes.from(listOf("module.md"))
     reportUndocumented.set(true)
+  }
+}
+
+mavenPublishing {
+  signAllPublications()
+  coordinates("com.clerk", "clerk-android", libs.versions.clerk.sdk.get())
+  publishToMavenCentral()
+
+  pom {
+    name.set("Clerk Android UI")
+    description.set("UI components for Clerk Android SDK")
+    inceptionYear.set("2025")
+    url.set("https://github.com/clerk/clerk-android")
+    licenses {
+      license {
+        name.set("MIT License")
+        url.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+        distribution.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+      }
+    }
+    developers {
+      developer {
+        id.set("clerk")
+        name.set("Clerk")
+        url.set("https://clerk.com")
+      }
+    }
+    scm {
+      url.set("https://github.com/clerk/clerk-android")
+      connection.set("scm:git:git://github.com/clerk/clerk-android.git")
+      developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
+    }
   }
 }
 

@@ -6,12 +6,12 @@ on:
 jobs:
   build:
 
-    runs-on: macos-latest
+    runs-on: macos-latest-xlarge
 
     steps:
     - uses: actions/checkout@v5
     - name: set up JDK 21
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: '21'
         distribution: 'zulu'

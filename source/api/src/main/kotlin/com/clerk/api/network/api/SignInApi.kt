@@ -1,8 +1,8 @@
 package com.clerk.api.network.api
 
+import com.clerk.api.network.ApiParams
+import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.paths.CommonParams
-import com.clerk.api.network.paths.Paths
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import retrofit2.http.Field
@@ -19,22 +19,22 @@ internal interface SignInApi {
    * @see SignIn.create
    */
   @FormUrlEncoded
-  @POST(Paths.ClientPath.SignInPath.SIGN_INS)
+  @POST(ApiPaths.Client.SignIn.BASE)
   suspend fun createSignIn(
     @FieldMap params: Map<String, String>
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
   /** @see SignIn.authenticateWithRedirect */
   @FormUrlEncoded
-  @POST(Paths.ClientPath.SignInPath.SIGN_INS)
+  @POST(ApiPaths.Client.SignIn.BASE)
   suspend fun authenticateWithGoogle(
-    @Field(CommonParams.STRATEGY) strategy: String = "google_one_tap",
+    @Field(ApiParams.STRATEGY) strategy: String = "google_one_tap",
     @Field("token") token: String,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
   /** @see SignIn.authenticateWithRedirect */
   @FormUrlEncoded
-  @POST(Paths.ClientPath.SignInPath.SIGN_INS)
+  @POST(ApiPaths.Client.SignIn.BASE)
   suspend fun authenticateWithRedirect(
     @Field("strategy") strategy: String,
     @Field("redirect_url") redirectUrl: String?,
@@ -43,30 +43,30 @@ internal interface SignInApi {
     @Field("legal_accepted") legalAccepted: Boolean? = null,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
-  @GET(Paths.ClientPath.SignInPath.WithId.SIGN_INS_WITH_ID)
+  @GET(ApiPaths.Client.SignIn.WITH_ID)
   suspend fun fetchSignIn(
-    @Path(CommonParams.ID) id: String,
+    @Path(ApiParams.ID) id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @POST(Paths.ClientPath.SignInPath.WithId.ATTEMPT_FIRST_FACTOR)
+  @POST(ApiPaths.Client.SignIn.ATTEMPT_FIRST_FACTOR)
   suspend fun attemptFirstFactor(
-    @Path(CommonParams.ID) id: String,
+    @Path(ApiParams.ID) id: String,
     @FieldMap params: Map<String, String>,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @POST(Paths.ClientPath.SignInPath.WithId.ATTEMPT_SECOND_FACTOR)
+  @POST(ApiPaths.Client.SignIn.ATTEMPT_SECOND_FACTOR)
   suspend fun attemptSecondFactor(
-    @Path(CommonParams.ID) id: String,
+    @Path(ApiParams.ID) id: String,
     @FieldMap params: Map<String, String>,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
   @FormUrlEncoded
-  @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_FIRST_FACTOR)
+  @POST(ApiPaths.Client.SignIn.PREPARE_FIRST_FACTOR)
   suspend fun prepareSignInFirstFactor(
-    @Path(CommonParams.ID) id: String,
+    @Path(ApiParams.ID) id: String,
     @FieldMap fields: Map<String, String>,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
@@ -77,9 +77,9 @@ internal interface SignInApi {
    * @param params The parameters for the second factor. @see [SignIn.PrepareSecondFactorParams]
    */
   @FormUrlEncoded
-  @POST(Paths.ClientPath.SignInPath.WithId.PREPARE_SECOND_FACTOR)
+  @POST(ApiPaths.Client.SignIn.PREPARE_SECOND_FACTOR)
   suspend fun prepareSecondFactor(
-    @Path(CommonParams.ID) id: String,
+    @Path(ApiParams.ID) id: String,
     @FieldMap params: Map<String, String>,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
@@ -93,9 +93,9 @@ internal interface SignInApi {
    * @param signOutOfOtherSessions Whether to sign out of other sessions.
    */
   @FormUrlEncoded
-  @POST(Paths.ClientPath.SignInPath.WithId.RESET_PASSWORD)
+  @POST(ApiPaths.Client.SignIn.RESET_PASSWORD)
   suspend fun resetPassword(
-    @Path(CommonParams.ID) id: String,
+    @Path(ApiParams.ID) id: String,
     @Field("password") password: String,
     @Field("sign_out_of_other_sessions") signOutOfOtherSessions: Boolean,
   ): ClerkResult<SignIn, ClerkErrorResponse>

@@ -1,0 +1,31 @@
+package com.clerk.api.organizations
+
+import com.clerk.api.Clerk
+import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
+import kotlinx.serialization.Serializable
+
+/** An interface representing an organization suggestion. */
+@Serializable
+data class OrganizationSuggestion(
+  /** The unique identifier of the suggestion. */
+  val id: String,
+  /** The public data of the organization. */
+  val publicOrganizationData: PublicOrganizationData,
+  /** The status of the suggestion. */
+  val status: String,
+  /** The timestamp when the suggestion was created. */
+  val createdAt: Long,
+  /** The timestamp when the suggestion was last updated. */
+  val updatedAt: Long,
+)
+
+/** Accepts this organization suggestion. */
+suspend fun OrganizationSuggestion.accept():
+  ClerkResult<OrganizationSuggestion, ClerkErrorResponse> {
+  return ClerkApi.user.acceptOrganizationSuggestion(
+    suggestionId = this.id,
+    sessionId = Clerk.session?.id,
+  )
+}

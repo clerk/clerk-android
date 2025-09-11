@@ -27,7 +27,9 @@ data class OAuthResult(val signIn: SignIn? = null, val signUp: SignUp? = null) {
     get() = if (signIn != null) ResultType.SIGN_IN else ResultType.SIGN_UP
 }
 
+@kotlinx.serialization.Serializable
 enum class ResultType {
   SIGN_IN,
   SIGN_UP,
+  UNKNOWN,
 }

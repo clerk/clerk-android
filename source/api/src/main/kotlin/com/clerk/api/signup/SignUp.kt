@@ -43,7 +43,7 @@ data class SignUp(
    * The status of the current sign-up. Indicates the current state of the sign-up process (e.g.,
    * complete, missing requirements, etc.).
    */
-  val status: Status,
+  val status: Status = Status.UNKNOWN,
 
   /**
    * An array of all the required fields that need to be supplied and verified in order for this
@@ -502,7 +502,7 @@ data class SignUp(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return SSOService.authenticateWithRedirect(
-        strategy = params.toMap()[AuthStrategy.STRATEGY_KEY]!!,
+        strategy = params.toMap()[com.clerk.api.Constants.Fields.STRATEGY]!!,
         redirectUrl = params.redirectUrl,
         identifier = params.identifier,
         emailAddress = params.emailAddress,
