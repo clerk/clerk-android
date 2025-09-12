@@ -18,6 +18,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.button.standard.ClerkButtonConfig
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.HeaderTextView
@@ -35,6 +36,7 @@ fun SignInFactorOnePasskeyView(
   factor: Factor,
   modifier: Modifier = Modifier,
   onBackPressed: () -> Unit = {},
+  onContinue: () -> Unit = {},
 ) {
   ClerkMaterialTheme {
     Column(
@@ -45,28 +47,7 @@ fun SignInFactorOnePasskeyView(
           .then(modifier),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      ClerkTopAppBar(onBackPressed = onBackPressed)
-      Spacers.Vertical.Spacer8()
-      HeaderTextView(text = stringResource(R.string.use_your_passkey), type = HeaderType.Title)
-      Spacers.Vertical.Spacer8()
-      HeaderTextView(
-        text =
-          stringResource(
-            R.string
-              .using_your_passkey_confirms_it_s_you_your_device_may_ask_for_your_fingerprint_face_or_screen_lock
-          ),
-        type = HeaderType.Subtitle,
-      )
-      Spacers.Vertical.Spacer8()
-      ClerkButton(
-        text = factor.safeIdentifier!!,
-        onClick = {},
-        icons =
-          ClerkButtonDefaults.icons(
-            trailingIcon = R.drawable.ic_edit,
-            trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-          ),
-      )
+      HeaderView(onBackPressed = onBackPressed, factor = factor, onContinue = onContinue)
       Spacers.Vertical.Spacer32()
       Icon(
         modifier = Modifier.size(dp72),
@@ -91,6 +72,37 @@ fun SignInFactorOnePasskeyView(
       SecuredByClerk()
     }
   }
+}
+
+@Composable
+private fun HeaderView(onBackPressed: () -> Unit, factor: Factor, onContinue: () -> Unit) {
+  ClerkTopAppBar(onBackPressed = onBackPressed)
+  Spacers.Vertical.Spacer8()
+  HeaderTextView(text = stringResource(R.string.use_your_passkey), type = HeaderType.Title)
+  Spacers.Vertical.Spacer8()
+  HeaderTextView(
+    text =
+      stringResource(
+        R.string
+          .using_your_passkey_confirms_it_s_you_your_device_may_ask_for_your_fingerprint_face_or_screen_lock
+      ),
+    type = HeaderType.Subtitle,
+  )
+  Spacers.Vertical.Spacer8()
+  ClerkButton(
+    text = factor.safeIdentifier!!,
+    onClick = onContinue,
+    icons =
+      ClerkButtonDefaults.icons(
+        trailingIcon = R.drawable.ic_edit,
+        trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+      ),
+    configuration =
+      ClerkButtonDefaults.configuration(
+        style = ClerkButtonConfig.ButtonStyle.Secondary,
+        emphasis = ClerkButtonConfig.Emphasis.High,
+      ),
+  )
 }
 
 @PreviewLightDark
