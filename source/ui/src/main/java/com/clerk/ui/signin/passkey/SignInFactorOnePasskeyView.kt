@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
@@ -35,6 +36,7 @@ import com.clerk.ui.theme.DefaultColors
 fun SignInFactorOnePasskeyView(
   factor: Factor,
   modifier: Modifier = Modifier,
+  viewModel: PasskeyViewModel = viewModel(),
   onBackPressed: () -> Unit = {},
   onContinue: () -> Unit = {},
 ) {
@@ -57,8 +59,8 @@ fun SignInFactorOnePasskeyView(
       )
       Spacers.Vertical.Spacer32()
       ClerkButton(
-        text = "Continue",
-        onClick = {},
+        text = stringResource(R.string.continue_text),
+        onClick = { viewModel.authenticate() },
         modifier = Modifier.fillMaxWidth(),
         icons =
           ClerkButtonDefaults.icons(
@@ -67,7 +69,7 @@ fun SignInFactorOnePasskeyView(
           ),
       )
       Spacers.Vertical.Spacer16()
-      ClerkTextButton(onClick = {}, text = "Use a different method")
+      ClerkTextButton(onClick = {}, text = stringResource(R.string.use_a_different_method))
       Spacers.Vertical.Spacer32()
       SecuredByClerk()
     }
