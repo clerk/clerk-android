@@ -4,9 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +29,7 @@ import com.clerk.ui.core.common.SecuredByClerk
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.common.dimens.dp72
+import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
@@ -92,16 +91,7 @@ private fun SignInFactorOnePasskeyViewImpl(
     subtitle = stringResource(R.string.using_your_passkey),
     onClickIdentifier = onChangeIdentifierClicked,
     identifier = factor.safeIdentifier,
-    snackbarHost = {
-      SnackbarHost(snackbarHostState) { data ->
-        Snackbar(
-          containerColor = ClerkMaterialTheme.computedColors.backgroundDanger,
-          contentColor = ClerkMaterialTheme.colors.foreground,
-          dismissActionContentColor = ClerkMaterialTheme.colors.foreground,
-          snackbarData = data,
-        )
-      }
-    },
+    snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
   ) {
     Spacers.Vertical.Spacer32()
     BodyContent(viewModel, state, onUseAnotherMethodClicked)
