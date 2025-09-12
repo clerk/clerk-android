@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -119,36 +120,39 @@ private fun SignInFactorCodeViewImpl(
   }
 
   ClerkMaterialTheme {
-    Column(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(color = ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp18)
-          .then(modifier),
-      horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-      AuthViewHeader(factor, onBackPressed = onBackPressed)
-      Spacers.Vertical.Spacer32()
-      ClerkCodeInputField(
-        verificationState = verificationState,
-        onOtpTextChange = {
-          if (it.length == 6) {
-            viewModel.attempt(factor, isSecondFactor = false, code = it)
-          }
-        },
-        showResend = SignInFactorCodeHelper.showResend(factor, verificationState),
-        secondsLeft = timeLeft,
-        onClickResend = onClickResend,
-      )
-      Spacers.Vertical.Spacer24()
-      if (SignInFactorCodeHelper.showUseAnotherMethod(factor)) {
-        ClerkTextButton(
-          text = stringResource(R.string.use_another_method),
-          onClick = onUserAnotherMethod,
+    Scaffold { innerPadding ->
+      Column(
+        modifier =
+          Modifier.fillMaxWidth()
+            .background(color = ClerkMaterialTheme.colors.background)
+            .padding(innerPadding)
+            .padding(horizontal = dp18)
+            .then(modifier),
+        horizontalAlignment = Alignment.CenterHorizontally,
+      ) {
+        AuthViewHeader(factor, onBackPressed = onBackPressed)
+        Spacers.Vertical.Spacer32()
+        ClerkCodeInputField(
+          verificationState = verificationState,
+          onOtpTextChange = {
+            if (it.length == 6) {
+              viewModel.attempt(factor, isSecondFactor = false, code = it)
+            }
+          },
+          showResend = SignInFactorCodeHelper.showResend(factor, verificationState),
+          secondsLeft = timeLeft,
+          onClickResend = onClickResend,
         )
+        Spacers.Vertical.Spacer24()
+        if (SignInFactorCodeHelper.showUseAnotherMethod(factor)) {
+          ClerkTextButton(
+            text = stringResource(R.string.use_another_method),
+            onClick = onUserAnotherMethod,
+          )
+        }
+        Spacers.Vertical.Spacer32()
+        SecuredByClerk()
       }
-      Spacers.Vertical.Spacer32()
-      SecuredByClerk()
     }
   }
 }
