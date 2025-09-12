@@ -37,3 +37,4 @@ val dp58 = 58.dp
 val dp60 = 60.dp
 val dp62 = 62.dp
 val dp64 = 64.dp
+val dp72 = 72.dp

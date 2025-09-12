@@ -22,6 +22,7 @@ class BadgeSnapshotTest : BaseSnapshotTest() {
   @Test
   fun badgeSnapshotTestLight() {
     paparazzi.snapshot {
+      Clerk.customTheme = ClerkTheme(DefaultColors.light)
       ClerkMaterialTheme {
         Column(
           modifier =

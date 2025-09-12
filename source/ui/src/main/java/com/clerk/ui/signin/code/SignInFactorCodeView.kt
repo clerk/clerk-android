@@ -20,7 +20,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.core.button.standard.TextButton
+import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.AuthViewHeader
 import com.clerk.ui.core.common.SecuredByClerk
 import com.clerk.ui.core.common.Spacers
@@ -142,7 +142,7 @@ private fun SignInFactorCodeViewImpl(
       )
       Spacers.Vertical.Spacer24()
       if (SignInFactorCodeHelper.showUseAnotherMethod(factor)) {
-        TextButton(
+        ClerkTextButton(
           text = stringResource(R.string.use_another_method),
           onClick = onUserAnotherMethod,
         )
