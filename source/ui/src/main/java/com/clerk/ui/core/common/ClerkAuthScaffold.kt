@@ -18,17 +18,18 @@ import com.clerk.ui.core.common.dimens.dp18
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-internal fun ClerkScaffold(
+internal fun ClerkAuthScaffold(
   onBackPressed: () -> Unit,
   title: String,
   subtitle: String,
   modifier: Modifier = Modifier,
+  snackbarHost: @Composable () -> Unit = {},
   hasLogo: Boolean = true,
   identifier: String? = null,
   onClickIdentifier: () -> Unit = {},
   content: @Composable () -> Unit,
 ) {
-  Scaffold(modifier = Modifier.then(modifier)) { innerPadding ->
+  Scaffold(modifier = Modifier.then(modifier), snackbarHost = snackbarHost) { innerPadding ->
     Column(
       modifier =
         Modifier.fillMaxWidth()

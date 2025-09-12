@@ -16,7 +16,7 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.ClerkScaffold
+import com.clerk.ui.core.common.ClerkAuthScaffold
 import com.clerk.ui.core.common.SecuredByClerk
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
@@ -87,7 +87,7 @@ fun SignInFactorCodeView(
  * @param onClickResend Callback for resend code action
  * @param modifier Optional modifier for styling
  * @param viewModel The view model managing the sign-in state (injected via Compose)
- * @param onUserAnotherMethod Callback for "use another method" action
+ * @param onUseAnotherMethod Callback for "use another method" action
  */
 @Composable
 private fun SignInFactorCodeViewImpl(
@@ -96,7 +96,7 @@ private fun SignInFactorCodeViewImpl(
   onClickResend: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: SignInFactorCodeViewModel = viewModel(),
-  onUserAnotherMethod: () -> Unit = {},
+  onUseAnotherMethod: () -> Unit = {},
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val verificationState = state.verificationState()
@@ -113,11 +113,13 @@ private fun SignInFactorCodeViewImpl(
   }
 
   ClerkMaterialTheme {
-    ClerkScaffold(
+    ClerkAuthScaffold(
       modifier = modifier,
       onBackPressed = onBackPressed,
       title = SignInFactorCodeHelper.titleForStrategy(factor),
       subtitle = SignInFactorCodeHelper.subtitleForStrategy(factor),
+      identifier = factor.safeIdentifier,
+      onClickIdentifier = { TODO() },
     ) {
       ClerkCodeInputField(
         verificationState = verificationState,
@@ -134,7 +136,7 @@ private fun SignInFactorCodeViewImpl(
       if (SignInFactorCodeHelper.showUseAnotherMethod(factor)) {
         ClerkTextButton(
           text = stringResource(R.string.use_another_method),
-          onClick = onUserAnotherMethod,
+          onClick = onUseAnotherMethod,
         )
       }
       Spacers.Vertical.Spacer32()
