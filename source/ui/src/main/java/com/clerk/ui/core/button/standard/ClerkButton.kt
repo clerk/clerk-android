@@ -43,7 +43,7 @@ import com.clerk.ui.theme.DefaultColors
  * @param text Label displayed on the button.
  * @param onClick Invoked when the button is pressed.
  * @param modifier Compose `Modifier` for layout and semantics.
- * @param buttonConfig Configuration controlling size, emphasis, and other visuals.
+ * @param configuration Configuration controlling size, emphasis, and other visuals.
  * @param isEnabled When false, applies disabled styling and prevents clicks.
  * @param icons Optional leading and trailing icons, including their colors.
  *
@@ -61,7 +61,7 @@ fun ClerkButton(
   text: String,
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
-  buttonConfig: ClerkButtonConfig = ClerkButtonDefaults.configuration(),
+  configuration: ClerkButtonConfig = ClerkButtonDefaults.configuration(),
   isEnabled: Boolean = true,
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
@@ -71,7 +71,7 @@ fun ClerkButton(
     text = text,
     onClick = onClick,
     modifier = modifier,
-    buttonConfig = buttonConfig,
+    buttonConfig = configuration,
     isEnabled = isEnabled,
     isPressedCombined = pressed,
     interactionSource = interactionSource,
@@ -228,7 +228,7 @@ private fun PreviewButton() {
           modifier = Modifier.fillMaxWidth(),
           text = "None - Large - Primary",
           onClick = {},
-          buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
+          configuration = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
           icons =
             ClerkButtonDefaults.icons( // Changed
               leadingIcon = R.drawable.ic_triangle_right,
@@ -258,7 +258,7 @@ private fun PreviewButton() {
           text = "None - Large - Primary - Disabled",
           isEnabled = false,
           onClick = {},
-          buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
+          configuration = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
           icons =
             ClerkButtonDefaults.icons( // Changed
               leadingIcon = R.drawable.ic_triangle_right,
@@ -274,7 +274,7 @@ private fun PreviewButton() {
           modifier = Modifier.fillMaxWidth(),
           text = "Low - Small - Primary",
           onClick = {},
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               emphasis = ClerkButtonConfig.Emphasis.Low,
               size = ClerkButtonConfig.Size.Small,
@@ -312,7 +312,7 @@ private fun PreviewButton() {
           text = "Low - Small - Primary - Disabled",
           isEnabled = false,
           onClick = {},
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               emphasis = ClerkButtonConfig.Emphasis.Low,
               size = ClerkButtonConfig.Size.Small,
@@ -332,7 +332,7 @@ private fun PreviewButton() {
           modifier = Modifier.fillMaxWidth(),
           text = "None - Small - Primary",
           onClick = {},
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Small,
@@ -370,7 +370,7 @@ private fun PreviewButton() {
           text = "None - Small - Primary - Disabled",
           isEnabled = false,
           onClick = {},
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               emphasis = ClerkButtonConfig.Emphasis.None,
               size = ClerkButtonConfig.Size.Small,
@@ -390,7 +390,7 @@ private fun PreviewButton() {
           modifier = Modifier.fillMaxWidth(),
           text = "High - Large - Secondary",
           onClick = {},
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               style = ClerkButtonConfig.ButtonStyle.Secondary,
               emphasis = ClerkButtonConfig.Emphasis.High,
@@ -430,7 +430,7 @@ private fun PreviewButton() {
           text = "High - Large - Secondary - Disabled",
           isEnabled = false,
           onClick = {},
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               style = ClerkButtonConfig.ButtonStyle.Secondary,
               emphasis = ClerkButtonConfig.Emphasis.High,
@@ -451,7 +451,7 @@ private fun PreviewButton() {
           modifier = Modifier.fillMaxWidth(),
           text = "None - Large - Secondary",
           onClick = {},
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               style = ClerkButtonConfig.ButtonStyle.Secondary,
               emphasis = ClerkButtonConfig.Emphasis.None,
@@ -491,7 +491,7 @@ private fun PreviewButton() {
           text = "None - Large - Secondary - Disabled",
           isEnabled = false,
           onClick = {},
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               style = ClerkButtonConfig.ButtonStyle.Secondary,
               emphasis = ClerkButtonConfig.Emphasis.None,
@@ -512,7 +512,7 @@ private fun PreviewButton() {
           modifier = Modifier.fillMaxWidth(),
           text = "High - Large - Negative",
           onClick = {},
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               style = ClerkButtonConfig.ButtonStyle.Negative,
               emphasis = ClerkButtonConfig.Emphasis.High,
@@ -552,7 +552,7 @@ private fun PreviewButton() {
           text = "High - Large - Negative - Disabled",
           onClick = {},
           isEnabled = false,
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               style = ClerkButtonConfig.ButtonStyle.Negative,
               emphasis = ClerkButtonConfig.Emphasis.High,
@@ -572,7 +572,7 @@ private fun PreviewButton() {
           modifier = Modifier.fillMaxWidth(),
           text = "None - Large - Negative",
           onClick = {},
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               style = ClerkButtonConfig.ButtonStyle.Negative,
               emphasis = ClerkButtonConfig.Emphasis.None,
@@ -612,7 +612,7 @@ private fun PreviewButton() {
           text = "None - Large - Negative - Disabled",
           onClick = {},
           isEnabled = false,
-          buttonConfig =
+          configuration =
             ClerkButtonConfig(
               style = ClerkButtonConfig.ButtonStyle.Negative,
               emphasis = ClerkButtonConfig.Emphasis.None,

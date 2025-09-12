@@ -34,7 +34,7 @@ internal fun AuthViewHeader(
       text = factor.safeIdentifier.orEmpty(),
       onClick = {},
       modifier = Modifier.wrapContentHeight(),
-      buttonConfig = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
+      configuration = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
       icons =
         ClerkButtonDefaults.icons(
           trailingIcon = R.drawable.ic_edit,

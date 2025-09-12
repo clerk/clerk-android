@@ -85,7 +85,7 @@ private fun SignInFactorOnePasswordViewImpl(
         text = email,
         onClick = {},
         modifier = Modifier.wrapContentHeight(),
-        buttonConfig = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
+        configuration = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
         icons =
           ClerkButtonDefaults.icons(
             trailingIcon = R.drawable.ic_edit,
