@@ -27,4 +27,7 @@
     <string name="use_a_different_method">Use a different method</string>
     <string name="get_help">Get help</string>
     <string name="if_you_have_trouble_signing_into_your_account">If you have trouble signing into your account, email us and we will work with you to restore access as soon as possible.</string>
+    <string name="email_support">Email support</string>
+    <string name="support_clerk_com" translatable="false">support@clerk.com</string>
+    <string name="no_email_clients_installed_on_device">No email clients installed on device.</string>
 </resources>
