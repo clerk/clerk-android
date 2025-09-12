@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,59 +81,65 @@ private fun SignInFactorOnePasswordViewImpl(
 ) {
   var password by remember { mutableStateOf("") }
   ClerkMaterialTheme {
-    Column(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(color = ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp18)
-          .then(modifier),
-      horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-      ClerkTopAppBar(onBackPressed = onBackPressed)
-      HeaderTextView(type = HeaderType.Title, text = stringResource(R.string.enter_password))
-      Spacer(Modifier.height(dp8))
-      HeaderTextView(
-        type = HeaderType.Subtitle,
-        text = stringResource(R.string.enter_the_password_associated_with_your_account),
-      )
-      Spacer(Modifier.height(dp8))
-      ClerkButton(
-        text = email,
-        onClick = {},
-        modifier = Modifier.wrapContentHeight(),
-        configuration = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
-        icons =
-          ClerkButtonDefaults.icons(
-            trailingIcon = R.drawable.ic_edit,
-            trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-          ),
-      )
-      Spacer(Modifier.height(dp24))
-      ClerkTextField(
-        value = password,
-        onValueChange = { password = it },
-        label = stringResource(R.string.enter_your_password),
-        visualTransformation = PasswordVisualTransformation(),
-      )
-      Spacer(Modifier.height(dp24))
-      ClerkButton(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = { onContinue(password) },
-        text = stringResource(R.string.continue_text),
-        icons =
-          ClerkButtonDefaults.icons(
-            trailingIcon = R.drawable.ic_triangle_right,
-            trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
-          ),
-      )
-      Spacer(Modifier.height(dp24))
-      Row(modifier = Modifier.fillMaxWidth().padding(horizontal = dp8)) {
-        ClerkTextButton(
-          text = stringResource(R.string.use_another_method),
-          onClick = onUseAnotherMethod,
+    Scaffold { innerPadding ->
+      Column(
+        modifier =
+          Modifier.fillMaxWidth()
+            .background(color = ClerkMaterialTheme.colors.background)
+            .padding(innerPadding)
+            .padding(horizontal = dp18)
+            .then(modifier),
+        horizontalAlignment = Alignment.CenterHorizontally,
+      ) {
+        ClerkTopAppBar(onBackPressed = onBackPressed)
+        HeaderTextView(type = HeaderType.Title, text = stringResource(R.string.enter_password))
+        Spacer(Modifier.height(dp8))
+        HeaderTextView(
+          type = HeaderType.Subtitle,
+          text = stringResource(R.string.enter_the_password_associated_with_your_account),
         )
-        Spacer(modifier = Modifier.weight(1f))
-        ClerkTextButton(text = stringResource(R.string.forgot_password), onClick = onForgotPassword)
+        Spacer(Modifier.height(dp8))
+        ClerkButton(
+          text = email,
+          onClick = {},
+          modifier = Modifier.wrapContentHeight(),
+          configuration = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
+          icons =
+            ClerkButtonDefaults.icons(
+              trailingIcon = R.drawable.ic_edit,
+              trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+            ),
+        )
+        Spacer(Modifier.height(dp24))
+        ClerkTextField(
+          value = password,
+          onValueChange = { password = it },
+          label = stringResource(R.string.enter_your_password),
+          visualTransformation = PasswordVisualTransformation(),
+        )
+        Spacer(Modifier.height(dp24))
+        ClerkButton(
+          modifier = Modifier.fillMaxWidth(),
+          onClick = { onContinue(password) },
+          text = stringResource(R.string.continue_text),
+          icons =
+            ClerkButtonDefaults.icons(
+              trailingIcon = R.drawable.ic_triangle_right,
+              trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+            ),
+        )
+        Spacer(Modifier.height(dp24))
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = dp8)) {
+          ClerkTextButton(
+            text = stringResource(R.string.use_another_method),
+            onClick = onUseAnotherMethod,
+          )
+          Spacer(modifier = Modifier.weight(1f))
+          ClerkTextButton(
+            text = stringResource(R.string.forgot_password),
+            onClick = onForgotPassword,
+          )
+        }
       }
     }
   }
