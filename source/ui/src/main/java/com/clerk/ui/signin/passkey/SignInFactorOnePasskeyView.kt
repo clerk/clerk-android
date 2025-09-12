@@ -1,12 +1,9 @@
 package com.clerk.ui.signin.passkey
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -26,17 +23,13 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.button.standard.ClerkButtonConfig
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.HeaderTextView
-import com.clerk.ui.core.common.HeaderType
+import com.clerk.ui.core.common.ClerkAuthScaffold
 import com.clerk.ui.core.common.SecuredByClerk
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
-import com.clerk.ui.core.common.dimens.dp18
 import com.clerk.ui.core.common.dimens.dp72
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
@@ -92,39 +85,28 @@ private fun SignInFactorOnePasskeyViewImpl(
       )
     }
   }
-  ClerkMaterialTheme {
-    Scaffold(
-      snackbarHost = {
-        SnackbarHost(snackbarHostState) { data ->
-          Snackbar(
-            containerColor = ClerkMaterialTheme.computedColors.backgroundDanger,
-            contentColor = ClerkMaterialTheme.colors.foreground,
-            dismissActionContentColor = ClerkMaterialTheme.colors.foreground,
-            snackbarData = data,
-          )
-        }
-      }
-    ) { innerPadding ->
-      Column(
-        modifier =
-          Modifier.fillMaxWidth()
-            .background(color = ClerkMaterialTheme.colors.background)
-            .padding(innerPadding)
-            .padding(horizontal = dp18)
-            .then(modifier),
-        horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
-        HeaderView(
-          onBackPressed = onBackPressed,
-          factor = factor,
-          onChangeIdentifierClicked = onChangeIdentifierClicked,
+  ClerkAuthScaffold(
+    modifier = modifier,
+    onBackPressed = onBackPressed,
+    title = stringResource(R.string.use_your_passkey),
+    subtitle = stringResource(R.string.using_your_passkey),
+    onClickIdentifier = onChangeIdentifierClicked,
+    identifier = factor.safeIdentifier,
+    snackbarHost = {
+      SnackbarHost(snackbarHostState) { data ->
+        Snackbar(
+          containerColor = ClerkMaterialTheme.computedColors.backgroundDanger,
+          contentColor = ClerkMaterialTheme.colors.foreground,
+          dismissActionContentColor = ClerkMaterialTheme.colors.foreground,
+          snackbarData = data,
         )
-        Spacers.Vertical.Spacer32()
-        BodyContent(viewModel, state, onUseAnotherMethodClicked)
-        Spacers.Vertical.Spacer32()
-        SecuredByClerk()
       }
-    }
+    },
+  ) {
+    Spacers.Vertical.Spacer32()
+    BodyContent(viewModel, state, onUseAnotherMethodClicked)
+    Spacers.Vertical.Spacer32()
+    SecuredByClerk()
   }
 }
 
@@ -159,41 +141,6 @@ private fun BodyContent(
       text = stringResource(R.string.use_a_different_method),
     )
   }
-}
-
-@Composable
-private fun HeaderView(
-  onBackPressed: () -> Unit,
-  factor: Factor,
-  onChangeIdentifierClicked: () -> Unit,
-) {
-  ClerkTopAppBar(onBackPressed = onBackPressed)
-  Spacers.Vertical.Spacer8()
-  HeaderTextView(text = stringResource(R.string.use_your_passkey), type = HeaderType.Title)
-  Spacers.Vertical.Spacer8()
-  HeaderTextView(
-    text =
-      stringResource(
-        R.string
-          .using_your_passkey_confirms_it_s_you_your_device_may_ask_for_your_fingerprint_face_or_screen_lock
-      ),
-    type = HeaderType.Subtitle,
-  )
-  Spacers.Vertical.Spacer8()
-  ClerkButton(
-    text = factor.safeIdentifier!!,
-    onClick = onChangeIdentifierClicked,
-    icons =
-      ClerkButtonDefaults.icons(
-        trailingIcon = R.drawable.ic_edit,
-        trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-      ),
-    configuration =
-      ClerkButtonDefaults.configuration(
-        style = ClerkButtonConfig.ButtonStyle.Secondary,
-        emphasis = ClerkButtonConfig.Emphasis.High,
-      ),
-  )
 }
 
 @PreviewLightDark
