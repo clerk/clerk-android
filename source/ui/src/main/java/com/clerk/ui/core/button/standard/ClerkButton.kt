@@ -6,12 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -24,12 +27,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.common.dimens.dp1
+import com.clerk.ui.core.common.dimens.dp12
+import com.clerk.ui.core.common.dimens.dp2
+import com.clerk.ui.core.common.dimens.dp24
 import com.clerk.ui.core.common.dimens.dp6
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
@@ -61,6 +68,7 @@ fun ClerkButton(
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
+  isLoading: Boolean = false,
   padding: ClerkButtonPadding = ClerkButtonDefaults.padding(),
   configuration: ClerkButtonConfig = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
@@ -73,6 +81,7 @@ fun ClerkButton(
     modifier = modifier,
     configuration = configuration,
     isEnabled = isEnabled,
+    isLoading = isLoading,
     isPressedCombined = pressed,
     interactionSource = interactionSource,
     icons = icons,
@@ -87,6 +96,7 @@ internal fun ClerkButtonWithPressedState(
   isPressed: Boolean,
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
+  isLoading: Boolean = false,
   padding: ClerkButtonPadding = ClerkButtonDefaults.padding(),
   configuration: ClerkButtonConfig = ClerkButtonConfig(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
@@ -103,6 +113,7 @@ internal fun ClerkButtonWithPressedState(
     padding = padding,
     configuration = configuration,
     icons = icons,
+    isLoading = isLoading,
   )
 }
 
@@ -113,6 +124,7 @@ private fun ClerkButtonImpl(
   isEnabled: Boolean,
   isPressedCombined: Boolean,
   interactionSource: MutableInteractionSource,
+  isLoading: Boolean,
   padding: ClerkButtonPadding,
   configuration: ClerkButtonConfig,
   modifier: Modifier = Modifier,
@@ -150,32 +162,61 @@ private fun ClerkButtonImpl(
       color = if (isEnabled) tokens.backgroundColor else tokens.backgroundColor.copy(alpha = 0.5f),
       border = BorderStroke(tokens.borderWidth, tokens.borderColor),
     ) {
-      Row(
-        modifier = Modifier.padding(horizontal = padding.horizontal, padding.vertical),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(dp6, Alignment.CenterHorizontally),
-      ) {
-        icons.leadingIcon?.let {
-          Icon(
-            painter = painterResource(it),
-            contentDescription = null,
-            tint =
-              if (isEnabled) icons.leadingIconColor else icons.leadingIconColor.copy(alpha = 0.5f),
-          )
-        }
-        Text(
-          text = text,
-          style = tokens.textStyle,
-          color = if (isEnabled) tokens.foreground else tokens.foreground.copy(alpha = 0.5f),
+      ButtonContent(
+        isLoading = isLoading,
+        padding = padding,
+        icons = icons,
+        isEnabled = isEnabled,
+        text = text,
+        tokens = tokens,
+      )
+    }
+  }
+}
+
+@Composable
+private fun ButtonContent(
+  isLoading: Boolean,
+  padding: ClerkButtonPadding,
+  icons: ClerkButtonIcons,
+  isEnabled: Boolean,
+  text: String,
+  tokens: ButtonStyleTokens,
+) {
+  if (isLoading) {
+    Box(modifier = Modifier.fillMaxWidth().padding(dp12), contentAlignment = Alignment.Center) {
+      CircularProgressIndicator(
+        strokeWidth = dp2,
+        color = tokens.foreground.copy(alpha = 0.5f),
+        modifier = Modifier.size(dp24),
+      )
+    }
+  } else {
+    Row(
+      modifier = Modifier.padding(horizontal = padding.horizontal, padding.vertical),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(dp6, Alignment.CenterHorizontally),
+    ) {
+      icons.leadingIcon?.let {
+        Icon(
+          painter = painterResource(it),
+          contentDescription = null,
+          tint =
+            if (isEnabled) icons.leadingIconColor else icons.leadingIconColor.copy(alpha = 0.5f),
         )
-        icons.trailingIcon?.let {
-          Icon(
-            painter = painterResource(it),
-            contentDescription = null,
-            tint =
-              if (isEnabled) icons.trailingIconColor else icons.trailingIconColor.copy(alpha = 0.5f),
-          )
-        }
+      }
+      Text(
+        text = text,
+        style = tokens.textStyle,
+        color = if (isEnabled) tokens.foreground else tokens.foreground.copy(alpha = 0.5f),
+      )
+      icons.trailingIcon?.let {
+        Icon(
+          painter = painterResource(it),
+          contentDescription = null,
+          tint =
+            if (isEnabled) icons.trailingIconColor else icons.trailingIconColor.copy(alpha = 0.5f),
+        )
       }
     }
   }
@@ -664,5 +705,13 @@ private fun PreviewButton() {
         )
       }
     }
+  }
+}
+
+@Preview
+@Composable
+private fun PreviewLoadingButton() {
+  ClerkMaterialTheme {
+    ClerkButton(text = "Loading", onClick = {}, isLoading = true, isEnabled = false)
   }
 }

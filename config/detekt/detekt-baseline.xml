@@ -5,7 +5,7 @@
     <ID>CyclomaticComplexMethod:ClerkComposeTheme.kt$@Composable private fun generateComputedColors(colors: ClerkColors): ComputedColors</ID>
     <ID>CyclomaticComplexMethod:ClerkTextField.kt$@Composable fun ClerkTextField( value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier, @DrawableRes leadingIcon: Int? = null, @DrawableRes trailingIcon: Int? = null, label: String? = null, placeholder: String? = null, supportingText: String? = null, isError: Boolean = false, enabled: Boolean = true, onLeadingIconClick: () -> Unit = {}, onTrailingIconClick: () -> Unit = {}, inputContentType: ContentType = ContentType.Username, leadingIconContentDescription: String? = null, trailingIconContentDescription: String? = null, visualTransformation: VisualTransformation = VisualTransformation.None, )</ID>
     <ID>CyclomaticComplexMethod:ClerkThemeProvider.kt$@Composable private fun generateColors(theme: ClerkTheme?): ClerkColors</ID>
-    <ID>LongMethod:ClerkButton.kt$@Composable private fun ClerkButtonImpl( text: String, onClick: () -> Unit, isEnabled: Boolean, isPressedCombined: Boolean, interactionSource: MutableInteractionSource, padding: ClerkButtonPadding, configuration: ClerkButtonConfig, modifier: Modifier = Modifier, icons: ClerkButtonIcons = ClerkButtonDefaults.icons(), )</ID>
+    <ID>EmptyClassBlock:PasskeyViewModel.kt$PasskeyViewModel${}</ID>
     <ID>LongMethod:ClerkButton.kt$@PreviewLightDark @Composable private fun PreviewButton()</ID>
     <ID>LongMethod:ClerkPhoneNumberField.kt$@Composable private fun PhoneNumberInput( computedColors: ComputedColors, value: String, onValueChange: (String) -> Unit, countryCode: String, errorText: String? = null, )</ID>
     <ID>LongMethod:ClerkStandardButtonSnapshotTest.kt$ClerkStandardButtonSnapshotTest$@Test fun clerkButtonGallery()</ID>
@@ -15,7 +15,8 @@
     <ID>LongMethod:ClerkTextFieldSnapshotTest.kt$ClerkTextFieldSnapshotTest$@Test fun testClerkTextFieldError()</ID>
     <ID>LongMethod:ClerkTextFieldSnapshotTest.kt$ClerkTextFieldSnapshotTest$@Test fun testClerkTextFieldUnfocused()</ID>
     <ID>LongMethod:SignInFactorOnePasswordView.kt$@Composable private fun SignInFactorOnePasswordViewImpl( onBackPressed: () -> Unit, email: String, onContinue: (String) -> Unit, onUseAnotherMethod: () -> Unit, modifier: Modifier = Modifier, onForgotPassword: () -> Unit, )</ID>
-    <ID>LongParameterList:ClerkButton.kt$( text: String, onClick: () -> Unit, isEnabled: Boolean, isPressedCombined: Boolean, interactionSource: MutableInteractionSource, padding: ClerkButtonPadding, configuration: ClerkButtonConfig, modifier: Modifier = Modifier, icons: ClerkButtonIcons = ClerkButtonDefaults.icons(), )</ID>
+    <ID>LongParameterList:ClerkButton.kt$( isLoading: Boolean, padding: ClerkButtonPadding, icons: ClerkButtonIcons, isEnabled: Boolean, text: String, tokens: ButtonStyleTokens, )</ID>
+    <ID>LongParameterList:ClerkButton.kt$( text: String, onClick: () -> Unit, isEnabled: Boolean, isPressedCombined: Boolean, interactionSource: MutableInteractionSource, isLoading: Boolean, padding: ClerkButtonPadding, configuration: ClerkButtonConfig, modifier: Modifier = Modifier, icons: ClerkButtonIcons = ClerkButtonDefaults.icons(), )</ID>
     <ID>MagicNumber:DeviceAttestationHelper.kt$DeviceAttestationHelper$8</ID>
     <ID>NestedBlockDepth:ClientSyncingMiddleware.kt$ClientSyncingMiddleware$override fun intercept(chain: Interceptor.Chain): Response</ID>
     <ID>ReturnCount:DeviceAssertionMiddleware.kt$DeviceAssertionInterceptor.DeviceAttestationManager$suspend fun performDeviceAssertion(request: Request, error: ClerkError): Boolean</ID>
