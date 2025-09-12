@@ -3,7 +3,7 @@ package com.clerk.snapshot.signin
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
-import com.clerk.ui.signin.SignInFactorOnePasswordView
+import com.clerk.ui.signin.password.SignInFactorOnePasswordView
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
 
