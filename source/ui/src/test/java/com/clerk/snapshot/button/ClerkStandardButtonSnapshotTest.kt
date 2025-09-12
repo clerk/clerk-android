@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           horizontalAlignment = Alignment.CenterHorizontally,
         ) {
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             icons =
@@ -46,6 +48,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButtonWithPressedState(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isPressed = true,
@@ -57,6 +60,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             isEnabled = false,
             onClick = {},
@@ -68,6 +72,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             configuration = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
@@ -79,10 +84,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButtonWithPressedState(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isPressed = true,
-            buttonConfig = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
+            configuration = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
             icons =
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
@@ -91,6 +97,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             isEnabled = false,
             onClick = {},
@@ -118,25 +125,10 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButtonWithPressedState(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isPressed = true,
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Small,
-              ),
-            icons =
-              ClerkButtonDefaults.icons(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
-          )
-
-          ClerkButton(
-            text = "Continue",
-            isEnabled = false,
-            onClick = {},
             configuration =
               ClerkButtonConfig(
                 emphasis = ClerkButtonConfig.Emphasis.Low,
@@ -150,6 +142,24 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Continue",
+            isEnabled = false,
+            onClick = {},
+            configuration =
+              ClerkButtonConfig(
+                emphasis = ClerkButtonConfig.Emphasis.Low,
+                size = ClerkButtonConfig.Size.Small,
+              ),
+            icons =
+              ClerkButtonDefaults.icons(
+                leadingIcon = R.drawable.ic_triangle_right,
+                trailingIcon = R.drawable.ic_triangle_right,
+              ),
+          )
+
+          ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             configuration =
@@ -165,25 +175,10 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButtonWithPressedState(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isPressed = true,
-            buttonConfig =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Small,
-              ),
-            icons =
-              ClerkButtonDefaults.icons(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
-          )
-
-          ClerkButton(
-            text = "Continue",
-            isEnabled = false,
-            onClick = {},
             configuration =
               ClerkButtonConfig(
                 emphasis = ClerkButtonConfig.Emphasis.None,
@@ -197,6 +192,24 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Continue",
+            isEnabled = false,
+            onClick = {},
+            configuration =
+              ClerkButtonConfig(
+                emphasis = ClerkButtonConfig.Emphasis.None,
+                size = ClerkButtonConfig.Size.Small,
+              ),
+            icons =
+              ClerkButtonDefaults.icons(
+                leadingIcon = R.drawable.ic_triangle_right,
+                trailingIcon = R.drawable.ic_triangle_right,
+              ),
+          )
+
+          ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             configuration =
@@ -213,10 +226,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButtonWithPressedState(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isPressed = true,
-            buttonConfig =
+            configuration =
               ClerkButtonConfig(
                 style = ClerkButtonConfig.ButtonStyle.Secondary,
                 emphasis = ClerkButtonConfig.Emphasis.High,
@@ -230,6 +244,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isEnabled = false,
@@ -247,6 +262,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             configuration =
@@ -263,10 +279,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButtonWithPressedState(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isPressed = true,
-            buttonConfig =
+            configuration =
               ClerkButtonConfig(
                 style = ClerkButtonConfig.ButtonStyle.Secondary,
                 emphasis = ClerkButtonConfig.Emphasis.None,
@@ -280,6 +297,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isEnabled = false,
@@ -297,6 +315,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             configuration =
@@ -313,10 +332,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButtonWithPressedState(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isPressed = true,
-            buttonConfig =
+            configuration =
               ClerkButtonConfig(
                 style = ClerkButtonConfig.ButtonStyle.Negative,
                 emphasis = ClerkButtonConfig.Emphasis.High,
@@ -330,6 +350,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isEnabled = false,
@@ -347,6 +368,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             configuration =
@@ -363,10 +385,11 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButtonWithPressedState(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isPressed = true,
-            buttonConfig =
+            configuration =
               ClerkButtonConfig(
                 style = ClerkButtonConfig.ButtonStyle.Negative,
                 emphasis = ClerkButtonConfig.Emphasis.None,
@@ -380,6 +403,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             isEnabled = false,

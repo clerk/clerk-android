@@ -1,7 +1,12 @@
 package com.clerk.ui.core.button.standard
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import com.clerk.ui.core.common.dimens.dp12
+import com.clerk.ui.core.common.dimens.dp4
+import com.clerk.ui.theme.ClerkMaterialTheme
 
 /** Contains default values for Clerk buttons. */
 object ClerkButtonDefaults {
@@ -15,9 +20,10 @@ object ClerkButtonDefaults {
    * @param leadingIcon The drawable resource for the leading icon.
    * @return A [ClerkButtonIcons] instance.
    */
+  @Composable
   fun icons(
-    trailingIconColor: Color = Color.Unspecified,
-    leadingIconColor: Color = Color.Unspecified,
+    trailingIconColor: Color = ClerkMaterialTheme.colors.primary,
+    leadingIconColor: Color = ClerkMaterialTheme.colors.primary,
     @DrawableRes trailingIcon: Int? = null,
     @DrawableRes leadingIcon: Int? = null,
   ) =
@@ -33,6 +39,8 @@ object ClerkButtonDefaults {
     emphasis: ClerkButtonConfig.Emphasis = ClerkButtonConfig.Emphasis.High,
     size: ClerkButtonConfig.Size = ClerkButtonConfig.Size.Large,
   ) = ClerkButtonConfig(style = style, emphasis = emphasis, size = size)
+
+  fun padding(horizontal: Dp = dp12, vertical: Dp = dp4) = ClerkButtonPadding(horizontal, vertical)
 }
 
 /**
@@ -72,3 +80,5 @@ data class ClerkButtonConfig(
     Negative,
   }
 }
+
+data class ClerkButtonPadding(val horizontal: Dp, val vertical: Dp)
