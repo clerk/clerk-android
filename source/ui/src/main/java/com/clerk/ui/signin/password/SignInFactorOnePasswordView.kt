@@ -1,4 +1,4 @@
-package com.clerk.ui.signin
+package com.clerk.ui.signin.password
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -25,7 +25,7 @@ import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfig
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
-import com.clerk.ui.core.button.standard.TextButton
+import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.HeaderTextView
 import com.clerk.ui.core.common.HeaderType
 import com.clerk.ui.core.common.dimens.dp18
@@ -35,6 +35,21 @@ import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
+/**
+ * A composable view for the first factor password step in the sign-in flow.
+ *
+ * This view displays a password input field, the user's email, and options for "Forgot Password"
+ * and "Use another method".
+ *
+ * @param onContinue A callback invoked with the entered password when the user clicks the continue
+ *   button.
+ * @param email The user's email address to be displayed.
+ * @param modifier The [Modifier] to be applied to the view.
+ * @param onUseAnotherMethod A callback invoked when the user clicks the "Use another method"
+ *   button.
+ * @param onForgotPassword A callback invoked when the user clicks the "Forgot password" button.
+ * @param onBackPressed A callback invoked when the user clicks the back button in the app bar.
+ */
 @Composable
 fun SignInFactorOnePasswordView(
   onContinue: (String) -> Unit,
@@ -85,7 +100,7 @@ private fun SignInFactorOnePasswordViewImpl(
         text = email,
         onClick = {},
         modifier = Modifier.wrapContentHeight(),
-        buttonConfig = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
+        configuration = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
         icons =
           ClerkButtonDefaults.icons(
             trailingIcon = R.drawable.ic_edit,
@@ -112,9 +127,12 @@ private fun SignInFactorOnePasswordViewImpl(
       )
       Spacer(Modifier.height(dp24))
       Row(modifier = Modifier.fillMaxWidth().padding(horizontal = dp8)) {
-        TextButton(text = stringResource(R.string.use_another_method), onClick = onUseAnotherMethod)
+        ClerkTextButton(
+          text = stringResource(R.string.use_another_method),
+          onClick = onUseAnotherMethod,
+        )
         Spacer(modifier = Modifier.weight(1f))
-        TextButton(text = stringResource(R.string.forgot_password), onClick = onForgotPassword)
+        ClerkTextButton(text = stringResource(R.string.forgot_password), onClick = onForgotPassword)
       }
     }
   }

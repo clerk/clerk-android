@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.signin.password.SignInFactorOnePasswordView
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
