@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class PasskeyViewModel : ViewModel() {
+internal class PasskeyViewModel : ViewModel() {
 
   private val _state = MutableStateFlow<AuthenticateState>(AuthenticateState.Idle)
   val state = _state.asStateFlow()

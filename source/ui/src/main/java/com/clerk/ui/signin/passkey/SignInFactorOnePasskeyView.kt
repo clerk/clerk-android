@@ -36,9 +36,27 @@ import com.clerk.ui.theme.DefaultColors
 fun SignInFactorOnePasskeyView(
   factor: Factor,
   modifier: Modifier = Modifier,
-  viewModel: PasskeyViewModel = viewModel(),
   onBackPressed: () -> Unit = {},
-  onContinue: () -> Unit = {},
+  onChangeIdentifierClicked: () -> Unit = {},
+  onUseAnotherMethodClicked: () -> Unit = {},
+) {
+  SignInFactorOnePasskeyViewImpl(
+    modifier = modifier,
+    onBackPressed = onBackPressed,
+    onChangeIdentifierClicked = onChangeIdentifierClicked,
+    factor = factor,
+    onUseAnotherMethodClicked = onUseAnotherMethodClicked,
+  )
+}
+
+@Composable
+private fun SignInFactorOnePasskeyViewImpl(
+  onBackPressed: () -> Unit,
+  factor: Factor,
+  modifier: Modifier = Modifier,
+  onChangeIdentifierClicked: () -> Unit = {},
+  viewModel: PasskeyViewModel = viewModel(),
+  onUseAnotherMethodClicked: () -> Unit = {},
 ) {
   ClerkMaterialTheme {
     Column(
@@ -49,7 +67,11 @@ fun SignInFactorOnePasskeyView(
           .then(modifier),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      HeaderView(onBackPressed = onBackPressed, factor = factor, onContinue = onContinue)
+      HeaderView(
+        onBackPressed = onBackPressed,
+        factor = factor,
+        onChangeIdentifierClicked = onChangeIdentifierClicked,
+      )
       Spacers.Vertical.Spacer32()
       Icon(
         modifier = Modifier.size(dp72),
@@ -69,7 +91,10 @@ fun SignInFactorOnePasskeyView(
           ),
       )
       Spacers.Vertical.Spacer16()
-      ClerkTextButton(onClick = {}, text = stringResource(R.string.use_a_different_method))
+      ClerkTextButton(
+        onClick = onUseAnotherMethodClicked,
+        text = stringResource(R.string.use_a_different_method),
+      )
       Spacers.Vertical.Spacer32()
       SecuredByClerk()
     }
@@ -77,7 +102,11 @@ fun SignInFactorOnePasskeyView(
 }
 
 @Composable
-private fun HeaderView(onBackPressed: () -> Unit, factor: Factor, onContinue: () -> Unit) {
+private fun HeaderView(
+  onBackPressed: () -> Unit,
+  factor: Factor,
+  onChangeIdentifierClicked: () -> Unit,
+) {
   ClerkTopAppBar(onBackPressed = onBackPressed)
   Spacers.Vertical.Spacer8()
   HeaderTextView(text = stringResource(R.string.use_your_passkey), type = HeaderType.Title)
@@ -93,7 +122,7 @@ private fun HeaderView(onBackPressed: () -> Unit, factor: Factor, onContinue: ()
   Spacers.Vertical.Spacer8()
   ClerkButton(
     text = factor.safeIdentifier!!,
-    onClick = onContinue,
+    onClick = onChangeIdentifierClicked,
     icons =
       ClerkButtonDefaults.icons(
         trailingIcon = R.drawable.ic_edit,
