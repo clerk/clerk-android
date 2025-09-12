@@ -1,16 +1,11 @@
 package com.clerk.ui.signin.code
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,11 +16,10 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.AuthViewHeader
+import com.clerk.ui.core.common.ClerkAuthScaffold
 import com.clerk.ui.core.common.SecuredByClerk
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
-import com.clerk.ui.core.common.dimens.dp18
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
@@ -93,7 +87,7 @@ fun SignInFactorCodeView(
  * @param onClickResend Callback for resend code action
  * @param modifier Optional modifier for styling
  * @param viewModel The view model managing the sign-in state (injected via Compose)
- * @param onUserAnotherMethod Callback for "use another method" action
+ * @param onUseAnotherMethod Callback for "use another method" action
  */
 @Composable
 private fun SignInFactorCodeViewImpl(
@@ -102,7 +96,7 @@ private fun SignInFactorCodeViewImpl(
   onClickResend: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: SignInFactorCodeViewModel = viewModel(),
-  onUserAnotherMethod: () -> Unit = {},
+  onUseAnotherMethod: () -> Unit = {},
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val verificationState = state.verificationState()
@@ -119,16 +113,14 @@ private fun SignInFactorCodeViewImpl(
   }
 
   ClerkMaterialTheme {
-    Column(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(color = ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp18)
-          .then(modifier),
-      horizontalAlignment = Alignment.CenterHorizontally,
+    ClerkAuthScaffold(
+      modifier = modifier,
+      onBackPressed = onBackPressed,
+      title = SignInFactorCodeHelper.titleForStrategy(factor),
+      subtitle = SignInFactorCodeHelper.subtitleForStrategy(factor),
+      identifier = factor.safeIdentifier,
+      onClickIdentifier = { TODO() },
     ) {
-      AuthViewHeader(factor, onBackPressed = onBackPressed)
-      Spacers.Vertical.Spacer32()
       ClerkCodeInputField(
         verificationState = verificationState,
         onOtpTextChange = {
@@ -144,7 +136,7 @@ private fun SignInFactorCodeViewImpl(
       if (SignInFactorCodeHelper.showUseAnotherMethod(factor)) {
         ClerkTextButton(
           text = stringResource(R.string.use_another_method),
-          onClick = onUserAnotherMethod,
+          onClick = onUseAnotherMethod,
         )
       }
       Spacers.Vertical.Spacer32()
