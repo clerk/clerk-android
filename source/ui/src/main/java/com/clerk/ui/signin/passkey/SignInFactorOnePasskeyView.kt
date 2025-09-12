@@ -41,6 +41,17 @@ import com.clerk.ui.core.common.dimens.dp72
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
+/**
+ * A composable that displays the passkey sign-in flow.
+ *
+ * @param factor The passkey factor to use for authentication.
+ * @param modifier The modifier to be applied to the component.
+ * @param onBackPressed A callback to be invoked when the user presses the back button.
+ * @param onChangeIdentifierClicked A callback to be invoked when the user clicks the button to
+ *   change the identifier.
+ * @param onUseAnotherMethodClicked A callback to be invoked when the user clicks the button to use
+ *   another method.
+ */
 @Composable
 fun SignInFactorOnePasskeyView(
   factor: Factor,
