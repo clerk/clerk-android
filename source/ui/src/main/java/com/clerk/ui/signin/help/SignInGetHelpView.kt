@@ -16,9 +16,7 @@ import androidx.core.net.toUri
 import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.common.ClerkAuthScaffold
-import com.clerk.ui.core.common.SecuredByClerk
-import com.clerk.ui.core.common.Spacers
+import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.coroutines.launch
@@ -27,41 +25,37 @@ import kotlinx.coroutines.launch
 fun SignInGetHelpView(modifier: Modifier = Modifier, onBackPressed: () -> Unit = {}) {
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
-  ClerkMaterialTheme {
-    ClerkAuthScaffold(
-      snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
-      modifier = modifier,
-      title = stringResource(R.string.get_help),
-      subtitle = stringResource(R.string.if_you_have_trouble_signing_into_your_account),
-      onBackPressed = onBackPressed,
-    ) {
-      val context = LocalContext.current
-      val emailIntent =
-        Intent(Intent.ACTION_SENDTO).apply {
-          data = "mailto:".toUri()
-          putExtra(Intent.EXTRA_EMAIL, arrayOf(stringResource(R.string.support_clerk_com)))
-        }
+  ClerkThemedAuthScaffold(
+    snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+    modifier = modifier,
+    title = stringResource(R.string.get_help),
+    subtitle = stringResource(R.string.if_you_have_trouble_signing_into_your_account),
+    onBackPressed = onBackPressed,
+  ) {
+    val context = LocalContext.current
+    val emailIntent =
+      Intent(Intent.ACTION_SENDTO).apply {
+        data = "mailto:".toUri()
+        putExtra(Intent.EXTRA_EMAIL, arrayOf(stringResource(R.string.support_clerk_com)))
+      }
 
-      ClerkButton(
-        modifier = Modifier.fillMaxWidth(),
-        text = stringResource(R.string.email_support),
-        onClick = {
-          try {
-            context.startActivity(Intent.createChooser(emailIntent, "Contact Clerk Support"))
-          } catch (_: ActivityNotFoundException) {
-            ClerkLog.e("No email clients installed on device.")
-            scope.launch {
-              snackbarHostState.showSnackbar(
-                message = context.getString(R.string.no_email_clients_installed_on_device),
-                duration = SnackbarDuration.Short,
-              )
-            }
+    ClerkButton(
+      modifier = Modifier.fillMaxWidth(),
+      text = stringResource(R.string.email_support),
+      onClick = {
+        try {
+          context.startActivity(Intent.createChooser(emailIntent, "Contact Clerk Support"))
+        } catch (_: ActivityNotFoundException) {
+          ClerkLog.e("No email clients installed on device.")
+          scope.launch {
+            snackbarHostState.showSnackbar(
+              message = context.getString(R.string.no_email_clients_installed_on_device),
+              duration = SnackbarDuration.Short,
+            )
           }
-        },
-      )
-      Spacers.Vertical.Spacer32()
-      SecuredByClerk()
-    }
+        }
+      },
+    )
   }
 }
 

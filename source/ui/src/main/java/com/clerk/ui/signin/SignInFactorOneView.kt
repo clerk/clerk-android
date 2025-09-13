@@ -8,7 +8,7 @@ import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.ui.signin.help.SignInGetHelpView
 import com.clerk.ui.signin.passkey.SignInFactorOnePasskeyView
-import com.clerk.ui.signin.password.SignInFactorOnePasswordView
+import com.clerk.ui.signin.password.set.SignInFactorOnePasswordView
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable

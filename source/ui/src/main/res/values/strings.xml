@@ -30,4 +30,10 @@
     <string name="email_support">Email support</string>
     <string name="support_clerk_com" translatable="false">support@clerk.com</string>
     <string name="no_email_clients_installed_on_device">No email clients installed on device.</string>
+    <string name="set_new_password">Set new password</string>
+    <string name="reset_password">Reset password</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="new_password">New password</string>
+    <string name="sign_out_of_all_other_devices">Sign out of all other devices</string>
+    <string name="back">Back</string>
 </resources>

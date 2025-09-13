@@ -1,6 +1,5 @@
 package com.clerk.ui.signin.passkey
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -10,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -24,8 +22,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.ClerkAuthScaffold
-import com.clerk.ui.core.common.SecuredByClerk
+import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.common.dimens.dp72
@@ -84,7 +81,7 @@ private fun SignInFactorOnePasskeyViewImpl(
       )
     }
   }
-  ClerkAuthScaffold(
+  ClerkThemedAuthScaffold(
     modifier = modifier,
     onBackPressed = onBackPressed,
     title = stringResource(R.string.use_your_passkey),
@@ -93,20 +90,6 @@ private fun SignInFactorOnePasskeyViewImpl(
     identifier = factor.safeIdentifier,
     snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
   ) {
-    Spacers.Vertical.Spacer32()
-    BodyContent(viewModel, state, onUseAnotherMethodClicked)
-    Spacers.Vertical.Spacer32()
-    SecuredByClerk()
-  }
-}
-
-@Composable
-private fun BodyContent(
-  viewModel: PasskeyViewModel,
-  state: PasskeyViewModel.AuthenticateState,
-  onUseAnotherMethodClicked: () -> Unit,
-) {
-  Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     Icon(
       modifier = Modifier.size(dp72),
       painter = painterResource(R.drawable.ic_passkey),
