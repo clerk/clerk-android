@@ -60,6 +60,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 @Composable
 fun ClerkTextField(
   value: String,
+  onValueChange: (String) -> Unit,
   modifier: Modifier = Modifier,
   @DrawableRes leadingIcon: Int? = null,
   @DrawableRes trailingIcon: Int? = null,
@@ -71,7 +72,6 @@ fun ClerkTextField(
   inputContentType: ContentType = ContentType.Username,
   visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
-  var inputValue by remember { mutableStateOf(value) }
   var isVisible by remember {
     mutableStateOf(visualTransformation !is PasswordVisualTransformation)
   }
@@ -81,7 +81,7 @@ fun ClerkTextField(
   val textFieldColors = getTextFieldColors()
 
   val labelStyle =
-    if (isFocused || inputValue.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
+    if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
     else MaterialTheme.typography.bodyLarge
   val labelColor =
     when {
@@ -94,8 +94,8 @@ fun ClerkTextField(
     OutlinedTextField(
       interactionSource = interactionSource,
       modifier = modifier.fillMaxWidth().semantics { contentType = inputContentType },
-      value = inputValue,
-      onValueChange = { inputValue = it },
+      value = value,
+      onValueChange = { onValueChange(it) },
       enabled = enabled,
       shape = ClerkMaterialTheme.shape,
       isError = isError,
@@ -209,6 +209,7 @@ private fun PreviewClerkTextField() {
     ) {
       item {
         ClerkTextField(
+          onValueChange = {},
           value = "Input",
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
@@ -217,6 +218,7 @@ private fun PreviewClerkTextField() {
       }
       item {
         ClerkTextField(
+          onValueChange = {},
           value = "",
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
@@ -225,6 +227,7 @@ private fun PreviewClerkTextField() {
       }
       item {
         ClerkTextField(
+          onValueChange = {},
           value = "Input",
           placeholder = "Placeholder",
           label = "Label",
@@ -233,6 +236,7 @@ private fun PreviewClerkTextField() {
       }
       item {
         ClerkTextField(
+          onValueChange = {},
           value = "",
           label = "Label",
           supportingText = "Supporting text",
@@ -241,6 +245,7 @@ private fun PreviewClerkTextField() {
       }
       item {
         ClerkTextField(
+          onValueChange = {},
           value = "Input",
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
@@ -250,6 +255,7 @@ private fun PreviewClerkTextField() {
       }
       item {
         ClerkTextField(
+          onValueChange = {},
           value = "",
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
@@ -257,7 +263,14 @@ private fun PreviewClerkTextField() {
           supportingText = "Supporting text",
         )
       }
-      item { ClerkTextField(value = "Input", label = "Label", supportingText = "Supporting text") }
+      item {
+        ClerkTextField(
+          onValueChange = {},
+          value = "Input",
+          label = "Label",
+          supportingText = "Supporting text",
+        )
+      }
     }
   }
 }
@@ -271,6 +284,7 @@ private fun PreviewClerkTextFieldError() {
       verticalArrangement = Arrangement.spacedBy(dp20, alignment = Alignment.CenterVertically),
     ) {
       ClerkTextField(
+        onValueChange = {},
         value = "Input",
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
@@ -279,6 +293,7 @@ private fun PreviewClerkTextFieldError() {
       )
 
       ClerkTextField(
+        onValueChange = {},
         value = "",
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
@@ -287,6 +302,7 @@ private fun PreviewClerkTextFieldError() {
       )
 
       ClerkTextField(
+        onValueChange = {},
         value = "Input",
         placeholder = "Placeholder",
         label = "Label",
@@ -295,6 +311,7 @@ private fun PreviewClerkTextFieldError() {
       )
 
       ClerkTextField(
+        onValueChange = {},
         value = "",
         label = "Label",
         supportingText = "Supporting text",
@@ -303,6 +320,7 @@ private fun PreviewClerkTextFieldError() {
       )
 
       ClerkTextField(
+        onValueChange = {},
         value = "Input",
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
@@ -312,6 +330,7 @@ private fun PreviewClerkTextFieldError() {
       )
 
       ClerkTextField(
+        onValueChange = {},
         value = "",
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
@@ -321,6 +340,7 @@ private fun PreviewClerkTextFieldError() {
       )
 
       ClerkTextField(
+        onValueChange = {},
         value = "Input",
         label = "Label",
         supportingText = "Supporting text",
