@@ -78,6 +78,7 @@ private fun SignInSetNewPasswordViewImpl(
   ) {
     ClerkTextField(
       value = password,
+      onValueChange = { password = it },
       visualTransformation = PasswordVisualTransformation(),
       label = stringResource(R.string.new_password),
       inputContentType = ContentType.Password,
@@ -85,6 +86,7 @@ private fun SignInSetNewPasswordViewImpl(
     Spacers.Vertical.Spacer24()
     ClerkTextField(
       value = confirmPassword,
+      onValueChange = { confirmPassword = it },
       label = stringResource(R.string.confirm_password),
       visualTransformation = PasswordVisualTransformation(),
       inputContentType = ContentType.Password,
