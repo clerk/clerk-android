@@ -33,12 +33,24 @@ import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 
+/**
+ * A view that allows the user to set a new password during the sign-in reset password flow.
+ *
+ * @param modifier The [Modifier] to be applied to the view.
+ * @param onBackPressed A callback to be invoked when the user presses the back button.
+ */
 @Composable
 fun SignInSetNewPasswordView(modifier: Modifier = Modifier, onBackPressed: () -> Unit) {
-
   SignInSetNewPasswordViewImpl(modifier = modifier, onBackPressed = onBackPressed)
 }
 
+/**
+ * The internal implementation of the [SignInSetNewPasswordView].
+ *
+ * @param onBackPressed A callback to be invoked when the user presses the back button.
+ * @param modifier The [Modifier] to be applied to the view.
+ * @param viewModel The [ResetPasswordViewModel] used to manage the state and actions of the view.
+ */
 @Composable
 private fun SignInSetNewPasswordViewImpl(
   onBackPressed: () -> Unit,
@@ -97,6 +109,12 @@ private fun SignInSetNewPasswordViewImpl(
   }
 }
 
+/**
+ * A row containing a label and a [Switch] to toggle signing out of other devices.
+ *
+ * @param signOutOtherDevices The current state of the switch.
+ * @param onCheckChange A callback to be invoked when the switch is toggled.
+ */
 @Composable
 private fun SignOutOfOtherDevicesRow(
   signOutOtherDevices: Boolean,
