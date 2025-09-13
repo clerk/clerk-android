@@ -80,6 +80,7 @@ private fun SignInFactorOnePasswordViewImpl(
   ) {
     ClerkTextField(
       value = password,
+      onValueChange = { password = it },
       label = stringResource(R.string.enter_your_password),
       visualTransformation = PasswordVisualTransformation(),
     )
