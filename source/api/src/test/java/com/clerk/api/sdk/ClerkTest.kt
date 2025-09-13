@@ -367,7 +367,7 @@ class ClerkTest {
     simulateUninitializedEnvironment()
 
     // When
-    val logoUrl = Clerk.logoUrl
+    val logoUrl = Clerk.organizationLogoUrl
 
     // Then
     assertEquals("", logoUrl)
@@ -381,7 +381,7 @@ class ClerkTest {
     initializeClerkWithEnvironment()
 
     // When
-    val logoUrl = Clerk.logoUrl
+    val logoUrl = Clerk.organizationLogoUrl
 
     // Then
     assertEquals(expectedLogoUrl, logoUrl)
