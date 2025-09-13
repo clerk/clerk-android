@@ -27,7 +27,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
         ) {
           ClerkTextField(
             value = "Input",
-            onValueChange = {},
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
             supportingText = "Supporting text",
@@ -35,7 +34,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "",
-            onValueChange = {},
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
             supportingText = "Supporting text",
@@ -43,7 +41,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "Input",
-            onValueChange = {},
             placeholder = "Placeholder",
             label = "Label",
             supportingText = "Supporting text",
@@ -51,7 +48,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "",
-            onValueChange = {},
             label = "Label",
             supportingText = "Supporting text",
             leadingIcon = R.drawable.ic_search,
@@ -59,7 +55,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "Input",
-            onValueChange = {},
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
             leadingIcon = R.drawable.ic_search,
@@ -68,19 +63,13 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "",
-            onValueChange = {},
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
             leadingIcon = R.drawable.ic_search,
             supportingText = "Supporting text",
           )
 
-          ClerkTextField(
-            value = "Input",
-            onValueChange = {},
-            label = "Label",
-            supportingText = "Supporting text",
-          )
+          ClerkTextField(value = "Input", label = "Label", supportingText = "Supporting text")
         }
       }
     }
@@ -97,7 +86,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
         ) {
           ClerkTextField(
             value = "Input",
-            onValueChange = {},
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
             supportingText = "Supporting text",
@@ -106,7 +94,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "",
-            onValueChange = {},
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
             supportingText = "Supporting text",
@@ -115,7 +102,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "Input",
-            onValueChange = {},
             placeholder = "Placeholder",
             label = "Label",
             supportingText = "Supporting text",
@@ -124,7 +110,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "",
-            onValueChange = {},
             label = "Label",
             supportingText = "Supporting text",
             leadingIcon = R.drawable.ic_search,
@@ -133,7 +118,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "Input",
-            onValueChange = {},
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
             leadingIcon = R.drawable.ic_search,
@@ -143,7 +127,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "",
-            onValueChange = {},
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
             leadingIcon = R.drawable.ic_search,
@@ -153,7 +136,6 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
           ClerkTextField(
             value = "Input",
-            onValueChange = {},
             label = "Label",
             supportingText = "Supporting text",
             isError = true,

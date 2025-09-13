@@ -19,13 +19,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
@@ -43,7 +46,6 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  * focus states, theming, and accessibility features.
  *
  * @param value The current text value of the input field
- * @param onValueChange Callback that is triggered when the input value changes
  * @param modifier Modifier to be applied to the text field
  * @param leadingIcon Optional drawable resource ID for an icon displayed at the start of the field
  * @param trailingIcon Optional drawable resource ID for an icon displayed at the end of the field.
@@ -53,16 +55,11 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  * @param supportingText Optional supporting/helper text displayed below the input field
  * @param isError Whether the field should be displayed in an error state with error styling
  * @param enabled Whether the text field is enabled and accepts user input
- * @param onLeadingIconClick Callback triggered when the leading icon is clicked
- * @param onTrailingIconClick Callback triggered when the trailing icon is clicked
  * @param inputContentType The content type for autofill hints, defaults to [ContentType.Username]
- * @param leadingIconContentDescription Content description for the leading icon for accessibility
- * @param trailingIconContentDescription Content description for the trailing icon for accessibility
  */
 @Composable
 fun ClerkTextField(
   value: String,
-  onValueChange: (String) -> Unit,
   modifier: Modifier = Modifier,
   @DrawableRes leadingIcon: Int? = null,
   @DrawableRes trailingIcon: Int? = null,
@@ -71,20 +68,20 @@ fun ClerkTextField(
   supportingText: String? = null,
   isError: Boolean = false,
   enabled: Boolean = true,
-  onLeadingIconClick: () -> Unit = {},
-  onTrailingIconClick: () -> Unit = {},
   inputContentType: ContentType = ContentType.Username,
-  leadingIconContentDescription: String? = null,
-  trailingIconContentDescription: String? = null,
   visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
+  var inputValue by remember { mutableStateOf(value) }
+  var isVisible by remember {
+    mutableStateOf(visualTransformation !is PasswordVisualTransformation)
+  }
   val interactionSource = remember { MutableInteractionSource() }
   val isFocused by interactionSource.collectIsFocusedAsState()
 
   val textFieldColors = getTextFieldColors()
 
   val labelStyle =
-    if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
+    if (isFocused || inputValue.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
     else MaterialTheme.typography.bodyLarge
   val labelColor =
     when {
@@ -97,36 +94,33 @@ fun ClerkTextField(
     OutlinedTextField(
       interactionSource = interactionSource,
       modifier = modifier.fillMaxWidth().semantics { contentType = inputContentType },
-      value = value,
-      onValueChange = onValueChange,
+      value = inputValue,
+      onValueChange = { inputValue = it },
       enabled = enabled,
       shape = ClerkMaterialTheme.shape,
       isError = isError,
       colors = textFieldColors,
-      visualTransformation = visualTransformation,
+      visualTransformation =
+        if (visualTransformation is PasswordVisualTransformation) {
+          if (isVisible) VisualTransformation.None else PasswordVisualTransformation()
+        } else {
+          visualTransformation
+        },
       leadingIcon =
         leadingIcon?.let { resId ->
-          {
-            ClickableIcon(
-              resId = resId,
-              onClick = onLeadingIconClick,
-              contentDescription = leadingIconContentDescription,
-            )
-          }
+          { ClickableIcon(resId = resId, onClick = {}, contentDescription = null) }
         },
       trailingIcon = {
-        if (trailingIcon != null || isError) {
-          val resId = if (isError) R.drawable.ic_warning else trailingIcon!!
-          val tint =
-            if (isError) ClerkMaterialTheme.colors.danger
-            else ClerkMaterialTheme.colors.mutedForeground
-          ClickableIcon(
-            resId = resId,
-            onClick = onTrailingIconClick,
-            tint = tint,
-            contentDescription = trailingIconContentDescription,
-          )
-        }
+        TrailingIcon(
+          trailingIcon,
+          isError,
+          visualTransformation,
+          onClick = {
+            if (visualTransformation is PasswordVisualTransformation) {
+              isVisible = !isVisible
+            }
+          },
+        )
       },
       placeholder = placeholder?.let { ph -> { Text(ph) } },
       label = label?.let { text -> { Text(text = text, style = labelStyle, color = labelColor) } },
@@ -145,6 +139,27 @@ fun ClerkTextField(
           }
         },
     )
+  }
+}
+
+@Composable
+private fun TrailingIcon(
+  trailingIcon: Int?,
+  isError: Boolean,
+  visualTransformation: VisualTransformation,
+  onClick: () -> Unit,
+) {
+
+  if (trailingIcon != null || isError || visualTransformation is PasswordVisualTransformation) {
+    val resId =
+      when {
+        isError -> R.drawable.ic_warning
+        visualTransformation is PasswordVisualTransformation -> R.drawable.ic_show
+        else -> trailingIcon!!
+      }
+    val tint =
+      if (isError) ClerkMaterialTheme.colors.danger else ClerkMaterialTheme.colors.mutedForeground
+    ClickableIcon(resId = resId, onClick = onClick, tint = tint, contentDescription = null)
   }
 }
 
@@ -195,7 +210,6 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "Input",
-          onValueChange = {},
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
           supportingText = "Supporting text",
@@ -204,7 +218,6 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "",
-          onValueChange = {},
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
           supportingText = "Supporting text",
@@ -213,7 +226,6 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "Input",
-          onValueChange = {},
           placeholder = "Placeholder",
           label = "Label",
           supportingText = "Supporting text",
@@ -222,7 +234,6 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "",
-          onValueChange = {},
           label = "Label",
           supportingText = "Supporting text",
           leadingIcon = R.drawable.ic_search,
@@ -231,7 +242,6 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "Input",
-          onValueChange = {},
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
           leadingIcon = R.drawable.ic_search,
@@ -241,21 +251,13 @@ private fun PreviewClerkTextField() {
       item {
         ClerkTextField(
           value = "",
-          onValueChange = {},
           label = "Label",
           trailingIcon = R.drawable.ic_cross,
           leadingIcon = R.drawable.ic_search,
           supportingText = "Supporting text",
         )
       }
-      item {
-        ClerkTextField(
-          value = "Input",
-          onValueChange = {},
-          label = "Label",
-          supportingText = "Supporting text",
-        )
-      }
+      item { ClerkTextField(value = "Input", label = "Label", supportingText = "Supporting text") }
     }
   }
 }
@@ -270,7 +272,6 @@ private fun PreviewClerkTextFieldError() {
     ) {
       ClerkTextField(
         value = "Input",
-        onValueChange = {},
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
         supportingText = "Supporting text",
@@ -279,7 +280,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "",
-        onValueChange = {},
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
         supportingText = "Supporting text",
@@ -288,7 +288,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "Input",
-        onValueChange = {},
         placeholder = "Placeholder",
         label = "Label",
         supportingText = "Supporting text",
@@ -297,7 +296,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "",
-        onValueChange = {},
         label = "Label",
         supportingText = "Supporting text",
         leadingIcon = R.drawable.ic_search,
@@ -306,7 +304,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "Input",
-        onValueChange = {},
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
         leadingIcon = R.drawable.ic_search,
@@ -316,7 +313,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "",
-        onValueChange = {},
         label = "Label",
         trailingIcon = R.drawable.ic_cross,
         leadingIcon = R.drawable.ic_search,
@@ -326,7 +322,6 @@ private fun PreviewClerkTextFieldError() {
 
       ClerkTextField(
         value = "Input",
-        onValueChange = {},
         label = "Label",
         supportingText = "Supporting text",
         isError = true,

@@ -16,8 +16,7 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.ClerkAuthScaffold
-import com.clerk.ui.core.common.SecuredByClerk
+import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.input.ClerkCodeInputField
@@ -111,36 +110,31 @@ private fun SignInFactorCodeViewImpl(
       timeLeft--
     }
   }
-
-  ClerkMaterialTheme {
-    ClerkAuthScaffold(
-      modifier = modifier,
-      onBackPressed = onBackPressed,
-      title = SignInFactorCodeHelper.titleForStrategy(factor),
-      subtitle = SignInFactorCodeHelper.subtitleForStrategy(factor),
-      identifier = factor.safeIdentifier,
-      onClickIdentifier = { TODO() },
-    ) {
-      ClerkCodeInputField(
-        verificationState = verificationState,
-        onOtpTextChange = {
-          if (it.length == 6) {
-            viewModel.attempt(factor, isSecondFactor = false, code = it)
-          }
-        },
-        showResend = SignInFactorCodeHelper.showResend(factor, verificationState),
-        secondsLeft = timeLeft,
-        onClickResend = onClickResend,
+  ClerkThemedAuthScaffold(
+    modifier = modifier,
+    onBackPressed = onBackPressed,
+    title = SignInFactorCodeHelper.titleForStrategy(factor),
+    subtitle = SignInFactorCodeHelper.subtitleForStrategy(factor),
+    identifier = factor.safeIdentifier,
+    onClickIdentifier = { TODO() },
+  ) {
+    ClerkCodeInputField(
+      verificationState = verificationState,
+      onOtpTextChange = {
+        if (it.length == 6) {
+          viewModel.attempt(factor, isSecondFactor = false, code = it)
+        }
+      },
+      showResend = SignInFactorCodeHelper.showResend(factor, verificationState),
+      secondsLeft = timeLeft,
+      onClickResend = onClickResend,
+    )
+    Spacers.Vertical.Spacer24()
+    if (SignInFactorCodeHelper.showUseAnotherMethod(factor)) {
+      ClerkTextButton(
+        text = stringResource(R.string.use_another_method),
+        onClick = onUseAnotherMethod,
       )
-      Spacers.Vertical.Spacer24()
-      if (SignInFactorCodeHelper.showUseAnotherMethod(factor)) {
-        ClerkTextButton(
-          text = stringResource(R.string.use_another_method),
-          onClick = onUseAnotherMethod,
-        )
-      }
-      Spacers.Vertical.Spacer32()
-      SecuredByClerk()
     }
   }
 }
