@@ -1,6 +1,7 @@
 package com.clerk.ui.signin.backupcode
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -8,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -18,6 +20,7 @@ import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
+import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -46,18 +49,32 @@ private fun SignInFactorTwoBackupCodeViewImpl(
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   var backupCode by remember { mutableStateOf("") }
+  val snackbarHostState = remember { SnackbarHostState() }
+  val context = LocalContext.current
 
   LaunchedEffect(state) {
     if (state is BackupCodeViewModel.AuthenticationState.Success) {
       onSubmitSuccess()
     }
   }
+
+  LaunchedEffect(state) {
+    if (state is BackupCodeViewModel.AuthenticationState.Error) {
+      snackbarHostState.showSnackbar(
+        message =
+          (state as BackupCodeViewModel.AuthenticationState.Error).message
+            ?: context.getString(R.string.an_error_occurred)
+      )
+    }
+  }
+
   ClerkThemedAuthScaffold(
     onBackPressed = onBackPressed,
     modifier = modifier,
     hasLogo = false,
     title = stringResource(R.string.enter_a_backup_code),
     subtitle = stringResource(R.string.your_backup_code),
+    snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
   ) {
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
