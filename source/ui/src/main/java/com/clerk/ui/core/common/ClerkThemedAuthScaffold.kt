@@ -79,6 +79,6 @@ private fun PreviewClerkThemedAuthScaffold() {
     title = "Welcome back",
     subtitle = "Sign in to continue",
   ) {
-    ClerkTextField(value = "")
+    ClerkTextField(value = "", onValueChange = {})
   }
 }
