@@ -2,6 +2,7 @@ package com.clerk.ui.signin.backupcode
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -9,6 +10,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
@@ -19,16 +22,36 @@ import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun SignInFactorTwoBackupCodeView(modifier: Modifier = Modifier, onBackPressed: () -> Unit) {
-  SignInFactorTwoBackupCodeViewImpl(onBackPressed, modifier)
+fun SignInFactorTwoBackupCodeView(
+  onBackPressed: () -> Unit,
+  onSubmitSuccess: () -> Unit,
+  modifier: Modifier = Modifier,
+  onUseAnotherMethod: () -> Unit,
+) {
+  SignInFactorTwoBackupCodeViewImpl(
+    onBackPressed = onBackPressed,
+    modifier = modifier,
+    onSubmitSuccess = onSubmitSuccess,
+    onUseAnotherMethod = onUseAnotherMethod,
+  )
 }
 
 @Composable
 private fun SignInFactorTwoBackupCodeViewImpl(
   onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
+  viewModel: BackupCodeViewModel = viewModel(),
+  onSubmitSuccess: () -> Unit = {},
+  onUseAnotherMethod: () -> Unit = {},
 ) {
+  val state by viewModel.state.collectAsStateWithLifecycle()
   var backupCode by remember { mutableStateOf("") }
+
+  LaunchedEffect(state) {
+    if (state is BackupCodeViewModel.AuthenticationState.Success) {
+      onSubmitSuccess()
+    }
+  }
   ClerkThemedAuthScaffold(
     onBackPressed = onBackPressed,
     modifier = modifier,
@@ -46,16 +69,22 @@ private fun SignInFactorTwoBackupCodeViewImpl(
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.continue_text),
-      onClick = {},
+      isLoading = state is BackupCodeViewModel.AuthenticationState.Verifying,
+      onClick = { viewModel.submit(backupCode) },
       icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
     )
     Spacers.Vertical.Spacer24()
-    ClerkTextButton(text = stringResource(R.string.use_another_method)) {}
+    ClerkTextButton(
+      text = stringResource(R.string.use_another_method),
+      onClick = onUseAnotherMethod,
+    )
   }
 }
 
 @PreviewLightDark
 @Composable
 private fun PreviewSignInFactorTwoBackupCodeView() {
-  ClerkMaterialTheme { SignInFactorTwoBackupCodeView(onBackPressed = {}) }
+  ClerkMaterialTheme {
+    SignInFactorTwoBackupCodeView(onBackPressed = {}, onUseAnotherMethod = {}, onSubmitSuccess = {})
+  }
 }
