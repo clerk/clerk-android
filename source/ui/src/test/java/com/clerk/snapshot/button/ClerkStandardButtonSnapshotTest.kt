@@ -44,6 +44,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+                trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
               ),
           )
 
@@ -56,6 +58,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+                trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
               ),
           )
 
@@ -68,6 +72,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+                trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
               ),
           )
 
@@ -110,6 +116,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
             configuration =
@@ -222,6 +229,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
               ),
           )
 
@@ -240,6 +249,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
               ),
           )
 
@@ -258,6 +269,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
               ),
           )
 
@@ -275,6 +288,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
               ),
           )
 
@@ -293,6 +308,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
               ),
           )
 
@@ -311,6 +328,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
               ),
           )
 
@@ -328,6 +347,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+                trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
               ),
           )
 
@@ -346,6 +367,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+                trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
               ),
           )
 
@@ -364,6 +387,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+                trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
               ),
           )
 
@@ -381,6 +406,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                leadingIconColor = ClerkMaterialTheme.colors.danger,
+                trailingIconColor = ClerkMaterialTheme.colors.danger,
               ),
           )
 
@@ -399,6 +426,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                leadingIconColor = ClerkMaterialTheme.colors.danger,
+                trailingIconColor = ClerkMaterialTheme.colors.danger,
               ),
           )
 
@@ -417,6 +446,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
+                leadingIconColor = ClerkMaterialTheme.colors.danger,
+                trailingIconColor = ClerkMaterialTheme.colors.danger,
               ),
           )
         }

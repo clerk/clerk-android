@@ -26,6 +26,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           verticalArrangement = Arrangement.spacedBy(dp20, alignment = Alignment.CenterVertically),
         ) {
           ClerkTextField(
+            onValueChange = {},
             value = "Input",
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
@@ -33,6 +34,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "",
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
@@ -40,6 +42,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "Input",
             placeholder = "Placeholder",
             label = "Label",
@@ -47,6 +50,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "",
             label = "Label",
             supportingText = "Supporting text",
@@ -54,6 +58,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "Input",
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
@@ -62,6 +67,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "",
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
@@ -69,7 +75,12 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
             supportingText = "Supporting text",
           )
 
-          ClerkTextField(value = "Input", label = "Label", supportingText = "Supporting text")
+          ClerkTextField(
+            onValueChange = {},
+            value = "Input",
+            label = "Label",
+            supportingText = "Supporting text",
+          )
         }
       }
     }
@@ -85,6 +96,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           verticalArrangement = Arrangement.spacedBy(dp20, alignment = Alignment.CenterVertically),
         ) {
           ClerkTextField(
+            onValueChange = {},
             value = "Input",
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
@@ -93,6 +105,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "",
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
@@ -101,6 +114,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "Input",
             placeholder = "Placeholder",
             label = "Label",
@@ -109,6 +123,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "",
             label = "Label",
             supportingText = "Supporting text",
@@ -117,6 +132,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "Input",
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
@@ -126,6 +142,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "",
             label = "Label",
             trailingIcon = R.drawable.ic_cross,
@@ -135,6 +152,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
           )
 
           ClerkTextField(
+            onValueChange = {},
             value = "Input",
             label = "Label",
             supportingText = "Supporting text",

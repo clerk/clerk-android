@@ -11,6 +11,7 @@
     <ID>LongMethod:ClerkTextField.kt$@PreviewLightDark @Composable private fun PreviewClerkTextField()</ID>
     <ID>LongMethod:ClerkTextField.kt$@PreviewLightDark @Composable private fun PreviewClerkTextFieldError()</ID>
     <ID>LongMethod:ClerkTextFieldSnapshotTest.kt$ClerkTextFieldSnapshotTest$@Test fun testClerkTextFieldError()</ID>
+    <ID>LongMethod:ClerkTextFieldSnapshotTest.kt$ClerkTextFieldSnapshotTest$@Test fun testClerkTextFieldUnfocused()</ID>
     <ID>LongParameterList:ClerkButton.kt$( isLoading: Boolean, padding: ClerkButtonPadding, icons: ClerkButtonIcons, isEnabled: Boolean, text: String, tokens: ButtonStyleTokens, )</ID>
     <ID>LongParameterList:ClerkButton.kt$( text: String, onClick: () -> Unit, isEnabled: Boolean, isPressedCombined: Boolean, interactionSource: MutableInteractionSource, isLoading: Boolean, padding: ClerkButtonPadding, configuration: ClerkButtonConfig, modifier: Modifier = Modifier, icons: ClerkButtonIcons = ClerkButtonDefaults.icons(), )</ID>
     <ID>MagicNumber:ColorUtils.kt$4f</ID>
