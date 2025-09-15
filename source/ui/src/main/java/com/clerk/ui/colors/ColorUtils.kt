@@ -1,4 +1,3 @@
-// DangerPaletteHsl.kt
 import androidx.compose.ui.graphics.Color
 import kotlin.math.max
 import kotlin.math.min
