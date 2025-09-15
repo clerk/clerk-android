@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class BackupCodeViewModel : ViewModel() {
+internal class BackupCodeViewModel : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationState>(AuthenticationState.Idle)
   val state = _state.asStateFlow()
 
