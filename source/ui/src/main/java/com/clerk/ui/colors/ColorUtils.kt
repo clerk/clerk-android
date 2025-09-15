@@ -96,8 +96,8 @@ private fun hsla(h: Float, s: Float, l: Float, a: Float): Color {
   return Color(r, g, b, a)
 }
 
-fun generateDangerPaletteHsl(seed: Color): DangerPalette {
-  val base = rgbToHsl(seed)
+fun Color.generateDangerPaletteHsl(): DangerPalette {
+  val base = rgbToHsl(this)
 
   // Step sizes are derived from list lengths (no hidden numbers).
   val lightStep = (TARGET_L_25 - base.l) / LIGHT_SHADES.size

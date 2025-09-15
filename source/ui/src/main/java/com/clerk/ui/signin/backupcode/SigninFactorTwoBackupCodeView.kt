@@ -24,6 +24,15 @@ import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 
+/**
+ * A composable view for handling second-factor authentication using a backup code.
+ *
+ * @param onBackPressed A callback invoked when the user presses the back button.
+ * @param onSubmitSuccess A callback invoked when the backup code is successfully verified.
+ * @param modifier The [Modifier] to be applied to the view.
+ * @param onUseAnotherMethod A callback invoked when the user chooses to use another authentication
+ *   method.
+ */
 @Composable
 fun SignInFactorTwoBackupCodeView(
   onBackPressed: () -> Unit,
@@ -39,6 +48,16 @@ fun SignInFactorTwoBackupCodeView(
   )
 }
 
+/**
+ * The internal implementation of the [SignInFactorTwoBackupCodeView].
+ *
+ * @param onBackPressed A callback invoked when the user presses the back button.
+ * @param modifier The [Modifier] to be applied to the view.
+ * @param viewModel The [BackupCodeViewModel] used to manage the state and actions of the view.
+ * @param onSubmitSuccess A callback invoked when the backup code is successfully verified.
+ * @param onUseAnotherMethod A callback invoked when the user chooses to use another authentication
+ *   method.
+ */
 @Composable
 private fun SignInFactorTwoBackupCodeViewImpl(
   onBackPressed: () -> Unit,
