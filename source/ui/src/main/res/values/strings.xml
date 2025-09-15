@@ -36,4 +36,7 @@
     <string name="new_password">New password</string>
     <string name="sign_out_of_all_other_devices">Sign out of all other devices</string>
     <string name="back">Back</string>
+    <string name="enter_a_backup_code">Enter a backup code</string>
+    <string name="your_backup_code">Your backup code is the one you get when setting up two-step authentication.</string>
+    <string name="backup_code">Backup code</string>
 </resources>
