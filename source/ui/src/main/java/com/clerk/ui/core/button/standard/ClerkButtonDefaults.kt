@@ -22,8 +22,8 @@ object ClerkButtonDefaults {
    */
   @Composable
   fun icons(
-    trailingIconColor: Color = ClerkMaterialTheme.colors.primaryForeground,
-    leadingIconColor: Color = ClerkMaterialTheme.colors.primaryForeground,
+    trailingIconColor: Color = ClerkMaterialTheme.colors.primary,
+    leadingIconColor: Color = ClerkMaterialTheme.colors.primary,
     @DrawableRes trailingIcon: Int? = null,
     @DrawableRes leadingIcon: Int? = null,
   ) =
