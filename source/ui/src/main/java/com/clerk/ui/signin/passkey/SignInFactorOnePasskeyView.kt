@@ -92,7 +92,7 @@ private fun SignInFactorOnePasskeyViewImpl(
   ) {
     Icon(
       modifier = Modifier.size(dp72),
-      painter = painterResource(R.drawable.ic_passkey),
+      painter = painterResource(R.drawable.ic_android_passkey),
       contentDescription = stringResource(R.string.passkey_icon),
       tint = ClerkMaterialTheme.colors.primary,
     )

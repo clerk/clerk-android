@@ -83,6 +83,7 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 
 dependencies {
   implementation(platform(libs.compose.bom))
+  implementation("com.materialkolor:material-color-utilities:3.0.1")
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.compose.foundation)
   implementation(libs.androidx.compose.icons)
