@@ -28,6 +28,15 @@ import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
+/**
+ * A view that allows the user to initiate the forgot password flow. It also presents alternative
+ * sign-in methods like social providers or other factors.
+ *
+ * @param factor The initial factor that led to this screen (typically password).
+ * @param onBackPressed A callback to be invoked when the user presses the back button.
+ * @param modifier The [Modifier] to be applied to the view.
+ * @param onClickFactor A callback to be invoked when the user selects an alternative factor.
+ */
 @Composable
 fun SignInFactorOneForgotPasswordView(
   factor: Factor,
@@ -47,6 +56,16 @@ fun SignInFactorOneForgotPasswordView(
   )
 }
 
+/**
+ * The internal implementation of the [SignInFactorOneForgotPasswordView].
+ *
+ * @param onBackPressed A callback to be invoked when the user presses the back button.
+ * @param alternativeFactors A list of alternative factors the user can use to sign in.
+ * @param socialProviders A list of social providers available for sign-in.
+ * @param modifier The [Modifier] to be applied to the view.
+ * @param viewModel The [ForgotPasswordViewModel] for handling the view's logic.
+ * @param onClickFactor A callback to be invoked when the user selects an alternative factor.
+ */
 @Composable
 private fun SignInFactorOneForgotPasswordViewImpl(
   onBackPressed: () -> Unit,
@@ -97,6 +116,13 @@ private fun SignInFactorOneForgotPasswordViewImpl(
   }
 }
 
+/**
+ * Returns the appropriate action text for a given sign-in factor.
+ *
+ * @param factor The [Factor] to get the action text for.
+ * @param context The current Android [Context].
+ * @return A formatted string describing the sign-in action.
+ */
 fun actionText(factor: Factor, context: Context): String? {
   return when (factor.strategy) {
     StrategyKeys.PHONE_CODE -> {
@@ -126,6 +152,12 @@ fun actionText(factor: Factor, context: Context): String? {
   }
 }
 
+/**
+ * Returns the appropriate icon resource for a given sign-in factor.
+ *
+ * @param factor The [Factor] to get the icon for.
+ * @return A drawable resource ID for the factor's icon, or null if not applicable.
+ */
 fun iconResource(factor: Factor): Int? {
   return when (factor.strategy) {
     StrategyKeys.PHONE_CODE -> R.drawable.ic_sms
