@@ -27,3 +27,6 @@ data class Factor(
   /** Whether the factor is the primary factor. */
   val primary: Boolean? = null,
 )
+
+fun Factor.isResetFactor() =
+  (strategy == "reset_password_email_code" || strategy == "reset_password_phone_code")

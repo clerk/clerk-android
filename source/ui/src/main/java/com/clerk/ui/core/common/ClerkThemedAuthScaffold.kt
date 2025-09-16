@@ -13,7 +13,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.button.standard.ClerkButtonConfig
+import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.common.dimens.dp18
 import com.clerk.ui.core.input.ClerkTextField
@@ -54,7 +54,8 @@ internal fun ClerkThemedAuthScaffold(
             text = it,
             onClick = onClickIdentifier,
             modifier = Modifier.wrapContentHeight(),
-            configuration = ClerkButtonConfig(style = ClerkButtonConfig.ButtonStyle.Secondary),
+            configuration =
+              ClerkButtonConfiguration(style = ClerkButtonConfiguration.ButtonStyle.Secondary),
             icons =
               ClerkButtonDefaults.icons(
                 trailingIcon = R.drawable.ic_edit,
