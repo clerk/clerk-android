@@ -20,6 +20,7 @@ import com.clerk.ui.core.common.dimens.dp12
 import com.clerk.ui.core.common.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
+import kotlinx.collections.immutable.toImmutableList
 import org.junit.Test
 
 class SocialButtonSnapshotTest : BaseSnapshotTest() {
@@ -111,7 +112,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
     provider.setLogoUrl(null)
     paparazzi.snapshot {
       ClerkMaterialTheme {
-        ClerkSocialRow(providers = listOf(provider, provider, provider, provider, provider))
+        ClerkSocialRow(
+          providers = listOf(provider, provider, provider, provider, provider).toImmutableList()
+        )
       }
     }
   }
@@ -128,7 +131,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
             Modifier.background(color = ClerkMaterialTheme.colors.background)
               .padding(horizontal = dp4)
         ) {
-          ClerkSocialRow(providers = listOf(provider, provider, provider, provider, provider))
+          ClerkSocialRow(
+            providers = listOf(provider, provider, provider, provider, provider).toImmutableList()
+          )
         }
       }
     }

@@ -35,18 +35,18 @@ object ClerkButtonDefaults {
     )
 
   /**
-   * Creates a [ClerkButtonConfig] with the specified style, emphasis, and size.
+   * Creates a [ClerkButtonConfiguration] with the specified style, emphasis, and size.
    *
    * @param style The visual style of the button (e.g., Primary, Secondary).
    * @param emphasis The prominence of the button (e.g., High, Low).
    * @param size The size of the button (e.g., Large, Small).
-   * @return A [ClerkButtonConfig] instance.
+   * @return A [ClerkButtonConfiguration] instance.
    */
   fun configuration(
-    style: ClerkButtonConfig.ButtonStyle = ClerkButtonConfig.ButtonStyle.Primary,
-    emphasis: ClerkButtonConfig.Emphasis = ClerkButtonConfig.Emphasis.High,
-    size: ClerkButtonConfig.Size = ClerkButtonConfig.Size.Large,
-  ) = ClerkButtonConfig(style = style, emphasis = emphasis, size = size)
+    style: ClerkButtonConfiguration.ButtonStyle = ClerkButtonConfiguration.ButtonStyle.Primary,
+    emphasis: ClerkButtonConfiguration.Emphasis = ClerkButtonConfiguration.Emphasis.High,
+    size: ClerkButtonConfiguration.Size = ClerkButtonConfiguration.Size.Large,
+  ) = ClerkButtonConfiguration(style = style, emphasis = emphasis, size = size)
 
   /**
    * Creates a [ClerkButtonPadding] configuration for a button.
@@ -80,7 +80,7 @@ data class ClerkButtonIcons(
  * @param emphasis The prominence of the button.
  * @param size The size of the button.
  */
-data class ClerkButtonConfig(
+data class ClerkButtonConfiguration(
   val style: ButtonStyle = ButtonStyle.Primary,
   val emphasis: Emphasis = Emphasis.High,
   val size: Size = Size.Large,

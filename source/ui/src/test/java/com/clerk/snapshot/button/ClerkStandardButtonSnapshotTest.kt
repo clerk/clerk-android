@@ -14,7 +14,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.button.standard.ClerkButtonConfig
+import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkButtonWithPressedState
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -81,49 +81,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             modifier = Modifier.fillMaxWidth(),
             text = "Continue",
             onClick = {},
-            configuration = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
-            icons =
-              ClerkButtonDefaults.icons(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
-          )
-
-          ClerkButtonWithPressedState(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Continue",
-            onClick = {},
-            isPressed = true,
-            configuration = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
-            icons =
-              ClerkButtonDefaults.icons(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
-          )
-
-          ClerkButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Continue",
-            isEnabled = false,
-            onClick = {},
-            configuration = ClerkButtonConfig(emphasis = ClerkButtonConfig.Emphasis.None),
-            icons =
-              ClerkButtonDefaults.icons(
-                leadingIcon = R.drawable.ic_triangle_right,
-                trailingIcon = R.drawable.ic_triangle_right,
-              ),
-          )
-
-          ClerkButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Continue",
-            onClick = {},
             configuration =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Small,
-              ),
+              ClerkButtonConfiguration(emphasis = ClerkButtonConfiguration.Emphasis.None),
             icons =
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
@@ -137,10 +96,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             onClick = {},
             isPressed = true,
             configuration =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Small,
-              ),
+              ClerkButtonConfiguration(emphasis = ClerkButtonConfiguration.Emphasis.None),
             icons =
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
@@ -154,10 +110,7 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             isEnabled = false,
             onClick = {},
             configuration =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.Low,
-                size = ClerkButtonConfig.Size.Small,
-              ),
+              ClerkButtonConfiguration(emphasis = ClerkButtonConfiguration.Emphasis.None),
             icons =
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
@@ -170,9 +123,9 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             text = "Continue",
             onClick = {},
             configuration =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Small,
+              ClerkButtonConfiguration(
+                emphasis = ClerkButtonConfiguration.Emphasis.Low,
+                size = ClerkButtonConfiguration.Size.Small,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -187,9 +140,9 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             onClick = {},
             isPressed = true,
             configuration =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Small,
+              ClerkButtonConfiguration(
+                emphasis = ClerkButtonConfiguration.Emphasis.Low,
+                size = ClerkButtonConfiguration.Size.Small,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -204,9 +157,9 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             isEnabled = false,
             onClick = {},
             configuration =
-              ClerkButtonConfig(
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Small,
+              ClerkButtonConfiguration(
+                emphasis = ClerkButtonConfiguration.Emphasis.Low,
+                size = ClerkButtonConfiguration.Size.Small,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -220,17 +173,14 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             text = "Continue",
             onClick = {},
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Secondary,
-                emphasis = ClerkButtonConfig.Emphasis.High,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                emphasis = ClerkButtonConfiguration.Emphasis.None,
+                size = ClerkButtonConfiguration.Size.Small,
               ),
             icons =
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
-                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
               ),
           )
 
@@ -240,37 +190,31 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             onClick = {},
             isPressed = true,
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Secondary,
-                emphasis = ClerkButtonConfig.Emphasis.High,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                emphasis = ClerkButtonConfiguration.Emphasis.None,
+                size = ClerkButtonConfiguration.Size.Small,
               ),
             icons =
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
-                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
               ),
           )
 
           ClerkButton(
             modifier = Modifier.fillMaxWidth(),
             text = "Continue",
-            onClick = {},
             isEnabled = false,
+            onClick = {},
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Secondary,
-                emphasis = ClerkButtonConfig.Emphasis.High,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                emphasis = ClerkButtonConfiguration.Emphasis.None,
+                size = ClerkButtonConfiguration.Size.Small,
               ),
             icons =
               ClerkButtonDefaults.icons(
                 leadingIcon = R.drawable.ic_triangle_right,
                 trailingIcon = R.drawable.ic_triangle_right,
-                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
               ),
           )
 
@@ -279,10 +223,10 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             text = "Continue",
             onClick = {},
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Secondary,
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+                emphasis = ClerkButtonConfiguration.Emphasis.High,
+                size = ClerkButtonConfiguration.Size.Large,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -299,10 +243,10 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             onClick = {},
             isPressed = true,
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Secondary,
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+                emphasis = ClerkButtonConfiguration.Emphasis.High,
+                size = ClerkButtonConfiguration.Size.Large,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -319,10 +263,10 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             onClick = {},
             isEnabled = false,
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Secondary,
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+                emphasis = ClerkButtonConfiguration.Emphasis.High,
+                size = ClerkButtonConfiguration.Size.Large,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -338,10 +282,69 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             text = "Continue",
             onClick = {},
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Negative,
-                emphasis = ClerkButtonConfig.Emphasis.High,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+                emphasis = ClerkButtonConfiguration.Emphasis.None,
+                size = ClerkButtonConfiguration.Size.Large,
+              ),
+            icons =
+              ClerkButtonDefaults.icons(
+                leadingIcon = R.drawable.ic_triangle_right,
+                trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+              ),
+          )
+
+          ClerkButtonWithPressedState(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Continue",
+            onClick = {},
+            isPressed = true,
+            configuration =
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+                emphasis = ClerkButtonConfiguration.Emphasis.None,
+                size = ClerkButtonConfiguration.Size.Large,
+              ),
+            icons =
+              ClerkButtonDefaults.icons(
+                leadingIcon = R.drawable.ic_triangle_right,
+                trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+              ),
+          )
+
+          ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Continue",
+            onClick = {},
+            isEnabled = false,
+            configuration =
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+                emphasis = ClerkButtonConfiguration.Emphasis.None,
+                size = ClerkButtonConfiguration.Size.Large,
+              ),
+            icons =
+              ClerkButtonDefaults.icons(
+                leadingIcon = R.drawable.ic_triangle_right,
+                trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+                leadingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+              ),
+          )
+
+          ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Continue",
+            onClick = {},
+            configuration =
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Negative,
+                emphasis = ClerkButtonConfiguration.Emphasis.High,
+                size = ClerkButtonConfiguration.Size.Large,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -358,10 +361,10 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             onClick = {},
             isPressed = true,
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Negative,
-                emphasis = ClerkButtonConfig.Emphasis.High,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Negative,
+                emphasis = ClerkButtonConfiguration.Emphasis.High,
+                size = ClerkButtonConfiguration.Size.Large,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -378,10 +381,10 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             onClick = {},
             isEnabled = false,
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Negative,
-                emphasis = ClerkButtonConfig.Emphasis.High,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Negative,
+                emphasis = ClerkButtonConfiguration.Emphasis.High,
+                size = ClerkButtonConfiguration.Size.Large,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -397,10 +400,10 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             text = "Continue",
             onClick = {},
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Negative,
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Negative,
+                emphasis = ClerkButtonConfiguration.Emphasis.None,
+                size = ClerkButtonConfiguration.Size.Large,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -417,10 +420,10 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             onClick = {},
             isPressed = true,
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Negative,
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Negative,
+                emphasis = ClerkButtonConfiguration.Emphasis.None,
+                size = ClerkButtonConfiguration.Size.Large,
               ),
             icons =
               ClerkButtonDefaults.icons(
@@ -437,10 +440,10 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
             onClick = {},
             isEnabled = false,
             configuration =
-              ClerkButtonConfig(
-                style = ClerkButtonConfig.ButtonStyle.Negative,
-                emphasis = ClerkButtonConfig.Emphasis.None,
-                size = ClerkButtonConfig.Size.Large,
+              ClerkButtonConfiguration(
+                style = ClerkButtonConfiguration.ButtonStyle.Negative,
+                emphasis = ClerkButtonConfiguration.Emphasis.None,
+                size = ClerkButtonConfiguration.Size.Large,
               ),
             icons =
               ClerkButtonDefaults.icons(

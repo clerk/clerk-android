@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
@@ -72,7 +73,7 @@ fun ClerkButton(
   isEnabled: Boolean = true,
   isLoading: Boolean = false,
   padding: ClerkButtonPadding = ClerkButtonDefaults.padding(),
-  configuration: ClerkButtonConfig = ClerkButtonDefaults.configuration(),
+  configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
   val interactionSource = remember { MutableInteractionSource() }
@@ -108,7 +109,7 @@ internal fun ClerkButtonWithPressedState(
   isEnabled: Boolean = true,
   isLoading: Boolean = false,
   padding: ClerkButtonPadding = ClerkButtonDefaults.padding(),
-  configuration: ClerkButtonConfig = ClerkButtonDefaults.configuration(),
+  configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
   val interactionSource = remember { MutableInteractionSource() }
@@ -146,7 +147,7 @@ private fun ClerkButtonImpl(
   interactionSource: MutableInteractionSource,
   isLoading: Boolean,
   padding: ClerkButtonPadding,
-  configuration: ClerkButtonConfig,
+  configuration: ClerkButtonConfiguration,
   modifier: Modifier = Modifier,
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
@@ -238,8 +239,10 @@ private fun ButtonContent(
         )
       }
       Text(
+        maxLines = 1,
         text = text,
         style = tokens.textStyle,
+        overflow = TextOverflow.Ellipsis,
         color = if (isEnabled) tokens.foreground else tokens.foreground.copy(alpha = 0.5f),
       )
       icons.trailingIcon?.let {
@@ -316,7 +319,7 @@ private fun PreviewButton() {
           text = "None - Large - Primary",
           onClick = {},
           configuration =
-            ClerkButtonDefaults.configuration(emphasis = ClerkButtonConfig.Emphasis.None),
+            ClerkButtonDefaults.configuration(emphasis = ClerkButtonConfiguration.Emphasis.None),
           icons =
             ClerkButtonDefaults.icons(
               leadingIcon = R.drawable.ic_triangle_right,
@@ -332,7 +335,7 @@ private fun PreviewButton() {
           onClick = {},
           isPressed = true,
           configuration =
-            ClerkButtonDefaults.configuration(emphasis = ClerkButtonConfig.Emphasis.None),
+            ClerkButtonDefaults.configuration(emphasis = ClerkButtonConfiguration.Emphasis.None),
           icons =
             ClerkButtonDefaults.icons(
               leadingIcon = R.drawable.ic_triangle_right,
@@ -348,7 +351,7 @@ private fun PreviewButton() {
           isEnabled = false,
           onClick = {},
           configuration =
-            ClerkButtonDefaults.configuration(emphasis = ClerkButtonConfig.Emphasis.None),
+            ClerkButtonDefaults.configuration(emphasis = ClerkButtonConfiguration.Emphasis.None),
           icons =
             ClerkButtonDefaults.icons(
               leadingIcon = R.drawable.ic_triangle_right,
@@ -366,8 +369,8 @@ private fun PreviewButton() {
           onClick = {},
           configuration =
             ClerkButtonDefaults.configuration(
-              emphasis = ClerkButtonConfig.Emphasis.Low,
-              size = ClerkButtonConfig.Size.Small,
+              emphasis = ClerkButtonConfiguration.Emphasis.Low,
+              size = ClerkButtonConfiguration.Size.Small,
             ),
           icons =
             ClerkButtonDefaults.icons(
@@ -385,8 +388,8 @@ private fun PreviewButton() {
           isPressed = true,
           configuration =
             ClerkButtonDefaults.configuration(
-              emphasis = ClerkButtonConfig.Emphasis.Low,
-              size = ClerkButtonConfig.Size.Small,
+              emphasis = ClerkButtonConfiguration.Emphasis.Low,
+              size = ClerkButtonConfiguration.Size.Small,
             ),
           icons =
             ClerkButtonDefaults.icons(
@@ -404,8 +407,8 @@ private fun PreviewButton() {
           onClick = {},
           configuration =
             ClerkButtonDefaults.configuration(
-              emphasis = ClerkButtonConfig.Emphasis.Low,
-              size = ClerkButtonConfig.Size.Small,
+              emphasis = ClerkButtonConfiguration.Emphasis.Low,
+              size = ClerkButtonConfiguration.Size.Small,
             ),
           icons =
             ClerkButtonDefaults.icons(
@@ -424,8 +427,8 @@ private fun PreviewButton() {
           onClick = {},
           configuration =
             ClerkButtonDefaults.configuration(
-              emphasis = ClerkButtonConfig.Emphasis.None,
-              size = ClerkButtonConfig.Size.Small,
+              emphasis = ClerkButtonConfiguration.Emphasis.None,
+              size = ClerkButtonConfiguration.Size.Small,
             ),
           icons =
             ClerkButtonDefaults.icons(
@@ -443,8 +446,8 @@ private fun PreviewButton() {
           isPressed = true,
           configuration =
             ClerkButtonDefaults.configuration(
-              emphasis = ClerkButtonConfig.Emphasis.None,
-              size = ClerkButtonConfig.Size.Small,
+              emphasis = ClerkButtonConfiguration.Emphasis.None,
+              size = ClerkButtonConfiguration.Size.Small,
             ),
           icons =
             ClerkButtonDefaults.icons(
@@ -462,8 +465,8 @@ private fun PreviewButton() {
           onClick = {},
           configuration =
             ClerkButtonDefaults.configuration(
-              emphasis = ClerkButtonConfig.Emphasis.None,
-              size = ClerkButtonConfig.Size.Small,
+              emphasis = ClerkButtonConfiguration.Emphasis.None,
+              size = ClerkButtonConfiguration.Size.Small,
             ),
           icons =
             ClerkButtonDefaults.icons(
@@ -482,9 +485,9 @@ private fun PreviewButton() {
           onClick = {},
           configuration =
             ClerkButtonDefaults.configuration(
-              style = ClerkButtonConfig.ButtonStyle.Secondary,
-              emphasis = ClerkButtonConfig.Emphasis.High,
-              size = ClerkButtonConfig.Size.Large,
+              style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+              emphasis = ClerkButtonConfiguration.Emphasis.High,
+              size = ClerkButtonConfiguration.Size.Large,
             ),
           icons =
             ClerkButtonDefaults.icons(
@@ -502,9 +505,9 @@ private fun PreviewButton() {
           isPressed = true,
           configuration =
             ClerkButtonDefaults.configuration(
-              style = ClerkButtonConfig.ButtonStyle.Secondary,
-              emphasis = ClerkButtonConfig.Emphasis.High,
-              size = ClerkButtonConfig.Size.Large,
+              style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+              emphasis = ClerkButtonConfiguration.Emphasis.High,
+              size = ClerkButtonConfiguration.Size.Large,
             ),
           icons =
             ClerkButtonDefaults.icons(
@@ -522,9 +525,9 @@ private fun PreviewButton() {
           onClick = {},
           configuration =
             ClerkButtonDefaults.configuration(
-              style = ClerkButtonConfig.ButtonStyle.Secondary,
-              emphasis = ClerkButtonConfig.Emphasis.High,
-              size = ClerkButtonConfig.Size.Large,
+              style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+              emphasis = ClerkButtonConfiguration.Emphasis.High,
+              size = ClerkButtonConfiguration.Size.Large,
             ),
           icons =
             ClerkButtonDefaults.icons(

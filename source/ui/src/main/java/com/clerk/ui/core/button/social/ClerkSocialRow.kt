@@ -1,15 +1,14 @@
 package com.clerk.ui.core.button.social
 
-import android.annotation.SuppressLint
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.ui.core.common.dimens.dp8
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * A composable row layout for displaying multiple social authentication buttons.
@@ -25,23 +24,21 @@ import com.clerk.ui.core.common.dimens.dp8
  */
 @Composable
 fun ClerkSocialRow(
-  @SuppressLint("ComposeUnstableCollections") providers: List<OAuthProvider>,
+  providers: ImmutableList<OAuthProvider>,
   modifier: Modifier = Modifier,
   onClick: (OAuthProvider) -> Unit = {},
 ) {
   FlowRow(
     modifier = modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.spacedBy(dp8),
+    horizontalArrangement = Arrangement.spacedBy(dp8, alignment = Alignment.CenterHorizontally),
     verticalArrangement = Arrangement.spacedBy(dp8),
   ) {
     providers.forEach { provider ->
-      ClerkSocialButtonImpl(
+      ClerkSocialButton(
         provider = provider,
         isEnabled = true,
-        isPressedCombined = false,
-        interactionSource = remember { MutableInteractionSource() },
-        forceIconOnly = true,
         onClick = onClick,
+        forceIconOnly = true,
       )
     }
   }
