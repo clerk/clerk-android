@@ -25,42 +25,42 @@ internal data class ButtonStyleTokens(
 
 @Composable
 internal fun buildButtonTokens(
-  config: ClerkButtonConfig,
+  config: ClerkButtonConfiguration,
   computed: ComputedColors,
   isPressed: Boolean,
 ): ButtonStyleTokens {
   val text =
     when (config.size) {
-      ClerkButtonConfig.Size.Small -> MaterialTheme.typography.titleSmall
-      ClerkButtonConfig.Size.Large -> MaterialTheme.typography.titleMedium
+      ClerkButtonConfiguration.Size.Small -> MaterialTheme.typography.titleSmall
+      ClerkButtonConfiguration.Size.Large -> MaterialTheme.typography.titleMedium
     }
 
   val height =
     when (config.size) {
-      ClerkButtonConfig.Size.Small -> dp32
-      ClerkButtonConfig.Size.Large -> dp48
+      ClerkButtonConfiguration.Size.Small -> dp32
+      ClerkButtonConfiguration.Size.Large -> dp48
     }
 
   val hasShadow =
     when (config.emphasis) {
-      ClerkButtonConfig.Emphasis.None -> false
-      ClerkButtonConfig.Emphasis.Low,
-      ClerkButtonConfig.Emphasis.High ->
-        !(isPressed && config.style == ClerkButtonConfig.ButtonStyle.Negative)
+      ClerkButtonConfiguration.Emphasis.None -> false
+      ClerkButtonConfiguration.Emphasis.Low,
+      ClerkButtonConfiguration.Emphasis.High ->
+        !(isPressed && config.style == ClerkButtonConfiguration.ButtonStyle.Negative)
     }
 
   val borderWidth =
     when (config.emphasis) {
-      ClerkButtonConfig.Emphasis.None -> dp0
-      ClerkButtonConfig.Emphasis.Low,
-      ClerkButtonConfig.Emphasis.High -> dp0
+      ClerkButtonConfiguration.Emphasis.None -> dp0
+      ClerkButtonConfiguration.Emphasis.Low,
+      ClerkButtonConfiguration.Emphasis.High -> dp0
     }
 
   val borderColor =
     when (config.emphasis) {
-      ClerkButtonConfig.Emphasis.None -> Color.Transparent
-      ClerkButtonConfig.Emphasis.Low,
-      ClerkButtonConfig.Emphasis.High -> computed.buttonBorder
+      ClerkButtonConfiguration.Emphasis.None -> Color.Transparent
+      ClerkButtonConfiguration.Emphasis.Low,
+      ClerkButtonConfiguration.Emphasis.High -> computed.buttonBorder
     }
 
   val foreground = generateForeground(config, isPressed)
@@ -78,62 +78,62 @@ internal fun buildButtonTokens(
 }
 
 @Composable
-private fun generateForeground(config: ClerkButtonConfig, isPressed: Boolean): Color =
+private fun generateForeground(config: ClerkButtonConfiguration, isPressed: Boolean): Color =
   when (config.style) {
-    ClerkButtonConfig.ButtonStyle.Primary ->
+    ClerkButtonConfiguration.ButtonStyle.Primary ->
       when (config.emphasis) {
-        ClerkButtonConfig.Emphasis.High -> ClerkMaterialTheme.colors.primaryForeground
-        ClerkButtonConfig.Emphasis.Low,
-        ClerkButtonConfig.Emphasis.None -> ClerkMaterialTheme.colors.primary
+        ClerkButtonConfiguration.Emphasis.High -> ClerkMaterialTheme.colors.primaryForeground
+        ClerkButtonConfiguration.Emphasis.Low,
+        ClerkButtonConfiguration.Emphasis.None -> ClerkMaterialTheme.colors.primary
       }
 
-    ClerkButtonConfig.ButtonStyle.Secondary ->
+    ClerkButtonConfiguration.ButtonStyle.Secondary ->
       when (config.emphasis) {
-        ClerkButtonConfig.Emphasis.None ->
+        ClerkButtonConfiguration.Emphasis.None ->
           if (isPressed) ClerkMaterialTheme.colors.foreground
           else ClerkMaterialTheme.colors.mutedForeground
-        ClerkButtonConfig.Emphasis.Low,
-        ClerkButtonConfig.Emphasis.High -> ClerkMaterialTheme.colors.foreground
+        ClerkButtonConfiguration.Emphasis.Low,
+        ClerkButtonConfiguration.Emphasis.High -> ClerkMaterialTheme.colors.foreground
       }
 
-    ClerkButtonConfig.ButtonStyle.Negative ->
+    ClerkButtonConfiguration.ButtonStyle.Negative ->
       when (config.emphasis) {
-        ClerkButtonConfig.Emphasis.High -> ClerkMaterialTheme.colors.primaryForeground
-        ClerkButtonConfig.Emphasis.Low,
-        ClerkButtonConfig.Emphasis.None -> ClerkMaterialTheme.colors.danger
+        ClerkButtonConfiguration.Emphasis.High -> ClerkMaterialTheme.colors.primaryForeground
+        ClerkButtonConfiguration.Emphasis.Low,
+        ClerkButtonConfiguration.Emphasis.None -> ClerkMaterialTheme.colors.danger
       }
   }
 
 @Composable
 private fun generateBackground(
-  config: ClerkButtonConfig,
+  config: ClerkButtonConfiguration,
   isPressed: Boolean,
   computed: ComputedColors,
 ): Color =
   when (config.style) {
-    ClerkButtonConfig.ButtonStyle.Primary ->
+    ClerkButtonConfiguration.ButtonStyle.Primary ->
       when (config.emphasis) {
-        ClerkButtonConfig.Emphasis.High ->
+        ClerkButtonConfiguration.Emphasis.High ->
           if (isPressed) computed.primaryPressed else ClerkMaterialTheme.colors.primary
-        ClerkButtonConfig.Emphasis.Low,
-        ClerkButtonConfig.Emphasis.None ->
+        ClerkButtonConfiguration.Emphasis.Low,
+        ClerkButtonConfiguration.Emphasis.None ->
           if (isPressed) ClerkMaterialTheme.colors.muted else ClerkMaterialTheme.colors.background
       }
 
-    ClerkButtonConfig.ButtonStyle.Secondary ->
+    ClerkButtonConfiguration.ButtonStyle.Secondary ->
       when (config.emphasis) {
-        ClerkButtonConfig.Emphasis.None,
-        ClerkButtonConfig.Emphasis.Low,
-        ClerkButtonConfig.Emphasis.High ->
+        ClerkButtonConfiguration.Emphasis.None,
+        ClerkButtonConfiguration.Emphasis.Low,
+        ClerkButtonConfiguration.Emphasis.High ->
           if (isPressed) ClerkMaterialTheme.colors.muted else ClerkMaterialTheme.colors.background
       }
 
-    ClerkButtonConfig.ButtonStyle.Negative ->
+    ClerkButtonConfiguration.ButtonStyle.Negative ->
       when (config.emphasis) {
-        ClerkButtonConfig.Emphasis.High ->
+        ClerkButtonConfiguration.Emphasis.High ->
           if (isPressed) computed.backgroundDanger else ClerkMaterialTheme.colors.danger
-        ClerkButtonConfig.Emphasis.Low,
-        ClerkButtonConfig.Emphasis.None ->
+        ClerkButtonConfiguration.Emphasis.Low,
+        ClerkButtonConfiguration.Emphasis.None ->
           if (isPressed) computed.backgroundDanger else ClerkMaterialTheme.colors.background
       }
   }

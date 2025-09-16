@@ -40,6 +40,7 @@ import com.clerk.ui.core.common.dimens.dp48
 import com.clerk.ui.core.common.dimens.dp6
 import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * A composable button for social authentication with a specific [OAuthProvider].
@@ -60,6 +61,7 @@ fun ClerkSocialButton(
   provider: OAuthProvider,
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
+  forceIconOnly: Boolean = false,
   onClick: (OAuthProvider) -> Unit = {},
 ) {
   val interactionSource = remember { MutableInteractionSource() }
@@ -69,6 +71,7 @@ fun ClerkSocialButton(
     isEnabled = isEnabled,
     isPressedCombined = pressed,
     interactionSource = interactionSource,
+    forceIconOnly = forceIconOnly,
     modifier = modifier,
     onClick = onClick,
   )
@@ -145,7 +148,7 @@ internal fun ClerkSocialButtonImpl(
             clip = true,
             spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.8f),
           )
-          .defaultMinSize(minHeight = dp48, minWidth = 120.dp),
+          .defaultMinSize(minHeight = dp48, minWidth = 100.dp),
     ) {
       SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = forceIconOnly)
     }
@@ -281,7 +284,7 @@ private fun PreviewSocialRow() {
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp8),
       verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
     ) {
-      ClerkSocialRow(listOf(provider, provider, provider, provider, provider))
+      ClerkSocialRow(listOf(provider, provider, provider, provider, provider).toImmutableList())
     }
   }
 }

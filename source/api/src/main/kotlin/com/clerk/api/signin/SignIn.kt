@@ -15,6 +15,7 @@ import com.clerk.api.Constants.Strategy.TRANSFER
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
@@ -379,15 +380,13 @@ data class SignIn(
      * Each strategy represents a different method of verifying the user's identity during the first
      * factor authentication step.
      */
-    val strategy: String
-
     @AutoMap
     @Serializable
     data class EmailCode(
       @SerialName("email_address_id")
       val emailAddressId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
-      override val strategy: String = EMAIL_CODE,
+      val strategy: String = EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -396,7 +395,7 @@ data class SignIn(
       @SerialName("phone_number_id")
       val phoneNumberId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
-      override val strategy: String = PHONE_CODE,
+      val strategy: String = PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -404,7 +403,7 @@ data class SignIn(
     data class ResetPasswordEmailCode(
       val emailAddressId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
-      override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+      val strategy: String = RESET_PASSWORD_EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -412,13 +411,13 @@ data class SignIn(
     data class ResetPasswordPhoneCode(
       val phoneNumberId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
-      override val strategy: String = RESET_PASSWORD_PHONE_CODE,
+      val strategy: String = RESET_PASSWORD_PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class OAuth(
-      override val strategy: String,
+      @SerialName("strategy") @MapProperty("providerData?.strategy") val provider: OAuthProvider,
       @SerialName("redirect_url")
       val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : PrepareFirstFactorParams
@@ -426,14 +425,14 @@ data class SignIn(
     @AutoMap
     @Serializable
     data class EnterpriseSSO(
-      override val strategy: String = ENTERPRISE_SSO,
+      val strategy: String = ENTERPRISE_SSO,
       @SerialName("redirect_url")
       val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
-    data class Passkey(override val strategy: String = PASSKEY) : PrepareFirstFactorParams
+    data class Passkey(val strategy: String = PASSKEY) : PrepareFirstFactorParams
   }
 
   /**
@@ -868,3 +867,23 @@ suspend fun SignIn.get(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
+
+fun SignIn.alternativeFirstFactors(factor: Factor): List<Factor> {
+  val firstFactors =
+    supportedFirstFactors?.filter {
+      it != factor &&
+        !it.isResetFactor() &&
+        !it.strategy.contains("oauth") &&
+        it.strategy != "enterprise_sso" &&
+        it.strategy != "saml"
+    }
+  return (firstFactors ?: emptyList()).sortedWith(
+    compareBy {
+      val i = strategySortOrderAllStrategies.indexOf(it.strategy)
+      if (i == -1) Int.MAX_VALUE else i // unknown strategies last
+    }
+  )
+}
+
+private val strategySortOrderAllStrategies =
+  listOf("email_code", "phone_code", "passkey", "password")
