@@ -40,4 +40,17 @@
     <string name="your_backup_code">Your backup code is the one you get when setting up two-step authentication.</string>
     <string name="backup_code">Backup code</string>
     <string name="an_error_occurred">An error occurred</string>
+    <string name="reset_your_password">Reset your password</string>
+    <string name="or_sign_in_with_another_method">Or, sign in with another method</string>
+    <string name="email_code_to">Email code to %1$s</string>
+    <string name="send_sms_code_to">Send SMS code to %1$s</string>
+    <string name="send_email_to">Send email to %1$s</string>
+    <string name="send_sms_code_to_phone">Send SMS code to %1$s</string>
+    <string name="email_code_to_email">Email code to %1$s</string>
+    <string name="sign_in_with_your_passkey">Sign in with your passkey</string>
+    <string name="sign_in_with_your_password">Sign in with your password</string>
+    <string name="use_your_authenticator_app">Use your authenticator app</string>
+    <string name="use_a_backup_code">Use a backup code</string>
+    <string name="send_sms_code">Send SMS code</string>
+    <string name="email_code">Email code</string>
 </resources>
