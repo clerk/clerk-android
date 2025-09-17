@@ -66,6 +66,18 @@ internal class AuthViewHelper {
       } && showIdentifierField
     }
 
+  fun continueIsDisabled(
+    isPhoneNumberFieldActive: Boolean,
+    identifier: String,
+    phoneNumber: String,
+  ): Boolean {
+    return if (isPhoneNumberFieldActive) {
+      phoneNumber.isEmpty()
+    } else {
+      identifier.isEmpty()
+    }
+  }
+
   private val applicationName: String?
     get() = testApplicationName ?: Clerk.applicationName
 
@@ -104,8 +116,8 @@ internal class AuthViewHelper {
   }
 
   @Composable
-  fun identifierSwitcherString(): String {
-    return if (phoneNumberIsEnabled) {
+  fun identifierSwitcherString(isPhoneNumberFieldActive: Boolean): String {
+    return if (isPhoneNumberFieldActive) {
       when {
         emailIsEnabled && usernameIsEnabled ->
           stringResource(R.string.use_email_address_or_username)

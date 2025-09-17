@@ -43,6 +43,7 @@ private fun AuthStartViewImpl(
 ) {
   var authStartPhoneNumber by rememberSaveable { mutableStateOf("") }
   var authStartIdentifier by rememberSaveable { mutableStateOf("") }
+  var phoneNumberFieldIsActive by rememberSaveable { mutableStateOf(false) }
 
   ClerkThemedAuthScaffold(
     modifier = modifier,
@@ -56,7 +57,7 @@ private fun AuthStartViewImpl(
       verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
     ) {
       if (authViewHelper.showIdentifierField) {
-        if (authViewHelper.phoneNumberIsEnabled) {
+        if (authViewHelper.phoneNumberIsEnabled && phoneNumberFieldIsActive) {
           ClerkPhoneNumberField(
             value = authStartPhoneNumber,
             modifier = Modifier,
@@ -80,7 +81,10 @@ private fun AuthStartViewImpl(
           onClick = {},
         )
         if (authViewHelper.showIdentifierSwitcher) {
-          ClerkTextButton(text = authViewHelper.identifierSwitcherString(), onClick = {})
+          ClerkTextButton(
+            text = authViewHelper.identifierSwitcherString(phoneNumberFieldIsActive),
+            onClick = { phoneNumberFieldIsActive = !phoneNumberFieldIsActive },
+          )
         }
         if (authViewHelper.showOrDivider) {
           TextDivider(stringResource(R.string.or))
