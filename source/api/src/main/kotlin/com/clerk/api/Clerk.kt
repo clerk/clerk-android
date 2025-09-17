@@ -177,34 +177,6 @@ object Clerk {
   val socialProviders: Map<String, UserSettings.SocialConfig>
     get() = if (::environment.isInitialized) environment.userSettings.social else emptyMap()
 
-  /** Indicates whether passkey authentication is enabled for this application. */
-  val passkeyIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.passkeyIsEnabled else false
-
-  /** Indicates whether multi-factor authentication (MFA) is enabled for this application. */
-  val mfaIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.mfaIsEnabled else false
-
-  /** Indicates whether authenticator app MFA is enabled for this application. */
-  val mfaAuthenticatorAppIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.mfaAuthenticatorAppIsEnabled else false
-
-  /** Indicates whether password authentication is enabled for this application. */
-  val passwordIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.passwordIsEnabled else false
-
-  /** Indicates whether username authentication is enabled for this application. */
-  val usernameIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.usernameIsEnabled else false
-
-  /** Indicates whether first name is enabled in user settings for this application. */
-  val firstNameIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.firstNameIsEnabled else false
-
-  /** Indicates whether last name is enabled in user settings for this application. */
-  val lastNameIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.lastNameIsEnabled else false
-
   // endregion
 
   // region Theme settings

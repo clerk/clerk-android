@@ -58,4 +58,11 @@
     <string name="create_your_account">Create your account</string>
     <string name="welcome_sign_in_to_continue">Welcome! Sign in to continue.</string>
     <string name="welcome_please_fill_in_the_details_to_get_started">Welcome! Please fill in the details to get started.</string>
+    <string name="use_email_address_or_username">Use email address or username</string>
+    <string name="use_email_address">Use email address</string>
+    <string name="use_username">Use username</string>
+    <string name="use_phone_number">Use phone number</string>
+    <string name="enter_your_email">Enter your email</string>
+    <string name="enter_your_username">Enter your username</string>
+    <string name="enter_you_email_or_username">Enter you email or username</string>
 </resources>

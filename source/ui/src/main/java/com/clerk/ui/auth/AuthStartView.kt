@@ -1,6 +1,10 @@
 package com.clerk.ui.auth
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
@@ -12,6 +16,9 @@ fun AuthStartView(
   modifier: Modifier = Modifier,
   authViewHelper: AuthViewHelper = AuthViewHelper(),
 ) {
+
+  var authStartPhoneNumber by rememberSaveable { mutableStateOf("") }
+  var authStartEmailAddress by rememberSaveable { mutableStateOf("") }
 
   ClerkThemedAuthScaffold(
     modifier = modifier,
