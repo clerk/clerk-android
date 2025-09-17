@@ -1,6 +1,5 @@
 package com.clerk.ui.core.input
 
-import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -77,15 +76,21 @@ private const val DROPDOWN_HEIGHT_DIVISOR = 3
  *
  * @param modifier [Modifier] to be applied to the component
  * @param errorText Optional error message to display below the input field
- * @param inputText Optional initial phone number text (without country code)
+ * @param value Optional initial phone number text (without country code)
  */
 @Composable
 fun ClerkPhoneNumberField(
+  value: String,
   modifier: Modifier = Modifier,
   errorText: String? = null,
-  @VisibleForTesting inputText: String? = null,
+  onValueChange: (String) -> Unit,
 ) {
-  ClerkPhoneNumberFieldImpl(modifier, errorText = errorText, inputText = inputText)
+  ClerkPhoneNumberFieldImpl(
+    modifier = modifier,
+    errorText = errorText,
+    value = value,
+    onValueChange = onValueChange,
+  )
 }
 
 /**
@@ -110,19 +115,20 @@ private fun getInitialPhoneNumber(inputText: String?, country: CountryInfo): Str
  * including automatic country detection and formatting.
  *
  * @param modifier [Modifier] to be applied to the component
- * @param inputText Optional initial phone number text (without country code)
+ * @param value Optional initial phone number text (without country code)
  * @param errorText Optional error message to display below the input field
  */
 @Composable
 internal fun ClerkPhoneNumberFieldImpl(
+  onValueChange: (String) -> Unit,
+  value: String,
   modifier: Modifier = Modifier,
-  inputText: String? = null,
   errorText: String? = null,
 ) {
   val defaultCountry = PhoneInputUtils.getDefaultCountry()
   var selectedCountry: CountryInfo by remember { mutableStateOf(defaultCountry) }
 
-  val initialPhoneNumber = remember(inputText) { getInitialPhoneNumber(inputText, defaultCountry) }
+  val initialPhoneNumber = remember(value) { getInitialPhoneNumber(value, defaultCountry) }
   var phoneNumber: String by remember { mutableStateOf(initialPhoneNumber) }
   val context = LocalContext.current
 
@@ -130,7 +136,7 @@ internal fun ClerkPhoneNumberFieldImpl(
     val detectedCountry = PhoneInputUtils.detectCountry(context)
     if (detectedCountry != null) {
       selectedCountry = detectedCountry
-      phoneNumber = getInitialPhoneNumber(inputText, detectedCountry)
+      phoneNumber = getInitialPhoneNumber(value, detectedCountry)
     }
   }
 
@@ -152,7 +158,7 @@ internal fun ClerkPhoneNumberFieldImpl(
           selectedCountry = selectedCountry,
           onSelect = { country ->
             selectedCountry = country
-            phoneNumber = getInitialPhoneNumber(inputText, country)
+            phoneNumber = getInitialPhoneNumber(value, country)
           },
         )
       }
@@ -161,7 +167,7 @@ internal fun ClerkPhoneNumberFieldImpl(
         PhoneNumberInput(
           computedColors = computedColors,
           value = phoneNumber,
-          onValueChange = { phoneNumber = it },
+          onValueChange = onValueChange,
           errorText = errorText,
           countryCode = selectedCountry.countryShortName,
         )
@@ -436,9 +442,11 @@ private fun PreviewPhoneInput() {
           .padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp12),
     ) {
-      ClerkPhoneNumberField()
+      ClerkPhoneNumberField(value = "", onValueChange = {})
       ClerkPhoneNumberField(
-        errorText = "The value entered is in an invalid format. Please check and correct it."
+        value = "",
+        onValueChange = {},
+        errorText = "The value entered is in an invalid format. Please check and correct it.",
       )
     }
   }

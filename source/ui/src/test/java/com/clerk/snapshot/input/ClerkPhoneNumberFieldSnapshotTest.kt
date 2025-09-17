@@ -29,9 +29,11 @@ class ClerkPhoneNumberFieldSnapshotTest : BaseSnapshotTest() {
               .padding(dp12),
           verticalArrangement = Arrangement.spacedBy(dp12),
         ) {
-          ClerkPhoneNumberField()
+          ClerkPhoneNumberField(value = "", onValueChange = {})
           ClerkPhoneNumberField(
-            errorText = "The value entered is in an invalid format. Please check and correct it."
+            value = "",
+            onValueChange = {},
+            errorText = "The value entered is in an invalid format. Please check and correct it.",
           )
         }
       }
@@ -50,9 +52,11 @@ class ClerkPhoneNumberFieldSnapshotTest : BaseSnapshotTest() {
               .padding(dp12),
           verticalArrangement = Arrangement.spacedBy(dp12),
         ) {
-          ClerkPhoneNumberField(inputText = "5555550100")
+          ClerkPhoneNumberField(value = "5555550100", onValueChange = {})
           ClerkPhoneNumberField(
-            errorText = "The value entered is in an invalid format. Please check and correct it."
+            onValueChange = {},
+            value = "",
+            errorText = "The value entered is in an invalid format. Please check and correct it.",
           )
         }
       }
