@@ -26,9 +26,10 @@ import kotlinx.collections.immutable.toImmutableList
 @Composable
 fun SignInFactorAlternativeMethodsView(
   currentFactor: Factor,
+  onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
-  onBackPressed: () -> Unit,
+  onClickFactor: (Factor) -> Unit,
 ) {
   val socialProviders =
     if (isSecondFactor) emptyList() else Clerk.socialProviders.toOAuthProvidersList()
@@ -41,6 +42,7 @@ fun SignInFactorAlternativeMethodsView(
     onBackPressed = onBackPressed,
     alternativeFactors = alternativeFactors.orEmpty().toImmutableList(),
     providers = socialProviders.toImmutableList(),
+    onClickFactor = onClickFactor,
   )
 }
 
@@ -52,6 +54,7 @@ private fun SignInFactorAlternativeMethodsViewImpl(
   modifier: Modifier = Modifier,
   textIconHelper: TextIconHelper = TextIconHelper(),
   viewModel: AlternativeMethodsViewModel = viewModel(),
+  onClickFactor: (Factor) -> Unit,
 ) {
   val context = LocalContext.current
   ClerkThemedAuthScaffold(
@@ -70,7 +73,7 @@ private fun SignInFactorAlternativeMethodsViewImpl(
       alternativeFactors = alternativeFactors,
       textIconHelper = textIconHelper,
       context = context,
-      onClickFactor = {},
+      onClickFactor = onClickFactor,
     )
   }
 }
@@ -83,6 +86,7 @@ private fun Preview() {
     alternativeFactors =
       listOf(Factor(strategy = StrategyKeys.PASSWORD), Factor(strategy = StrategyKeys.PHONE_CODE))
         .toImmutableList(),
+    onClickFactor = {},
     providers =
       listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK).toImmutableList(),
   )
