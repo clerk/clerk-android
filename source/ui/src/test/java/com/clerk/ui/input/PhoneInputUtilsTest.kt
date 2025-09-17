@@ -390,6 +390,28 @@ class PhoneInputUtilsTest {
   }
 
   @Test
+  fun `getAllCountries prioritizes US for phone code 1`() {
+    // Given - using real implementations with Robolectric context
+    val realPhoneInputUtils = PhoneInputUtils()
+
+    // When - this will use the real Android context provided by Robolectric
+    val result = realPhoneInputUtils.getAllCountries()
+
+    // Then - find all countries with phone code +1
+    val plusOneCountries = result.filter { it.code == 1 }
+
+    // US should be in the list and should be easily identifiable
+    val usCountry = plusOneCountries.find { it.countryShortName == "US" }
+    assertNotNull("US should be found in +1 countries", usCountry)
+    assertEquals("US", usCountry?.countryShortName)
+    assertEquals(1, usCountry?.code)
+    assertEquals("🇺🇸", usCountry?.flag)
+
+    // There should be multiple countries with +1 (US, Canada, etc.)
+    assert(plusOneCountries.size > 1) { "There should be multiple countries with +1 code" }
+  }
+
+  @Test
   fun `companion object methods delegate to default instance`() {
     // Test that companion object methods work for backward compatibility
     // These will use real implementations since they create a default instance

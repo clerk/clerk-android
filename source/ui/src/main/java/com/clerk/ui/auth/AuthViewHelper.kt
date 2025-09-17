@@ -104,8 +104,8 @@ internal class AuthViewHelper {
   }
 
   @Composable
-  fun identifierSwitcherString(isPhoneNumberFieldActive: Boolean): String {
-    return if (isPhoneNumberFieldActive) {
+  fun identifierSwitcherString(): String {
+    return if (phoneNumberIsEnabled) {
       when {
         emailIsEnabled && usernameIsEnabled ->
           stringResource(R.string.use_email_address_or_username)

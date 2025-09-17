@@ -80,7 +80,7 @@ private fun AuthStartViewImpl(
           onClick = {},
         )
         if (authViewHelper.showIdentifierSwitcher) {
-          ClerkTextButton(text = authViewHelper.identifierSwitcherString(false), onClick = {})
+          ClerkTextButton(text = authViewHelper.identifierSwitcherString(), onClick = {})
         }
         if (authViewHelper.showOrDivider) {
           TextDivider(stringResource(R.string.or))
