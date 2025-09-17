@@ -62,12 +62,14 @@ fun SignInFactorCodeView(
   modifier: Modifier = Modifier,
   onBackPressed: () -> Unit = {},
   onClickResend: () -> Unit = {},
+  isSecondFactor: Boolean = false,
 ) {
   SignInFactorCodeViewImpl(
     factor = factor,
     modifier = modifier,
     onBackPressed = onBackPressed,
     onClickResend = onClickResend,
+    isSecondFactor = isSecondFactor,
   )
 }
 
@@ -96,6 +98,7 @@ private fun SignInFactorCodeViewImpl(
   modifier: Modifier = Modifier,
   viewModel: SignInFactorCodeViewModel = viewModel(),
   onUseAnotherMethod: () -> Unit = {},
+  isSecondFactor: Boolean = false,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val verificationState = state.verificationState()
@@ -122,7 +125,7 @@ private fun SignInFactorCodeViewImpl(
       verificationState = verificationState,
       onOtpTextChange = {
         if (it.length == 6) {
-          viewModel.attempt(factor, isSecondFactor = false, code = it)
+          viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = it)
         }
       },
       showResend = SignInFactorCodeHelper.showResend(factor, verificationState),
