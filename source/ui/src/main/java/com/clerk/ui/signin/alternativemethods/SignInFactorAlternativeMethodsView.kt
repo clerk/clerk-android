@@ -1,0 +1,87 @@
+package com.clerk.ui.signin.alternativemethods
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.Clerk
+import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.signin.alternativeFirstFactors
+import com.clerk.api.signin.alternativeSecondFactors
+import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.toOAuthProvidersList
+import com.clerk.ui.R
+import com.clerk.ui.core.button.social.ClerkSocialRow
+import com.clerk.ui.core.common.ClerkThemedAuthScaffold
+import com.clerk.ui.core.common.Spacers
+import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.core.divider.TextDivider
+import com.clerk.ui.signin.password.forgot.AlternativeFactorList
+import com.clerk.ui.util.TextIconHelper
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
+
+@Composable
+fun SignInFactorAlternativeMethodsView(
+  currentFactor: Factor,
+  modifier: Modifier = Modifier,
+  isSecondFactor: Boolean = false,
+  onBackPressed: () -> Unit,
+) {
+  val socialProviders =
+    if (isSecondFactor) emptyList() else Clerk.socialProviders.toOAuthProvidersList()
+  val alternativeFactors =
+    if (isSecondFactor) Clerk.signIn?.alternativeSecondFactors(currentFactor)
+    else Clerk.signIn?.alternativeFirstFactors(currentFactor)
+
+  SignInFactorAlternativeMethodsViewImpl(
+    modifier = modifier,
+    onBackPressed = onBackPressed,
+    alternativeFactors = alternativeFactors.orEmpty().toImmutableList(),
+    providers = socialProviders.toImmutableList(),
+  )
+}
+
+@Composable
+private fun SignInFactorAlternativeMethodsViewImpl(
+  onBackPressed: () -> Unit,
+  providers: ImmutableList<OAuthProvider>,
+  alternativeFactors: ImmutableList<Factor>,
+  modifier: Modifier = Modifier,
+  textIconHelper: TextIconHelper = TextIconHelper(),
+) {
+  val context = LocalContext.current
+  ClerkThemedAuthScaffold(
+    modifier = modifier,
+    onBackPressed = onBackPressed,
+    title = stringResource(R.string.use_another_method),
+    subtitle = "Facing issues? You can use any of these methods to sign in.",
+  ) {
+    if (providers.isNotEmpty()) {
+      ClerkSocialRow(providers = providers)
+    }
+    Spacers.Vertical.Spacer24()
+    TextDivider(text = "or")
+    Spacers.Vertical.Spacer24()
+    AlternativeFactorList(
+      alternativeFactors = alternativeFactors,
+      textIconHelper = textIconHelper,
+      context = context,
+      onClickFactor = {},
+    )
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun Preview() {
+  SignInFactorAlternativeMethodsViewImpl(
+    onBackPressed = {},
+    alternativeFactors =
+      listOf(Factor(strategy = StrategyKeys.PASSWORD), Factor(strategy = StrategyKeys.PHONE_CODE))
+        .toImmutableList(),
+    providers =
+      listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK).toImmutableList(),
+  )
+}

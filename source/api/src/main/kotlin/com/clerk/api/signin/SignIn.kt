@@ -885,5 +885,22 @@ fun SignIn.alternativeFirstFactors(factor: Factor): List<Factor> {
   )
 }
 
+fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
+  val secondFactors = supportedSecondFactors?.filter { it != factor }.orEmpty()
+
+  return secondFactors.sortedWith { lhs, rhs ->
+    val order1 = strategySortOrderBackupCodePref.indexOf(lhs.strategy)
+    val order2 = strategySortOrderBackupCodePref.indexOf(rhs.strategy)
+
+    when {
+      order1 == -1 || order2 == -1 -> 0
+      order1 < order2 -> -1
+      else -> 1
+    }
+  }
+}
+
 private val strategySortOrderAllStrategies =
   listOf("email_code", "phone_code", "passkey", "password")
+
+private val strategySortOrderBackupCodePref = listOf("totp", "phone_code", "backup_code")
