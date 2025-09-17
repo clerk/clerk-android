@@ -278,6 +278,8 @@ private fun PreviewButton() {
             ClerkButtonDefaults.icons(
               leadingIcon = R.drawable.ic_triangle_right,
               trailingIcon = R.drawable.ic_triangle_right,
+              trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+              leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
             ),
         )
       }
@@ -292,6 +294,8 @@ private fun PreviewButton() {
             ClerkButtonDefaults.icons(
               leadingIcon = R.drawable.ic_triangle_right,
               trailingIcon = R.drawable.ic_triangle_right,
+              trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+              leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
             ),
         )
       }
@@ -306,6 +310,8 @@ private fun PreviewButton() {
             ClerkButtonDefaults.icons(
               leadingIcon = R.drawable.ic_triangle_right,
               trailingIcon = R.drawable.ic_triangle_right,
+              trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+              leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
             ),
         )
       }
