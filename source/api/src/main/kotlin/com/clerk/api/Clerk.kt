@@ -7,6 +7,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.model.environment.enabledFirstFactorAttributes
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -74,8 +75,27 @@ object Clerk {
    */
   val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized
 
+  /**
+   * The name of the application, as configured in the Clerk Dashboard.
+   *
+   * Used for display purposes in authentication UI and other contexts.
+   */
   val applicationName: String?
     get() = if (::environment.isInitialized) environment.displayConfig.applicationName else null
+
+  /**
+   * A list of enabled first factor attributes, sorted by priority.
+   *
+   * These attributes represent the primary identification methods available for users during
+   * sign-in or sign-up. Examples include email address, phone number, or username. The order in
+   * this list reflects the preferred order for presenting these options in the UI.
+   *
+   * @return A list of strings, each representing an enabled first factor attribute. Returns an
+   *   empty list if the SDK is not initialized or if no first factor attributes are enabled.
+   */
+  val enabledFirstFactorAttributes: List<String>
+    get() =
+      if (::environment.isInitialized) environment.enabledFirstFactorAttributes() else emptyList()
 
   /**
    * The image URL for the application logo used in authentication UI components.

@@ -56,4 +56,6 @@
     <string name="or">or</string>
     <string name="continue_to">Continue to %1$s</string>
     <string name="create_your_account">Create your account</string>
+    <string name="welcome_sign_in_to_continue">Welcome! Sign in to continue.</string>
+    <string name="welcome_please_fill_in_the_details_to_get_started">Welcome! Please fill in the details to get started.</string>
 </resources>
