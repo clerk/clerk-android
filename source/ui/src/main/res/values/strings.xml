@@ -65,4 +65,5 @@
     <string name="enter_your_email">Enter your email</string>
     <string name="enter_your_username">Enter your username</string>
     <string name="enter_you_email_or_username">Enter you email or username</string>
+    <string name="sign_in_with">Sign in with %1$s</string>
 </resources>
