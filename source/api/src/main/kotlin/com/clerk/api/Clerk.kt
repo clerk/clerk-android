@@ -13,6 +13,7 @@ import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
+import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import java.lang.ref.WeakReference
@@ -329,3 +330,6 @@ data class ClerkConfigurationOptions(
 )
 
 data class DeviceAttestationOptions(val applicationId: String, val cloudProjectNumber: Long)
+
+fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthProvider> =
+  this.map { OAuthProvider.fromStrategy(it.value.strategy) }
