@@ -6,6 +6,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.res.stringResource
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.sso.OAuthProvider
 import com.clerk.ui.R
 
 private const val EMAIL_ADDRESS = "email_address"
@@ -19,8 +20,19 @@ internal class AuthViewHelper {
 
   // Test backdoor properties - set these for testing
   internal var testEnabledFirstFactorAttributes: List<String>? = null
-  internal var testSocialProviders: Map<String, Any>? = null
+  internal var testSocialProviders: List<OAuthProvider>? = null
   internal var testApplicationName: String? = null
+
+  val authenticatableSocialProviders: List<OAuthProvider>
+    get() {
+      return if (testSocialProviders != null) {
+        testSocialProviders!!
+      } else {
+        Clerk.socialProviders.values
+          .filter { it.authenticatable }
+          .map { OAuthProvider.fromStrategy(it.strategy) }
+      }
+    }
 
   val emailIsEnabled: Boolean
     get() =
@@ -46,8 +58,8 @@ internal class AuthViewHelper {
 
   val showOrDivider: Boolean
     get() {
-      val socialProviders = testSocialProviders ?: Clerk.socialProviders
-      return socialProviders.values.any {
+      val socialProviders = testSocialProviders ?: Clerk.socialProviders.values
+      return socialProviders.any {
         // For testing, assume all test social providers are authenticatable
         if (testSocialProviders != null) true
         else (it as? UserSettings.SocialConfig)?.authenticatable == true
@@ -118,7 +130,7 @@ internal class AuthViewHelper {
   @VisibleForTesting
   internal fun setTestValues(
     enabledFirstFactorAttributes: List<String>? = null,
-    socialProviders: Map<String, Any>? = null,
+    socialProviders: List<OAuthProvider>? = null,
     applicationName: String? = null,
   ) {
     testEnabledFirstFactorAttributes = enabledFirstFactorAttributes
