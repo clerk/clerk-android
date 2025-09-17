@@ -26,6 +26,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 fun ClerkTopAppBar(
   modifier: Modifier = Modifier,
   hasLogo: Boolean = true,
+  hasBackButton: Boolean = true,
   onBackPressed: () -> Unit,
 ) {
   ClerkMaterialTheme {
@@ -33,20 +34,23 @@ fun ClerkTopAppBar(
       modifier = Modifier.fillMaxWidth().padding(vertical = dp8).then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      Icon(
-        modifier = Modifier.clickable { onBackPressed() },
-        imageVector = Icons.AutoMirrored.Default.ArrowBack,
-        contentDescription = stringResource(R.string.back),
-        tint = ClerkMaterialTheme.colors.foreground,
-      )
+      if (hasBackButton) {
+        Icon(
+          modifier = Modifier.clickable { onBackPressed() },
+          imageVector = Icons.AutoMirrored.Default.ArrowBack,
+          contentDescription = stringResource(R.string.back),
+          tint = ClerkMaterialTheme.colors.foreground,
+        )
+      }
 
       Spacer(modifier = Modifier.weight(1f))
       if (hasLogo) {
         OrganizationAvatar()
       }
       Spacer(modifier = Modifier.weight(1f))
-      // Add invisible spacer with same size as IconButton to balance spacing
-      Box(modifier = Modifier.size(dp40))
+      if (hasBackButton) {
+        Box(modifier = Modifier.size(dp40))
+      }
     }
   }
 }
@@ -57,6 +61,16 @@ private fun PreviewClerkTopAppBarr() {
   ClerkMaterialTheme {
     Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
       ClerkTopAppBar(onBackPressed = {})
+    }
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun Preview() {
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
+      ClerkTopAppBar(onBackPressed = {}, hasBackButton = false)
     }
   }
 }

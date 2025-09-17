@@ -21,12 +21,13 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
 internal fun ClerkThemedAuthScaffold(
-  onBackPressed: () -> Unit,
   title: String,
   modifier: Modifier = Modifier,
+  onBackPressed: () -> Unit = {},
   subtitle: String? = null,
   snackbarHost: @Composable () -> Unit = {},
   hasLogo: Boolean = true,
+  hasBackButton: Boolean = true,
   identifier: String? = null,
   onClickIdentifier: () -> Unit = {},
   content: @Composable () -> Unit,
@@ -41,7 +42,11 @@ internal fun ClerkThemedAuthScaffold(
             .background(ClerkMaterialTheme.colors.background),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
-        ClerkTopAppBar(onBackPressed = onBackPressed, hasLogo = hasLogo)
+        ClerkTopAppBar(
+          onBackPressed = onBackPressed,
+          hasLogo = hasLogo,
+          hasBackButton = hasBackButton,
+        )
         Spacers.Vertical.Spacer8()
         HeaderTextView(text = title, type = HeaderType.Title)
         subtitle?.let {
