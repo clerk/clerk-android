@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.alternativeFirstFactors
@@ -50,6 +51,7 @@ private fun SignInFactorAlternativeMethodsViewImpl(
   alternativeFactors: ImmutableList<Factor>,
   modifier: Modifier = Modifier,
   textIconHelper: TextIconHelper = TextIconHelper(),
+  viewModel: AlternativeMethodsViewModel = viewModel(),
 ) {
   val context = LocalContext.current
   ClerkThemedAuthScaffold(
@@ -59,10 +61,10 @@ private fun SignInFactorAlternativeMethodsViewImpl(
     subtitle = "Facing issues? You can use any of these methods to sign in.",
   ) {
     if (providers.isNotEmpty()) {
-      ClerkSocialRow(providers = providers)
+      ClerkSocialRow(providers = providers, onClick = { viewModel.signInWithProvider(it) })
     }
     Spacers.Vertical.Spacer24()
-    TextDivider(text = "or")
+    TextDivider(text = stringResource(R.string.or))
     Spacers.Vertical.Spacer24()
     AlternativeFactorList(
       alternativeFactors = alternativeFactors,
