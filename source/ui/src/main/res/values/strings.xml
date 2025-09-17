@@ -54,4 +54,6 @@
     <string name="send_sms_code">Send SMS code</string>
     <string name="email_code">Email code</string>
     <string name="or">or</string>
+    <string name="continue_to">Continue to %1$s</string>
+    <string name="create_your_account">Create your account</string>
 </resources>
