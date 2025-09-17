@@ -1,8 +1,11 @@
 package com.clerk.ui.signin.password.forgot
 
 import android.content.Context
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -12,6 +15,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.alternativeFirstFactors
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.toOAuthProvidersList
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.button.social.ClerkSocialRow
@@ -21,10 +25,11 @@ import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.core.common.dimens.dp24
 import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
-import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
+import com.clerk.ui.util.TextIconHelper
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -48,8 +53,7 @@ fun SignInFactorOneForgotPasswordView(
   val alternativeFactors = Clerk.signIn?.alternativeFirstFactors(factor)
   SignInFactorOneForgotPasswordViewImpl(
     onBackPressed = onBackPressed,
-    socialProviders =
-      socialProviders.map { OAuthProvider.fromStrategy(it.value.strategy) }.toImmutableList(),
+    socialProviders = socialProviders.toOAuthProvidersList().toImmutableList(),
     modifier = modifier,
     alternativeFactors = alternativeFactors.orEmpty().toImmutableList(),
     onClickFactor = onClickFactor,
@@ -73,6 +77,7 @@ private fun SignInFactorOneForgotPasswordViewImpl(
   socialProviders: ImmutableList<OAuthProvider>,
   modifier: Modifier = Modifier,
   viewModel: ForgotPasswordViewModel = viewModel(),
+  textIconHelper: TextIconHelper = TextIconHelper(),
   onClickFactor: (Factor) -> Unit,
 ) {
   val context = LocalContext.current
@@ -94,9 +99,26 @@ private fun SignInFactorOneForgotPasswordViewImpl(
       ClerkSocialRow(providers = socialProviders, onClick = { viewModel.signInWithProvider(it) })
       Spacers.Vertical.Spacer24()
     }
+    AlternativeFactorList(alternativeFactors, textIconHelper, context, onClickFactor)
+  }
+}
+
+@Composable
+internal fun AlternativeFactorList(
+  alternativeFactors: ImmutableList<Factor>,
+  textIconHelper: TextIconHelper,
+  context: Context,
+  onClickFactor: (Factor) -> Unit,
+) {
+  Column(
+    modifier = Modifier.fillMaxWidth(),
+    verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
+    horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
     alternativeFactors.forEach {
-      val actionText = actionText(it, context) ?: return@forEach
-      val iconRes = iconResource(it)
+      val actionText = textIconHelper.actionText(it, context) ?: return@forEach
+      val iconRes = textIconHelper.iconResource(it)
+
       ClerkButton(
         modifier = Modifier.fillMaxWidth(),
         icons =
@@ -113,58 +135,6 @@ private fun SignInFactorOneForgotPasswordViewImpl(
         onClick = { onClickFactor(it) },
       )
     }
-  }
-}
-
-/**
- * Returns the appropriate action text for a given sign-in factor.
- *
- * @param factor The [Factor] to get the action text for.
- * @param context The current Android [Context].
- * @return A formatted string describing the sign-in action.
- */
-fun actionText(factor: Factor, context: Context): String? {
-  return when (factor.strategy) {
-    StrategyKeys.PHONE_CODE -> {
-      val safeIdentifier = factor.safeIdentifier
-      if (safeIdentifier.isNullOrBlank()) {
-        context.getString(R.string.send_sms_code)
-      } else {
-        context.getString(
-          R.string.send_sms_code_to_phone,
-          safeIdentifier.formattedAsPhoneNumberIfPossible,
-        )
-      }
-    }
-    StrategyKeys.EMAIL_CODE -> {
-      val safeIdentifier = factor.safeIdentifier
-      if (safeIdentifier.isNullOrBlank()) {
-        context.getString(R.string.email_code)
-      } else {
-        context.getString(R.string.email_code_to_email, safeIdentifier)
-      }
-    }
-    StrategyKeys.PASSKEY -> context.getString(R.string.sign_in_with_your_passkey)
-    StrategyKeys.PASSWORD -> context.getString(R.string.sign_in_with_your_password)
-    StrategyKeys.TOTP -> context.getString(R.string.use_your_authenticator_app)
-    StrategyKeys.BACKUP_CODE -> context.getString(R.string.use_a_backup_code)
-    else -> null
-  }
-}
-
-/**
- * Returns the appropriate icon resource for a given sign-in factor.
- *
- * @param factor The [Factor] to get the icon for.
- * @return A drawable resource ID for the factor's icon, or null if not applicable.
- */
-fun iconResource(factor: Factor): Int? {
-  return when (factor.strategy) {
-    StrategyKeys.PHONE_CODE -> R.drawable.ic_sms
-    StrategyKeys.EMAIL_CODE -> R.drawable.ic_email
-    StrategyKeys.PASSKEY -> R.drawable.ic_fingerprint
-    StrategyKeys.PASSWORD -> R.drawable.ic_lock
-    else -> null
   }
 }
 
