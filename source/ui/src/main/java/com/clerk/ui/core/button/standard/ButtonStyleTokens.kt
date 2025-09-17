@@ -44,9 +44,8 @@ internal fun buildButtonTokens(
   val hasShadow =
     when (config.emphasis) {
       ClerkButtonConfiguration.Emphasis.None -> false
-      ClerkButtonConfiguration.Emphasis.Low,
-      ClerkButtonConfiguration.Emphasis.High ->
-        !(isPressed && config.style == ClerkButtonConfiguration.ButtonStyle.Negative)
+      ClerkButtonConfiguration.Emphasis.Low -> !isPressed
+      ClerkButtonConfiguration.Emphasis.High -> !isPressed
     }
 
   val borderWidth =

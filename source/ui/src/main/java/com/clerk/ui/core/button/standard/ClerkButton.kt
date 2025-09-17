@@ -163,7 +163,7 @@ private fun ClerkButtonImpl(
       Modifier.height(tokens.height)
         .then(modifier)
         .let { mod ->
-          if (tokens.hasShadow) {
+          if (tokens.hasShadow && !isPressedCombined) {
             mod.shadow(elevation = dp1, shape = ClerkMaterialTheme.shape)
           } else {
             mod
@@ -171,7 +171,6 @@ private fun ClerkButtonImpl(
         }
         .clickable(
           interactionSource = interactionSource,
-          indication = null,
           enabled = isEnabled,
           role = Role.Button,
           onClick = onClick,
