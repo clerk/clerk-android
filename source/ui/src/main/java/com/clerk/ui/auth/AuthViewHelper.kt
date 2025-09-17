@@ -1,9 +1,11 @@
 package com.clerk.ui.auth
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.res.stringResource
 import com.clerk.api.Clerk
+import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.ui.R
 
 private const val EMAIL_ADDRESS = "email_address"
@@ -13,16 +15,47 @@ private const val USERNAME = "username"
 private const val PHONE_NUMBER = "phone_number"
 
 @Stable
-class AuthViewHelper {
+internal class AuthViewHelper {
 
-  val emailIsEnabled = Clerk.enabledFirstFactorAttributes.contains(EMAIL_ADDRESS)
-  val usernameIsEnabled = Clerk.enabledFirstFactorAttributes.contains(USERNAME)
-  val phoneNumberIsEnabled = Clerk.enabledFirstFactorAttributes.contains(PHONE_NUMBER)
-  val showIdentifierSwitcher = (emailIsEnabled || usernameIsEnabled) && phoneNumberIsEnabled
-  val showIdentifierField = emailIsEnabled || usernameIsEnabled || phoneNumberIsEnabled
-  val showOrDivider
+  // Test backdoor properties - set these for testing
+  internal var testEnabledFirstFactorAttributes: List<String>? = null
+  internal var testSocialProviders: Map<String, Any>? = null
+  internal var testApplicationName: String? = null
+
+  val emailIsEnabled: Boolean
     get() =
-      Clerk.socialProviders.filter { it.value.authenticatable }.isNotEmpty() && showIdentifierField
+      (testEnabledFirstFactorAttributes ?: Clerk.enabledFirstFactorAttributes).contains(
+        EMAIL_ADDRESS
+      )
+
+  val usernameIsEnabled: Boolean
+    get() =
+      (testEnabledFirstFactorAttributes ?: Clerk.enabledFirstFactorAttributes).contains(USERNAME)
+
+  val phoneNumberIsEnabled: Boolean
+    get() =
+      (testEnabledFirstFactorAttributes ?: Clerk.enabledFirstFactorAttributes).contains(
+        PHONE_NUMBER
+      )
+
+  val showIdentifierSwitcher: Boolean
+    get() = (emailIsEnabled || usernameIsEnabled) && phoneNumberIsEnabled
+
+  val showIdentifierField: Boolean
+    get() = emailIsEnabled || usernameIsEnabled || phoneNumberIsEnabled
+
+  val showOrDivider: Boolean
+    get() {
+      val socialProviders = testSocialProviders ?: Clerk.socialProviders
+      return socialProviders.values.any {
+        // For testing, assume all test social providers are authenticatable
+        if (testSocialProviders != null) true
+        else (it as? UserSettings.SocialConfig)?.authenticatable == true
+      } && showIdentifierField
+    }
+
+  private val applicationName: String?
+    get() = testApplicationName ?: Clerk.applicationName
 
   fun shouldStartOnPhoneNumber(authStartPhoneNumber: String, authStartIdentifier: String): Boolean {
     return when {
@@ -38,7 +71,7 @@ class AuthViewHelper {
     return when (authMode) {
       AuthMode.SignIn,
       AuthMode.SignInOrUp -> {
-        val appName = Clerk.applicationName
+        val appName = applicationName
         if (appName != null) {
           stringResource(R.string.continue_to, appName)
         } else {
@@ -80,5 +113,23 @@ class AuthViewHelper {
       (!emailIsEnabled && usernameIsEnabled) -> stringResource(R.string.enter_your_username)
       else -> stringResource(R.string.enter_you_email_or_username)
     }
+  }
+
+  @VisibleForTesting
+  internal fun setTestValues(
+    enabledFirstFactorAttributes: List<String>? = null,
+    socialProviders: Map<String, Any>? = null,
+    applicationName: String? = null,
+  ) {
+    testEnabledFirstFactorAttributes = enabledFirstFactorAttributes
+    testSocialProviders = socialProviders
+    testApplicationName = applicationName
+  }
+
+  @VisibleForTesting
+  internal fun clearTestValues() {
+    testEnabledFirstFactorAttributes = null
+    testSocialProviders = null
+    testApplicationName = null
   }
 }
