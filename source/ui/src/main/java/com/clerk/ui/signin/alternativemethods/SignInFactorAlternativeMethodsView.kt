@@ -23,6 +23,22 @@ import com.clerk.ui.util.TextIconHelper
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
+/**
+ * A view that displays alternative sign-in methods.
+ *
+ * This component can be used for both first-factor and second-factor authentication steps, showing
+ * a list of available methods like social providers (for first factor), or other verification
+ * strategies (e.g., password, phone code).
+ *
+ * @param currentFactor The factor that the user is currently trying to authenticate with. This is
+ *   used to determine which alternative factors to show.
+ * @param onBackPressed A callback invoked when the user presses the back button.
+ * @param modifier The [Modifier] to be applied to the view.
+ * @param isSecondFactor A flag indicating whether the view is being used for a second-factor
+ *   authentication step. This affects which alternative factors are fetched.
+ * @param onClickFactor A callback invoked when the user selects an alternative factor from the
+ *   list.
+ */
 @Composable
 fun SignInFactorAlternativeMethodsView(
   currentFactor: Factor,
@@ -46,6 +62,18 @@ fun SignInFactorAlternativeMethodsView(
   )
 }
 
+/**
+ * The internal implementation of the [SignInFactorAlternativeMethodsView].
+ *
+ * @param onBackPressed A callback invoked when the user presses the back button.
+ * @param providers A list of social providers to display.
+ * @param alternativeFactors A list of alternative factors (e.g., password, passkey) to display.
+ * @param modifier The [Modifier] to be applied to the view.
+ * @param textIconHelper A helper class to get the appropriate text and icon for each factor.
+ * @param viewModel The [AlternativeMethodsViewModel] for handling the view's logic, such as social
+ *   sign-in.
+ * @param onClickFactor A callback invoked when the user selects an alternative factor.
+ */
 @Composable
 private fun SignInFactorAlternativeMethodsViewImpl(
   onBackPressed: () -> Unit,
@@ -65,10 +93,10 @@ private fun SignInFactorAlternativeMethodsViewImpl(
   ) {
     if (providers.isNotEmpty()) {
       ClerkSocialRow(providers = providers, onClick = { viewModel.signInWithProvider(it) })
+      Spacers.Vertical.Spacer24()
+      TextDivider(text = stringResource(R.string.or))
+      Spacers.Vertical.Spacer24()
     }
-    Spacers.Vertical.Spacer24()
-    TextDivider(text = stringResource(R.string.or))
-    Spacers.Vertical.Spacer24()
     AlternativeFactorList(
       alternativeFactors = alternativeFactors,
       textIconHelper = textIconHelper,
