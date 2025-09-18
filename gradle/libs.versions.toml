@@ -47,7 +47,7 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 androidx-compose-icons = "org.jetbrains.compose.material:material-icons-core:1.7.3"
 androidx-core = { module = "androidx.test:core", version.ref = "core" }
 androidx-credentials = "androidx.credentials:credentials:1.5.0"
-androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.3"
+androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.4"
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.9.4"
 androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.3"
