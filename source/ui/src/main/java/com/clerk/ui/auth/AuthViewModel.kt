@@ -8,9 +8,12 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signin.startingFirstFactor
+import com.clerk.api.signup.SignUp
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal class AuthViewModel : ViewModel() {
 
@@ -30,13 +33,19 @@ internal class AuthViewModel : ViewModel() {
           phoneNumber = phoneNumber,
           identifier = identifier,
         )
-      AuthMode.SignUp -> TODO()
+      AuthMode.SignUp ->
+        signUp(
+          isPhoneNumberFieldActive = isPhoneNumberFieldActive,
+          identifier = identifier,
+          phoneNumber = phoneNumber,
+        )
       AuthMode.SignInOrUp -> TODO()
     }
   }
 
   private fun signIn(isPhoneNumberFieldActive: Boolean, phoneNumber: String, identifier: String) {
-    executeWithState {
+    viewModelScope.launch(Dispatchers.IO) {
+      _state.value = AuthState.Loading
       val resolvedIdentifier = if (isPhoneNumberFieldActive) phoneNumber else identifier
 
       SignIn.create(SignIn.CreateParams.Strategy.Identifier(identifier = resolvedIdentifier))
@@ -45,10 +54,43 @@ internal class AuthViewModel : ViewModel() {
     }
   }
 
+  private fun signUp(isPhoneNumberFieldActive: Boolean, identifier: String, phoneNumber: String) {
+    _state.value = AuthState.Loading
+    viewModelScope.launch(Dispatchers.IO) {
+      SignUp.create(
+          signUpParams(
+            isPhoneNumberFieldActive = isPhoneNumberFieldActive,
+            identifier = identifier,
+            phoneNumber = phoneNumber,
+          )
+        )
+        .onSuccess {
+          withContext(Dispatchers.Main) { _state.value = AuthState.Success(signUp = it) }
+        }
+        .onFailure {
+          withContext(Dispatchers.Main) {
+            _state.value = AuthState.Error(it.longErrorMessageOrNull)
+          }
+        }
+    }
+  }
+
+  private fun signUpParams(
+    isPhoneNumberFieldActive: Boolean,
+    identifier: String,
+    phoneNumber: String,
+  ): SignUp.CreateParams.Standard {
+    return when {
+      isPhoneNumberFieldActive -> SignUp.CreateParams.Standard(phoneNumber = phoneNumber)
+      identifier.isEmailAddress -> SignUp.CreateParams.Standard(emailAddress = identifier)
+      else -> SignUp.CreateParams.Standard(username = identifier)
+    }
+  }
+
   private suspend fun handleSignInSuccess(signIn: SignIn) {
     when {
       signIn.requiresEnterpriseSSO() -> handleEnterpriseSSO(signIn)
-      else -> _state.value = AuthState.Success(signIn)
+      else -> _state.value = withContext(Dispatchers.Main) { AuthState.Success(signIn = signIn) }
     }
   }
 
@@ -59,7 +101,10 @@ internal class AuthViewModel : ViewModel() {
         val redirectUrl = signIn.getExternalVerificationRedirectUrl()
         authenticateWithEnterpriseSSO(redirectUrl)
       }
-      .onFailure { throwable -> _state.value = AuthState.Error(throwable.longErrorMessageOrNull) }
+      .onFailure { throwable ->
+        _state.value =
+          withContext(Dispatchers.Main) { AuthState.Error(throwable.longErrorMessageOrNull) }
+      }
   }
 
   private suspend fun authenticateWithEnterpriseSSO(redirectUrl: String) {
@@ -69,17 +114,12 @@ internal class AuthViewModel : ViewModel() {
     TODO("Need to understand `authenticateWithRedirect` from the iOS SDK")
   }
 
-  private fun executeWithState(block: suspend () -> Unit) {
-    _state.value = AuthState.Loading
-    viewModelScope.launch { block() }
-  }
-
   sealed interface AuthState {
     object Idle : AuthState
 
     object Loading : AuthState
 
-    data class Success(val signIn: SignIn) : AuthState
+    data class Success(val signIn: SignIn? = null, val signUp: SignUp? = null) : AuthState
 
     data class Error(val message: String?) : AuthState
   }
@@ -91,3 +131,8 @@ private fun SignIn.requiresEnterpriseSSO(): Boolean =
 private fun SignIn.getExternalVerificationRedirectUrl(): String =
   firstFactorVerification?.externalVerificationRedirectUrl
     ?: error("External verification redirect URL is null")
+
+private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
+
+private val String.isEmailAddress: Boolean
+  get() = emailRegex.matches(this)
