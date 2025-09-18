@@ -71,7 +71,7 @@ internal fun ClerkThemedAuthScaffold(
         Spacers.Vertical.Spacer32()
         content()
         Spacers.Vertical.Spacer32()
-        SecuredByClerk()
+        SecuredByClerkView()
       }
     }
   }
