@@ -15,7 +15,6 @@ import com.clerk.api.Constants.Strategy.TRANSFER
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
@@ -481,7 +480,7 @@ data class SignIn(
      */
     sealed interface Strategy {
       /** The authentication strategy identifier. */
-      val strategy: String
+      val strategy: String?
 
       /**
        * Email code sign-in strategy.
@@ -550,6 +549,11 @@ data class SignIn(
 
       /** Passkey strategy for authentication using a passkey. */
       data class Passkey(override val strategy: String = PASSKEY) : Strategy
+
+      @AutoMap
+      @Serializable
+      data class Identifier(override val strategy: String? = null, val identifier: String) :
+        Strategy
     }
   }
 
@@ -867,40 +871,3 @@ suspend fun SignIn.get(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
-
-fun SignIn.alternativeFirstFactors(factor: Factor): List<Factor> {
-  val firstFactors =
-    supportedFirstFactors?.filter {
-      it != factor &&
-        !it.isResetFactor() &&
-        !it.strategy.contains("oauth") &&
-        it.strategy != "enterprise_sso" &&
-        it.strategy != "saml"
-    }
-  return (firstFactors ?: emptyList()).sortedWith(
-    compareBy {
-      val i = strategySortOrderAllStrategies.indexOf(it.strategy)
-      if (i == -1) Int.MAX_VALUE else i // unknown strategies last
-    }
-  )
-}
-
-fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
-  val secondFactors = supportedSecondFactors?.filter { it != factor }.orEmpty()
-
-  return secondFactors.sortedWith { lhs, rhs ->
-    val order1 = strategySortOrderBackupCodePref.indexOf(lhs.strategy)
-    val order2 = strategySortOrderBackupCodePref.indexOf(rhs.strategy)
-
-    when {
-      order1 == -1 || order2 == -1 -> 0
-      order1 < order2 -> -1
-      else -> 1
-    }
-  }
-}
-
-private val strategySortOrderAllStrategies =
-  listOf("email_code", "phone_code", "passkey", "password")
-
-private val strategySortOrderBackupCodePref = listOf("totp", "phone_code", "backup_code")
