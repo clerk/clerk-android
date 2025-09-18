@@ -326,7 +326,7 @@ data class SignIn(
      *
      * You can use [OAuthProvider] directly to authenticate with an OAuth provider.
      *
-     * @property strategy The OAuth provider strategy to use for authentication.
+     * @property provider The OAuth provider to use for authentication.
      * @property redirectUrl The URL to redirect to after authentication.
      * @property emailAddress The user's email address for pre-filling authentication forms.
      * @property legalAccepted Whether the user has accepted the legal terms.
@@ -369,8 +369,6 @@ data class SignIn(
    *
    * This interface is used to specify which verification strategy should be prepared before
    * attempting the first factor authentication.
-   *
-   * @property strategy The verification strategy to use for the first factor authentication.
    */
   sealed interface PrepareFirstFactorParams {
     /**
