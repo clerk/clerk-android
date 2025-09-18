@@ -9,6 +9,8 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
+import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.sso.ResultType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,6 +68,30 @@ internal class AuthViewModel : ViewModel() {
         )
         .onSuccess {
           withContext(Dispatchers.Main) { _state.value = AuthState.Success(signUp = it) }
+        }
+        .onFailure {
+          withContext(Dispatchers.Main) {
+            _state.value = AuthState.Error(it.longErrorMessageOrNull)
+          }
+        }
+    }
+  }
+
+  fun authenticateWithSocialProvider(provider: OAuthProvider) {
+    _state.value = AuthState.Loading
+    viewModelScope.launch(Dispatchers.IO) {
+      SignIn.authenticateWithRedirect(
+          SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider)
+        )
+        .onSuccess {
+          withContext(Dispatchers.Main) {
+            _state.value =
+              when (it.resultType) {
+                ResultType.SIGN_IN -> AuthState.Success(signIn = it.signIn)
+                ResultType.SIGN_UP -> AuthState.Success(signUp = it.signUp)
+                ResultType.UNKNOWN -> AuthState.Error("Unknown result type")
+              }
+          }
         }
         .onFailure {
           withContext(Dispatchers.Main) {
