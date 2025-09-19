@@ -76,8 +76,8 @@ private fun AuthStartViewImpl(
             isEnabled =
               !authViewHelper.continueIsDisabled(
                 isPhoneNumberFieldActive = phoneNumberFieldIsActive,
-                identifier = authStartPhoneNumber,
-                phoneNumber = authStartIdentifier,
+                identifier = authStartIdentifier,
+                phoneNumber = authStartPhoneNumber,
               ),
             phoneNumberFieldIsActive = phoneNumberFieldIsActive,
           )
