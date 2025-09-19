@@ -16,7 +16,7 @@ import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-internal fun SecuredByClerk(modifier: Modifier = Modifier) {
+internal fun SecuredByClerkView(modifier: Modifier = Modifier) {
   ClerkMaterialTheme {
     Row(
       modifier = Modifier.then(modifier),
@@ -38,7 +38,7 @@ internal fun SecuredByClerk(modifier: Modifier = Modifier) {
 private fun PreviewSecuredByClerk() {
   ClerkMaterialTheme {
     Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
-      SecuredByClerk()
+      SecuredByClerkView()
     }
   }
 }

@@ -1,6 +1,5 @@
 package com.clerk.ui.core.input
 
-import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -75,31 +74,99 @@ private const val DROPDOWN_HEIGHT_DIVISOR = 3
  * - Error state display
  * - Accessibility support
  *
+ * The component is fully controlled - the `value` parameter is the single source of truth, and
+ * `onValueChange` is called whenever the user modifies the input. The parent component is
+ * responsible for managing the phone number state.
+ *
+ * Example usage:
+ * ```kotlin
+ * @Composable
+ * fun MyPhoneForm() {
+ *   var phoneNumber by remember { mutableStateOf("") }
+ *   var errorMessage by remember { mutableStateOf<String?>(null) }
+ *
+ *   ClerkPhoneNumberField(
+ *     value = phoneNumber,
+ *     onValueChange = { newValue ->
+ *       phoneNumber = newValue
+ *       // Validate and set error if needed
+ *       errorMessage = if (newValue.length < 10) "Invalid phone number" else null
+ *     },
+ *     errorText = errorMessage
+ *   )
+ * }
+ * ```
+ *
  * @param modifier [Modifier] to be applied to the component
  * @param errorText Optional error message to display below the input field
- * @param inputText Optional initial phone number text (without country code)
+ * @param value The complete phone number including country code (e.g., "+1 5551234567")
+ * @param onValueChange Callback when the complete phone number changes
  */
 @Composable
 fun ClerkPhoneNumberField(
+  value: String,
   modifier: Modifier = Modifier,
   errorText: String? = null,
-  @VisibleForTesting inputText: String? = null,
+  onValueChange: (String) -> Unit,
 ) {
-  ClerkPhoneNumberFieldImpl(modifier, errorText = errorText, inputText = inputText)
+  ClerkPhoneNumberFieldImpl(
+    modifier = modifier,
+    errorText = errorText,
+    value = value,
+    onValueChange = onValueChange,
+  )
 }
 
 /**
- * Creates the initial phone number string by combining country prefix with input text.
- *
- * @param inputText The raw phone number input (may be null or empty)
- * @param country The selected country information
- * @return A formatted phone number string with country prefix
+ * Finds the best matching country for a given phone number value. For cases where multiple
+ * countries share the same prefix (like +1), prioritizes US as the default for +1.
  */
-private fun getInitialPhoneNumber(inputText: String?, country: CountryInfo): String {
-  return if (inputText.isNullOrEmpty()) {
-    country.getPhonePrefix
-  } else {
-    "${country.getPhonePrefix} $inputText"
+private fun findMatchingCountry(value: String, defaultCountry: CountryInfo): CountryInfo {
+  if (value.isEmpty()) return defaultCountry
+
+  val matchingCountries =
+    PhoneInputUtils.getAllCountries().filter { country -> value.startsWith(country.getPhonePrefix) }
+
+  return when {
+    matchingCountries.isEmpty() -> defaultCountry
+    matchingCountries.size == 1 -> matchingCountries.first()
+    else -> {
+      // Multiple matches - prioritize US for +1, otherwise take first
+      matchingCountries.find { it.countryShortName == "US" } ?: matchingCountries.first()
+    }
+  }
+}
+
+/** Handles country auto-detection and initialization effects. */
+@Composable
+private fun CountryAutoDetectionEffect(
+  value: String,
+  onCountrySelected: (CountryInfo) -> Unit,
+  onValueChange: (String) -> Unit,
+) {
+  val context = LocalContext.current
+  val defaultCountry = PhoneInputUtils.getDefaultCountry()
+
+  // Update selected country when value changes externally
+  LaunchedEffect(value) {
+    if (value.isNotEmpty()) {
+      val matchingCountry = findMatchingCountry(value, defaultCountry)
+      if (matchingCountry != defaultCountry || value.startsWith(matchingCountry.getPhonePrefix)) {
+        onCountrySelected(matchingCountry)
+      }
+    }
+  }
+
+  // Auto-detect country on first load
+  LaunchedEffect(Unit) {
+    val detectedCountry = PhoneInputUtils.detectCountry(context)
+    if (detectedCountry != null && value.isEmpty()) {
+      onCountrySelected(detectedCountry)
+      onValueChange(detectedCountry.getPhonePrefix)
+    } else if (value.isEmpty()) {
+      onCountrySelected(defaultCountry)
+      onValueChange(defaultCountry.getPhonePrefix)
+    }
   }
 }
 
@@ -110,29 +177,26 @@ private fun getInitialPhoneNumber(inputText: String?, country: CountryInfo): Str
  * including automatic country detection and formatting.
  *
  * @param modifier [Modifier] to be applied to the component
- * @param inputText Optional initial phone number text (without country code)
+ * @param value The complete phone number (including country prefix) - this is the source of truth
  * @param errorText Optional error message to display below the input field
+ * @param onValueChange Callback when the complete phone number changes
  */
 @Composable
 internal fun ClerkPhoneNumberFieldImpl(
+  onValueChange: (String) -> Unit,
+  value: String,
   modifier: Modifier = Modifier,
-  inputText: String? = null,
   errorText: String? = null,
 ) {
   val defaultCountry = PhoneInputUtils.getDefaultCountry()
-  var selectedCountry: CountryInfo by remember { mutableStateOf(defaultCountry) }
+  val currentCountry = remember(value) { findMatchingCountry(value, defaultCountry) }
+  var selectedCountry: CountryInfo by remember { mutableStateOf(currentCountry) }
 
-  val initialPhoneNumber = remember(inputText) { getInitialPhoneNumber(inputText, defaultCountry) }
-  var phoneNumber: String by remember { mutableStateOf(initialPhoneNumber) }
-  val context = LocalContext.current
-
-  LaunchedEffect(Unit) {
-    val detectedCountry = PhoneInputUtils.detectCountry(context)
-    if (detectedCountry != null) {
-      selectedCountry = detectedCountry
-      phoneNumber = getInitialPhoneNumber(inputText, detectedCountry)
-    }
-  }
+  CountryAutoDetectionEffect(
+    value = value,
+    onCountrySelected = { selectedCountry = it },
+    onValueChange = onValueChange,
+  )
 
   ClerkMaterialTheme {
     val computedColors = LocalComputedColors.current
@@ -151,8 +215,26 @@ internal fun ClerkPhoneNumberFieldImpl(
         CountrySelector(
           selectedCountry = selectedCountry,
           onSelect = { country ->
+            // Extract the phone number part without the country prefix
+            val prefix = selectedCountry.getPhonePrefix
+            val currentNumberWithoutPrefix =
+              when {
+                value == prefix -> ""
+                value.startsWith("$prefix ") -> value.substring(prefix.length + 1).trim()
+                value.startsWith(prefix) && value.length > prefix.length ->
+                  value.substring(prefix.length).trim()
+
+                else -> value.trim()
+              }
+
             selectedCountry = country
-            phoneNumber = getInitialPhoneNumber(inputText, country)
+            val newPhoneNumber =
+              if (currentNumberWithoutPrefix.isNotEmpty()) {
+                "${country.getPhonePrefix} $currentNumberWithoutPrefix"
+              } else {
+                country.getPhonePrefix
+              }
+            onValueChange(newPhoneNumber)
           },
         )
       }
@@ -160,8 +242,8 @@ internal fun ClerkPhoneNumberFieldImpl(
       Column(modifier = Modifier.weight(1f)) {
         PhoneNumberInput(
           computedColors = computedColors,
-          value = phoneNumber,
-          onValueChange = { phoneNumber = it },
+          value = value,
+          onValueChange = onValueChange,
           errorText = errorText,
           countryCode = selectedCountry.countryShortName,
         )
@@ -180,8 +262,8 @@ internal fun ClerkPhoneNumberFieldImpl(
  * - Accessibility semantics
  *
  * @param computedColors Theme colors for styling
- * @param value Current phone number value
- * @param onValueChange Callback when phone number changes
+ * @param value Current complete phone number value (including country prefix)
+ * @param onValueChange Callback when phone number changes (receives complete phone number)
  * @param countryCode Selected country code for formatting
  * @param errorText Optional error message to display
  */
@@ -212,7 +294,11 @@ private fun PhoneNumberInput(
         ),
       interactionSource = interactionSource,
       value = value,
-      onValueChange = { onValueChange(PhoneInputUtils().keepDialableCapped(it)) },
+      onValueChange = { newValue ->
+        // Filter and cap the input, ensuring it maintains proper format
+        val filtered = PhoneInputUtils().keepDialableCapped(newValue)
+        onValueChange(filtered)
+      },
       visualTransformation = phoneVisualTransformation(countryCode),
       isError = errorText != null,
       label = {
@@ -436,9 +522,20 @@ private fun PreviewPhoneInput() {
           .padding(dp12),
       verticalArrangement = Arrangement.spacedBy(dp12),
     ) {
-      ClerkPhoneNumberField()
+      // Empty phone number - should show country picker with default country
+      ClerkPhoneNumberField(value = "", onValueChange = {})
+
+      // Phone number with US country code
+      ClerkPhoneNumberField(value = "+1 5551234567", onValueChange = {})
+
+      // Phone number with UK country code
+      ClerkPhoneNumberField(value = "+44 20 1234 5678", onValueChange = {})
+
+      // Error state
       ClerkPhoneNumberField(
-        errorText = "The value entered is in an invalid format. Please check and correct it."
+        value = "+1 555",
+        onValueChange = {},
+        errorText = "The value entered is in an invalid format. Please check and correct it.",
       )
     }
   }

@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -49,7 +48,6 @@ import com.clerk.workbench.ui.theme.WorkbenchTheme
 class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
-    val viewModel: AuthViewModel by viewModels()
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
@@ -58,7 +56,7 @@ class MainActivity : ComponentActivity() {
         MainContent(
           onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
-          onClickFirstItem = { viewModel.createPasskey() },
+          onClickFirstItem = {},
           onClickSecondItem = { context.startActivity(Intent(context, UiActivity::class.java)) },
         )
       }
