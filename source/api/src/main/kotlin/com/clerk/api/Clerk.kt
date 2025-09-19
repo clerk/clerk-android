@@ -1,12 +1,17 @@
 package com.clerk.api
 
 import android.content.Context
+import com.clerk.api.Clerk.initialize
+import com.clerk.api.Clerk.isInitialized
+import com.clerk.api.Clerk.sessionFlow
+import com.clerk.api.Clerk.userFlow
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.model.environment.enabledFirstFactorAttributes
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -37,7 +42,7 @@ object Clerk {
   /**
    * Enable for additional debugging signals and logging.
    *
-   * When enabled, provides verbose logging for SDK operations and API calls.
+   * When enabled, provides verbose logging for SDK operations and API calls. Defaults to `false`.
    */
   var debugMode: Boolean = false
     private set
@@ -61,7 +66,8 @@ object Clerk {
   /**
    * The Client object representing the current device and its authentication state.
    *
-   * Contains information about active sessions, sign-in attempts, and device-specific data.
+   * Contains information about active sessions, sign-in attempts, and device-specific data. This is
+   * initialized after the SDK's `initialize` method has been successfully called.
    */
   lateinit var client: Client
     private set
@@ -70,21 +76,58 @@ object Clerk {
    * Reactive state indicating whether the Clerk SDK has completed initialization.
    *
    * Observe this StateFlow to know when the SDK is ready for authentication operations. The SDK
-   * must be initialized before calling authentication methods.
+   * must be initialized by calling [initialize] before most other methods can be used. Emits `true`
+   * once initialization is complete, `false` otherwise.
    */
   val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized
 
+  /**
+   * The name of the application, as configured in the Clerk Dashboard.
+   *
+   * Used for display purposes in authentication UI and other contexts. Returns `null` if the SDK is
+   * not yet initialized or the application name is not set.
+   */
   val applicationName: String?
     get() = if (::environment.isInitialized) environment.displayConfig.applicationName else null
+
+  /**
+   * A list of enabled first factor attributes, sorted by priority.
+   *
+   * These attributes represent the primary identification methods available for users during
+   * sign-in or sign-up. Examples include email address, phone number, or username. The order in
+   * this list reflects the preferred order for presenting these options in the UI.
+   *
+   * @return A list of strings, each representing an enabled first factor attribute. Returns an
+   *   empty list if the SDK is not initialized or if no first factor attributes are enabled.
+   */
+  val enabledFirstFactorAttributes: List<String>
+    get() =
+      if (::environment.isInitialized) environment.enabledFirstFactorAttributes() else emptyList()
 
   /**
    * The image URL for the application logo used in authentication UI components.
    *
    * This logo appears in sign-in screens, sign-up flows, and other authentication interfaces. The
-   * URL is configured in your Clerk Dashboard under branding settings.
+   * URL is configured in your Clerk Dashboard under branding settings. Returns `null` if the SDK is
+   * not yet initialized or no logo URL is configured.
    */
   val organizationLogoUrl: String?
     get() = if (::environment.isInitialized) environment.displayConfig.logoImageUrl else null
+
+  /**
+   * Indicates whether Google One Tap sign-in is enabled for the application.
+   *
+   * Google One Tap provides a streamlined sign-in experience for users with existing Google
+   * accounts. This property returns `true` if Google One Tap is configured with a client ID in the
+   * Clerk Dashboard, and `false` otherwise.
+   *
+   * @return `true` if Google One Tap is enabled, `false` otherwise. Returns `false` if the SDK is
+   *   not yet initialized.
+   */
+  val isGoogleOneTapEnabled: Boolean
+    get() =
+      if (::environment.isInitialized) environment.displayConfig.googleOneTapClientId != null
+      else false
 
   // endregion
 
@@ -97,7 +140,7 @@ object Clerk {
    * Reactive state for the currently active user session.
    *
    * Observe this StateFlow to react to session changes such as sign-in, sign-out, or session
-   * refresh. Emits null when no session is active.
+   * refresh. Emits `null` when no session is active.
    */
   val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
 
@@ -105,7 +148,7 @@ object Clerk {
    * The currently active user session.
    *
    * Represents an authenticated session and is guaranteed to be one of the sessions in
-   * [Client.sessions]. Returns null when no session is active.
+   * [Client.sessions]. Returns `null` when no session is active or if the SDK is not initialized.
    */
   val session: Session?
     get() =
@@ -116,7 +159,7 @@ object Clerk {
   /**
    * Indicates whether a user is currently signed in.
    *
-   * @return true if there is an active session with a user, false otherwise.
+   * @return `true` if there is an active session with a user, `false` otherwise.
    */
   val isSignedIn: Boolean
     get() = session != null
@@ -132,11 +175,15 @@ object Clerk {
    * Reactive state for the currently authenticated user.
    *
    * Observe this StateFlow to react to user changes such as sign-in, sign-out, or profile updates.
-   * Emits null when no user is signed in.
+   * Emits `null` when no user is signed in.
    */
   val userFlow: StateFlow<User?> = _userFlow.asStateFlow()
 
-  /** The current user for the active session. */
+  /**
+   * The current user for the active session.
+   *
+   * Returns `null` if no session is active or if the SDK is not initialized.
+   */
   val user: User?
     get() = session?.user
 
@@ -151,54 +198,39 @@ object Clerk {
    * and its configuration details. Use these strategy identifiers when initiating OAuth sign-in
    * flows.
    *
-   * @return Map where keys are strategy identifiers and values contain provider configuration.
+   * @return Map where keys are strategy identifiers (e.g., `oauth_google`) and values contain
+   *   provider configuration. Returns an empty map if the SDK is not initialized or no social
+   *   providers are configured.
    * @see [SignIn.create] for usage with OAuth authentication.
    */
   val socialProviders: Map<String, UserSettings.SocialConfig>
     get() = if (::environment.isInitialized) environment.userSettings.social else emptyMap()
 
-  /** Indicates whether passkey authentication is enabled for this application. */
-  val passkeyIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.passkeyIsEnabled else false
-
-  /** Indicates whether multi-factor authentication (MFA) is enabled for this application. */
-  val mfaIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.mfaIsEnabled else false
-
-  /** Indicates whether authenticator app MFA is enabled for this application. */
-  val mfaAuthenticatorAppIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.mfaAuthenticatorAppIsEnabled else false
-
-  /** Indicates whether password authentication is enabled for this application. */
-  val passwordIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.passwordIsEnabled else false
-
-  /** Indicates whether username authentication is enabled for this application. */
-  val usernameIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.usernameIsEnabled else false
-
-  /** Indicates whether first name is enabled in user settings for this application. */
-  val firstNameIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.firstNameIsEnabled else false
-
-  /** Indicates whether last name is enabled in user settings for this application. */
-  val lastNameIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.lastNameIsEnabled else false
-
   // endregion
 
   // region Theme settings
-  /** Clerk theme configuration for customizing the appearance of authentication UI components. */
+  /**
+   * Clerk theme configuration for customizing the appearance of authentication UI components.
+   *
+   * Set this property during SDK initialization or at any time to apply a custom theme. See
+   * [ClerkTheme] for details on available customizations. If `null`, default theming will be
+   * applied.
+   */
   var customTheme: ClerkTheme? = null
 
   // endregion
 
   /**
-   * Sets the active session, useful for multi-session applications.
+   * Sets the active session and optionally the active organization for that session.
    *
-   * @param sessionId The session ID to be set as active
-   * @param organizationId The organization ID to be as active in the current session. If null, the
-   *   currently active organization is removed as active.
+   * This is useful for applications that support multiple user sessions or organizations. Calling
+   * this method will attempt to update the active session on the Clerk backend.
+   *
+   * @param sessionId The ID of the session to be set as active.
+   * @param organizationId The ID of the organization to be set as active for the current session.
+   *   If `null`, the currently active organization (if any) is removed as active.
+   * @return A [ClerkResult] which is a [ClerkResult.Success] containing the updated [Session] on
+   *   success, or a [ClerkResult.Failure] containing a [ClerkErrorResponse] on failure.
    */
   suspend fun setActive(
     sessionId: String,
@@ -213,7 +245,8 @@ object Clerk {
    * The current sign-in attempt, if one is in progress.
    *
    * This represents an ongoing authentication flow and provides access to verification steps and
-   * authentication state. Returns null when no sign-in is active.
+   * authentication state. Returns `null` when no sign-in is active or if the SDK is not
+   * initialized.
    */
   val signIn: SignIn?
     get() = if (::client.isInitialized) client.signIn else null
@@ -222,7 +255,7 @@ object Clerk {
    * The current sign-up attempt, if one is in progress.
    *
    * This represents an ongoing user registration flow and provides access to verification steps and
-   * registration state. Returns null when no sign-up is active.
+   * registration state. Returns `null` when no sign-up is active or if the SDK is not initialized.
    */
   val signUp: SignUp?
     get() = if (::client.isInitialized) client.signUp else null
@@ -235,14 +268,16 @@ object Clerk {
    * Initializes the Clerk SDK with the provided configuration.
    *
    * This method must be called before using any other Clerk functionality. It configures the API
-   * client, initializes local storage, and begins the authentication state setup.
+   * client, initializes local storage, and begins the authentication state setup. Observe
+   * [isInitialized] to know when the SDK is ready.
    *
    * @param context The application context used for initialization and storage setup.
    * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
-   *   Clerk.
-   * @param options Enable additional options for the Clerk SDK. See [ClerkConfigurationOptions] for
-   *   details.
-   * @param theme Customize the appearance of Clerk UI components. See [ClerkTheme] for
+   *   Clerk. This key should be in the format `pk_test_...` or `pk_live_...`.
+   * @param options Optional configuration for enabling extra functionality. See
+   *   [ClerkConfigurationOptions] for details.
+   * @param theme Optional theme to customize the appearance of Clerk UI components. See
+   *   [ClerkTheme] for details.
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
   fun initialize(
@@ -266,9 +301,10 @@ object Clerk {
    * Signs out the currently authenticated user.
    *
    * This operation removes the active session from both the server and local storage, clearing all
-   * cached user data and authentication state.
+   * cached user data and authentication state. [sessionFlow] and [userFlow] will emit `null`.
    *
-   * @return A [ClerkResult] indicating success or failure of the sign-out operation.
+   * @return A [ClerkResult.Success] with `Unit` on successful sign-out, or a [ClerkResult.Failure]
+   *   containing a [ClerkErrorResponse] if an error occurs.
    */
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> = SignOutService.signOut()
 
@@ -321,15 +357,36 @@ object Clerk {
   // endregion
 }
 
-/** Data class for enabling extra functionality on the Clerk SDK. */
+/**
+ * Data class for enabling extra functionality on the Clerk SDK.
+ *
+ * @property enableDebugMode If `true`, enables verbose logging for SDK operations and API calls.
+ *   Defaults to `false`.
+ * @property deviceAttestationOptions Configuration for Android Play Integrity device attestation.
+ *   Used to enhance security. Defaults to `null` (device attestation disabled).
+ */
 data class ClerkConfigurationOptions(
-  /** Enables verbose logging */
   val enableDebugMode: Boolean = false,
-  /** Used only for device attestation. Should be something like: `com.example.app` */
   val deviceAttestationOptions: DeviceAttestationOptions? = null,
 )
 
+/**
+ * Configuration options for Android Play Integrity device attestation.
+ *
+ * @property applicationId The application ID (package name) of your app (e.g., `com.example.app`).
+ * @property cloudProjectNumber Your Google Cloud Project number, required for Play Integrity API.
+ */
 data class DeviceAttestationOptions(val applicationId: String, val cloudProjectNumber: Long)
 
+/**
+ * Extension function to convert a map of social provider configurations into a list of
+ * [OAuthProvider] objects.
+ *
+ * This is useful for easily iterating over available OAuth providers for UI display or other logic.
+ *
+ * @return A list of [OAuthProvider] enums corresponding to the enabled social providers.
+ * @receiver A map where keys are strategy identifiers (e.g., `oauth_google`) and values are
+ *   [UserSettings.SocialConfig].
+ */
 fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthProvider> =
   this.map { OAuthProvider.fromStrategy(it.value.strategy) }

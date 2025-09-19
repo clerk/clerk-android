@@ -230,11 +230,11 @@ private fun ButtonContent(
       horizontalArrangement = Arrangement.spacedBy(dp6, Alignment.CenterHorizontally),
     ) {
       icons.leadingIcon?.let {
+        val iconColor = icons.leadingIconColor ?: ClerkMaterialTheme.colors.primaryForeground
         Icon(
           painter = painterResource(it),
           contentDescription = null,
-          tint =
-            if (isEnabled) icons.leadingIconColor else icons.leadingIconColor.copy(alpha = 0.5f),
+          tint = if (isEnabled) iconColor else iconColor.copy(alpha = 0.5f),
         )
       }
       Text(
@@ -245,11 +245,11 @@ private fun ButtonContent(
         color = if (isEnabled) tokens.foreground else tokens.foreground.copy(alpha = 0.5f),
       )
       icons.trailingIcon?.let {
+        val iconColor = icons.trailingIconColor ?: ClerkMaterialTheme.colors.primaryForeground
         Icon(
           painter = painterResource(it),
           contentDescription = null,
-          tint =
-            if (isEnabled) icons.trailingIconColor else icons.trailingIconColor.copy(alpha = 0.5f),
+          tint = if (isEnabled) iconColor else iconColor.copy(alpha = 0.5f),
         )
       }
     }
@@ -278,6 +278,8 @@ private fun PreviewButton() {
             ClerkButtonDefaults.icons(
               leadingIcon = R.drawable.ic_triangle_right,
               trailingIcon = R.drawable.ic_triangle_right,
+              trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+              leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
             ),
         )
       }
@@ -292,6 +294,8 @@ private fun PreviewButton() {
             ClerkButtonDefaults.icons(
               leadingIcon = R.drawable.ic_triangle_right,
               trailingIcon = R.drawable.ic_triangle_right,
+              trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+              leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
             ),
         )
       }
@@ -306,6 +310,8 @@ private fun PreviewButton() {
             ClerkButtonDefaults.icons(
               leadingIcon = R.drawable.ic_triangle_right,
               trailingIcon = R.drawable.ic_triangle_right,
+              trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+              leadingIconColor = ClerkMaterialTheme.colors.primaryForeground,
             ),
         )
       }

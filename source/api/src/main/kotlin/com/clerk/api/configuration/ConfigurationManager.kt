@@ -2,7 +2,6 @@ package com.clerk.api.configuration
 
 import android.content.Context
 import com.clerk.api.Clerk
-import com.clerk.api.Clerk.debugMode
 import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.Constants.Config.API_TIMEOUT_SECONDS
 import com.clerk.api.Constants.Config.BACKOFF_BASE_DELAY_SECONDS
@@ -195,7 +194,9 @@ internal class ConfigurationManager {
   }
 
   private fun startTokenRefresh() {
-    ClerkLog.d("startTokenRefresh() called - debugMode: $debugMode, hasConfigured: $hasConfigured")
+    ClerkLog.d(
+      "startTokenRefresh() called - debugMode: ${Clerk.debugMode}, hasConfigured: $hasConfigured"
+    )
 
     if (!hasConfigured) {
       ClerkLog.w("Cannot start token refresh - not configured")
@@ -216,7 +217,7 @@ internal class ConfigurationManager {
               // Use async to avoid blocking the refresh loop
               async { session.fetchToken(GetTokenOptions(skipCache = false)) }
             } else {
-              if (debugMode) {
+              if (Clerk.debugMode) {
                 ClerkLog.d("No session available for token refresh")
               }
             }
@@ -255,7 +256,7 @@ internal class ConfigurationManager {
       return
     }
 
-    if (debugMode) {
+    if (Clerk.debugMode) {
       ClerkLog.d("Starting client and environment refresh")
     }
 
@@ -300,7 +301,7 @@ internal class ConfigurationManager {
               )
             }
 
-            if (debugMode) {
+            if (Clerk.debugMode) {
               ClerkLog.d("Client and environment refresh completed successfully")
             }
           } else {
@@ -455,7 +456,7 @@ internal class ConfigurationManager {
   private fun handleEnvironmentResult(result: ClerkResult<Environment, *>) {
     result.fold(
       onSuccess = { environment ->
-        if (debugMode) {
+        if (Clerk.debugMode) {
           ClerkLog.d("Environment loaded successfully: ${environment.authConfig}")
         }
       },

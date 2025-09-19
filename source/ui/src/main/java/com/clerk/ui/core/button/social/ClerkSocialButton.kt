@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -25,6 +26,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -142,6 +144,7 @@ internal fun ClerkSocialButtonImpl(
       contentPadding = ButtonDefaults.ContentPadding,
       modifier =
         modifier
+          .fillMaxWidth()
           .shadow(
             elevation = dp3,
             shape = ClerkMaterialTheme.shape,
@@ -198,7 +201,7 @@ private fun SocialButtonWithText(provider: OAuthProvider, isEnabled: Boolean) {
   ) {
     SocialButtonIcon(provider = provider, isEnabled = isEnabled, contentDescription = null)
     Text(
-      text = "Sign in with ${provider.providerName}",
+      text = stringResource(R.string.sign_in_with, provider.providerName),
       style = ClerkMaterialTheme.typography.titleMedium,
     )
   }
@@ -210,7 +213,7 @@ private fun SocialButtonIconOnly(provider: OAuthProvider, isEnabled: Boolean) {
   SocialButtonIcon(
     provider = provider,
     isEnabled = isEnabled,
-    contentDescription = "Sign in with ${provider.providerName}",
+    contentDescription = stringResource(R.string.sign_in_with, provider.providerName),
   )
 }
 

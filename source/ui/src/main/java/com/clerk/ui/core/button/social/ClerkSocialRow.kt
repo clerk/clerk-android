@@ -1,21 +1,24 @@
 package com.clerk.ui.core.button.social
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.ui.core.common.dimens.dp8
 import kotlinx.collections.immutable.ImmutableList
 
+private const val MAX_BUTTONS_PER_ROW = 3
+
 /**
  * A composable row layout for displaying multiple social authentication buttons.
  *
- * This component arranges social login buttons in a flexible row layout using [FlowRow], which
- * automatically wraps buttons to the next line when horizontal space is constrained. All buttons in
- * the row are displayed in icon-only mode for consistent, compact sizing.
+ * This component arranges social login buttons in rows of exactly 3 buttons each. When there are
+ * more than 3 buttons, they wrap to additional rows. Each button takes equal width within its row
+ * and is displayed in icon-only mode for consistent, compact sizing.
  *
  * @param providers List of [OAuthProvider]s to display as social login buttons.
  * @param modifier Optional [Modifier] for theming and styling.
@@ -28,18 +31,21 @@ fun ClerkSocialRow(
   modifier: Modifier = Modifier,
   onClick: (OAuthProvider) -> Unit = {},
 ) {
-  FlowRow(
-    modifier = modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.spacedBy(dp8, alignment = Alignment.CenterHorizontally),
-    verticalArrangement = Arrangement.spacedBy(dp8),
-  ) {
-    providers.forEach { provider ->
-      ClerkSocialButton(
-        provider = provider,
-        isEnabled = true,
-        onClick = onClick,
-        forceIconOnly = true,
-      )
+  Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp8)) {
+    providers.chunked(MAX_BUTTONS_PER_ROW).forEach { rowProviders ->
+      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(dp8)) {
+        rowProviders.forEach { provider ->
+          ClerkSocialButton(
+            provider = provider,
+            isEnabled = true,
+            onClick = onClick,
+            forceIconOnly = true,
+            modifier = Modifier.weight(1f),
+          )
+        }
+        // Add empty spaces to maintain equal spacing when less than 3 buttons in a row
+        repeat(MAX_BUTTONS_PER_ROW - rowProviders.size) { Spacer(modifier = Modifier.weight(1f)) }
+      }
     }
   }
 }
