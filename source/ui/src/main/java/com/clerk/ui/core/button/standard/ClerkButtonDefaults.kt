@@ -6,7 +6,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import com.clerk.ui.core.common.dimens.dp12
 import com.clerk.ui.core.common.dimens.dp4
-import com.clerk.ui.theme.ClerkMaterialTheme
 
 /** Contains default values for Clerk buttons. */
 object ClerkButtonDefaults {
@@ -14,16 +13,18 @@ object ClerkButtonDefaults {
   /**
    * Creates a [ClerkButtonIcons] configuration for a button.
    *
-   * @param trailingIconColor The color of the trailing icon.
-   * @param leadingIconColor The color of the leading icon.
+   * @param trailingIconColor The color of the trailing icon. If null, uses the current theme's
+   *   primary color.
+   * @param leadingIconColor The color of the leading icon. If null, uses the current theme's
+   *   primary color.
    * @param trailingIcon The drawable resource for the trailing icon.
    * @param leadingIcon The drawable resource for the leading icon.
    * @return A [ClerkButtonIcons] instance.
    */
   @Composable
   fun icons(
-    trailingIconColor: Color = ClerkMaterialTheme.colors.primary,
-    leadingIconColor: Color = ClerkMaterialTheme.colors.primary,
+    trailingIconColor: Color? = null,
+    leadingIconColor: Color? = null,
     @DrawableRes trailingIcon: Int? = null,
     @DrawableRes leadingIcon: Int? = null,
   ) =
@@ -69,8 +70,8 @@ object ClerkButtonDefaults {
 data class ClerkButtonIcons(
   @DrawableRes val trailingIcon: Int?,
   @DrawableRes val leadingIcon: Int?,
-  val trailingIconColor: Color,
-  val leadingIconColor: Color,
+  val trailingIconColor: Color?,
+  val leadingIconColor: Color?,
 )
 
 /**
