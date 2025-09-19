@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.sso.OAuthProvider
@@ -46,6 +47,7 @@ private fun AuthStartViewImpl(
   var authStartPhoneNumber by rememberSaveable { mutableStateOf("") }
   var authStartIdentifier by rememberSaveable { mutableStateOf("") }
   var phoneNumberFieldIsActive by rememberSaveable { mutableStateOf(false) }
+  val state by authViewModel.state.collectAsStateWithLifecycle()
 
   ClerkThemedAuthScaffold(
     modifier = modifier,
@@ -69,13 +71,19 @@ private fun AuthStartViewImpl(
         )
 
         AuthActionButtons(
-          authMode = authMode,
-          authViewModel = authViewModel,
           authViewHelper = authViewHelper,
-          authStartIdentifier = authStartIdentifier,
-          authStartPhoneNumber = authStartPhoneNumber,
           phoneNumberFieldIsActive = phoneNumberFieldIsActive,
           onPhoneNumberFieldToggle = { phoneNumberFieldIsActive = !phoneNumberFieldIsActive },
+          onSocialProviderClick = { authViewModel.authenticateWithSocialProvider(it) },
+          isLoading = state is AuthViewModel.AuthState.Loading,
+          onStartAuth = {
+            authViewModel.startAuth(
+              authMode = authMode,
+              isPhoneNumberFieldActive = phoneNumberFieldIsActive,
+              identifier = authStartIdentifier,
+              phoneNumber = authStartPhoneNumber,
+            )
+          },
         )
       }
     }
@@ -108,30 +116,23 @@ private fun AuthInputField(
 
 @Composable
 private fun AuthActionButtons(
-  authMode: AuthMode,
-  authViewModel: AuthViewModel,
   authViewHelper: AuthViewHelper,
-  authStartIdentifier: String,
-  authStartPhoneNumber: String,
   phoneNumberFieldIsActive: Boolean,
+  onStartAuth: () -> Unit,
+  onSocialProviderClick: (OAuthProvider) -> Unit,
+  isLoading: Boolean = false,
   onPhoneNumberFieldToggle: () -> Unit,
 ) {
   ClerkButton(
     modifier = Modifier.fillMaxWidth(),
     text = stringResource(R.string.continue_text),
+    isLoading = isLoading,
     icons =
       ClerkButtonDefaults.icons(
         trailingIcon = R.drawable.ic_triangle_right,
         trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
       ),
-    onClick = {
-      authViewModel.startAuth(
-        authMode = authMode,
-        identifier = authStartIdentifier,
-        phoneNumber = authStartPhoneNumber,
-        isPhoneNumberFieldActive = phoneNumberFieldIsActive,
-      )
-    },
+    onClick = { onStartAuth() },
   )
 
   if (authViewHelper.showIdentifierSwitcher) {
@@ -147,7 +148,7 @@ private fun AuthActionButtons(
 
   ClerkSocialRow(
     providers = authViewHelper.authenticatableSocialProviders.toImmutableList(),
-    onClick = { authViewModel.authenticateWithSocialProvider(it) },
+    onClick = { onSocialProviderClick(it) },
   )
 }
 

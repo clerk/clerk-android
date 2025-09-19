@@ -109,7 +109,7 @@ internal class AuthViewModel : ViewModel() {
    * @param provider The [OAuthProvider] to authenticate with (e.g., Google, Facebook).
    */
   internal fun authenticateWithSocialProvider(provider: OAuthProvider) {
-    _state.value = AuthState.Loading
+    _state.value = AuthState.OAuthState.Loading
     if (provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
       handleGoogleOneTap()
     } else {
@@ -124,15 +124,16 @@ internal class AuthViewModel : ViewModel() {
           withContext(Dispatchers.Main) {
             _state.value =
               when (it.resultType) {
-                ResultType.SIGN_IN -> AuthState.Success(signIn = it.signIn)
-                ResultType.SIGN_UP -> AuthState.Success(signUp = it.signUp)
-                ResultType.UNKNOWN -> AuthState.Error("Unknown result type from Google One Tap")
+                ResultType.SIGN_IN -> AuthState.OAuthState.Success(signIn = it.signIn)
+                ResultType.SIGN_UP -> AuthState.OAuthState.Success(signUp = it.signUp)
+                ResultType.UNKNOWN ->
+                  AuthState.OAuthState.Error("Unknown result type from Google One Tap")
               }
           }
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            _state.value = AuthState.Error(it.longErrorMessageOrNull)
+            _state.value = AuthState.OAuthState.Error(it.longErrorMessageOrNull)
           }
         }
     }
@@ -147,15 +148,16 @@ internal class AuthViewModel : ViewModel() {
           withContext(Dispatchers.Main) {
             _state.value =
               when (it.resultType) {
-                ResultType.SIGN_IN -> AuthState.Success(signIn = it.signIn)
-                ResultType.SIGN_UP -> AuthState.Success(signUp = it.signUp)
-                ResultType.UNKNOWN -> AuthState.Error("Unknown result type from OAuth provider")
+                ResultType.SIGN_IN -> AuthState.OAuthState.Success(signIn = it.signIn)
+                ResultType.SIGN_UP -> AuthState.OAuthState.Success(signUp = it.signUp)
+                ResultType.UNKNOWN ->
+                  AuthState.OAuthState.Error("Unknown result type from OAuth provider")
               }
           }
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            _state.value = AuthState.Error(it.longErrorMessageOrNull)
+            _state.value = AuthState.OAuthState.Error(it.longErrorMessageOrNull)
           }
         }
     }
@@ -222,6 +224,18 @@ internal class AuthViewModel : ViewModel() {
      * @property message A descriptive error message, if available.
      */
     data class Error(val message: String?) : AuthState
+
+    /**
+     * Represents the states specifically related to OAuth (social provider) authentication.
+     * Inherits from [AuthState] as OAuth is a type of authentication.
+     */
+    sealed interface OAuthState : AuthState {
+      data object Loading : OAuthState
+
+      data class Success(val signIn: SignIn? = null, val signUp: SignUp? = null) : AuthState
+
+      data class Error(val message: String?) : AuthState
+    }
   }
 }
 
