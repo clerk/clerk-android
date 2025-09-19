@@ -2,6 +2,7 @@ package com.clerk.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.longErrorMessageOrNull
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -79,6 +80,35 @@ internal class AuthViewModel : ViewModel() {
 
   fun authenticateWithSocialProvider(provider: OAuthProvider) {
     _state.value = AuthState.Loading
+    if (provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
+      handleGoogleOneTap()
+    } else {
+      authenticateWithOAuthProvider(provider)
+    }
+  }
+
+  private fun handleGoogleOneTap() {
+    viewModelScope.launch(Dispatchers.IO) {
+      SignIn.authenticateWithGoogleOneTap()
+        .onSuccess {
+          withContext(Dispatchers.Main) {
+            _state.value =
+              when (it.resultType) {
+                ResultType.SIGN_IN -> AuthState.Success(signIn = it.signIn)
+                ResultType.SIGN_UP -> AuthState.Success(signUp = it.signUp)
+                ResultType.UNKNOWN -> AuthState.Error("Unknown result type")
+              }
+          }
+        }
+        .onFailure {
+          withContext(Dispatchers.Main) {
+            _state.value = AuthState.Error(it.longErrorMessageOrNull)
+          }
+        }
+    }
+  }
+
+  private fun authenticateWithOAuthProvider(provider: OAuthProvider) {
     viewModelScope.launch(Dispatchers.IO) {
       SignIn.authenticateWithRedirect(
           SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider)
