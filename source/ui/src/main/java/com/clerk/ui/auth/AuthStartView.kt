@@ -70,20 +70,34 @@ private fun AuthStartViewImpl(
           onIdentifierChange = { authStartIdentifier = it },
         )
 
+        val authButtonsState =
+          AuthButtonsState(
+            isLoading = state is AuthViewModel.AuthState.Loading,
+            isEnabled =
+              !authViewHelper.continueIsDisabled(
+                isPhoneNumberFieldActive = phoneNumberFieldIsActive,
+                identifier = authStartPhoneNumber,
+                phoneNumber = authStartIdentifier,
+              ),
+            phoneNumberFieldIsActive = phoneNumberFieldIsActive,
+          )
+        val authButtonsCallbacks =
+          AuthButtonsCallbacks(
+            onStartAuth = {
+              authViewModel.startAuth(
+                authMode = authMode,
+                isPhoneNumberFieldActive = phoneNumberFieldIsActive,
+                identifier = authStartIdentifier,
+                phoneNumber = authStartPhoneNumber,
+              )
+            },
+            onSocialProviderClick = { authViewModel.authenticateWithSocialProvider(it) },
+            onPhoneNumberFieldToggle = { phoneNumberFieldIsActive = !phoneNumberFieldIsActive },
+          )
         AuthActionButtons(
           authViewHelper = authViewHelper,
-          phoneNumberFieldIsActive = phoneNumberFieldIsActive,
-          onPhoneNumberFieldToggle = { phoneNumberFieldIsActive = !phoneNumberFieldIsActive },
-          onSocialProviderClick = { authViewModel.authenticateWithSocialProvider(it) },
-          isLoading = state is AuthViewModel.AuthState.Loading,
-          onStartAuth = {
-            authViewModel.startAuth(
-              authMode = authMode,
-              isPhoneNumberFieldActive = phoneNumberFieldIsActive,
-              identifier = authStartIdentifier,
-              phoneNumber = authStartPhoneNumber,
-            )
-          },
+          state = authButtonsState,
+          callbacks = authButtonsCallbacks,
         )
       }
     }
@@ -114,31 +128,41 @@ private fun AuthInputField(
   }
 }
 
+private data class AuthButtonsState(
+  val isLoading: Boolean = false,
+  val isEnabled: Boolean = true,
+  val phoneNumberFieldIsActive: Boolean = false,
+)
+
+private data class AuthButtonsCallbacks(
+  val onStartAuth: () -> Unit,
+  val onSocialProviderClick: (OAuthProvider) -> Unit,
+  val onPhoneNumberFieldToggle: () -> Unit,
+)
+
 @Composable
 private fun AuthActionButtons(
   authViewHelper: AuthViewHelper,
-  phoneNumberFieldIsActive: Boolean,
-  onStartAuth: () -> Unit,
-  onSocialProviderClick: (OAuthProvider) -> Unit,
-  isLoading: Boolean = false,
-  onPhoneNumberFieldToggle: () -> Unit,
+  state: AuthButtonsState,
+  callbacks: AuthButtonsCallbacks,
 ) {
   ClerkButton(
     modifier = Modifier.fillMaxWidth(),
     text = stringResource(R.string.continue_text),
-    isLoading = isLoading,
+    isLoading = state.isLoading,
+    isEnabled = state.isEnabled,
     icons =
       ClerkButtonDefaults.icons(
         trailingIcon = R.drawable.ic_triangle_right,
         trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
       ),
-    onClick = { onStartAuth() },
+    onClick = callbacks.onStartAuth,
   )
 
   if (authViewHelper.showIdentifierSwitcher) {
     ClerkTextButton(
-      text = authViewHelper.identifierSwitcherString(phoneNumberFieldIsActive),
-      onClick = onPhoneNumberFieldToggle,
+      text = authViewHelper.identifierSwitcherString(state.phoneNumberFieldIsActive),
+      onClick = callbacks.onPhoneNumberFieldToggle,
     )
   }
 
@@ -148,7 +172,7 @@ private fun AuthActionButtons(
 
   ClerkSocialRow(
     providers = authViewHelper.authenticatableSocialProviders.toImmutableList(),
-    onClick = { onSocialProviderClick(it) },
+    onClick = callbacks.onSocialProviderClick,
   )
 }
 
