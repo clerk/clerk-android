@@ -240,9 +240,6 @@ class AuthViewModelTest {
 
   @Test
   fun authStatesShouldBeCorrectlyStructured() {
-    // Test AuthState structure
-    val idle = AuthViewModel.AuthState.Idle
-    val loading = AuthViewModel.AuthState.Loading
 
     val mockSignIn = mockk<SignIn>(relaxed = true)
     val mockSignUp = mockk<SignUp>(relaxed = true)
@@ -251,18 +248,7 @@ class AuthViewModelTest {
     val successWithSignUp = AuthViewModel.AuthState.Success(signUp = mockSignUp)
     val error = AuthViewModel.AuthState.Error("Test error")
 
-    val oauthLoading = AuthViewModel.AuthState.OAuthState.Loading
-    val oauthSuccess = AuthViewModel.AuthState.OAuthState.Success(signIn = mockSignIn)
     val oauthError = AuthViewModel.AuthState.OAuthState.Error("OAuth error")
-
-    // Verify types
-    assertTrue("Idle should be AuthState", idle is AuthViewModel.AuthState)
-    assertTrue("Loading should be AuthState", loading is AuthViewModel.AuthState)
-    assertTrue("Success should be AuthState", successWithSignIn is AuthViewModel.AuthState)
-    assertTrue("Error should be AuthState", error is AuthViewModel.AuthState)
-    assertTrue("OAuthState.Loading should be AuthState", oauthLoading is AuthViewModel.AuthState)
-    assertTrue("OAuthState.Success should be AuthState", oauthSuccess is AuthViewModel.AuthState)
-    assertTrue("OAuthState.Error should be AuthState", oauthError is AuthViewModel.AuthState)
 
     // Verify Success state content
     assertEquals(mockSignIn, successWithSignIn.signIn)
