@@ -1,12 +1,12 @@
 package com.clerk.ui.signup
 
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
-import com.clerk.ui.core.common.dimens.dp12
-import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.core.common.Spacers
+import com.clerk.ui.core.input.ClerkCodeInputField
+import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 
 @Composable
 fun SignUpCodeView(field: Field, modifier: Modifier = Modifier) {
@@ -16,13 +16,9 @@ fun SignUpCodeView(field: Field, modifier: Modifier = Modifier) {
     hasLogo = false,
     identifier = field.value,
   ) {
-    LinearProgressIndicator(
-      progress = { 0.50f },
-      color = ClerkMaterialTheme.colors.primary,
-      gapSize = dp12,
-      trackColor = ClerkMaterialTheme.colors.neutral.copy(alpha = .11f),
-      drawStopIndicator = {},
-    )
+    ClerkLinearProgressIndicator(progress = 0)
+    Spacers.Vertical.Spacer32()
+    ClerkCodeInputField(onTextChange = {})
   }
 }
 
