@@ -20,6 +20,14 @@ import com.clerk.ui.core.common.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
+/**
+ * A linear progress indicator that displays a series of segments, with a certain number of them
+ * highlighted to indicate progress.
+ *
+ * @param progress The number of segments to highlight, starting from the left.
+ * @param modifier A [Modifier] to apply to the progress indicator.
+ * @param segments The total number of segments to display.
+ */
 @Composable
 internal fun ClerkLinearProgressIndicator(
   progress: Int,
