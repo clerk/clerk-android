@@ -4,9 +4,14 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,22 +43,39 @@ fun AuthStartView(authMode: AuthMode, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun AuthStartViewImpl(
+internal fun AuthStartViewImpl(
   authMode: AuthMode,
   modifier: Modifier = Modifier,
   authViewHelper: AuthViewHelper = AuthViewHelper(),
   authViewModel: AuthViewModel = viewModel(),
 ) {
-  var authStartPhoneNumber by rememberSaveable { mutableStateOf("") }
-  var authStartIdentifier by rememberSaveable { mutableStateOf("") }
-  var phoneNumberFieldIsActive by rememberSaveable { mutableStateOf(false) }
+  // Inputs + derived enabled state
+  var phoneActive by rememberSaveable { mutableStateOf(false) }
+  var phone by rememberSaveable { mutableStateOf("") }
+  var identifier by rememberSaveable { mutableStateOf("") }
+  val isContinueEnabled by
+    remember(identifier, phone, phoneActive) {
+      derivedStateOf {
+        !authViewHelper.continueIsDisabled(
+          isPhoneNumberFieldActive = phoneActive,
+          identifier = identifier,
+          phoneNumber = phone,
+        )
+      }
+    }
+
   val state by authViewModel.state.collectAsStateWithLifecycle()
+  val snackbarHostState = remember { SnackbarHostState() }
+  val generic = stringResource(R.string.something_went_wrong_please_try_again)
+
+  HandleAuthErrors(state = state, snackbarHostState = snackbarHostState, generic = generic)
 
   ClerkThemedAuthScaffold(
     modifier = modifier,
     hasBackButton = false,
     title = authViewHelper.titleString(authMode),
     subtitle = authViewHelper.subtitleString(authMode),
+    snackbarHost = { SnackbarHost(snackbarHostState) },
   ) {
     Column(
       modifier = Modifier.fillMaxWidth(),
@@ -63,41 +85,34 @@ private fun AuthStartViewImpl(
       if (authViewHelper.showIdentifierField) {
         AuthInputField(
           authViewHelper = authViewHelper,
-          phoneNumberFieldIsActive = phoneNumberFieldIsActive,
-          authStartPhoneNumber = authStartPhoneNumber,
-          authStartIdentifier = authStartIdentifier,
-          onPhoneNumberChange = { authStartPhoneNumber = it },
-          onIdentifierChange = { authStartIdentifier = it },
+          phoneNumberFieldIsActive = phoneActive,
+          authStartPhoneNumber = phone,
+          authStartIdentifier = identifier,
+          onPhoneNumberChange = { phone = it },
+          onIdentifierChange = { identifier = it },
         )
 
-        val authButtonsState =
-          AuthButtonsState(
-            isLoading = state is AuthViewModel.AuthState.Loading,
-            isEnabled =
-              !authViewHelper.continueIsDisabled(
-                isPhoneNumberFieldActive = phoneNumberFieldIsActive,
-                identifier = authStartIdentifier,
-                phoneNumber = authStartPhoneNumber,
-              ),
-            phoneNumberFieldIsActive = phoneNumberFieldIsActive,
-          )
-        val authButtonsCallbacks =
-          AuthButtonsCallbacks(
-            onStartAuth = {
-              authViewModel.startAuth(
-                authMode = authMode,
-                isPhoneNumberFieldActive = phoneNumberFieldIsActive,
-                identifier = authStartIdentifier,
-                phoneNumber = authStartPhoneNumber,
-              )
-            },
-            onSocialProviderClick = { authViewModel.authenticateWithSocialProvider(it) },
-            onPhoneNumberFieldToggle = { phoneNumberFieldIsActive = !phoneNumberFieldIsActive },
-          )
         AuthActionButtons(
           authViewHelper = authViewHelper,
-          state = authButtonsState,
-          callbacks = authButtonsCallbacks,
+          state =
+            AuthButtonsState(
+              isLoading = state is AuthViewModel.AuthState.Loading,
+              isEnabled = isContinueEnabled,
+              phoneNumberFieldIsActive = phoneActive,
+            ),
+          callbacks =
+            AuthButtonsCallbacks(
+              onStartAuth = {
+                authViewModel.startAuth(
+                  authMode = authMode,
+                  isPhoneNumberFieldActive = phoneActive,
+                  identifier = identifier,
+                  phoneNumber = phone,
+                )
+              },
+              onSocialProviderClick = { authViewModel.authenticateWithSocialProvider(it) },
+              onPhoneNumberFieldToggle = { phoneActive = !phoneActive },
+            ),
         )
       }
     }
@@ -175,6 +190,51 @@ private fun AuthActionButtons(
     onClick = callbacks.onSocialProviderClick,
   )
 }
+
+@Composable
+internal fun HandleAuthErrors(
+  state: AuthViewModel.AuthState,
+  snackbarHostState: SnackbarHostState,
+  generic: String,
+) {
+  val errorMessage: String? =
+    when (state) {
+      is AuthViewModel.AuthState.Error -> state.message
+      is AuthViewModel.AuthState.OAuthState.Error -> state.message
+      else -> null
+    }
+  LaunchedEffect(errorMessage) {
+    errorMessage?.let { snackbarHostState.showSnackbar(it.ifBlank { generic }) }
+  }
+}
+
+@Composable
+internal fun rememberAuthInputs(
+  authViewHelper: AuthViewHelper
+): Triple<StateHolder, Boolean, Boolean> {
+  var phone by rememberSaveable { mutableStateOf("") }
+  var id by rememberSaveable { mutableStateOf("") }
+  var phoneActive by rememberSaveable { mutableStateOf(false) }
+
+  val isContinueEnabled by
+    remember(id, phone, phoneActive) {
+      derivedStateOf {
+        !authViewHelper.continueIsDisabled(
+          isPhoneNumberFieldActive = phoneActive,
+          identifier = id,
+          phoneNumber = phone,
+        )
+      }
+    }
+
+  return Triple(StateHolder(id, phone, isContinueEnabled), phoneActive, true)
+}
+
+internal data class StateHolder(
+  val identifier: String,
+  val phone: String,
+  val isContinueEnabled: Boolean,
+)
 
 @SuppressLint("VisibleForTests")
 @PreviewLightDark
