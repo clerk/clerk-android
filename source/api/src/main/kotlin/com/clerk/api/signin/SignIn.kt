@@ -326,7 +326,7 @@ data class SignIn(
      *
      * You can use [OAuthProvider] directly to authenticate with an OAuth provider.
      *
-     * @property strategy The OAuth provider strategy to use for authentication.
+     * @property provider The OAuth provider to use for authentication.
      * @property redirectUrl The URL to redirect to after authentication.
      * @property emailAddress The user's email address for pre-filling authentication forms.
      * @property legalAccepted Whether the user has accepted the legal terms.
@@ -369,8 +369,6 @@ data class SignIn(
    *
    * This interface is used to specify which verification strategy should be prepared before
    * attempting the first factor authentication.
-   *
-   * @property strategy The verification strategy to use for the first factor authentication.
    */
   sealed interface PrepareFirstFactorParams {
     /**
@@ -379,15 +377,13 @@ data class SignIn(
      * Each strategy represents a different method of verifying the user's identity during the first
      * factor authentication step.
      */
-    val strategy: String
-
     @AutoMap
     @Serializable
     data class EmailCode(
       @SerialName("email_address_id")
       val emailAddressId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
-      override val strategy: String = EMAIL_CODE,
+      val strategy: String = EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -396,7 +392,7 @@ data class SignIn(
       @SerialName("phone_number_id")
       val phoneNumberId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
-      override val strategy: String = PHONE_CODE,
+      val strategy: String = PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -404,7 +400,7 @@ data class SignIn(
     data class ResetPasswordEmailCode(
       val emailAddressId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
-      override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+      val strategy: String = RESET_PASSWORD_EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -412,13 +408,13 @@ data class SignIn(
     data class ResetPasswordPhoneCode(
       val phoneNumberId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
-      override val strategy: String = RESET_PASSWORD_PHONE_CODE,
+      val strategy: String = RESET_PASSWORD_PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class OAuth(
-      override val strategy: String,
+      @SerialName("strategy") @MapProperty("providerData?.strategy") val provider: OAuthProvider,
       @SerialName("redirect_url")
       val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : PrepareFirstFactorParams
@@ -426,14 +422,14 @@ data class SignIn(
     @AutoMap
     @Serializable
     data class EnterpriseSSO(
-      override val strategy: String = ENTERPRISE_SSO,
+      val strategy: String = ENTERPRISE_SSO,
       @SerialName("redirect_url")
       val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
-    data class Passkey(override val strategy: String = PASSKEY) : PrepareFirstFactorParams
+    data class Passkey(val strategy: String = PASSKEY) : PrepareFirstFactorParams
   }
 
   /**
@@ -482,7 +478,7 @@ data class SignIn(
      */
     sealed interface Strategy {
       /** The authentication strategy identifier. */
-      val strategy: String
+      val strategy: String?
 
       /**
        * Email code sign-in strategy.
@@ -551,6 +547,11 @@ data class SignIn(
 
       /** Passkey strategy for authentication using a passkey. */
       data class Passkey(override val strategy: String = PASSKEY) : Strategy
+
+      @AutoMap
+      @Serializable
+      data class Identifier(override val strategy: String? = null, val identifier: String) :
+        Strategy
     }
   }
 
@@ -752,11 +753,14 @@ suspend fun SignIn.prepareFirstFactor(
  *   verification on success, or a [ClerkErrorResponse] on failure.
  * @receiver The current [SignIn] object representing the sign-in session.
  */
-suspend fun SignIn.prepareSecondFactor(): ClerkResult<SignIn, ClerkErrorResponse> {
+suspend fun SignIn.prepareSecondFactor(
+  phoneNumberId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> {
   val params =
     SignIn.PrepareSecondFactorParams(
       phoneNumberId =
-        this.supportedSecondFactors?.find { it.strategy == "phone_code" }?.phoneNumberId
+        phoneNumberId
+          ?: this.supportedSecondFactors?.find { it.strategy == "phone_code" }?.phoneNumberId
     )
   return ClerkApi.signIn.prepareSecondFactor(id = this.id, params = params.toMap())
 }

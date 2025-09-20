@@ -1,0 +1,194 @@
+package com.clerk.ui.signin.code
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.Clerk
+import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.R
+import com.clerk.ui.core.button.standard.ClerkTextButton
+import com.clerk.ui.core.common.ClerkThemedAuthScaffold
+import com.clerk.ui.core.common.Spacers
+import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.core.input.ClerkCodeInputField
+import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.DefaultColors
+
+/**
+ * A Composable that displays a verification code input screen for sign-in authentication factors.
+ *
+ * This component handles various authentication strategies including:
+ * - Email verification codes
+ * - SMS verification codes
+ * - Password reset codes
+ * - TOTP codes for two-factor authentication
+ *
+ * The view automatically prepares the factor for verification and provides a code input field with
+ * resend functionality and timer countdown.
+ *
+ * @param factor The authentication factor containing strategy and identifier information
+ * @param modifier Optional [Modifier] to customize the appearance and behavior
+ * @param onBackPressed Callback invoked when the back button is pressed
+ * @param onClickResend Callback invoked when the resend code button is clicked
+ * @sample
+ *
+ * ```kotlin
+ * SignInFactorCodeView(
+ *   factor = Factor(strategy = "email_code", emailAddressId = "user@example.com"),
+ *   onBackPressed = { navController.popBackStack() },
+ *   onClickResend = { /* Handle resend logic */ }
+ * )
+ * ```
+ */
+@Composable
+fun SignInFactorCodeView(
+  factor: Factor,
+  modifier: Modifier = Modifier,
+  onBackPressed: () -> Unit = {},
+  onClickResend: () -> Unit = {},
+  isSecondFactor: Boolean = false,
+) {
+  SignInFactorCodeViewImpl(
+    factor = factor,
+    modifier = modifier,
+    onBackPressed = onBackPressed,
+    onClickResend = onClickResend,
+    isSecondFactor = isSecondFactor,
+  )
+}
+
+/**
+ * Internal implementation of the SignInFactorCodeView that manages the UI state and interactions.
+ *
+ * This component handles:
+ * - View model state management
+ * - Factor preparation on composition
+ * - Timer countdown for resend functionality
+ * - Code input and automatic submission when complete
+ * - Navigation actions (back, use another method)
+ *
+ * @param factor The authentication factor to process
+ * @param onBackPressed Callback for back navigation
+ * @param onClickResend Callback for resend code action
+ * @param modifier Optional modifier for styling
+ * @param viewModel The view model managing the sign-in state (injected via Compose)
+ * @param onUseAnotherMethod Callback for "use another method" action
+ */
+@Composable
+private fun SignInFactorCodeViewImpl(
+  factor: Factor,
+  onBackPressed: () -> Unit,
+  onClickResend: () -> Unit,
+  modifier: Modifier = Modifier,
+  viewModel: SignInFactorCodeViewModel = viewModel(),
+  onUseAnotherMethod: () -> Unit = {},
+  isSecondFactor: Boolean = false,
+) {
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  val verificationState = state.verificationState()
+
+  LaunchedEffect(Unit) { viewModel.prepare(factor, isSecondFactor = isSecondFactor) }
+
+  ClerkThemedAuthScaffold(
+    modifier = modifier,
+    onBackPressed = onBackPressed,
+    title = SignInFactorCodeHelper.titleForStrategy(factor),
+    subtitle = SignInFactorCodeHelper.subtitleForStrategy(factor),
+    identifier = factor.safeIdentifier,
+    onClickIdentifier = { TODO() },
+  ) {
+    ClerkCodeInputField(
+      verificationState = verificationState,
+      onTextChange = {
+        if (it.length == 6) {
+          viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = it)
+        }
+      },
+      showResend = SignInFactorCodeHelper.showResend(factor, verificationState),
+      onClickResend = onClickResend,
+    )
+    Spacers.Vertical.Spacer24()
+    if (SignInFactorCodeHelper.showUseAnotherMethod(factor)) {
+      ClerkTextButton(
+        text = stringResource(R.string.use_another_method),
+        onClick = onUseAnotherMethod,
+      )
+    }
+  }
+}
+
+/**
+ * Extension function that converts a [SignInFactorCodeViewModel.State] to a [VerificationState].
+ *
+ * This mapping provides a UI-focused state representation that can be used by input components to
+ * determine their visual appearance and behavior.
+ *
+ * @return The corresponding [VerificationState] for the current view model state
+ */
+private fun SignInFactorCodeViewModel.State.verificationState(): VerificationState {
+  return when (this) {
+    SignInFactorCodeViewModel.State.Error -> VerificationState.Error
+    SignInFactorCodeViewModel.State.Idle -> VerificationState.Default
+    SignInFactorCodeViewModel.State.Success -> VerificationState.Success
+    SignInFactorCodeViewModel.State.Verifying -> VerificationState.Verifying
+  }
+}
+
+/**
+ * Preview function for the SignInFactorCodeView component.
+ *
+ * Demonstrates the component with a phone code factor for development and design purposes.
+ */
+@Preview
+@Composable
+private fun PreviewSignInFactorCodeView() {
+  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
+  ClerkMaterialTheme {
+    SignInFactorCodeView(Factor(StrategyKeys.PHONE_CODE, safeIdentifier = "sam@clerk.dev"))
+  }
+}
+
+/**
+ * Sealed interface representing the various verification states for code input components.
+ *
+ * This interface provides a UI-focused state system that abstracts the underlying view model states
+ * into states that are relevant for verification input components.
+ *
+ * States correspond to different visual appearances and behaviors:
+ * - [Default]: Initial state, ready for input
+ * - [Verifying]: Currently processing the code
+ * - [Success]: Code verification succeeded
+ * - [Error]: Code verification failed
+ */
+sealed interface VerificationState {
+
+  /**
+   * Default state indicating the component is ready for user input. Typically shows normal input
+   * styling without any status indicators.
+   */
+  data object Default : VerificationState
+
+  /**
+   * Verifying state indicating code submission is in progress. Usually displays loading indicators
+   * and disables input.
+   */
+  data object Verifying : VerificationState
+
+  /**
+   * Success state indicating the code was successfully verified. Often shows success indicators and
+   * may trigger navigation.
+   */
+  data object Success : VerificationState
+
+  /**
+   * Error state indicating code verification failed. Typically displays error styling and allows
+   * retry.
+   */
+  data object Error : VerificationState
+}
