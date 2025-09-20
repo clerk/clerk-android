@@ -19,7 +19,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
-import com.clerk.ui.colors.ComputedColors
+import com.clerk.ui.theme.colors.ComputedColors
 import com.materialkolor.ktx.darken
 import com.materialkolor.ktx.lighten
 
