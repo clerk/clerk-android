@@ -18,6 +18,15 @@ import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 import com.clerk.ui.signin.code.VerificationState
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 
+/**
+ * Composable function for the Sign Up Code View.
+ *
+ * This function displays a view where the user can enter a verification code received via email or
+ * phone to complete the sign-up process.
+ *
+ * @param field The [Field] indicating whether the code was sent to a phone or email.
+ * @param modifier The [Modifier] to be applied to the view.
+ */
 @Composable
 fun SignUpCodeView(field: Field, modifier: Modifier = Modifier) {
   SignUpCodeViewImpl(field, modifier)
