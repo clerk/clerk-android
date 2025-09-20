@@ -15,6 +15,7 @@ import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
+import com.clerk.ui.signin.code.VerificationState
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 
 @Composable
@@ -49,6 +50,14 @@ private fun SignUpCodeViewImpl(
       is Field.Email -> stringResource(R.string.check_your_email)
     }
 
+  val verificationState =
+    when (state) {
+      SignUpCodeViewModel.AuthenticationState.CodeSent -> VerificationState.Default
+      is SignUpCodeViewModel.AuthenticationState.Error -> VerificationState.Error
+      SignUpCodeViewModel.AuthenticationState.Idle -> VerificationState.Default
+      SignUpCodeViewModel.AuthenticationState.Loading -> VerificationState.Verifying
+    }
+
   ClerkThemedAuthScaffold(
     modifier = modifier,
     title = title,
@@ -59,6 +68,7 @@ private fun SignUpCodeViewImpl(
     ClerkLinearProgressIndicator(progress = 0)
     Spacers.Vertical.Spacer32()
     ClerkCodeInputField(
+      verificationState = verificationState,
       onTextChange = {
         if (it.length == 6) {
           viewModel.attempt(field = field, code = it)
