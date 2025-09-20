@@ -29,7 +29,6 @@ import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.dimens.dp16
 import com.clerk.ui.core.common.dimens.dp8
-import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -74,7 +73,7 @@ private fun SignInSetNewPasswordViewImpl(
     onBackPressed = onBackPressed,
     hasLogo = false,
     title = stringResource(R.string.set_new_password),
-    snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+    snackbarHostState = snackbarHostState,
   ) {
     ClerkTextField(
       value = password,

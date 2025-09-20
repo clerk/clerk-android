@@ -46,7 +46,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.clerk.ui.R
-import com.clerk.ui.colors.ComputedColors
 import com.clerk.ui.core.common.dimens.dp1
 import com.clerk.ui.core.common.dimens.dp12
 import com.clerk.ui.core.common.dimens.dp14
@@ -57,6 +56,7 @@ import com.clerk.ui.core.common.dimens.dp56
 import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.LocalComputedColors
+import com.clerk.ui.theme.colors.ComputedColors
 
 /**
  * Divisor used to calculate the maximum height of the country dropdown menu as a fraction of screen

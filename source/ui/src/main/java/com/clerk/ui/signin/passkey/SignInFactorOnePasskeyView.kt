@@ -26,7 +26,6 @@ import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.common.dimens.dp72
-import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
@@ -88,7 +87,7 @@ private fun SignInFactorOnePasskeyViewImpl(
     subtitle = stringResource(R.string.using_your_passkey),
     onClickIdentifier = onChangeIdentifierClicked,
     identifier = factor.safeIdentifier,
-    snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+    snackbarHostState = snackbarHostState,
   ) {
     Icon(
       modifier = Modifier.size(dp72),

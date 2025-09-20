@@ -1,4 +1,4 @@
-package com.clerk.ui.colors
+package com.clerk.ui.theme.colors
 
 import androidx.compose.ui.graphics.Color
 

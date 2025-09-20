@@ -33,7 +33,9 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -65,8 +67,13 @@ import com.clerk.ui.core.common.dimens.dp56
 import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.signin.code.VerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
+import kotlinx.coroutines.delay
 
-// Constants
+/** Default timer length in seconds for code resend functionality. */
+private const val DEFAULT_TIMER_LENGTH = 60
+
+/** Default delay in milliseconds for timer countdown. */
+private const val DEFAULT_DELAY = 1000L
 private const val CARET_HEIGHT_FRACTION = 0.45f
 private const val DEFAULT_OTP_LENGTH = 6
 
@@ -77,24 +84,33 @@ private const val DEFAULT_OTP_LENGTH = 6
  * feedback for different states including error, success, and verification in progress. It includes
  * automatic resend functionality with a countdown timer.
  *
- * @param onOtpTextChange Callback invoked when the OTP text changes. Receives the current OTP
- *   string.
- * @param secondsLeft Number of seconds remaining before the resend option becomes available. When >
- *   0, shows countdown; when 0 or less, shows resend link.
- * @param verificationState The current state of the verification process (e.g., Default, Verifying,
- *   Success, Error).
- * @param modifier Optional [Modifier] to be applied to the component.
+ * @param onTextChange Callback invoked when the OTP text changes. Receives the current OTP string.
  * @param onClickResend Callback invoked when the user clicks the resend code link.
+ * @param modifier Optional [Modifier] to be applied to the component.
+ * @param timerDuration The duration of the countdown timer in seconds for resending the code.
+ *   Defaults to [DEFAULT_TIMER_LENGTH].
+ * @param verificationState The current state of the verification process (e.g., Default, Verifying,
+ *   Success, Error). Defaults to [VerificationState.Default].
+ * @param showResend Whether to show the resend code link and timer. Defaults to `true`.
  */
 @Composable
 fun ClerkCodeInputField(
-  onOtpTextChange: (String) -> Unit,
-  secondsLeft: Int,
+  onTextChange: (String) -> Unit,
   onClickResend: () -> Unit,
   modifier: Modifier = Modifier,
+  timerDuration: Int = DEFAULT_TIMER_LENGTH,
   verificationState: VerificationState = VerificationState.Default,
   showResend: Boolean = true,
 ) {
+  var timeLeft by remember { mutableIntStateOf(timerDuration) }
+
+  LaunchedEffect(Unit) {
+    while (timeLeft > 0) {
+      delay(DEFAULT_DELAY)
+      timeLeft--
+    }
+  }
+
   ClerkMaterialTheme {
     var otpText by remember { mutableStateOf("") }
     val interactionSource = remember { MutableInteractionSource() }
@@ -114,7 +130,7 @@ fun ClerkCodeInputField(
             val filtered = newValue.filter { it.isDigit() }.take(DEFAULT_OTP_LENGTH)
             if (filtered != otpText) {
               otpText = filtered
-              onOtpTextChange(filtered)
+              onTextChange(filtered)
             }
           },
           keyboardOptions =
@@ -134,8 +150,8 @@ fun ClerkCodeInputField(
         )
         SupportingText(verificationState)
         if (showResend) {
-          if (secondsLeft > 0) {
-            IconTextRow(text = stringResource(R.string.didn_t_receive_a_code_resend, secondsLeft))
+          if (timeLeft > 0) {
+            IconTextRow(text = stringResource(R.string.didn_t_receive_a_code_resend, timeLeft))
           } else {
             ResendCodeText(onClick = onClickResend)
           }
@@ -363,23 +379,20 @@ private fun PreviewClerkCodeInputField() {
       modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp16),
       verticalArrangement = Arrangement.spacedBy(dp16),
     ) {
-      ClerkCodeInputField(onOtpTextChange = {}, secondsLeft = 30, onClickResend = {})
+      ClerkCodeInputField(onTextChange = {}, onClickResend = {})
       ClerkCodeInputField(
-        onOtpTextChange = {},
+        onTextChange = {},
         verificationState = VerificationState.Error,
-        secondsLeft = 30,
         onClickResend = {},
       )
       ClerkCodeInputField(
-        onOtpTextChange = {},
+        onTextChange = {},
         verificationState = VerificationState.Success,
-        secondsLeft = 0,
         onClickResend = {},
       )
       ClerkCodeInputField(
-        onOtpTextChange = {},
+        onTextChange = {},
         verificationState = VerificationState.Verifying,
-        secondsLeft = 0,
         onClickResend = {},
       )
     }
