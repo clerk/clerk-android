@@ -25,21 +25,21 @@ class ClerkCodeInputFieldSnapshotTest : BaseSnapshotTest() {
           modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp16),
           verticalArrangement = Arrangement.spacedBy(dp16),
         ) {
-          ClerkCodeInputField(onOtpTextChange = {}, secondsLeft = 30, onClickResend = {})
+          ClerkCodeInputField(onTextChange = {}, secondsLeft = 30, onClickResend = {})
           ClerkCodeInputField(
-            onOtpTextChange = {},
+            onTextChange = {},
             verificationState = VerificationState.Error,
             secondsLeft = 30,
             onClickResend = {},
           )
           ClerkCodeInputField(
-            onOtpTextChange = {},
+            onTextChange = {},
             verificationState = VerificationState.Success,
             secondsLeft = 0,
             onClickResend = {},
           )
           ClerkCodeInputField(
-            onOtpTextChange = {},
+            onTextChange = {},
             verificationState = VerificationState.Verifying,
             secondsLeft = 0,
             onClickResend = {},
@@ -58,21 +58,21 @@ class ClerkCodeInputFieldSnapshotTest : BaseSnapshotTest() {
           modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp16),
           verticalArrangement = Arrangement.spacedBy(dp16),
         ) {
-          ClerkCodeInputField(onOtpTextChange = {}, secondsLeft = 30, onClickResend = {})
+          ClerkCodeInputField(onTextChange = {}, secondsLeft = 30, onClickResend = {})
           ClerkCodeInputField(
-            onOtpTextChange = {},
+            onTextChange = {},
             verificationState = VerificationState.Error,
             secondsLeft = 30,
             onClickResend = {},
           )
           ClerkCodeInputField(
-            onOtpTextChange = {},
+            onTextChange = {},
             verificationState = VerificationState.Success,
             secondsLeft = 0,
             onClickResend = {},
           )
           ClerkCodeInputField(
-            onOtpTextChange = {},
+            onTextChange = {},
             verificationState = VerificationState.Verifying,
             secondsLeft = 0,
             onClickResend = {},

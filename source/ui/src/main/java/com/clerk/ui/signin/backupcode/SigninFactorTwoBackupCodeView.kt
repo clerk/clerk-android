@@ -20,7 +20,6 @@ import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
-import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -93,7 +92,7 @@ private fun SignInFactorTwoBackupCodeViewImpl(
     hasLogo = false,
     title = stringResource(R.string.enter_a_backup_code),
     subtitle = stringResource(R.string.your_backup_code),
-    snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+    snackbarHostState = snackbarHostState,
   ) {
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),

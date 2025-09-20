@@ -17,7 +17,6 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
-import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.coroutines.launch
 
@@ -26,7 +25,7 @@ fun SignInGetHelpView(modifier: Modifier = Modifier, onBackPressed: () -> Unit =
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
   ClerkThemedAuthScaffold(
-    snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+    snackbarHostState = snackbarHostState,
     modifier = modifier,
     title = stringResource(R.string.get_help),
     subtitle = stringResource(R.string.if_you_have_trouble_signing_into_your_account),
@@ -62,5 +61,5 @@ fun SignInGetHelpView(modifier: Modifier = Modifier, onBackPressed: () -> Unit =
 @PreviewLightDark
 @Composable
 private fun PreviewSignInGetHelpView() {
-  ClerkMaterialTheme() { SignInGetHelpView() }
+  ClerkMaterialTheme { SignInGetHelpView() }
 }

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,7 +74,7 @@ internal fun AuthStartViewImpl(
     hasBackButton = false,
     title = authViewHelper.titleString(authMode),
     subtitle = authViewHelper.subtitleString(authMode),
-    snackbarHost = { SnackbarHost(snackbarHostState) },
+    snackbarHostState = snackbarHostState,
   ) {
     Column(
       modifier = Modifier.fillMaxWidth(),

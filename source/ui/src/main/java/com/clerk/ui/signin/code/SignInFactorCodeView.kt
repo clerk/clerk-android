@@ -3,9 +3,6 @@ package com.clerk.ui.signin.code
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,13 +19,6 @@ import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
-import kotlinx.coroutines.delay
-
-/** Default timer length in seconds for code resend functionality. */
-private const val DEFAULT_TIMER_LENGTH = 60
-
-/** Default delay in milliseconds for timer countdown. */
-private const val DEFAULT_DELAY = 1000L
 
 /**
  * A Composable that displays a verification code input screen for sign-in authentication factors.
@@ -103,16 +93,8 @@ private fun SignInFactorCodeViewImpl(
   val state by viewModel.state.collectAsStateWithLifecycle()
   val verificationState = state.verificationState()
 
-  var timeLeft by remember { mutableIntStateOf(DEFAULT_TIMER_LENGTH) }
+  LaunchedEffect(Unit) { viewModel.prepare(factor, isSecondFactor = isSecondFactor) }
 
-  // Prepare the factor and start timer countdown on composition
-  LaunchedEffect(Unit) {
-    viewModel.prepare(factor, isSecondFactor = false)
-    while (timeLeft > 0) {
-      delay(DEFAULT_DELAY)
-      timeLeft--
-    }
-  }
   ClerkThemedAuthScaffold(
     modifier = modifier,
     onBackPressed = onBackPressed,
@@ -123,13 +105,12 @@ private fun SignInFactorCodeViewImpl(
   ) {
     ClerkCodeInputField(
       verificationState = verificationState,
-      onOtpTextChange = {
+      onTextChange = {
         if (it.length == 6) {
           viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = it)
         }
       },
       showResend = SignInFactorCodeHelper.showResend(factor, verificationState),
-      secondsLeft = timeLeft,
       onClickResend = onClickResend,
     )
     Spacers.Vertical.Spacer24()
