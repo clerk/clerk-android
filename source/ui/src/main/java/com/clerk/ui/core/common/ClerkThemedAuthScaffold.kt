@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -16,6 +18,7 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.common.dimens.dp18
+import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -23,9 +26,9 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 internal fun ClerkThemedAuthScaffold(
   title: String,
   modifier: Modifier = Modifier,
+  snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
   onBackPressed: () -> Unit = {},
   subtitle: String? = null,
-  snackbarHost: @Composable () -> Unit = {},
   hasLogo: Boolean = true,
   hasBackButton: Boolean = true,
   identifier: String? = null,
@@ -33,7 +36,10 @@ internal fun ClerkThemedAuthScaffold(
   content: @Composable () -> Unit,
 ) {
   ClerkMaterialTheme {
-    Scaffold(modifier = Modifier.then(modifier), snackbarHost = snackbarHost) { innerPadding ->
+    Scaffold(
+      modifier = Modifier.then(modifier),
+      snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+    ) { innerPadding ->
       Column(
         modifier =
           Modifier.fillMaxWidth()
