@@ -2,7 +2,9 @@ package com.clerk.ui.core.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Scaffold
@@ -12,12 +14,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.common.dimens.dp18
+import com.clerk.ui.core.common.dimens.dp32
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -33,6 +37,7 @@ internal fun ClerkThemedAuthScaffold(
   hasBackButton: Boolean = true,
   identifier: String? = null,
   onClickIdentifier: () -> Unit = {},
+  spacingAfterIdentifier: Dp = dp32,
   content: @Composable () -> Unit,
 ) {
   ClerkMaterialTheme {
@@ -74,7 +79,7 @@ internal fun ClerkThemedAuthScaffold(
               ),
           )
         }
-        Spacers.Vertical.Spacer32()
+        Spacer(modifier = Modifier.height(spacingAfterIdentifier))
         content()
         Spacers.Vertical.Spacer32()
         SecuredByClerkView()

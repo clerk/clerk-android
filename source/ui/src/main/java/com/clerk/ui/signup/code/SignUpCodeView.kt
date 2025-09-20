@@ -13,6 +13,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
+import com.clerk.ui.core.common.dimens.dp28
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 import com.clerk.ui.signin.code.VerificationState
@@ -72,6 +73,7 @@ private fun SignUpCodeViewImpl(
     title = title,
     hasLogo = false,
     identifier = field.value.formattedAsPhoneNumberIfPossible,
+    spacingAfterIdentifier = dp28,
     snackbarHostState = snackbarHostState,
   ) {
     ClerkLinearProgressIndicator(progress = 0)
