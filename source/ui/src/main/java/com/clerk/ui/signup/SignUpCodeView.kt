@@ -18,7 +18,7 @@ fun SignUpCodeView(field: Field, modifier: Modifier = Modifier) {
   ) {
     ClerkLinearProgressIndicator(progress = 0)
     Spacers.Vertical.Spacer32()
-    ClerkCodeInputField(onTextChange = {})
+    ClerkCodeInputField(onTextChange = {}, onClickResend = {})
   }
 }
 
