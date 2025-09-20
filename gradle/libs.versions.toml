@@ -78,7 +78,7 @@ kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
 ksp-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
-mockito = "org.mockito:mockito-core:5.19.0"
+mockito = "org.mockito:mockito-core:5.20.0"
 mockk = "io.mockk:mockk:1.14.5"
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
