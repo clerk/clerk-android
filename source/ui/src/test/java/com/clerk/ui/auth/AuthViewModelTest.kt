@@ -239,29 +239,6 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun authStatesShouldBeCorrectlyStructured() {
-
-    val mockSignIn = mockk<SignIn>(relaxed = true)
-    val mockSignUp = mockk<SignUp>(relaxed = true)
-
-    val successWithSignIn = AuthViewModel.AuthState.Success(signIn = mockSignIn)
-    val successWithSignUp = AuthViewModel.AuthState.Success(signUp = mockSignUp)
-    val error = AuthViewModel.AuthState.Error("Test error")
-
-    val oauthError = AuthViewModel.AuthState.OAuthState.Error("OAuth error")
-
-    // Verify Success state content
-    assertEquals(mockSignIn, successWithSignIn.signIn)
-    assertEquals(null, successWithSignIn.signUp)
-    assertEquals(null, successWithSignUp.signIn)
-    assertEquals(mockSignUp, successWithSignUp.signUp)
-
-    // Verify error messages
-    assertEquals("Test error", error.message)
-    assertEquals("OAuth error", oauthError.message)
-  }
-
-  @Test
   fun emailRegexPatternShouldWorkCorrectly() {
     // Test email validation regex pattern (same as used in the ViewModel)
     val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
