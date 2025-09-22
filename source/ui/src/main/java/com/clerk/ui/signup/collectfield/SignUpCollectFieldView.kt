@@ -15,6 +15,8 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
@@ -30,10 +32,27 @@ fun SignUpCollectFieldView(
   modifier: Modifier = Modifier,
   collectFieldHelper: CollectFieldHelper = CollectFieldHelper(),
 ) {
+  SignUpCollectFieldViewImpl(
+    collectField = collectField,
+    modifier = modifier,
+    collectFieldHelper = collectFieldHelper,
+  )
+}
+
+@Composable
+private fun SignUpCollectFieldViewImpl(
+  collectField: CollectField,
+  collectFieldHelper: CollectFieldHelper,
+  modifier: Modifier = Modifier,
+  viewModel: CollectFieldViewModel = viewModel(),
+) {
+
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
   var phone by remember { mutableStateOf("") }
   var username by remember { mutableStateOf("") }
+
+  val state by viewModel.state.collectAsStateWithLifecycle()
 
   val continueIsEnabled by remember {
     derivedStateOf {
@@ -72,13 +91,14 @@ fun SignUpCollectFieldView(
 
       ClerkButton(
         text = stringResource(R.string.continue_text),
-        onClick = {},
+        onClick = { viewModel.updateSignUp(collectField, email, password, phone, username) },
         modifier = Modifier.fillMaxWidth(),
         isEnabled = continueIsEnabled,
+        isLoading = state is CollectFieldViewModel.State.Loading,
         icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
       )
       if (collectFieldHelper.fieldIsOptional(collectField)) {
-        ClerkTextButton(text = "Skip") {}
+        ClerkTextButton(text = stringResource(R.string.skip)) {}
       }
     }
   }
