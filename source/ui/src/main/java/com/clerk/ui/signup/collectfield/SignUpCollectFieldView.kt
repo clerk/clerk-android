@@ -30,12 +30,14 @@ import com.clerk.ui.core.input.ClerkTextField
 fun SignUpCollectFieldView(
   collectField: CollectField,
   modifier: Modifier = Modifier,
+  onSkipClick: () -> Unit = {},
   collectFieldHelper: CollectFieldHelper = CollectFieldHelper(),
 ) {
   SignUpCollectFieldViewImpl(
     collectField = collectField,
     modifier = modifier,
     collectFieldHelper = collectFieldHelper,
+    onSkipClick = onSkipClick,
   )
 }
 
@@ -43,6 +45,7 @@ fun SignUpCollectFieldView(
 private fun SignUpCollectFieldViewImpl(
   collectField: CollectField,
   collectFieldHelper: CollectFieldHelper,
+  onSkipClick: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: CollectFieldViewModel = viewModel(),
 ) {
@@ -98,7 +101,7 @@ private fun SignUpCollectFieldViewImpl(
         icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
       )
       if (collectFieldHelper.fieldIsOptional(collectField)) {
-        ClerkTextButton(text = stringResource(R.string.skip)) {}
+        ClerkTextButton(text = stringResource(R.string.skip), onClick = onSkipClick)
       }
     }
   }
