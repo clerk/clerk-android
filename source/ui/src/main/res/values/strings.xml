@@ -69,4 +69,13 @@
     <string name="something_went_wrong_please_try_again">Something went wrong, please try again</string>
     <string name="check_your_phone">Check your phone</string>
     <string name="check_your_email">Check your email</string>
+    <string name="enter_the_email_address_you_d_like_to_use">Enter the email address you\'d like to use</string>
+    <string name="create_a_unique_password">Create a unique password</string>
+    <string name="enter_the_phone_number_you_d_like_to_use">Enter the phone number you\'d like to use</string>
+    <string name="choose_a_username">Choose a username</string>
+    <string name="email_address">Email address</string>
+    <string name="phone_number">Phone number</string>
+    <string name="password">Password</string>
+    <string name="username">Username</string>
+    <string name="skip">Skip</string>
 </resources>
