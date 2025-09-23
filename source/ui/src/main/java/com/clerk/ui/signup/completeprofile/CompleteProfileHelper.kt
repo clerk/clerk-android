@@ -12,8 +12,6 @@ import com.clerk.api.Clerk
 import com.clerk.ui.R
 
 internal class CompleteProfileHelper(
-  private val firstName: String,
-  private val lastName: String,
   private val firstNameEnabled: Boolean,
   private val lastNameEnabled: Boolean,
   private val state: CompleteProfileViewModel.State,
@@ -40,13 +38,6 @@ internal class CompleteProfileHelper(
     }
   }
 
-  val isSubmitEnabled: Boolean
-    get() {
-      val firstOk = if (firstEnabled) firstName.isNotBlank() else true
-      val lastOk = if (lastEnabled) lastName.isNotBlank() else true
-      return firstOk && lastOk
-    }
-
   fun submitLabel(): Int {
     val isLast = enabledFields.lastOrNull() == currentField
     return if (isLast) R.string.done else R.string.next
@@ -60,23 +51,14 @@ internal class CompleteProfileHelper(
 
 @Composable
 internal fun rememberCompleteProfileHelper(
-  firstName: String,
-  lastName: String,
   firstNameEnabled: Boolean,
   lastNameEnabled: Boolean,
   state: CompleteProfileViewModel.State,
   snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ): CompleteProfileHelper {
   val helper =
-    remember(firstName, lastName, firstNameEnabled, lastNameEnabled, state) {
-      CompleteProfileHelper(
-        firstName,
-        lastName,
-        firstNameEnabled,
-        lastNameEnabled,
-        state,
-        snackbarHostState,
-      )
+    remember(firstNameEnabled, lastNameEnabled, state) {
+      CompleteProfileHelper(firstNameEnabled, lastNameEnabled, state, snackbarHostState)
     }
 
   // Keep currentField valid when enabledFields changes

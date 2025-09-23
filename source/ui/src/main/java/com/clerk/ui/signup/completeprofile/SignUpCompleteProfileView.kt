@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
@@ -55,14 +58,21 @@ private fun SignUpCompleteProfileImpl(
 ) {
   val firstEnabled = Clerk.isFirstNameEnabled || firstNameEnabled
   val lastEnabled = Clerk.isLastNameEnabled || lastNameEnabled
+  var firstName by remember { mutableStateOf(firstName) }
+  var lastName by remember { mutableStateOf(lastName) }
 
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
+  val isSubmitEnabled by remember {
+    derivedStateOf {
+      val firstOk = if (firstEnabled) firstName.isNotBlank() else true
+      val lastOk = if (lastEnabled) lastName.isNotBlank() else true
+      firstOk && lastOk
+    }
+  }
 
   val helper =
     rememberCompleteProfileHelper(
-      firstName = firstName,
-      lastName = lastName,
       firstNameEnabled = firstEnabled,
       lastNameEnabled = lastEnabled,
       state = state,
@@ -88,14 +98,14 @@ private fun SignUpCompleteProfileImpl(
         lastEnabled = lastEnabled,
         firstName = firstName,
         lastName = lastName,
-        onFirstChange = {},
+        onFirstChange = { firstName = it },
         onLastChange = {},
         onFocusChange = { field -> helper.setCurrentField(field) },
       )
 
       ClerkButton(
         modifier = Modifier.fillMaxWidth(),
-        isEnabled = helper.isSubmitEnabled,
+        isEnabled = isSubmitEnabled,
         text = stringResource(helper.submitLabel()),
         isLoading = state is CompleteProfileViewModel.State.Loading,
         onClick = { viewModel.updateSignUp(firstName, lastName) },
