@@ -87,8 +87,8 @@ private fun SignUpCompleteProfileImpl(
         lastEnabled = lastEnabled,
         firstName = firstName,
         lastName = lastName,
-        onFirstChange = { /* hook up to VM or hoisted state in real screen */ },
-        onLastChange = { /* hook up to VM or hoisted state in real screen */ },
+        onFirstChange = {},
+        onLastChange = {},
         onFocusChange = { field -> helper.setCurrentField(field) },
       )
 
