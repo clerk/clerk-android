@@ -26,22 +26,23 @@ import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**
- * Public, production-friendly wrapper that pulls enablement from Clerk and owns its own state. Use
- * [SignUpCompleteProfileView] in the app, and [SignUpCompleteProfileImpl] in previews/tests to
- * inject specific values and flags.
+ * Composable that displays the complete profile view.
+ *
+ * This view allows the user to input their first and last name, if enabled in the Clerk dashboard.
+ *
+ * @param progress The current progress of the sign up flow.
+ * @param modifier The modifier to be applied to the view.
  */
 @Composable
 fun SignUpCompleteProfileView(progress: Int, modifier: Modifier = Modifier) {
   SignUpCompleteProfileImpl(progress = progress, modifier = modifier)
 }
 
-/** Internal enum for focus tracking & label logic. */
 internal enum class CompleteProfileField {
   FirstName,
   LastName,
 }
 
-/** Hoisted-state composable for previews/tests. You control all values here. */
 @Composable
 private fun SignUpCompleteProfileImpl(
   progress: Int,
