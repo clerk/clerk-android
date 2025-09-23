@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class CompleteProfileViewModel : ViewModel() {
+internal class CompleteProfileViewModel : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()

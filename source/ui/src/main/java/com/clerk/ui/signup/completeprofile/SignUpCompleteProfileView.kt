@@ -4,18 +4,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -28,70 +27,52 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**
  * Public, production-friendly wrapper that pulls enablement from Clerk and owns its own state. Use
- * [SignUpCompleteProfileView] in the app, and [SignUpCompleteProfileScreen] in previews/tests to
+ * [SignUpCompleteProfileView] in the app, and [SignUpCompleteProfileImpl] in previews/tests to
  * inject specific values and flags.
  */
 @Composable
 fun SignUpCompleteProfileView(progress: Int, modifier: Modifier = Modifier) {
-  SignUpCompleteProfileScreen(progress = progress, modifier = modifier)
+  SignUpCompleteProfileImpl(progress = progress, modifier = modifier)
 }
 
 /** Internal enum for focus tracking & label logic. */
-private enum class CompleteProfileField {
+internal enum class CompleteProfileField {
   FirstName,
   LastName,
 }
 
 /** Hoisted-state composable for previews/tests. You control all values here. */
 @Composable
-fun SignUpCompleteProfileScreen(
+private fun SignUpCompleteProfileImpl(
   progress: Int,
   modifier: Modifier = Modifier,
   firstName: String = "",
   lastName: String = "",
   firstNameEnabled: Boolean = false,
   lastNameEnabled: Boolean = false,
+  viewModel: CompleteProfileViewModel = viewModel(),
 ) {
   val firstEnabled = Clerk.isFirstNameEnabled || firstNameEnabled
   val lastEnabled = Clerk.isLastNameEnabled || lastNameEnabled
 
-  val enabledFields =
-    remember(firstEnabled, lastEnabled) {
-      buildList {
-        if (firstEnabled) add(CompleteProfileField.FirstName)
-        if (lastEnabled) add(CompleteProfileField.LastName)
-      }
-    }
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  val snackbarHostState = remember { SnackbarHostState() }
 
-  var currentField by remember {
-    mutableStateOf(enabledFields.firstOrNull() ?: CompleteProfileField.FirstName)
-  }
-
-  LaunchedEffect(enabledFields) {
-    if (currentField !in enabledFields && enabledFields.isNotEmpty()) {
-      currentField = enabledFields.first()
-    }
-  }
-
-  val isSubmitEnabled by
-    remember(firstName, lastName, firstEnabled, lastEnabled) {
-      derivedStateOf {
-        val firstOk = if (firstEnabled) firstName.isNotBlank() else true
-        val lastOk = if (lastEnabled) lastName.isNotBlank() else true
-        firstOk && lastOk
-      }
-    }
-
-  val submitLabel =
-    remember(currentField, enabledFields) {
-      val isLast = enabledFields.lastOrNull() == currentField
-      if (isLast) R.string.done else R.string.next
-    }
+  val helper =
+    rememberCompleteProfileHelper(
+      firstName = firstName,
+      lastName = lastName,
+      firstNameEnabled = firstEnabled,
+      lastNameEnabled = lastEnabled,
+      state = state,
+      snackbarHostState = snackbarHostState, // ensure scaffold + helper share the same host
+    )
 
   ClerkThemedAuthScaffold(
     modifier = Modifier.then(modifier),
     title = stringResource(R.string.profile_details),
     subtitle = stringResource(R.string.complete_your_profile),
+    snackbarHostState = snackbarHostState,
     hasLogo = false,
   ) {
     Column(
@@ -104,14 +85,19 @@ fun SignUpCompleteProfileScreen(
       InputRow(
         firstEnabled = firstEnabled,
         lastEnabled = lastEnabled,
-        onFocusChange = { currentField = it },
+        firstName = firstName,
+        lastName = lastName,
+        onFirstChange = { /* hook up to VM or hoisted state in real screen */ },
+        onLastChange = { /* hook up to VM or hoisted state in real screen */ },
+        onFocusChange = { field -> helper.setCurrentField(field) },
       )
 
       ClerkButton(
         modifier = Modifier.fillMaxWidth(),
-        isEnabled = isSubmitEnabled,
-        text = stringResource(submitLabel),
-        onClick = {},
+        isEnabled = helper.isSubmitEnabled,
+        text = stringResource(helper.submitLabel()),
+        isLoading = state is CompleteProfileViewModel.State.Loading,
+        onClick = { viewModel.updateSignUp(firstName, lastName) },
       )
     }
   }
@@ -121,10 +107,12 @@ fun SignUpCompleteProfileScreen(
 private fun InputRow(
   firstEnabled: Boolean,
   lastEnabled: Boolean,
+  firstName: String,
+  lastName: String,
+  onFirstChange: (String) -> Unit,
+  onLastChange: (String) -> Unit,
   onFocusChange: (CompleteProfileField) -> Unit = {},
 ) {
-  var first by remember { mutableStateOf("") }
-  var last by remember { mutableStateOf("") }
   Row(
     modifier = Modifier.fillMaxWidth(),
     horizontalArrangement = Arrangement.spacedBy(dp12, alignment = Alignment.CenterHorizontally),
@@ -132,9 +120,9 @@ private fun InputRow(
     if (firstEnabled) {
       ClerkTextField(
         modifier = Modifier.weight(1f),
-        value = first,
+        value = firstName,
         inputContentType = ContentType.PersonFirstName,
-        onValueChange = { first = it },
+        onValueChange = onFirstChange,
         label = stringResource(R.string.first_name),
         onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
       )
@@ -142,9 +130,9 @@ private fun InputRow(
     if (lastEnabled) {
       ClerkTextField(
         modifier = Modifier.weight(1f),
-        value = last,
+        value = lastName,
         inputContentType = ContentType.PersonLastName,
-        onValueChange = { last = it },
+        onValueChange = onLastChange,
         label = stringResource(R.string.last_name),
         onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
       )
@@ -156,7 +144,7 @@ private fun InputRow(
 @Composable
 private fun Preview_BothEnabled_Filled() {
   ClerkMaterialTheme {
-    SignUpCompleteProfileScreen(
+    SignUpCompleteProfileImpl(
       firstNameEnabled = true,
       lastNameEnabled = true,
       progress = 2,
@@ -170,7 +158,7 @@ private fun Preview_BothEnabled_Filled() {
 @Composable
 private fun Preview_OnlyFirstEnabled_Empty() {
   ClerkMaterialTheme {
-    SignUpCompleteProfileScreen(
+    SignUpCompleteProfileImpl(
       firstNameEnabled = true,
       lastNameEnabled = false,
       progress = 1,
@@ -184,7 +172,7 @@ private fun Preview_OnlyFirstEnabled_Empty() {
 @Composable
 private fun Preview_OnlyLastEnabled_Partial() {
   ClerkMaterialTheme {
-    SignUpCompleteProfileScreen(
+    SignUpCompleteProfileImpl(
       firstNameEnabled = false,
       lastNameEnabled = true,
       progress = 3,
