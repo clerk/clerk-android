@@ -25,11 +25,13 @@ import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.dimens.dp24
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 
 @Composable
 fun SignUpCollectFieldView(
   collectField: CollectField,
   modifier: Modifier = Modifier,
+  progress: Int = 0,
   onSkipClick: () -> Unit = {},
   collectFieldHelper: CollectFieldHelper = CollectFieldHelper(),
 ) {
@@ -38,16 +40,18 @@ fun SignUpCollectFieldView(
     modifier = modifier,
     collectFieldHelper = collectFieldHelper,
     onSkipClick = onSkipClick,
+    progress = progress,
   )
 }
 
 @Composable
 private fun SignUpCollectFieldViewImpl(
-  collectField: CollectField,
-  collectFieldHelper: CollectFieldHelper,
-  onSkipClick: () -> Unit,
-  modifier: Modifier = Modifier,
-  viewModel: CollectFieldViewModel = viewModel(),
+    collectField: CollectField,
+    collectFieldHelper: CollectFieldHelper,
+    onSkipClick: () -> Unit,
+    progress: Int,
+    modifier: Modifier = Modifier,
+    viewModel: CollectFieldViewModel = viewModel()
 ) {
 
   var email by remember { mutableStateOf("") }
@@ -79,6 +83,7 @@ private fun SignUpCollectFieldViewImpl(
       verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+      ClerkLinearProgressIndicator(progress = progress)
       InputField(
         collectField = collectField,
         collectFieldHelper = collectFieldHelper,
