@@ -58,15 +58,12 @@ private fun SignUpCompleteProfileImpl(
   lastNameEnabled: Boolean = false,
   viewModel: CompleteProfileViewModel = viewModel(),
 ) {
-  // Enablement pulled from Clerk unless explicitly overridden for preview/tests.
   val firstEnabled = Clerk.isFirstNameEnabled || firstNameEnabled
   val lastEnabled = Clerk.isLastNameEnabled || lastNameEnabled
 
-  // Hoisted text state (wired to InputRow)
   var first by rememberSaveable(firstName) { mutableStateOf(firstName) }
   var last by rememberSaveable(lastName) { mutableStateOf(lastName) }
 
-  // VM + error plumbing
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val genericErrorMessage = stringResource(R.string.something_went_wrong_please_try_again)
@@ -79,7 +76,6 @@ private fun SignUpCompleteProfileImpl(
     errorMessage?.let { snackbarHostState.showSnackbar(it.ifBlank { genericErrorMessage }) }
   }
 
-  // Helper centralizes focus, labels, validation.
   val enabledFields =
     remember(firstEnabled, lastEnabled) {
       CompleteProfileHelper.enabledFields(firstEnabled = firstEnabled, lastEnabled = lastEnabled)
