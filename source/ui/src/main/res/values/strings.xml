@@ -78,4 +78,10 @@
     <string name="password">Password</string>
     <string name="username">Username</string>
     <string name="skip">Skip</string>
+    <string name="profile_details">Profile Details</string>
+    <string name="complete_your_profile">Complete your profile</string>
+    <string name="done">Done</string>
+    <string name="next">Next</string>
+    <string name="first_name">First name</string>
+    <string name="last_name">Last name</string>
 </resources>
