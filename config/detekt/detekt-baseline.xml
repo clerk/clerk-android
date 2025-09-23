@@ -16,11 +16,11 @@
     <ID>LongParameterList:AuthStartView.kt$( authViewHelper: AuthViewHelper, phoneNumberFieldIsActive: Boolean, authStartPhoneNumber: String, authStartIdentifier: String, onPhoneNumberChange: (String) -> Unit, onIdentifierChange: (String) -> Unit, )</ID>
     <ID>LongParameterList:ClerkButton.kt$( isLoading: Boolean, padding: ClerkButtonPadding, icons: ClerkButtonIcons, isEnabled: Boolean, text: String, tokens: ButtonStyleTokens, )</ID>
     <ID>LongParameterList:ClerkButton.kt$( text: String, onClick: () -> Unit, isEnabled: Boolean, isPressedCombined: Boolean, interactionSource: MutableInteractionSource, isLoading: Boolean, padding: ClerkButtonPadding, configuration: ClerkButtonConfiguration, modifier: Modifier = Modifier, icons: ClerkButtonIcons = ClerkButtonDefaults.icons(), )</ID>
+    <ID>LongParameterList:SignUpCollectFieldView.kt$( collectField: CollectField, collectFieldHelper: CollectFieldHelper, email: String, onEmailChange: (String) -> Unit, password: String, onPasswordChange: (String) -> Unit, phone: String, onPhoneChange: (String) -> Unit, username: String, onUsernameChange: (String) -> Unit, )</ID>
     <ID>MagicNumber:ColorUtils.kt$4f</ID>
     <ID>MagicNumber:DeviceAttestationHelper.kt$DeviceAttestationHelper$8</ID>
     <ID>MatchingDeclarationName:ColorUtils.kt$DangerPalette</ID>
     <ID>NestedBlockDepth:ClientSyncingMiddleware.kt$ClientSyncingMiddleware$override fun intercept(chain: Interceptor.Chain): Response</ID>
-    <ID>NewLineAtEndOfFile:BaseRobot.kt$com.clerk.ui.robot.BaseRobot.kt</ID>
     <ID>ReturnCount:DeviceAssertionMiddleware.kt$DeviceAssertionInterceptor.DeviceAttestationManager$suspend fun performDeviceAssertion(request: Request, error: ClerkError): Boolean</ID>
     <ID>SwallowedException:PasskeyCredentialManagerTest.kt$PasskeyCredentialManagerTest$e: Exception</ID>
     <ID>TooGenericExceptionThrown:DeviceAttestationHelper.kt$DeviceAttestationHelper$throw RuntimeException("Failed to hash clientId", e)</ID>

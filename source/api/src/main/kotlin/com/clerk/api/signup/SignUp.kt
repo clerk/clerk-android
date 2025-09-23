@@ -404,33 +404,27 @@ data class SignUp(
   }
 
   /**
-   * Parameters for updating an existing sign-up with additional information. These parameters
-   * mirror the create parameters and allow modification of sign-up data.
+   * Standard sign-up update strategy, allowing the user to provide common details such as email,
+   * password, and personal information. The update parameters are just a mirror of the create
+   * parameters.
+   *
+   * @param emailAddress The user's email address (optional).
+   * @param password The user's password (optional).
+   * @param firstName The user's first name (optional).
+   * @param lastName The user's last name (optional).
+   * @param username The user's username (optional).
+   * @param phoneNumber The user's phone number in E.164 format (optional).
    */
-  sealed interface SignUpUpdateParams {
-    /**
-     * Standard sign-up update strategy, allowing the user to provide common details such as email,
-     * password, and personal information. The update parameters are just a mirror of the create
-     * parameters.
-     *
-     * @param emailAddress The user's email address (optional).
-     * @param password The user's password (optional).
-     * @param firstName The user's first name (optional).
-     * @param lastName The user's last name (optional).
-     * @param username The user's username (optional).
-     * @param phoneNumber The user's phone number in E.164 format (optional).
-     */
-    @AutoMap
-    @Serializable
-    data class Standard(
-      @SerialName("email_address") val emailAddress: String? = null,
-      val password: String? = null,
-      @SerialName("first_name") val firstName: String? = null,
-      @SerialName("last_name") val lastName: String? = null,
-      val username: String? = null,
-      @SerialName("phone_number") val phoneNumber: String? = null,
-    ) : SignUpUpdateParams
-  }
+  @AutoMap
+  @Serializable
+  data class UpdateParams(
+    @SerialName("email_address") val emailAddress: String? = null,
+    val password: String? = null,
+    @SerialName("first_name") val firstName: String? = null,
+    @SerialName("last_name") val lastName: String? = null,
+    val username: String? = null,
+    @SerialName("phone_number") val phoneNumber: String? = null,
+  )
 
   companion object {
 
@@ -525,7 +519,7 @@ data class SignUp(
  *   if the update failed.
  */
 suspend fun SignUp.update(
-  updateParams: SignUp.SignUpUpdateParams
+  updateParams: SignUp.UpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
 }
