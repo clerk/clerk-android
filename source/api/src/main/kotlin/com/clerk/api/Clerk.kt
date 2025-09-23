@@ -105,6 +105,33 @@ object Clerk {
       if (::environment.isInitialized) environment.enabledFirstFactorAttributes() else emptyList()
 
   /**
+   * Indicates whether the 'First Name' field is enabled for user profiles.
+   *
+   * This setting is configured in your Clerk Dashboard under User & Authentication settings.
+   *
+   * @return `true` if the 'First Name' attribute is enabled, `false` otherwise. Returns `false` if
+   *   the SDK is not yet initialized.
+   */
+  val isFirstNameEnabled: Boolean
+    get() =
+      if (::environment.isInitialized) environment.userSettings.attributes.contains("first_name")
+      else false
+
+  /**
+   * Indicates whether the last name field is enabled for user profiles.
+   *
+   * This setting is configured in your Clerk Dashboard under user attributes. If enabled, the SDK
+   * may prompt for or display the last name in user profiles and authentication flows.
+   *
+   * @return `true` if the last name attribute is enabled, `false` otherwise. Returns `false` if the
+   *   SDK is not yet initialized.
+   */
+  val isLastNameEnabled: Boolean
+    get() =
+      if (::environment.isInitialized) environment.userSettings.attributes.contains("last_name")
+      else false
+
+  /**
    * The image URL for the application logo used in authentication UI components.
    *
    * This logo appears in sign-in screens, sign-up flows, and other authentication interfaces. The
