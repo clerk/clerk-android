@@ -1,72 +1,59 @@
 package com.clerk.ui.signup.completeprofile
 
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import com.clerk.api.Clerk
 import com.clerk.ui.R
+import kotlinx.collections.immutable.ImmutableList
 
+/** Small helper to centralize enabled-fields, current focus, label, and validation logic. */
 internal class CompleteProfileHelper(
-  private val firstNameEnabled: Boolean,
-  private val lastNameEnabled: Boolean,
-  private val state: CompleteProfileViewModel.State,
-  private val snackbarHostState: SnackbarHostState,
+  private val enabled: List<CompleteProfileField>,
+  initial: CompleteProfileField,
 ) {
-  val firstEnabled = Clerk.isFirstNameEnabled || firstNameEnabled
-  val lastEnabled = Clerk.isLastNameEnabled || lastNameEnabled
-
-  val enabledFields: List<CompleteProfileField> = buildList {
-    if (firstEnabled) add(CompleteProfileField.FirstName)
-    if (lastEnabled) add(CompleteProfileField.LastName)
-  }
-
-  var currentField by mutableStateOf(enabledFields.firstOrNull() ?: CompleteProfileField.FirstName)
+  var currentField by mutableStateOf(initial)
     private set
 
-  fun setCurrentField(field: CompleteProfileField) {
-    currentField = field
+  fun focusTo(field: CompleteProfileField) {
+    if (field in enabled) currentField = field
   }
 
-  fun onFieldsChanged() {
-    if (currentField !in enabledFields && enabledFields.isNotEmpty()) {
-      currentField = enabledFields.first()
+  fun ensureValid() {
+    if (currentField !in enabled && enabled.isNotEmpty()) {
+      currentField = enabled.first()
     }
   }
 
-  fun submitLabel(): Int {
-    val isLast = enabledFields.lastOrNull() == currentField
+  fun isSubmitEnabled(firstName: String, lastName: String): Boolean {
+    val firstOk = if (CompleteProfileField.FirstName in enabled) firstName.isNotBlank() else true
+    val lastOk = if (CompleteProfileField.LastName in enabled) lastName.isNotBlank() else true
+    return firstOk && lastOk
+  }
+
+  fun submitLabelRes(): Int {
+    val isLast = enabled.lastOrNull() == currentField
     return if (isLast) R.string.done else R.string.next
   }
 
-  suspend fun maybeShowError(genericErrorMessage: String) {
-    val errorMessage = (state as? CompleteProfileViewModel.State.Error)?.message
-    errorMessage?.let { snackbarHostState.showSnackbar(it.ifBlank { genericErrorMessage }) }
+  companion object {
+    fun enabledFields(firstEnabled: Boolean, lastEnabled: Boolean): List<CompleteProfileField> =
+      buildList {
+        if (firstEnabled) add(CompleteProfileField.FirstName)
+        if (lastEnabled) add(CompleteProfileField.LastName)
+      }
   }
 }
 
+/** Remember an instance of [CompleteProfileHelper] for a given set of enabled fields. */
 @Composable
 internal fun rememberCompleteProfileHelper(
-  firstNameEnabled: Boolean,
-  lastNameEnabled: Boolean,
-  state: CompleteProfileViewModel.State,
-  snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+  enabledFields: ImmutableList<CompleteProfileField>
 ): CompleteProfileHelper {
-  val helper =
-    remember(firstNameEnabled, lastNameEnabled, state) {
-      CompleteProfileHelper(firstNameEnabled, lastNameEnabled, state, snackbarHostState)
-    }
-
-  // Keep currentField valid when enabledFields changes
-  LaunchedEffect(helper.enabledFields) { helper.onFieldsChanged() }
-
-  // Show errors
-  val genericErrorMessage = stringResource(R.string.something_went_wrong_please_try_again)
-  LaunchedEffect(state) { helper.maybeShowError(genericErrorMessage) }
-
+  val initial = enabledFields.firstOrNull() ?: CompleteProfileField.FirstName
+  val helper = remember(enabledFields) { CompleteProfileHelper(enabledFields, initial) }
+  LaunchedEffect(enabledFields) { helper.ensureValid() }
   return helper
 }
