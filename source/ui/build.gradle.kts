@@ -83,13 +83,14 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 
 dependencies {
   implementation(platform(libs.compose.bom))
-  implementation("com.materialkolor:material-color-utilities:3.0.1")
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.compose.foundation)
   implementation(libs.androidx.compose.icons)
   implementation(libs.androidx.compose.runtime)
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
+  implementation(libs.androidx.navigation3.runtime)
+  implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.tooling)
   implementation(libs.androidx.ui.tooling.preview.android)

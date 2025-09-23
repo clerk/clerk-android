@@ -28,6 +28,7 @@ material = "1.13.0"
 uiToolingPreviewAndroid = "1.9.1"
 paparazziPlugin = "2.0.0-alpha02"
 turbineVersion = "1.2.1"
+navigation3 = "1.0.0-alpha09"
 
 # Build Versions -- Do not delete
 clerk-api = "0.1.10"
@@ -52,6 +53,8 @@ androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-p
 androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.9.4"
 androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4"
 androidx-lifecycle-viewmodel-compose = "androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4"
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.5.0"
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
