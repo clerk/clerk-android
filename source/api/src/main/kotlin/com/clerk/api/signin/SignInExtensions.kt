@@ -19,7 +19,7 @@ import com.clerk.api.network.model.factor.isResetFactor
  * @return A [List] of alternative [Factor] objects, sorted by preference. Returns an empty list if
  *   no suitable alternatives are found or if [SignIn.supportedFirstFactors] is null.
  */
-fun SignIn.alternativeFirstFactors(factor: Factor): List<Factor> {
+fun SignIn.alternativeFirstFactors(factor: Factor? = null): List<Factor> {
   val firstFactors =
     supportedFirstFactors?.filter {
       it != factor &&

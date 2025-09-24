@@ -12,7 +12,7 @@ import com.clerk.ui.signin.password.set.SignInFactorOnePasswordView
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun SignInFactorOneComponent(factor: Factor, modifier: Modifier = Modifier) {
+fun SignInFactorOneView(factor: Factor, modifier: Modifier = Modifier) {
 
   ClerkMaterialTheme {
     when (factor.strategy) {
@@ -30,5 +30,5 @@ fun SignInFactorOneComponent(factor: Factor, modifier: Modifier = Modifier) {
 @PreviewLightDark
 @Composable
 private fun PreviewSignInComponent() {
-  SignInFactorOneComponent(Factor("passkey"))
+  SignInFactorOneView(Factor("passkey"))
 }

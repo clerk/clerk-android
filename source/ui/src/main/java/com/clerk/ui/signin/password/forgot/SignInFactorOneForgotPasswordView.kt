@@ -44,13 +44,12 @@ import kotlinx.collections.immutable.toImmutableList
  */
 @Composable
 fun SignInFactorOneForgotPasswordView(
-  factor: Factor,
   onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
   onClickFactor: (Factor) -> Unit,
 ) {
   val socialProviders = Clerk.socialProviders
-  val alternativeFactors = Clerk.signIn?.alternativeFirstFactors(factor)
+  val alternativeFactors = Clerk.signIn?.alternativeFirstFactors()
   SignInFactorOneForgotPasswordViewImpl(
     onBackPressed = onBackPressed,
     socialProviders = socialProviders.toOAuthProvidersList().toImmutableList(),
