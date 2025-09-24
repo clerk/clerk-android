@@ -61,5 +61,5 @@ fun SignInGetHelpView(modifier: Modifier = Modifier, onBackPressed: () -> Unit) 
 @PreviewLightDark
 @Composable
 private fun PreviewSignInGetHelpView() {
-  ClerkMaterialTheme { SignInGetHelpView() }
+  ClerkMaterialTheme { SignInGetHelpView(onBackPressed = {}) }
 }

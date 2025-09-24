@@ -32,12 +32,12 @@ import org.junit.Test
 class AuthViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
-  private lateinit var viewModel: AuthViewModel
+  private lateinit var viewModel: AuthStartViewModel
 
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
-    viewModel = AuthViewModel()
+    viewModel = AuthStartViewModel()
   }
 
   @After
@@ -48,7 +48,7 @@ class AuthViewModelTest {
 
   @Test
   fun initialStateShouldBeIdle() = runTest {
-    viewModel.state.test { assertEquals(AuthViewModel.AuthState.Idle, awaitItem()) }
+    viewModel.state.test { assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem()) }
   }
 
   @Test
@@ -85,18 +85,21 @@ class AuthViewModelTest {
     val expectedState =
       when (mockOAuthResult.resultType) {
         ResultType.SIGN_IN ->
-          AuthViewModel.AuthState.OAuthState.Success(signIn = mockOAuthResult.signIn)
+          AuthStartViewModel.AuthState.OAuthState.Success(signIn = mockOAuthResult.signIn)
         ResultType.SIGN_UP ->
-          AuthViewModel.AuthState.OAuthState.Success(signUp = mockOAuthResult.signUp)
+          AuthStartViewModel.AuthState.OAuthState.Success(signUp = mockOAuthResult.signUp)
         ResultType.UNKNOWN ->
-          AuthViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
+          AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
       }
 
     assertTrue(
       "Should create success state with SignIn",
-      expectedState is AuthViewModel.AuthState.OAuthState.Success,
+      expectedState is AuthStartViewModel.AuthState.OAuthState.Success,
     )
-    assertEquals(mockSignIn, (expectedState as AuthViewModel.AuthState.OAuthState.Success).signIn)
+    assertEquals(
+      mockSignIn,
+      (expectedState as AuthStartViewModel.AuthState.OAuthState.Success).signIn,
+    )
   }
 
   @Test
@@ -114,18 +117,21 @@ class AuthViewModelTest {
     val expectedState =
       when (mockOAuthResult.resultType) {
         ResultType.SIGN_IN ->
-          AuthViewModel.AuthState.OAuthState.Success(signIn = mockOAuthResult.signIn)
+          AuthStartViewModel.AuthState.OAuthState.Success(signIn = mockOAuthResult.signIn)
         ResultType.SIGN_UP ->
-          AuthViewModel.AuthState.OAuthState.Success(signUp = mockOAuthResult.signUp)
+          AuthStartViewModel.AuthState.OAuthState.Success(signUp = mockOAuthResult.signUp)
         ResultType.UNKNOWN ->
-          AuthViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
+          AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
       }
 
     assertTrue(
       "Should create success state with SignUp",
-      expectedState is AuthViewModel.AuthState.OAuthState.Success,
+      expectedState is AuthStartViewModel.AuthState.OAuthState.Success,
     )
-    assertEquals(mockSignUp, (expectedState as AuthViewModel.AuthState.OAuthState.Success).signUp)
+    assertEquals(
+      mockSignUp,
+      (expectedState as AuthStartViewModel.AuthState.OAuthState.Success).signUp,
+    )
   }
 
   @Test
@@ -142,20 +148,20 @@ class AuthViewModelTest {
     val expectedState =
       when (mockOAuthResult.resultType) {
         ResultType.SIGN_IN ->
-          AuthViewModel.AuthState.OAuthState.Success(signIn = mockOAuthResult.signIn)
+          AuthStartViewModel.AuthState.OAuthState.Success(signIn = mockOAuthResult.signIn)
         ResultType.SIGN_UP ->
-          AuthViewModel.AuthState.OAuthState.Success(signUp = mockOAuthResult.signUp)
+          AuthStartViewModel.AuthState.OAuthState.Success(signUp = mockOAuthResult.signUp)
         ResultType.UNKNOWN ->
-          AuthViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
+          AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
       }
 
     assertTrue(
       "Should create error state for unknown result type",
-      expectedState is AuthViewModel.AuthState.OAuthState.Error,
+      expectedState is AuthStartViewModel.AuthState.OAuthState.Error,
     )
     assertEquals(
       "Unknown result type from OAuth provider",
-      (expectedState as AuthViewModel.AuthState.OAuthState.Error).message,
+      (expectedState as AuthStartViewModel.AuthState.OAuthState.Error).message,
     )
   }
 

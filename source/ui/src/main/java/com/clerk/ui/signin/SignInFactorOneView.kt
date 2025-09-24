@@ -1,7 +1,6 @@
 package com.clerk.ui.signin
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.core.common.StrategyKeys
@@ -12,7 +11,7 @@ import com.clerk.ui.signin.password.set.SignInFactorOnePasswordView
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun SignInFactorOneView(factor: Factor, modifier: Modifier = Modifier) {
+fun SignInFactorOneView(factor: Factor, onBackPressed: () -> Unit) {
 
   ClerkMaterialTheme {
     when (factor.strategy) {
@@ -22,7 +21,7 @@ fun SignInFactorOneView(factor: Factor, modifier: Modifier = Modifier) {
       StrategyKeys.PHONE_CODE,
       StrategyKeys.RESET_PASSWORD_PHONE_CODE,
       StrategyKeys.RESET_PASSWORD_EMAIL_CODE -> SignInFactorCodeView(factor = factor)
-      else -> SignInGetHelpView()
+      else -> SignInGetHelpView(onBackPressed = onBackPressed)
     }
   }
 }
@@ -30,5 +29,5 @@ fun SignInFactorOneView(factor: Factor, modifier: Modifier = Modifier) {
 @PreviewLightDark
 @Composable
 private fun PreviewSignInComponent() {
-  SignInFactorOneView(Factor("passkey"))
+  SignInFactorOneView(Factor("passkey"), onBackPressed = {})
 }

@@ -16,7 +16,7 @@ private const val USERNAME = "username"
 private const val PHONE_NUMBER = "phone_number"
 
 @Stable
-internal class AuthViewHelper {
+internal class AuthStartViewHelper {
 
   // Test backdoor properties - set these for testing
   internal var testEnabledFirstFactorAttributes: List<String>? = null

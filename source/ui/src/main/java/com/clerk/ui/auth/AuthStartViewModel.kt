@@ -3,6 +3,7 @@ package com.clerk.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.longErrorMessageOrNull
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -19,6 +20,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private const val FORM_IDENTIFIER_NOT_FOUND = "form_identifier_not_found"
+
+private const val INVITATION_ACCOUNT_NOT_EXISTS = "invitation_account_not_exists"
+
 /**
  * ViewModel responsible for handling the authentication logic for both sign-in and sign-up flows.
  *
@@ -26,7 +31,7 @@ import kotlinx.coroutines.withContext
  * Clerk SDK to perform operations like creating sign-in/sign-up attempts, and handling social
  * provider authentication.
  */
-internal class AuthViewModel : ViewModel() {
+internal class AuthStartViewModel : ViewModel() {
 
   private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
   /**
@@ -63,18 +68,35 @@ internal class AuthViewModel : ViewModel() {
           identifier = identifier,
           phoneNumber = phoneNumber,
         )
-      AuthMode.SignInOrUp -> TODO("SignInOrUp mode is not yet implemented")
+      AuthMode.SignInOrUp -> {
+        signIn(isPhoneNumberFieldActive, phoneNumber, identifier, withSignUp = true)
+      }
     }
   }
 
-  private fun signIn(isPhoneNumberFieldActive: Boolean, phoneNumber: String, identifier: String) {
+  private fun signIn(
+    isPhoneNumberFieldActive: Boolean,
+    phoneNumber: String,
+    identifier: String,
+    withSignUp: Boolean = false,
+  ) {
     viewModelScope.launch(Dispatchers.IO) {
       _state.value = AuthState.Loading
       val resolvedIdentifier = if (isPhoneNumberFieldActive) phoneNumber else identifier
 
       SignIn.create(SignIn.CreateParams.Strategy.Identifier(identifier = resolvedIdentifier))
         .onSuccess { signIn -> handleSignInSuccess(signIn) }
-        .onFailure { throwable -> _state.value = AuthState.Error(throwable.longErrorMessageOrNull) }
+        .onFailure {
+          if (withSignUp && it.error is ClerkErrorResponse) {
+            val matchingCodes = listOf(FORM_IDENTIFIER_NOT_FOUND, INVITATION_ACCOUNT_NOT_EXISTS)
+            val hasMatchingError = it.error?.errors?.any { it.code in matchingCodes } ?: false
+            if (hasMatchingError) {
+              signUp(isPhoneNumberFieldActive, identifier, phoneNumber)
+            } else {
+              _state.value = AuthState.Error(it.longErrorMessageOrNull)
+            }
+          }
+        }
     }
   }
 

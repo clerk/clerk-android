@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.ui.auth.AuthMode
 import com.clerk.ui.auth.AuthStartView
+import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 import kotlinx.coroutines.launch
@@ -28,7 +29,7 @@ class UiActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent { WorkbenchTheme { MainContent(viewModel) } }
+    setContent { WorkbenchTheme { AuthView() } }
   }
 }
 

@@ -21,7 +21,7 @@ import com.clerk.ui.signin.help.SignInGetHelpView
  * @param modifier The [Modifier] to be applied to the view.
  */
 @Composable
-fun SignInFactorTwoView(factor: Factor, modifier: Modifier = Modifier) {
+fun SignInFactorTwoView(factor: Factor, modifier: Modifier = Modifier, onBackPressed: () -> Unit) {
   when (factor.strategy) {
     StrategyKeys.TOTP,
     StrategyKeys.PHONE_CODE ->
@@ -33,12 +33,12 @@ fun SignInFactorTwoView(factor: Factor, modifier: Modifier = Modifier) {
         onSubmitSuccess = {},
         onUseAnotherMethod = {},
       )
-    else -> SignInGetHelpView()
+    else -> SignInGetHelpView(onBackPressed = onBackPressed, modifier = modifier)
   }
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  SignInFactorTwoView(factor = Factor(StrategyKeys.TOTP))
+  SignInFactorTwoView(factor = Factor(StrategyKeys.TOTP), onBackPressed = {})
 }

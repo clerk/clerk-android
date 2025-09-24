@@ -28,7 +28,9 @@ fun AuthView(modifier: Modifier = Modifier, authMode: AuthMode = AuthMode.SignIn
     entryProvider =
       entryProvider {
         entry<Screens.AuthStart> { key -> AuthStartView(authMode = key.mode) }
-        entry<Screens.SignInFactorOne> { key -> SignInFactorOneView(factor = key.factor) }
+        entry<Screens.SignInFactorOne> { key ->
+          SignInFactorOneView(factor = key.factor, onBackPressed = { backStack.removeLastOrNull() })
+        }
         entry<Screens.SignInFactorOneUseAnotherMethod> { key ->
           SignInFactorAlternativeMethodsView(
             currentFactor = key.currentFactor,
@@ -36,7 +38,9 @@ fun AuthView(modifier: Modifier = Modifier, authMode: AuthMode = AuthMode.SignIn
             onClickFactor = {},
           )
         }
-        entry<Screens.SignInFactorTwo> { key -> SignInFactorTwoView(key.factor) }
+        entry<Screens.SignInFactorTwo> { key ->
+          SignInFactorTwoView(factor = key.factor, onBackPressed = { backStack.removeLastOrNull() })
+        }
         entry<Screens.SignInFactorTwoUseAnotherMethod> { key ->
           SignInFactorAlternativeMethodsView(
             currentFactor = key.currentFactor,
