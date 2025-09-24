@@ -869,3 +869,7 @@ suspend fun SignIn.get(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
+
+suspend fun SignIn.authenticateWithRedirectUrl(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+  return SSOService.authenticateWithRedirect()
+}

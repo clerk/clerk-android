@@ -68,7 +68,7 @@ internal object SSOService {
    *   failure
    */
   suspend fun authenticateWithRedirect(
-    strategy: String,
+    strategy: String? = null,
     redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     identifier: String? = null,
     emailAddress: String? = null,

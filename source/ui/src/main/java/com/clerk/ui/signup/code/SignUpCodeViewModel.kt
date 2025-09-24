@@ -18,16 +18,16 @@ internal class SignUpCodeViewModel : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationState>(AuthenticationState.Idle)
   val state = _state.asStateFlow()
 
-  fun prepare(field: Field) {
+  fun prepare(field: SignUpCodeField) {
     _state.value = AuthenticationState.Loading
     val signUp = Clerk.client.signUp ?: return
     viewModelScope.launch {
       val signUp =
         when (field) {
-          is Field.Email -> {
+          is SignUpCodeField.Email -> {
             signUp.prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailCode())
           }
-          is Field.Phone -> {
+          is SignUpCodeField.Phone -> {
             signUp.prepareVerification(SignUp.PrepareVerificationParams.Strategy.PhoneCode())
           }
         }
@@ -37,14 +37,14 @@ internal class SignUpCodeViewModel : ViewModel() {
     }
   }
 
-  fun attempt(code: String, field: Field) {
+  fun attempt(code: String, field: SignUpCodeField) {
     val signUp = Clerk.client.signUp ?: return
     viewModelScope.launch {
       val signUp =
         when (field) {
-          is Field.Email ->
+          is SignUpCodeField.Email ->
             signUp.attemptVerification(SignUp.AttemptVerificationParams.EmailCode(code))
-          is Field.Phone ->
+          is SignUpCodeField.Phone ->
             signUp.attemptVerification(SignUp.AttemptVerificationParams.PhoneCode(code))
         }
       signUp

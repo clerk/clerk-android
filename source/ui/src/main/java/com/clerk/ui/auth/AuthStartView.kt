@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
@@ -38,42 +39,51 @@ import com.clerk.ui.theme.DefaultColors
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun AuthStartView(authMode: AuthMode, modifier: Modifier = Modifier) {
-  AuthStartViewImpl(authMode = authMode, modifier = modifier)
+fun AuthStartView(modifier: Modifier = Modifier) {
+  AuthStartViewImpl(modifier = modifier)
 }
 
 @Composable
 internal fun AuthStartViewImpl(
-  authMode: AuthMode,
   modifier: Modifier = Modifier,
   authViewHelper: AuthStartViewHelper = AuthStartViewHelper(),
   authStartViewModel: AuthStartViewModel = viewModel(),
 ) {
+  val authState = LocalAuthState.current
+  val state by authStartViewModel.state.collectAsStateWithLifecycle()
+  val snackbarHostState = remember { SnackbarHostState() }
+  val generic = stringResource(R.string.something_went_wrong_please_try_again)
   var phoneActive by rememberSaveable { mutableStateOf(false) }
-  var phone by rememberSaveable { mutableStateOf("") }
-  var identifier by rememberSaveable { mutableStateOf("") }
   val isContinueEnabled by
-    remember(identifier, phone, phoneActive) {
+    remember(authState.authStartIdentifier, authState.authStartPhoneNumber, phoneActive) {
       derivedStateOf {
         !authViewHelper.continueIsDisabled(
           isPhoneNumberFieldActive = phoneActive,
-          identifier = identifier,
-          phoneNumber = phone,
+          identifier = authState.authStartIdentifier,
+          phoneNumber = authState.authStartPhoneNumber,
         )
       }
     }
 
-  val state by authStartViewModel.state.collectAsStateWithLifecycle()
-  val snackbarHostState = remember { SnackbarHostState() }
-  val generic = stringResource(R.string.something_went_wrong_please_try_again)
+  LaunchedEffect(state) {
+    when (val s = state) {
+      is AuthStartViewModel.AuthState.Success.SignInSuccess -> {
+        authState.setToStepForStatus(s.signIn!!)
+      }
+      is AuthStartViewModel.AuthState.Success.SignUpSuccess -> {
+        authState.setToStepForStatus(s.signUp!!)
+      }
+      else -> Unit
+    }
+  }
 
   HandleAuthErrors(state = state, snackbarHostState = snackbarHostState, generic = generic)
 
   ClerkThemedAuthScaffold(
     modifier = modifier,
     hasBackButton = false,
-    title = authViewHelper.titleString(authMode),
-    subtitle = authViewHelper.subtitleString(authMode),
+    title = authViewHelper.titleString(authState.mode),
+    subtitle = authViewHelper.subtitleString(authState.mode),
     snackbarHostState = snackbarHostState,
   ) {
     Column(
@@ -85,10 +95,10 @@ internal fun AuthStartViewImpl(
         AuthInputField(
           authViewHelper = authViewHelper,
           phoneNumberFieldIsActive = phoneActive,
-          authStartPhoneNumber = phone,
-          authStartIdentifier = identifier,
-          onPhoneNumberChange = { phone = it },
-          onIdentifierChange = { identifier = it },
+          authStartPhoneNumber = authState.authStartPhoneNumber,
+          authStartIdentifier = authState.authStartIdentifier,
+          onPhoneNumberChange = { authState.authStartPhoneNumber = it },
+          onIdentifierChange = { authState.authStartIdentifier = it },
         )
 
         AuthActionButtons(
@@ -103,10 +113,10 @@ internal fun AuthStartViewImpl(
             AuthButtonsCallbacks(
               onStartAuth = {
                 authStartViewModel.startAuth(
-                  authMode = authMode,
+                  authMode = authState.mode,
                   isPhoneNumberFieldActive = phoneActive,
-                  identifier = identifier,
-                  phoneNumber = phone,
+                  identifier = authState.authStartIdentifier,
+                  phoneNumber = authState.authStartPhoneNumber,
                 )
               },
               onSocialProviderClick = { authStartViewModel.authenticateWithSocialProvider(it) },
@@ -208,38 +218,11 @@ internal fun HandleAuthErrors(
   }
 }
 
-@Composable
-internal fun rememberAuthInputs(
-  authViewHelper: AuthStartViewHelper
-): Triple<StateHolder, Boolean, Boolean> {
-  var phone by rememberSaveable { mutableStateOf("") }
-  var id by rememberSaveable { mutableStateOf("") }
-  var phoneActive by rememberSaveable { mutableStateOf(false) }
-
-  val isContinueEnabled by
-    remember(id, phone, phoneActive) {
-      derivedStateOf {
-        !authViewHelper.continueIsDisabled(
-          isPhoneNumberFieldActive = phoneActive,
-          identifier = id,
-          phoneNumber = phone,
-        )
-      }
-    }
-
-  return Triple(StateHolder(id, phone, isContinueEnabled), phoneActive, true)
-}
-
-internal data class StateHolder(
-  val identifier: String,
-  val phone: String,
-  val isContinueEnabled: Boolean,
-)
-
 @SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable
 private fun Preview() {
+  val backStack = rememberNavBackStack(Destinations.AuthStart)
   Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
   val authViewHelper = AuthStartViewHelper()
 
@@ -249,5 +232,5 @@ private fun Preview() {
     socialProviders = listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
   )
 
-  AuthStartViewImpl(authMode = AuthMode.SignIn, authViewHelper = authViewHelper)
+  AuthStateProvider(backStack = backStack) { AuthStartViewImpl(authViewHelper = authViewHelper) }
 }

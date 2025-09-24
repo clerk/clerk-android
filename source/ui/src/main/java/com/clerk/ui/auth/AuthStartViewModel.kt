@@ -3,11 +3,13 @@ package com.clerk.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.longErrorMessageOrNull
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
+import com.clerk.api.signin.authenticateWithRedirectUrl
 import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
@@ -111,7 +113,9 @@ internal class AuthStartViewModel : ViewModel() {
           )
         )
         .onSuccess {
-          withContext(Dispatchers.Main) { _state.value = AuthState.Success(signUp = it) }
+          withContext(Dispatchers.Main) {
+            _state.value = AuthState.Success.SignUpSuccess(signUp = it)
+          }
         }
         .onFailure {
           withContext(Dispatchers.Main) {
@@ -200,7 +204,9 @@ internal class AuthStartViewModel : ViewModel() {
   private suspend fun handleSignInSuccess(signIn: SignIn) {
     when {
       signIn.requiresEnterpriseSSO() -> handleEnterpriseSSO(signIn)
-      else -> _state.value = withContext(Dispatchers.Main) { AuthState.Success(signIn = signIn) }
+      else ->
+        _state.value =
+          withContext(Dispatchers.Main) { AuthState.Success.SignInSuccess(signIn = signIn) }
     }
   }
 
@@ -208,8 +214,9 @@ internal class AuthStartViewModel : ViewModel() {
     signIn
       .prepareFirstFactor(SignIn.PrepareFirstFactorParams.EnterpriseSSO())
       .onSuccess {
-        val redirectUrl = signIn.getExternalVerificationRedirectUrl()
-        authenticateWithEnterpriseSSO(redirectUrl)
+        if (it.firstFactorVerification?.externalVerificationRedirectUrl != null) {
+          authenticateWithRedirect(it)
+        }
       }
       .onFailure { throwable ->
         _state.value =
@@ -217,15 +224,26 @@ internal class AuthStartViewModel : ViewModel() {
       }
   }
 
-  private suspend fun authenticateWithEnterpriseSSO(redirectUrl: String) {
-    SignIn.authenticateWithRedirect(
-      SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(redirectUrl = redirectUrl)
-    )
-    TODO("Need to understand `authenticateWithRedirect` from the iOS SDK for Enterprise SSO")
+  private suspend fun authenticateWithRedirect(signIn: SignIn) {
+    signIn.authenticateWithRedirectUrl().onSuccess {
+      withContext(Dispatchers.Main) {
+        val successType =
+          when (it.resultType) {
+            ResultType.SIGN_IN -> AuthState.Success.SignInSuccess(signIn = it.signIn)
+            ResultType.SIGN_UP -> AuthState.Success.SignUpSuccess(signUp = it.signUp)
+            ResultType.UNKNOWN -> {
+              ClerkLog.e("Unknown result type after SSO redirect: ${it.resultType}")
+              AuthState.Error("Unknown result type after SSO redirect")
+            }
+          }
+
+        _state.value = successType
+      }
+    }
   }
 
   /** Represents the various states of the authentication process. */
-  sealed interface AuthState {
+  internal sealed interface AuthState {
     /** The initial state before any authentication attempt has started. */
     object Idle : AuthState
 
@@ -238,7 +256,11 @@ internal class AuthStartViewModel : ViewModel() {
      * @property signIn The [SignIn] object if the successful attempt was a sign-in.
      * @property signUp The [SignUp] object if the successful attempt was a sign-up.
      */
-    data class Success(val signIn: SignIn? = null, val signUp: SignUp? = null) : AuthState
+    sealed interface Success : AuthState {
+      data class SignInSuccess(val signIn: SignIn?) : Success
+
+      data class SignUpSuccess(val signUp: SignUp?) : Success
+    }
 
     /**
      * Indicates that an authentication attempt failed.
@@ -263,10 +285,6 @@ internal class AuthStartViewModel : ViewModel() {
 
 private fun SignIn.requiresEnterpriseSSO(): Boolean =
   startingFirstFactor?.strategy == "enterprise_sso"
-
-private fun SignIn.getExternalVerificationRedirectUrl(): String =
-  firstFactorVerification?.externalVerificationRedirectUrl
-    ?: error("External verification redirect URL is null for Enterprise SSO")
 
 private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
 

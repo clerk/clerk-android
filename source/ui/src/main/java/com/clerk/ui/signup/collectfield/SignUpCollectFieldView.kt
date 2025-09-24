@@ -29,14 +29,14 @@ import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 
 @Composable
 fun SignUpCollectFieldView(
-  collectField: CollectField,
+  field: CollectField,
   modifier: Modifier = Modifier,
   progress: Int = 0,
   onSkipClick: () -> Unit = {},
   collectFieldHelper: CollectFieldHelper = CollectFieldHelper(),
 ) {
   SignUpCollectFieldViewImpl(
-    collectField = collectField,
+    collectField = field,
     modifier = modifier,
     collectFieldHelper = collectFieldHelper,
     onSkipClick = onSkipClick,
@@ -46,12 +46,12 @@ fun SignUpCollectFieldView(
 
 @Composable
 private fun SignUpCollectFieldViewImpl(
-    collectField: CollectField,
-    collectFieldHelper: CollectFieldHelper,
-    onSkipClick: () -> Unit,
-    progress: Int,
-    modifier: Modifier = Modifier,
-    viewModel: CollectFieldViewModel = viewModel()
+  collectField: CollectField,
+  collectFieldHelper: CollectFieldHelper,
+  onSkipClick: () -> Unit,
+  progress: Int,
+  modifier: Modifier = Modifier,
+  viewModel: CollectFieldViewModel = viewModel(),
 ) {
 
   var email by remember { mutableStateOf("") }
@@ -173,5 +173,5 @@ enum class CollectField(val rawValue: String) {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  SignUpCollectFieldView(collectField = CollectField.Password)
+  SignUpCollectFieldView(field = CollectField.Password)
 }

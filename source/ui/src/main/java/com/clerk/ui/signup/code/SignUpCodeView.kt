@@ -25,17 +25,17 @@ import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
  * This function displays a view where the user can enter a verification code received via email or
  * phone to complete the sign-up process.
  *
- * @param field The [Field] indicating whether the code was sent to a phone or email.
+ * @param field The [SignUpCodeField] indicating whether the code was sent to a phone or email.
  * @param modifier The [Modifier] to be applied to the view.
  */
 @Composable
-fun SignUpCodeView(field: Field, modifier: Modifier = Modifier) {
+fun SignUpCodeView(field: SignUpCodeField, modifier: Modifier = Modifier) {
   SignUpCodeViewImpl(field, modifier)
 }
 
 @Composable
 private fun SignUpCodeViewImpl(
-  field: Field,
+  field: SignUpCodeField,
   modifier: Modifier = Modifier,
   viewModel: SignUpCodeViewModel = viewModel(),
 ) {
@@ -56,8 +56,8 @@ private fun SignUpCodeViewImpl(
 
   val title =
     when (field) {
-      is Field.Phone -> stringResource(R.string.check_your_phone)
-      is Field.Email -> stringResource(R.string.check_your_email)
+      is SignUpCodeField.Phone -> stringResource(R.string.check_your_phone)
+      is SignUpCodeField.Email -> stringResource(R.string.check_your_email)
     }
 
   val verificationState =
@@ -93,13 +93,13 @@ private fun SignUpCodeViewImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  SignUpCodeView(field = Field.Phone("3012370655"))
+  SignUpCodeView(field = SignUpCodeField.Phone("3012370655"))
 }
 
-sealed interface Field {
+sealed interface SignUpCodeField {
   val value: String
 
-  data class Phone(override val value: String) : Field
+  data class Phone(override val value: String) : SignUpCodeField
 
-  data class Email(override val value: String) : Field
+  data class Email(override val value: String) : SignUpCodeField
 }
