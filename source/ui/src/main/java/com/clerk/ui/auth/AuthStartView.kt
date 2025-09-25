@@ -20,7 +20,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
@@ -39,12 +38,13 @@ import com.clerk.ui.theme.DefaultColors
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun AuthStartView(modifier: Modifier = Modifier) {
-  AuthStartViewImpl(modifier = modifier)
+fun AuthStartView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
+  AuthStartViewImpl(modifier = modifier, onAuthComplete = onAuthComplete)
 }
 
 @Composable
 internal fun AuthStartViewImpl(
+  onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
   authViewHelper: AuthStartViewHelper = AuthStartViewHelper(),
   authStartViewModel: AuthStartViewModel = viewModel(),
@@ -68,16 +68,24 @@ internal fun AuthStartViewImpl(
   LaunchedEffect(state) {
     when (val s = state) {
       is AuthStartViewModel.AuthState.Success.SignInSuccess -> {
-        authState.setToStepForStatus(s.signIn!!)
+        authState.setToStepForStatus(s.signIn!!, onAuthComplete = onAuthComplete)
+        authStartViewModel.resetState()
       }
       is AuthStartViewModel.AuthState.Success.SignUpSuccess -> {
-        authState.setToStepForStatus(s.signUp!!)
+        authState.setToStepForStatus(s.signUp!!, onAuthComplete = onAuthComplete)
+        authStartViewModel.resetState()
+      }
+      is AuthStartViewModel.AuthState.Error -> {
+        snackbarHostState.showSnackbar(s.message ?: generic)
+        authStartViewModel.resetState()
+      }
+      is AuthStartViewModel.AuthState.OAuthState.Error -> {
+        snackbarHostState.showSnackbar(s.message ?: generic)
+        authStartViewModel.resetState()
       }
       else -> Unit
     }
   }
-
-  HandleAuthErrors(state = state, snackbarHostState = snackbarHostState, generic = generic)
 
   ClerkThemedAuthScaffold(
     modifier = modifier,
@@ -201,28 +209,10 @@ private fun AuthActionButtons(
   )
 }
 
-@Composable
-internal fun HandleAuthErrors(
-  state: AuthStartViewModel.AuthState,
-  snackbarHostState: SnackbarHostState,
-  generic: String,
-) {
-  val errorMessage: String? =
-    when (state) {
-      is AuthStartViewModel.AuthState.Error -> state.message
-      is AuthStartViewModel.AuthState.OAuthState.Error -> state.message
-      else -> null
-    }
-  LaunchedEffect(errorMessage) {
-    errorMessage?.let { snackbarHostState.showSnackbar(it.ifBlank { generic }) }
-  }
-}
-
 @SuppressLint("VisibleForTests")
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  val backStack = rememberNavBackStack(Destinations.AuthStart)
   Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
   val authViewHelper = AuthStartViewHelper()
 
@@ -232,5 +222,7 @@ private fun Preview() {
     socialProviders = listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
   )
 
-  AuthStateProvider(backStack = backStack) { AuthStartViewImpl(authViewHelper = authViewHelper) }
+  PreviewAuthStateProvider {
+    AuthStartViewImpl(authViewHelper = authViewHelper, onAuthComplete = {})
+  }
 }

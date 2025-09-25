@@ -15,6 +15,7 @@ import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
+import com.clerk.ui.core.common.StrategyKeys
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +42,16 @@ internal class AuthStartViewModel : ViewModel() {
    * possible states.
    */
   val state: StateFlow<AuthState> = _state.asStateFlow()
+
+  /**
+   * Resets the current state back to [AuthState.Idle].
+   *
+   * This should be called by the UI after handling a terminal state (success or error) to avoid
+   * re-triggering navigation/effects on recomposition or when navigating back.
+   */
+  internal fun resetState() {
+    _state.value = AuthState.Idle
+  }
 
   /**
    * Initiates the authentication process based on the provided [authMode].
@@ -112,9 +123,9 @@ internal class AuthStartViewModel : ViewModel() {
             phoneNumber = phoneNumber,
           )
         )
-        .onSuccess {
+        .onSuccess { signUp ->
           withContext(Dispatchers.Main) {
-            _state.value = AuthState.Success.SignUpSuccess(signUp = it)
+            _state.value = AuthState.Success.SignUpSuccess(signUp = signUp)
           }
         }
         .onFailure {
@@ -204,9 +215,34 @@ internal class AuthStartViewModel : ViewModel() {
   private suspend fun handleSignInSuccess(signIn: SignIn) {
     when {
       signIn.requiresEnterpriseSSO() -> handleEnterpriseSSO(signIn)
-      else ->
+      else -> {
+        // Proactively prepare the first factor for OTP strategies so the code is sent
+        // before navigating to the code-entry screen. This avoids races where the global
+        // Clerk.signIn hasn't been synced yet on the destination screen.
+        val startingFactor = signIn.startingFirstFactor
+        try {
+          when (startingFactor?.strategy) {
+            StrategyKeys.EMAIL_CODE ->
+              signIn.prepareFirstFactor(
+                SignIn.PrepareFirstFactorParams.EmailCode(
+                  emailAddressId = startingFactor.emailAddressId!!
+                )
+              )
+
+            StrategyKeys.PHONE_CODE ->
+              signIn.prepareFirstFactor(
+                SignIn.PrepareFirstFactorParams.PhoneCode(
+                  phoneNumberId = startingFactor.phoneNumberId!!
+                )
+              )
+          }
+        } catch (t: Throwable) {
+          ClerkLog.e("Error pre-preparing first factor: ${t.message}")
+        }
+
         _state.value =
           withContext(Dispatchers.Main) { AuthState.Success.SignInSuccess(signIn = signIn) }
+      }
     }
   }
 

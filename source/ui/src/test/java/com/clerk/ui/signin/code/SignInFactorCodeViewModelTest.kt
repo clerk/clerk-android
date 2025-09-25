@@ -7,6 +7,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.SignIn
+import com.clerk.ui.core.common.AuthenticationViewState
 import com.clerk.ui.core.common.StrategyKeys
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -64,7 +65,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun initialStateShouldBeIdle() = runTest {
-    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Idle, awaitItem()) }
+    viewModel.state.test { assertEquals(AuthenticationViewState.Idle, awaitItem()) }
   }
 
   @Test
@@ -75,7 +76,7 @@ class SignInFactorCodeViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     coVerify { mockPrepareHandler.prepareForEmailCode(mockSignIn, factor) }
-    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem()) }
+    viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
   }
 
   @Test
@@ -93,7 +94,7 @@ class SignInFactorCodeViewModelTest {
         isSecondFactor = isSecondFactor,
       )
     }
-    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem()) }
+    viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
   }
 
   @Test
@@ -106,7 +107,7 @@ class SignInFactorCodeViewModelTest {
       testDispatcher.scheduler.advanceUntilIdle()
 
       coVerify { mockPrepareHandler.prepareForResetPasswordWithPhone(mockSignIn, factor) }
-      viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem()) }
+      viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
     }
 
   @Test
@@ -118,7 +119,7 @@ class SignInFactorCodeViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     coVerify { mockPrepareHandler.prepareForResetWithEmailCode(mockSignIn, factor) }
-    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem()) }
+    viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
   }
 
   @Test
@@ -168,7 +169,9 @@ class SignInFactorCodeViewModelTest {
           onErrorCallback = any(),
         )
       }
-      viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Success, awaitItem()) }
+      viewModel.state.test {
+        assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+      }
     }
 
   @Test
@@ -204,7 +207,9 @@ class SignInFactorCodeViewModelTest {
           onErrorCallback = any(),
         )
       }
-      viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Success, awaitItem()) }
+      viewModel.state.test {
+        assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+      }
     }
 
   @Test
@@ -236,7 +241,9 @@ class SignInFactorCodeViewModelTest {
         onErrorCallback = any(),
       )
     }
-    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Success, awaitItem()) }
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
   }
 
   @Test
@@ -268,7 +275,9 @@ class SignInFactorCodeViewModelTest {
         onErrorCallback = any(),
       )
     }
-    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Success, awaitItem()) }
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
   }
 
   @Test
@@ -300,7 +309,9 @@ class SignInFactorCodeViewModelTest {
         onErrorCallback = any(),
       )
     }
-    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Success, awaitItem()) }
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
   }
 
   @Test
@@ -325,7 +336,7 @@ class SignInFactorCodeViewModelTest {
     viewModel.attempt(factor, isSecondFactor = false, code)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    viewModel.state.test { assertEquals(SignInFactorCodeViewModel.State.Error, awaitItem()) }
+    viewModel.state.test { assertEquals(AuthenticationViewState.Error(""), awaitItem()) }
   }
 
   @Test
@@ -351,11 +362,11 @@ class SignInFactorCodeViewModelTest {
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_id")
 
     viewModel.state.test {
-      assertEquals(SignInFactorCodeViewModel.State.Idle, awaitItem())
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
 
       viewModel.prepare(factor, isSecondFactor = false)
 
-      assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem())
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
     }
   }
 
@@ -365,11 +376,11 @@ class SignInFactorCodeViewModelTest {
     val code = "123456"
 
     viewModel.state.test {
-      assertEquals(SignInFactorCodeViewModel.State.Idle, awaitItem())
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
 
       viewModel.attempt(factor, isSecondFactor = false, code)
 
-      assertEquals(SignInFactorCodeViewModel.State.Verifying, awaitItem())
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
     }
   }
 }

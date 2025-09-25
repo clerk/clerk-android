@@ -1,6 +1,5 @@
 package com.clerk.ui.auth
 
-import AuthState
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -38,8 +37,8 @@ internal fun AuthStateProvider(backStack: NavBackStack<NavKey>, content: @Compos
 }
 
 @Composable
-fun AuthView(modifier: Modifier = Modifier) {
-  val backStack = rememberNavBackStack(Destinations.AuthStart)
+fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
+  val backStack = rememberNavBackStack(Destination.AuthStart)
   AuthStateProvider(backStack) {
     NavDisplay(
       modifier = modifier,
@@ -47,52 +46,44 @@ fun AuthView(modifier: Modifier = Modifier) {
       onBack = { backStack.removeLastOrNull() },
       entryProvider =
         entryProvider {
-          entry<Destinations.AuthStart> { key -> AuthStartView() }
-          entry<Destinations.SignInFactorOne> { key ->
-            SignInFactorOneView(
-              factor = key.factor,
-              onBackPressed = { backStack.removeLastOrNull() },
-            )
+          entry<Destination.AuthStart> { key -> AuthStartView(onAuthComplete = onAuthComplete) }
+          entry<Destination.SignInFactorOne> { key ->
+            SignInFactorOneView(factor = key.factor, onAuthComplete = onAuthComplete)
           }
-          entry<Destinations.SignInFactorOneUseAnotherMethod> { key ->
+          entry<Destination.SignInFactorOneUseAnotherMethod> { key ->
             SignInFactorAlternativeMethodsView(
               currentFactor = key.currentFactor,
-              onBackPressed = { backStack.removeLastOrNull() },
-              onClickFactor = { backStack.removeLastOrNull() },
+              onAuthComplete = onAuthComplete,
             )
           }
-          entry<Destinations.SignInFactorTwo> { key ->
-            SignInFactorTwoView(
-              factor = key.factor,
-              onBackPressed = { backStack.removeLastOrNull() },
-            )
+          entry<Destination.SignInFactorTwo> { key ->
+            SignInFactorTwoView(factor = key.factor, onAuthComplete = onAuthComplete)
           }
-          entry<Destinations.SignInFactorTwoUseAnotherMethod> { key ->
+          entry<Destination.SignInFactorTwoUseAnotherMethod> { key ->
             SignInFactorAlternativeMethodsView(
               currentFactor = key.currentFactor,
               isSecondFactor = true,
-              onBackPressed = { backStack.removeLastOrNull() },
-              onClickFactor = { backStack.removeLastOrNull() },
+              onAuthComplete = onAuthComplete,
             )
           }
-          entry<Destinations.SignInForgotPassword> { key ->
+          entry<Destination.SignInForgotPassword> { key ->
             SignInFactorOneForgotPasswordView(
-              onBackPressed = { backStack.removeLastOrNull() },
               onClickFactor = { backStack.removeLastOrNull() },
+              onAuthComplete = onAuthComplete,
             )
           }
-          entry<Destinations.SignInSetNewPassword> {
-            SignInSetNewPasswordView(onBackPressed = { backStack.removeLastOrNull() })
+          entry<Destination.SignInSetNewPassword> {
+            SignInSetNewPasswordView(onAuthComplete = onAuthComplete)
           }
-          entry<Destinations.SignInGetHelp> {
-            SignInGetHelpView(onBackPressed = { backStack.removeLastOrNull() })
+          entry<Destination.SignInGetHelp> { SignInGetHelpView() }
+          entry<Destination.SignUpCollectField> { key ->
+            SignUpCollectFieldView(field = key.field, onAuthComplete = onAuthComplete)
           }
-          entry<Destinations.SignUpCollectField> { key ->
-            SignUpCollectFieldView(field = key.field)
+          entry<Destination.SignUpCode> { key ->
+            SignUpCodeView(field = key.field, onAuthComplete = onAuthComplete)
           }
-          entry<Destinations.SignUpCode> { key -> SignUpCodeView(field = key.field) }
-          entry<Destinations.SignUpCompleteProfile> {
-            SignUpCompleteProfileView(progress = it.progress)
+          entry<Destination.SignUpCompleteProfile> {
+            SignUpCompleteProfileView(progress = it.progress, onAuthComplete = onAuthComplete)
           }
         },
     )
@@ -105,7 +96,7 @@ private fun Preview() {
   AuthView()
 }
 
-internal object Destinations {
+internal object Destination {
 
   @Serializable data object AuthStart : NavKey
 

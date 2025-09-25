@@ -7,7 +7,7 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
 import com.clerk.ui.core.common.StrategyKeys
 
-internal object SignInFactorCodeHelper {
+internal object SignInFactorCodeUiHelper {
   internal fun getShowResendValue(verificationState: VerificationState): Boolean =
     when (verificationState) {
       VerificationState.Default,
@@ -34,11 +34,11 @@ internal object SignInFactorCodeHelper {
   @Composable
   internal fun titleForStrategy(factor: Factor): String {
     return when (factor.strategy) {
-      StrategyKeys.EMAIL_CODE -> "Check your email"
-      StrategyKeys.PHONE_CODE -> "Check your phone"
+      StrategyKeys.EMAIL_CODE -> stringResource(R.string.check_your_email)
+      StrategyKeys.PHONE_CODE -> stringResource(R.string.check_your_phone)
       StrategyKeys.RESET_PASSWORD_EMAIL_CODE,
-      StrategyKeys.RESET_PASSWORD_PHONE_CODE -> "Reset password"
-      StrategyKeys.TOTP -> "Two-step verification"
+      StrategyKeys.RESET_PASSWORD_PHONE_CODE -> stringResource(R.string.reset_password)
+      StrategyKeys.TOTP -> stringResource(R.string.two_step_verification)
       else -> ""
     }
   }
@@ -59,15 +59,6 @@ internal object SignInFactorCodeHelper {
         Clerk.applicationName?.let { stringResource(R.string.to_continue_to, it) }
           ?: stringResource(R.string.to_continue)
       }
-    }
-  }
-
-  @Composable
-  internal fun resendString(remainingSeconds: Int): String {
-    return if (remainingSeconds > 0) {
-      stringResource(R.string.resend_with_pararm, remainingSeconds)
-    } else {
-      stringResource(R.string.resend)
     }
   }
 }

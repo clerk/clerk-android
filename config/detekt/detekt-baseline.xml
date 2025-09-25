@@ -4,7 +4,7 @@
   <CurrentIssues>
     <ID>CyclomaticComplexMethod:ClerkComposeTheme.kt$@Composable private fun generateComputedColors(colors: ClerkColors): ComputedColors</ID>
     <ID>CyclomaticComplexMethod:ClerkThemeProvider.kt$@Composable private fun generateColors(theme: ClerkTheme?): ClerkColors</ID>
-    <ID>LongMethod:AuthStartView.kt$@Composable internal fun AuthStartViewImpl( authMode: AuthMode, modifier: Modifier = Modifier, authViewHelper: AuthStartViewHelper = AuthStartViewHelper(), authStartViewModel: AuthStartViewModel = viewModel(), )</ID>
+    <ID>LongMethod:AuthStartView.kt$@Composable internal fun AuthStartViewImpl( onAuthComplete: () -> Unit, modifier: Modifier = Modifier, authViewHelper: AuthStartViewHelper = AuthStartViewHelper(), authStartViewModel: AuthStartViewModel = viewModel(), )</ID>
     <ID>LongMethod:ClerkButton.kt$@PreviewLightDark @Composable private fun PreviewButton()</ID>
     <ID>LongMethod:ClerkPhoneNumberField.kt$@Composable private fun PhoneNumberInput( computedColors: ComputedColors, value: String, onValueChange: (String) -> Unit, countryCode: String, errorText: String? = null, )</ID>
     <ID>LongMethod:ClerkStandardButtonSnapshotTest.kt$ClerkStandardButtonSnapshotTest$@Test fun clerkButtonGallery()</ID>
@@ -13,6 +13,7 @@
     <ID>LongMethod:ClerkTextField.kt$@PreviewLightDark @Composable private fun PreviewClerkTextFieldError()</ID>
     <ID>LongMethod:ClerkTextFieldSnapshotTest.kt$ClerkTextFieldSnapshotTest$@Test fun testClerkTextFieldError()</ID>
     <ID>LongMethod:ClerkTextFieldSnapshotTest.kt$ClerkTextFieldSnapshotTest$@Test fun testClerkTextFieldUnfocused()</ID>
+    <ID>LongMethod:SignUpCollectFieldView.kt$@Composable private fun SignUpCollectFieldViewImpl( collectField: CollectField, collectFieldHelper: CollectFieldHelper, progress: Int, onAuthComplete: () -> Unit, modifier: Modifier = Modifier, viewModel: CollectFieldViewModel = viewModel(), )</ID>
     <ID>LongParameterList:AuthStartView.kt$( authViewHelper: AuthStartViewHelper, phoneNumberFieldIsActive: Boolean, authStartPhoneNumber: String, authStartIdentifier: String, onPhoneNumberChange: (String) -> Unit, onIdentifierChange: (String) -> Unit, )</ID>
     <ID>LongParameterList:ClerkButton.kt$( isLoading: Boolean, padding: ClerkButtonPadding, icons: ClerkButtonIcons, isEnabled: Boolean, text: String, tokens: ButtonStyleTokens, )</ID>
     <ID>LongParameterList:ClerkButton.kt$( text: String, onClick: () -> Unit, isEnabled: Boolean, isPressedCombined: Boolean, interactionSource: MutableInteractionSource, isLoading: Boolean, padding: ClerkButtonPadding, configuration: ClerkButtonConfiguration, modifier: Modifier = Modifier, icons: ClerkButtonIcons = ClerkButtonDefaults.icons(), )</ID>
@@ -25,12 +26,12 @@
     <ID>ReturnCount:DeviceAssertionMiddleware.kt$DeviceAssertionInterceptor.DeviceAttestationManager$suspend fun performDeviceAssertion(request: Request, error: ClerkError): Boolean</ID>
     <ID>SwallowedException:PasskeyCredentialManagerTest.kt$PasskeyCredentialManagerTest$e: Exception</ID>
     <ID>TooGenericExceptionThrown:DeviceAttestationHelper.kt$DeviceAttestationHelper$throw RuntimeException("Failed to hash clientId", e)</ID>
+    <ID>TooManyFunctions:AuthStartViewModel.kt$AuthStartViewModel : ViewModel</ID>
     <ID>TooManyFunctions:ConfigurationManager.kt$ConfigurationManager</ID>
     <ID>TooManyFunctions:Organization.kt$com.clerk.api.organizations.Organization.kt</ID>
     <ID>TooManyFunctions:OrganizationApi.kt$OrganizationApi</ID>
     <ID>TooManyFunctions:User.kt$com.clerk.api.user.User.kt</ID>
     <ID>UnusedPrivateClass:ClerkApiResultCallAdapterFactory.kt$ApiException : Exception</ID>
-    <ID>UnusedPrivateMember:UiActivity.kt$@Composable private fun MainContent(viewModel: MainViewModel)</ID>
     <ID>UnusedPrivateProperty:build.gradle.kts$val detektProjectBaseline by tasks.registering(DetektCreateBaselineTask::class) { description = "Overrides current baseline." buildUponDefaultConfig.set(true) ignoreFailures.set(true) parallel.set(true) setSource(files(rootDir)) config.setFrom(files("$rootDir/config/detekt/detekt.yml")) baseline.set(file("$rootDir/config/detekt/detekt-baseline.xml")) include("**/*.kt") include("**/*.kts") exclude("**/resources/**") exclude("**/build/**") }</ID>
   </CurrentIssues>
 </SmellBaseline>

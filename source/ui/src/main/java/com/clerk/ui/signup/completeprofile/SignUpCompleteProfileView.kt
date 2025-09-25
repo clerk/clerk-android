@@ -6,13 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
@@ -22,7 +18,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.ui.R
+import com.clerk.ui.auth.LocalAuthState
+import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.common.AuthStateEffects
+import com.clerk.ui.core.common.AuthenticationViewState
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.dimens.dp12
 import com.clerk.ui.core.common.dimens.dp24
@@ -37,8 +37,16 @@ import kotlinx.collections.immutable.toImmutableList
  * inject specific values and flags.
  */
 @Composable
-fun SignUpCompleteProfileView(progress: Int, modifier: Modifier = Modifier) {
-  SignUpCompleteProfileImpl(progress = progress, modifier = modifier)
+fun SignUpCompleteProfileView(
+  progress: Int,
+  modifier: Modifier = Modifier,
+  onAuthComplete: () -> Unit,
+) {
+  SignUpCompleteProfileImpl(
+    progress = progress,
+    modifier = modifier,
+    onAuthComplete = onAuthComplete,
+  )
 }
 
 /** Internal enum for focus tracking & label logic. */
@@ -51,6 +59,7 @@ internal enum class CompleteProfileField {
 @Composable
 private fun SignUpCompleteProfileImpl(
   progress: Int,
+  onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
   firstName: String = "",
   lastName: String = "",
@@ -58,23 +67,17 @@ private fun SignUpCompleteProfileImpl(
   lastNameEnabled: Boolean = false,
   viewModel: CompleteProfileViewModel = viewModel(),
 ) {
+  val authState = LocalAuthState.current
   val firstEnabled = Clerk.isFirstNameEnabled || firstNameEnabled
   val lastEnabled = Clerk.isLastNameEnabled || lastNameEnabled
 
-  var first by rememberSaveable(firstName) { mutableStateOf(firstName) }
-  var last by rememberSaveable(lastName) { mutableStateOf(lastName) }
+  authState.signUpFirstName = firstName
+  authState.signUpLastName = lastName
 
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
-  val genericErrorMessage = stringResource(R.string.something_went_wrong_please_try_again)
-  val errorMessage =
-    when (val s = state) {
-      is CompleteProfileViewModel.State.Error -> s.message
-      else -> null
-    }
-  LaunchedEffect(errorMessage) {
-    errorMessage?.let { snackbarHostState.showSnackbar(it.ifBlank { genericErrorMessage }) }
-  }
+
+  AuthStateEffects(authState, state, snackbarHostState, onAuthComplete) { viewModel.resetState() }
 
   val enabledFields =
     remember(firstEnabled, lastEnabled) {
@@ -83,8 +86,8 @@ private fun SignUpCompleteProfileImpl(
   val helper = rememberCompleteProfileHelper(enabledFields.toImmutableList())
 
   val isSubmitEnabled by
-    remember(first, last, helper, enabledFields) {
-      derivedStateOf { helper.isSubmitEnabled(first, last) }
+    remember(authState.signUpFirstName, authState.signUpLastName, helper, enabledFields) {
+      derivedStateOf { helper.isSubmitEnabled(authState.signUpFirstName, authState.signUpLastName) }
     }
 
   ClerkThemedAuthScaffold(
@@ -92,6 +95,8 @@ private fun SignUpCompleteProfileImpl(
     title = stringResource(R.string.profile_details),
     subtitle = stringResource(R.string.complete_your_profile),
     snackbarHostState = snackbarHostState,
+    onClickIdentifier = { authState.navigateToAuthStart() },
+    onBackPressed = { authState.navigateBack() },
     hasLogo = false,
   ) {
     Column(
@@ -104,10 +109,10 @@ private fun SignUpCompleteProfileImpl(
       InputRow(
         firstEnabled = firstEnabled,
         lastEnabled = lastEnabled,
-        first = first,
-        last = last,
-        onFirstChange = { first = it },
-        onLastChange = { last = it },
+        first = authState.signUpFirstName,
+        last = authState.signUpLastName,
+        onFirstChange = { authState.signUpFirstName = it },
+        onLastChange = { authState.signUpLastName = it },
         onFocusChange = { helper.focusTo(it) },
       )
 
@@ -115,8 +120,8 @@ private fun SignUpCompleteProfileImpl(
         modifier = Modifier.fillMaxWidth(),
         isEnabled = isSubmitEnabled,
         text = stringResource(helper.submitLabelRes()),
-        isLoading = state is CompleteProfileViewModel.State.Loading,
-        onClick = { viewModel.updateSignUp(first, last) },
+        isLoading = state is AuthenticationViewState.Loading,
+        onClick = { viewModel.updateSignUp(authState.signUpFirstName, authState.signUpLastName) },
       )
     }
   }
@@ -162,41 +167,50 @@ private fun InputRow(
 @PreviewLightDark
 @Composable
 private fun Preview_BothEnabled_Filled() {
-  ClerkMaterialTheme {
-    SignUpCompleteProfileImpl(
-      firstNameEnabled = true,
-      lastNameEnabled = true,
-      progress = 2,
-      firstName = "Ada",
-      lastName = "Lovelace",
-    )
+  PreviewAuthStateProvider {
+    ClerkMaterialTheme {
+      SignUpCompleteProfileImpl(
+        firstNameEnabled = true,
+        lastNameEnabled = true,
+        progress = 2,
+        firstName = "Cal",
+        lastName = "Raleigh",
+        onAuthComplete = {},
+      )
+    }
   }
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview_OnlyFirstEnabled_Empty() {
-  ClerkMaterialTheme {
-    SignUpCompleteProfileImpl(
-      firstNameEnabled = true,
-      lastNameEnabled = false,
-      progress = 1,
-      firstName = "",
-      lastName = "",
-    )
+  PreviewAuthStateProvider {
+    ClerkMaterialTheme {
+      SignUpCompleteProfileImpl(
+        firstNameEnabled = true,
+        lastNameEnabled = false,
+        progress = 1,
+        firstName = "",
+        lastName = "",
+        onAuthComplete = {},
+      )
+    }
   }
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview_OnlyLastEnabled_Partial() {
-  ClerkMaterialTheme {
-    SignUpCompleteProfileImpl(
-      firstNameEnabled = false,
-      lastNameEnabled = true,
-      progress = 3,
-      firstName = "",
-      lastName = "Ng",
-    )
+  PreviewAuthStateProvider {
+    ClerkMaterialTheme {
+      SignUpCompleteProfileImpl(
+        firstNameEnabled = false,
+        lastNameEnabled = true,
+        progress = 3,
+        firstName = "",
+        lastName = "Daniels",
+        onAuthComplete = {},
+      )
+    }
   }
 }

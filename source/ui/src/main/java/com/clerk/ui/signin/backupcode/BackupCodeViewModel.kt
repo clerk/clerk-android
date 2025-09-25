@@ -8,36 +8,31 @@ import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptSecondFactor
+import com.clerk.ui.core.common.AuthenticationViewState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class BackupCodeViewModel : ViewModel() {
-  private val _state = MutableStateFlow<AuthenticationState>(AuthenticationState.Idle)
+  private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
   fun submit(backupCode: String) {
     if (Clerk.signIn == null) {
-      _state.value = AuthenticationState.Error("No sign-in in progress")
+      _state.value = AuthenticationViewState.NotStarted
       return
     }
-    _state.value = AuthenticationState.Verifying
+    _state.value = AuthenticationViewState.Loading
     val inProgressSignIn = Clerk.signIn!!
     viewModelScope.launch {
       inProgressSignIn
         .attemptSecondFactor(SignIn.AttemptSecondFactorParams.BackupCode(backupCode))
-        .onSuccess { _state.value = AuthenticationState.Success }
-        .onFailure { _state.value = AuthenticationState.Error(it.longErrorMessageOrNull) }
+        .onSuccess { _state.value = AuthenticationViewState.Success.SignIn(it) }
+        .onFailure { _state.value = AuthenticationViewState.Error(it.longErrorMessageOrNull) }
     }
   }
 
-  sealed interface AuthenticationState {
-    object Idle : AuthenticationState
-
-    object Verifying : AuthenticationState
-
-    data object Success : AuthenticationState
-
-    data class Error(val message: String?) : AuthenticationState
+  fun resetState() {
+    _state.value = AuthenticationViewState.Idle
   }
 }
