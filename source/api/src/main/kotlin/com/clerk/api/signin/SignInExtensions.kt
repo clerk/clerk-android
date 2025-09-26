@@ -19,7 +19,7 @@ import com.clerk.api.network.model.factor.isResetFactor
  * @return A [List] of alternative [Factor] objects, sorted by preference. Returns an empty list if
  *   no suitable alternatives are found or if [SignIn.supportedFirstFactors] is null.
  */
-fun SignIn.alternativeFirstFactors(factor: Factor): List<Factor> {
+fun SignIn.alternativeFirstFactors(factor: Factor? = null): List<Factor> {
   val firstFactors =
     supportedFirstFactors?.filter {
       it != factor &&
@@ -49,12 +49,41 @@ fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
     .sortedWith(comparator = FactorComparators.backupCodePrefComparator)
 }
 
+/**
+ * Determines the starting first factor for a sign-in attempt based on the preferred sign-in
+ * strategy.
+ *
+ * This property inspects the `preferredSignInStrategy` from the Clerk environment's display
+ * configuration.
+ * - If the preferred strategy is `PASSWORD`, it returns the result of
+ *   [factorWhenPasswordIsPreferred].
+ * - Otherwise (implying an OTP-based preference), it returns the result of
+ *   [factorWhenOtpIsPreferred].
+ *
+ * @return The [Factor] to be presented as the initial first factor, or `null` if no suitable factor
+ *   is found.
+ */
 val SignIn.startingFirstFactor: Factor?
   get() =
     when (Clerk.environment.displayConfig?.preferredSignInStrategy) {
       PreferredSignInStrategy.PASSWORD -> this.factorWhenPasswordIsPreferred
       else -> this.factorWhenOtpIsPreferred
     }
+
+val SignIn.startingSecondFactor: Factor?
+  get() {
+    supportedSecondFactors
+      ?.firstOrNull { it.strategy == "totp" }
+      ?.let {
+        return it
+      }
+    supportedSecondFactors
+      ?.firstOrNull { it.strategy == "phone_code" }
+      ?.let {
+        return it
+      }
+    return supportedSecondFactors?.firstOrNull()
+  }
 
 private val SignIn.factorWhenPasswordIsPreferred: Factor?
   get() {

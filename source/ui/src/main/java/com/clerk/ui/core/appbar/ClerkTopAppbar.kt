@@ -18,7 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.OrganizationAvatar
-import com.clerk.ui.core.common.dimens.dp40
+import com.clerk.ui.core.common.dimens.dp24
 import com.clerk.ui.core.common.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -49,7 +49,7 @@ fun ClerkTopAppBar(
       }
       Spacer(modifier = Modifier.weight(1f))
       if (hasBackButton) {
-        Box(modifier = Modifier.size(dp40))
+        Box(modifier = Modifier.size(dp24))
       }
     }
   }

@@ -1,5 +1,10 @@
 package com.clerk.ui.core.error
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -29,7 +34,7 @@ fun ClerkErrorSnackbar(snackbarHostState: SnackbarHostState, modifier: Modifier 
   val dangerPalette = ClerkMaterialTheme.computedColors.backgroundDanger.generateDangerPaletteHsl()
   SnackbarHost(snackbarHostState) { data ->
     Snackbar(
-      modifier = modifier,
+      modifier = modifier.windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars)),
       containerColor = dangerPalette.danger950,
       contentColor = dangerPalette.danger25,
       dismissActionContentColor = dangerPalette.danger150,

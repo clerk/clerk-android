@@ -47,7 +47,7 @@ internal class SignInPrepareHandler {
         .prepareFirstFactor(
           SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = factor.phoneNumberId!!)
         )
-        .onFailure { ClerkLog.e("Error preparing for phone code: $it") } // Corrected log message
+        .onFailure { ClerkLog.e("Error preparing for phone code: $it") }
     }
   }
 
@@ -56,6 +56,7 @@ internal class SignInPrepareHandler {
       .prepareFirstFactor(
         SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = factor.emailAddressId!!)
       )
-      .onFailure { ClerkLog.e("Error preparing for email code: $it") } // Corrected log message
+      .onSuccess { ClerkLog.v("Successfully prepared for email code: $it") }
+      .onFailure { ClerkLog.e("Error preparing for email code: $it") }
   }
 }

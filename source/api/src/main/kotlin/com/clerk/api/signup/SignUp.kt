@@ -3,6 +3,7 @@
 package com.clerk.api.signup
 
 import com.clerk.api.Constants.Strategy as AuthStrategy
+import com.clerk.api.extensions.sortedByPriority
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
@@ -503,8 +504,33 @@ data class SignUp(
         legalAccepted = params.legalAccepted,
       )
     }
+
+    val fieldPriority: List<String> =
+      listOf("email_address", "phone_number", "username", "username")
   }
 }
+
+/**
+ * Helper property to get the first field that needs to be collected.
+ *
+ * This property returns the name of the first field in the `missingFields` list, sorted by
+ * priority. The priority order is defined by [SignUp.fieldPriority].
+ *
+ * @return The name of the first field to collect, or `null` if there are no missing fields.
+ */
+val SignUp.firstFieldToCollect: String?
+  get() = missingFields.sortedByPriority(SignUp.fieldPriority).firstOrNull()
+
+/**
+ * Helper property to get the first field that needs to be verified.
+ *
+ * This property returns the name of the first field in the `unverifiedFields` list, sorted by
+ * priority. The priority order is defined by [SignUp.fieldPriority].
+ *
+ * @return The name of the first field to verify, or `null` if there are no unverified fields.
+ */
+val SignUp.firstFieldToVerify: String?
+  get() = this.unverifiedFields.sortedByPriority(SignUp.fieldPriority).firstOrNull()
 
 /**
  * The [update] method is used to update the sign-up process with new information. This can be used

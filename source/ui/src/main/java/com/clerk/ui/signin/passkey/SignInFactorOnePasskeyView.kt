@@ -3,10 +3,8 @@ package com.clerk.ui.signin.passkey
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,9 +17,14 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
+import com.clerk.ui.auth.Destination
+import com.clerk.ui.auth.LocalAuthState
+import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
+import com.clerk.ui.core.common.AuthStateEffects
+import com.clerk.ui.core.common.AuthenticationViewState
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
@@ -34,58 +37,47 @@ import com.clerk.ui.theme.DefaultColors
  *
  * @param factor The passkey factor to use for authentication.
  * @param modifier The modifier to be applied to the component.
- * @param onBackPressed A callback to be invoked when the user presses the back button.
- * @param onChangeIdentifierClicked A callback to be invoked when the user clicks the button to
- *   change the identifier.
- * @param onUseAnotherMethodClicked A callback to be invoked when the user clicks the button to use
- *   another method.
  */
 @Composable
 fun SignInFactorOnePasskeyView(
   factor: Factor,
   modifier: Modifier = Modifier,
-  onBackPressed: () -> Unit = {},
-  onChangeIdentifierClicked: () -> Unit = {},
-  onUseAnotherMethodClicked: () -> Unit = {},
+  onAuthComplete: () -> Unit,
 ) {
   SignInFactorOnePasskeyViewImpl(
     modifier = modifier,
-    onBackPressed = onBackPressed,
-    onChangeIdentifierClicked = onChangeIdentifierClicked,
     factor = factor,
-    onUseAnotherMethodClicked = onUseAnotherMethodClicked,
+    onAuthComplete = onAuthComplete,
   )
 }
 
 @Composable
 private fun SignInFactorOnePasskeyViewImpl(
-  onBackPressed: () -> Unit,
   factor: Factor,
   modifier: Modifier = Modifier,
-  onChangeIdentifierClicked: () -> Unit = {},
   viewModel: PasskeyViewModel = viewModel(),
-  onUseAnotherMethodClicked: () -> Unit = {},
+  onAuthComplete: () -> Unit,
 ) {
+
+  val authState = LocalAuthState.current
   val snackbarHostState = remember { SnackbarHostState() }
   val state by viewModel.state.collectAsStateWithLifecycle()
-  if (state is PasskeyViewModel.AuthenticateState.Failed) {
-    val errorMessage =
-      (state as PasskeyViewModel.AuthenticateState.Failed).message
-        ?: "That action couldn't be completed."
-    LaunchedEffect(state) {
-      snackbarHostState.showSnackbar(
-        message = errorMessage,
-        withDismissAction = true,
-        duration = SnackbarDuration.Short,
-      )
-    }
+
+  AuthStateEffects(
+    authState = authState,
+    snackbarHostState = snackbarHostState,
+    state = state,
+    onAuthComplete = onAuthComplete,
+  ) {
+    viewModel.resetState()
   }
+
   ClerkThemedAuthScaffold(
     modifier = modifier,
-    onBackPressed = onBackPressed,
+    onBackPressed = authState::navigateBack,
     title = stringResource(R.string.use_your_passkey),
     subtitle = stringResource(R.string.using_your_passkey),
-    onClickIdentifier = onChangeIdentifierClicked,
+    onClickIdentifier = { authState.navigateToAuthStart() },
     identifier = factor.safeIdentifier,
     snackbarHostState = snackbarHostState,
   ) {
@@ -100,7 +92,7 @@ private fun SignInFactorOnePasskeyViewImpl(
       text = stringResource(R.string.continue_text),
       onClick = { viewModel.authenticate() },
       modifier = Modifier.fillMaxWidth(),
-      isLoading = state is PasskeyViewModel.AuthenticateState.Verifying,
+      isLoading = state is AuthenticationViewState.Loading,
       icons =
         ClerkButtonDefaults.icons(
           trailingIcon = R.drawable.ic_triangle_right,
@@ -109,7 +101,9 @@ private fun SignInFactorOnePasskeyViewImpl(
     )
     Spacers.Vertical.Spacer16()
     ClerkTextButton(
-      onClick = onUseAnotherMethodClicked,
+      onClick = {
+        authState.navigateTo(Destination.SignInFactorOneUseAnotherMethod(currentFactor = factor))
+      },
       text = stringResource(R.string.use_a_different_method),
     )
   }
@@ -118,8 +112,11 @@ private fun SignInFactorOnePasskeyViewImpl(
 @PreviewLightDark
 @Composable
 private fun PreviewSignInFactorOnePasskeyView() {
-  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  SignInFactorOnePasskeyView(
-    factor = Factor(strategy = StrategyKeys.PASSKEY, safeIdentifier = "sam@clerk.dev")
-  )
+  PreviewAuthStateProvider {
+    Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
+    SignInFactorOnePasskeyView(
+      factor = Factor(strategy = StrategyKeys.PASSKEY, safeIdentifier = "sam@clerk.dev"),
+      onAuthComplete = {},
+    )
+  }
 }

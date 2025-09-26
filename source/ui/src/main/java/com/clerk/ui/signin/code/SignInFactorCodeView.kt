@@ -1,8 +1,9 @@
 package com.clerk.ui.signin.code
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -12,10 +13,15 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
+import com.clerk.ui.auth.Destination
+import com.clerk.ui.auth.LocalAuthState
+import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkTextButton
+import com.clerk.ui.core.common.AuthStateEffects
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.core.common.verificationState
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
@@ -34,15 +40,11 @@ import com.clerk.ui.theme.DefaultColors
  *
  * @param factor The authentication factor containing strategy and identifier information
  * @param modifier Optional [Modifier] to customize the appearance and behavior
- * @param onBackPressed Callback invoked when the back button is pressed
- * @param onClickResend Callback invoked when the resend code button is clicked
  * @sample
  *
  * ```kotlin
  * SignInFactorCodeView(
- *   factor = Factor(strategy = "email_code", emailAddressId = "user@example.com"),
- *   onBackPressed = { navController.popBackStack() },
- *   onClickResend = { /* Handle resend logic */ }
+ *   factor = Factor(strategy = "email_code", emailAddressId = "user@example.com")
  * )
  * ```
  */
@@ -50,16 +52,14 @@ import com.clerk.ui.theme.DefaultColors
 fun SignInFactorCodeView(
   factor: Factor,
   modifier: Modifier = Modifier,
-  onBackPressed: () -> Unit = {},
-  onClickResend: () -> Unit = {},
   isSecondFactor: Boolean = false,
+  onAuthComplete: () -> Unit,
 ) {
   SignInFactorCodeViewImpl(
     factor = factor,
     modifier = modifier,
-    onBackPressed = onBackPressed,
-    onClickResend = onClickResend,
     isSecondFactor = isSecondFactor,
+    onAuthComplete = onAuthComplete,
   )
 }
 
@@ -74,69 +74,65 @@ fun SignInFactorCodeView(
  * - Navigation actions (back, use another method)
  *
  * @param factor The authentication factor to process
- * @param onBackPressed Callback for back navigation
- * @param onClickResend Callback for resend code action
  * @param modifier Optional modifier for styling
  * @param viewModel The view model managing the sign-in state (injected via Compose)
- * @param onUseAnotherMethod Callback for "use another method" action
  */
 @Composable
 private fun SignInFactorCodeViewImpl(
   factor: Factor,
-  onBackPressed: () -> Unit,
-  onClickResend: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: SignInFactorCodeViewModel = viewModel(),
-  onUseAnotherMethod: () -> Unit = {},
   isSecondFactor: Boolean = false,
+  onAuthComplete: () -> Unit,
 ) {
+  val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
-  val verificationState = state.verificationState()
+  val snackbarHostState = remember { SnackbarHostState() }
 
-  LaunchedEffect(Unit) { viewModel.prepare(factor, isSecondFactor = isSecondFactor) }
+  viewModel.prepare(factor, isSecondFactor = isSecondFactor)
 
+  AuthStateEffects(
+    authState = authState,
+    state = state,
+    snackbarHostState = snackbarHostState,
+    onAuthComplete = onAuthComplete,
+    onReset = { viewModel.resetState() },
+  )
   ClerkThemedAuthScaffold(
     modifier = modifier,
-    onBackPressed = onBackPressed,
-    title = SignInFactorCodeHelper.titleForStrategy(factor),
-    subtitle = SignInFactorCodeHelper.subtitleForStrategy(factor),
+    onBackPressed = { authState.navigateBack() },
+    title = SignInFactorCodeUiHelper.titleForStrategy(factor),
+    subtitle = SignInFactorCodeUiHelper.subtitleForStrategy(factor),
     identifier = factor.safeIdentifier,
-    onClickIdentifier = { TODO() },
+    onClickIdentifier = { authState.navigateToAuthStart() },
   ) {
     ClerkCodeInputField(
-      verificationState = verificationState,
+      verificationState = state.verificationState(),
       onTextChange = {
         if (it.length == 6) {
           viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = it)
         }
       },
-      showResend = SignInFactorCodeHelper.showResend(factor, verificationState),
-      onClickResend = onClickResend,
+      showResend = SignInFactorCodeUiHelper.showResend(factor, state.verificationState()),
+      onClickResend = { viewModel.prepare(factor, isSecondFactor = isSecondFactor) },
     )
     Spacers.Vertical.Spacer24()
-    if (SignInFactorCodeHelper.showUseAnotherMethod(factor)) {
+    if (SignInFactorCodeUiHelper.showUseAnotherMethod(factor)) {
       ClerkTextButton(
         text = stringResource(R.string.use_another_method),
-        onClick = onUseAnotherMethod,
+        onClick = {
+          if (isSecondFactor) {
+            authState.navigateTo(
+              Destination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
+            )
+          } else {
+            authState.navigateTo(
+              Destination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
+            )
+          }
+        },
       )
     }
-  }
-}
-
-/**
- * Extension function that converts a [SignInFactorCodeViewModel.State] to a [VerificationState].
- *
- * This mapping provides a UI-focused state representation that can be used by input components to
- * determine their visual appearance and behavior.
- *
- * @return The corresponding [VerificationState] for the current view model state
- */
-private fun SignInFactorCodeViewModel.State.verificationState(): VerificationState {
-  return when (this) {
-    SignInFactorCodeViewModel.State.Error -> VerificationState.Error
-    SignInFactorCodeViewModel.State.Idle -> VerificationState.Default
-    SignInFactorCodeViewModel.State.Success -> VerificationState.Success
-    SignInFactorCodeViewModel.State.Verifying -> VerificationState.Verifying
   }
 }
 
@@ -148,9 +144,14 @@ private fun SignInFactorCodeViewModel.State.verificationState(): VerificationSta
 @Preview
 @Composable
 private fun PreviewSignInFactorCodeView() {
-  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme {
-    SignInFactorCodeView(Factor(StrategyKeys.PHONE_CODE, safeIdentifier = "sam@clerk.dev"))
+  PreviewAuthStateProvider {
+    Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
+    ClerkMaterialTheme {
+      SignInFactorCodeView(
+        Factor(StrategyKeys.PHONE_CODE, safeIdentifier = "sam@clerk.dev"),
+        onAuthComplete = {},
+      )
+    }
   }
 }
 

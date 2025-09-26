@@ -3,12 +3,11 @@ package com.clerk.ui.signup.collectfield
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
@@ -18,9 +17,13 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
+import com.clerk.ui.auth.LocalAuthState
+import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
+import com.clerk.ui.core.common.AuthStateEffects
+import com.clerk.ui.core.common.AuthenticationViewState
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.dimens.dp24
 import com.clerk.ui.core.input.ClerkPhoneNumberField
@@ -29,54 +32,55 @@ import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 
 @Composable
 fun SignUpCollectFieldView(
-  collectField: CollectField,
+  field: CollectField,
+  onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
   progress: Int = 0,
-  onSkipClick: () -> Unit = {},
   collectFieldHelper: CollectFieldHelper = CollectFieldHelper(),
 ) {
   SignUpCollectFieldViewImpl(
-    collectField = collectField,
+    collectField = field,
     modifier = modifier,
     collectFieldHelper = collectFieldHelper,
-    onSkipClick = onSkipClick,
     progress = progress,
+    onAuthComplete = onAuthComplete,
   )
 }
 
 @Composable
 private fun SignUpCollectFieldViewImpl(
-    collectField: CollectField,
-    collectFieldHelper: CollectFieldHelper,
-    onSkipClick: () -> Unit,
-    progress: Int,
-    modifier: Modifier = Modifier,
-    viewModel: CollectFieldViewModel = viewModel()
+  collectField: CollectField,
+  collectFieldHelper: CollectFieldHelper,
+  progress: Int,
+  onAuthComplete: () -> Unit,
+  modifier: Modifier = Modifier,
+  viewModel: CollectFieldViewModel = viewModel(),
 ) {
 
-  var email by remember { mutableStateOf("") }
-  var password by remember { mutableStateOf("") }
-  var phone by remember { mutableStateOf("") }
-  var username by remember { mutableStateOf("") }
-
+  val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
+  val snackbarHostState = remember { SnackbarHostState() }
 
-  val continueIsEnabled by remember {
-    derivedStateOf {
-      when (collectField) {
-        CollectField.Email -> email.isNotEmpty()
-        CollectField.Password -> password.isNotEmpty()
-        CollectField.Phone -> phone.isNotEmpty()
-        CollectField.Username -> username.isNotEmpty()
+  AuthStateEffects(authState, state, snackbarHostState, onAuthComplete) { viewModel.resetState() }
+
+  val continueIsEnabled by
+    remember(collectField) {
+      derivedStateOf {
+        when (collectField) {
+          CollectField.Email -> authState.signUpEmail.isNotEmpty()
+          CollectField.Password -> authState.signUpPassword.isNotEmpty()
+          CollectField.Phone -> authState.signUpPhoneNumber.isNotEmpty()
+          CollectField.Username -> authState.signUpUsername.isNotEmpty()
+        }
       }
     }
-  }
 
   ClerkThemedAuthScaffold(
     modifier = modifier,
     title = collectFieldHelper.title(collectField),
     subtitle = collectFieldHelper.subtitle(collectField),
     hasLogo = false,
+    snackbarHostState = snackbarHostState,
   ) {
     Column(
       modifier = Modifier.fillMaxWidth(),
@@ -87,26 +91,34 @@ private fun SignUpCollectFieldViewImpl(
       InputField(
         collectField = collectField,
         collectFieldHelper = collectFieldHelper,
-        email = email,
-        onEmailChange = { email = it },
-        password = password,
-        onPasswordChange = { password = it },
-        phone = phone,
-        onPhoneChange = { phone = it },
-        username = username,
-        onUsernameChange = { username = it },
+        email = authState.signUpEmail,
+        onEmailChange = { authState.signUpEmail = it },
+        password = authState.signUpPassword,
+        onPasswordChange = { authState.signUpPassword = it },
+        phone = authState.signUpPhoneNumber,
+        onPhoneChange = { authState.signUpPhoneNumber = it },
+        username = authState.signUpUsername,
+        onUsernameChange = { authState.signUpUsername = it },
       )
 
       ClerkButton(
         text = stringResource(R.string.continue_text),
-        onClick = { viewModel.updateSignUp(collectField, email, password, phone, username) },
+        onClick = {
+          viewModel.updateSignUp(
+            collectField,
+            email = authState.signUpEmail,
+            password = authState.signUpPassword,
+            phone = authState.signUpPhoneNumber,
+            username = authState.signUpUsername,
+          )
+        },
         modifier = Modifier.fillMaxWidth(),
         isEnabled = continueIsEnabled,
-        isLoading = state is CollectFieldViewModel.State.Loading,
+        isLoading = state is AuthenticationViewState.Loading,
         icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
       )
       if (collectFieldHelper.fieldIsOptional(collectField)) {
-        ClerkTextButton(text = stringResource(R.string.skip), onClick = onSkipClick)
+        ClerkTextButton(text = stringResource(R.string.skip), onClick = {})
       }
     }
   }
@@ -173,5 +185,7 @@ enum class CollectField(val rawValue: String) {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  SignUpCollectFieldView(collectField = CollectField.Password)
+  PreviewAuthStateProvider {
+    SignUpCollectFieldView(field = CollectField.Password, onAuthComplete = {})
+  }
 }

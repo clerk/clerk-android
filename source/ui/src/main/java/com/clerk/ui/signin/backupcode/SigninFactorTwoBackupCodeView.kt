@@ -3,91 +3,75 @@ package com.clerk.ui.signin.backupcode
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
+import com.clerk.ui.auth.Destination
+import com.clerk.ui.auth.LocalAuthState
+import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
+import com.clerk.ui.core.common.AuthStateEffects
+import com.clerk.ui.core.common.AuthenticationViewState
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
+import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**
  * A composable view for handling second-factor authentication using a backup code.
  *
- * @param onBackPressed A callback invoked when the user presses the back button.
- * @param onSubmitSuccess A callback invoked when the backup code is successfully verified.
  * @param modifier The [Modifier] to be applied to the view.
- * @param onUseAnotherMethod A callback invoked when the user chooses to use another authentication
- *   method.
  */
 @Composable
 fun SignInFactorTwoBackupCodeView(
-  onBackPressed: () -> Unit,
-  onSubmitSuccess: () -> Unit,
+  factor: Factor,
   modifier: Modifier = Modifier,
-  onUseAnotherMethod: () -> Unit,
+  onAuthComplete: () -> Unit,
 ) {
   SignInFactorTwoBackupCodeViewImpl(
-    onBackPressed = onBackPressed,
+    factor = factor,
     modifier = modifier,
-    onSubmitSuccess = onSubmitSuccess,
-    onUseAnotherMethod = onUseAnotherMethod,
+    onAuthComplete = onAuthComplete,
   )
 }
 
 /**
  * The internal implementation of the [SignInFactorTwoBackupCodeView].
  *
- * @param onBackPressed A callback invoked when the user presses the back button.
  * @param modifier The [Modifier] to be applied to the view.
  * @param viewModel The [BackupCodeViewModel] used to manage the state and actions of the view.
- * @param onSubmitSuccess A callback invoked when the backup code is successfully verified.
- * @param onUseAnotherMethod A callback invoked when the user chooses to use another authentication
- *   method.
  */
 @Composable
 private fun SignInFactorTwoBackupCodeViewImpl(
-  onBackPressed: () -> Unit,
+  factor: Factor,
   modifier: Modifier = Modifier,
   viewModel: BackupCodeViewModel = viewModel(),
-  onSubmitSuccess: () -> Unit = {},
-  onUseAnotherMethod: () -> Unit = {},
+  onAuthComplete: () -> Unit,
 ) {
+  val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
-  var backupCode by remember { mutableStateOf("") }
   val snackbarHostState = remember { SnackbarHostState() }
-  val context = LocalContext.current
 
-  LaunchedEffect(state) {
-    if (state is BackupCodeViewModel.AuthenticationState.Success) {
-      onSubmitSuccess()
-    }
-  }
-
-  LaunchedEffect(state) {
-    if (state is BackupCodeViewModel.AuthenticationState.Error) {
-      snackbarHostState.showSnackbar(
-        message =
-          (state as BackupCodeViewModel.AuthenticationState.Error).message
-            ?: context.getString(R.string.an_error_occurred)
-      )
-    }
+  AuthStateEffects(
+    authState = authState,
+    state = state,
+    snackbarHostState = snackbarHostState,
+    onAuthComplete = onAuthComplete,
+  ) {
+    viewModel.resetState()
   }
 
   ClerkThemedAuthScaffold(
-    onBackPressed = onBackPressed,
+    onBackPressed = { authState.navigateBack() },
     modifier = modifier,
     hasLogo = false,
     title = stringResource(R.string.enter_a_backup_code),
@@ -96,22 +80,24 @@ private fun SignInFactorTwoBackupCodeViewImpl(
   ) {
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
-      value = backupCode,
-      onValueChange = { backupCode = it },
+      value = authState.signInBackupCode,
+      onValueChange = { authState.signInBackupCode = it },
       label = stringResource(R.string.backup_code),
     )
     Spacers.Vertical.Spacer24()
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.continue_text),
-      isLoading = state is BackupCodeViewModel.AuthenticationState.Verifying,
-      onClick = { viewModel.submit(backupCode) },
+      isLoading = state is AuthenticationViewState.Loading,
+      onClick = { viewModel.submit(authState.signInBackupCode) },
       icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
     )
     Spacers.Vertical.Spacer24()
     ClerkTextButton(
       text = stringResource(R.string.use_another_method),
-      onClick = onUseAnotherMethod,
+      onClick = {
+        authState.navigateTo(Destination.SignInFactorTwoUseAnotherMethod(currentFactor = factor))
+      },
     )
   }
 }
@@ -119,7 +105,12 @@ private fun SignInFactorTwoBackupCodeViewImpl(
 @PreviewLightDark
 @Composable
 private fun PreviewSignInFactorTwoBackupCodeView() {
-  ClerkMaterialTheme {
-    SignInFactorTwoBackupCodeView(onBackPressed = {}, onUseAnotherMethod = {}, onSubmitSuccess = {})
+  PreviewAuthStateProvider {
+    ClerkMaterialTheme {
+      SignInFactorTwoBackupCodeView(
+        onAuthComplete = {},
+        factor = Factor(strategy = StrategyKeys.PASSWORD),
+      )
+    }
   }
 }

@@ -15,13 +15,16 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.core.net.toUri
 import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
+import com.clerk.ui.auth.LocalAuthState
+import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignInGetHelpView(modifier: Modifier = Modifier, onBackPressed: () -> Unit = {}) {
+fun SignInGetHelpView(modifier: Modifier = Modifier) {
+  val authState = LocalAuthState.current
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
   ClerkThemedAuthScaffold(
@@ -29,7 +32,7 @@ fun SignInGetHelpView(modifier: Modifier = Modifier, onBackPressed: () -> Unit =
     modifier = modifier,
     title = stringResource(R.string.get_help),
     subtitle = stringResource(R.string.if_you_have_trouble_signing_into_your_account),
-    onBackPressed = onBackPressed,
+    onBackPressed = { authState.navigateBack() },
   ) {
     val context = LocalContext.current
     val emailIntent =
@@ -61,5 +64,5 @@ fun SignInGetHelpView(modifier: Modifier = Modifier, onBackPressed: () -> Unit =
 @PreviewLightDark
 @Composable
 private fun PreviewSignInGetHelpView() {
-  ClerkMaterialTheme { SignInGetHelpView() }
+  PreviewAuthStateProvider { ClerkMaterialTheme { SignInGetHelpView() } }
 }

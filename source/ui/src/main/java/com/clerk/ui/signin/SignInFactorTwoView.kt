@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.signin.backupcode.SignInFactorTwoBackupCodeView
 import com.clerk.ui.signin.code.SignInFactorCodeView
@@ -21,24 +22,30 @@ import com.clerk.ui.signin.help.SignInGetHelpView
  * @param modifier The [Modifier] to be applied to the view.
  */
 @Composable
-fun SignInFactorTwoView(factor: Factor, modifier: Modifier = Modifier) {
+fun SignInFactorTwoView(factor: Factor, modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
   when (factor.strategy) {
     StrategyKeys.TOTP,
     StrategyKeys.PHONE_CODE ->
-      SignInFactorCodeView(factor = factor, isSecondFactor = true, modifier = modifier)
+      SignInFactorCodeView(
+        factor = factor,
+        isSecondFactor = true,
+        modifier = modifier,
+        onAuthComplete = onAuthComplete,
+      )
     StrategyKeys.BACKUP_CODE ->
       SignInFactorTwoBackupCodeView(
-        onBackPressed = {},
         modifier = modifier,
-        onSubmitSuccess = {},
-        onUseAnotherMethod = {},
+        factor = factor,
+        onAuthComplete = onAuthComplete,
       )
-    else -> SignInGetHelpView()
+    else -> SignInGetHelpView(modifier = modifier)
   }
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  SignInFactorTwoView(factor = Factor(StrategyKeys.TOTP))
+  PreviewAuthStateProvider {
+    SignInFactorTwoView(factor = Factor(StrategyKeys.TOTP), onAuthComplete = {})
+  }
 }
