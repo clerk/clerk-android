@@ -11,20 +11,32 @@ import com.clerk.api.signin.prepareSecondFactor
 internal class SignInPrepareHandler {
 
   internal suspend fun prepareForResetWithEmailCode(inProgressSignIn: SignIn, factor: Factor) {
+    val emailAddressId = factor.emailAddressId
+    if (emailAddressId == null) {
+      ClerkLog.e("Error preparing for reset password with email code: emailAddressId is null")
+      return
+    }
+    
     inProgressSignIn
       .prepareFirstFactor(
         SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(
-          emailAddressId = factor.emailAddressId!!
+          emailAddressId = emailAddressId
         )
       )
       .onFailure { ClerkLog.e("Error preparing for reset password with email code: $it") }
   }
 
   internal suspend fun prepareForResetPasswordWithPhone(inProgressSignIn: SignIn, factor: Factor) {
+    val phoneNumberId = factor.phoneNumberId
+    if (phoneNumberId == null) {
+      ClerkLog.e("Error preparing for reset password with phone code: phoneNumberId is null")
+      return
+    }
+    
     inProgressSignIn
       .prepareFirstFactor(
         SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(
-          phoneNumberId = factor.phoneNumberId!!
+          phoneNumberId = phoneNumberId
         )
       )
       .onFailure {
@@ -37,24 +49,36 @@ internal class SignInPrepareHandler {
     factor: Factor,
     isSecondFactor: Boolean,
   ) {
+    val phoneNumberId = factor.phoneNumberId
+    if (phoneNumberId == null) {
+      ClerkLog.e("Error preparing for phone code: phoneNumberId is null")
+      return
+    }
+    
     if (isSecondFactor) {
       inProgressSignIn
-        .prepareSecondFactor(factor.phoneNumberId!!)
+        .prepareSecondFactor(phoneNumberId)
         .onSuccess { ClerkLog.v("Successfully prepared second factor for phone code") }
         .onFailure { ClerkLog.e("Error preparing second factor for phone code: $it") }
     } else {
       inProgressSignIn
         .prepareFirstFactor(
-          SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = factor.phoneNumberId!!)
+          SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneNumberId)
         )
         .onFailure { ClerkLog.e("Error preparing for phone code: $it") }
     }
   }
 
   internal suspend fun prepareForEmailCode(inProgressSignIn: SignIn, factor: Factor) {
+    val emailAddressId = factor.emailAddressId
+    if (emailAddressId == null) {
+      ClerkLog.e("Error preparing for email code: emailAddressId is null")
+      return
+    }
+    
     inProgressSignIn
       .prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = factor.emailAddressId!!)
+        SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailAddressId)
       )
       .onSuccess { ClerkLog.v("Successfully prepared for email code: $it") }
       .onFailure { ClerkLog.e("Error preparing for email code: $it") }

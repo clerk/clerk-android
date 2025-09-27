@@ -63,7 +63,12 @@ internal class AuthViewModel : ViewModel() {
           identifier = identifier,
           phoneNumber = phoneNumber,
         )
-      AuthMode.SignInOrUp -> TODO("SignInOrUp mode is not yet implemented")
+      AuthMode.SignInOrUp ->
+        signInOrUp(
+          isPhoneNumberFieldActive = isPhoneNumberFieldActive,
+          phoneNumber = phoneNumber,
+          identifier = identifier,
+        )
     }
   }
 
@@ -95,6 +100,36 @@ internal class AuthViewModel : ViewModel() {
           withContext(Dispatchers.Main) {
             _state.value = AuthState.Error(it.longErrorMessageOrNull)
           }
+        }
+    }
+  }
+
+  private fun signInOrUp(isPhoneNumberFieldActive: Boolean, phoneNumber: String, identifier: String) {
+    viewModelScope.launch(Dispatchers.IO) {
+      _state.value = AuthState.Loading
+      val resolvedIdentifier = if (isPhoneNumberFieldActive) phoneNumber else identifier
+
+      // First try to sign in
+      SignIn.create(SignIn.CreateParams.Strategy.Identifier(identifier = resolvedIdentifier))
+        .onSuccess { signIn -> handleSignInSuccess(signIn) }
+        .onFailure { signInError ->
+          // If sign in fails, try to sign up
+          SignUp.create(
+              signUpParams(
+                isPhoneNumberFieldActive = isPhoneNumberFieldActive,
+                identifier = identifier,
+                phoneNumber = phoneNumber,
+              )
+            )
+            .onSuccess {
+              withContext(Dispatchers.Main) { _state.value = AuthState.Success(signUp = it) }
+            }
+            .onFailure { signUpError ->
+              withContext(Dispatchers.Main) {
+                // If both fail, show the sign in error as it's typically more informative
+                _state.value = AuthState.Error(signInError.longErrorMessageOrNull)
+              }
+            }
         }
     }
   }
@@ -199,7 +234,12 @@ internal class AuthViewModel : ViewModel() {
     SignIn.authenticateWithRedirect(
       SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(redirectUrl = redirectUrl)
     )
-    TODO("Need to understand `authenticateWithRedirect` from the iOS SDK for Enterprise SSO")
+      .onSuccess { signIn ->
+        withContext(Dispatchers.Main) { _state.value = AuthState.Success(signIn = signIn) }
+      }
+      .onFailure { throwable ->
+        withContext(Dispatchers.Main) { _state.value = AuthState.Error(throwable.longErrorMessageOrNull) }
+      }
   }
 
   /** Represents the various states of the authentication process. */

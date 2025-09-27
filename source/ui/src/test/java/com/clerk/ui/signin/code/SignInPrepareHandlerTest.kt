@@ -247,31 +247,25 @@ class SignInPrepareHandlerTest {
   fun prepareForPhoneCodeShouldHandleNullPhoneNumberId() = runTest {
     val factor = Factor(strategy = "phone_code", phoneNumberId = null)
 
-    // This should throw a NullPointerException due to the !! operator in the handler
-    var thrownException: Exception? = null
-    try {
-      handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = false)
-    } catch (e: Exception) {
-      thrownException = e
-    }
+    // This should now handle null gracefully and not throw an exception
+    handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = false)
 
-    // Verify that an exception was thrown (due to null phoneNumberId!!)
-    assert(thrownException != null)
+    // Verify that no API call was made since phoneNumberId was null
+    coVerify(exactly = 0) {
+      mockSignIn.prepareFirstFactor(any())
+    }
   }
 
   @Test
   fun prepareForEmailCodeShouldHandleNullEmailAddressId() = runTest {
     val factor = Factor(strategy = "email_code", emailAddressId = null)
 
-    // This should throw a NullPointerException due to the !! operator in the handler
-    var thrownException: Exception? = null
-    try {
-      handler.prepareForEmailCode(mockSignIn, factor)
-    } catch (e: Exception) {
-      thrownException = e
-    }
+    // This should now handle null gracefully and not throw an exception
+    handler.prepareForEmailCode(mockSignIn, factor)
 
-    // Verify that an exception was thrown (due to null emailAddressId!!)
-    assert(thrownException != null)
+    // Verify that no API call was made since emailAddressId was null
+    coVerify(exactly = 0) {
+      mockSignIn.prepareFirstFactor(any())
+    }
   }
 }

@@ -222,19 +222,31 @@ internal class AuthStartViewModel : ViewModel() {
         val startingFactor = signIn.startingFirstFactor
         try {
           when (startingFactor?.strategy) {
-            StrategyKeys.EMAIL_CODE ->
-              signIn.prepareFirstFactor(
-                SignIn.PrepareFirstFactorParams.EmailCode(
-                  emailAddressId = startingFactor.emailAddressId!!
+            StrategyKeys.EMAIL_CODE -> {
+              val emailAddressId = startingFactor.emailAddressId
+              if (emailAddressId != null) {
+                signIn.prepareFirstFactor(
+                  SignIn.PrepareFirstFactorParams.EmailCode(
+                    emailAddressId = emailAddressId
+                  )
                 )
-              )
+              } else {
+                ClerkLog.e("Cannot prepare EMAIL_CODE factor: emailAddressId is null")
+              }
+            }
 
-            StrategyKeys.PHONE_CODE ->
-              signIn.prepareFirstFactor(
-                SignIn.PrepareFirstFactorParams.PhoneCode(
-                  phoneNumberId = startingFactor.phoneNumberId!!
+            StrategyKeys.PHONE_CODE -> {
+              val phoneNumberId = startingFactor.phoneNumberId
+              if (phoneNumberId != null) {
+                signIn.prepareFirstFactor(
+                  SignIn.PrepareFirstFactorParams.PhoneCode(
+                    phoneNumberId = phoneNumberId
+                  )
                 )
-              )
+              } else {
+                ClerkLog.e("Cannot prepare PHONE_CODE factor: phoneNumberId is null")
+              }
+            }
           }
         } catch (t: Throwable) {
           ClerkLog.e("Error pre-preparing first factor: ${t.message}")
