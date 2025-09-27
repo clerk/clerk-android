@@ -35,7 +35,7 @@ private val LightColorScheme =
   )
 
 @Composable
-fun ClerkTheme(
+fun WorkbenchTheme(
   darkTheme: Boolean = isSystemInDarkTheme(),
   // Dynamic color is available on Android 12+
   dynamicColor: Boolean = false,
