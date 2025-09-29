@@ -27,7 +27,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
@@ -52,6 +51,7 @@ import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
@@ -198,7 +198,6 @@ private fun SupportingText(verificationState: VerificationState) {
  *
  * @param onClick Callback invoked when the resend link is clicked.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ResendCodeText(onClick: () -> Unit) {
   val annotatedString = buildAnnotatedString {
@@ -213,7 +212,7 @@ private fun ResendCodeText(onClick: () -> Unit) {
   Text(
     modifier = Modifier.clickable { onClick() }.padding(vertical = dp24),
     text = annotatedString,
-    style = ClerkMaterialTheme.typography.titleSmallEmphasized,
+    style = ClerkMaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
   )
 }
 

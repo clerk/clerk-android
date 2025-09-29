@@ -386,7 +386,7 @@ data class SignIn(
       @SerialName("email_address_id")
       val emailAddressId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
-      val strategy: String = EMAIL_CODE,
+      override val strategy: String = EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -395,7 +395,7 @@ data class SignIn(
       @SerialName("phone_number_id")
       val phoneNumberId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
-      val strategy: String = PHONE_CODE,
+      override val strategy: String = PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -403,7 +403,7 @@ data class SignIn(
     data class ResetPasswordEmailCode(
       val emailAddressId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
-      val strategy: String = RESET_PASSWORD_EMAIL_CODE,
+      override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -411,13 +411,13 @@ data class SignIn(
     data class ResetPasswordPhoneCode(
       val phoneNumberId: String =
         signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
-      val strategy: String = RESET_PASSWORD_PHONE_CODE,
+      override val strategy: String = RESET_PASSWORD_PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class OAuth(
-      @SerialName("strategy") @MapProperty("providerData?.strategy") val provider: OAuthProvider,
+      override val strategy: String,
       @SerialName("redirect_url")
       val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : PrepareFirstFactorParams
@@ -425,14 +425,14 @@ data class SignIn(
     @AutoMap
     @Serializable
     data class EnterpriseSSO(
-      val strategy: String = ENTERPRISE_SSO,
+      override val strategy: String = ENTERPRISE_SSO,
       @SerialName("redirect_url")
       val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
-    data class Passkey(val strategy: String = PASSKEY) : PrepareFirstFactorParams
+    data class Passkey(override val strategy: String = PASSKEY) : PrepareFirstFactorParams
   }
 
   /**
