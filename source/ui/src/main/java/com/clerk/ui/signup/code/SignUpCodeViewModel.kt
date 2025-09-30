@@ -10,17 +10,20 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.attemptVerification
 import com.clerk.api.signup.prepareVerification
 import com.clerk.ui.core.common.AuthenticationViewState
+import com.clerk.ui.core.common.VerificationUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class SignUpCodeViewModel : ViewModel() {
 
+  private val _verificationState = MutableStateFlow<VerificationUiState>(VerificationUiState.Idle)
+  val verificationState = _verificationState.asStateFlow()
+
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
   fun prepare(field: SignUpCodeField) {
-    _state.value = AuthenticationViewState.Loading
     val signUp = Clerk.client.signUp ?: return
     viewModelScope.launch {
       val signUp =
@@ -39,6 +42,7 @@ internal class SignUpCodeViewModel : ViewModel() {
   }
 
   fun attempt(code: String, field: SignUpCodeField) {
+    _verificationState.value = VerificationUiState.Verifying
     val signUp = Clerk.client.signUp ?: return
     viewModelScope.launch {
       val signUp =
@@ -49,12 +53,22 @@ internal class SignUpCodeViewModel : ViewModel() {
             signUp.attemptVerification(SignUp.AttemptVerificationParams.PhoneCode(code))
         }
       signUp
-        .onSuccess { _state.value = AuthenticationViewState.Success.SignUp(it) }
-        .onFailure { _state.value = AuthenticationViewState.Error(it.longErrorMessageOrNull) }
+        .onSuccess {
+          _verificationState.value = VerificationUiState.Verified
+          _state.value = AuthenticationViewState.Success.SignUp(it)
+        }
+        .onFailure {
+          _verificationState.value = VerificationUiState.Error(it.longErrorMessageOrNull)
+          _state.value = AuthenticationViewState.Error(it.longErrorMessageOrNull)
+        }
     }
   }
 
   fun reset() {
     _state.value = AuthenticationViewState.Idle
+  }
+
+  fun resetVerificationState() {
+    _verificationState.value = VerificationUiState.Idle
   }
 }
