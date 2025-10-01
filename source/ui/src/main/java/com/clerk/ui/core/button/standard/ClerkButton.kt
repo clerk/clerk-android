@@ -25,12 +25,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.common.dimens.dp1
@@ -541,6 +544,28 @@ private fun PreviewButton() {
             ),
         )
       }
+    }
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun Preview() {
+  Clerk.customTheme = ClerkTheme(darkColors = ClerkColors(primary = Color.Red))
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp12)) {
+      ClerkButton(
+        modifier = Modifier.fillMaxWidth(),
+        text = stringResource(R.string.continue_text),
+        isLoading = false,
+        isEnabled = false,
+        icons =
+          ClerkButtonDefaults.icons(
+            trailingIcon = R.drawable.ic_triangle_right,
+            trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+          ),
+        onClick = {},
+      )
     }
   }
 }

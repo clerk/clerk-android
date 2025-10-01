@@ -20,9 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -34,7 +32,6 @@ import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.DefaultColors
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -213,7 +210,7 @@ private fun AuthActionButtons(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
+  //  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
   val authViewHelper = AuthStartViewHelper()
 
   authViewHelper.setTestValues(
