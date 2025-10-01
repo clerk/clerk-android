@@ -15,10 +15,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkColors
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.workbench.ui.theme.WorkbenchTheme
@@ -30,6 +33,7 @@ class UiActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    Clerk.customTheme = ClerkTheme(darkColors = ClerkColors(primary = Color.Red))
     setContent {
       val context = LocalContext.current
       WorkbenchTheme {
