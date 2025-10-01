@@ -4,7 +4,6 @@ package com.clerk.ui.signin.code
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.core.common.AuthenticationViewState
@@ -23,7 +22,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -127,16 +125,10 @@ class SignInFactorCodeViewModelTest {
     every { Clerk.signIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
 
-    var thrownError: Throwable? = null
-    try {
-      viewModel.prepare(factor, isSecondFactor = false)
-      testDispatcher.scheduler.advanceUntilIdle()
-    } catch (e: Throwable) {
-      thrownError = e
-    }
+    viewModel.prepare(factor, isSecondFactor = false)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-    assertTrue(thrownError is IllegalStateException)
-    assertEquals("No sign in in progress", thrownError?.message)
+    viewModel.state.test { assertEquals(AuthenticationViewState.NotStarted, awaitItem()) }
   }
 
   @Test
@@ -154,8 +146,8 @@ class SignInFactorCodeViewModelTest {
         )
       } coAnswers
         {
-          val onSuccess = args[2] as suspend () -> Unit
-          onSuccess()
+          val onSuccess = args[2] as suspend (SignIn) -> Unit
+          onSuccess(mockSignIn)
         }
 
       viewModel.attempt(factor, isSecondFactor = false, code)
@@ -191,8 +183,8 @@ class SignInFactorCodeViewModelTest {
         )
       } coAnswers
         {
-          val onSuccess = args[3] as suspend () -> Unit
-          onSuccess()
+          val onSuccess = args[3] as suspend (SignIn) -> Unit
+          onSuccess(mockSignIn)
         }
 
       viewModel.attempt(factor, isSecondFactor, code)
@@ -226,8 +218,8 @@ class SignInFactorCodeViewModelTest {
       )
     } coAnswers
       {
-        val onSuccess = args[2] as suspend () -> Unit
-        onSuccess()
+        val onSuccess = args[2] as suspend (SignIn) -> Unit
+        onSuccess(mockSignIn)
       }
 
     viewModel.attempt(factor, isSecondFactor = false, code)
@@ -260,8 +252,8 @@ class SignInFactorCodeViewModelTest {
       )
     } coAnswers
       {
-        val onSuccess = args[2] as suspend () -> Unit
-        onSuccess()
+        val onSuccess = args[2] as suspend (SignIn) -> Unit
+        onSuccess(mockSignIn)
       }
 
     viewModel.attempt(factor, isSecondFactor = false, code)
@@ -294,8 +286,8 @@ class SignInFactorCodeViewModelTest {
       )
     } coAnswers
       {
-        val onSuccess = args[2] as suspend () -> Unit
-        onSuccess()
+        val onSuccess = args[2] as suspend (SignIn) -> Unit
+        onSuccess(mockSignIn)
       }
 
     viewModel.attempt(factor, isSecondFactor = true, code)
@@ -318,7 +310,6 @@ class SignInFactorCodeViewModelTest {
   fun attemptShouldSetErrorStateWhenHandlerCallsOnErrorCallback() = runTest {
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
     val code = "123456"
-    val mockError = mockk<ClerkErrorResponse>()
 
     coEvery {
       mockAttemptHandler.attemptFirstFactorEmailCode(
@@ -329,14 +320,19 @@ class SignInFactorCodeViewModelTest {
       )
     } coAnswers
       {
-        val onError = args[3] as suspend (ClerkErrorResponse?) -> Unit
-        onError(mockError)
+        val onError = args[3] as suspend (String?) -> Unit
+        onError("error")
       }
 
-    viewModel.attempt(factor, isSecondFactor = false, code)
-    testDispatcher.scheduler.advanceUntilIdle()
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
 
-    viewModel.state.test { assertEquals(AuthenticationViewState.Error(""), awaitItem()) }
+      viewModel.attempt(factor, isSecondFactor = false, code)
+
+      // First, the view model emits Loading; then, error from the handler
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
+      assertEquals(AuthenticationViewState.Error("error"), awaitItem())
+    }
   }
 
   @Test
@@ -345,16 +341,10 @@ class SignInFactorCodeViewModelTest {
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
     val code = "123456"
 
-    var thrownError: Throwable? = null
-    try {
-      viewModel.attempt(factor, isSecondFactor = false, code)
-      testDispatcher.scheduler.advanceUntilIdle()
-    } catch (e: Throwable) {
-      thrownError = e
-    }
+    viewModel.attempt(factor, isSecondFactor = false, code)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-    assertTrue(thrownError is IllegalStateException)
-    assertEquals("No sign in in progress", thrownError?.message)
+    viewModel.state.test { assertEquals(AuthenticationViewState.NotStarted, awaitItem()) }
   }
 
   @Test

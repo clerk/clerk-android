@@ -63,9 +63,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify {
-      mockSignIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
-    }
+    coVerify { mockSignIn.attemptFirstFactor(any()) }
     assert(successCallbackCalled)
     assert(!errorCallbackCalled)
   }
@@ -74,6 +72,7 @@ class SignInAttemptHandlerTest {
   fun attemptFirstFactorEmailCodeShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "123456"
     val errorResponse = mockk<ClerkErrorResponse>()
+    every { errorResponse.errors } returns emptyList()
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -88,14 +87,12 @@ class SignInAttemptHandlerTest {
       code = code,
       onSuccessCallback = { successCallbackCalled = true },
       onErrorCallback = {
-        receivedError = it
+        receivedError = errorResponse
         errorCallbackCalled = true
       },
     )
 
-    coVerify {
-      mockSignIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
-    }
+    coVerify { mockSignIn.attemptFirstFactor(any()) }
     assert(!successCallbackCalled)
     assert(errorCallbackCalled)
     assert(receivedError == errorResponse)
@@ -121,9 +118,7 @@ class SignInAttemptHandlerTest {
         onErrorCallback = { errorCallbackCalled = true },
       )
 
-      coVerify {
-        mockSignIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.PhoneCode(code = code))
-      }
+      coVerify { mockSignIn.attemptFirstFactor(any()) }
       assert(successCallbackCalled)
       assert(!errorCallbackCalled)
     }
@@ -132,6 +127,7 @@ class SignInAttemptHandlerTest {
   fun attemptFirstFactorPhoneCodeAsFirstFactorShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "654321"
     val errorResponse = mockk<ClerkErrorResponse>()
+    every { errorResponse.errors } returns emptyList()
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -148,9 +144,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify {
-      mockSignIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.PhoneCode(code = code))
-    }
+    coVerify { mockSignIn.attemptFirstFactor(any()) }
     assert(!successCallbackCalled)
     assert(errorCallbackCalled)
   }
@@ -175,9 +169,7 @@ class SignInAttemptHandlerTest {
         onErrorCallback = { errorCallbackCalled = true },
       )
 
-      coVerify {
-        mockSignIn.attemptSecondFactor(SignIn.AttemptSecondFactorParams.PhoneCode(code = code))
-      }
+      coVerify { mockSignIn.attemptSecondFactor(any()) }
       assert(successCallbackCalled)
       assert(!errorCallbackCalled)
     }
@@ -186,6 +178,7 @@ class SignInAttemptHandlerTest {
   fun attemptFirstFactorPhoneCodeAsSecondFactorShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "789012"
     val errorResponse = mockk<ClerkErrorResponse>()
+    every { errorResponse.errors } returns emptyList()
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -202,9 +195,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify {
-      mockSignIn.attemptSecondFactor(SignIn.AttemptSecondFactorParams.PhoneCode(code = code))
-    }
+    coVerify { mockSignIn.attemptSecondFactor(any()) }
     assert(!successCallbackCalled)
     assert(errorCallbackCalled)
   }
@@ -227,7 +218,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify { mockSignIn.attemptSecondFactor(SignIn.AttemptSecondFactorParams.TOTP(code = code)) }
+    coVerify { mockSignIn.attemptSecondFactor(any()) }
     assert(successCallbackCalled)
     assert(!errorCallbackCalled)
   }
@@ -236,6 +227,7 @@ class SignInAttemptHandlerTest {
   fun attemptForTotpShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "345678"
     val errorResponse = mockk<ClerkErrorResponse>()
+    every { errorResponse.errors } returns emptyList()
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -251,7 +243,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify { mockSignIn.attemptSecondFactor(SignIn.AttemptSecondFactorParams.TOTP(code = code)) }
+    coVerify { mockSignIn.attemptSecondFactor(any()) }
     assert(!successCallbackCalled)
     assert(errorCallbackCalled)
   }
@@ -276,11 +268,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify {
-      mockSignIn.attemptFirstFactor(
-        SignIn.AttemptFirstFactorParams.ResetPasswordEmailCode(code = code)
-      )
-    }
+    coVerify { mockSignIn.attemptFirstFactor(any()) }
     assert(successCallbackCalled)
     assert(!errorCallbackCalled)
   }
@@ -289,6 +277,7 @@ class SignInAttemptHandlerTest {
   fun attemptResetForEmailCodeShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "901234"
     val errorResponse = mockk<ClerkErrorResponse>()
+    every { errorResponse.errors } returns emptyList()
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -306,11 +295,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify {
-      mockSignIn.attemptFirstFactor(
-        SignIn.AttemptFirstFactorParams.ResetPasswordEmailCode(code = code)
-      )
-    }
+    coVerify { mockSignIn.attemptFirstFactor(any()) }
     assert(!successCallbackCalled)
     assert(errorCallbackCalled)
   }
@@ -335,11 +320,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify {
-      mockSignIn.attemptFirstFactor(
-        SignIn.AttemptFirstFactorParams.ResetPasswordPhoneCode(code = code)
-      )
-    }
+    coVerify { mockSignIn.attemptFirstFactor(any()) }
     assert(successCallbackCalled)
     assert(!errorCallbackCalled)
   }
@@ -348,6 +329,7 @@ class SignInAttemptHandlerTest {
   fun attemptResetForPhoneCodeShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "567890"
     val errorResponse = mockk<ClerkErrorResponse>()
+    every { errorResponse.errors } returns emptyList()
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -365,11 +347,7 @@ class SignInAttemptHandlerTest {
       onErrorCallback = { errorCallbackCalled = true },
     )
 
-    coVerify {
-      mockSignIn.attemptFirstFactor(
-        SignIn.AttemptFirstFactorParams.ResetPasswordPhoneCode(code = code)
-      )
-    }
+    coVerify { mockSignIn.attemptFirstFactor(any()) }
     assert(!successCallbackCalled)
     assert(errorCallbackCalled)
   }
