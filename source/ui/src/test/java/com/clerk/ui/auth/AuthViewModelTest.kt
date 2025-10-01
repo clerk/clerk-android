@@ -1,13 +1,16 @@
 package com.clerk.ui.auth
 
 import app.cash.turbine.test
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.ResultType
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,22 +56,23 @@ class AuthViewModelTest {
 
   @Test
   fun startAuthWithSignInOrUpModeShouldInitiateSignInOrUpFlow() = runTest {
-    // This tests the SignInOrUp implementation
-    viewModel.startAuth(
-      authMode = AuthMode.SignInOrUp,
-      isPhoneNumberFieldActive = false,
-      phoneNumber = "",
-      identifier = "test@example.com",
-    )
+    // Avoid real API calls
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.apiFailure(null)
 
-    // Verify that the state changes to Loading when SignInOrUp is initiated
+    // Verify state transitions when starting SignInOrUp
     viewModel.state.test {
-      val initialState = awaitItem()
-      assertTrue("Initial state should be Idle", initialState is AuthStartViewModel.AuthState.Idle)
-      
-      // The loading state should be set when the coroutine starts
-      // Note: Due to the async nature, we might need to advance the test dispatcher
-      testDispatcher.scheduler.advanceUntilIdle()
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAuth(
+        authMode = AuthMode.SignInOrUp,
+        isPhoneNumberFieldActive = false,
+        phoneNumber = "",
+        identifier = "test@example.com",
+      )
+
+      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
     }
   }
 

@@ -15,6 +15,7 @@ import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.core.common.AuthStateEffects
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
+import com.clerk.ui.core.common.VerificationUiState
 import com.clerk.ui.core.common.dimens.dp28
 import com.clerk.ui.core.common.verificationState
 import com.clerk.ui.core.input.ClerkCodeInputField
@@ -50,6 +51,7 @@ private fun SignUpCodeViewImpl(
 ) {
   val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
+  val verificationTextState by viewModel.verificationState.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
 
   LaunchedEffect(field) { viewModel.prepare(field) }
@@ -74,8 +76,11 @@ private fun SignUpCodeViewImpl(
     ClerkLinearProgressIndicator(progress = 0)
     Spacers.Vertical.Spacer32()
     ClerkCodeInputField(
-      verificationState = state.verificationState(),
+      verificationState = verificationTextState.verificationState(),
       onTextChange = {
+        if (verificationTextState is VerificationUiState.Error) {
+          viewModel.resetVerificationState()
+        }
         if (it.length == 6) {
           viewModel.attempt(field = field, code = it)
         }

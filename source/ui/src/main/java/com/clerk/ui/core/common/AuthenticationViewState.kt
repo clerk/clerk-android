@@ -30,21 +30,31 @@ internal sealed interface AuthenticationViewState {
   data class Error(val message: String?) : AuthenticationViewState
 }
 
+/** States for the code verification text, since it's not 1:1 with the view model states. */
+sealed interface VerificationUiState {
+  data object Idle : VerificationUiState
+
+  data object Verifying : VerificationUiState
+
+  data object Verified : VerificationUiState
+
+  data class Error(val message: String?) : VerificationUiState
+}
+
 /**
- * Extension function that converts a [AuthenticationViewState] to a [VerificationState].
+ * Extension function that converts a [AuthenticationViewState] to a [VerificationUiState].
  *
  * This mapping provides a UI-focused state representation that can be used by input components to
  * determine their visual appearance and behavior.
  *
- * @return The corresponding [VerificationState] for the current view model state
+ * @return The corresponding [VerificationUiState] for the current view model state
  */
-internal fun AuthenticationViewState.verificationState(): VerificationState {
+internal fun VerificationUiState.verificationState(): VerificationState {
   return when (this) {
-    is AuthenticationViewState.Error -> VerificationState.Error
-    AuthenticationViewState.Idle -> VerificationState.Default
-    is AuthenticationViewState.Success -> VerificationState.Success
-    AuthenticationViewState.Loading -> VerificationState.Verifying
-    else -> VerificationState.Default
+    is VerificationUiState.Error -> VerificationState.Error
+    VerificationUiState.Idle -> VerificationState.Default
+    is VerificationUiState.Verified -> VerificationState.Success
+    VerificationUiState.Verifying -> VerificationState.Verifying
   }
 }
 

@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
@@ -118,7 +119,10 @@ private fun SignUpCollectFieldViewImpl(
         icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
       )
       if (collectFieldHelper.fieldIsOptional(collectField)) {
-        ClerkTextButton(text = stringResource(R.string.skip), onClick = {})
+        ClerkTextButton(
+          text = stringResource(R.string.skip),
+          onClick = { authState.setToStepForStatus(Clerk.signUp!!, onAuthComplete) },
+        )
       }
     }
   }

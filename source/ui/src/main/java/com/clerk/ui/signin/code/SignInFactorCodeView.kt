@@ -21,6 +21,7 @@ import com.clerk.ui.core.common.AuthStateEffects
 import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.core.common.VerificationUiState
 import com.clerk.ui.core.common.verificationState
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -87,6 +88,7 @@ private fun SignInFactorCodeViewImpl(
 ) {
   val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
+  val verificationTextState by viewModel.verificationUiState.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
 
   viewModel.prepare(factor, isSecondFactor = isSecondFactor)
@@ -107,13 +109,17 @@ private fun SignInFactorCodeViewImpl(
     onClickIdentifier = { authState.navigateToAuthStart() },
   ) {
     ClerkCodeInputField(
-      verificationState = state.verificationState(),
+      verificationState = verificationTextState.verificationState(),
       onTextChange = {
+        if (verificationTextState is VerificationUiState.Error) {
+          viewModel.resetState()
+        }
         if (it.length == 6) {
           viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = it)
         }
       },
-      showResend = SignInFactorCodeUiHelper.showResend(factor, state.verificationState()),
+      showResend =
+        SignInFactorCodeUiHelper.showResend(factor, verificationTextState.verificationState()),
       onClickResend = { viewModel.prepare(factor, isSecondFactor = isSecondFactor) },
     )
     Spacers.Vertical.Spacer24()
