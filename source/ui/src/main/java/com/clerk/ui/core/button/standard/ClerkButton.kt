@@ -152,12 +152,7 @@ private fun ClerkButtonImpl(
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
   ClerkMaterialTheme {
-    val tokens =
-      buildButtonTokens(
-        config = configuration,
-        computed = ClerkMaterialTheme.computedColors,
-        isPressed = isPressedCombined,
-      )
+    val tokens = buildButtonTokens(config = configuration, isPressed = isPressedCombined)
 
     val surfaceModifier =
       Modifier.height(tokens.height)

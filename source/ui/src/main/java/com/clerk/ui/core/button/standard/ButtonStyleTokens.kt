@@ -1,16 +1,15 @@
 package com.clerk.ui.core.button.standard
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import com.clerk.ui.core.common.dimens.dp0
+import com.clerk.ui.core.common.dimens.dp1
 import com.clerk.ui.core.common.dimens.dp32
 import com.clerk.ui.core.common.dimens.dp48
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.colors.ComputedColors
 
 @Immutable
 internal data class ButtonStyleTokens(
@@ -26,13 +25,12 @@ internal data class ButtonStyleTokens(
 @Composable
 internal fun buildButtonTokens(
   config: ClerkButtonConfiguration,
-  computed: ComputedColors,
   isPressed: Boolean,
 ): ButtonStyleTokens {
   val text =
     when (config.size) {
-      ClerkButtonConfiguration.Size.Small -> MaterialTheme.typography.titleSmall
-      ClerkButtonConfiguration.Size.Large -> MaterialTheme.typography.titleMedium
+      ClerkButtonConfiguration.Size.Small -> ClerkMaterialTheme.typography.titleSmall
+      ClerkButtonConfiguration.Size.Large -> ClerkMaterialTheme.typography.titleMedium
     }
 
   val height =
@@ -52,18 +50,18 @@ internal fun buildButtonTokens(
     when (config.emphasis) {
       ClerkButtonConfiguration.Emphasis.None -> dp0
       ClerkButtonConfiguration.Emphasis.Low,
-      ClerkButtonConfiguration.Emphasis.High -> dp0
+      ClerkButtonConfiguration.Emphasis.High -> dp1
     }
 
   val borderColor =
     when (config.emphasis) {
       ClerkButtonConfiguration.Emphasis.None -> Color.Transparent
       ClerkButtonConfiguration.Emphasis.Low,
-      ClerkButtonConfiguration.Emphasis.High -> computed.buttonBorder
+      ClerkButtonConfiguration.Emphasis.High -> ClerkMaterialTheme.computedColors.buttonBorder
     }
 
   val foreground = generateForeground(config, isPressed)
-  val background = generateBackground(config, isPressed, computed)
+  val background = generateBackground(config, isPressed)
 
   return ButtonStyleTokens(
     textStyle = text,
@@ -104,16 +102,13 @@ private fun generateForeground(config: ClerkButtonConfiguration, isPressed: Bool
   }
 
 @Composable
-private fun generateBackground(
-  config: ClerkButtonConfiguration,
-  isPressed: Boolean,
-  computed: ComputedColors,
-): Color =
+private fun generateBackground(config: ClerkButtonConfiguration, isPressed: Boolean): Color =
   when (config.style) {
     ClerkButtonConfiguration.ButtonStyle.Primary ->
       when (config.emphasis) {
         ClerkButtonConfiguration.Emphasis.High ->
-          if (isPressed) computed.primaryPressed else ClerkMaterialTheme.colors.primary
+          if (isPressed) ClerkMaterialTheme.computedColors.primaryPressed
+          else ClerkMaterialTheme.colors.primary
         ClerkButtonConfiguration.Emphasis.Low,
         ClerkButtonConfiguration.Emphasis.None ->
           if (isPressed) ClerkMaterialTheme.colors.muted else ClerkMaterialTheme.colors.background
@@ -130,9 +125,11 @@ private fun generateBackground(
     ClerkButtonConfiguration.ButtonStyle.Negative ->
       when (config.emphasis) {
         ClerkButtonConfiguration.Emphasis.High ->
-          if (isPressed) computed.backgroundDanger else ClerkMaterialTheme.colors.danger
+          if (isPressed) ClerkMaterialTheme.computedColors.backgroundDanger
+          else ClerkMaterialTheme.colors.danger
         ClerkButtonConfiguration.Emphasis.Low,
         ClerkButtonConfiguration.Emphasis.None ->
-          if (isPressed) computed.backgroundDanger else ClerkMaterialTheme.colors.background
+          if (isPressed) ClerkMaterialTheme.computedColors.backgroundDanger
+          else ClerkMaterialTheme.colors.background
       }
   }
