@@ -43,6 +43,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
@@ -55,11 +57,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
 import com.clerk.ui.core.common.dimens.dp1
 import com.clerk.ui.core.common.dimens.dp12
-import com.clerk.ui.core.common.dimens.dp16
 import com.clerk.ui.core.common.dimens.dp24
 import com.clerk.ui.core.common.dimens.dp4
 import com.clerk.ui.core.common.dimens.dp52
@@ -112,10 +112,6 @@ fun ClerkCodeInputField(
   }
 
   ClerkMaterialTheme {
-    var otpText by remember { mutableStateOf("") }
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-
     val selectionColors = rememberSelectionColors()
 
     CompositionLocalProvider(LocalTextSelectionColors provides selectionColors) {
@@ -123,31 +119,12 @@ fun ClerkCodeInputField(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
-        BasicTextField(
-          interactionSource = interactionSource,
-          value = otpText,
-          onValueChange = { newValue ->
-            val filtered = newValue.filter { it.isDigit() }.take(DEFAULT_OTP_LENGTH)
-            if (filtered != otpText) {
-              otpText = filtered
-              onTextChange(filtered)
-            }
-          },
-          keyboardOptions =
-            KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-          singleLine = true,
-          textStyle = LocalTextStyle.current.copy(color = Color.Transparent),
-          cursorBrush = SolidColor(Color.Transparent),
-          modifier = Modifier.semantics { contentType = ContentType.SmsOtpCode }.then(modifier),
-          decorationBox = { innerTextField ->
-            OtpBoxRow(
-              otpText = otpText,
-              isFocused = isFocused,
-              innerTextField = innerTextField,
-              isError = verificationState is VerificationState.Error,
-            )
-          },
+        OtpField(
+          onTextChange = onTextChange,
+          modifier = modifier,
+          verificationState = verificationState,
         )
+
         SupportingText(verificationState)
         if (showResend) {
           if (timeLeft > 0) {
@@ -159,6 +136,45 @@ fun ClerkCodeInputField(
       }
     }
   }
+}
+
+@Composable
+private fun OtpField(
+  onTextChange: (String) -> Unit,
+  verificationState: VerificationState,
+  modifier: Modifier = Modifier,
+) {
+  val interactionSource = remember { MutableInteractionSource() }
+  val isFocused by interactionSource.collectIsFocusedAsState()
+  val focusRequester = remember { FocusRequester() }
+  var otpText by remember { mutableStateOf("") }
+  LaunchedEffect(Unit) { focusRequester.requestFocus() }
+  BasicTextField(
+    interactionSource = interactionSource,
+    value = otpText,
+    onValueChange = { newValue ->
+      val filtered = newValue.filter { it.isDigit() }.take(DEFAULT_OTP_LENGTH)
+      otpText = filtered
+      onTextChange(filtered)
+    },
+    keyboardOptions =
+      KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+    singleLine = true,
+    textStyle = LocalTextStyle.current.copy(color = Color.Transparent),
+    cursorBrush = SolidColor(Color.Transparent),
+    modifier =
+      Modifier.focusRequester(focusRequester)
+        .semantics { contentType = ContentType.SmsOtpCode }
+        .then(modifier),
+    decorationBox = { innerTextField ->
+      OtpBoxRow(
+        otpText = otpText,
+        isFocused = isFocused,
+        innerTextField = innerTextField,
+        isError = verificationState is VerificationState.Error,
+      )
+    },
+  )
 }
 
 /**
@@ -294,6 +310,10 @@ private fun OtpBoxRow(
     horizontalArrangement = Arrangement.spacedBy(dp8),
     verticalAlignment = Alignment.CenterVertically,
   ) {
+    // Place the hidden inner text field at the start so the system paste/selection toolbar
+    // anchors near the first box instead of at the end.
+    Box(modifier = Modifier.size(dp1).alpha(0f).background(Color.Transparent)) { innerTextField() }
+
     val showCaret = isFocused && otpText.length < DEFAULT_OTP_LENGTH
 
     repeat(DEFAULT_OTP_LENGTH) { index ->
@@ -302,8 +322,6 @@ private fun OtpBoxRow(
 
       OtpBox(char = char, isCurrentBox = isCurrentBox, isError)
     }
-
-    Box(modifier = Modifier.size(dp1).alpha(0f).background(Color.Transparent)) { innerTextField() }
   }
 }
 
@@ -370,30 +388,4 @@ private fun BlinkingCaret() {
   )
 }
 
-@PreviewLightDark
-@Composable
-private fun PreviewClerkCodeInputField() {
-  ClerkMaterialTheme {
-    Column(
-      modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp16),
-      verticalArrangement = Arrangement.spacedBy(dp16),
-    ) {
-      ClerkCodeInputField(onTextChange = {}, onClickResend = {})
-      ClerkCodeInputField(
-        onTextChange = {},
-        verificationState = VerificationState.Error,
-        onClickResend = {},
-      )
-      ClerkCodeInputField(
-        onTextChange = {},
-        verificationState = VerificationState.Success,
-        onClickResend = {},
-      )
-      ClerkCodeInputField(
-        onTextChange = {},
-        verificationState = VerificationState.Verifying,
-        onClickResend = {},
-      )
-    }
-  }
-}
+// Preview moved to separate file to keep function count below linter threshold
