@@ -1,5 +1,7 @@
 package com.clerk.ui.signin.password.set
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,10 +11,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
@@ -112,29 +118,62 @@ private fun SignInFactorOnePasswordViewImpl(
 
 @Composable
 private fun Footer(authState: AuthState, factor: Factor) {
-  Row(modifier = Modifier.fillMaxWidth().padding(horizontal = dp8)) {
-    ClerkTextButton(
-      text = stringResource(R.string.use_another_method),
-      onClick = {
-        authState.navigateTo(Destination.SignInFactorOneUseAnotherMethod(currentFactor = factor))
-      },
-    )
-    Spacer(modifier = Modifier.weight(1f))
-    ClerkTextButton(
-      text = stringResource(R.string.forgot_password),
-      onClick = {
-        Clerk.signIn?.resetPasswordFactor?.let {
-          authState.navigateTo(Destination.SignInForgotPassword)
-        }
-          ?: authState.navigateTo(
-            Destination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-          )
-      },
-    )
+  val windowInfo = LocalWindowInfo.current
+  val density = LocalDensity.current
+  val widthDp = with(density) { windowInfo.containerSize.width.toDp() }
+  val isCompact = widthDp < 360.dp
+  if (isCompact) {
+    Column(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = dp8),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(dp24),
+    ) {
+      ClerkTextButton(
+        text = stringResource(R.string.use_another_method),
+        onClick = {
+          authState.navigateTo(Destination.SignInFactorOneUseAnotherMethod(currentFactor = factor))
+        },
+      )
+      ClerkTextButton(
+        text = stringResource(R.string.forgot_password),
+        onClick = {
+          Clerk.signIn?.resetPasswordFactor?.let {
+            authState.navigateTo(Destination.SignInForgotPassword)
+          }
+            ?: authState.navigateTo(
+              Destination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
+            )
+        },
+      )
+    }
+  } else {
+    Row(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = dp8),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      ClerkTextButton(
+        text = stringResource(R.string.use_another_method),
+        onClick = {
+          authState.navigateTo(Destination.SignInFactorOneUseAnotherMethod(currentFactor = factor))
+        },
+      )
+      ClerkTextButton(
+        text = stringResource(R.string.forgot_password),
+        onClick = {
+          Clerk.signIn?.resetPasswordFactor?.let {
+            authState.navigateTo(Destination.SignInForgotPassword)
+          }
+            ?: authState.navigateTo(
+              Destination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
+            )
+        },
+      )
+    }
   }
 }
 
-@Preview
+@Preview(device = "spec:width=300dp,height=891dp")
 @Composable
 private fun PreviewSignInFactorOnePasswordView() {
   PreviewAuthStateProvider {
