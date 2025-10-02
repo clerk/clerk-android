@@ -12,12 +12,16 @@ package com.clerk.api.ui
  * Having a single container greatly simplifies passing theme data through composables and other UI
  * components.
  *
- * @property colors colors used by the UI layer.
+ * @property colors colors used by the UI layer across light and dark modes.
+ * @property lightColors optional overrides that only apply when the system is in light mode.
+ * @property darkColors optional overrides that only apply when the system is in dark mode.
  * @property typography fonts and typography definitions.
  * @property design design tokens such as spacing and shapes.
  */
 data class ClerkTheme(
   val colors: ClerkColors? = null,
+  val lightColors: ClerkColors? = null,
+  val darkColors: ClerkColors? = null,
   val typography: ClerkTypography? = null,
   val design: ClerkDesign? = null,
 )

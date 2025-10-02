@@ -124,26 +124,39 @@ private fun generateTypography(theme: ClerkTheme?): Typography {
 
 @Composable
 private fun generateColors(theme: ClerkTheme?): ClerkColors {
-  val defaultColors = if (isSystemInDarkTheme()) DefaultColors.dark else DefaultColors.light
-  val colors =
-    ClerkColors(
-      primary = theme?.colors?.primary ?: defaultColors.primary,
-      background = theme?.colors?.background ?: defaultColors.background,
-      input = theme?.colors?.input ?: defaultColors.input,
-      danger = theme?.colors?.danger ?: defaultColors.danger,
-      success = theme?.colors?.success ?: defaultColors.success,
-      warning = theme?.colors?.warning ?: defaultColors.warning,
-      foreground = theme?.colors?.foreground ?: defaultColors.foreground,
-      mutedForeground = theme?.colors?.mutedForeground ?: defaultColors.mutedForeground,
-      primaryForeground = theme?.colors?.primaryForeground ?: defaultColors.primaryForeground,
-      inputForeground = theme?.colors?.inputForeground ?: defaultColors.inputForeground,
-      neutral = theme?.colors?.neutral ?: defaultColors.neutral,
-      border = theme?.colors?.border ?: defaultColors.border,
-      ring = theme?.colors?.ring ?: defaultColors.ring,
-      muted = theme?.colors?.muted ?: defaultColors.muted,
-      shadow = theme?.colors?.shadow ?: defaultColors.shadow,
-    )
-  return colors
+  return resolveColors(theme = theme, isDarkMode = isSystemInDarkTheme())
+}
+
+internal fun resolveColors(theme: ClerkTheme?, isDarkMode: Boolean): ClerkColors {
+  val defaultColors = if (isDarkMode) DefaultColors.dark else DefaultColors.light
+  val baseOverrides = theme?.colors
+  val modeOverrides = if (isDarkMode) theme?.darkColors else theme?.lightColors
+
+  fun resolve(getter: (ClerkColors) -> Color?): Color {
+    // Prefer mode-specific overrides, otherwise fall back to global overrides and finally defaults.
+    return modeOverrides?.let(getter)
+      ?: baseOverrides?.let(getter)
+      ?: getter(defaultColors)
+      ?: error("Default color palette must define all colors")
+  }
+
+  return ClerkColors(
+    primary = resolve { it.primary },
+    background = resolve { it.background },
+    input = resolve { it.input },
+    danger = resolve { it.danger },
+    success = resolve { it.success },
+    warning = resolve { it.warning },
+    foreground = resolve { it.foreground },
+    mutedForeground = resolve { it.mutedForeground },
+    primaryForeground = resolve { it.primaryForeground },
+    inputForeground = resolve { it.inputForeground },
+    neutral = resolve { it.neutral },
+    border = resolve { it.border },
+    ring = resolve { it.ring },
+    muted = resolve { it.muted },
+    shadow = resolve { it.shadow },
+  )
 }
 
 /** Object providing easy access to current theme values within composables. */
