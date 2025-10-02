@@ -86,4 +86,7 @@
     <string name="last_name">Last name</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">Facing issues? You can use any of these methods to sign in.</string>
     <string name="two_step_verification">Two-step verification</string>
+    <string name="when_signing_in_you_will_need_to_enter_a_verification_code">When signing in, you will need to enter a verification code sent to this phone number as an additional step.\n\nSave these backup codes and store them somewhere safe. If you lose access to your authentication device, you can use backup codes to sign in.</string>
+    <string name="two_step_verification_is_now_enabled">Two-step verification is now enabled. When signing in, you will need to enter a verification code from this authenticator app as an additional step.\n\nSave these backup codes and store them somewhere safe. If you lose access to your authentication device, you can use backup codes to sign in.</string>
+    <string name="backup_codes_are_now_enabled">Backup codes are now enabled. You can use one of these to sign in to your account, if you lose access to your authentication device. Each code can only be used once.</string>
 </resources>
