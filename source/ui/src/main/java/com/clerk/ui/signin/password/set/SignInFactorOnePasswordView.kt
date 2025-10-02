@@ -173,7 +173,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
   }
 }
 
-@Preview
+@Preview(device = "spec:width=300dp,height=891dp")
 @Composable
 private fun PreviewSignInFactorOnePasswordView() {
   PreviewAuthStateProvider {
