@@ -2,7 +2,9 @@ package com.clerk.ui.userprofile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,12 +14,14 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
-import com.clerk.ui.core.common.Spacers
+import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.common.dimens.dp1
 import com.clerk.ui.core.common.dimens.dp24
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -25,21 +29,27 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun BackupCodesView(mfaType: MfaType, codes: ImmutableList<String>, modifier: Modifier = Modifier) {
+internal fun BackupCodesView(
+  mfaType: MfaType,
+  codes: ImmutableList<String>,
+  modifier: Modifier = Modifier,
+) {
   ClerkMaterialTheme {
     Column(
       modifier =
         Modifier.fillMaxSize()
           .background(color = ClerkMaterialTheme.colors.background)
           .padding(dp24)
-          .then(modifier)
+          .then(modifier),
+      verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
+      horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       Text(
         text = mfaType.instructions(),
         style = ClerkMaterialTheme.typography.bodyMedium,
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
-      Spacers.Vertical.Spacer24()
+
       Surface(
         color = ClerkMaterialTheme.colors.background,
         modifier = Modifier.fillMaxWidth(),
@@ -47,6 +57,24 @@ fun BackupCodesView(mfaType: MfaType, codes: ImmutableList<String>, modifier: Mo
         border = BorderStroke(width = dp1, color = ClerkMaterialTheme.computedColors.inputBorder),
       ) {
         BackupCodeGrid(codes = codes)
+      }
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(dp24, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        ClerkButton(
+          modifier = Modifier.weight(1f),
+          text = stringResource(R.string.download),
+          onClick = {},
+          configuration = ClerkButtonConfiguration(ClerkButtonConfiguration.ButtonStyle.Secondary),
+        )
+        ClerkButton(
+          modifier = Modifier.weight(1f),
+          text = stringResource(R.string.copy_to_clipboard),
+          onClick = {},
+          configuration = ClerkButtonConfiguration(ClerkButtonConfiguration.ButtonStyle.Secondary),
+        )
       }
     }
   }
@@ -71,7 +99,7 @@ fun BackupCodeGrid(codes: ImmutableList<String>, modifier: Modifier = Modifier) 
 }
 
 @Composable
-fun MfaType.instructions() =
+private fun MfaType.instructions() =
   when (this) {
     MfaType.PhoneCode ->
       stringResource(R.string.when_signing_in_you_will_need_to_enter_a_verification_code)
@@ -79,7 +107,7 @@ fun MfaType.instructions() =
     MfaType.BackupCodes -> stringResource(R.string.backup_codes_are_now_enabled)
   }
 
-enum class MfaType {
+internal enum class MfaType {
   PhoneCode,
   AuthenticatorApp,
   BackupCodes,
