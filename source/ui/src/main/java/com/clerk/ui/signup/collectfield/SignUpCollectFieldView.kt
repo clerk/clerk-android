@@ -25,8 +25,8 @@ import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.AuthStateEffects
 import com.clerk.ui.core.common.AuthenticationViewState
-import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.dimens.dp24
+import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.progress.ClerkLinearProgressIndicator

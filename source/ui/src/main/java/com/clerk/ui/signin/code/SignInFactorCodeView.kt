@@ -18,10 +18,10 @@ import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.AuthStateEffects
-import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.common.VerificationUiState
+import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.verificationState
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.theme.ClerkMaterialTheme

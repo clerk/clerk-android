@@ -18,7 +18,7 @@ import com.clerk.ui.R
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.common.ClerkThemedAuthScaffold
+import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.coroutines.launch
 
