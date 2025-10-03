@@ -5,16 +5,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.dimens.dp18
+import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
 fun ClerkThemedProfileScaffold(
+  snackbarHostState: SnackbarHostState,
   modifier: Modifier = Modifier,
   hasLogo: Boolean = false,
   hasBackButton: Boolean = true,
@@ -23,7 +26,10 @@ fun ClerkThemedProfileScaffold(
   content: @Composable () -> Unit,
 ) {
   ClerkMaterialTheme {
-    Scaffold(modifier = Modifier.then(modifier)) { innerPadding ->
+    Scaffold(
+      modifier = Modifier.then(modifier),
+      snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+    ) { innerPadding ->
       Column(
         modifier =
           Modifier.fillMaxWidth()
