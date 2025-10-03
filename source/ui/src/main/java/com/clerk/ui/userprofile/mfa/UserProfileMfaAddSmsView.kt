@@ -119,7 +119,7 @@ private fun UserProfileMfaAddSmsViewImpl(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.continue_text),
       isLoading = state is MfaAddSmsViewModel.State.Loading,
-      isEnabled = true,
+      isEnabled = selectedNumber != null && state !is MfaAddSmsViewModel.State.Loading,
       onClick = { viewModel.reserveForSecondFactor(selectedNumber!!) },
     )
     Spacers.Vertical.Spacer24()
