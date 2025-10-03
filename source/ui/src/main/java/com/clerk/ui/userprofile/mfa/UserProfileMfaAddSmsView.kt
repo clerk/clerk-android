@@ -22,9 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.verification.Verification
@@ -48,7 +50,11 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun UserProfileMfaAddSmsView(modifier: Modifier = Modifier) {
+fun UserProfileMfaAddSmsView(
+  onClickUsePhoneNumber: () -> Unit,
+  modifier: Modifier = Modifier,
+  onReserveForSecondFactorSuccess: () -> Unit,
+) {
   val availablePhoneNumbers =
     remember(Clerk.user) { Clerk.user?.phoneNumbersAvailableForMfa() ?: emptyList() }
       .filter { it.verification?.status == Verification.Status.VERIFIED }
@@ -57,19 +63,36 @@ fun UserProfileMfaAddSmsView(modifier: Modifier = Modifier) {
   UserProfileMfaAddSmsViewImpl(
     modifier = modifier,
     availablePhoneNumbers = availablePhoneNumbers.toImmutableList(),
+    onClickUsePhoneNumber = onClickUsePhoneNumber,
+    onReserveForSecondFactorSuccess = onReserveForSecondFactorSuccess,
   )
 }
 
 @Composable
 private fun UserProfileMfaAddSmsViewImpl(
   availablePhoneNumbers: ImmutableList<PhoneNumber>,
+  onReserveForSecondFactorSuccess: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: MfaAddSmsViewModel = viewModel(),
+  onClickUsePhoneNumber: () -> Unit,
 ) {
+  val state by viewModel.state.collectAsStateWithLifecycle()
   val phoneUtil = PhoneNumberUtil.getInstance()
   var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
+  val context = LocalContext.current
+  val errorMessage: String? =
+    when (val s = state) {
+      is MfaAddSmsViewModel.State.Error ->
+        s.message ?: context.getString(R.string.something_went_wrong_please_try_again)
+      else -> null
+    }
+
+  if (state is MfaAddSmsViewModel.State.Success) {
+    onReserveForSecondFactorSuccess()
+  }
 
   ClerkThemedProfileScaffold(
+    errorMessage = errorMessage,
     modifier = modifier,
     title = stringResource(R.string.add_sms_code_verification),
   ) {
@@ -95,12 +118,14 @@ private fun UserProfileMfaAddSmsViewImpl(
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.continue_text),
-      onClick = {},
+      isLoading = state is MfaAddSmsViewModel.State.Loading,
+      isEnabled = true,
+      onClick = { viewModel.reserveForSecondFactor(selectedNumber!!) },
     )
     Spacers.Vertical.Spacer24()
     ClerkTextButton(
       text = stringResource(R.string.use_phone_number),
-      onClick = { viewModel.reserveForSecondFactor(selectedNumber!!) },
+      onClick = onClickUsePhoneNumber,
     )
   }
 }
@@ -194,12 +219,14 @@ private fun PreviewMfaRow() {
 @Composable
 private fun Preview() {
   UserProfileMfaAddSmsViewImpl(
+    onClickUsePhoneNumber = {},
+    onReserveForSecondFactorSuccess = {},
     availablePhoneNumbers =
       listOf(
           PhoneNumber(id = "1", phoneNumber = "+13012370655"),
           PhoneNumber(id = "2", "+15246462566"),
           PhoneNumber(id = "3", "+306912345678"),
         )
-        .toImmutableList()
+        .toImmutableList(),
   )
 }
