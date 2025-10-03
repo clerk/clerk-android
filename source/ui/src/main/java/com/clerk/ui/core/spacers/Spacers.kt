@@ -2,6 +2,7 @@ package com.clerk.ui.core.spacers
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.clerk.ui.core.dimens.dp16
@@ -31,6 +32,14 @@ internal object Spacers {
     @Composable
     internal fun Spacer32() {
       Spacer(modifier = Modifier.Companion.height(dp32))
+    }
+  }
+
+  internal object Horizontal {
+
+    @Composable
+    internal fun Spacer8() {
+      Spacer(modifier = Modifier.Companion.width(dp8))
     }
   }
 }

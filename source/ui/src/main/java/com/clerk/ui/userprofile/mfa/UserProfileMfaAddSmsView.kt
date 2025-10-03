@@ -4,16 +4,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,27 +31,38 @@ import com.clerk.api.user.phoneNumbersAvailableForMfa
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp10
+import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.CountryCodeUtils
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import com.google.i18n.phonenumbers.PhoneNumberUtil
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun UserProfileMfaAddSmsView(modifier: Modifier = Modifier) {
-  UserProfileMfaAddSmsViewImpl(modifier = modifier)
-}
-
-@Composable
-fun UserProfileMfaAddSmsViewImpl(modifier: Modifier = Modifier) {
-  val phoneUtil = PhoneNumberUtil.getInstance()
-
   val availablePhoneNumbers =
     remember(Clerk.user) { Clerk.user?.phoneNumbersAvailableForMfa() ?: emptyList() }
       .filter { it.verification?.status == Verification.Status.VERIFIED }
       .sortedBy { it.createdAt }
+
+  UserProfileMfaAddSmsViewImpl(
+    modifier = modifier,
+    availablePhoneNumbers = availablePhoneNumbers.map { it.phoneNumber }.toImmutableList(),
+  )
+}
+
+@Composable
+fun UserProfileMfaAddSmsViewImpl(
+  availablePhoneNumbers: ImmutableList<String>,
+  modifier: Modifier = Modifier,
+) {
+  val phoneUtil = PhoneNumberUtil.getInstance()
+  var selectedNumber by remember { mutableStateOf<String?>(null) }
 
   ClerkThemedProfileScaffold(
     modifier = modifier,
@@ -56,35 +73,54 @@ fun UserProfileMfaAddSmsViewImpl(modifier: Modifier = Modifier) {
       style = ClerkMaterialTheme.typography.bodyMedium,
     )
     Spacers.Vertical.Spacer24()
-    LazyColumn {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(dp12)) {
       items(availablePhoneNumbers) { phoneNumber ->
-        val proto = phoneUtil.parse(phoneNumber.phoneNumber, null)
+        val proto = phoneUtil.parse(phoneNumber, null)
         val region = phoneUtil.getRegionCodeForNumber(proto)
-        AddMfaSmsRow(regionCode = region, flag = CountryCodeUtils.regionToFlagEmoji(region))
+        AddMfaSmsRow(
+          regionCode = region,
+          flag = CountryCodeUtils.regionToFlagEmoji(region),
+          phoneNumber = phoneNumber,
+          selected = selectedNumber == phoneNumber,
+          onSelected = { selectedNumber = phoneNumber },
+        )
       }
     }
   }
 }
 
 @Composable
-fun AddMfaSmsRow(flag: String, regionCode: String, modifier: Modifier = Modifier) {
+fun AddMfaSmsRow(
+  flag: String,
+  regionCode: String,
+  phoneNumber: String,
+  selected: Boolean,
+  onSelected: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  val borderColor =
+    if (selected) ClerkMaterialTheme.colors.primary
+    else ClerkMaterialTheme.computedColors.inputBorder
   ClerkMaterialTheme {
     Row(
       modifier =
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.input, shape = ClerkMaterialTheme.shape)
-          .border(
-            dp1,
-            color = ClerkMaterialTheme.computedColors.inputBorder,
-            shape = ClerkMaterialTheme.shape,
-          )
+          .border(dp1, color = borderColor, shape = ClerkMaterialTheme.shape)
           .padding(horizontal = dp6)
           .padding(vertical = dp8)
           .then(modifier),
-      horizontalArrangement = Arrangement.Start,
+      horizontalArrangement = Arrangement.spacedBy(dp8, Alignment.Start),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       CountryIndicator(region = regionCode, flagEmoji = flag)
+      Text(
+        text = phoneNumber.formattedAsPhoneNumberIfPossible,
+        color = ClerkMaterialTheme.colors.foreground,
+        style = ClerkMaterialTheme.typography.bodyMedium,
+      )
+      Spacer(modifier = Modifier.weight(1f))
+      RadioButton(selected = selected, onClick = onSelected)
     }
   }
 }
@@ -112,11 +148,37 @@ fun CountryIndicator(region: String, flagEmoji: String, modifier: Modifier = Mod
 @PreviewLightDark
 @Composable
 private fun PreviewMfaRow() {
-  AddMfaSmsRow(flag = "🇺🇸", regionCode = "US")
+  ClerkMaterialTheme {
+    Column(
+      modifier =
+        Modifier.fillMaxWidth()
+          .background(color = ClerkMaterialTheme.colors.background)
+          .padding(dp8),
+      verticalArrangement = Arrangement.spacedBy(dp12),
+    ) {
+      AddMfaSmsRow(
+        flag = "🇺🇸",
+        regionCode = "US",
+        "+13012370655",
+        selected = true,
+        onSelected = {},
+      )
+      AddMfaSmsRow(
+        flag = "🇺🇸",
+        regionCode = "US",
+        "+13012370655",
+        selected = false,
+        onSelected = {},
+      )
+    }
+  }
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileMfaAddSmsView()
+  UserProfileMfaAddSmsViewImpl(
+    availablePhoneNumbers =
+      listOf("+13012370655", "+15246462566", "+306912345678").toImmutableList()
+  )
 }
