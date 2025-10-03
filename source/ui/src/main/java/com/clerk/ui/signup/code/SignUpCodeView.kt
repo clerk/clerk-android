@@ -13,10 +13,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.core.common.AuthStateEffects
-import com.clerk.ui.core.common.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.VerificationUiState
 import com.clerk.ui.core.common.dimens.dp28
+import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.common.verificationState
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
