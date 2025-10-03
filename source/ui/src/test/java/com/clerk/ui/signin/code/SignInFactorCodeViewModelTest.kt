@@ -6,7 +6,7 @@ import app.cash.turbine.test
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.SignIn
-import com.clerk.ui.core.common.AuthenticationViewState
+import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.core.common.StrategyKeys
 import io.mockk.coEvery
 import io.mockk.coVerify

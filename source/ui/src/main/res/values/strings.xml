@@ -93,4 +93,6 @@
     <string name="download">Download</string>
     <string name="you_ll_need_to_verify_this_email_address">You\'ll need to verify this email address before it can be added to your account</string>
     <string name="add_email_address">Add email address</string>
+    <string name="add_sms_code_verification">Add SMS code verification</string>
+    <string name="select_an_existing_phone_number">Select an existing phone number to register for SMS code two-step verification or add a new one.</string>
 </resources>

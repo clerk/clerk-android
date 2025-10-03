@@ -1,6 +1,8 @@
-package com.clerk.ui.core.common
+package com.clerk.ui.auth
 
 import com.clerk.api.Clerk
+import com.clerk.api.signin.SignIn
+import com.clerk.api.signup.SignUp
 import com.clerk.ui.signin.code.VerificationState
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -10,9 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
  * This sealed interface is used to model the different stages that an authentication flow can be
  * in, such as not started, idle, loading, successful, or encountering an error.
  */
-typealias ClerkSignIn = com.clerk.api.signin.SignIn
+typealias ClerkSignIn = SignIn
 
-typealias ClerkSignUp = com.clerk.api.signup.SignUp
+typealias ClerkSignUp = SignUp
 
 internal sealed interface AuthenticationViewState {
   data object NotStarted : AuthenticationViewState

@@ -1,4 +1,4 @@
-package com.clerk.ui.core.common
+package com.clerk.ui.core.footer
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

@@ -17,11 +17,11 @@ import com.clerk.api.signin.alternativeSecondFactors
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.toOAuthProvidersList
 import com.clerk.ui.R
+import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.Destination
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.social.ClerkSocialRow
-import com.clerk.ui.core.common.AuthStateEffects
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold

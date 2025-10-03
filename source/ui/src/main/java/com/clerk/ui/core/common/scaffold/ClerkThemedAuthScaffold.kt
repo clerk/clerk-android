@@ -22,11 +22,11 @@ import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.common.HeaderTextView
 import com.clerk.ui.core.common.HeaderType
-import com.clerk.ui.core.common.SecuredByClerkView
 import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.dimens.dp18
 import com.clerk.ui.core.common.dimens.dp32
 import com.clerk.ui.core.error.ClerkErrorSnackbar
+import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 

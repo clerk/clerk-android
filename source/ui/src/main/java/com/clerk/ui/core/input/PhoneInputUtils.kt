@@ -233,7 +233,7 @@ internal class PhoneInputUtils(
     }
   }
 
-  private fun regionToFlagEmoji(regionCode: String): String {
+  internal fun regionToFlagEmoji(regionCode: String): String {
     val first = if (regionCode.length == 2) regionCode[0].uppercaseChar() else ' '
     val second = if (regionCode.length == 2) regionCode[1].uppercaseChar() else ' '
 
