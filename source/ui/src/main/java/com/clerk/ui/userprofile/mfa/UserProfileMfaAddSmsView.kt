@@ -29,6 +29,8 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.user.phoneNumbersAvailableForMfa
 import com.clerk.ui.R
+import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp10
 import com.clerk.ui.core.dimens.dp12
@@ -86,6 +88,10 @@ fun UserProfileMfaAddSmsViewImpl(
         )
       }
     }
+    Spacers.Vertical.Spacer24()
+    ClerkButton(modifier = Modifier.fillMaxWidth(), text = "Continue", onClick = {})
+    Spacers.Vertical.Spacer24()
+    ClerkTextButton(text = "Use phone number", onClick = {})
   }
 }
 
