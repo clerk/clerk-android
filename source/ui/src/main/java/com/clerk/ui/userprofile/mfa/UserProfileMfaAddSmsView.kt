@@ -25,8 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.verification.Verification
+import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.user.phoneNumbersAvailableForMfa
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -54,17 +56,18 @@ fun UserProfileMfaAddSmsView(modifier: Modifier = Modifier) {
 
   UserProfileMfaAddSmsViewImpl(
     modifier = modifier,
-    availablePhoneNumbers = availablePhoneNumbers.map { it.phoneNumber }.toImmutableList(),
+    availablePhoneNumbers = availablePhoneNumbers.toImmutableList(),
   )
 }
 
 @Composable
-fun UserProfileMfaAddSmsViewImpl(
-  availablePhoneNumbers: ImmutableList<String>,
+private fun UserProfileMfaAddSmsViewImpl(
+  availablePhoneNumbers: ImmutableList<PhoneNumber>,
   modifier: Modifier = Modifier,
+  viewModel: MfaAddSmsViewModel = viewModel(),
 ) {
   val phoneUtil = PhoneNumberUtil.getInstance()
-  var selectedNumber by remember { mutableStateOf<String?>(null) }
+  var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
 
   ClerkThemedProfileScaffold(
     modifier = modifier,
@@ -77,21 +80,28 @@ fun UserProfileMfaAddSmsViewImpl(
     Spacers.Vertical.Spacer24()
     LazyColumn(verticalArrangement = Arrangement.spacedBy(dp12)) {
       items(availablePhoneNumbers) { phoneNumber ->
-        val proto = phoneUtil.parse(phoneNumber, null)
+        val proto = phoneUtil.parse(phoneNumber.phoneNumber, null)
         val region = phoneUtil.getRegionCodeForNumber(proto)
         AddMfaSmsRow(
           regionCode = region,
           flag = CountryCodeUtils.regionToFlagEmoji(region),
-          phoneNumber = phoneNumber,
+          phoneNumber = phoneNumber.phoneNumber,
           selected = selectedNumber == phoneNumber,
           onSelected = { selectedNumber = phoneNumber },
         )
       }
     }
     Spacers.Vertical.Spacer24()
-    ClerkButton(modifier = Modifier.fillMaxWidth(), text = "Continue", onClick = {})
+    ClerkButton(
+      modifier = Modifier.fillMaxWidth(),
+      text = stringResource(R.string.continue_text),
+      onClick = {},
+    )
     Spacers.Vertical.Spacer24()
-    ClerkTextButton(text = "Use phone number", onClick = {})
+    ClerkTextButton(
+      text = stringResource(R.string.use_phone_number),
+      onClick = { viewModel.reserveForSecondFactor(selectedNumber!!) },
+    )
   }
 }
 
@@ -185,6 +195,11 @@ private fun PreviewMfaRow() {
 private fun Preview() {
   UserProfileMfaAddSmsViewImpl(
     availablePhoneNumbers =
-      listOf("+13012370655", "+15246462566", "+306912345678").toImmutableList()
+      listOf(
+          PhoneNumber(id = "1", phoneNumber = "+13012370655"),
+          PhoneNumber(id = "2", "+15246462566"),
+          PhoneNumber(id = "3", "+306912345678"),
+        )
+        .toImmutableList()
   )
 }
