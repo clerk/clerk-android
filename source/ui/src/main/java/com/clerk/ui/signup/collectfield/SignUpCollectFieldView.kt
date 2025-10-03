@@ -25,11 +25,11 @@ import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.dimens.dp24
-import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
+import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 
 @Composable
 fun SignUpCollectFieldView(

@@ -23,11 +23,11 @@ import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.common.dimens.dp12
-import com.clerk.ui.core.common.dimens.dp24
-import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
+import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
+import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.toImmutableList
 

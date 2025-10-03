@@ -20,8 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.OrganizationAvatar
-import com.clerk.ui.core.common.dimens.dp24
-import com.clerk.ui.core.common.dimens.dp8
+import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable

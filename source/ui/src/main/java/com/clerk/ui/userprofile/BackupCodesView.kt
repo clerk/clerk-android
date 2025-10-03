@@ -22,8 +22,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
-import com.clerk.ui.core.common.dimens.dp1
-import com.clerk.ui.core.common.dimens.dp24
+import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList

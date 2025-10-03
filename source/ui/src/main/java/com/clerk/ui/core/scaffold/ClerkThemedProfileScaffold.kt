@@ -1,4 +1,4 @@
-package com.clerk.ui.core.common.scaffold
+package com.clerk.ui.core.scaffold
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -12,9 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.clerk.ui.core.appbar.ClerkTopAppBar
-import com.clerk.ui.core.common.Spacers
-import com.clerk.ui.core.common.dimens.dp18
+import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.error.ClerkErrorSnackbar
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable

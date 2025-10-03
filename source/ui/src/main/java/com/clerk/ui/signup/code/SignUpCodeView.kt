@@ -15,11 +15,11 @@ import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.verificationState
-import com.clerk.ui.core.common.Spacers
-import com.clerk.ui.core.common.dimens.dp28
-import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
+import com.clerk.ui.core.dimens.dp28
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
+import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import kotlinx.serialization.Serializable

@@ -11,8 +11,8 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
-import com.clerk.ui.core.common.dimens.dp12
-import com.clerk.ui.core.common.dimens.dp8
+import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test

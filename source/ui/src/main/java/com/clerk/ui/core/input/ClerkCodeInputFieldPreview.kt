@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.ui.core.common.dimens.dp16
+import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.signin.code.VerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
 

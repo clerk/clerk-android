@@ -22,10 +22,10 @@ import com.clerk.ui.auth.Destination
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.social.ClerkSocialRow
-import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
-import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.divider.TextDivider
+import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.password.forgot.AlternativeFactorList
 import com.clerk.ui.util.TextIconHelper
 import kotlinx.collections.immutable.ImmutableList

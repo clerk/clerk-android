@@ -20,10 +20,10 @@ import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
-import com.clerk.ui.core.common.Spacers
 import com.clerk.ui.core.common.StrategyKeys
-import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**

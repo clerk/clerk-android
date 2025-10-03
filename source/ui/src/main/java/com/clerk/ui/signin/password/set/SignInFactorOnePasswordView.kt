@@ -35,10 +35,10 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.StrategyKeys
-import com.clerk.ui.core.common.dimens.dp24
-import com.clerk.ui.core.common.dimens.dp8
-import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
+import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 

@@ -15,9 +15,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
-import com.clerk.ui.core.common.dimens.dp1
-import com.clerk.ui.core.common.dimens.dp12
-import com.clerk.ui.core.common.dimens.dp8
+import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**

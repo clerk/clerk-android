@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.ui.core.common.dimens.dp8
+import com.clerk.ui.core.dimens.dp8
 import kotlinx.collections.immutable.ImmutableList
 
 private const val MAX_BUTTONS_PER_ROW = 3

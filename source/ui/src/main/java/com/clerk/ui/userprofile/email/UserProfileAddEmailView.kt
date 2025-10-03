@@ -19,9 +19,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
-import com.clerk.ui.core.common.Spacers
-import com.clerk.ui.core.common.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable

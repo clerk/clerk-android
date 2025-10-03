@@ -1,4 +1,4 @@
-package com.clerk.ui.core.common.dimens
+package com.clerk.ui.core.dimens
 
 import androidx.compose.ui.unit.dp
 

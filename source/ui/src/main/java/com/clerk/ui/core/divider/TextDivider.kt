@@ -12,8 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.ui.core.common.dimens.dp1
-import com.clerk.ui.core.common.dimens.dp16
+import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**
