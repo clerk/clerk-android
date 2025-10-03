@@ -1,16 +1,21 @@
 package com.clerk.ui.userprofile.mfa
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 
 @Composable
-private fun UserProfileAddMfaView(viewType: ViewType, modifier: Modifier = Modifier) {
-  UserProfileAddMfaViewImpl(viewType = viewType, modifier = modifier)
+private fun UserProfileAddMfaView(viewType: ViewType) {
+  UserProfileAddMfaViewImpl(viewType = viewType)
 }
 
 @Composable
-private fun UserProfileAddMfaViewImpl(viewType: ViewType, modifier: Modifier = Modifier) {}
+private fun UserProfileAddMfaViewImpl(viewType: ViewType) {
+  when (viewType) {
+    ViewType.SMS ->
+      UserProfileMfaAddSmsView(onClickUsePhoneNumber = {}, onReserveForSecondFactorSuccess = {})
+    ViewType.AuthenticatorApp -> TODO()
+  }
+}
 
 internal enum class ViewType {
   SMS,
