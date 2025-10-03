@@ -1,9 +1,8 @@
-package com.clerk.ui.userprofile.addemail
+package com.clerk.ui.userprofile.email
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,26 +36,26 @@ private fun UserProfileAddEmailViewImpl(
   onAddEmailSuccess: () -> Unit,
 ) {
   var email by remember { mutableStateOf("") }
-  val snackbarHostState = remember { SnackbarHostState() }
 
   val state by viewModel.state.collectAsStateWithLifecycle()
   val context = LocalContext.current
+  val errorMessage: String? =
+    when (val s = state) {
+      is AddEmailViewModel.State.Error ->
+        s.message ?: context.getString(R.string.something_went_wrong_please_try_again)
+      else -> null
+    }
 
   LaunchedEffect(state) {
-    when (val s = state) {
-      is AddEmailViewModel.State.Error -> {
-        snackbarHostState.showSnackbar(
-          s.message ?: context.getString(R.string.something_went_wrong_please_try_again)
-        )
-      }
-      AddEmailViewModel.State.Success -> onAddEmailSuccess
-      else -> {}
+    if (state == AddEmailViewModel.State.Success) {
+      onAddEmailSuccess()
     }
   }
+
   ClerkThemedProfileScaffold(
     modifier = modifier,
     title = stringResource(R.string.add_email_address),
-    snackbarHostState = snackbarHostState,
+    errorMessage = errorMessage,
   ) {
     Text(
       text = stringResource(R.string.you_ll_need_to_verify_this_email_address),
@@ -73,7 +72,7 @@ private fun UserProfileAddEmailViewImpl(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.continue_text),
       isLoading = state is AddEmailViewModel.State.Loading,
-      onClick = {},
+      onClick = { viewModel.addEmail(email) },
       icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
     )
   }

@@ -596,3 +596,13 @@ suspend fun User.getOrganizationMemberships(
     sessionId = Clerk.session?.id,
   )
 }
+
+fun User.phoneNumbersAvailableForMfa(): List<PhoneNumber> {
+  return phoneNumbers.filter { !it.reservedForSecondFactor }
+}
+
+fun User.phoneNumbersReservedForMfa(): List<PhoneNumber> {
+  return phoneNumbers.filter {
+    it.verification?.status == Verification.Status.VERIFIED && it.reservedForSecondFactor
+  }
+}
