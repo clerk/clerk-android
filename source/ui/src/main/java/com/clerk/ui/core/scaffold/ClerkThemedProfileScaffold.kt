@@ -1,4 +1,4 @@
-package com.clerk.ui.core.common.scaffold
+package com.clerk.ui.core.scaffold
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -7,24 +7,33 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.clerk.ui.core.appbar.ClerkTopAppBar
-import com.clerk.ui.core.common.Spacers
-import com.clerk.ui.core.common.dimens.dp18
+import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.error.ClerkErrorSnackbar
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
 fun ClerkThemedProfileScaffold(
-  snackbarHostState: SnackbarHostState,
   modifier: Modifier = Modifier,
+  errorMessage: String? = null,
   hasLogo: Boolean = false,
   hasBackButton: Boolean = true,
   title: String? = null,
   onBackPressed: () -> Unit = {},
   content: @Composable () -> Unit,
 ) {
+  val snackbarHostState = remember { SnackbarHostState() }
+  LaunchedEffect(errorMessage) {
+    if (errorMessage != null) {
+      snackbarHostState.showSnackbar(errorMessage)
+    }
+  }
+
   ClerkMaterialTheme {
     Scaffold(
       modifier = Modifier.then(modifier),

@@ -25,16 +25,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthState
+import com.clerk.ui.auth.AuthStateEffects
+import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.common.AuthStateEffects
-import com.clerk.ui.core.common.AuthenticationViewState
-import com.clerk.ui.core.common.Spacers
-import com.clerk.ui.core.common.dimens.dp16
-import com.clerk.ui.core.common.dimens.dp8
-import com.clerk.ui.core.common.scaffold.ClerkThemedAuthScaffold
+import com.clerk.ui.core.dimens.dp16
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**

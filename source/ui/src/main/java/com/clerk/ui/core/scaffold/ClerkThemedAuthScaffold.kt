@@ -1,4 +1,4 @@
-package com.clerk.ui.core.common.scaffold
+package com.clerk.ui.core.scaffold
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -20,14 +20,14 @@ import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
-import com.clerk.ui.core.common.HeaderTextView
-import com.clerk.ui.core.common.HeaderType
-import com.clerk.ui.core.common.SecuredByClerkView
-import com.clerk.ui.core.common.Spacers
-import com.clerk.ui.core.common.dimens.dp18
-import com.clerk.ui.core.common.dimens.dp32
+import com.clerk.ui.core.dimens.dp18
+import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.error.ClerkErrorSnackbar
+import com.clerk.ui.core.footer.SecuredByClerkView
+import com.clerk.ui.core.header.HeaderTextView
+import com.clerk.ui.core.header.HeaderType
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable

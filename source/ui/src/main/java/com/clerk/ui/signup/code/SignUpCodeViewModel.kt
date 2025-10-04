@@ -9,8 +9,8 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.attemptVerification
 import com.clerk.api.signup.prepareVerification
-import com.clerk.ui.core.common.AuthenticationViewState
-import com.clerk.ui.core.common.VerificationUiState
+import com.clerk.ui.auth.AuthenticationViewState
+import com.clerk.ui.auth.VerificationUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch

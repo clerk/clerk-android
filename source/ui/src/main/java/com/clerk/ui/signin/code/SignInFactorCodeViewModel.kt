@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.SignIn
-import com.clerk.ui.core.common.AuthenticationViewState
+import com.clerk.ui.auth.AuthenticationViewState
+import com.clerk.ui.auth.VerificationUiState
+import com.clerk.ui.auth.guardSignIn
 import com.clerk.ui.core.common.StrategyKeys
-import com.clerk.ui.core.common.VerificationUiState
-import com.clerk.ui.core.common.guardSignIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

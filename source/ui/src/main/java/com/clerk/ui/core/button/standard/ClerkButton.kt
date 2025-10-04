@@ -36,11 +36,11 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.core.common.dimens.dp1
-import com.clerk.ui.core.common.dimens.dp12
-import com.clerk.ui.core.common.dimens.dp2
-import com.clerk.ui.core.common.dimens.dp24
-import com.clerk.ui.core.common.dimens.dp6
+import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp2
+import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 

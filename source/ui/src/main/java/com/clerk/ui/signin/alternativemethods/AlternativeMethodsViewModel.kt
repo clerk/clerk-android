@@ -8,7 +8,7 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
-import com.clerk.ui.core.common.AuthenticationViewState
+import com.clerk.ui.auth.AuthenticationViewState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch

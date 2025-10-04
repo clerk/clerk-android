@@ -4,8 +4,8 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import com.clerk.ui.core.common.dimens.dp12
-import com.clerk.ui.core.common.dimens.dp4
+import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp4
 
 /** Contains default values for Clerk buttons. */
 object ClerkButtonDefaults {

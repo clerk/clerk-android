@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
-import com.clerk.ui.core.common.dimens.dp16
+import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.signin.code.VerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme

@@ -7,8 +7,8 @@ import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
-import com.clerk.ui.core.common.AuthenticationViewState
-import com.clerk.ui.core.common.guardSignIn
+import com.clerk.ui.auth.AuthenticationViewState
+import com.clerk.ui.auth.guardSignIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

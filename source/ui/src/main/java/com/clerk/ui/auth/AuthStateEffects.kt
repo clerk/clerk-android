@@ -1,11 +1,10 @@
-package com.clerk.ui.core.common
+package com.clerk.ui.auth
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.clerk.ui.R
-import com.clerk.ui.auth.AuthState
 
 @Composable
 internal fun AuthStateEffects(

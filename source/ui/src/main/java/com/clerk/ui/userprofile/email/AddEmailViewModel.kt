@@ -1,4 +1,4 @@
-package com.clerk.ui.userprofile.addemail
+package com.clerk.ui.userprofile.email
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
