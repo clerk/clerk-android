@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.longErrorMessageOrNull
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -55,6 +56,10 @@ class OAuthViewModel : ViewModel() {
                 // If the status is not complete, check why. User may need to
                 // complete further steps.
               }
+            }
+
+            ResultType.UNKNOWN -> {
+              ClerkLog.e("Unknown result type after OAuth redirect")
             }
           }
         }

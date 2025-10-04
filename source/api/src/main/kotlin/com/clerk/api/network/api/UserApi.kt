@@ -617,4 +617,12 @@ internal interface UserApi {
     @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<ClerkPaginatedResponse<OrganizationSuggestion>, ClerkErrorResponse>
+
+  @FormUrlEncoded
+  @PATCH(ApiPaths.User.PhoneNumber.WITH_ID)
+  suspend fun setReservedForSecondFactor(
+    @Path(ApiParams.PHONE_NUMBER_ID) phoneNumberId: String,
+    @Field("reserved_for_second_factor") reservedForSecondFactor: Boolean,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
+  ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 }
