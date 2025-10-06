@@ -2,6 +2,8 @@ package com.clerk.ui.userprofile.mfa
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.network.model.totp.TOTPResource
+import com.clerk.ui.userprofile.totp.UserProfileMfaAddTotpView
 
 @Composable
 private fun UserProfileAddMfaView(viewType: ViewType) {
@@ -11,19 +13,20 @@ private fun UserProfileAddMfaView(viewType: ViewType) {
 @Composable
 private fun UserProfileAddMfaViewImpl(viewType: ViewType) {
   when (viewType) {
-    ViewType.SMS ->
+    ViewType.Sms ->
       UserProfileMfaAddSmsView(onClickUsePhoneNumber = {}, onReserveForSecondFactorSuccess = {})
-    ViewType.AuthenticatorApp -> TODO()
+    is ViewType.AuthenticatorApp -> UserProfileMfaAddTotpView(viewType.totp)
   }
 }
 
-internal enum class ViewType {
-  SMS,
-  AuthenticatorApp,
+internal sealed interface ViewType {
+  data object Sms : ViewType
+
+  data class AuthenticatorApp(val totp: TOTPResource) : ViewType
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileAddMfaView(viewType = ViewType.SMS)
+  UserProfileAddMfaView(viewType = ViewType.Sms)
 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp32
@@ -17,6 +18,11 @@ internal object Spacers {
     @Composable
     internal fun Spacer8() {
       Spacer(modifier = Modifier.Companion.height(dp8))
+    }
+
+    @Composable
+    internal fun Spacer12() {
+      Spacer(modifier = Modifier.Companion.height(dp12))
     }
 
     @Composable

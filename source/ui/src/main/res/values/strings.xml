@@ -95,4 +95,8 @@
     <string name="add_email_address">Add email address</string>
     <string name="add_sms_code_verification">Add SMS code verification</string>
     <string name="select_an_existing_phone_number">Select an existing phone number to register for SMS code two-step verification or add a new one.</string>
+    <string name="add_authenticator_application">Add authenticator application</string>
+    <string name="set_up_a_new_sign_in_method">Set up a new sign-in method in your authenticator and enter the Key provided below.\n\nMake sure Time-based or One-time passwords is enabled, then finish linking your account.</string>
+    <string name="alternatively_if_your_authenticator_supports_totp">Alternatively, if your authenticator supports TOTP URIs, you can also copy the full URI.</string>
+    <string name="scan_qr_code_instead">Scan QR code instead</string>
 </resources>

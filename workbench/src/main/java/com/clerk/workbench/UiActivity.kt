@@ -1,7 +1,6 @@
 package com.clerk.workbench
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -15,15 +14,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkColors
-import com.clerk.api.ui.ClerkTheme
-import com.clerk.ui.auth.AuthView
+import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.userprofile.totp.UserProfileMfaAddTotpView
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,9 +29,8 @@ class UiActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    Clerk.customTheme = ClerkTheme(darkColors = ClerkColors(primary = Color.Red))
+
     setContent {
-      val context = LocalContext.current
       WorkbenchTheme {
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
@@ -53,8 +48,18 @@ class UiActivity : ComponentActivity() {
               )
             }
             MainViewModel.UiState.SignedOut ->
-              AuthView(
-                onAuthComplete = { Toast.makeText(context, "Signed in", Toast.LENGTH_SHORT).show() }
+              UserProfileMfaAddTotpView(
+                totpResource =
+                  TOTPResource(
+                    id = "1",
+                    secret = "MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
+                    uri =
+                      "otpauth://totp/Clerk:georgevanjek@clerk.dev?algorithm=SHA1&digits=6" +
+                        "&issuer=Clerk&period=30&secret=MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
+                    verified = true,
+                    createdAt = 1L,
+                    updatedAt = 1L,
+                  )
               )
           }
         }
