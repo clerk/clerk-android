@@ -1,5 +1,6 @@
 package com.clerk.ui.userprofile.totp
 
+import android.content.ClipData
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -8,8 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -27,9 +31,13 @@ import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
+import kotlinx.coroutines.launch
 
 @Composable
 fun UserProfileMfaAddTotpView(totpResource: TOTPResource, modifier: Modifier = Modifier) {
+  val clipboard = LocalClipboard.current
+  val scope = rememberCoroutineScope()
+
   ClerkThemedProfileScaffold(
     modifier = modifier,
     title = stringResource(R.string.add_authenticator_application),
@@ -40,13 +48,27 @@ fun UserProfileMfaAddTotpView(totpResource: TOTPResource, modifier: Modifier = M
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    DisplayTextWithActionButton(text = totpResource.secret, onClick = {})
+    DisplayTextWithActionButton(
+      text = totpResource.secret,
+      onClick = {
+        scope.launch {
+          clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", totpResource.secret)))
+        }
+      },
+    )
     Text(
       text = stringResource(R.string.alternatively_if_your_authenticator_supports_totp),
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    DisplayTextWithActionButton(text = totpResource.uri, onClick = {})
+    DisplayTextWithActionButton(
+      text = totpResource.uri,
+      onClick = {
+        scope.launch {
+          clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", totpResource.uri)))
+        }
+      },
+    )
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.continue_text),
