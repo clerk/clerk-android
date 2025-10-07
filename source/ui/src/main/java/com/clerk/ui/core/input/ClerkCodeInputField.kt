@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -388,4 +389,15 @@ private fun BlinkingCaret() {
   )
 }
 
-// Preview moved to separate file to keep function count below linter threshold
+@PreviewLightDark
+@Composable
+private fun Preview() {
+  ClerkMaterialTheme {
+    Box(
+      modifier =
+        Modifier.background(color = ClerkMaterialTheme.colors.background).padding(top = dp12)
+    ) {
+      ClerkCodeInputField(onTextChange = {}, onClickResend = {})
+    }
+  }
+}

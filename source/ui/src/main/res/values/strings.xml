@@ -99,4 +99,9 @@
     <string name="set_up_a_new_sign_in_method">Set up a new sign-in method in your authenticator and enter the Key provided below.\n\nMake sure Time-based or One-time passwords is enabled, then finish linking your account.</string>
     <string name="alternatively_if_your_authenticator_supports_totp">Alternatively, if your authenticator supports TOTP URIs, you can also copy the full URI.</string>
     <string name="scan_qr_code_instead">Scan QR code instead</string>
+    <string name="verify_email_address">Verify email address</string>
+    <string name="verify_phone_number">Verify phone number</string>
+    <string name="verify_authenticator_app">Verify authenticator app</string>
+    <string name="enter_the_verification_code_sent_to">Enter the verification code sent to %1$s</string>
+    <string name="enter_the_verification_code_from_your_authenticator_application">Enter the verification code from your authenticator application</string>
 </resources>

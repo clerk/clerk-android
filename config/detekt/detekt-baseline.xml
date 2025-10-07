@@ -27,6 +27,7 @@
     <ID>SwallowedException:PasskeyCredentialManagerTest.kt$PasskeyCredentialManagerTest$e: Exception</ID>
     <ID>TooGenericExceptionThrown:DeviceAttestationHelper.kt$DeviceAttestationHelper$throw RuntimeException("Failed to hash clientId", e)</ID>
     <ID>TooManyFunctions:AuthStartViewModel.kt$AuthStartViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:ClerkCodeInputField.kt$com.clerk.ui.core.input.ClerkCodeInputField.kt</ID>
     <ID>TooManyFunctions:ConfigurationManager.kt$ConfigurationManager</ID>
     <ID>TooManyFunctions:Organization.kt$com.clerk.api.organizations.Organization.kt</ID>
     <ID>TooManyFunctions:OrganizationApi.kt$OrganizationApi</ID>
