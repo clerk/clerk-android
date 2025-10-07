@@ -6,6 +6,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,11 +34,19 @@ private fun UserProfileVerifyViewImpl(
 
   val state by viewModel.state.collectAsStateWithLifecycle()
   val verificationTextState by viewModel.verificationTextState.collectAsStateWithLifecycle()
+  val context = LocalContext.current
   LaunchedEffect(mode) { prepareCode(mode, viewModel) }
+  val errorMessage: String? =
+    when (val s = state) {
+      is UserProfileVerifyViewModel.AuthState.Error ->
+        s.error ?: context.getString(R.string.something_went_wrong_please_try_again)
+      else -> null
+    }
 
   ClerkThemedProfileScaffold(
     modifier = modifier,
     title = mode.title(),
+    errorMessage = errorMessage,
     hasBackButton = mode.hasBackButton(),
   ) {
     Text(
