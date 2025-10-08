@@ -19,11 +19,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -224,12 +227,28 @@ private fun SocialButtonIcon(
   isEnabled: Boolean,
   contentDescription: String?,
 ) {
+  val mutedForeground = ClerkMaterialTheme.colors.mutedForeground
+
+  val model = provider.logoUrl?.takeUnless { it.isBlank() }
+
+  val fallbackPainter =
+    if (provider == OAuthProvider.GOOGLE) painterResource(R.drawable.ic_google)
+    else painterResource(R.drawable.ic_globe)
+
+  var showingFallback by remember { mutableStateOf(model == null) }
+
   AsyncImage(
-    model = provider.logoUrl,
+    model = model,
     contentDescription = contentDescription,
-    fallback = painterResource(R.drawable.ic_google),
+    fallback = fallbackPainter,
+    error = fallbackPainter,
+    onSuccess = { showingFallback = false },
+    onError = { showingFallback = true },
     alpha = if (isEnabled) 1f else 0.5f,
     modifier = Modifier.size(dp24),
+    colorFilter =
+      if (showingFallback && provider != OAuthProvider.GOOGLE) ColorFilter.tint(mutedForeground)
+      else null,
   )
 }
 
@@ -287,7 +306,16 @@ private fun PreviewSocialRow() {
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp8),
       verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
     ) {
-      ClerkSocialRow(listOf(provider, provider, provider, provider, provider).toImmutableList())
+      ClerkSocialRow(
+        listOf(
+            provider,
+            OAuthProvider.APPLE,
+            OAuthProvider.HUGGING_FACE,
+            OAuthProvider.LINEAR,
+            OAuthProvider.BOX,
+          )
+          .toImmutableList()
+      )
     }
   }
 }
