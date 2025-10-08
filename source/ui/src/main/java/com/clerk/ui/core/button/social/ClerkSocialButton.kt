@@ -227,7 +227,9 @@ private fun SocialButtonIcon(
   AsyncImage(
     model = provider.logoUrl,
     contentDescription = contentDescription,
-    fallback = painterResource(R.drawable.ic_google),
+    fallback =
+      if (provider == OAuthProvider.GOOGLE) painterResource(R.drawable.ic_google)
+      else painterResource(R.drawable.ic_globe),
     alpha = if (isEnabled) 1f else 0.5f,
     modifier = Modifier.size(dp24),
   )
@@ -287,7 +289,16 @@ private fun PreviewSocialRow() {
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp8),
       verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
     ) {
-      ClerkSocialRow(listOf(provider, provider, provider, provider, provider).toImmutableList())
+      ClerkSocialRow(
+        listOf(
+            provider,
+            OAuthProvider.APPLE,
+            OAuthProvider.HUGGING_FACE,
+            OAuthProvider.LINEAR,
+            OAuthProvider.BOX,
+          )
+          .toImmutableList()
+      )
     }
   }
 }
