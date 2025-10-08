@@ -105,4 +105,5 @@
     <string name="enter_the_verification_code_sent_to">Enter the verification code sent to %1$s</string>
     <string name="enter_the_verification_code_from_your_authenticator_application">Enter the verification code from your authenticator application</string>
     <string name="link_another_login_option">Link another login option to your account. You’ll need to verify it before it can be used.</string>
+    <string name="connect_account">Connect account</string>
 </resources>
