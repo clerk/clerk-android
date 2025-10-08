@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class AddConnectedAccountViewModel : ViewModel() {
+internal class AddConnectedAccountViewModel : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
