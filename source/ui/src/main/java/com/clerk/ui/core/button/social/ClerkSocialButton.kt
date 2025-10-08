@@ -229,22 +229,18 @@ private fun SocialButtonIcon(
 ) {
   val mutedForeground = ClerkMaterialTheme.colors.mutedForeground
 
-  // Use the URL only if it’s non-blank
   val model = provider.logoUrl?.takeUnless { it.isBlank() }
 
   val fallbackPainter =
     if (provider == OAuthProvider.GOOGLE) painterResource(R.drawable.ic_google)
     else painterResource(R.drawable.ic_globe)
 
-  // Track whether we're currently showing the fallback (null model OR load error)
   var showingFallback by remember { mutableStateOf(model == null) }
 
   AsyncImage(
     model = model,
     contentDescription = contentDescription,
-    // Used when model == null
     fallback = fallbackPainter,
-    // Used when the request fails (e.g., Preview, bad URL)
     error = fallbackPainter,
     onSuccess = { showingFallback = false },
     onError = { showingFallback = true },
