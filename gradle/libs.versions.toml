@@ -9,6 +9,8 @@ core = "1.7.0"
 coreKtxVersion = "1.7.0"
 detekt = "1.23.8"
 dokka = "1.9.20"
+firebase-appDistrubution = "5.1.1"
+googleGms = "4.4.3"
 kotlin = "2.2.10"
 ksp = "2.2.20-2.0.4"
 lifecycleProcess = "2.9.4"
@@ -68,6 +70,8 @@ coil-okhttp = "io.coil-kt.coil3:coil-network-okhttp:3.3.0"
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-lints = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
+firebase-bom = "com.google.firebase:firebase-bom:34.4.0"
+firebase-appDistribution = "com.google.firebase:firebase-appdistribution:17.0.0"
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.1.1"
 google-playIntegrity = "com.google.android.play:integrity:1.5.0"
 google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.15"
@@ -113,3 +117,5 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "sortDependencies" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+google-gms = { id = "com.google.gms.google-services", version.ref = "googleGms" }
+firebase-appDistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appDistrubution" }
