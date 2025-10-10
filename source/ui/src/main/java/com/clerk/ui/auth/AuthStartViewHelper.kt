@@ -4,6 +4,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.sso.OAuthProvider
@@ -65,6 +66,18 @@ internal class AuthStartViewHelper {
         else (it as? UserSettings.SocialConfig)?.authenticatable == true
       } && showIdentifierField
     }
+
+  fun getKeyboardType(isPhoneNumberFieldActive: Boolean): KeyboardType {
+    return if (isPhoneNumberFieldActive) {
+      KeyboardType.Phone
+    } else {
+      if (emailIsEnabled && !usernameIsEnabled) {
+        KeyboardType.Email
+      } else {
+        KeyboardType.Text
+      }
+    }
+  }
 
   fun continueIsDisabled(
     isPhoneNumberFieldActive: Boolean,
