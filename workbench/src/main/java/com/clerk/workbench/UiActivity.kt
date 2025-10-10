@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
+import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +46,9 @@ class UiActivity : ComponentActivity() {
                 onClick = { scope.launch(Dispatchers.IO) { Clerk.signOut() } },
               )
             }
-            MainViewModel.UiState.SignedOut -> {}
+            MainViewModel.UiState.SignedOut -> {
+              AuthView()
+            }
           }
         }
       }

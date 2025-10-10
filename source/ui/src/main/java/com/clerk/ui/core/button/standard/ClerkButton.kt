@@ -2,7 +2,6 @@ package com.clerk.ui.core.button.standard
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -28,7 +29,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -158,27 +158,25 @@ private fun ClerkButtonImpl(
     val tokens = buildButtonTokens(config = configuration, isPressed = isPressedCombined)
 
     val surfaceModifier =
-      Modifier.height(tokens.height)
-        .then(modifier)
-        .let { mod ->
-          if (tokens.hasShadow && !isPressedCombined) {
-            mod.shadow(elevation = dp1, shape = ClerkMaterialTheme.shape)
-          } else {
-            mod
-          }
+      Modifier.height(tokens.height).then(modifier).let { mod ->
+        if (tokens.hasShadow && !isPressedCombined) {
+          mod.shadow(elevation = dp1, shape = ClerkMaterialTheme.shape)
+        } else {
+          mod
         }
-        .clickable(
-          interactionSource = interactionSource,
-          enabled = isEnabled,
-          role = Role.Button,
-          onClick = onClick,
-        )
+      }
 
-    Surface(
+    Button(
       modifier = surfaceModifier,
       shape = ClerkMaterialTheme.shape,
-      color = if (isEnabled) tokens.backgroundColor else tokens.backgroundColor.copy(alpha = 0.5f),
+      colors =
+        ButtonDefaults.buttonColors(
+          containerColor =
+            if (isEnabled) tokens.backgroundColor else tokens.backgroundColor.copy(alpha = 0.5f)
+        ),
       border = BorderStroke(tokens.borderWidth, tokens.borderColor),
+      onClick = onClick,
+      interactionSource = interactionSource,
     ) {
       ButtonContent(
         isLoading = isLoading,
