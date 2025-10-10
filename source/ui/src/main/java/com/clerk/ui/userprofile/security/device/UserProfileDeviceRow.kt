@@ -54,13 +54,13 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 @Composable
 fun UserProfileDeviceRow(modifier: Modifier = Modifier, onError: (String?) -> Unit) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  UserProfileDeviceRowImpl(session = session!!, modifier = modifier, onError = onError)
+  UserProfileDeviceRowImpl(session = session, modifier = modifier, onError = onError)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserProfileDeviceRowImpl(
-  session: Session,
+  session: Session?,
   modifier: Modifier = Modifier,
   forceIsThisDevice: Boolean = false,
   viewModel: DeviceViewModel = viewModel(),
@@ -74,7 +74,7 @@ private fun UserProfileDeviceRowImpl(
     }
   }
 
-  session.latestActivity?.let { activity ->
+  session?.latestActivity?.let { activity ->
     ClerkMaterialTheme {
       Row(
         modifier =
