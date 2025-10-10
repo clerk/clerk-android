@@ -73,7 +73,7 @@ class SignInFactorCodeViewModelTest {
     viewModel.prepare(factor, isSecondFactor = false)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify { mockPrepareHandler.prepareForEmailCode(mockSignIn, factor) }
+    coVerify { mockPrepareHandler.prepareForEmailCode(mockSignIn, factor, onError = {}) }
     viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
   }
 
@@ -90,6 +90,7 @@ class SignInFactorCodeViewModelTest {
         inProgressSignIn = mockSignIn,
         factor = factor,
         isSecondFactor = isSecondFactor,
+        onError = {},
       )
     }
     viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
@@ -104,7 +105,9 @@ class SignInFactorCodeViewModelTest {
       viewModel.prepare(factor, isSecondFactor = false)
       testDispatcher.scheduler.advanceUntilIdle()
 
-      coVerify { mockPrepareHandler.prepareForResetPasswordWithPhone(mockSignIn, factor) }
+      coVerify {
+        mockPrepareHandler.prepareForResetPasswordWithPhone(mockSignIn, factor, onError = {})
+      }
       viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
     }
 
@@ -116,7 +119,7 @@ class SignInFactorCodeViewModelTest {
     viewModel.prepare(factor, isSecondFactor = false)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify { mockPrepareHandler.prepareForResetWithEmailCode(mockSignIn, factor) }
+    coVerify { mockPrepareHandler.prepareForResetWithEmailCode(mockSignIn, factor, onError = {}) }
     viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
   }
 
