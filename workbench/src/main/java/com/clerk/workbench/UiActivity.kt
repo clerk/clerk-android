@@ -17,9 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.userprofile.totp.UserProfileMfaAddTotpView
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -47,20 +45,7 @@ class UiActivity : ComponentActivity() {
                 onClick = { scope.launch(Dispatchers.IO) { Clerk.signOut() } },
               )
             }
-            MainViewModel.UiState.SignedOut ->
-              UserProfileMfaAddTotpView(
-                totpResource =
-                  TOTPResource(
-                    id = "1",
-                    secret = "MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
-                    uri =
-                      "otpauth://totp/Clerk:georgevanjek@clerk.dev?algorithm=SHA1&digits=6" +
-                        "&issuer=Clerk&period=30&secret=MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
-                    verified = true,
-                    createdAt = 1L,
-                    updatedAt = 1L,
-                  )
-              )
+            MainViewModel.UiState.SignedOut -> {}
           }
         }
       }
