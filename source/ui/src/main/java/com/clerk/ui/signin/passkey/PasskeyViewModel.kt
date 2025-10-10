@@ -3,7 +3,7 @@ package com.clerk.ui.signin.passkey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -24,7 +24,7 @@ internal class PasskeyViewModel : ViewModel() {
         .onSuccess { _state.value = AuthenticationViewState.Success.SignIn(it) }
         .onFailure {
           ClerkLog.e("Passkey authentication failed: $it")
-          _state.value = AuthenticationViewState.Error(it.longErrorMessageOrNull)
+          _state.value = AuthenticationViewState.Error(it.errorMessage)
         }
     }
   }

@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -66,7 +66,7 @@ class OAuthViewModel : ViewModel() {
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling
           // for more info on error handling
-          Log.e("OAuthViewModel", it.longErrorMessageOrNull, it.throwable)
+          Log.e("OAuthViewModel", it.errorMessage, it.throwable)
         }
     }
   }

@@ -2,7 +2,7 @@ package com.clerk.ui.userprofile.mfa
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.phonenumber.PhoneNumber
@@ -22,7 +22,7 @@ internal class MfaAddSmsViewModel : ViewModel() {
       phoneNumber
         .setReservedForSecondFactor(true)
         .onSuccess { _state.value = State.Success }
-        .onFailure { _state.value = State.Error(it.longErrorMessageOrNull) }
+        .onFailure { _state.value = State.Error(it.errorMessage) }
     }
   }
 

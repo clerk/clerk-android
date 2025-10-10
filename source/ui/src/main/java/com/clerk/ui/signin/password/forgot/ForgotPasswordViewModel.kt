@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -37,7 +37,7 @@ internal class ForgotPasswordViewModel : ViewModel() {
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            _state.value = ResetPasswordViewState.Error(it.longErrorMessageOrNull)
+            _state.value = ResetPasswordViewState.Error(it.errorMessage)
           }
         }
     }

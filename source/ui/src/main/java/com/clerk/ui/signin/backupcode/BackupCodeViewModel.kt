@@ -3,7 +3,7 @@ package com.clerk.ui.signin.backupcode
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -28,7 +28,7 @@ internal class BackupCodeViewModel : ViewModel() {
       inProgressSignIn
         .attemptSecondFactor(SignIn.AttemptSecondFactorParams.BackupCode(backupCode))
         .onSuccess { _state.value = AuthenticationViewState.Success.SignIn(it) }
-        .onFailure { _state.value = AuthenticationViewState.Error(it.longErrorMessageOrNull) }
+        .onFailure { _state.value = AuthenticationViewState.Error(it.errorMessage) }
     }
   }
 

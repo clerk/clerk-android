@@ -3,7 +3,7 @@ package com.clerk.ui.signup.collectfield
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
@@ -50,10 +50,10 @@ internal class CollectFieldViewModel : ViewModel() {
           }
           .onFailure {
             ClerkLog.e(
-              "CollectFieldViewModel - updateSignUp - failed to update sign up: ${it.longErrorMessageOrNull}"
+              "CollectFieldViewModel - updateSignUp - failed to update sign up: ${it.errorMessage}"
             )
             withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Error(it.longErrorMessageOrNull)
+              _state.value = AuthenticationViewState.Error(it.errorMessage)
             }
           }
       }

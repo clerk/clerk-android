@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -106,7 +106,7 @@ internal class AuthStartViewModel : ViewModel() {
             if (hasMatchingError) {
               signUp(isPhoneNumberFieldActive, identifier, phoneNumber)
             } else {
-              _state.value = AuthState.Error(it.longErrorMessageOrNull)
+              _state.value = AuthState.Error(it.errorMessage)
             }
           }
         }
@@ -129,9 +129,7 @@ internal class AuthStartViewModel : ViewModel() {
           }
         }
         .onFailure {
-          withContext(Dispatchers.Main) {
-            _state.value = AuthState.Error(it.longErrorMessageOrNull)
-          }
+          withContext(Dispatchers.Main) { _state.value = AuthState.Error(it.errorMessage) }
         }
     }
   }
@@ -170,7 +168,7 @@ internal class AuthStartViewModel : ViewModel() {
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            _state.value = AuthState.OAuthState.Error(it.longErrorMessageOrNull)
+            _state.value = AuthState.OAuthState.Error(it.errorMessage)
           }
         }
     }
@@ -194,7 +192,7 @@ internal class AuthStartViewModel : ViewModel() {
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            _state.value = AuthState.OAuthState.Error(it.longErrorMessageOrNull)
+            _state.value = AuthState.OAuthState.Error(it.errorMessage)
           }
         }
     }
@@ -226,9 +224,7 @@ internal class AuthStartViewModel : ViewModel() {
               val emailAddressId = startingFactor.emailAddressId
               if (emailAddressId != null) {
                 signIn.prepareFirstFactor(
-                  SignIn.PrepareFirstFactorParams.EmailCode(
-                    emailAddressId = emailAddressId
-                  )
+                  SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailAddressId)
                 )
               } else {
                 ClerkLog.e("Cannot prepare EMAIL_CODE factor: emailAddressId is null")
@@ -239,9 +235,7 @@ internal class AuthStartViewModel : ViewModel() {
               val phoneNumberId = startingFactor.phoneNumberId
               if (phoneNumberId != null) {
                 signIn.prepareFirstFactor(
-                  SignIn.PrepareFirstFactorParams.PhoneCode(
-                    phoneNumberId = phoneNumberId
-                  )
+                  SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneNumberId)
                 )
               } else {
                 ClerkLog.e("Cannot prepare PHONE_CODE factor: phoneNumberId is null")
@@ -267,8 +261,7 @@ internal class AuthStartViewModel : ViewModel() {
         }
       }
       .onFailure { throwable ->
-        _state.value =
-          withContext(Dispatchers.Main) { AuthState.Error(throwable.longErrorMessageOrNull) }
+        _state.value = withContext(Dispatchers.Main) { AuthState.Error(throwable.errorMessage) }
       }
   }
 

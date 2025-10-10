@@ -18,9 +18,9 @@ data class ClerkErrorResponse(
 @Serializable
 data class Error(
   /** A message that describes the error. */
-  val message: String,
+  val message: String?,
   /** A more detailed message that describes the error. */
-  @SerialName("long_message") val longMessage: String,
+  @SerialName("long_message") val longMessage: String?,
   /** A string code that represents the error, such as `username_exists_code`. */
   val code: String,
   /** Additional information about the error. */
