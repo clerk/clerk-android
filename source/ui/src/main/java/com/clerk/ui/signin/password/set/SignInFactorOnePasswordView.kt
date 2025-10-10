@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -98,6 +99,7 @@ private fun SignInFactorOnePasswordViewImpl(
       onValueChange = { authState.signInPassword = it },
       label = stringResource(R.string.enter_your_password),
       visualTransformation = PasswordVisualTransformation(),
+      keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
     )
     Spacer(Modifier.height(dp24))
     ClerkButton(
