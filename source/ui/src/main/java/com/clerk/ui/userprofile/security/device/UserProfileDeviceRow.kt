@@ -3,18 +3,27 @@ package com.clerk.ui.userprofile.security.device
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -45,29 +54,51 @@ fun UserProfileDeviceRow(modifier: Modifier = Modifier) {
   UserProfileDeviceRowImpl(session = session!!, modifier = modifier)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun UserProfileDeviceRowImpl(
+fun UserProfileDeviceRowImpl(
   session: Session,
   modifier: Modifier = Modifier,
   forceIsThisDevice: Boolean = false,
 ) {
+  var showDropdown by remember { mutableStateOf(false) }
+
   session.latestActivity?.let { activity ->
     ClerkMaterialTheme {
       Row(
         modifier =
           Modifier.fillMaxWidth()
-            .background(color = ClerkMaterialTheme.colors.background)
+            .background(ClerkMaterialTheme.colors.background)
             .padding(vertical = dp16, horizontal = dp24)
             .then(modifier)
       ) {
         DeviceInfoWithIcon(activity, session, forceIsThisDevice)
         Spacer(modifier = Modifier.weight(1f))
-        IconButton(modifier = Modifier.align(Alignment.CenterVertically), onClick = {}) {
-          Icon(
-            imageVector = Icons.Outlined.MoreVert,
-            contentDescription = stringResource(R.string.more_options),
-            tint = ClerkMaterialTheme.colors.mutedForeground,
-          )
+        ExposedDropdownMenuBox(expanded = showDropdown, onExpandedChange = { showDropdown = it }) {
+          IconButton(modifier = Modifier.menuAnchor(), onClick = { showDropdown = true }) {
+            Icon(
+              imageVector = Icons.Outlined.MoreVert,
+              contentDescription = stringResource(R.string.more_options),
+              tint = ClerkMaterialTheme.colors.mutedForeground,
+            )
+          }
+
+          DropdownMenu(
+            modifier = Modifier.width(IntrinsicSize.Min),
+            expanded = showDropdown,
+            onDismissRequest = { showDropdown = false },
+          ) {
+            DropdownMenuItem(
+              text = {
+                Text(
+                  text = "Sign out of this device",
+                  style = ClerkMaterialTheme.typography.bodyLarge,
+                  color = ClerkMaterialTheme.colors.danger,
+                )
+              },
+              onClick = { showDropdown = false },
+            )
+          }
         }
       }
     }
