@@ -32,19 +32,29 @@ internal class SignInFactorCodeViewModel(
       guardSignIn(_state) { inProgressSignIn ->
         viewModelScope.launch(Dispatchers.IO) {
           when (factor.strategy) {
-            StrategyKeys.EMAIL_CODE -> prepareHandler.prepareForEmailCode(inProgressSignIn, factor)
+            StrategyKeys.EMAIL_CODE -> {
+              prepareHandler.prepareForEmailCode(inProgressSignIn, factor) {
+                _state.value = AuthenticationViewState.Error(it)
+              }
+            }
             StrategyKeys.PHONE_CODE ->
               prepareHandler.prepareForPhoneCode(
                 inProgressSignIn = inProgressSignIn,
                 factor = factor,
                 isSecondFactor = isSecondFactor,
-              )
+              ) {
+                _state.value = AuthenticationViewState.Error(it)
+              }
 
             StrategyKeys.RESET_PASSWORD_PHONE_CODE ->
-              prepareHandler.prepareForResetPasswordWithPhone(inProgressSignIn, factor)
+              prepareHandler.prepareForResetPasswordWithPhone(inProgressSignIn, factor) {
+                _state.value = AuthenticationViewState.Error(it)
+              }
 
             StrategyKeys.RESET_PASSWORD_EMAIL_CODE ->
-              prepareHandler.prepareForResetWithEmailCode(inProgressSignIn, factor)
+              prepareHandler.prepareForResetWithEmailCode(inProgressSignIn, factor) {
+                _state.value = AuthenticationViewState.Error(it)
+              }
           }
         }
       }
