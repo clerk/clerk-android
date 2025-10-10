@@ -15,11 +15,13 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.clerk.api.Clerk
 import com.clerk.api.session.Session
@@ -49,19 +52,27 @@ import com.clerk.ui.core.extensions.lastActiveRelativeTime
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun UserProfileDeviceRow(modifier: Modifier = Modifier) {
+fun UserProfileDeviceRow(modifier: Modifier = Modifier, onError: (String?) -> Unit) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  UserProfileDeviceRowImpl(session = session!!, modifier = modifier)
+  UserProfileDeviceRowImpl(session = session!!, modifier = modifier, onError = onError)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserProfileDeviceRowImpl(
+private fun UserProfileDeviceRowImpl(
   session: Session,
   modifier: Modifier = Modifier,
   forceIsThisDevice: Boolean = false,
+  viewModel: DeviceViewModel = viewModel(),
+  onError: (String?) -> Unit,
 ) {
   var showDropdown by remember { mutableStateOf(false) }
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  LaunchedEffect(state) {
+    if (state is DeviceViewModel.State.Error) {
+      onError((state as DeviceViewModel.State.Error).message)
+    }
+  }
 
   session.latestActivity?.let { activity ->
     ClerkMaterialTheme {
@@ -75,7 +86,14 @@ fun UserProfileDeviceRowImpl(
         DeviceInfoWithIcon(activity, session, forceIsThisDevice)
         Spacer(modifier = Modifier.weight(1f))
         ExposedDropdownMenuBox(expanded = showDropdown, onExpandedChange = { showDropdown = it }) {
-          IconButton(modifier = Modifier.menuAnchor(), onClick = { showDropdown = true }) {
+          IconButton(
+            modifier =
+              Modifier.menuAnchor(
+                type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                enabled = true,
+              ),
+            onClick = { showDropdown = true },
+          ) {
             Icon(
               imageVector = Icons.Outlined.MoreVert,
               contentDescription = stringResource(R.string.more_options),
@@ -86,6 +104,7 @@ fun UserProfileDeviceRowImpl(
           DropdownMenu(
             modifier = Modifier.width(IntrinsicSize.Min),
             expanded = showDropdown,
+            shape = ClerkMaterialTheme.shape,
             onDismissRequest = { showDropdown = false },
           ) {
             DropdownMenuItem(
@@ -96,7 +115,10 @@ fun UserProfileDeviceRowImpl(
                   color = ClerkMaterialTheme.colors.danger,
                 )
               },
-              onClick = { showDropdown = false },
+              onClick = {
+                viewModel.signOut(session)
+                showDropdown = false
+              },
             )
           }
         }
@@ -159,6 +181,7 @@ private fun DeviceInfoWithIcon(
 private fun Preview() {
   UserProfileDeviceRowImpl(
     forceIsThisDevice = true,
+    onError = {},
     session =
       Session(
         id = "123456",
