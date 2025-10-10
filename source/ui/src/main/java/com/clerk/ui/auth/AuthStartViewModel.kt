@@ -15,7 +15,6 @@ import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
-import com.clerk.ui.core.common.StrategyKeys
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -214,37 +213,6 @@ internal class AuthStartViewModel : ViewModel() {
     when {
       signIn.requiresEnterpriseSSO() -> handleEnterpriseSSO(signIn)
       else -> {
-        // Proactively prepare the first factor for OTP strategies so the code is sent
-        // before navigating to the code-entry screen. This avoids races where the global
-        // Clerk.signIn hasn't been synced yet on the destination screen.
-        val startingFactor = signIn.startingFirstFactor
-        try {
-          when (startingFactor?.strategy) {
-            StrategyKeys.EMAIL_CODE -> {
-              val emailAddressId = startingFactor.emailAddressId
-              if (emailAddressId != null) {
-                signIn.prepareFirstFactor(
-                  SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailAddressId)
-                )
-              } else {
-                ClerkLog.e("Cannot prepare EMAIL_CODE factor: emailAddressId is null")
-              }
-            }
-
-            StrategyKeys.PHONE_CODE -> {
-              val phoneNumberId = startingFactor.phoneNumberId
-              if (phoneNumberId != null) {
-                signIn.prepareFirstFactor(
-                  SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneNumberId)
-                )
-              } else {
-                ClerkLog.e("Cannot prepare PHONE_CODE factor: phoneNumberId is null")
-              }
-            }
-          }
-        } catch (t: Throwable) {
-          ClerkLog.e("Error pre-preparing first factor: ${t.message}")
-        }
 
         _state.value =
           withContext(Dispatchers.Main) { AuthState.Success.SignInSuccess(signIn = signIn) }

@@ -2,6 +2,7 @@ package com.clerk.ui.signin.code
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -91,7 +92,7 @@ private fun SignInFactorCodeViewImpl(
   val verificationTextState by viewModel.verificationUiState.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
 
-  viewModel.prepare(factor, isSecondFactor = isSecondFactor)
+  LaunchedEffect(Unit) { viewModel.prepare(factor, isSecondFactor = isSecondFactor) }
 
   AuthStateEffects(
     authState = authState,
