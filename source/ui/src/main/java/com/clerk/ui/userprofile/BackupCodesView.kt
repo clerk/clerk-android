@@ -41,7 +41,7 @@ internal fun BackupCodesView(
           .background(color = ClerkMaterialTheme.colors.background)
           .padding(dp24)
           .then(modifier),
-      verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
+      verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.Top),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       Text(
