@@ -1,12 +1,15 @@
 package com.clerk.workbench
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -14,12 +17,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.totp.TOTPResource
+import com.clerk.api.user.createPasskey
+import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.userprofile.totp.UserProfileMfaAddTotpView
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,6 +39,7 @@ class UiActivity : ComponentActivity() {
       WorkbenchTheme {
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
+        val context = LocalContext.current
         Box(
           modifier =
             Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background),
@@ -46,20 +52,15 @@ class UiActivity : ComponentActivity() {
                 text = "Sign out",
                 onClick = { scope.launch(Dispatchers.IO) { Clerk.signOut() } },
               )
+              Spacer(modifier = Modifier.height(dp8))
+              ClerkButton(
+                text = "Create passkey",
+                onClick = { scope.launch { Clerk.user?.createPasskey() } },
+              )
             }
             MainViewModel.UiState.SignedOut ->
-              UserProfileMfaAddTotpView(
-                totpResource =
-                  TOTPResource(
-                    id = "1",
-                    secret = "MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
-                    uri =
-                      "otpauth://totp/Clerk:georgevanjek@clerk.dev?algorithm=SHA1&digits=6" +
-                        "&issuer=Clerk&period=30&secret=MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
-                    verified = true,
-                    createdAt = 1L,
-                    updatedAt = 1L,
-                  )
+              AuthView(
+                onAuthComplete = { Toast.makeText(context, "Signed in", Toast.LENGTH_SHORT).show() }
               )
           }
         }
