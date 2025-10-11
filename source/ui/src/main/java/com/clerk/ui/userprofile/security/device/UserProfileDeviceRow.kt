@@ -34,7 +34,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import com.clerk.api.Clerk
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionActivity
 import com.clerk.api.session.isThisDevice
@@ -52,8 +51,11 @@ import com.clerk.ui.core.extensions.lastActiveRelativeTime
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun UserProfileDeviceRow(modifier: Modifier = Modifier, onError: (String?) -> Unit) {
-  val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
+fun UserProfileDeviceRow(
+  onError: (String?) -> Unit,
+  session: Session,
+  modifier: Modifier = Modifier,
+) {
   UserProfileDeviceRowImpl(session = session, modifier = modifier, onError = onError)
 }
 

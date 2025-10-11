@@ -110,4 +110,5 @@
     <string name="desktop_device">Desktop device</string>
     <string name="this_device">This device</string>
     <string name="more_options">More options</string>
+    <string name="active_devices">Active devices</string>
 </resources>
