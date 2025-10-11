@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class AllDevicesViewModel : ViewModel() {
+internal class AllDevicesViewModel : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()

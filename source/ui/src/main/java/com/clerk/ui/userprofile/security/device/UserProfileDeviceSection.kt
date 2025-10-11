@@ -27,7 +27,7 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun UserProfileDevicesSection(
+internal fun UserProfileDevicesSection(
   modifier: Modifier = Modifier,
   viewModel: AllDevicesViewModel = viewModel(),
   errorFetchingDevices: () -> Unit,
