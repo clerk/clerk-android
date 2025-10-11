@@ -18,8 +18,8 @@ android {
     applicationId = "com.clerk.workbench"
     minSdk = libs.versions.minSdk.get().toInt()
     targetSdk = libs.versions.compileSdk.get().toInt()
-    versionCode = 1
-    versionName = "AuthView"
+    versionCode = 2
+    versionName = "AuthView-v2"
 
     val isCI = System.getenv("CI")?.toBoolean() == true
     val clerkPublishableKey = project.findProperty(workbenchKey) as String?
