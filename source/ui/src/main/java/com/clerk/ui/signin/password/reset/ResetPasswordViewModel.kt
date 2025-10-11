@@ -3,7 +3,7 @@ package com.clerk.ui.signin.password.reset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -38,10 +38,10 @@ internal class ResetPasswordViewModel : ViewModel() {
             }
           }
           .onFailure {
-            ClerkLog.e("ResetPasswordViewModel, ${it.longErrorMessageOrNull}")
+            ClerkLog.e("ResetPasswordViewModel, ${it.errorMessage}")
             withContext(Dispatchers.Main) {
               _state.value =
-                AuthenticationViewState.Error(it.longErrorMessageOrNull ?: "Something went wrong")
+                AuthenticationViewState.Error(it.errorMessage ?: "Something went wrong")
             }
           }
       }

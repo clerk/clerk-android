@@ -2,7 +2,7 @@ package com.clerk.ui.signin.password.set
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -33,7 +33,7 @@ internal class SetPasswordViewModel : ViewModel() {
           }
           .onFailure {
             withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Error(it.longErrorMessageOrNull)
+              _state.value = AuthenticationViewState.Error(it.errorMessage)
             }
           }
       }

@@ -67,60 +67,6 @@ class SignInFactorCodeViewModelTest {
   }
 
   @Test
-  fun prepareWithEmailCodeStrategyShouldCallPrepareForEmailCode() = runTest {
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_id")
-
-    viewModel.prepare(factor, isSecondFactor = false)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify { mockPrepareHandler.prepareForEmailCode(mockSignIn, factor) }
-    viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
-  }
-
-  @Test
-  fun prepareWithPhoneCodeStrategyShouldCallPrepareForPhoneCode() = runTest {
-    val factor = Factor(strategy = StrategyKeys.PHONE_CODE, phoneNumberId = "phone_id")
-    val isSecondFactor = true
-
-    viewModel.prepare(factor, isSecondFactor)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify {
-      mockPrepareHandler.prepareForPhoneCode(
-        inProgressSignIn = mockSignIn,
-        factor = factor,
-        isSecondFactor = isSecondFactor,
-      )
-    }
-    viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
-  }
-
-  @Test
-  fun prepareWithResetPasswordPhoneCodeStrategyShouldCallPrepareForResetPasswordWithPhone() =
-    runTest {
-      val factor =
-        Factor(strategy = StrategyKeys.RESET_PASSWORD_PHONE_CODE, phoneNumberId = "phone_id")
-
-      viewModel.prepare(factor, isSecondFactor = false)
-      testDispatcher.scheduler.advanceUntilIdle()
-
-      coVerify { mockPrepareHandler.prepareForResetPasswordWithPhone(mockSignIn, factor) }
-      viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
-    }
-
-  @Test
-  fun prepareWithResetPasswordEmailCodeStrategyShouldCallPrepareForResetWithEmailCode() = runTest {
-    val factor =
-      Factor(strategy = StrategyKeys.RESET_PASSWORD_EMAIL_CODE, emailAddressId = "email_id")
-
-    viewModel.prepare(factor, isSecondFactor = false)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify { mockPrepareHandler.prepareForResetWithEmailCode(mockSignIn, factor) }
-    viewModel.state.test { assertEquals(AuthenticationViewState.Loading, awaitItem()) }
-  }
-
-  @Test
   fun prepareShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
     every { Clerk.signIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)

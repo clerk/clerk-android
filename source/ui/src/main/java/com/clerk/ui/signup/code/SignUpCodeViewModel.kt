@@ -3,7 +3,7 @@ package com.clerk.ui.signup.code
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
@@ -37,7 +37,7 @@ internal class SignUpCodeViewModel : ViewModel() {
         }
       signUp
         .onSuccess { _state.value = AuthenticationViewState.Success.SignUp(it) }
-        .onFailure { _state.value = AuthenticationViewState.Error(it.longErrorMessageOrNull) }
+        .onFailure { _state.value = AuthenticationViewState.Error(it.errorMessage) }
     }
   }
 
@@ -58,8 +58,8 @@ internal class SignUpCodeViewModel : ViewModel() {
           _state.value = AuthenticationViewState.Success.SignUp(it)
         }
         .onFailure {
-          _verificationState.value = VerificationUiState.Error(it.longErrorMessageOrNull)
-          _state.value = AuthenticationViewState.Error(it.longErrorMessageOrNull)
+          _verificationState.value = VerificationUiState.Error(it.errorMessage)
+          _state.value = AuthenticationViewState.Error(it.errorMessage)
         }
     }
   }

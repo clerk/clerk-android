@@ -169,9 +169,9 @@ private fun ClerkButtonImpl(
         }
         .clickable(
           interactionSource = interactionSource,
-          enabled = isEnabled,
           role = Role.Button,
           onClick = onClick,
+          enabled = isEnabled,
         )
 
     Surface(

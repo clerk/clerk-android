@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.attemptVerification
 import com.clerk.api.emailaddress.prepareVerification
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.phonenumber.PhoneNumber
@@ -33,7 +33,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
       phoneNumber
         .prepareVerification()
         .onSuccess { _state.value = AuthState.Success }
-        .onFailure { _state.value = AuthState.Error(it.longErrorMessageOrNull) }
+        .onFailure { _state.value = AuthState.Error(it.errorMessage) }
     }
   }
 
@@ -43,7 +43,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
       emailAddress
         .prepareVerification(EmailAddress.PrepareVerificationParams.EmailCode())
         .onSuccess { _state.value = AuthState.Success }
-        .onFailure { _state.value = AuthState.Error(it.longErrorMessageOrNull) }
+        .onFailure { _state.value = AuthState.Error(it.errorMessage) }
     }
   }
 
@@ -53,9 +53,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
       emailAddress
         .attemptVerification(code)
         .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
-        .onFailure {
-          _verificationTextState.value = VerificationTextState.Error(it.longErrorMessageOrNull)
-        }
+        .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
     }
   }
 
@@ -65,9 +63,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
       phoneNumber
         .attemptVerification(code)
         .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
-        .onFailure {
-          _verificationTextState.value = VerificationTextState.Error(it.longErrorMessageOrNull)
-        }
+        .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
     }
   }
 
@@ -82,9 +78,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
         user
           .attemptTOTPVerification(code)
           .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
-          .onFailure {
-            _verificationTextState.value = VerificationTextState.Error(it.longErrorMessageOrNull)
-          }
+          .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
       }
     }
   }

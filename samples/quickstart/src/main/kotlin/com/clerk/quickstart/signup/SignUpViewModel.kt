@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
@@ -30,7 +30,7 @@ class SignUpViewModel : ViewModel() {
           }
         }
         .onFailure {
-          Log.e("SignUpViewModel", "${it.longErrorMessageOrNull}", it.throwable)
+          Log.e("SignUpViewModel", "${it.errorMessage}", it.throwable)
           _uiState.value = SignUpUiState.SignedOut
         }
     }
@@ -42,7 +42,7 @@ class SignUpViewModel : ViewModel() {
       inProgressSignUp
         .attemptVerification(SignUp.AttemptVerificationParams.EmailCode(code))
         .onSuccess { _uiState.value = SignUpUiState.Success }
-        .onFailure { Log.e("SignUpViewModel", "${it.longErrorMessageOrNull}", it.throwable) }
+        .onFailure { Log.e("SignUpViewModel", "${it.errorMessage}", it.throwable) }
     }
   }
 }

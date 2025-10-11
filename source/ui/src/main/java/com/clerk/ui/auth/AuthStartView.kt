@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -154,6 +155,8 @@ private fun AuthInputField(
       value = authStartIdentifier,
       onValueChange = onIdentifierChange,
       label = authViewHelper.emailOrUsernamePlaceholder(),
+      keyboardOptions =
+        KeyboardOptions(keyboardType = authViewHelper.getKeyboardType(phoneNumberFieldIsActive)),
     )
   }
 }

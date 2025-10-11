@@ -1,7 +1,7 @@
 package com.clerk.ui.signin.code
 
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -21,7 +21,7 @@ internal class SignInAttemptHandler {
       .onSuccess { onSuccessCallback(it) }
       .onFailure {
         ClerkLog.e("Error attempting TOTP code: $it")
-        onErrorCallback(it.longErrorMessageOrNull)
+        onErrorCallback(it.errorMessage)
       }
   }
 
@@ -36,7 +36,7 @@ internal class SignInAttemptHandler {
       .onSuccess { onSuccessCallback(it) }
       .onFailure {
         ClerkLog.e("Error attempting reset password phone code: $it")
-        onErrorCallback(it.longErrorMessageOrNull)
+        onErrorCallback(it.errorMessage)
       }
   }
 
@@ -51,7 +51,7 @@ internal class SignInAttemptHandler {
       .onSuccess { onSuccessCallback(it) }
       .onFailure {
         ClerkLog.e("Error attempting reset password email code: $it")
-        onErrorCallback(it.longErrorMessageOrNull)
+        onErrorCallback(it.errorMessage)
       }
   }
 
@@ -68,7 +68,7 @@ internal class SignInAttemptHandler {
         .onSuccess { onSuccessCallback(it) }
         .onFailure {
           ClerkLog.e("Error attempting phone code as second factor: $it")
-          onErrorCallback(it.longErrorMessageOrNull)
+          onErrorCallback(it.errorMessage)
         }
     } else {
       inProgressSignIn
@@ -76,7 +76,7 @@ internal class SignInAttemptHandler {
         .onSuccess { onSuccessCallback(it) }
         .onFailure {
           ClerkLog.e("Error attempting phone code: $it")
-          onErrorCallback(it.longErrorMessageOrNull)
+          onErrorCallback(it.errorMessage)
         }
     }
   }
@@ -92,7 +92,7 @@ internal class SignInAttemptHandler {
       .onSuccess { onSuccessCallback(it) }
       .onFailure {
         ClerkLog.e("Error attempting email code: $it")
-        onErrorCallback(it.longErrorMessageOrNull)
+        onErrorCallback(it.errorMessage)
       }
   }
 }

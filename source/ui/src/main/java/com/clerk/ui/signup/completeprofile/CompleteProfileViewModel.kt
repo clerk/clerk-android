@@ -3,7 +3,7 @@ package com.clerk.ui.signup.completeprofile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
@@ -33,9 +33,9 @@ internal class CompleteProfileViewModel : ViewModel() {
             }
           }
           .onFailure {
-            ClerkLog.e("Failed to update sign up: ${it.longErrorMessageOrNull}")
+            ClerkLog.e("Failed to update sign up: ${it.errorMessage}")
             withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Error(it.longErrorMessageOrNull)
+              _state.value = AuthenticationViewState.Error(it.errorMessage)
             }
           }
       }
