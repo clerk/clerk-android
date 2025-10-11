@@ -30,15 +30,21 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 fun UserProfileDevicesSection(
   modifier: Modifier = Modifier,
   viewModel: AllDevicesViewModel = viewModel(),
+  errorFetchingDevices: () -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
-  UserProfileDevicesSectionImpl(modifier = modifier, state = state)
+  UserProfileDevicesSectionImpl(
+    modifier = modifier,
+    state = state,
+    errorFetchingDevices = errorFetchingDevices,
+  )
 }
 
 @Composable
 private fun UserProfileDevicesSectionImpl(
   state: AllDevicesViewModel.State,
   modifier: Modifier = Modifier,
+  errorFetchingDevices: () -> Unit,
 ) {
   ClerkMaterialTheme {
     Box(
@@ -49,7 +55,7 @@ private fun UserProfileDevicesSectionImpl(
       contentAlignment = Alignment.Center,
     ) {
       when (state) {
-        is AllDevicesViewModel.State.Error -> TODO()
+        is AllDevicesViewModel.State.Error -> errorFetchingDevices()
         AllDevicesViewModel.State.Idle -> {}
         AllDevicesViewModel.State.Loading -> CircularProgressIndicator()
         is AllDevicesViewModel.State.Success -> {
@@ -112,6 +118,7 @@ private fun Preview() {
               ),
           ),
         )
-      )
+      ),
+    errorFetchingDevices = {},
   )
 }
