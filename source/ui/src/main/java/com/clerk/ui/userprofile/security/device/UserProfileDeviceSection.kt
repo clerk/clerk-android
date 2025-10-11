@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,7 +56,7 @@ private fun UserProfileDevicesSectionImpl(
       contentAlignment = Alignment.Center,
     ) {
       when (state) {
-        is AllDevicesViewModel.State.Error -> errorFetchingDevices()
+        is AllDevicesViewModel.State.Error -> SideEffect { errorFetchingDevices() }
         AllDevicesViewModel.State.Idle -> {}
         AllDevicesViewModel.State.Loading -> CircularProgressIndicator()
         is AllDevicesViewModel.State.Success -> {
