@@ -9,11 +9,17 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp32
+import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.dimens.dp8
 
 internal object Spacers {
 
   internal object Vertical {
+
+    @Composable
+    internal fun Spacer4() {
+      Spacer(modifier = Modifier.Companion.height(dp4))
+    }
 
     @Composable
     internal fun Spacer8() {
