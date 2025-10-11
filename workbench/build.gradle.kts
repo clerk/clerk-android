@@ -6,6 +6,8 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.google.gms)
+  alias(libs.plugins.firebase.appDistribution)
 }
 
 android {
@@ -16,6 +18,8 @@ android {
     applicationId = "com.clerk.workbench"
     minSdk = libs.versions.minSdk.get().toInt()
     targetSdk = libs.versions.compileSdk.get().toInt()
+    versionCode = 2
+    versionName = "AuthView-v2"
 
     val isCI = System.getenv("CI")?.toBoolean() == true
     val clerkPublishableKey = project.findProperty(workbenchKey) as String?
@@ -26,6 +30,15 @@ android {
 
     val keyValue = clerkPublishableKey ?: "pk_test_placeholder_for_ci"
     buildConfigField("String", workbenchKey, "\"${keyValue}\"")
+  }
+
+  buildTypes {
+    getByName("debug") {
+      firebaseAppDistribution {
+        artifactType = "APK"
+        artifactPath = "workbench/build/outputs/apk/debug/workbench-debug.apk"
+      }
+    }
   }
 
   compileOptions {
@@ -41,7 +54,9 @@ android {
 
 dependencies {
   implementation(platform(libs.compose.bom))
+  implementation(platform(libs.firebase.bom))
   implementation(libs.activity.compose)
+  implementation(libs.androidx.compose.icons)
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime)
   implementation(libs.androidx.ui)
@@ -50,4 +65,5 @@ dependencies {
   implementation(libs.androidx.ui.tooling.preview)
   implementation(libs.material3)
   implementation(projects.source.api)
+  implementation(projects.source.ui)
 }

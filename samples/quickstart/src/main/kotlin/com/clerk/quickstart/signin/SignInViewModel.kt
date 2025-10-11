@@ -3,7 +3,7 @@ package com.clerk.quickstart.signin
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -19,7 +19,7 @@ class SignInViewModel : ViewModel() {
     viewModelScope.launch {
       SignIn.create(SignIn.CreateParams.Strategy.Password(identifier = email, password = password))
         .onSuccess { _uiState.value = SignInUiState.SignedIn }
-        .onFailure { Log.e("SignInViewModel", "${it.longErrorMessageOrNull}", it.throwable) }
+        .onFailure { Log.e("SignInViewModel", "${it.errorMessage}", it.throwable) }
     }
   }
 }
