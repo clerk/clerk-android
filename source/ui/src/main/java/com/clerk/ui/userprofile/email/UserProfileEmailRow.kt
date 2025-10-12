@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -74,15 +75,16 @@ fun UserProfileEmailRow(
         )
       }
       Spacer(modifier = Modifier.weight(1f))
-      DropDownMenu(isPrimary)
+      DropDownMenu(isPrimary, emailAddress)
     }
   }
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun DropDownMenu(isPrimary: Boolean) {
+private fun DropDownMenu(isPrimary: Boolean, emailAddress: EmailAddress) {
   var showDropdown by remember { mutableStateOf(false) }
+
   ExposedDropdownMenuBox(expanded = showDropdown, onExpandedChange = { showDropdown = it }) {
     IconButton(
       modifier =
@@ -99,26 +101,48 @@ private fun DropDownMenu(isPrimary: Boolean) {
       )
     }
 
-    DropdownMenu(
-      modifier = Modifier.defaultMinSize(minWidth = 200.dp),
-      expanded = showDropdown,
-      shape = ClerkMaterialTheme.shape,
-      onDismissRequest = { showDropdown = false },
-    ) {
-      if (!isPrimary) {
-        DropdownMenuItem(
-          text = {
-            Text(
-              text = "Set as primary",
-              style = ClerkMaterialTheme.typography.bodyLarge,
-              color = ClerkMaterialTheme.colors.foreground,
-            )
-          },
-          onClick = { showDropdown = false },
-        )
-      }
-    }
+    DropDownMenuContent(
+      isPrimary = isPrimary,
+      emailAddress = emailAddress,
+      showDropdown = showDropdown,
+      onDismiss = { showDropdown = false },
+    )
   }
+}
+
+@Composable
+private fun DropDownMenuContent(
+  isPrimary: Boolean,
+  emailAddress: EmailAddress,
+  showDropdown: Boolean,
+  onDismiss: () -> Unit,
+) {
+  DropdownMenu(
+    modifier = Modifier.defaultMinSize(minWidth = 200.dp),
+    expanded = showDropdown,
+    shape = ClerkMaterialTheme.shape,
+    onDismissRequest = onDismiss,
+  ) {
+    if (!isPrimary)
+      DropDownItem(R.string.set_as_primary, ClerkMaterialTheme.colors.foreground, onDismiss)
+    if (emailAddress.verification?.status != Verification.Status.VERIFIED)
+      DropDownItem(R.string.verify, ClerkMaterialTheme.colors.foreground, onDismiss)
+    DropDownItem(R.string.remove_email, ClerkMaterialTheme.colors.danger, onDismiss)
+  }
+}
+
+@Composable
+private fun DropDownItem(textRes: Int, color: Color, onClick: () -> Unit) {
+  DropdownMenuItem(
+    text = {
+      Text(
+        text = stringResource(textRes),
+        style = ClerkMaterialTheme.typography.bodyLarge,
+        color = color,
+      )
+    },
+    onClick = onClick,
+  )
 }
 
 @PreviewLightDark

@@ -115,4 +115,7 @@
     <string name="sign_out_of_this_device">Sign out of this device</string>
     <string name="linked">Linked</string>
     <string name="unverified">Unverified</string>
+    <string name="set_as_primary">Set as primary</string>
+    <string name="verify">Verify</string>
+    <string name="remove_email">Remove email</string>
 </resources>
