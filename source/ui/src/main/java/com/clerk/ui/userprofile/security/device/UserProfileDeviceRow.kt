@@ -112,7 +112,7 @@ private fun UserProfileDeviceRowImpl(
             DropdownMenuItem(
               text = {
                 Text(
-                  text = "Sign out of this device",
+                  text = stringResource(R.string.sign_out_of_this_device),
                   style = ClerkMaterialTheme.typography.bodyLarge,
                   color = ClerkMaterialTheme.colors.danger,
                 )

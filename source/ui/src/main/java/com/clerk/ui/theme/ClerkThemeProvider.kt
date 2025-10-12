@@ -27,7 +27,7 @@ internal object DefaultColors {
       neutral = Color(0xFF000000),
       border = Color(0xFF000000),
       ring = Color(0xFF000000),
-      muted = Color(0xFFF7F7F7),
+      muted = Color(0xFFF9F9F9),
       shadow = Color(0xFF000000),
     )
 

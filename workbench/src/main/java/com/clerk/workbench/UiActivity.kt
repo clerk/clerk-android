@@ -59,12 +59,18 @@ class UiActivity : ComponentActivity() {
               }
             }
             MainViewModel.UiState.SignedOut -> {
-              AuthView()
+              MainContent()
             }
           }
         }
       }
     }
+  }
+
+  @Suppress("MagicNumber")
+  @Composable
+  private fun MainContent() {
+    AuthView {}
   }
 }
 
