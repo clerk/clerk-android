@@ -27,7 +27,7 @@ class EmailViewModel : ViewModel() {
         user
           .update(User.UpdateParams(primaryEmailAddressId = emailAddress.id))
           .onSuccess { _state.value = State.SetAsPrimary.Success }
-          .onFailure { _state.value = State.SetAsPrimary.Failure(it.errorMessage) }
+          .onFailure { _state.value = State.Failure(it.errorMessage) }
       }
     }
   }
@@ -37,7 +37,7 @@ class EmailViewModel : ViewModel() {
     viewModelScope.launch(Dispatchers.IO) {
       emailAddress
         .delete()
-        .onFailure { _state.value = State.Remove.Failure(it.errorMessage) }
+        .onFailure { _state.value = State.Failure(it.errorMessage) }
         .onSuccess { _state.value = State.Remove.Success }
     }
   }
@@ -47,16 +47,14 @@ class EmailViewModel : ViewModel() {
 
     data object Loading : State
 
+    data class Failure(val message: String) : State
+
     sealed interface SetAsPrimary : State {
       data object Success : SetAsPrimary
-
-      data class Failure(val message: String) : SetAsPrimary
     }
 
     sealed interface Remove : State {
       data object Success : Remove
-
-      data class Failure(val message: String) : Remove
     }
   }
 }

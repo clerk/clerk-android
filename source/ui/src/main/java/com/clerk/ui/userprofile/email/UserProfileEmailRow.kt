@@ -28,6 +28,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.ui.R
@@ -42,10 +44,17 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 @Composable
 fun UserProfileEmailRow(
   emailAddress: EmailAddress,
+  onVerify: () -> Unit,
+  onError: (String) -> Unit,
   modifier: Modifier = Modifier,
   isPrimary: Boolean = false,
+  viewModel: EmailViewModel = viewModel(),
 ) {
 
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  if (state is EmailViewModel.State.Failure) {
+    onError((state as EmailViewModel.State.Failure).message)
+  }
   ClerkMaterialTheme {
     Row(
       modifier =
@@ -75,14 +84,26 @@ fun UserProfileEmailRow(
         )
       }
       Spacer(modifier = Modifier.weight(1f))
-      DropDownMenu(isPrimary, emailAddress)
+      DropDownMenu(
+        isPrimary,
+        emailAddress,
+        onSetAsPrimary = { viewModel.setAsPrimary(emailAddress) },
+        onVerify = onVerify,
+        onRemoveEmail = { viewModel.remove(emailAddress) },
+      )
     }
   }
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun DropDownMenu(isPrimary: Boolean, emailAddress: EmailAddress) {
+private fun DropDownMenu(
+  isPrimary: Boolean,
+  emailAddress: EmailAddress,
+  onSetAsPrimary: () -> Unit,
+  onVerify: () -> Unit,
+  onRemoveEmail: () -> Unit,
+) {
   var showDropdown by remember { mutableStateOf(false) }
 
   ExposedDropdownMenuBox(expanded = showDropdown, onExpandedChange = { showDropdown = it }) {
@@ -105,6 +126,18 @@ private fun DropDownMenu(isPrimary: Boolean, emailAddress: EmailAddress) {
       isPrimary = isPrimary,
       emailAddress = emailAddress,
       showDropdown = showDropdown,
+      onSetAsPrimary = {
+        onSetAsPrimary()
+        showDropdown = false
+      },
+      onVerify = {
+        onVerify()
+        showDropdown = false
+      },
+      onRemoveEmail = {
+        onRemoveEmail()
+        showDropdown = false
+      },
       onDismiss = { showDropdown = false },
     )
   }
@@ -115,6 +148,9 @@ private fun DropDownMenuContent(
   isPrimary: Boolean,
   emailAddress: EmailAddress,
   showDropdown: Boolean,
+  onSetAsPrimary: () -> Unit,
+  onVerify: () -> Unit,
+  onRemoveEmail: () -> Unit,
   onDismiss: () -> Unit,
 ) {
   DropdownMenu(
@@ -124,10 +160,10 @@ private fun DropDownMenuContent(
     onDismissRequest = onDismiss,
   ) {
     if (!isPrimary)
-      DropDownItem(R.string.set_as_primary, ClerkMaterialTheme.colors.foreground, onDismiss)
+      DropDownItem(R.string.set_as_primary, ClerkMaterialTheme.colors.foreground, onSetAsPrimary)
     if (emailAddress.verification?.status != Verification.Status.VERIFIED)
-      DropDownItem(R.string.verify, ClerkMaterialTheme.colors.foreground, onDismiss)
-    DropDownItem(R.string.remove_email, ClerkMaterialTheme.colors.danger, onDismiss)
+      DropDownItem(R.string.verify, ClerkMaterialTheme.colors.foreground, onVerify)
+    DropDownItem(R.string.remove_email, ClerkMaterialTheme.colors.danger, onRemoveEmail)
   }
 }
 
@@ -155,6 +191,8 @@ private fun Preview() {
     ) {
       UserProfileEmailRow(
         isPrimary = true,
+        onError = {},
+        onVerify = {},
         emailAddress =
           EmailAddress(
             id = "123",
@@ -164,6 +202,8 @@ private fun Preview() {
       )
       UserProfileEmailRow(
         isPrimary = false,
+        onError = {},
+        onVerify = {},
         emailAddress =
           EmailAddress(
             id = "123",
@@ -173,6 +213,8 @@ private fun Preview() {
       )
       UserProfileEmailRow(
         isPrimary = false,
+        onError = {},
+        onVerify = {},
         emailAddress =
           EmailAddress(
             id = "123",
