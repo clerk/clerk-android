@@ -42,7 +42,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserProfileEmailRow(
+internal fun UserProfileEmailRow(
   emailAddress: EmailAddress,
   onVerify: () -> Unit,
   onError: (String) -> Unit,
