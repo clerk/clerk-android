@@ -118,4 +118,7 @@
     <string name="set_as_primary">Set as primary</string>
     <string name="verify">Verify</string>
     <string name="remove_email">Remove email</string>
+    <string name="remove">Remove</string>
+    <string name="set_as_default">Set as default</string>
+    <string name="regenerate">Regenerate</string>
 </resources>

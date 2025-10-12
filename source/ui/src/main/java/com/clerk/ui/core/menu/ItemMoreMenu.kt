@@ -67,6 +67,7 @@ internal fun <T> ItemMoreMenu(
       shape = ClerkMaterialTheme.shape,
     ) {
       dropDownItems.forEach { item ->
+        if (item.isHidden) return@forEach
         DropdownMenuItem(
           leadingIcon =
             item.leadingIcon?.let { iconVec ->
@@ -106,6 +107,7 @@ internal data class DropDownItem<T>(
   val leadingIcon: ImageVector? = null,
   val enabled: Boolean = true,
   val danger: Boolean = false,
+  val isHidden: Boolean = false,
 )
 
 enum class PreviewItemMoreMenu {
