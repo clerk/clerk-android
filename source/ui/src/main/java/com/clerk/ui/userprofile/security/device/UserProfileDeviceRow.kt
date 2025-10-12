@@ -3,29 +3,16 @@ package com.clerk.ui.userprofile.security.device
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -48,7 +35,10 @@ import com.clerk.ui.core.extensions.deviceImage
 import com.clerk.ui.core.extensions.deviceText
 import com.clerk.ui.core.extensions.ipAndLocationFormatted
 import com.clerk.ui.core.extensions.lastActiveRelativeTime
+import com.clerk.ui.core.menu.DropDownItem
+import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.theme.ClerkMaterialTheme
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun UserProfileDeviceRow(
@@ -68,7 +58,6 @@ private fun UserProfileDeviceRowImpl(
   viewModel: DeviceViewModel = viewModel(),
   onError: (String?) -> Unit,
 ) {
-  var showDropdown by remember { mutableStateOf(false) }
   val state by viewModel.state.collectAsStateWithLifecycle()
   LaunchedEffect(state) {
     if (state is DeviceViewModel.State.Error) {
@@ -87,46 +76,30 @@ private fun UserProfileDeviceRowImpl(
       ) {
         DeviceInfoWithIcon(activity, session, forceIsThisDevice)
         Spacer(modifier = Modifier.weight(1f))
-        ExposedDropdownMenuBox(expanded = showDropdown, onExpandedChange = { showDropdown = it }) {
-          IconButton(
-            modifier =
-              Modifier.menuAnchor(
-                type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
-                enabled = true,
-              ),
-            onClick = { showDropdown = true },
-          ) {
-            Icon(
-              imageVector = Icons.Outlined.MoreVert,
-              contentDescription = stringResource(R.string.more_options),
-              tint = ClerkMaterialTheme.colors.mutedForeground,
-            )
-          }
-
-          DropdownMenu(
-            modifier = Modifier.width(IntrinsicSize.Min),
-            expanded = showDropdown,
-            shape = ClerkMaterialTheme.shape,
-            onDismissRequest = { showDropdown = false },
-          ) {
-            DropdownMenuItem(
-              text = {
-                Text(
-                  text = stringResource(R.string.sign_out_of_this_device),
-                  style = ClerkMaterialTheme.typography.bodyLarge,
-                  color = ClerkMaterialTheme.colors.danger,
-                )
-              },
-              onClick = {
+        ItemMoreMenu(
+          dropDownItems =
+            persistentListOf(
+              DropDownItem(
+                id = DeviceAction.SignOut,
+                textRes = R.string.sign_out_of_this_device,
+                danger = true,
+              )
+            ),
+          onClick = {
+            when (it) {
+              DeviceAction.SignOut -> {
                 viewModel.signOut(session)
-                showDropdown = false
-              },
-            )
-          }
-        }
+              }
+            }
+          },
+        )
       }
     }
   }
+}
+
+private enum class DeviceAction {
+  SignOut
 }
 
 @Composable
