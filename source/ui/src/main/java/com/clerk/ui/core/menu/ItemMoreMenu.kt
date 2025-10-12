@@ -38,9 +38,9 @@ import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ItemMoreMenu(
-  dropDownItems: ImmutableList<DropDownItem>,
-  onClick: (id: Int) -> Unit,
+internal fun <T> ItemMoreMenu(
+  dropDownItems: ImmutableList<DropDownItem<T>>,
+  onClick: (T) -> Unit,
   modifier: Modifier = Modifier,
   icon: ImageVector = Icons.Outlined.MoreVert,
   iconTint: Color = ClerkMaterialTheme.colors.mutedForeground,
@@ -100,13 +100,19 @@ internal fun ItemMoreMenu(
   }
 }
 
-internal data class DropDownItem(
-  val id: Int,
+internal data class DropDownItem<T>(
+  val id: T,
   val textRes: Int,
   val leadingIcon: ImageVector? = null,
   val enabled: Boolean = true,
   val danger: Boolean = false,
 )
+
+enum class PreviewItemMoreMenu {
+  VERIFY,
+  SET_AS_PRIMARY,
+  REMOVE_EMAIL,
+}
 
 @PreviewLightDark
 @Composable
@@ -116,14 +122,18 @@ private fun Preview() {
       Spacer(modifier = Modifier.weight(1f))
       ItemMoreMenu(
         dropDownItems =
-          persistentListOf(
+          persistentListOf<DropDownItem<PreviewItemMoreMenu>>(
             DropDownItem(
-              id = 0,
+              id = PreviewItemMoreMenu.VERIFY,
               textRes = R.string.verify,
               leadingIcon = Icons.Outlined.MoreVert, // example
             ),
-            DropDownItem(id = 1, textRes = R.string.set_as_primary),
-            DropDownItem(id = 2, textRes = R.string.remove_email, danger = true),
+            DropDownItem(id = PreviewItemMoreMenu.REMOVE_EMAIL, textRes = R.string.set_as_primary),
+            DropDownItem(
+              id = PreviewItemMoreMenu.SET_AS_PRIMARY,
+              textRes = R.string.remove_email,
+              danger = true,
+            ),
           ),
         onClick = {},
       )

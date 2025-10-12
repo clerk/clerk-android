@@ -45,7 +45,7 @@ import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * A composable button for social authentication with a specific [OAuthProvider].
@@ -307,14 +307,13 @@ private fun PreviewSocialRow() {
       verticalArrangement = Arrangement.spacedBy(dp12, Alignment.CenterVertically),
     ) {
       ClerkSocialRow(
-        listOf(
-            provider,
-            OAuthProvider.APPLE,
-            OAuthProvider.HUGGING_FACE,
-            OAuthProvider.LINEAR,
-            OAuthProvider.BOX,
-          )
-          .toImmutableList()
+        persistentListOf(
+          provider,
+          OAuthProvider.APPLE,
+          OAuthProvider.HUGGING_FACE,
+          OAuthProvider.LINEAR,
+          OAuthProvider.BOX,
+        )
       )
     }
   }

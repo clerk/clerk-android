@@ -47,6 +47,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -222,11 +223,10 @@ private fun Preview() {
     onClickUsePhoneNumber = {},
     onReserveForSecondFactorSuccess = {},
     availablePhoneNumbers =
-      listOf(
-          PhoneNumber(id = "1", phoneNumber = "+13012370655"),
-          PhoneNumber(id = "2", "+15246462566"),
-          PhoneNumber(id = "3", "+306912345678"),
-        )
-        .toImmutableList(),
+      persistentListOf(
+        PhoneNumber(id = "1", phoneNumber = "+13012370655"),
+        PhoneNumber(id = "2", "+15246462566"),
+        PhoneNumber(id = "3", "+306912345678"),
+      ),
   )
 }
