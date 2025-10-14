@@ -358,6 +358,7 @@ data class SignUp(
      * @param lastName The user's last name (optional).
      * @param username The user's username (optional).
      * @param phoneNumber The user's phone number in E.164 format (optional).
+     * @param locale The user's locale in BCP-47 format (e.g., "en-US", "pt-BR") for localized emails (optional).
      */
     @AutoMap
     @Serializable
@@ -368,6 +369,7 @@ data class SignUp(
       @SerialName("last_name") val lastName: String? = null,
       val username: String? = null,
       @SerialName("phone_number") val phoneNumber: String? = null,
+      val locale: String? = null,
     ) : CreateParams
 
     /**
@@ -419,6 +421,7 @@ data class SignUp(
      * @param lastName The user's last name (optional).
      * @param username The user's username (optional).
      * @param phoneNumber The user's phone number in E.164 format (optional).
+     * @param locale The user's locale in BCP-47 format (e.g., "en-US", "pt-BR") for localized emails (optional).
      */
     @AutoMap
     @Serializable
@@ -429,6 +432,7 @@ data class SignUp(
       @SerialName("last_name") val lastName: String? = null,
       val username: String? = null,
       @SerialName("phone_number") val phoneNumber: String? = null,
+      val locale: String? = null,
     ) : SignUpUpdateParams
   }
 
