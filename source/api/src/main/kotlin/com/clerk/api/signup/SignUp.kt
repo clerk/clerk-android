@@ -3,6 +3,7 @@
 package com.clerk.api.signup
 
 import com.clerk.api.Constants.Strategy as AuthStrategy
+import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
@@ -453,6 +454,10 @@ data class SignUp(
      * What you must pass to params depends on which sign-up options you have enabled in your Clerk
      * application instance.
      *
+     * **Note:** If you don't explicitly provide a `locale` in [CreateParams.Standard], the SDK will
+     * automatically include the device's current locale in BCP-47 format (e.g., "en-US", "pt-BR").
+     * This enables Clerk to send localized verification emails to users in their preferred language.
+     *
      * @param params The strategy to use for creating the sign-up. See [CreateParams] for available
      *   options.
      * @return A [ClerkResult] containing either a [SignUp] object with the current status and
@@ -465,7 +470,13 @@ data class SignUp(
         if (params is CreateParams.Transfer) {
           mapOf("transfer" to "true")
         } else {
-          params.toMap()
+          val baseMap = params.toMap()
+          // Automatically add locale if it's a Standard request and locale is not already provided
+          if (params is CreateParams.Standard && params.locale == null) {
+            LocaleProvider.locale?.let { locale -> baseMap + ("locale" to locale) } ?: baseMap
+          } else {
+            baseMap
+          }
         }
       return ClerkApi.signUp.createSignUp(paramMap)
     }

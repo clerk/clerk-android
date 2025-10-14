@@ -12,6 +12,7 @@ import com.clerk.api.Constants.Config.REFRESH_TOKEN_INTERVAL
 import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
+import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
@@ -111,6 +112,7 @@ internal class ConfigurationManager {
     if (!storageInitialized) {
       context?.get()?.let { context ->
         StorageHelper.initialize(context)
+        LocaleProvider.initialize(context)
         storageInitialized = true
         ClerkLog.d("Storage initialized")
       }
@@ -176,6 +178,7 @@ internal class ConfigurationManager {
         AppLifecycleListener.configure {
           if (hasConfigured) {
             scope.launch {
+              LocaleProvider.refresh()
               refreshClientAndEnvironment(options)
               startTokenRefresh()
             }
@@ -527,6 +530,7 @@ internal class ConfigurationManager {
   fun cleanup() {
     refreshJob?.cancel()
     attestationJob?.cancel()
+    LocaleProvider.cleanup()
     context = null
     storageInitialized = false
     hasConfigured = false

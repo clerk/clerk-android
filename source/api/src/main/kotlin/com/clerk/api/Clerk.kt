@@ -2,6 +2,7 @@ package com.clerk.api
 
 import android.content.Context
 import com.clerk.api.configuration.ConfigurationManager
+import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
@@ -182,6 +183,27 @@ object Clerk {
   /** Indicates whether last name is enabled in user settings for this application. */
   val lastNameIsEnabled: Boolean
     get() = if (::environment.isInitialized) environment.lastNameIsEnabled else false
+
+  /**
+   * Reactive state for the current device locale in BCP-47 format.
+   *
+   * Observe this StateFlow to react to locale changes. The locale is used for sending localized
+   * emails during authentication flows (e.g., verification codes).
+   *
+   * Examples of BCP-47 format: "en-US", "pt-BR", "es-ES", "fr-FR"
+   */
+  val localeFlow: StateFlow<String?> = LocaleProvider.localeFlow
+
+  /**
+   * The current device locale in BCP-47 format.
+   *
+   * This locale is automatically sent with sign-up requests to enable localized verification
+   * emails. The locale is refreshed when the SDK is initialized and when the app starts.
+   *
+   * @return The device locale (e.g., "en-US", "pt-BR") or null if not yet initialized.
+   */
+  val locale: String?
+    get() = LocaleProvider.locale
 
   // endregion
 
