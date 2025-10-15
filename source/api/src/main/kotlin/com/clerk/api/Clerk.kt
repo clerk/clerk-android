@@ -6,6 +6,7 @@ import com.clerk.api.Clerk.isInitialized
 import com.clerk.api.Clerk.sessionFlow
 import com.clerk.api.Clerk.userFlow
 import com.clerk.api.configuration.ConfigurationManager
+import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
@@ -182,6 +183,14 @@ object Clerk {
       if (::client.isInitialized) {
         client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
       } else null
+
+  /**
+   * The active locale for the current session.
+   *
+   * This is used to determine the language of the UI components and the emails sent to the user.
+   * The value is a IETF BCP 47 language tag, e.g., "en-US".
+   */
+  val locale: StateFlow<String?> = LocaleProvider.locale
 
   /**
    * Indicates whether a user is currently signed in.

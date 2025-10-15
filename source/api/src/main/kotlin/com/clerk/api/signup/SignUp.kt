@@ -2,6 +2,7 @@
 
 package com.clerk.api.signup
 
+import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy as AuthStrategy
 import com.clerk.api.extensions.sortedByPriority
 import com.clerk.api.network.ClerkApi
@@ -452,12 +453,13 @@ data class SignUp(
      * @see [SignUp]
      */
     suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
-      val paramMap =
+      val baseMap =
         if (params is CreateParams.Transfer) {
           mapOf("transfer" to "true")
         } else {
           params.toMap()
         }
+      val paramMap = baseMap + ("locale" to Clerk.locale.value.orEmpty())
       return ClerkApi.signUp.createSignUp(paramMap)
     }
 
