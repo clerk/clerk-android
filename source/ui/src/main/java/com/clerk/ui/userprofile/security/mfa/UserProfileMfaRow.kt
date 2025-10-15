@@ -10,29 +10,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
 import com.clerk.ui.core.dimens.dp0
-import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
@@ -46,13 +40,14 @@ import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserProfileMfaRow(
+internal fun UserProfileMfaRow(
   style: Style,
+  onRemove: (Style) -> Unit,
   modifier: Modifier = Modifier,
   isDefault: Boolean = false,
   title: String? = null,
+  viewModel: UserProfileMfaViewModel = viewModel(),
 ) {
-  var showConfirmRemoveDialog by remember { mutableStateOf(false) }
   val hasHeader = isDefault || title != null
 
   ClerkMaterialTheme {
@@ -92,54 +87,17 @@ fun UserProfileMfaRow(
               isHidden = style != Style.BackupCodes,
             ),
           ),
-        onClick = { /* ... */ },
-      )
-    }
-    if (showConfirmRemoveDialog) {
-
-      RemoveResourceConfirmationDialog(
-        style,
-        onDismiss = { showConfirmRemoveDialog = false },
-        onConfirm = {},
+        onClick = {
+          when (it) {
+            MfaAction.Remove -> onRemove(style)
+            MfaAction.SetAsDefault ->
+              viewModel.makeDefaultSecondFactor((style as? Style.Sms)?.phoneNumber)
+            MfaAction.Regenerate -> viewModel.regenerateBackupCodes()
+          }
+        },
       )
     }
   }
-}
-
-@Composable
-private fun RemoveResourceConfirmationDialog(
-  style: Style,
-  onConfirm: () -> Unit,
-  onDismiss: () -> Unit,
-) {
-  AlertDialog(
-    containerColor = ClerkMaterialTheme.colors.background,
-    shape = ClerkMaterialTheme.shape,
-    onDismissRequest = onDismiss,
-    title = {
-      Text(
-        text = style.dialogTitle()!!,
-        style = ClerkMaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-        color = ClerkMaterialTheme.colors.mutedForeground,
-      )
-    },
-    text = {
-      Text(
-        text = style.removeActionString() ?: "",
-        style = ClerkMaterialTheme.typography.bodyMedium,
-        color = ClerkMaterialTheme.colors.mutedForeground,
-      )
-    },
-    confirmButton = {
-      androidx.compose.material3.TextButton(onClick = onConfirm) {
-        Text(
-          text = style.removeActionString() ?: "",
-          color = ClerkMaterialTheme.colors.danger,
-          style = ClerkMaterialTheme.typography.labelLarge,
-        )
-      }
-    },
-  )
 }
 
 @Composable
@@ -163,28 +121,6 @@ private fun MfaContent(isDefault: Boolean, title: String?, style: Style) {
       style = ClerkMaterialTheme.typography.bodyLarge,
       color = ClerkMaterialTheme.colors.foreground,
     )
-  }
-}
-
-@Composable
-fun Style.removeActionString(): String? {
-  return when (this) {
-    Style.AuthenticatorApp -> stringResource(R.string.remove_two_step_verification)
-    is Style.Sms -> stringResource(R.string.remove_phone_number)
-    else -> null
-  }
-}
-
-@Composable
-fun Style.dialogTitle(): String? {
-  return when (this) {
-    Style.AuthenticatorApp -> stringResource(R.string.verification_codes_will_no_longer_be_required)
-    Style.BackupCodes -> null
-    is Style.Sms ->
-      stringResource(
-        R.string.phone_number_will_be_removed,
-        this.phoneNumber.phoneNumber.formattedAsPhoneNumberIfPossible,
-      )
   }
 }
 
@@ -216,9 +152,13 @@ private fun RowScope.MfaIcon(title: String?, hasHeader: Boolean, style: Style) {
 @Composable
 fun Style.text(): String {
   return when (this) {
-    Style.AuthenticatorApp -> "Authenticator app"
-    is Style.Sms -> "SMS code ${this.phoneNumber.phoneNumber.formattedAsPhoneNumberIfPossible}"
-    Style.BackupCodes -> "Backup codes"
+    Style.AuthenticatorApp -> stringResource(R.string.authenticator_app)
+    is Style.Sms ->
+      stringResource(
+        R.string.sms_code,
+        this.phoneNumber.phoneNumber.formattedAsPhoneNumberIfPossible,
+      )
+    Style.BackupCodes -> stringResource(R.string.backup_codes)
   }
 }
 
@@ -248,30 +188,16 @@ sealed interface Style {
 
 @PreviewLightDark
 @Composable
-private fun PreviewConfirmationDialog() {
-  ClerkMaterialTheme {
-    Box(
-      modifier = Modifier.background(color = ClerkMaterialTheme.colors.background).padding(dp12)
-    ) {
-      RemoveResourceConfirmationDialog(
-        style = Style.Sms(phoneNumber = PhoneNumber(id = "1", phoneNumber = "+13012370655")),
-        onConfirm = {},
-      ) {}
-    }
-  }
-}
-
-@PreviewLightDark
-@Composable
 private fun Preview() {
   ClerkMaterialTheme {
     Column {
-      UserProfileMfaRow(style = Style.AuthenticatorApp, isDefault = true)
+      UserProfileMfaRow(style = Style.AuthenticatorApp, isDefault = true, onRemove = {})
       UserProfileMfaRow(
         style = Style.Sms(phoneNumber = PhoneNumber(id = "1", phoneNumber = "+13012370655")),
         title = "Primary",
+        onRemove = {},
       )
-      UserProfileMfaRow(style = Style.BackupCodes)
+      UserProfileMfaRow(style = Style.BackupCodes, onRemove = {})
     }
   }
 }
