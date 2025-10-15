@@ -11,7 +11,7 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.phonenumber.attemptVerification
 import com.clerk.api.phonenumber.prepareVerification
-import com.clerk.api.user.attemptTOTPVerification
+import com.clerk.api.user.attemptTotpVerification
 import com.clerk.ui.core.common.guardUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,7 +76,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     ) { user ->
       viewModelScope.launch(Dispatchers.IO) {
         user
-          .attemptTOTPVerification(code)
+          .attemptTotpVerification(code)
           .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
           .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
       }

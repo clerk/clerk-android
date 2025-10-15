@@ -45,6 +45,7 @@ fun UserProfileMfaRow(
   isDefault: Boolean = false,
   title: String? = null,
 ) {
+
   val hasHeader = isDefault || title != null
 
   ClerkMaterialTheme {
