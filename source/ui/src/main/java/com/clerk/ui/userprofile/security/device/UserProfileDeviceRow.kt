@@ -81,7 +81,7 @@ private fun UserProfileDeviceRowImpl(
             persistentListOf(
               DropDownItem(
                 id = DeviceAction.SignOut,
-                textRes = R.string.sign_out_of_this_device,
+                text = stringResource(R.string.sign_out_of_this_device),
                 danger = true,
               )
             ),

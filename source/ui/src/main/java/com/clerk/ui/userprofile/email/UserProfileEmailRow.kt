@@ -76,9 +76,16 @@ internal fun UserProfileEmailRow(
       ItemMoreMenu(
         dropDownItems =
           persistentListOf(
-            DropDownItem(id = EmailAction.SetAsPrimary, textRes = R.string.set_as_primary),
-            DropDownItem(id = EmailAction.Verify, textRes = R.string.verify),
-            DropDownItem(id = EmailAction.Remove, textRes = R.string.remove_email, danger = true),
+            DropDownItem(
+              id = EmailAction.SetAsPrimary,
+              text = stringResource(R.string.set_as_primary),
+            ),
+            DropDownItem(id = EmailAction.Verify, text = stringResource(R.string.verify)),
+            DropDownItem(
+              id = EmailAction.Remove,
+              text = stringResource(R.string.remove_email),
+              danger = true,
+            ),
           ),
         onClick = {
           when (it) {

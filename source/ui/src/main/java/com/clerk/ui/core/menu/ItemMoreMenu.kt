@@ -78,12 +78,7 @@ internal fun <T> ItemMoreMenu(
                 )
               }
             },
-          text = {
-            Text(
-              text = stringResource(item.textRes),
-              style = ClerkMaterialTheme.typography.bodyLarge,
-            )
-          },
+          text = { Text(text = item.text, style = ClerkMaterialTheme.typography.bodyLarge) },
           enabled = item.enabled,
           colors =
             MenuDefaults.itemColors(
@@ -103,7 +98,7 @@ internal fun <T> ItemMoreMenu(
 
 internal data class DropDownItem<T>(
   val id: T,
-  val textRes: Int,
+  val text: String,
   val leadingIcon: ImageVector? = null,
   val enabled: Boolean = true,
   val danger: Boolean = false,
@@ -127,13 +122,16 @@ private fun Preview() {
           persistentListOf<DropDownItem<PreviewItemMoreMenu>>(
             DropDownItem(
               id = PreviewItemMoreMenu.VERIFY,
-              textRes = R.string.verify,
+              text = stringResource(R.string.verify),
               leadingIcon = Icons.Outlined.MoreVert, // example
             ),
-            DropDownItem(id = PreviewItemMoreMenu.REMOVE_EMAIL, textRes = R.string.set_as_primary),
+            DropDownItem(
+              id = PreviewItemMoreMenu.REMOVE_EMAIL,
+              text = stringResource(R.string.set_as_primary),
+            ),
             DropDownItem(
               id = PreviewItemMoreMenu.SET_AS_PRIMARY,
-              textRes = R.string.remove_email,
+              text = stringResource(R.string.remove_email),
               danger = true,
             ),
           ),
