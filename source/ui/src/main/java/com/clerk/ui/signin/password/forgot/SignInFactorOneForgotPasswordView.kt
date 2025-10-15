@@ -39,6 +39,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.util.TextIconHelper
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /**
@@ -170,15 +171,14 @@ private fun Preview() {
     Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
     SignInFactorOneForgotPasswordViewImpl(
       socialProviders =
-        listOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK, OAuthProvider.APPLE).toImmutableList(),
+        persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK, OAuthProvider.APPLE),
       alternativeFactors =
-        listOf(
-            Factor(StrategyKeys.PASSWORD),
-            Factor(StrategyKeys.PASSKEY),
-            Factor(strategy = StrategyKeys.EMAIL_CODE),
-            Factor(strategy = StrategyKeys.PHONE_CODE, safeIdentifier = "3012370655"),
-          )
-          .toImmutableList(),
+        persistentListOf(
+          Factor(StrategyKeys.PASSWORD),
+          Factor(StrategyKeys.PASSKEY),
+          Factor(strategy = StrategyKeys.EMAIL_CODE),
+          Factor(strategy = StrategyKeys.PHONE_CODE, safeIdentifier = "3012370655"),
+        ),
       onClickFactor = {},
       onAuthComplete = {},
     )

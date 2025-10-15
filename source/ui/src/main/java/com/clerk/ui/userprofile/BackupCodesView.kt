@@ -26,7 +26,7 @@ import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun BackupCodesView(
@@ -118,19 +118,18 @@ internal enum class MfaType {
 private fun Preview() {
   BackupCodesView(
     codes =
-      listOf(
-          "jsdwz752",
-          "abxkq983",
-          "abxkq983",
-          "mpltk294",
-          "mpltk294",
-          "qwert678",
-          "dj2b5ugx",
-          "xyztj501",
-          "qwert678",
-          "4nb52vql",
-        )
-        .toImmutableList(),
+      persistentListOf(
+        "jsdwz752",
+        "abxkq983",
+        "abxkq983",
+        "mpltk294",
+        "mpltk294",
+        "qwert678",
+        "dj2b5ugx",
+        "xyztj501",
+        "qwert678",
+        "4nb52vql",
+      ),
     mfaType = MfaType.AuthenticatorApp,
   )
 }

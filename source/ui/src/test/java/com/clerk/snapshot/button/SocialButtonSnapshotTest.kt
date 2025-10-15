@@ -20,7 +20,7 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.Test
 
 class SocialButtonSnapshotTest : BaseSnapshotTest() {
@@ -113,7 +113,7 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       ClerkMaterialTheme {
         ClerkSocialRow(
-          providers = listOf(provider, provider, provider, provider, provider).toImmutableList()
+          providers = persistentListOf(provider, provider, provider, provider, provider)
         )
       }
     }
@@ -132,7 +132,7 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
               .padding(horizontal = dp4)
         ) {
           ClerkSocialRow(
-            providers = listOf(provider, provider, provider, provider, provider).toImmutableList()
+            providers = persistentListOf(provider, provider, provider, provider, provider)
           )
         }
       }

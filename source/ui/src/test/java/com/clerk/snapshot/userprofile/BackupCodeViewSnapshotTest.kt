@@ -11,7 +11,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.userprofile.BackupCodesView
 import com.clerk.ui.userprofile.MfaType
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.Test
 
 class BackupCodeViewSnapshotTest : BaseSnapshotTest() {
@@ -24,19 +24,18 @@ class BackupCodeViewSnapshotTest : BaseSnapshotTest() {
           BackupCodesView(
             mfaType = MfaType.AuthenticatorApp,
             codes =
-              listOf(
-                  "jsdwz752",
-                  "abxkq983",
-                  "abxkq983",
-                  "mpltk294",
-                  "mpltk294",
-                  "qwert678",
-                  "dj2b5ugx",
-                  "xyztj501",
-                  "qwert678",
-                  "4nb52vql",
-                )
-                .toImmutableList(),
+              persistentListOf(
+                "jsdwz752",
+                "abxkq983",
+                "abxkq983",
+                "mpltk294",
+                "mpltk294",
+                "qwert678",
+                "dj2b5ugx",
+                "xyztj501",
+                "qwert678",
+                "4nb52vql",
+              ),
           )
         }
       }
@@ -52,19 +51,18 @@ class BackupCodeViewSnapshotTest : BaseSnapshotTest() {
           BackupCodesView(
             mfaType = MfaType.AuthenticatorApp,
             codes =
-              listOf(
-                  "jsdwz752",
-                  "abxkq983",
-                  "abxkq983",
-                  "mpltk294",
-                  "mpltk294",
-                  "qwert678",
-                  "dj2b5ugx",
-                  "xyztj501",
-                  "qwert678",
-                  "4nb52vql",
-                )
-                .toImmutableList(),
+              persistentListOf(
+                "jsdwz752",
+                "abxkq983",
+                "abxkq983",
+                "mpltk294",
+                "mpltk294",
+                "qwert678",
+                "dj2b5ugx",
+                "xyztj501",
+                "qwert678",
+                "4nb52vql",
+              ),
           )
         }
       }

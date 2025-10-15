@@ -29,6 +29,7 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.password.forgot.AlternativeFactorList
 import com.clerk.ui.util.TextIconHelper
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /**
@@ -134,10 +135,12 @@ private fun Preview() {
     SignInFactorAlternativeMethodsViewImpl(
       onAuthComplete = {},
       alternativeFactors =
-        listOf(Factor(strategy = StrategyKeys.PASSWORD), Factor(strategy = StrategyKeys.PHONE_CODE))
-          .toImmutableList(),
+        persistentListOf(
+          Factor(strategy = StrategyKeys.PASSWORD),
+          Factor(strategy = StrategyKeys.PHONE_CODE),
+        ),
       providers =
-        listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK).toImmutableList(),
+        persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
     )
   }
 }

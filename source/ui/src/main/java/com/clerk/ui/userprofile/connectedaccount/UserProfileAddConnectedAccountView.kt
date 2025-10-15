@@ -15,6 +15,7 @@ import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -56,7 +57,7 @@ private fun UserProfileAddConnectedAccountViewImpl(
 @Composable
 private fun Preview() {
   val unconnectedProviders =
-    listOf(
+    persistentListOf(
       OAuthProvider.GOOGLE,
       OAuthProvider.FACEBOOK,
       OAuthProvider.APPLE,
@@ -64,7 +65,7 @@ private fun Preview() {
       OAuthProvider.GITHUB,
     )
   UserProfileAddConnectedAccountViewImpl(
-    unconnectedProviders = unconnectedProviders.toImmutableList(),
+    unconnectedProviders = unconnectedProviders,
     onBackPressed = {},
   )
 }
