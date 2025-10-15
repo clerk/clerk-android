@@ -20,6 +20,7 @@ internal interface SignUpApi {
     @FieldMap fields: Map<String, String>
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
+  /** @see [com.clerk.api.signup.update] */
   @FormUrlEncoded
   @PATCH(ApiPaths.Client.SignUp.WITH_ID)
   suspend fun updateSignUp(
@@ -27,7 +28,7 @@ internal interface SignUpApi {
     @FieldMap fields: Map<String, String>,
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
-  /** @see [com.clerk.signup.prepareVerification] */
+  /** @see [com.clerk.api.signup.prepareVerification] */
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignUp.PREPARE_VERIFICATION)
   suspend fun prepareSignUpVerification(
@@ -35,7 +36,7 @@ internal interface SignUpApi {
     @Field(ApiParams.STRATEGY) strategy: String,
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
-  /** @see [com.clerk.signup.attemptVerification] */
+  /** @see [com.clerk.api.signup.attemptVerification] */
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignUp.ATTEMPT_VERIFICATION)
   suspend fun attemptSignUpVerification(
