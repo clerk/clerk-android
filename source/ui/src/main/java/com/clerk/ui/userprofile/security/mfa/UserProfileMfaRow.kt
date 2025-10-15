@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,7 +28,6 @@ import com.clerk.ui.core.badge.ClerkBadgeType
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
-import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.menu.DropDownItem
@@ -57,27 +57,7 @@ fun UserProfileMfaRow(
       horizontalArrangement = Arrangement.spacedBy(dp16),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      val padding = if (title != null) dp4 else dp0
-      if (hasHeader) {
-        Icon(
-          painter = painterResource(style.icon()),
-          tint = ClerkMaterialTheme.colors.mutedForeground,
-          contentDescription = null,
-          modifier = Modifier.padding(top = padding).size(dp18).align(Alignment.Top),
-        )
-      } else {
-        Box(
-          modifier = Modifier.size(dp18).align(Alignment.CenterVertically),
-          contentAlignment = Alignment.Center,
-        ) {
-          Icon(
-            painter = painterResource(style.icon()),
-            tint = ClerkMaterialTheme.colors.mutedForeground,
-            contentDescription = null,
-            modifier = Modifier.size(dp18),
-          )
-        }
-      }
+      MfaIcon(title, hasHeader, style)
 
       Column(verticalArrangement = Arrangement.Center) {
         if (isDefault) {
@@ -124,6 +104,31 @@ fun UserProfileMfaRow(
             ),
           ),
         onClick = { /* ... */ },
+      )
+    }
+  }
+}
+
+@Composable
+private fun RowScope.MfaIcon(title: String?, hasHeader: Boolean, style: Style) {
+  val padding = if (title != null) dp4 else dp0
+  if (hasHeader) {
+    Icon(
+      painter = painterResource(style.icon()),
+      tint = ClerkMaterialTheme.colors.mutedForeground,
+      contentDescription = null,
+      modifier = Modifier.padding(top = padding).size(dp18).align(Alignment.Top),
+    )
+  } else {
+    Box(
+      modifier = Modifier.size(dp18).align(Alignment.CenterVertically),
+      contentAlignment = Alignment.Center,
+    ) {
+      Icon(
+        painter = painterResource(style.icon()),
+        tint = ClerkMaterialTheme.colors.mutedForeground,
+        contentDescription = null,
+        modifier = Modifier.size(dp18),
       )
     }
   }
