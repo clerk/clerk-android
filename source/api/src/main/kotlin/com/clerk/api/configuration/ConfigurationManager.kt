@@ -2,7 +2,6 @@ package com.clerk.api.configuration
 
 import android.content.Context
 import com.clerk.api.Clerk
-import com.clerk.api.Clerk.debugMode
 import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.Constants.Config.API_TIMEOUT_SECONDS
 import com.clerk.api.Constants.Config.BACKOFF_BASE_DELAY_SECONDS
@@ -12,6 +11,7 @@ import com.clerk.api.Constants.Config.REFRESH_TOKEN_INTERVAL
 import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
+import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
@@ -83,9 +83,6 @@ internal class ConfigurationManager {
   /** Internal mutable state flow for device attestation status. */
   private val _isDeviceAttested = MutableStateFlow(false)
 
-  /** Public read-only state flow indicating device attestation completion. */
-  val isDeviceAttested: StateFlow<Boolean> = _isDeviceAttested.asStateFlow()
-
   /**
    * The publishable key from Clerk Dashboard used for API authentication.
    *
@@ -147,6 +144,7 @@ internal class ConfigurationManager {
     try {
       this.context = WeakReference(context.applicationContext)
       this.publishableKey = publishableKey
+      LocaleProvider.initialize()
 
       // Extract base URL and configure API client - these are fast operations
       val baseUrl = PublishableKeyHelper().extractApiUrl(publishableKey)
@@ -195,7 +193,9 @@ internal class ConfigurationManager {
   }
 
   private fun startTokenRefresh() {
-    ClerkLog.d("startTokenRefresh() called - debugMode: $debugMode, hasConfigured: $hasConfigured")
+    ClerkLog.d(
+      "startTokenRefresh() called - debugMode: ${Clerk.debugMode}, hasConfigured: $hasConfigured"
+    )
 
     if (!hasConfigured) {
       ClerkLog.w("Cannot start token refresh - not configured")
@@ -216,7 +216,7 @@ internal class ConfigurationManager {
               // Use async to avoid blocking the refresh loop
               async { session.fetchToken(GetTokenOptions(skipCache = false)) }
             } else {
-              if (debugMode) {
+              if (Clerk.debugMode) {
                 ClerkLog.d("No session available for token refresh")
               }
             }
@@ -255,7 +255,7 @@ internal class ConfigurationManager {
       return
     }
 
-    if (debugMode) {
+    if (Clerk.debugMode) {
       ClerkLog.d("Starting client and environment refresh")
     }
 
@@ -300,7 +300,7 @@ internal class ConfigurationManager {
               )
             }
 
-            if (debugMode) {
+            if (Clerk.debugMode) {
               ClerkLog.d("Client and environment refresh completed successfully")
             }
           } else {
@@ -455,7 +455,7 @@ internal class ConfigurationManager {
   private fun handleEnvironmentResult(result: ClerkResult<Environment, *>) {
     result.fold(
       onSuccess = { environment ->
-        if (debugMode) {
+        if (Clerk.debugMode) {
           ClerkLog.d("Environment loaded successfully: ${environment.authConfig}")
         }
       },
@@ -518,20 +518,5 @@ internal class ConfigurationManager {
     if (Clerk.debugMode) {
       ClerkLog.d("Clerk state updated - Client ID: ${client.id}, Sessions: ${client.sessions.size}")
     }
-  }
-
-  /**
-   * Cleanup method to cancel ongoing operations and release resources. Should be called when the
-   * ConfigurationManager is no longer needed.
-   */
-  fun cleanup() {
-    refreshJob?.cancel()
-    attestationJob?.cancel()
-    context = null
-    storageInitialized = false
-    hasConfigured = false
-    _isInitialized.value = false
-    _isDeviceAttested.value = false
-    ClerkLog.d("ConfigurationManager cleaned up")
   }
 }
