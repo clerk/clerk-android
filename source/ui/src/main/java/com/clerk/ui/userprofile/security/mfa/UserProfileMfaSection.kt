@@ -22,7 +22,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun UserProfileMfaSection(modifier: Modifier = Modifier) {
+internal fun UserProfileMfaSection(modifier: Modifier = Modifier) {
   UserProfileMfaSectionImpl(modifier = modifier, mfaItems = buildMfaItemList())
 }
 
