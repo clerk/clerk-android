@@ -193,7 +193,7 @@ private fun Preview() {
     Column {
       UserProfileMfaRow(style = Style.AuthenticatorApp, isDefault = true, onRemove = {})
       UserProfileMfaRow(
-        style = Style.Sms(phoneNumber = PhoneNumber(id = "1", phoneNumber = "+13012370655")),
+        style = Style.Sms(phoneNumber = PhoneNumber(id = "1", phoneNumber = "+15555550100")),
         title = "Primary",
         onRemove = {},
       )

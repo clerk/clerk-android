@@ -37,6 +37,18 @@ internal data class Environment(
   val lastNameIsEnabled: Boolean
     get() = userSettings.attributes.any { (key, value) -> key == "last_name" && value.enabled }
 
+  val mfaPhoneCodeIsEnabled: Boolean
+    get() =
+      userSettings.attributes.any { (key, value) ->
+        key == "phone_number" && value.enabled && value.usedForSecondFactor
+      }
+
+  val mfaBackupCodeIsEnabled: Boolean
+    get() =
+      userSettings.attributes.any { (key, value) ->
+        key == "backup_code" && value.enabled && value.usedForSecondFactor
+      }
+
   companion object {
 
     /** Fetches the environment configuration from the Clerk API. */
