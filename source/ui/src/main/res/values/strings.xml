@@ -133,4 +133,8 @@
     <string name="change_password">Change password</string>
     <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
     <string name="add_password">Add password</string>
+    <string name="passkeys">Passkeys</string>
+    <string name="rename">Rename</string>
+    <string name="created">Created: %1$s</string>
+    <string name="last_used">Last used: %1$s</string>
 </resources>

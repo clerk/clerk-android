@@ -71,24 +71,18 @@ internal fun <T> ItemMoreMenu(
         DropdownMenuItem(
           leadingIcon =
             item.leadingIcon?.let { iconVec ->
-              {
-                Icon(
-                  imageVector = iconVec,
-                  contentDescription = null, // decorative
-                )
-              }
+              { Icon(imageVector = iconVec, contentDescription = null) }
             },
           text = { Text(text = item.text, style = ClerkMaterialTheme.typography.bodyLarge) },
           enabled = item.enabled,
           colors =
             MenuDefaults.itemColors(
-              // Optional: custom emphasize for “danger” actions
               textColor =
                 if (item.danger) ClerkMaterialTheme.colors.danger else LocalContentColor.current
             ),
           onClick = {
             expanded = false
-            onClickUpdated(item.id) // ← make sure we propagate the selection
+            onClickUpdated(item.id)
           },
         )
       }

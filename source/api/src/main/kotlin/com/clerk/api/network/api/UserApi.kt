@@ -52,7 +52,7 @@ internal interface UserApi {
    *
    * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]
    * @return [ClerkResult] containing the [User] on success or [ClerkErrorResponse] on failure
-   * @see [com.clerk.user.User.get]
+   * @see [com.clerk.api.user.get]
    */
   @GET(ApiPaths.User.BASE)
   suspend fun getUser(
@@ -66,7 +66,7 @@ internal interface UserApi {
    * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]
    * @return [ClerkResult] containing the updated [User] on success or [ClerkErrorResponse] on
    *   failure
-   * @see [com.clerk.user.User.update]
+   * @see [com.clerk.api.user.update]
    */
   @PATCH(ApiPaths.User.BASE)
   @FormUrlEncoded
@@ -528,7 +528,7 @@ internal interface UserApi {
    * @param sessionId Optional session ID for the operation
    * @return A [ClerkResult] containing either the accepted [OrganizationInvitation] on success or a
    *   [ClerkErrorResponse] on failure
-   * @see com.clerk.api.organizations.acceptInvitation
+   * @see com.clerk.api.organizations.accept
    */
   @POST(ApiPaths.User.ACCEPT_ORGANIZATION_INVITATION)
   suspend fun acceptUserOrganizationInvitation(
@@ -543,7 +543,7 @@ internal interface UserApi {
    * @param sessionId Optional session ID for the operation
    * @return A [ClerkResult] containing either the accepted [OrganizationSuggestion] on success or a
    *   [ClerkErrorResponse] on failure
-   * @see com.clerk.api.organizations.acceptSuggestion
+   * @see com.clerk.api.organizations.accept
    */
   @POST(ApiPaths.User.ACCEPT_ORGANIZATION_SUGGESTION)
   suspend fun acceptOrganizationSuggestion(
