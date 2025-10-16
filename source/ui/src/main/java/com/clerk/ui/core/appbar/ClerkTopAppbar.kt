@@ -49,7 +49,7 @@ fun ClerkTopAppBar(
       title?.let {
         Text(
           text = it,
-          style = ClerkMaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+          style = ClerkMaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
           color = ClerkMaterialTheme.colors.foreground,
         )
       }

@@ -157,6 +157,30 @@ object Clerk {
       if (::environment.isInitialized) environment.displayConfig.googleOneTapClientId != null
       else false
 
+  /**
+   * Indicates whether MFA (Multi-Factor Authentication) via phone code is enabled.
+   *
+   * This setting is configured in your Clerk Dashboard. If enabled, users can add a phone number as
+   * a second authentication factor.
+   *
+   * @return `true` if MFA with phone code is enabled, `false` otherwise. Returns `false` if the SDK
+   *   is not yet initialized.
+   */
+  val mfaPhoneCodeIsEnabled: Boolean
+    get() = if (::environment.isInitialized) environment.mfaPhoneCodeIsEnabled else false
+
+  /**
+   * Indicates whether MFA (Multi-Factor Authentication) via backup codes is enabled.
+   *
+   * This setting is configured in your Clerk Dashboard. If enabled, users can generate and use
+   * single-use backup codes as a second authentication factor.
+   *
+   * @return `true` if MFA with backup codes is enabled, `false` otherwise. Returns `false` if the
+   *   SDK is not yet initialized.
+   */
+  val mfaBackupCodeIsEnabled: Boolean
+    get() = if (::environment.isInitialized) environment.mfaBackupCodeIsEnabled else false
+
   // endregion
 
   // region Session Management
