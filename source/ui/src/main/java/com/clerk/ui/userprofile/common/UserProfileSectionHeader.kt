@@ -14,6 +14,6 @@ internal fun UserProfileSectionHeader(text: String, modifier: Modifier = Modifie
     modifier = Modifier.padding(horizontal = dp24).then(modifier),
     text = text.uppercase(),
     color = ClerkMaterialTheme.colors.mutedForeground,
-    style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+    style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
   )
 }

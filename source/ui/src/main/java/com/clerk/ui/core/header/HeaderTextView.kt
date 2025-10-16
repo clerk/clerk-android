@@ -20,7 +20,7 @@ internal fun HeaderTextView(text: String, type: HeaderType, modifier: Modifier =
     when (type) {
       HeaderType.Title ->
         ClerkMaterialTheme.typography.titleMedium.copy(
-          fontWeight = FontWeight.SemiBold,
+          fontWeight = FontWeight.Medium,
           fontSize = 22.sp,
           lineHeight = 28.sp,
           letterSpacing = 0.sp,

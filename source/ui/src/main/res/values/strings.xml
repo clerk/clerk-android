@@ -129,4 +129,5 @@
     <string name="authenticator_app">Authenticator app</string>
     <string name="sms_code">SMS code %1$s</string>
     <string name="backup_codes">Backup codes</string>
+    <string name="add_two_step_verification">Add two-step verification</string>
 </resources>
