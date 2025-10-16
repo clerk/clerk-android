@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.passkeys.Passkey
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
@@ -26,8 +27,9 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 fun UserProfilePasskeyRow(
   passkey: Passkey,
-  modifier: Modifier = Modifier,
   onClickRename: () -> Unit,
+  modifier: Modifier = Modifier,
+  viewModel: UserProfilePasskeyViewModel = viewModel(),
 ) {
   ClerkMaterialTheme {
     Row(
@@ -69,7 +71,7 @@ fun UserProfilePasskeyRow(
         onClick = {
           when (it) {
             PasskeyActions.Rename -> onClickRename()
-            PasskeyActions.Remove -> TODO()
+            PasskeyActions.Remove -> viewModel.deletePasskey(passkey)
           }
         },
       )
