@@ -32,29 +32,29 @@ fun UserProfilePasswordSection(modifier: Modifier = Modifier, onAction: (Passwor
 }
 
 @Composable
-private fun UserProfilePasswordSectionImpl(
+internal fun UserProfilePasswordSectionImpl(
   modifier: Modifier = Modifier,
-  forcePasswordEnabled: Boolean = false,
+  isPasswordEnabled: Boolean = Clerk.user?.passwordEnabled == true,
   onAction: (PasswordAction) -> Unit,
 ) {
   ClerkMaterialTheme {
     Column(
       modifier = Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.background)
     ) {
-      if (Clerk.user?.passwordEnabled == true || forcePasswordEnabled) {
+      if (isPasswordEnabled) {
         Text(
           modifier =
             Modifier.padding(top = dp32)
-              .padding(horizontal = dp16)
+              .padding(horizontal = dp24)
               .padding(bottom = dp16)
               .then(modifier),
           text = stringResource(R.string.password).uppercase(),
           color = ClerkMaterialTheme.colors.mutedForeground,
           style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
         )
-        Row(modifier = Modifier.fillMaxWidth().padding(dp16)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(vertical = dp16)) {
           Icon(
-            modifier = Modifier.size(dp24),
+            modifier = Modifier.padding(start = dp24).size(dp24),
             painter = painterResource(R.drawable.ic_lock),
             contentDescription = null,
             tint = ClerkMaterialTheme.colors.mutedForeground,
@@ -89,7 +89,7 @@ private fun Preview() {
       modifier =
         Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
     ) {
-      UserProfilePasswordSectionImpl(onAction = {}, forcePasswordEnabled = true)
+      UserProfilePasswordSectionImpl(onAction = {}, isPasswordEnabled = true)
     }
   }
 }
