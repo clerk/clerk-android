@@ -30,8 +30,6 @@ fun UserProfileButtonRow(text: String, modifier: Modifier = Modifier, onClick: (
     Box(
       modifier =
         modifier
-          .padding(vertical = dp16)
-          .padding(horizontal = dp24)
           .clip(ClerkMaterialTheme.shape) // masks ripple to this shape
           .clickable(
             interactionSource = interaction,
@@ -39,6 +37,8 @@ fun UserProfileButtonRow(text: String, modifier: Modifier = Modifier, onClick: (
             role = Role.Button,
             onClick = onClick,
           )
+          .padding(horizontal = dp24)
+          .padding(vertical = dp16)
     ) {
       Text(
         text = text,
@@ -54,7 +54,9 @@ fun UserProfileButtonRow(text: String, modifier: Modifier = Modifier, onClick: (
 private fun Preview() {
   Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
   ClerkMaterialTheme {
-    Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
+    Box(
+      modifier = Modifier.background(color = ClerkMaterialTheme.colors.background).padding(dp24)
+    ) {
       UserProfileButtonRow(text = "Button Row") {}
     }
   }
