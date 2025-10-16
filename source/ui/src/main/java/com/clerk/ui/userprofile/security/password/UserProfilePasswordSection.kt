@@ -21,47 +21,61 @@ import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp32
-import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 
 @Composable
-fun UserProfilePasswordSection(modifier: Modifier = Modifier) {
-  UserProfilePasswordSectionImpl(modifier = modifier)
+fun UserProfilePasswordSection(modifier: Modifier = Modifier, onAction: (PasswordAction) -> Unit) {
+  UserProfilePasswordSectionImpl(modifier = modifier, onAction = onAction)
 }
 
 @Composable
-private fun UserProfilePasswordSectionImpl(modifier: Modifier = Modifier) {
+private fun UserProfilePasswordSectionImpl(
+  modifier: Modifier = Modifier,
+  forcePasswordEnabled: Boolean = false,
+  onAction: (PasswordAction) -> Unit,
+) {
   ClerkMaterialTheme {
     Column(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(color = ClerkMaterialTheme.colors.background)
-          .padding(top = dp32)
+      modifier = Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.background)
     ) {
-      Text(
-        modifier = Modifier.padding(horizontal = dp16).padding(bottom = dp16).then(modifier),
-        text = stringResource(R.string.password).uppercase(),
-        color = ClerkMaterialTheme.colors.mutedForeground,
-        style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-      )
-      Row(modifier = Modifier.fillMaxWidth().padding(dp16)) {
-        Icon(
-          modifier = Modifier.size(dp24),
-          painter = painterResource(R.drawable.ic_lock),
-          contentDescription = null,
-          tint = ClerkMaterialTheme.colors.mutedForeground,
-        )
-        Spacers.Horizontal.Spacer16()
+      if (Clerk.user?.passwordEnabled == true || forcePasswordEnabled) {
         Text(
-          text = "•••••••••••••••••••••••••",
-          style = ClerkMaterialTheme.typography.bodyLarge,
+          modifier =
+            Modifier.padding(top = dp32)
+              .padding(horizontal = dp16)
+              .padding(bottom = dp16)
+              .then(modifier),
+          text = stringResource(R.string.password).uppercase(),
           color = ClerkMaterialTheme.colors.mutedForeground,
+          style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+        )
+        Row(modifier = Modifier.fillMaxWidth().padding(dp16)) {
+          Icon(
+            modifier = Modifier.size(dp24),
+            painter = painterResource(R.drawable.ic_lock),
+            contentDescription = null,
+            tint = ClerkMaterialTheme.colors.mutedForeground,
+          )
+          Spacers.Horizontal.Spacer16()
+          Text(
+            text = stringResource(R.string.password_filler),
+            style = ClerkMaterialTheme.typography.bodyLarge,
+            color = ClerkMaterialTheme.colors.mutedForeground,
+          )
+        }
+        UserProfileButtonRow(
+          text = stringResource(R.string.change_password),
+          onClick = { onAction(PasswordAction.Change) },
+        )
+      } else {
+        UserProfileButtonRow(
+          text = stringResource(R.string.add_password),
+          onClick = { onAction(PasswordAction.Add) },
         )
       }
-      UserProfileButtonRow(modifier = Modifier.padding(vertical = dp8), text = "Change password") {}
     }
   }
 }
@@ -75,12 +89,26 @@ private fun Preview() {
       modifier =
         Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
     ) {
-      UserProfilePasswordSectionImpl()
+      UserProfilePasswordSectionImpl(onAction = {}, forcePasswordEnabled = true)
     }
   }
 }
 
-internal enum class PasswordAction {
+@PreviewLightDark
+@Composable
+private fun PreviewAddPassword() {
+  Clerk.customTheme = null
+  ClerkMaterialTheme {
+    Box(
+      modifier =
+        Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
+    ) {
+      UserProfilePasswordSectionImpl(onAction = {})
+    }
+  }
+}
+
+enum class PasswordAction {
   Add,
-  Reset,
+  Change,
 }

@@ -130,4 +130,7 @@
     <string name="sms_code">SMS code %1$s</string>
     <string name="backup_codes">Backup codes</string>
     <string name="add_two_step_verification">Add two-step verification</string>
+    <string name="change_password">Change password</string>
+    <string name="password_filler" translatable="false">•••••••••••••••••••••••••</string>
+    <string name="add_password">Add password</string>
 </resources>
