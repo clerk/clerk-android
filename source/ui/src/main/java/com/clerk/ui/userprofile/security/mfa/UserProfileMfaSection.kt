@@ -15,10 +15,9 @@ import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp32
-import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.common.UserProfileSectionFooter
+import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import com.clerk.ui.userprofile.common.UserProfileSectionHeader
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -66,8 +65,7 @@ internal fun UserProfileMfaSectionImpl(
         }
       }
 
-      UserProfileSectionFooter(
-        modifier = modifier.padding(horizontal = dp8),
+      UserProfileButtonRow(
         text = stringResource(R.string.add_two_step_verification),
         onClick = onAdd,
       )

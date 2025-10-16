@@ -1,5 +1,6 @@
 package com.clerk.ui.userprofile.common
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -13,19 +14,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import com.clerk.ui.core.dimens.dp6
-import com.clerk.ui.core.dimens.dp8
+import androidx.compose.ui.tooling.preview.Preview
+import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkTheme
+import com.clerk.ui.core.dimens.dp16
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.DefaultColors
 
 @Composable
-fun UserProfileSectionFooter(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun UserProfileButtonRow(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
   val interaction = remember { MutableInteractionSource() }
 
   ClerkMaterialTheme {
     Box(
       modifier =
         modifier
-          .padding(horizontal = dp8)
+          .padding(vertical = dp16)
+          .padding(horizontal = dp24)
           .clip(ClerkMaterialTheme.shape) // masks ripple to this shape
           .clickable(
             interactionSource = interaction,
@@ -33,13 +39,23 @@ fun UserProfileSectionFooter(text: String, modifier: Modifier = Modifier, onClic
             role = Role.Button,
             onClick = onClick,
           )
-          .padding(horizontal = dp8, vertical = dp6)
     ) {
       Text(
         text = text,
         color = ClerkMaterialTheme.colors.primary,
         style = ClerkMaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
       )
+    }
+  }
+}
+
+@Preview
+@Composable
+private fun Preview() {
+  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
+      UserProfileButtonRow(text = "Button Row") {}
     }
   }
 }
