@@ -53,5 +53,10 @@ internal object Spacers {
     internal fun Spacer8() {
       Spacer(modifier = Modifier.Companion.width(dp8))
     }
+
+    @Composable
+    internal fun Spacer16() {
+      Spacer(modifier = Modifier.Companion.width(dp16))
+    }
   }
 }
