@@ -25,7 +25,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun UserProfilePasskeyRow(
+internal fun UserProfilePasskeyRow(
   passkey: Passkey,
   onClickRename: () -> Unit,
   modifier: Modifier = Modifier,
@@ -66,7 +66,11 @@ fun UserProfilePasskeyRow(
         dropDownItems =
           persistentListOf(
             DropDownItem(id = PasskeyActions.Rename, text = stringResource(R.string.rename)),
-            DropDownItem(id = PasskeyActions.Remove, text = stringResource(R.string.remove)),
+            DropDownItem(
+              id = PasskeyActions.Remove,
+              text = stringResource(R.string.remove),
+              danger = true,
+            ),
           ),
         onClick = {
           when (it) {
