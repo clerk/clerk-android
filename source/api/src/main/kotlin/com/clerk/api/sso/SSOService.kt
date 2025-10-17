@@ -11,7 +11,7 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.signin.get
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.SSOService.authenticateWithRedirect
@@ -68,7 +68,7 @@ internal object SSOService {
    *   failure
    */
   suspend fun authenticateWithRedirect(
-    strategy: String,
+    strategy: String? = null,
     redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     identifier: String? = null,
     emailAddress: String? = null,
@@ -93,7 +93,7 @@ internal object SSOService {
 
     return when (initialResult) {
       is ClerkResult.Failure -> {
-        val message = initialResult.longErrorMessageOrNull
+        val message = initialResult.errorMessage
         ClerkLog.e("Failed to authenticate with redirect: $message")
         ClerkResult.apiFailure(initialResult.error)
       }

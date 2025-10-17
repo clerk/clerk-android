@@ -111,7 +111,7 @@ class ClerkTest {
         every { uninitializedClient.id } returns null
         every { uninitializedClient.updatedAt } returns null
         Clerk.updateClient(uninitializedClient)
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         // Client not initialized, that's fine
       }
 
@@ -136,7 +136,7 @@ class ClerkTest {
         every { uninitializedEnvironment.firstNameIsEnabled } returns false
         every { uninitializedEnvironment.lastNameIsEnabled } returns false
         environmentField.set(Clerk, uninitializedEnvironment)
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         // Environment not initialized, that's fine
       }
 
@@ -144,10 +144,10 @@ class ClerkTest {
       try {
         // Force update session and user state to null by triggering state update with empty client
         Clerk.updateSessionAndUserState()
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         // Ignore if method is not accessible or other issues
       }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       // Ignore reflection errors - they mean the fields weren't accessible
     }
   }
@@ -367,7 +367,7 @@ class ClerkTest {
     simulateUninitializedEnvironment()
 
     // When
-    val logoUrl = Clerk.logoUrl
+    val logoUrl = Clerk.organizationLogoUrl
 
     // Then
     assertEquals("", logoUrl)
@@ -381,7 +381,7 @@ class ClerkTest {
     initializeClerkWithEnvironment()
 
     // When
-    val logoUrl = Clerk.logoUrl
+    val logoUrl = Clerk.organizationLogoUrl
 
     // Then
     assertEquals(expectedLogoUrl, logoUrl)
@@ -437,31 +437,6 @@ class ClerkTest {
 
     // Then
     assertEquals(expectedProviders, providers)
-  }
-
-  @Test
-  fun `passkeyIsEnabled returns false when environment is not initialized`() = runTest {
-    // Given - simulate uninitialized environment
-    simulateUninitializedEnvironment()
-
-    // When
-    val isEnabled = Clerk.passkeyIsEnabled
-
-    // Then
-    assertFalse(isEnabled)
-  }
-
-  @Test
-  fun `passkeyIsEnabled returns correct value when environment is initialized`() = runTest {
-    // Given
-    every { mockEnvironment.passkeyIsEnabled } returns true
-    initializeClerkWithEnvironment()
-
-    // When
-    val isEnabled = Clerk.passkeyIsEnabled
-
-    // Then
-    assertTrue(isEnabled)
   }
 
   @Test

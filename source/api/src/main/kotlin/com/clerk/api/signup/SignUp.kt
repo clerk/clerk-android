@@ -4,6 +4,7 @@ package com.clerk.api.signup
 
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy as AuthStrategy
+import com.clerk.api.extensions.sortedByPriority
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
@@ -405,33 +406,27 @@ data class SignUp(
   }
 
   /**
-   * Parameters for updating an existing sign-up with additional information. These parameters
-   * mirror the create parameters and allow modification of sign-up data.
+   * Standard sign-up update strategy, allowing the user to provide common details such as email,
+   * password, and personal information. The update parameters are just a mirror of the create
+   * parameters.
+   *
+   * @param emailAddress The user's email address (optional).
+   * @param password The user's password (optional).
+   * @param firstName The user's first name (optional).
+   * @param lastName The user's last name (optional).
+   * @param username The user's username (optional).
+   * @param phoneNumber The user's phone number in E.164 format (optional).
    */
-  sealed interface SignUpUpdateParams {
-    /**
-     * Standard sign-up update strategy, allowing the user to provide common details such as email,
-     * password, and personal information. The update parameters are just a mirror of the create
-     * parameters.
-     *
-     * @param emailAddress The user's email address (optional).
-     * @param password The user's password (optional).
-     * @param firstName The user's first name (optional).
-     * @param lastName The user's last name (optional).
-     * @param username The user's username (optional).
-     * @param phoneNumber The user's phone number in E.164 format (optional).
-     */
-    @AutoMap
-    @Serializable
-    data class Standard(
-      @SerialName("email_address") val emailAddress: String? = null,
-      val password: String? = null,
-      @SerialName("first_name") val firstName: String? = null,
-      @SerialName("last_name") val lastName: String? = null,
-      val username: String? = null,
-      @SerialName("phone_number") val phoneNumber: String? = null,
-    ) : SignUpUpdateParams
-  }
+  @AutoMap
+  @Serializable
+  data class UpdateParams(
+    @SerialName("email_address") val emailAddress: String? = null,
+    val password: String? = null,
+    @SerialName("first_name") val firstName: String? = null,
+    @SerialName("last_name") val lastName: String? = null,
+    val username: String? = null,
+    @SerialName("phone_number") val phoneNumber: String? = null,
+  )
 
   companion object {
 
@@ -511,8 +506,33 @@ data class SignUp(
         legalAccepted = params.legalAccepted,
       )
     }
+
+    val fieldPriority: List<String> =
+      listOf("email_address", "phone_number", "username", "username")
   }
 }
+
+/**
+ * Helper property to get the first field that needs to be collected.
+ *
+ * This property returns the name of the first field in the `missingFields` list, sorted by
+ * priority. The priority order is defined by [SignUp.fieldPriority].
+ *
+ * @return The name of the first field to collect, or `null` if there are no missing fields.
+ */
+val SignUp.firstFieldToCollect: String?
+  get() = missingFields.sortedByPriority(SignUp.fieldPriority).firstOrNull()
+
+/**
+ * Helper property to get the first field that needs to be verified.
+ *
+ * This property returns the name of the first field in the `unverifiedFields` list, sorted by
+ * priority. The priority order is defined by [SignUp.fieldPriority].
+ *
+ * @return The name of the first field to verify, or `null` if there are no unverified fields.
+ */
+val SignUp.firstFieldToVerify: String?
+  get() = this.unverifiedFields.sortedByPriority(SignUp.fieldPriority).firstOrNull()
 
 /**
  * The [update] method is used to update the sign-up process with new information. This can be used
@@ -527,7 +547,7 @@ data class SignUp(
  *   if the update failed.
  */
 suspend fun SignUp.update(
-  updateParams: SignUp.SignUpUpdateParams
+  updateParams: SignUp.UpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
 }
