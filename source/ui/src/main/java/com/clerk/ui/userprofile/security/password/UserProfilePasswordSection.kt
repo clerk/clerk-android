@@ -49,7 +49,7 @@ internal fun UserProfilePasswordSectionImpl(
           .padding(top = dp32)
     ) {
       Text(
-        modifier = Modifier.padding(top = dp32).padding(bottom = dp16).then(modifier),
+        modifier = Modifier.padding(bottom = dp16).then(modifier),
         text = stringResource(R.string.password).uppercase(),
         color = ClerkMaterialTheme.colors.mutedForeground,
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),

@@ -68,6 +68,7 @@ private fun UserProfilePasskeySectionImpl(
       ) {
         items(passkeys) { passkey -> UserProfilePasskeyRow(passkey = passkey, onClickRename = {}) }
       }
+      Spacers.Vertical.Spacer32()
       UserProfileButtonRow(
         text = stringResource(R.string.add_a_passkey),
         onClick = { viewModel.createPasskey() },

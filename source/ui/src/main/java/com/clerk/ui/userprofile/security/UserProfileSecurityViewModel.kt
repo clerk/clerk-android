@@ -17,6 +17,10 @@ class UserProfileSecurityViewModel : ViewModel() {
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
 
+  init {
+    loadSessions()
+  }
+
   fun loadSessions() {
     _state.value = State.Loading
     guardUser({}) { user ->
