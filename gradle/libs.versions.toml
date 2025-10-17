@@ -33,7 +33,7 @@ turbineVersion = "1.2.1"
 navigation3 = "1.0.0-alpha09"
 
 # Build Versions -- Do not delete
-clerk-sdk = "0.1.12"
+clerk-api = "0.1.12"
 clerk-ui = "0.1.0-SNAPSHOT"
 jdk = "17"
 jvmTarget = "17"
