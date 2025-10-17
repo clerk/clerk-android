@@ -8,22 +8,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionActivity
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp32
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.common.UserProfileSectionHeader
 
 @Composable
 internal fun UserProfileDevicesSection(
@@ -50,16 +50,20 @@ private fun UserProfileDevicesSectionImpl(
       modifier =
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
-          .then(modifier),
-      contentAlignment = Alignment.Center,
+          .then(modifier)
     ) {
       when (state) {
         is AllDevicesViewModel.State.Error -> SideEffect { errorFetchingDevices() }
         AllDevicesViewModel.State.Idle -> {}
         AllDevicesViewModel.State.Loading -> CircularProgressIndicator()
         is AllDevicesViewModel.State.Success -> {
-          Column(modifier = Modifier.fillMaxWidth().padding(top = dp32)) {
-            UserProfileSectionHeader(text = stringResource(R.string.active_devices))
+          Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+              modifier = Modifier.padding(horizontal = dp24).then(modifier),
+              text = stringResource(R.string.active_devices).uppercase(),
+              color = ClerkMaterialTheme.colors.mutedForeground,
+              style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+            )
             Spacers.Vertical.Spacer16()
             LazyColumn { items(state.devices) { UserProfileDeviceRow(session = it, onError = {}) } }
           }

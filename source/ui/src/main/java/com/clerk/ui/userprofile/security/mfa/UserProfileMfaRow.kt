@@ -29,7 +29,6 @@ import com.clerk.ui.core.badge.ClerkBadgeType
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
-import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
@@ -53,10 +52,7 @@ internal fun UserProfileMfaRow(
   ClerkMaterialTheme {
     Row(
       modifier =
-        Modifier.fillMaxWidth()
-          .background(ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24, vertical = dp16)
-          .then(modifier),
+        Modifier.fillMaxWidth().background(ClerkMaterialTheme.colors.background).then(modifier),
       horizontalArrangement = Arrangement.spacedBy(dp16),
       verticalAlignment = Alignment.CenterVertically,
     ) {

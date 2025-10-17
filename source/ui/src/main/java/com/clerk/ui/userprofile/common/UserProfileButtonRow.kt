@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
-import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
@@ -42,8 +41,6 @@ fun UserProfileButtonRow(
             role = Role.Button,
             onClick = onClick,
           )
-          .padding(horizontal = dp16)
-          .padding(vertical = dp16)
     ) {
       Text(
         text = text,

@@ -2,6 +2,8 @@ package com.clerk.ui.core.scaffold
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -46,6 +48,7 @@ fun ClerkThemedProfileScaffold(
       Column(
         modifier =
           Modifier.fillMaxWidth()
+            .fillMaxSize()
             .padding(innerPadding)
             .padding(horizontal = dp18)
             .background(backgroundColor),
@@ -59,6 +62,8 @@ fun ClerkThemedProfileScaffold(
         )
         Spacers.Vertical.Spacer24()
         content()
+        Spacer(modifier = Modifier.weight(1f))
+        Spacers.Vertical.Spacer24()
         SecuredByClerkView()
         Spacers.Vertical.Spacer24()
       }

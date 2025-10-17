@@ -27,7 +27,10 @@ import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 
 @Composable
-internal fun UserProfilePasswordSection(modifier: Modifier = Modifier, onAction: (PasswordAction) -> Unit) {
+internal fun UserProfilePasswordSection(
+  modifier: Modifier = Modifier,
+  onAction: (PasswordAction) -> Unit,
+) {
   UserProfilePasswordSectionImpl(modifier = modifier, onAction = onAction)
 }
 
@@ -39,22 +42,22 @@ internal fun UserProfilePasswordSectionImpl(
 ) {
   ClerkMaterialTheme {
     Column(
-      modifier = Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.background)
+      modifier =
+        Modifier.fillMaxWidth()
+          .background(color = ClerkMaterialTheme.colors.background)
+          .padding(horizontal = dp24)
     ) {
+      Text(
+        modifier = Modifier.padding(top = dp32).padding(bottom = dp16).then(modifier),
+        text = stringResource(R.string.password).uppercase(),
+        color = ClerkMaterialTheme.colors.mutedForeground,
+        style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+      )
       if (isPasswordEnabled) {
-        Text(
-          modifier =
-            Modifier.padding(top = dp32)
-              .padding(horizontal = dp24)
-              .padding(bottom = dp16)
-              .then(modifier),
-          text = stringResource(R.string.password).uppercase(),
-          color = ClerkMaterialTheme.colors.mutedForeground,
-          style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-        )
+
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = dp16)) {
           Icon(
-            modifier = Modifier.padding(start = dp24).size(dp24),
+            modifier = Modifier.size(dp24),
             painter = painterResource(R.drawable.ic_lock),
             contentDescription = null,
             tint = ClerkMaterialTheme.colors.mutedForeground,

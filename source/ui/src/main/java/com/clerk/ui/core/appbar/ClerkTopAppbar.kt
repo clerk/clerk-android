@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -24,15 +25,20 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
 fun ClerkTopAppBar(
+  onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
   hasLogo: Boolean = true,
   hasBackButton: Boolean = true,
   title: String? = null,
-  onBackPressed: () -> Unit,
+  backgroundColor: Color = Color.Unspecified,
 ) {
   ClerkMaterialTheme {
     Row(
-      modifier = Modifier.fillMaxWidth().padding(vertical = dp8).then(modifier),
+      modifier =
+        Modifier.fillMaxWidth()
+          .then(modifier)
+          .background(color = backgroundColor)
+          .padding(vertical = dp8),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       if (hasBackButton) {
@@ -92,6 +98,7 @@ private fun PreviewTitle() {
       ClerkTopAppBar(
         onBackPressed = {},
         hasBackButton = true,
+        backgroundColor = ClerkMaterialTheme.colors.danger,
         title = "Add email address",
         hasLogo = false,
       )
