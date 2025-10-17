@@ -16,6 +16,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
@@ -50,6 +51,7 @@ private fun UserProfileMfaSectionImpl(
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
           .padding(horizontal = dp24)
+          .padding(top = dp32)
           .then(modifier)
     ) {
       Text(

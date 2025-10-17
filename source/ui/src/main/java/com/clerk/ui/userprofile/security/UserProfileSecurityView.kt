@@ -69,6 +69,7 @@ private fun UserProfileSecurityViewImpl(
         if (isDeleteSelfEnabled) {
           UserProfileDeleteAccountSection(onDeleteAccount = {})
         }
+        Spacers.Vertical.Spacer16()
         Spacer(modifier = Modifier.weight(1f))
         Spacers.Vertical.Spacer24()
         SecuredByClerkView()

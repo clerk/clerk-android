@@ -46,6 +46,7 @@ internal fun UserProfilePasswordSectionImpl(
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
           .padding(horizontal = dp24)
+          .padding(top = dp32)
     ) {
       Text(
         modifier = Modifier.padding(top = dp32).padding(bottom = dp16).then(modifier),
