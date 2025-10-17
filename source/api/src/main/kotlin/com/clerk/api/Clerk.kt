@@ -278,14 +278,14 @@ object Clerk {
     options: ClerkConfigurationOptions? = null,
   ) {
     this.debugMode = options?.enableDebugMode == true
+    this.proxyUrl = options?.proxyUrl
+    this.applicationId = options?.deviceAttestationOptions?.applicationId
+    this.applicationContext = WeakReference(context)
     configurationManager.configure(
       context = context,
       publishableKey = publishableKey,
       options = options,
     )
-    this.applicationContext = WeakReference(context)
-    this.applicationId = options?.deviceAttestationOptions?.applicationId
-    this.proxyUrl = options?.proxyUrl
   }
 
   /**
