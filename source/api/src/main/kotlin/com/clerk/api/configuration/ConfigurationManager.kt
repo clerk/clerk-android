@@ -146,8 +146,12 @@ internal class ConfigurationManager {
       this.publishableKey = publishableKey
       LocaleProvider.initialize()
 
-      // Extract base URL and configure API client - these are fast operations
-      val baseUrl = PublishableKeyHelper().extractApiUrl(publishableKey)
+      val baseUrl =
+        if (options?.proxyUrl != null) {
+          options.proxyUrl
+        } else {
+          PublishableKeyHelper().extractApiUrl(publishableKey)
+        }
       Clerk.baseUrl = baseUrl
       ClerkApi.configure(Clerk.baseUrl, context.applicationContext)
 
@@ -167,7 +171,6 @@ internal class ConfigurationManager {
         val dataRefreshJob = async { refreshClientAndEnvironment(options) }
 
         // Wait for storage init before setting up lifecycle monitoring
-        // (lifecycle monitoring might need storage for session persistence)
         storageInitJob.await()
 
         // Set up lifecycle monitoring for automatic refresh

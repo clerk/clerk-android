@@ -43,9 +43,22 @@ object Clerk {
   /**
    * Enable for additional debugging signals and logging.
    *
-   * When enabled, provides verbose logging for SDK operations and API calls. Defaults to `false`.
+   * When enabled, provides verbose logging for SDK operations and API calls.
+   *
+   * Set this via [ClerkConfigurationOptions] in the [initialize] method. When enabled, provides
+   * verbose logging for SDK operations and API calls. Defaults to `false`.
    */
   var debugMode: Boolean = false
+    private set
+
+  /**
+   * Optional proxy URL for network requests.
+   *
+   * Your Clerk app's proxy URL. Required for applications that run behind a reverse proxy. Must be
+   * a full URL (for example, https://proxy.example.com/__clerk. Set this via
+   * [ClerkConfigurationOptions] in the [initialize] method.
+   */
+  var proxyUrl: String? = null
     private set
 
   /**
@@ -333,7 +346,24 @@ object Clerk {
    *
    * @param context The application context used for initialization and storage setup.
    * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
-   *   Clerk. This key should be in the format `pk_test_...` or `pk_live_...`.
+   *   Clerk.
+   * @throws IllegalArgumentException if the publishable key format is invalid.
+   */
+  fun initialize(context: Context, publishableKey: String) {
+    initialize(context, publishableKey, null)
+  }
+
+  /**
+   * Initializes the Clerk SDK with the provided configuration.
+   *
+   * This method must be called before using any other Clerk functionality. It configures the API
+   * client, initializes local storage, and begins the authentication state setup.
+   *
+   * @param context The application context used for initialization and storage setup.
+   * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
+   *   Clerk.
+   * @param options Enable additional options for the Clerk SDK. See [ClerkConfigurationOptions] for
+   *   details. Clerk. This key should be in the format `pk_test_...` or `pk_live_...`.
    * @param options Optional configuration for enabling extra functionality. See
    *   [ClerkConfigurationOptions] for details.
    * @param theme Optional theme to customize the appearance of Clerk UI components. See
@@ -347,14 +377,15 @@ object Clerk {
     theme: ClerkTheme? = null,
   ) {
     this.debugMode = options?.enableDebugMode == true
+    this.proxyUrl = options?.proxyUrl
+    this.applicationContext = WeakReference(context)
+    this.applicationId = options?.deviceAttestationOptions?.applicationId
+    this.customTheme = theme
     configurationManager.configure(
       context = context,
       publishableKey = publishableKey,
       options = options,
     )
-    this.applicationContext = WeakReference(context)
-    this.applicationId = options?.deviceAttestationOptions?.applicationId
-    this.customTheme = theme
   }
 
   /**
@@ -424,10 +455,14 @@ object Clerk {
  *   Defaults to `false`.
  * @property deviceAttestationOptions Configuration for Android Play Integrity device attestation.
  *   Used to enhance security. Defaults to `null` (device attestation disabled).
+ * @property proxyUrl Optional proxy URL for network requests Your Clerk app's proxy URL. Required
+ *   for applications that run behind a reverse proxy. Must be a full URL (for example,
+ *   https://proxy.example.com/__clerk).
  */
 data class ClerkConfigurationOptions(
   val enableDebugMode: Boolean = false,
   val deviceAttestationOptions: DeviceAttestationOptions? = null,
+  val proxyUrl: String? = null,
 )
 
 /**
