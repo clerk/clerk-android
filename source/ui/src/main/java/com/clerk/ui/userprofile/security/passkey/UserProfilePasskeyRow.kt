@@ -16,7 +16,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.passkeys.Passkey
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
-import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.formattedRelativeDateTime
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
@@ -37,7 +36,6 @@ internal fun UserProfilePasskeyRow(
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
           .padding(vertical = dp16)
-          .padding(horizontal = dp24)
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -6,12 +6,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,15 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.api.Clerk
-import com.clerk.api.user.createPasskey
+import com.clerk.api.ui.ClerkColors
 import com.clerk.ui.auth.AuthView
-import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.userprofile.security.passkey.UserProfilePasskeySection
 import com.clerk.workbench.ui.theme.WorkbenchTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class UiActivity : ComponentActivity() {
   val viewModel: MainViewModel by viewModels()
@@ -37,6 +31,24 @@ class UiActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
 
     setContent {
+      val dark =
+        ClerkColors(
+          primary = Color(0xFFFAFAFB),
+          background = Color(0xFF131316),
+          input = Color(0xFF212126),
+          danger = Color(0xFFEF4444),
+          success = Color(0xFF22C543),
+          warning = Color(0xFFF36B16),
+          foreground = Color(0xFFFFFFFF),
+          mutedForeground = Color(0xFFB7B8C2),
+          primaryForeground = Color(0xFF000000),
+          inputForeground = Color(0xFFFFFFFF),
+          neutral = Color(0xFFFFFFFF),
+          border = Color(0xFFFFFFFF),
+          ring = Color(0xFFFFFFFF),
+          muted = Color(0xFF1A1A1D),
+          shadow = Color(0xFFFFFFFF),
+        )
       WorkbenchTheme {
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
@@ -48,19 +60,11 @@ class UiActivity : ComponentActivity() {
             when (state) {
               MainViewModel.UiState.Loading -> CircularProgressIndicator()
               MainViewModel.UiState.SignedIn -> {
-                Column(
-                  modifier = Modifier.fillMaxSize(),
-                  horizontalAlignment = Alignment.CenterHorizontally,
+                Box(
+                  modifier = Modifier.fillMaxSize().background(dark.input!!),
+                  contentAlignment = Alignment.Center,
                 ) {
-                  ClerkButton(
-                    text = "Sign out",
-                    onClick = { scope.launch(Dispatchers.IO) { Clerk.signOut() } },
-                  )
-                  Spacer(modifier = Modifier.height(8.dp))
-                  ClerkButton(
-                    text = "Create passkey",
-                    onClick = { scope.launch(Dispatchers.IO) { Clerk.user?.createPasskey() } },
-                  )
+                  UserProfilePasskeySection()
                 }
               }
 
@@ -77,7 +81,12 @@ class UiActivity : ComponentActivity() {
   @Suppress("MagicNumber")
   @Composable
   private fun MainContent() {
-    AuthView {}
+    Box(
+      modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background),
+      contentAlignment = Alignment.Center,
+    ) {
+      AuthView {}
+    }
   }
 }
 
