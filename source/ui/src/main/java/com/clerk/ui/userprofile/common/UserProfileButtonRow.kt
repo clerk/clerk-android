@@ -23,7 +23,12 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
 @Composable
-fun UserProfileButtonRow(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun UserProfileButtonRow(
+  text: String,
+  modifier: Modifier = Modifier,
+  textColor: Color = ClerkMaterialTheme.colors.primary,
+  onClick: () -> Unit,
+) {
   val interaction = remember { MutableInteractionSource() }
 
   ClerkMaterialTheme {
@@ -42,7 +47,7 @@ fun UserProfileButtonRow(text: String, modifier: Modifier = Modifier, onClick: (
     ) {
       Text(
         text = text,
-        color = ClerkMaterialTheme.colors.primary,
+        color = textColor,
         style = ClerkMaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
       )
     }
