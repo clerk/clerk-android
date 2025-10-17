@@ -30,7 +30,7 @@ paparazziPlugin = "2.0.0-alpha02"
 turbineVersion = "1.2.1"
 
 # Build Versions -- Do not delete
-clerk-sdk = "0.1.11"
+clerk-sdk = "0.1.12"
 clerk-ui = "0.1.0-SNAPSHOT"
 jdk = "17"
 jvmTarget = "17"
