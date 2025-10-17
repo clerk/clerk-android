@@ -11,9 +11,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.error.ClerkErrorSnackbar
+import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -25,6 +28,7 @@ fun ClerkThemedProfileScaffold(
   hasBackButton: Boolean = true,
   title: String? = null,
   onBackPressed: () -> Unit = {},
+  backgroundColor: Color = ClerkMaterialTheme.colors.background,
   content: @Composable () -> Unit,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
@@ -44,7 +48,7 @@ fun ClerkThemedProfileScaffold(
           Modifier.fillMaxWidth()
             .padding(innerPadding)
             .padding(horizontal = dp18)
-            .background(ClerkMaterialTheme.colors.background),
+            .background(backgroundColor),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
         ClerkTopAppBar(
@@ -55,7 +59,23 @@ fun ClerkThemedProfileScaffold(
         )
         Spacers.Vertical.Spacer24()
         content()
+        SecuredByClerkView()
+        Spacers.Vertical.Spacer24()
       }
     }
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun Preview() {
+  ClerkMaterialTheme {
+    ClerkThemedProfileScaffold(
+      title = "Security",
+      backgroundColor = ClerkMaterialTheme.colors.muted,
+      content = {
+        /* Content goes here */
+      },
+    )
   }
 }

@@ -30,13 +30,13 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun UserProfilePasskeySection(modifier: Modifier = Modifier, onError: (String) -> Unit) {
+internal fun UserProfilePasskeySection(modifier: Modifier = Modifier, onError: (String) -> Unit) {
   val sortedPasskeys = Clerk.user?.passkeys?.sortedBy { it.createdAt }.orEmpty().toImmutableList()
   UserProfilePasskeySectionImpl(passkeys = sortedPasskeys, modifier = modifier, onError = onError)
 }
 
 @Composable
-fun UserProfilePasskeySectionImpl(
+private fun UserProfilePasskeySectionImpl(
   passkeys: ImmutableList<Passkey>,
   modifier: Modifier = Modifier,
   viewModel: UserProfilePasskeyViewModel = viewModel(),

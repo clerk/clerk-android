@@ -38,7 +38,7 @@ internal fun UserProfileMfaSection(
 }
 
 @Composable
-internal fun UserProfileMfaSectionImpl(
+private fun UserProfileMfaSectionImpl(
   mfaItems: ImmutableList<MfaItem>,
   onRemove: (Style) -> Unit,
   modifier: Modifier = Modifier,

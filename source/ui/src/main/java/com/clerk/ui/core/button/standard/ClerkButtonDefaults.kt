@@ -68,8 +68,8 @@ object ClerkButtonDefaults {
  * @property leadingIconColor The color of the leading icon.
  */
 data class ClerkButtonIcons(
-  @DrawableRes val trailingIcon: Int?,
-  @DrawableRes val leadingIcon: Int?,
+  @field:DrawableRes val trailingIcon: Int?,
+  @field:DrawableRes val leadingIcon: Int?,
   val trailingIconColor: Color?,
   val leadingIconColor: Color?,
 )

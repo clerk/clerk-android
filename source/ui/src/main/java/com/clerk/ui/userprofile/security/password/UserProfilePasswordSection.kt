@@ -27,7 +27,7 @@ import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 
 @Composable
-fun UserProfilePasswordSection(modifier: Modifier = Modifier, onAction: (PasswordAction) -> Unit) {
+internal fun UserProfilePasswordSection(modifier: Modifier = Modifier, onAction: (PasswordAction) -> Unit) {
   UserProfilePasswordSectionImpl(modifier = modifier, onAction = onAction)
 }
 

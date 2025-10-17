@@ -140,4 +140,5 @@
     <string name="add_a_passkey">Add a passkey</string>
     <string name="account">Account</string>
     <string name="delete_account">Delete account</string>
+    <string name="security">Security</string>
 </resources>
