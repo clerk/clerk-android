@@ -2,11 +2,14 @@ package com.clerk.ui.userprofile.security.passkey
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.passkeys.Passkey
 import com.clerk.api.passkeys.delete
+import com.clerk.api.user.createPasskey
+import com.clerk.ui.core.common.guardUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -23,6 +26,20 @@ class UserProfilePasskeyViewModel : ViewModel() {
         .delete()
         .onFailure { _state.value = State.Error(it.errorMessage) }
         .onSuccess { _state.value = State.Success }
+    }
+  }
+
+  fun createPasskey() {
+    guardUser({ _state.value = State.Error("User does not exist") }) { user ->
+      viewModelScope.launch {
+        user
+          .createPasskey()
+          .onSuccess { _state.value = State.Success }
+          .onFailure {
+            ClerkLog.e("Failed to create passkey: ${it.errorMessage}")
+            _state.value = State.Error(it.errorMessage)
+          }
+      }
     }
   }
 

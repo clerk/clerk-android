@@ -37,6 +37,7 @@ fun UserProfileButtonRow(text: String, modifier: Modifier = Modifier, onClick: (
             role = Role.Button,
             onClick = onClick,
           )
+          .padding(horizontal = dp16)
           .padding(vertical = dp16)
     ) {
       Text(

@@ -64,7 +64,7 @@ class UiActivity : ComponentActivity() {
                   modifier = Modifier.fillMaxSize().background(dark.input!!),
                   contentAlignment = Alignment.Center,
                 ) {
-                  UserProfilePasskeySection()
+                  UserProfilePasskeySection(onError = {})
                 }
               }
 

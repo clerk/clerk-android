@@ -137,4 +137,5 @@
     <string name="rename">Rename</string>
     <string name="created">Created: %1$s</string>
     <string name="last_used">Last used: %1$s</string>
+    <string name="add_a_passkey">Add a passkey</string>
 </resources>
