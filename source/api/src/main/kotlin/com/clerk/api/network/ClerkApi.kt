@@ -71,8 +71,16 @@ internal object ClerkApi {
   val organization: OrganizationApi
     get() = _organization ?: error("ClerkApi is not configured.")
 
+  // Exposed for internal testing/verification
+  internal var configuredBaseUrl: String? = null
+    private set
+
+  internal var configuredUrlWithVersion: String? = null
+    private set
+
   /** Initializes the API client with the given [baseUrl]. */
   fun configure(baseUrl: String, context: Context) {
+    configuredBaseUrl = baseUrl
     val retrofit = buildRetrofit(baseUrl, context)
     _client = retrofit.create(ClientApi::class.java)
     _environment = retrofit.create(EnvironmentApi::class.java)
@@ -87,6 +95,7 @@ internal object ClerkApi {
   /** Builds and configures the Retrofit instance. */
   private fun buildRetrofit(baseUrl: String, context: Context): Retrofit {
     val urlWithVersion = "$baseUrl/v1/"
+    configuredUrlWithVersion = urlWithVersion
 
     val client =
       OkHttpClient.Builder()

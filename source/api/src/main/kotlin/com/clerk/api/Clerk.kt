@@ -1,6 +1,7 @@
 package com.clerk.api
 
 import android.content.Context
+import com.clerk.api.Clerk.initialize
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
@@ -37,8 +38,20 @@ object Clerk {
    * Enable for additional debugging signals and logging.
    *
    * When enabled, provides verbose logging for SDK operations and API calls.
+   *
+   * Set this via [ClerkConfigurationOptions] in the [initialize] method.
    */
   var debugMode: Boolean = false
+    private set
+
+  /**
+   * Optional proxy URL for network requests.
+   *
+   * Your Clerk app's proxy URL. Required for applications that run behind a reverse proxy. Must be
+   * a full URL (for example, https://proxy.example.com/__clerk. Set this via
+   * [ClerkConfigurationOptions] in the [initialize] method.
+   */
+  var proxyUrl: String? = null
     private set
 
   /**
@@ -244,9 +257,7 @@ object Clerk {
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
   fun initialize(context: Context, publishableKey: String) {
-    this.debugMode = false
-    configurationManager.configure(context, publishableKey, null)
-    this.applicationContext = WeakReference(context)
+    initialize(context, publishableKey, null)
   }
 
   /**
@@ -258,7 +269,8 @@ object Clerk {
    * @param context The application context used for initialization and storage setup.
    * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
    *   Clerk.
-   * @param options Enable additional options for the Clerk SDK. See [ClerkOptions] for details.
+   * @param options Enable additional options for the Clerk SDK. See [ClerkConfigurationOptions] for
+   *   details.
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
   fun initialize(
@@ -267,13 +279,14 @@ object Clerk {
     options: ClerkConfigurationOptions? = null,
   ) {
     this.debugMode = options?.enableDebugMode == true
+    this.proxyUrl = options?.proxyUrl
+    this.applicationId = options?.deviceAttestationOptions?.applicationId
+    this.applicationContext = WeakReference(context)
     configurationManager.configure(
       context = context,
       publishableKey = publishableKey,
       options = options,
     )
-    this.applicationContext = WeakReference(context)
-    this.applicationId = options?.deviceAttestationOptions?.applicationId
   }
 
   /**
@@ -341,6 +354,12 @@ data class ClerkConfigurationOptions(
   val enableDebugMode: Boolean = false,
   /** Used only for device attestation. Should be something like: `com.example.app` */
   val deviceAttestationOptions: DeviceAttestationOptions? = null,
+  /**
+   * Optional proxy URL for network requests Your Clerk app's proxy URL. Required for applications
+   * that run behind a reverse proxy. Must be a full URL (for example,
+   * https://proxy.example.com/__clerk).
+   */
+  val proxyUrl: String? = null,
 )
 
 data class DeviceAttestationOptions(val applicationId: String, val cloudProjectNumber: Long)
