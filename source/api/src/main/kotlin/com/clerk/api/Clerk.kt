@@ -269,7 +269,8 @@ object Clerk {
    * @param context The application context used for initialization and storage setup.
    * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
    *   Clerk.
-   * @param options Enable additional options for the Clerk SDK. See [ClerkOptions] for details.
+   * @param options Enable additional options for the Clerk SDK. See [ClerkConfigurationOptions] for
+   *   details.
    * @throws IllegalArgumentException if the publishable key format is invalid.
    */
   fun initialize(
