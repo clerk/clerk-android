@@ -15,9 +15,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp32
-import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
@@ -50,17 +49,16 @@ private fun UserProfileMfaSectionImpl(
       modifier =
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24)
-          .padding(top = dp32)
+          .padding(top = dp16)
           .then(modifier)
     ) {
       Text(
+        modifier = Modifier.padding(horizontal = dp24),
         text = stringResource(R.string.two_step_verification).uppercase(),
         color = ClerkMaterialTheme.colors.mutedForeground,
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
       )
-      Spacers.Vertical.Spacer16()
-      LazyColumn(modifier = Modifier.fillMaxWidth()) {
+      LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
         items(mfaItems) { mfaItem ->
           UserProfileMfaRow(
             style = mfaItem.style,

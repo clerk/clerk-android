@@ -40,6 +40,6 @@ class UserProfileSecurityViewModel : ViewModel() {
 
     data class Error(val message: String) : State
 
-    data class Success(val data: List<Session>) : State
+    data class Success(val sessions: List<Session>) : State
   }
 }

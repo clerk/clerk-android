@@ -3,11 +3,13 @@ package com.clerk.ui.userprofile.security
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -24,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
+import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -32,6 +35,7 @@ import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
 import com.clerk.ui.userprofile.security.passkey.UserProfilePasskeySection
 import com.clerk.ui.userprofile.security.password.UserProfilePasswordSection
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun UserProfileSecurityView(
@@ -64,13 +68,15 @@ private fun UserProfileSecurityViewImpl(
       snackbarHostState.showSnackbar(errorMessage)
     }
   }
+  LaunchedEffect(Unit) { viewModel.loadSessions() }
   ClerkMaterialTheme {
     Scaffold(
       modifier = Modifier.then(modifier),
       snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
       when (state) {
-        is UserProfileSecurityViewModel.State.Loading -> {
+        is UserProfileSecurityViewModel.State.Loading,
+        UserProfileSecurityViewModel.State.Idle -> {
           Box(
             modifier =
               Modifier.fillMaxSize()
@@ -96,31 +102,64 @@ private fun UserProfileSecurityViewImpl(
               backgroundColor = ClerkMaterialTheme.colors.muted,
               onBackPressed = {},
             )
-            if (isPasswordEnabled) {
-              UserProfilePasswordSection(onAction = {})
-            }
-            if (isPasskeyEnabled) {
-              UserProfilePasskeySection() {}
-            }
-            if (isMfaEnabled) {
-              UserProfileMfaSection(onRemove = {}, onAdd = {})
-            }
-            if (isPasskeyEnabled || isPasswordEnabled || isMfaEnabled) {
-              UserProfileDevicesSection {}
-            }
-            if (isDeleteSelfEnabled) {
-              UserProfileDeleteAccountSection(onDeleteAccount = {})
-            }
-            Spacers.Vertical.Spacer16()
-            Spacer(modifier = Modifier.weight(1f))
-            Spacers.Vertical.Spacer24()
-            SecuredByClerkView()
-            Spacers.Vertical.Spacer24()
+            UserProfileSecurityContent(
+              isPasswordEnabled,
+              isPasskeyEnabled,
+              isMfaEnabled,
+              state,
+              isDeleteSelfEnabled,
+            )
+            UserProfileSecurityFooter()
           }
         }
       }
     }
   }
+}
+
+@Composable
+private fun UserProfileSecurityContent(
+  isPasswordEnabled: Boolean,
+  isPasskeyEnabled: Boolean,
+  isMfaEnabled: Boolean,
+  state: UserProfileSecurityViewModel.State,
+  isDeleteSelfEnabled: Boolean,
+) {
+  if (isPasswordEnabled) {
+    UserProfilePasswordSection(onAction = {})
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if (isPasskeyEnabled) {
+    UserProfilePasskeySection() {}
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if (isMfaEnabled) {
+    UserProfileMfaSection(onRemove = {}, onAdd = {})
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if (
+    (state as? UserProfileSecurityViewModel.State.Success)
+      ?.sessions
+      ?.mapNotNull { it.latestActivity }
+      ?.isNotEmpty() == true
+  ) {
+    UserProfileDevicesSection(
+      devices = (state as UserProfileSecurityViewModel.State.Success).sessions.toImmutableList()
+    )
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if (isDeleteSelfEnabled) {
+    UserProfileDeleteAccountSection(onDeleteAccount = {})
+  }
+}
+
+@Composable
+private fun ColumnScope.UserProfileSecurityFooter() {
+  Spacers.Vertical.Spacer16()
+  Spacer(modifier = Modifier.weight(1f))
+  Spacers.Vertical.Spacer24()
+  SecuredByClerkView()
+  Spacers.Vertical.Spacer24()
 }
 
 @PreviewLightDark

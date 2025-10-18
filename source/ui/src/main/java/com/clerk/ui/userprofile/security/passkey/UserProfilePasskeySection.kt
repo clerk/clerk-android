@@ -19,9 +19,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.passkeys.Passkey
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp32
-import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
@@ -52,23 +52,21 @@ private fun UserProfilePasskeySectionImpl(
       modifier =
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24)
-          .padding(top = dp32)
+          .padding(top = dp16)
           .then(modifier)
     ) {
       Text(
+        modifier = Modifier.padding(horizontal = dp24),
         text = stringResource(R.string.passkeys).uppercase(),
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
-      Spacers.Vertical.Spacer16()
       LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = dp24),
         verticalArrangement = Arrangement.spacedBy(dp32),
       ) {
         items(passkeys) { passkey -> UserProfilePasskeyRow(passkey = passkey, onClickRename = {}) }
       }
-      Spacers.Vertical.Spacer32()
       UserProfileButtonRow(
         text = stringResource(R.string.add_a_passkey),
         onClick = { viewModel.createPasskey() },

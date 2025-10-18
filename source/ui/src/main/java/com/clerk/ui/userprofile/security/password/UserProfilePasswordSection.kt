@@ -45,11 +45,10 @@ internal fun UserProfilePasswordSectionImpl(
       modifier =
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24)
           .padding(top = dp32)
     ) {
       Text(
-        modifier = Modifier.padding(bottom = dp16).then(modifier),
+        modifier = Modifier.padding(horizontal = dp24).then(modifier),
         text = stringResource(R.string.password).uppercase(),
         color = ClerkMaterialTheme.colors.mutedForeground,
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
