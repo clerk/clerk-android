@@ -69,14 +69,16 @@ internal class AuthState(
       }
       SignIn.Status.NEEDS_IDENTIFIER -> backStack.clear()
       SignIn.Status.NEEDS_FIRST_FACTOR -> {
-        signIn.startingFirstFactor?.let { backStack.add(Destination.SignInFactorOne(factor = it)) }
-          ?: backStack.add(Destination.SignInGetHelp)
+        signIn.startingFirstFactor?.let {
+          backStack.add(AuthDestination.SignInFactorOne(factor = it))
+        } ?: backStack.add(AuthDestination.SignInGetHelp)
       }
       SignIn.Status.NEEDS_SECOND_FACTOR -> {
-        signIn.startingSecondFactor?.let { backStack.add(Destination.SignInFactorTwo(factor = it)) }
-          ?: backStack.add(Destination.SignInGetHelp)
+        signIn.startingSecondFactor?.let {
+          backStack.add(AuthDestination.SignInFactorTwo(factor = it))
+        } ?: backStack.add(AuthDestination.SignInGetHelp)
       }
-      SignIn.Status.NEEDS_NEW_PASSWORD -> backStack.add(Destination.SignInSetNewPassword)
+      SignIn.Status.NEEDS_NEW_PASSWORD -> backStack.add(AuthDestination.SignInSetNewPassword)
       SignIn.Status.UNKNOWN -> return
     }
   }
@@ -107,7 +109,7 @@ internal class AuthState(
       EMAIL_ADDRESS -> {
         val emailAddress = signUp.emailAddress
         if (emailAddress != null) {
-          backStack.add(Destination.SignUpCode(field = SignUpCodeField.Email(emailAddress)))
+          backStack.add(AuthDestination.SignUpCode(field = SignUpCodeField.Email(emailAddress)))
         } else {
           backStack.clear()
         }
@@ -115,7 +117,7 @@ internal class AuthState(
       PHONE_NUMBER -> {
         val phoneNumber = signUp.phoneNumber
         if (phoneNumber != null) {
-          backStack.add(Destination.SignUpCode(SignUpCodeField.Phone(phoneNumber)))
+          backStack.add(AuthDestination.SignUpCode(SignUpCodeField.Phone(phoneNumber)))
         } else {
           backStack.clear()
         }
@@ -128,11 +130,11 @@ internal class AuthState(
     val nextFieldToCollect = signUp.firstFieldToCollect
     if (nextFieldToCollect != null) {
       when (nextFieldToCollect) {
-        PASSWORD -> backStack.add(Destination.SignUpCollectField(CollectField.Password))
-        EMAIL_ADDRESS -> backStack.add(Destination.SignUpCollectField(CollectField.Email))
-        PHONE_NUMBER -> backStack.add(Destination.SignUpCollectField(CollectField.Phone))
-        USERNAME -> backStack.add(Destination.SignUpCollectField(CollectField.Username))
-        else -> backStack.add(Destination.SignUpCompleteProfile(signUp.missingFields.count()))
+        PASSWORD -> backStack.add(AuthDestination.SignUpCollectField(CollectField.Password))
+        EMAIL_ADDRESS -> backStack.add(AuthDestination.SignUpCollectField(CollectField.Email))
+        PHONE_NUMBER -> backStack.add(AuthDestination.SignUpCollectField(CollectField.Phone))
+        USERNAME -> backStack.add(AuthDestination.SignUpCollectField(CollectField.Username))
+        else -> backStack.add(AuthDestination.SignUpCompleteProfile(signUp.missingFields.count()))
       }
     }
   }

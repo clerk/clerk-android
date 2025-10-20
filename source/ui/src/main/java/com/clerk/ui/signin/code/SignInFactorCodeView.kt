@@ -14,8 +14,8 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
+import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
-import com.clerk.ui.auth.Destination
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.auth.VerificationUiState
@@ -131,11 +131,11 @@ private fun SignInFactorCodeViewImpl(
         onClick = {
           if (isSecondFactor) {
             authState.navigateTo(
-              Destination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
+              AuthDestination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
             )
           } else {
             authState.navigateTo(
-              Destination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
+              AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
             )
           }
         },
