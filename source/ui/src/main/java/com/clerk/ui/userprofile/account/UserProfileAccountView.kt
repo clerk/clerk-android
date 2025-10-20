@@ -86,7 +86,7 @@ private fun UserProfileAccountViewImpl(
         Spacers.Vertical.Spacer32()
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
       }
-      MainProfileActions(userFullName)
+      MainProfileActions()
     },
     bottomContent = {
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
