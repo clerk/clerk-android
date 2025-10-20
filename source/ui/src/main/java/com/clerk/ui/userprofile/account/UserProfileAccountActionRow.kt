@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.account
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ fun UserProfileAccountActionRow(
   @DrawableRes iconResId: Int,
   text: String,
   modifier: Modifier = Modifier,
+  onClick: () -> Unit,
 ) {
   ClerkMaterialTheme {
     Row(
@@ -33,7 +35,8 @@ fun UserProfileAccountActionRow(
           .fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
           .padding(horizontal = dp24)
-          .padding(vertical = dp16),
+          .padding(vertical = dp16)
+          .clickable { onClick() },
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Icon(
@@ -56,7 +59,7 @@ fun UserProfileAccountActionRow(
 private fun Preview() {
 
   Column(modifier = Modifier.fillMaxWidth()) {
-    UserProfileAccountActionRow(iconResId = R.drawable.ic_user, text = "Profile")
-    UserProfileAccountActionRow(iconResId = R.drawable.ic_security, text = "Security")
+    UserProfileAccountActionRow(iconResId = R.drawable.ic_user, text = "Profile", onClick = {})
+    UserProfileAccountActionRow(iconResId = R.drawable.ic_security, text = "Security", onClick = {})
   }
 }
