@@ -49,9 +49,9 @@ fun ClerkThemedProfileScaffold(
         modifier =
           Modifier.fillMaxWidth()
             .fillMaxSize()
+            .background(backgroundColor)
             .padding(innerPadding)
-            .padding(horizontal = dp18)
-            .background(backgroundColor),
+            .padding(horizontal = dp18),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
         ClerkTopAppBar(

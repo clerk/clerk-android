@@ -9,8 +9,8 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
-import com.clerk.ui.userprofile.BackupCodesView
-import com.clerk.ui.userprofile.MfaType
+import com.clerk.ui.userprofile.security.BackupCodesView
+import com.clerk.ui.userprofile.security.MfaType
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Test
 

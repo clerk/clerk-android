@@ -3,7 +3,6 @@ package com.clerk.ui.core.avatar
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -15,10 +14,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.Clerk
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp36
+import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.core.dimens.dp96
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
@@ -35,11 +37,11 @@ internal fun AvatarView(
       AvatarType.ORGANIZATION -> R.drawable.ic_organization
     }
 
-  Box(modifier = Modifier.wrapContentSize(), contentAlignment = Alignment.Center) {
+  Box(modifier = Modifier.wrapContentSize().then(modifier), contentAlignment = Alignment.Center) {
     SubcomposeAsyncImage(
       model = imageUrl,
       contentDescription = stringResource(R.string.logo),
-      modifier = Modifier.size(size.toDp()).clip(shape).then(modifier),
+      modifier = Modifier.size(size.toDp()).clip(shape),
       contentScale = ContentScale.Fit,
       loading = { CircularProgressIndicator() },
       error = {
@@ -76,29 +78,18 @@ fun OrganizationAvatar(
   }
 }
 
-@Composable
-fun UserAvatar(modifier: Modifier = Modifier) {
-  ClerkMaterialTheme {
-    AvatarView(
-      imageUrl = Clerk.user?.imageUrl,
-      size = AvatarSize.MEDIUM,
-      shape = CircleShape,
-      modifier = modifier,
-      avatarType = AvatarType.USER,
-    )
-  }
-}
-
 enum class AvatarSize {
   SMALL,
   MEDIUM,
   LARGE,
+  X_LARGE,
 }
 
 private fun AvatarSize.toDp(): Dp {
   return when (this) {
-    AvatarSize.SMALL -> 24.dp
-    AvatarSize.MEDIUM -> 36.dp
-    AvatarSize.LARGE -> 48.dp
+    AvatarSize.SMALL -> dp24
+    AvatarSize.MEDIUM -> dp36
+    AvatarSize.LARGE -> dp48
+    AvatarSize.X_LARGE -> dp96
   }
 }
