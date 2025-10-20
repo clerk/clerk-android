@@ -50,50 +50,50 @@ import kotlinx.coroutines.launch
 fun UserProfileMfaAddTotpView(totpResource: TOTPResource, modifier: Modifier = Modifier) {
   val clipboard = LocalClipboard.current
   val scope = rememberCoroutineScope()
-
   ClerkThemedProfileScaffold(
     modifier = modifier,
     title = stringResource(R.string.add_authenticator_application),
     onBackPressed = {},
-  ) {
-    Text(
-      text = stringResource(R.string.set_up_a_new_sign_in_method),
-      style = ClerkMaterialTheme.typography.bodyMedium,
-      color = ClerkMaterialTheme.colors.mutedForeground,
-    )
-    DisplayTextWithActionButton(
-      text = totpResource.secret,
-      onClick = {
-        scope.launch {
-          clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", totpResource.secret)))
-        }
-      },
-    )
-    Text(
-      text = stringResource(R.string.alternatively_if_your_authenticator_supports_totp),
-      style = ClerkMaterialTheme.typography.bodyMedium,
-      color = ClerkMaterialTheme.colors.mutedForeground,
-    )
-    DisplayTextWithActionButton(
-      text = totpResource.uri,
-      onClick = {
-        scope.launch {
-          clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", totpResource.uri)))
-        }
-      },
-    )
-    ClerkButton(
-      modifier = Modifier.fillMaxWidth(),
-      text = stringResource(R.string.continue_text),
-      onClick = {},
-    )
-    Spacers.Vertical.Spacer24()
-    ClerkTextButton(
-      text = stringResource(R.string.scan_qr_code_instead),
-      onClick = {},
-      textStyle = ClerkMaterialTheme.typography.bodyMedium,
-    )
-  }
+    content = {
+      Text(
+        text = stringResource(R.string.set_up_a_new_sign_in_method),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+        color = ClerkMaterialTheme.colors.mutedForeground,
+      )
+      DisplayTextWithActionButton(
+        text = totpResource.secret,
+        onClick = {
+          scope.launch {
+            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", totpResource.secret)))
+          }
+        },
+      )
+      Text(
+        text = stringResource(R.string.alternatively_if_your_authenticator_supports_totp),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+        color = ClerkMaterialTheme.colors.mutedForeground,
+      )
+      DisplayTextWithActionButton(
+        text = totpResource.uri,
+        onClick = {
+          scope.launch {
+            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", totpResource.uri)))
+          }
+        },
+      )
+      ClerkButton(
+        modifier = Modifier.fillMaxWidth(),
+        text = stringResource(R.string.continue_text),
+        onClick = {},
+      )
+      Spacers.Vertical.Spacer24()
+      ClerkTextButton(
+        text = stringResource(R.string.scan_qr_code_instead),
+        onClick = {},
+        textStyle = ClerkMaterialTheme.typography.bodyMedium,
+      )
+    },
+  )
 }
 
 @Composable
@@ -154,17 +154,19 @@ private fun TextDisplayBox(text: String, modifier: Modifier = Modifier) {
 @Composable
 private fun Preview() {
   Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  UserProfileMfaAddTotpView(
-    totpResource =
-      TOTPResource(
-        id = "1",
-        secret = "MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
-        uri =
-          "otpauth://totp/Clerk:georgevanjek@clerk.dev?algorithm=SHA1&digits=6" +
-            "&issuer=Clerk&period=30&secret=MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
-        verified = true,
-        createdAt = 1L,
-        updatedAt = 1L,
-      )
-  )
+  ClerkMaterialTheme {
+    UserProfileMfaAddTotpView(
+      totpResource =
+        TOTPResource(
+          id = "1",
+          secret = "MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
+          uri =
+            "otpauth://totp/Clerk:georgevanjek@clerk.dev?algorithm=SHA1&digits=6" +
+              "&issuer=Clerk&period=30&secret=MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
+          verified = true,
+          createdAt = 1L,
+          updatedAt = 1L,
+        )
+    )
+  }
 }

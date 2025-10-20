@@ -142,4 +142,6 @@
     <string name="delete_account">Delete account</string>
     <string name="security">Security</string>
     <string name="update_profile">Update profile</string>
+    <string name="profile">Profile</string>
+    <string name="log_out">Log out</string>
 </resources>

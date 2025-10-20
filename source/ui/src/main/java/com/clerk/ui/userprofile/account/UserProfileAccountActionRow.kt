@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -26,6 +27,7 @@ fun UserProfileAccountActionRow(
   @DrawableRes iconResId: Int,
   text: String,
   modifier: Modifier = Modifier,
+  backgroundColor: Color = ClerkMaterialTheme.colors.background,
   onClick: () -> Unit,
 ) {
   ClerkMaterialTheme {
@@ -33,10 +35,10 @@ fun UserProfileAccountActionRow(
       modifier =
         modifier
           .fillMaxWidth()
-          .background(color = ClerkMaterialTheme.colors.background)
+          .background(color = backgroundColor)
+          .clickable { onClick() }
           .padding(horizontal = dp24)
-          .padding(vertical = dp16)
-          .clickable { onClick() },
+          .padding(vertical = dp16),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Icon(
@@ -57,9 +59,14 @@ fun UserProfileAccountActionRow(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-
-  Column(modifier = Modifier.fillMaxWidth()) {
-    UserProfileAccountActionRow(iconResId = R.drawable.ic_user, text = "Profile", onClick = {})
-    UserProfileAccountActionRow(iconResId = R.drawable.ic_security, text = "Security", onClick = {})
+  ClerkMaterialTheme {
+    Column(modifier = Modifier.fillMaxWidth()) {
+      UserProfileAccountActionRow(iconResId = R.drawable.ic_user, text = "Profile", onClick = {})
+      UserProfileAccountActionRow(
+        iconResId = R.drawable.ic_security,
+        text = "Security",
+        onClick = {},
+      )
+    }
   }
 }

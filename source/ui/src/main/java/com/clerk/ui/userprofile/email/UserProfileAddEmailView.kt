@@ -56,26 +56,27 @@ private fun UserProfileAddEmailViewImpl(
     modifier = modifier,
     title = stringResource(R.string.add_email_address),
     errorMessage = errorMessage,
-  ) {
-    Text(
-      text = stringResource(R.string.you_ll_need_to_verify_this_email_address),
-      style = ClerkMaterialTheme.typography.bodyMedium,
-    )
-    Spacers.Vertical.Spacer24()
-    ClerkTextField(
-      value = email,
-      onValueChange = { email = it },
-      label = stringResource(R.string.enter_your_email),
-    )
-    Spacers.Vertical.Spacer24()
-    ClerkButton(
-      modifier = Modifier.fillMaxWidth(),
-      text = stringResource(R.string.continue_text),
-      isLoading = state is AddEmailViewModel.State.Loading,
-      onClick = { viewModel.addEmail(email) },
-      icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
-    )
-  }
+    content = {
+      Text(
+        text = stringResource(R.string.you_ll_need_to_verify_this_email_address),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+      )
+      Spacers.Vertical.Spacer24()
+      ClerkTextField(
+        value = email,
+        onValueChange = { email = it },
+        label = stringResource(R.string.enter_your_email),
+      )
+      Spacers.Vertical.Spacer24()
+      ClerkButton(
+        modifier = Modifier.fillMaxWidth(),
+        text = stringResource(R.string.continue_text),
+        isLoading = state is AddEmailViewModel.State.Loading,
+        onClick = { viewModel.addEmail(email) },
+        icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
+      )
+    },
+  )
 }
 
 @PreviewLightDark

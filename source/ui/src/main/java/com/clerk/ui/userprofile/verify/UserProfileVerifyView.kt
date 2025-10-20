@@ -48,28 +48,29 @@ private fun UserProfileVerifyViewImpl(
     title = mode.title(),
     errorMessage = errorMessage,
     hasBackButton = mode.hasBackButton(),
-  ) {
-    Text(
-      text = mode.instructionString(),
-      style = ClerkMaterialTheme.typography.bodyMedium,
-      color = ClerkMaterialTheme.colors.mutedForeground,
-    )
-    Spacers.Vertical.Spacer24()
-    ClerkCodeInputField(
-      onTextChange = {
-        if (it.length == 6) {
-          when (mode) {
-            is Mode.Email -> viewModel.attemptEmailAddress(mode.emailAddress, it)
-            is Mode.Phone -> viewModel.attemptPhoneNumber(mode.phoneNumber, it)
-            Mode.Totp -> viewModel.attemptTotp(it)
+    content = {
+      Text(
+        text = mode.instructionString(),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+        color = ClerkMaterialTheme.colors.mutedForeground,
+      )
+      Spacers.Vertical.Spacer24()
+      ClerkCodeInputField(
+        onTextChange = {
+          if (it.length == 6) {
+            when (mode) {
+              is Mode.Email -> viewModel.attemptEmailAddress(mode.emailAddress, it)
+              is Mode.Phone -> viewModel.attemptPhoneNumber(mode.phoneNumber, it)
+              Mode.Totp -> viewModel.attemptTotp(it)
+            }
           }
-        }
-      },
-      onClickResend = { prepareCode(mode, viewModel) },
-      showResend = mode.showResend(),
-      verificationState = verificationTextState.getTextVerificationState(),
-    )
-  }
+        },
+        onClickResend = { prepareCode(mode, viewModel) },
+        showResend = mode.showResend(),
+        verificationState = verificationTextState.getTextVerificationState(),
+      )
+    },
+  )
 }
 
 private fun UserProfileVerifyViewModel.VerificationTextState.getTextVerificationState():
@@ -93,9 +94,11 @@ private fun prepareCode(mode: Mode, viewModel: UserProfileVerifyViewModel) {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileVerifyView(
-    mode = Mode.Email(emailAddress = EmailAddress(id = "id", emailAddress = "user@email.com"))
-  )
+  ClerkMaterialTheme {
+    UserProfileVerifyView(
+      mode = Mode.Email(emailAddress = EmailAddress(id = "id", emailAddress = "user@email.com"))
+    )
+  }
 }
 
 private fun Mode.showResend(): Boolean {
