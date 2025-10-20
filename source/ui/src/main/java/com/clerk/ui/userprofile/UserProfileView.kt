@@ -7,6 +7,7 @@ import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import kotlinx.serialization.Serializable
 

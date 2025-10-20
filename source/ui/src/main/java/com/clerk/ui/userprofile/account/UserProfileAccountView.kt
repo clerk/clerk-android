@@ -1,4 +1,4 @@
-package com.clerk.ui.userprofile
+package com.clerk.ui.userprofile.account
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
