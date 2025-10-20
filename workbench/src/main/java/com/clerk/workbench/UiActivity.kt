@@ -11,14 +11,18 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.clerk.api.Clerk
 import com.clerk.ui.auth.AuthView
+import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import com.clerk.workbench.ui.theme.WorkbenchTheme
+import kotlinx.coroutines.launch
 
 class UiActivity : ComponentActivity() {
   val viewModel: MainViewModel by viewModels()
@@ -27,6 +31,7 @@ class UiActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
 
     setContent {
+      val scope = rememberCoroutineScope()
       WorkbenchTheme {
         val state by viewModel.uiState.collectAsStateWithLifecycle()
         Box(
@@ -37,10 +42,15 @@ class UiActivity : ComponentActivity() {
             MainViewModel.UiState.Loading -> CircularProgressIndicator()
             MainViewModel.UiState.SignedIn -> {
               UserProfileSecurityView()
+              ClerkButton(
+                modifier = Modifier.align(Alignment.Center),
+                text = "Sign Out",
+                onClick = { scope.launch { Clerk.signOut() } },
+              )
             }
 
             MainViewModel.UiState.SignedOut -> {
-              MainContent()
+              AuthView {}
             }
           }
         }
@@ -54,9 +64,7 @@ class UiActivity : ComponentActivity() {
     Box(
       modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background),
       contentAlignment = Alignment.Center,
-    ) {
-      AuthView {}
-    }
+    ) {}
   }
 }
 
