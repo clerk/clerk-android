@@ -38,10 +38,7 @@ import com.clerk.ui.userprofile.security.password.UserProfilePasswordSection
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun UserProfileSecurityView(
-  modifier: Modifier = Modifier,
-  viewModel: UserProfileSecurityViewModel = viewModel(),
-) {
+internal fun UserProfileSecurityView(modifier: Modifier = Modifier) {
   UserProfileSecurityViewImpl(
     modifier = modifier,
     isPasswordEnabled = Clerk.passwordIsEnabled,

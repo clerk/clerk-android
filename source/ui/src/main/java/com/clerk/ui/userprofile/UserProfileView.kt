@@ -8,6 +8,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
+import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import kotlinx.serialization.Serializable
 
@@ -20,7 +21,18 @@ fun UserProfileView(modifier: Modifier = Modifier) {
     onBack = { backStack.removeLastOrNull() },
     entryProvider =
       entryProvider {
-        entry<UserProfileDestination.UserProfileAccount> { key -> UserProfileAccountView() }
+        entry<UserProfileDestination.UserProfileAccount> { key ->
+          UserProfileAccountView(
+            onClick = {
+              when (it) {
+                UserProfileAction.Profile -> TODO()
+                UserProfileAction.Security ->
+                  backStack.add(UserProfileDestination.UserProfileSecurity)
+              }
+            },
+            onBackPressed = { backStack.removeLastOrNull() },
+          )
+        }
         entry<UserProfileDestination.UserProfile> { key -> }
         entry<UserProfileDestination.UserProfileSecurity> { key -> UserProfileSecurityView() }
       },

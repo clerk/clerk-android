@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.ui.auth.AuthView
-import com.clerk.ui.userprofile.security.UserProfileSecurityView
+import com.clerk.ui.userprofile.UserProfileView
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 
 class UiActivity2 : ComponentActivity() {
@@ -36,7 +36,7 @@ class UiActivity2 : ComponentActivity() {
           when (state) {
             MainViewModel.UiState.Loading -> CircularProgressIndicator()
             MainViewModel.UiState.SignedIn -> {
-              UserProfileSecurityView()
+              UserProfileView()
             }
 
             MainViewModel.UiState.SignedOut -> {
