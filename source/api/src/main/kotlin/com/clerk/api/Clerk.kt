@@ -345,6 +345,16 @@ object Clerk {
     _userFlow.value = currentUser
   }
 
+  /**
+   * Internal method to clear session and user state flows.
+   *
+   * Should be called when signing out to immediately clear local session state.
+   */
+  internal fun clearSessionAndUserState() {
+    _session.value = null
+    _userFlow.value = null
+  }
+
   // endregion
 }
 
