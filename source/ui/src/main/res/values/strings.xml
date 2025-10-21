@@ -148,4 +148,7 @@
     <string name="choose_photo">Choose photo</string>
     <string name="remove_photo">Remove photo</string>
     <string name="save">Save</string>
+    <string name="update_password">Update password</string>
+    <string name="enter_your_current_password_to_set_a_new_one">Enter your current password to set a new one</string>
+    <string name="current_password">Current password</string>
 </resources>

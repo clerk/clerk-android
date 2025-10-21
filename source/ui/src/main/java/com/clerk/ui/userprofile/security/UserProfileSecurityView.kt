@@ -34,17 +34,22 @@ import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
 import com.clerk.ui.userprofile.security.passkey.UserProfilePasskeySection
+import com.clerk.ui.userprofile.security.password.PasswordAction
 import com.clerk.ui.userprofile.security.password.UserProfilePasswordSection
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun UserProfileSecurityView(modifier: Modifier = Modifier) {
+internal fun UserProfileSecurityView(
+  modifier: Modifier = Modifier,
+  onAction: (PasswordAction) -> Unit,
+) {
   UserProfileSecurityViewImpl(
     modifier = modifier,
     isPasswordEnabled = Clerk.passwordIsEnabled,
     isPasskeyEnabled = Clerk.passkeyIsEnabled,
     isMfaEnabled = Clerk.mfaIsEnabled,
     isDeleteSelfEnabled = Clerk.deleteSelfIsEnabled,
+    onAction = onAction,
   )
 }
 
@@ -56,6 +61,7 @@ private fun UserProfileSecurityViewImpl(
   isPasskeyEnabled: Boolean = false,
   isMfaEnabled: Boolean = false,
   isDeleteSelfEnabled: Boolean = false,
+  onAction: (PasswordAction) -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
@@ -105,6 +111,7 @@ private fun UserProfileSecurityViewImpl(
               isMfaEnabled,
               state,
               isDeleteSelfEnabled,
+              onAction = onAction,
             )
             UserProfileSecurityFooter()
           }
@@ -121,9 +128,10 @@ private fun UserProfileSecurityContent(
   isMfaEnabled: Boolean,
   state: UserProfileSecurityViewModel.State,
   isDeleteSelfEnabled: Boolean,
+  onAction: (PasswordAction) -> Unit,
 ) {
   if (isPasswordEnabled) {
-    UserProfilePasswordSection(onAction = {})
+    UserProfilePasswordSection(onAction = onAction)
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
   }
   if (isPasskeyEnabled) {
@@ -140,9 +148,7 @@ private fun UserProfileSecurityContent(
       ?.mapNotNull { it.latestActivity }
       ?.isNotEmpty() == true
   ) {
-    UserProfileDevicesSection(
-      devices = (state as UserProfileSecurityViewModel.State.Success).sessions.toImmutableList()
-    )
+    UserProfileDevicesSection(devices = state.sessions.toImmutableList())
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
   }
   if (isDeleteSelfEnabled) {
@@ -152,9 +158,7 @@ private fun UserProfileSecurityContent(
 
 @Composable
 private fun ColumnScope.UserProfileSecurityFooter() {
-  Spacers.Vertical.Spacer16()
   Spacer(modifier = Modifier.weight(1f))
-  Spacers.Vertical.Spacer24()
   SecuredByClerkView()
   Spacers.Vertical.Spacer24()
 }
@@ -168,6 +172,7 @@ private fun Preview() {
       isPasswordEnabled = true,
       isMfaEnabled = true,
       isDeleteSelfEnabled = true,
+      onAction = {},
     )
   }
 }
