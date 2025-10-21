@@ -37,7 +37,9 @@ fun UserProfileView(modifier: Modifier = Modifier) {
         }
         entry<UserProfileDestination.UserProfile> { key -> }
         entry<UserProfileDestination.UserProfileSecurity> { key -> UserProfileSecurityView() }
-        entry<UserProfileDestination.UserProfileUpdate> { key -> UserProfileUpdateProfileView() }
+        entry<UserProfileDestination.UserProfileUpdate> { key ->
+          UserProfileUpdateProfileView(onSuccess = { backStack.removeLastOrNull() })
+        }
       },
   )
 }

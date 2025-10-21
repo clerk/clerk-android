@@ -118,6 +118,9 @@ object Clerk {
     get() =
       if (::environment.isInitialized) environment.enabledFirstFactorAttributes() else emptyList()
 
+  val isUserNameEnabled: Boolean
+    get() = if (::environment.isInitialized) environment.usernameIsEnabled else false
+
   /**
    * Indicates whether the 'First Name' field is enabled for user profiles.
    *
@@ -127,9 +130,7 @@ object Clerk {
    *   the SDK is not yet initialized.
    */
   val isFirstNameEnabled: Boolean
-    get() =
-      if (::environment.isInitialized) environment.userSettings.attributes.contains("first_name")
-      else false
+    get() = if (::environment.isInitialized) environment.firstNameIsEnabled else false
 
   /**
    * Indicates whether the last name field is enabled for user profiles.
@@ -141,9 +142,7 @@ object Clerk {
    *   SDK is not yet initialized.
    */
   val isLastNameEnabled: Boolean
-    get() =
-      if (::environment.isInitialized) environment.userSettings.attributes.contains("last_name")
-      else false
+    get() = if (::environment.isInitialized) environment.lastNameIsEnabled else false
 
   val passwordIsEnabled: Boolean
     get() = if (::environment.isInitialized) environment.passwordIsEnabled else false

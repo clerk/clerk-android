@@ -147,4 +147,5 @@
     <string name="take_a_photo">Take a photo</string>
     <string name="choose_photo">Choose photo</string>
     <string name="remove_photo">Remove photo</string>
+    <string name="save">Save</string>
 </resources>
