@@ -12,17 +12,17 @@ data class ClerkErrorResponse(
   /** An object containing additional information about the error response. */
   val meta: Meta? = null,
   /** A unique identifier for tracing the specific request, useful for debugging. */
-  @SerialName("clerk_trace_id") val clerkTraceId: String,
+  @SerialName("clerk_trace_id") val clerkTraceId: String? = null,
 )
 
 @Serializable
 data class Error(
   /** A message that describes the error. */
-  val message: String,
+  val message: String? = null,
   /** A more detailed message that describes the error. */
-  @SerialName("long_message") val longMessage: String,
+  @SerialName("long_message") val longMessage: String? = null,
   /** A string code that represents the error, such as `username_exists_code`. */
-  val code: String,
+  val code: String? = null,
   /** Additional information about the error. */
 )
 

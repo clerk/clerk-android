@@ -1,5 +1,6 @@
 package com.clerk.api.phonenumber
 
+import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.PHONE_CODE
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.deleted.DeletedObject
@@ -147,4 +148,25 @@ suspend fun PhoneNumber.update(
  */
 suspend fun PhoneNumber.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.user.deletePhoneNumber(phoneNumberId = this.id)
+}
+
+/**
+ * Sets whether this phone number is reserved for multi-factor authentication.
+ *
+ * This function is a convenience wrapper around [update] that specifically toggles whether the
+ * phone number is reserved for 2FA. When a phone number is reserved for 2FA, it can only be used
+ * for authentication challenges and not as a primary authentication method.
+ *
+ * @param reserved `true` to reserve the phone number for 2FA, `false` otherwise.
+ * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun PhoneNumber.setReservedForSecondFactor(
+  reservedForSecondFactor: Boolean
+): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+  return ClerkApi.user.setReservedForSecondFactor(
+    phoneNumberId = this.id,
+    reservedForSecondFactor = reservedForSecondFactor,
+    sessionId = Clerk.session?.id,
+  )
 }

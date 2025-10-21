@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,7 +35,7 @@ class MainViewModel : ViewModel() {
     viewModelScope.launch {
       Clerk.signOut()
         .onSuccess { _uiState.value = MainUiState.SignedOut }
-        .onFailure { Log.e("MainViewModel", "${it.longErrorMessageOrNull}", it.throwable) }
+        .onFailure { Log.e("MainViewModel", "${it.errorMessage}", it.throwable) }
     }
   }
 }

@@ -7,8 +7,8 @@ import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.attemptVerification
 import com.clerk.api.emailaddress.prepareVerification
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.flatMap
-import com.clerk.api.network.serialization.longErrorMessageOrNull
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.user.createEmailAddress
@@ -51,7 +51,7 @@ class AddEmailViewModel : ViewModel() {
         .onFailure {
           Log.e(
             "AddEmailViewModel",
-            "Failed to create email address and prepare verification: ${it.longErrorMessageOrNull}",
+            "Failed to create email address and prepare verification: ${it.errorMessage}",
           )
         }
     }
@@ -66,7 +66,7 @@ class AddEmailViewModel : ViewModel() {
           _uiState.value = UiState.Verified
         }
         .onFailure {
-          Log.e("AddEmailViewModel", "Failed to verify email address: ${it.longErrorMessageOrNull}")
+          Log.e("AddEmailViewModel", "Failed to verify email address: ${it.errorMessage}")
         }
     }
   }

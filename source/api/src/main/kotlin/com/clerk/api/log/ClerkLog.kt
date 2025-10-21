@@ -11,7 +11,7 @@ import android.util.Log
  *
  * This is an internal utility and should not be used outside the Clerk SDK.
  */
-internal object ClerkLog {
+object ClerkLog {
   /**
    * Logs an error message.
    *

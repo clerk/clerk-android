@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
@@ -39,11 +39,7 @@ class ForgotPasswordPhoneViewModel : ViewModel() {
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling
           // for more info on error handling
-          Log.e(
-            ForgotPasswordPhoneViewModel::class.simpleName,
-            it.longErrorMessageOrNull,
-            it.throwable,
-          )
+          Log.e(ForgotPasswordPhoneViewModel::class.simpleName, it.errorMessage, it.throwable)
         }
     }
   }
@@ -57,11 +53,7 @@ class ForgotPasswordPhoneViewModel : ViewModel() {
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling
           // for more info on error handling
-          Log.e(
-            ForgotPasswordPhoneViewModel::class.simpleName,
-            it.longErrorMessageOrNull,
-            it.throwable,
-          )
+          Log.e(ForgotPasswordPhoneViewModel::class.simpleName, it.errorMessage, it.throwable)
         }
     }
   }
@@ -75,11 +67,7 @@ class ForgotPasswordPhoneViewModel : ViewModel() {
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling
           // for more info on error handling
-          Log.e(
-            ForgotPasswordPhoneViewModel::class.simpleName,
-            it.longErrorMessageOrNull,
-            it.throwable,
-          )
+          Log.e(ForgotPasswordPhoneViewModel::class.simpleName, it.errorMessage, it.throwable)
         }
     }
   }
