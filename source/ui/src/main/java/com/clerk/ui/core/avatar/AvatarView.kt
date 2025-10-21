@@ -1,8 +1,10 @@
 package com.clerk.ui.core.avatar
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -13,13 +15,20 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.Clerk
 import com.clerk.ui.R
+import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
+import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.button.standard.ClerkButtonPadding
+import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.dimens.dp96
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -30,6 +39,8 @@ internal fun AvatarView(
   shape: Shape,
   avatarType: AvatarType,
   modifier: Modifier = Modifier,
+  hasEditButton: Boolean = false,
+  onEditClick: () -> Unit = {},
 ) {
   val placeholder =
     when (avatarType) {
@@ -52,6 +63,27 @@ internal fun AvatarView(
         )
       },
     )
+    if (hasEditButton) {
+      ClerkButton(
+        modifier = Modifier.align(Alignment.BottomEnd),
+        text = null,
+        configuration =
+          ClerkButtonConfiguration(
+            size = ClerkButtonConfiguration.Size.Small,
+            emphasis = ClerkButtonConfiguration.Emphasis.High,
+            style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+            backgroundColorOverride = ClerkMaterialTheme.colors.muted,
+          ),
+        isEnabled = true,
+        icons =
+          ClerkButtonDefaults.icons(
+            trailingIcon = R.drawable.ic_edit,
+            trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+          ),
+        padding = ClerkButtonPadding(horizontal = dp8, vertical = dp0),
+        onClick = onEditClick,
+      )
+    }
   }
 }
 
@@ -91,5 +123,21 @@ private fun AvatarSize.toDp(): Dp {
     AvatarSize.MEDIUM -> dp36
     AvatarSize.LARGE -> dp48
     AvatarSize.X_LARGE -> dp96
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun Preview() {
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
+      AvatarView(
+        hasEditButton = true,
+        imageUrl = null,
+        size = AvatarSize.X_LARGE,
+        shape = CircleShape,
+        avatarType = AvatarType.USER,
+      )
+    }
   }
 }

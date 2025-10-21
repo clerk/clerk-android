@@ -36,11 +36,13 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
@@ -70,7 +72,7 @@ import com.clerk.ui.theme.DefaultColors
  */
 @Composable
 fun ClerkButton(
-  text: String,
+  text: String?,
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
@@ -143,7 +145,7 @@ internal fun ClerkButtonWithPressedState(
  */
 @Composable
 private fun ClerkButtonImpl(
-  text: String,
+  text: String?,
   onClick: () -> Unit,
   isEnabled: Boolean,
   isPressedCombined: Boolean,
@@ -187,6 +189,7 @@ private fun ClerkButtonImpl(
         isEnabled = isEnabled,
         text = text,
         tokens = tokens,
+        size = configuration.size,
       )
     }
   }
@@ -210,7 +213,8 @@ private fun ButtonContent(
   padding: ClerkButtonPadding,
   icons: ClerkButtonIcons,
   isEnabled: Boolean,
-  text: String,
+  text: String?,
+  size: ClerkButtonConfiguration.Size,
   tokens: ButtonStyleTokens,
 ) {
   if (isLoading) {
@@ -227,21 +231,25 @@ private fun ButtonContent(
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.spacedBy(dp6, Alignment.CenterHorizontally),
     ) {
+      val iconSize = if (size == ClerkButtonConfiguration.Size.Small) dp12 else dp24
       icons.leadingIcon?.let {
         val iconColor = icons.leadingIconColor ?: ClerkMaterialTheme.colors.primaryForeground
         Icon(
+          modifier = Modifier.size(iconSize),
           painter = painterResource(it),
           contentDescription = null,
           tint = if (isEnabled) iconColor else iconColor.copy(alpha = 0.5f),
         )
       }
-      Text(
-        maxLines = 1,
-        text = text,
-        style = tokens.textStyle,
-        overflow = TextOverflow.Ellipsis,
-        color = if (isEnabled) tokens.foreground else tokens.foreground.copy(alpha = 0.5f),
-      )
+      text?.let {
+        Text(
+          maxLines = 1,
+          text = text,
+          style = tokens.textStyle,
+          overflow = TextOverflow.Ellipsis,
+          color = if (isEnabled) tokens.foreground else tokens.foreground.copy(alpha = 0.5f),
+        )
+      }
       icons.trailingIcon?.let {
         val iconColor = icons.trailingIconColor ?: ClerkMaterialTheme.colors.primaryForeground
         Icon(
@@ -559,6 +567,32 @@ private fun Preview() {
             trailingIcon = R.drawable.ic_triangle_right,
             trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
           ),
+        onClick = {},
+      )
+    }
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewIconOnly() {
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp12)) {
+      ClerkButton(
+        text = null,
+        configuration =
+          ClerkButtonConfiguration(
+            size = ClerkButtonConfiguration.Size.Small,
+            emphasis = ClerkButtonConfiguration.Emphasis.High,
+            style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+          ),
+        isEnabled = true,
+        icons =
+          ClerkButtonDefaults.icons(
+            trailingIcon = R.drawable.ic_edit,
+            trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+          ),
+        padding = ClerkButtonPadding(horizontal = dp8, vertical = dp0),
         onClick = {},
       )
     }

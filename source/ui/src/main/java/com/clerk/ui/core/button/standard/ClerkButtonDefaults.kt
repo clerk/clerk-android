@@ -41,13 +41,21 @@ object ClerkButtonDefaults {
    * @param style The visual style of the button (e.g., Primary, Secondary).
    * @param emphasis The prominence of the button (e.g., High, Low).
    * @param size The size of the button (e.g., Large, Small).
+   * @param backgroundColorOverride an optional background color override
    * @return A [ClerkButtonConfiguration] instance.
    */
   fun configuration(
     style: ClerkButtonConfiguration.ButtonStyle = ClerkButtonConfiguration.ButtonStyle.Primary,
     emphasis: ClerkButtonConfiguration.Emphasis = ClerkButtonConfiguration.Emphasis.High,
     size: ClerkButtonConfiguration.Size = ClerkButtonConfiguration.Size.Large,
-  ) = ClerkButtonConfiguration(style = style, emphasis = emphasis, size = size)
+    backgroundColorOverride: Color? = null,
+  ) =
+    ClerkButtonConfiguration(
+      style = style,
+      emphasis = emphasis,
+      size = size,
+      backgroundColorOverride = backgroundColorOverride,
+    )
 
   /**
    * Creates a [ClerkButtonPadding] configuration for a button.
@@ -80,11 +88,13 @@ data class ClerkButtonIcons(
  * @param style The visual style of the button.
  * @param emphasis The prominence of the button.
  * @param size The size of the button.
+ * @param backgroundColorOverride an optional background color override
  */
 data class ClerkButtonConfiguration(
   val style: ButtonStyle = ButtonStyle.Primary,
   val emphasis: Emphasis = Emphasis.High,
   val size: Size = Size.Large,
+  val backgroundColorOverride: Color? = null,
 ) {
   /** Defines the visual prominence of the button. */
   enum class Emphasis {

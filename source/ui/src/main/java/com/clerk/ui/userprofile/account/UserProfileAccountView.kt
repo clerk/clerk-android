@@ -1,6 +1,5 @@
 package com.clerk.ui.userprofile.account
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -64,17 +63,7 @@ private fun UserProfileAccountViewImpl(
       horizontalPadding = dp0,
       onBackPressed = onBackPressed,
       content = {
-        Box(modifier = Modifier.fillMaxWidth()) {
-          AvatarView(
-            modifier = Modifier.align(Alignment.Center),
-            size = AvatarSize.X_LARGE,
-            shape = CircleShape,
-            avatarType = AvatarType.USER,
-            imageUrl = imageUrl,
-          )
-        }
-        Spacers.Vertical.Spacer12()
-        AvatarHeader(userFullName)
+        AvatarHeaderView(userFullName = userFullName, imageUrl = imageUrl)
         MainProfileActions(onClick = onClick)
       },
       bottomContent = {
@@ -92,30 +81,48 @@ private fun UserProfileAccountViewImpl(
 }
 
 @Composable
-private fun AvatarHeader(userFullName: String?) {
+private fun AvatarHeaderView(
+  userFullName: String?,
+  imageUrl: String?,
+  mode: AvatarMode = AvatarMode.VIEW,
+) {
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-    userFullName?.let {
-      Text(
-        text = it,
-        style = ClerkMaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
-        color = ClerkMaterialTheme.colors.foreground,
+    AvatarView(
+      size = AvatarSize.X_LARGE,
+      shape = CircleShape,
+      avatarType = AvatarType.USER,
+      imageUrl = imageUrl,
+    )
+    Spacers.Vertical.Spacer12()
+    if (mode == AvatarMode.VIEW) {
+      userFullName?.let {
+        Text(
+          text = it,
+          style = ClerkMaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
+          color = ClerkMaterialTheme.colors.foreground,
+        )
+      }
+      Spacers.Vertical.Spacer8()
+      ClerkButton(
+        modifier = Modifier.defaultMinSize(minWidth = 120.dp),
+        text = stringResource(R.string.update_profile),
+        onClick = {},
+        configuration =
+          ClerkButtonDefaults.configuration(
+            style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+            emphasis = ClerkButtonConfiguration.Emphasis.High,
+          ),
       )
     }
-    Spacers.Vertical.Spacer8()
-    ClerkButton(
-      modifier = Modifier.defaultMinSize(minWidth = 120.dp),
-      text = stringResource(R.string.update_profile),
-      onClick = {},
-      configuration =
-        ClerkButtonDefaults.configuration(
-          style = ClerkButtonConfiguration.ButtonStyle.Secondary,
-          emphasis = ClerkButtonConfiguration.Emphasis.High,
-        ),
-    )
 
     Spacers.Vertical.Spacer32()
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
   }
+}
+
+enum class AvatarMode {
+  VIEW,
+  EDIT,
 }
 
 @Composable
