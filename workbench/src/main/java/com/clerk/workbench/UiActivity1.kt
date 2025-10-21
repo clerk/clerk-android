@@ -18,13 +18,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 import kotlinx.coroutines.launch
 
-class UiActivity : ComponentActivity() {
+class UiActivity1 : ComponentActivity() {
   val viewModel: MainViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +39,6 @@ class UiActivity : ComponentActivity() {
           when (state) {
             MainViewModel.UiState.Loading -> CircularProgressIndicator()
             MainViewModel.UiState.SignedIn -> {
-              UserProfileSecurityView()
               ClerkButton(
                 modifier = Modifier.align(Alignment.Center),
                 text = "Sign Out",
@@ -49,9 +46,7 @@ class UiActivity : ComponentActivity() {
               )
             }
 
-            MainViewModel.UiState.SignedOut -> {
-              AuthView {}
-            }
+            MainViewModel.UiState.SignedOut -> {}
           }
         }
       }
