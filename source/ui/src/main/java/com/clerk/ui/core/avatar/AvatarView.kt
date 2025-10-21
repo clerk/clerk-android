@@ -3,6 +3,7 @@ package com.clerk.ui.core.avatar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.Clerk
 import com.clerk.ui.R
@@ -72,7 +74,6 @@ internal fun AvatarView(
       },
     )
     if (hasEditButton) {
-
       EditButton(
         onEditTakePhoto = onEditTakePhoto,
         onEditChoosePhoto = onEditChoosePhoto,
@@ -109,23 +110,32 @@ private fun BoxScope.EditButton(
       onClick = { expanded.value = true },
     )
 
-    DropdownMenu(expanded = expanded.value, onDismissRequest = { expanded.value = false }) {
+    DropdownMenu(
+      modifier = Modifier.defaultMinSize(minWidth = 144.dp),
+      expanded = expanded.value,
+      onDismissRequest = { expanded.value = false },
+    ) {
       DropdownMenuItem(
-        text = { Text(text = "Take a photo") },
+        text = { Text(text = stringResource(R.string.take_a_photo)) },
         onClick = {
           expanded.value = false
           onEditTakePhoto()
         },
       )
       DropdownMenuItem(
-        text = { Text(text = "Choose photo") },
+        text = { Text(text = stringResource(R.string.choose_photo)) },
         onClick = {
           expanded.value = false
           onEditChoosePhoto()
         },
       )
       DropdownMenuItem(
-        text = { Text(text = "Remove photo", color = ClerkMaterialTheme.colors.danger) },
+        text = {
+          Text(
+            text = stringResource(R.string.remove_photo),
+            color = ClerkMaterialTheme.colors.danger,
+          )
+        },
         onClick = {
           expanded.value = false
           onEditRemovePhoto()

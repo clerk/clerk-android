@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.AvatarType
@@ -43,7 +44,10 @@ private fun UserProfileUpdateProfileViewImpl(modifier: Modifier = Modifier) {
             size = AvatarSize.X_LARGE,
             shape = CircleShape,
             avatarType = AvatarType.USER,
-            imageUrl = null,
+            imageUrl = Clerk.user?.imageUrl,
+            onEditTakePhoto = {},
+            onEditChoosePhoto = {},
+            onEditRemovePhoto = {},
           )
         }
         Spacers.Vertical.Spacer12()
