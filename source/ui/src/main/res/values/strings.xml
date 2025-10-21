@@ -140,4 +140,15 @@
     <string name="add_a_passkey">Add a passkey</string>
     <string name="account">Account</string>
     <string name="delete_account">Delete account</string>
+    <string name="security">Security</string>
+    <string name="update_profile">Update profile</string>
+    <string name="profile">Profile</string>
+    <string name="log_out">Log out</string>
+    <string name="take_a_photo">Take a photo</string>
+    <string name="choose_photo">Choose photo</string>
+    <string name="remove_photo">Remove photo</string>
+    <string name="save">Save</string>
+    <string name="update_password">Update password</string>
+    <string name="enter_your_current_password_to_set_a_new_one">Enter your current password to set a new one</string>
+    <string name="current_password">Current password</string>
 </resources>

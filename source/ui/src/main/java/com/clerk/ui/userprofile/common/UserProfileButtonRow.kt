@@ -2,17 +2,14 @@ package com.clerk.ui.userprofile.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.clerk.api.Clerk
@@ -27,29 +24,22 @@ fun UserProfileButtonRow(
   text: String,
   modifier: Modifier = Modifier,
   textColor: Color = ClerkMaterialTheme.colors.primary,
+  textStyle: TextStyle =
+    ClerkMaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
   onClick: () -> Unit,
 ) {
-  val interaction = remember { MutableInteractionSource() }
 
   ClerkMaterialTheme {
     Box(
       modifier =
-        modifier
-          .clip(ClerkMaterialTheme.shape) // masks ripple to this shape
-          .clickable(
-            interactionSource = interaction,
-            indication = ripple(bounded = true, color = Color.Unspecified),
-            role = Role.Button,
-            onClick = onClick,
-          )
-          .padding(horizontal = dp16)
+        Modifier.fillMaxWidth()
+          .background(ClerkMaterialTheme.colors.background)
+          .clickable { onClick() }
           .padding(vertical = dp16)
+          .padding(horizontal = dp24)
+          .then(modifier)
     ) {
-      Text(
-        text = text,
-        color = textColor,
-        style = ClerkMaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-      )
+      Text(text = text, color = textColor, style = textStyle)
     }
   }
 }
@@ -58,11 +48,5 @@ fun UserProfileButtonRow(
 @Composable
 private fun Preview() {
   Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme {
-    Box(
-      modifier = Modifier.background(color = ClerkMaterialTheme.colors.background).padding(dp24)
-    ) {
-      UserProfileButtonRow(text = "Button Row") {}
-    }
-  }
+  ClerkMaterialTheme { UserProfileButtonRow(text = "Button Row") {} }
 }

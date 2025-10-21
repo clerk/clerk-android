@@ -17,8 +17,8 @@ import com.clerk.api.signin.alternativeSecondFactors
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.toOAuthProvidersList
 import com.clerk.ui.R
+import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
-import com.clerk.ui.auth.Destination
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.social.ClerkSocialRow
@@ -119,9 +119,9 @@ private fun SignInFactorAlternativeMethodsViewImpl(
       context = context,
       onClickFactor = {
         if (isSecondFactor) {
-          authState.navigateTo(Destination.SignInFactorTwo(it))
+          authState.navigateTo(AuthDestination.SignInFactorTwo(it))
         } else {
-          authState.navigateTo(Destination.SignInFactorOne(it))
+          authState.navigateTo(AuthDestination.SignInFactorOne(it))
         }
       },
     )

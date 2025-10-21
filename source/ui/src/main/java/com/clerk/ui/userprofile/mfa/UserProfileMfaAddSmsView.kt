@@ -96,39 +96,40 @@ private fun UserProfileMfaAddSmsViewImpl(
     errorMessage = errorMessage,
     modifier = modifier,
     title = stringResource(R.string.add_sms_code_verification),
-  ) {
-    Text(
-      stringResource(R.string.select_an_existing_phone_number),
-      style = ClerkMaterialTheme.typography.bodyMedium,
-    )
-    Spacers.Vertical.Spacer24()
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(dp12)) {
-      items(availablePhoneNumbers) { phoneNumber ->
-        val proto = phoneUtil.parse(phoneNumber.phoneNumber, null)
-        val region = phoneUtil.getRegionCodeForNumber(proto)
-        AddMfaSmsRow(
-          regionCode = region,
-          flag = CountryCodeUtils.regionToFlagEmoji(region),
-          phoneNumber = phoneNumber.phoneNumber,
-          selected = selectedNumber == phoneNumber,
-          onSelected = { selectedNumber = phoneNumber },
-        )
+    content = {
+      Text(
+        stringResource(R.string.select_an_existing_phone_number),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+      )
+      Spacers.Vertical.Spacer24()
+      LazyColumn(verticalArrangement = Arrangement.spacedBy(dp12)) {
+        items(availablePhoneNumbers) { phoneNumber ->
+          val proto = phoneUtil.parse(phoneNumber.phoneNumber, null)
+          val region = phoneUtil.getRegionCodeForNumber(proto)
+          AddMfaSmsRow(
+            regionCode = region,
+            flag = CountryCodeUtils.regionToFlagEmoji(region),
+            phoneNumber = phoneNumber.phoneNumber,
+            selected = selectedNumber == phoneNumber,
+            onSelected = { selectedNumber = phoneNumber },
+          )
+        }
       }
-    }
-    Spacers.Vertical.Spacer24()
-    ClerkButton(
-      modifier = Modifier.fillMaxWidth(),
-      text = stringResource(R.string.continue_text),
-      isLoading = state is MfaAddSmsViewModel.State.Loading,
-      isEnabled = selectedNumber != null && state !is MfaAddSmsViewModel.State.Loading,
-      onClick = { viewModel.reserveForSecondFactor(selectedNumber!!) },
-    )
-    Spacers.Vertical.Spacer24()
-    ClerkTextButton(
-      text = stringResource(R.string.use_phone_number),
-      onClick = onClickUsePhoneNumber,
-    )
-  }
+      Spacers.Vertical.Spacer24()
+      ClerkButton(
+        modifier = Modifier.fillMaxWidth(),
+        text = stringResource(R.string.continue_text),
+        isLoading = state is MfaAddSmsViewModel.State.Loading,
+        isEnabled = selectedNumber != null && state !is MfaAddSmsViewModel.State.Loading,
+        onClick = { viewModel.reserveForSecondFactor(selectedNumber!!) },
+      )
+      Spacers.Vertical.Spacer24()
+      ClerkTextButton(
+        text = stringResource(R.string.use_phone_number),
+        onClick = onClickUsePhoneNumber,
+      )
+    },
+  )
 }
 
 @Composable
@@ -219,14 +220,16 @@ private fun PreviewMfaRow() {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileMfaAddSmsViewImpl(
-    onClickUsePhoneNumber = {},
-    onReserveForSecondFactorSuccess = {},
-    availablePhoneNumbers =
-      persistentListOf(
-        PhoneNumber(id = "1", phoneNumber = "+13012370655"),
-        PhoneNumber(id = "2", "+15246462566"),
-        PhoneNumber(id = "3", "+306912345678"),
-      ),
-  )
+  ClerkMaterialTheme {
+    UserProfileMfaAddSmsViewImpl(
+      onClickUsePhoneNumber = {},
+      onReserveForSecondFactorSuccess = {},
+      availablePhoneNumbers =
+        persistentListOf(
+          PhoneNumber(id = "1", phoneNumber = "+13012370655"),
+          PhoneNumber(id = "2", "+15246462566"),
+          PhoneNumber(id = "3", "+306912345678"),
+        ),
+    )
+  }
 }

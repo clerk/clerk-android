@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,7 +14,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.passkeys.Passkey
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.extensions.formattedRelativeDateTime
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
@@ -35,7 +33,6 @@ internal fun UserProfilePasskeyRow(
       modifier =
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
-          .padding(vertical = dp16)
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {

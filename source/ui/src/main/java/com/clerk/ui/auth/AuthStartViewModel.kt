@@ -174,26 +174,20 @@ internal class AuthStartViewModel : ViewModel() {
   }
 
   private fun authenticateWithOAuthProvider(provider: OAuthProvider) {
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch {
       SignIn.authenticateWithRedirect(
           SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider)
         )
         .onSuccess {
-          withContext(Dispatchers.Main) {
-            _state.value =
-              when (it.resultType) {
-                ResultType.SIGN_IN -> AuthState.OAuthState.Success(signIn = it.signIn)
-                ResultType.SIGN_UP -> AuthState.OAuthState.Success(signUp = it.signUp)
-                ResultType.UNKNOWN ->
-                  AuthState.OAuthState.Error("Unknown result type from OAuth provider")
-              }
-          }
+          _state.value =
+            when (it.resultType) {
+              ResultType.SIGN_IN -> AuthState.OAuthState.Success(signIn = it.signIn)
+              ResultType.SIGN_UP -> AuthState.OAuthState.Success(signUp = it.signUp)
+              ResultType.UNKNOWN ->
+                AuthState.OAuthState.Error("Unknown result type from OAuth provider")
+            }
         }
-        .onFailure {
-          withContext(Dispatchers.Main) {
-            _state.value = AuthState.OAuthState.Error(it.errorMessage)
-          }
-        }
+        .onFailure { _state.value = AuthState.OAuthState.Error(it.errorMessage) }
     }
   }
 

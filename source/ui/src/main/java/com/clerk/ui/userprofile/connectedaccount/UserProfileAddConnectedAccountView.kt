@@ -35,22 +35,24 @@ private fun UserProfileAddConnectedAccountViewImpl(
   viewModel: AddConnectedAccountViewModel = viewModel(),
   onBackPressed: () -> Unit,
 ) {
+
   ClerkThemedProfileScaffold(
     modifier = modifier,
     title = stringResource(R.string.connect_account),
     onBackPressed = onBackPressed,
-  ) {
-    Text(
-      text = stringResource(R.string.link_another_login_option),
-      style = ClerkMaterialTheme.typography.bodyMedium,
-      color = ClerkMaterialTheme.colors.mutedForeground,
-    )
-    Spacers.Vertical.Spacer24()
-    ClerkSocialRow(
-      providers = unconnectedProviders,
-      onClick = { viewModel.connectExternalAccount(it) },
-    )
-  }
+    content = {
+      Text(
+        text = stringResource(R.string.link_another_login_option),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+        color = ClerkMaterialTheme.colors.mutedForeground,
+      )
+      Spacers.Vertical.Spacer24()
+      ClerkSocialRow(
+        providers = unconnectedProviders,
+        onClick = { viewModel.connectExternalAccount(it) },
+      )
+    },
+  )
 }
 
 @PreviewLightDark
@@ -64,8 +66,10 @@ private fun Preview() {
       OAuthProvider.BOX,
       OAuthProvider.GITHUB,
     )
-  UserProfileAddConnectedAccountViewImpl(
-    unconnectedProviders = unconnectedProviders,
-    onBackPressed = {},
-  )
+  ClerkMaterialTheme {
+    UserProfileAddConnectedAccountViewImpl(
+      unconnectedProviders = unconnectedProviders,
+      onBackPressed = {},
+    )
+  }
 }

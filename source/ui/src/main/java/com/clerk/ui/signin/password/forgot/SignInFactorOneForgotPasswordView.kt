@@ -23,7 +23,7 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.toOAuthProvidersList
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.auth.Destination
+import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.social.ClerkSocialRow
@@ -98,7 +98,7 @@ private fun SignInFactorOneForgotPasswordViewImpl(
         )
       ResetPasswordViewState.NotStarted -> authState.navigateToAuthStart()
       is ResetPasswordViewState.ResetFactor ->
-        authState.navigateTo(Destination.SignInFactorOne(factor = s.factor))
+        authState.navigateTo(AuthDestination.SignInFactorOne(factor = s.factor))
       is ResetPasswordViewState.Success.SignIn ->
         authState.setToStepForStatus(s.signIn, onAuthComplete)
       is ResetPasswordViewState.Success.SignUp ->

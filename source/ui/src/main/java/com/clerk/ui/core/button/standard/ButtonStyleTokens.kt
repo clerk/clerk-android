@@ -61,7 +61,7 @@ internal fun buildButtonTokens(
     }
 
   val foreground = generateForeground(config, isPressed)
-  val background = generateBackground(config, isPressed)
+  val background = config.backgroundColorOverride ?: generateBackground(config, isPressed)
 
   return ButtonStyleTokens(
     textStyle = text,

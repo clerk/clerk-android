@@ -17,9 +17,9 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
+import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
-import com.clerk.ui.auth.Destination
 import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -102,7 +102,9 @@ private fun SignInFactorOnePasskeyViewImpl(
     Spacers.Vertical.Spacer16()
     ClerkTextButton(
       onClick = {
-        authState.navigateTo(Destination.SignInFactorOneUseAnotherMethod(currentFactor = factor))
+        authState.navigateTo(
+          AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
+        )
       },
       text = stringResource(R.string.use_a_different_method),
     )

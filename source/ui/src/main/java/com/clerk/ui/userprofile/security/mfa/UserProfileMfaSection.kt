@@ -6,19 +6,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
-import com.clerk.ui.core.dimens.dp32
-import com.clerk.ui.core.spacers.Spacers
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
-import com.clerk.ui.userprofile.common.UserProfileSectionHeader
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -38,7 +38,7 @@ internal fun UserProfileMfaSection(
 }
 
 @Composable
-internal fun UserProfileMfaSectionImpl(
+private fun UserProfileMfaSectionImpl(
   mfaItems: ImmutableList<MfaItem>,
   onRemove: (Style) -> Unit,
   modifier: Modifier = Modifier,
@@ -49,13 +49,16 @@ internal fun UserProfileMfaSectionImpl(
       modifier =
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
-          .padding(top = dp32)
-          .padding(bottom = dp16)
+          .padding(top = dp16)
           .then(modifier)
     ) {
-      UserProfileSectionHeader(stringResource(R.string.two_step_verification))
-      Spacers.Vertical.Spacer16()
-      LazyColumn(modifier = Modifier.fillMaxWidth()) {
+      Text(
+        modifier = Modifier.padding(horizontal = dp24),
+        text = stringResource(R.string.two_step_verification).uppercase(),
+        color = ClerkMaterialTheme.colors.mutedForeground,
+        style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+      )
+      LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
         items(mfaItems) { mfaItem ->
           UserProfileMfaRow(
             style = mfaItem.style,

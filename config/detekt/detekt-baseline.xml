@@ -14,23 +14,15 @@
     <ID>LongMethod:ClerkTextFieldSnapshotTest.kt$ClerkTextFieldSnapshotTest$@Test fun testClerkTextFieldUnfocused()</ID>
     <ID>LongMethod:SignUpCollectFieldView.kt$@Composable private fun SignUpCollectFieldViewImpl( collectField: CollectField, collectFieldHelper: CollectFieldHelper, progress: Int, onAuthComplete: () -> Unit, modifier: Modifier = Modifier, viewModel: CollectFieldViewModel = viewModel(), )</ID>
     <ID>LongParameterList:AuthStartView.kt$( authViewHelper: AuthStartViewHelper, phoneNumberFieldIsActive: Boolean, authStartPhoneNumber: String, authStartIdentifier: String, onPhoneNumberChange: (String) -> Unit, onIdentifierChange: (String) -> Unit, )</ID>
-    <ID>LongParameterList:ClerkButton.kt$( isLoading: Boolean, padding: ClerkButtonPadding, icons: ClerkButtonIcons, isEnabled: Boolean, text: String, tokens: ButtonStyleTokens, )</ID>
-    <ID>LongParameterList:ClerkButton.kt$( text: String, onClick: () -> Unit, isEnabled: Boolean, isPressedCombined: Boolean, interactionSource: MutableInteractionSource, isLoading: Boolean, padding: ClerkButtonPadding, configuration: ClerkButtonConfiguration, modifier: Modifier = Modifier, icons: ClerkButtonIcons = ClerkButtonDefaults.icons(), )</ID>
+    <ID>LongParameterList:ClerkButton.kt$( isLoading: Boolean, padding: ClerkButtonPadding, icons: ClerkButtonIcons, isEnabled: Boolean, text: String?, size: ClerkButtonConfiguration.Size, tokens: ButtonStyleTokens, )</ID>
+    <ID>LongParameterList:ClerkButton.kt$( text: String?, onClick: () -> Unit, isEnabled: Boolean, isPressedCombined: Boolean, interactionSource: MutableInteractionSource, isLoading: Boolean, padding: ClerkButtonPadding, configuration: ClerkButtonConfiguration, modifier: Modifier = Modifier, icons: ClerkButtonIcons = ClerkButtonDefaults.icons(), )</ID>
     <ID>LongParameterList:SignUpCollectFieldView.kt$( collectField: CollectField, collectFieldHelper: CollectFieldHelper, email: String, onEmailChange: (String) -> Unit, password: String, onPasswordChange: (String) -> Unit, phone: String, onPhoneChange: (String) -> Unit, username: String, onUsernameChange: (String) -> Unit, )</ID>
     <ID>LongParameterList:SignUpCompleteProfileView.kt$( firstEnabled: Boolean, lastEnabled: Boolean, first: String, last: String, onFirstChange: (String) -> Unit, onLastChange: (String) -> Unit, onFocusChange: (CompleteProfileField) -> Unit = {}, )</ID>
+    <ID>LongParameterList:UserProfileSecurityView.kt$( isPasswordEnabled: Boolean, isPasskeyEnabled: Boolean, isMfaEnabled: Boolean, state: UserProfileSecurityViewModel.State, isDeleteSelfEnabled: Boolean, onAction: (PasswordAction) -> Unit, )</ID>
     <ID>MagicNumber:ColorUtils.kt$4f</ID>
     <ID>MagicNumber:DeviceAttestationHelper.kt$DeviceAttestationHelper$8</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFF000000</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFF131316</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFF1A1A1D</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFF212126</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFF22C543</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFFB7B8C2</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFFEF4444</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFFF36B16</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFFF9F9F9</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFFFAFAFB</ID>
-    <ID>MagicNumber:UiActivity.kt$UiActivity$0xFFFFFFFF</ID>
+    <ID>MagicNumber:UiActivity1.kt$UiActivity1$0xFFF9F9F9</ID>
+    <ID>MagicNumber:UiActivity2.kt$UiActivity2$0xFFF9F9F9</ID>
     <ID>MatchingDeclarationName:ColorUtils.kt$DangerPalette</ID>
     <ID>NestedBlockDepth:ClientSyncingMiddleware.kt$ClientSyncingMiddleware$override fun intercept(chain: Interceptor.Chain): Response</ID>
     <ID>ReturnCount:DeviceAssertionMiddleware.kt$DeviceAssertionInterceptor.DeviceAttestationManager$suspend fun performDeviceAssertion(request: Request, error: ClerkError): Boolean</ID>
@@ -43,7 +35,8 @@
     <ID>TooManyFunctions:OrganizationApi.kt$OrganizationApi</ID>
     <ID>TooManyFunctions:User.kt$com.clerk.api.user.User.kt</ID>
     <ID>UnusedPrivateClass:ClerkApiResultCallAdapterFactory.kt$ApiException : Exception</ID>
-    <ID>UnusedPrivateProperty:UiActivity.kt$UiActivity$val scope = rememberCoroutineScope()</ID>
+    <ID>UnusedPrivateMember:UiActivity1.kt$UiActivity1$@Suppress("MagicNumber") @Composable private fun MainContent()</ID>
+    <ID>UnusedPrivateMember:UiActivity2.kt$UiActivity2$@Suppress("MagicNumber") @Composable private fun MainContent()</ID>
     <ID>UnusedPrivateProperty:build.gradle.kts$val detektProjectBaseline by tasks.registering(DetektCreateBaselineTask::class) { description = "Overrides current baseline." buildUponDefaultConfig.set(true) ignoreFailures.set(true) parallel.set(true) setSource(files(rootDir)) config.setFrom(files("$rootDir/config/detekt/detekt.yml")) baseline.set(file("$rootDir/config/detekt/detekt-baseline.xml")) include("**/*.kt") include("**/*.kts") exclude("**/resources/**") exclude("**/build/**") }</ID>
   </CurrentIssues>
 </SmellBaseline>

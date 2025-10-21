@@ -1,4 +1,4 @@
-package com.clerk.ui.userprofile
+package com.clerk.ui.userprofile.security
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
