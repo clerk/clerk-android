@@ -32,8 +32,9 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 @Composable
 internal fun UserProfileAccountView(
   onClick: (UserProfileAction) -> Unit,
-  modifier: Modifier = Modifier,
   onBackPressed: () -> Unit,
+  modifier: Modifier = Modifier,
+  onClickEdit: () -> Unit,
 ) {
 
   UserProfileAccountViewImpl(
@@ -42,6 +43,7 @@ internal fun UserProfileAccountView(
     userFullName = Clerk.user?.fullName(),
     onClick = onClick,
     onBackPressed = onBackPressed,
+    onEditAvatarClick = onClickEdit,
   )
 }
 
@@ -53,6 +55,7 @@ private fun UserProfileAccountViewImpl(
   modifier: Modifier = Modifier,
   imageUrl: String? = null,
   viewModel: UserProfileAccountViewModel = viewModel(),
+  onEditAvatarClick: () -> Unit,
 ) {
   ClerkMaterialTheme {
     ClerkThemedProfileScaffold(
@@ -63,7 +66,11 @@ private fun UserProfileAccountViewImpl(
       horizontalPadding = dp0,
       onBackPressed = onBackPressed,
       content = {
-        AvatarHeaderView(userFullName = userFullName, imageUrl = imageUrl)
+        AvatarHeaderView(
+          userFullName = userFullName,
+          imageUrl = imageUrl,
+          onClickEdit = onEditAvatarClick,
+        )
         MainProfileActions(onClick = onClick)
       },
       bottomContent = {
@@ -85,6 +92,7 @@ private fun AvatarHeaderView(
   userFullName: String?,
   imageUrl: String?,
   mode: AvatarMode = AvatarMode.VIEW,
+  onClickEdit: () -> Unit,
 ) {
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     AvatarView(
@@ -106,7 +114,7 @@ private fun AvatarHeaderView(
       ClerkButton(
         modifier = Modifier.defaultMinSize(minWidth = 120.dp),
         text = stringResource(R.string.update_profile),
-        onClick = {},
+        onClick = onClickEdit,
         configuration =
           ClerkButtonDefaults.configuration(
             style = ClerkButtonConfiguration.ButtonStyle.Secondary,
@@ -152,6 +160,11 @@ internal enum class UserProfileAction {
 @Composable
 private fun Preview() {
   ClerkMaterialTheme {
-    UserProfileAccountViewImpl(userFullName = "Cameron Walker", onClick = {}, onBackPressed = {})
+    UserProfileAccountViewImpl(
+      userFullName = "Cameron Walker",
+      onClick = {},
+      onBackPressed = {},
+      onEditAvatarClick = {},
+    )
   }
 }

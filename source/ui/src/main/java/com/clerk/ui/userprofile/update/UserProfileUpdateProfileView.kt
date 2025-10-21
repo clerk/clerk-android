@@ -21,12 +21,12 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.account.UserProfileAccountActionRow
 
 @Composable
-fun UserProfileUpdateProfileView(modifier: Modifier = Modifier) {
+internal fun UserProfileUpdateProfileView(modifier: Modifier = Modifier) {
   UserProfileUpdateProfileViewImpl(modifier = modifier)
 }
 
 @Composable
-fun UserProfileUpdateProfileViewImpl(modifier: Modifier = Modifier) {
+private fun UserProfileUpdateProfileViewImpl(modifier: Modifier = Modifier) {
   ClerkMaterialTheme {
     ClerkThemedProfileScaffold(
       modifier = modifier,

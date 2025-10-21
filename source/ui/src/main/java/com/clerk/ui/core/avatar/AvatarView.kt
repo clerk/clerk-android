@@ -2,12 +2,18 @@ package com.clerk.ui.core.avatar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,7 +46,9 @@ internal fun AvatarView(
   avatarType: AvatarType,
   modifier: Modifier = Modifier,
   hasEditButton: Boolean = false,
-  onEditClick: () -> Unit = {},
+  onEditTakePhoto: () -> Unit = {},
+  onEditChoosePhoto: () -> Unit = {},
+  onEditRemovePhoto: () -> Unit = {},
 ) {
   val placeholder =
     when (avatarType) {
@@ -64,24 +72,64 @@ internal fun AvatarView(
       },
     )
     if (hasEditButton) {
-      ClerkButton(
-        modifier = Modifier.align(Alignment.BottomEnd),
-        text = null,
-        configuration =
-          ClerkButtonConfiguration(
-            size = ClerkButtonConfiguration.Size.Small,
-            emphasis = ClerkButtonConfiguration.Emphasis.High,
-            style = ClerkButtonConfiguration.ButtonStyle.Secondary,
-            backgroundColorOverride = ClerkMaterialTheme.colors.muted,
-          ),
-        isEnabled = true,
-        icons =
-          ClerkButtonDefaults.icons(
-            trailingIcon = R.drawable.ic_edit,
-            trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-          ),
-        padding = ClerkButtonPadding(horizontal = dp8, vertical = dp0),
-        onClick = onEditClick,
+
+      EditButton(
+        onEditTakePhoto = onEditTakePhoto,
+        onEditChoosePhoto = onEditChoosePhoto,
+        onEditRemovePhoto = onEditRemovePhoto,
+      )
+    }
+  }
+}
+
+@Composable
+private fun BoxScope.EditButton(
+  onEditTakePhoto: () -> Unit,
+  onEditChoosePhoto: () -> Unit,
+  onEditRemovePhoto: () -> Unit,
+) {
+  val expanded = remember { mutableStateOf(false) }
+  Box(modifier = Modifier.align(Alignment.BottomEnd)) {
+    ClerkButton(
+      text = null,
+      configuration =
+        ClerkButtonConfiguration(
+          size = ClerkButtonConfiguration.Size.Small,
+          emphasis = ClerkButtonConfiguration.Emphasis.High,
+          style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+          backgroundColorOverride = ClerkMaterialTheme.colors.muted,
+        ),
+      isEnabled = true,
+      icons =
+        ClerkButtonDefaults.icons(
+          trailingIcon = R.drawable.ic_edit,
+          trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+        ),
+      padding = ClerkButtonPadding(horizontal = dp8, vertical = dp0),
+      onClick = { expanded.value = true },
+    )
+
+    DropdownMenu(expanded = expanded.value, onDismissRequest = { expanded.value = false }) {
+      DropdownMenuItem(
+        text = { Text(text = "Take a photo") },
+        onClick = {
+          expanded.value = false
+          onEditTakePhoto()
+        },
+      )
+      DropdownMenuItem(
+        text = { Text(text = "Choose photo") },
+        onClick = {
+          expanded.value = false
+          onEditChoosePhoto()
+        },
+      )
+      DropdownMenuItem(
+        text = { Text(text = "Remove photo", color = ClerkMaterialTheme.colors.danger) },
+        onClick = {
+          expanded.value = false
+          onEditRemovePhoto()
+        },
       )
     }
   }

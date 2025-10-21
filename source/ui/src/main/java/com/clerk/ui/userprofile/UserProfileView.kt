@@ -10,6 +10,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
+import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -31,10 +32,12 @@ fun UserProfileView(modifier: Modifier = Modifier) {
               }
             },
             onBackPressed = { backStack.removeLastOrNull() },
+            onClickEdit = { backStack.add(UserProfileDestination.UserProfileUpdate) },
           )
         }
         entry<UserProfileDestination.UserProfile> { key -> }
         entry<UserProfileDestination.UserProfileSecurity> { key -> UserProfileSecurityView() }
+        entry<UserProfileDestination.UserProfileUpdate> { key -> UserProfileUpdateProfileView() }
       },
   )
 }
@@ -45,4 +48,6 @@ internal object UserProfileDestination {
   @Serializable data object UserProfile : NavKey
 
   @Serializable data object UserProfileSecurity : NavKey
+
+  @Serializable data object UserProfileUpdate : NavKey
 }
