@@ -36,7 +36,7 @@ internal object SignOutService {
         Clerk.session?.delete()
       }
       // Clean up local session state immediately after successful logout
-      Clerk.updateSessionAndUserState()
+      Clerk.clearSessionAndUserState()
       return ClerkResult.success(Unit)
     } catch (e: Exception) {
       return ClerkResult.unknownFailure(Exception(e.message ?: "Unknown error"))
