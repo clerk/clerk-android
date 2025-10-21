@@ -1,7 +1,10 @@
 package com.clerk.ui.userprofile.update
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Bitmap.CompressFormat
+import android.net.Uri
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,27 +58,16 @@ private fun UserProfileUpdateProfileViewImpl(
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   val state by viewModel.state.collectAsState()
   val errorMessage = (state as? UpdateProfileViewModel.State.Error)?.message
-  if (state is UpdateProfileViewModel.State.Success) {
-    onSuccess()
+  LaunchedEffect(state) {
+    if (state is UpdateProfileViewModel.State.Success) {
+      onSuccess()
+      viewModel.reset()
+    }
   }
 
   val context = LocalContext.current
 
-  val takePhotoLauncher =
-    rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-      if (bitmap != null) {
-        val file = createImageFileFromBitmap(context.cacheDir.absolutePath, bitmap)
-        viewModel.uploadProfileImage(file)
-      }
-    }
-
-  val pickPhotoLauncher =
-    rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-      if (uri != null) {
-        val file = createImageFileFromUri(context, uri)
-        viewModel.uploadProfileImage(file)
-      }
-    }
+  val (takePhotoLauncher, pickPhotoLauncher) = CreateLaunchers(context, viewModel)
 
   ClerkMaterialTheme {
     ClerkThemedProfileScaffold(
@@ -110,6 +103,32 @@ private fun UserProfileUpdateProfileViewImpl(
       },
     )
   }
+}
+
+@Composable
+private fun CreateLaunchers(
+  context: Context,
+  viewModel: UpdateProfileViewModel,
+): Pair<
+  ManagedActivityResultLauncher<Void?, Bitmap?>,
+  ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
+> {
+  val takePhotoLauncher =
+    rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+      if (bitmap != null) {
+        val file = createImageFileFromBitmap(context.cacheDir.absolutePath, bitmap)
+        viewModel.uploadProfileImage(file)
+      }
+    }
+
+  val pickPhotoLauncher =
+    rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+      if (uri != null) {
+        val file = createImageFileFromUri(context, uri)
+        viewModel.uploadProfileImage(file)
+      }
+    }
+  return Pair(takePhotoLauncher, pickPhotoLauncher)
 }
 
 @Composable

@@ -80,6 +80,10 @@ class UpdateProfileViewModel : ViewModel() {
     }
   }
 
+  fun reset() {
+    _state.value = State.Idle
+  }
+
   sealed interface State {
     data object Idle : State
 
