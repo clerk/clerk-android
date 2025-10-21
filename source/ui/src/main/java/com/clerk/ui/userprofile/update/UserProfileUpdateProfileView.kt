@@ -5,11 +5,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.Clerk
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.AvatarType
@@ -27,7 +29,14 @@ internal fun UserProfileUpdateProfileView(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun UserProfileUpdateProfileViewImpl(modifier: Modifier = Modifier) {
+private fun UserProfileUpdateProfileViewImpl(
+  modifier: Modifier = Modifier,
+  viewModel: UpdateProfileViewModel = viewModel(),
+) {
+  val user by viewModel.user.collectAsState()
+  val state by viewModel.state.collectAsState()
+  val errorMessage = (state as? UpdateProfileViewModel.State.Error)?.message
+
   ClerkMaterialTheme {
     ClerkThemedProfileScaffold(
       modifier = modifier,
@@ -36,6 +45,7 @@ private fun UserProfileUpdateProfileViewImpl(modifier: Modifier = Modifier) {
       hasBackButton = true,
       horizontalPadding = dp0,
       onBackPressed = {},
+      errorMessage = errorMessage,
       content = {
         Box(modifier = Modifier.fillMaxWidth()) {
           AvatarView(
@@ -44,10 +54,10 @@ private fun UserProfileUpdateProfileViewImpl(modifier: Modifier = Modifier) {
             size = AvatarSize.X_LARGE,
             shape = CircleShape,
             avatarType = AvatarType.USER,
-            imageUrl = Clerk.user?.imageUrl,
+            imageUrl = user?.imageUrl,
             onEditTakePhoto = {},
             onEditChoosePhoto = {},
-            onEditRemovePhoto = {},
+            onEditRemovePhoto = { viewModel.removeProfileImage() },
           )
         }
         Spacers.Vertical.Spacer12()

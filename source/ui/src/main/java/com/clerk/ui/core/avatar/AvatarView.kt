@@ -64,7 +64,7 @@ internal fun AvatarView(
       contentDescription = stringResource(R.string.logo),
       modifier = Modifier.size(size.toDp()).clip(shape),
       contentScale = ContentScale.Fit,
-      loading = { CircularProgressIndicator() },
+      loading = { CircularProgressIndicator(modifier = Modifier.size(dp24)) },
       error = {
         Icon(
           painter = painterResource(placeholder),
