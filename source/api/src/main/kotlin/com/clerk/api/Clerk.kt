@@ -155,7 +155,7 @@ object Clerk {
 
   /** The current user for the active session. */
   val user: User?
-    get() = session?.user
+    get() = userFlow.value
 
   // endregion
 
