@@ -120,10 +120,7 @@ object Clerk {
    * [Client.sessions]. Returns null when no session is active.
    */
   val session: Session?
-    get() =
-      if (::client.isInitialized) {
-        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
-      } else null
+    get() = sessionFlow.value
 
   /**
    * The active locale for the current session.
@@ -139,7 +136,7 @@ object Clerk {
    * @return true if there is an active session with a user, false otherwise.
    */
   val isSignedIn: Boolean
-    get() = session != null
+    get() = sessionFlow.value != null
 
   // endregion
 
@@ -338,7 +335,9 @@ object Clerk {
    * user.
    */
   internal fun updateSessionAndUserState() {
-    val currentSession = if (::client.isInitialized) session else null
+    val currentSession = if (::client.isInitialized) {
+      client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
+    } else null
     val currentUser = currentSession?.user
 
     _session.value = currentSession
