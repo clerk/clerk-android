@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
 import com.clerk.api.log.ClerkLog
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
  */
 internal class SSOManagerActivity : AppCompatActivity() {
   private var authorizationStarted = false
+  private var completionStarted = false
   private lateinit var desiredUri: Uri
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,9 +58,21 @@ internal class SSOManagerActivity : AppCompatActivity() {
       return
     }
     // subsequent runs, we either got the response back from OAuthReceiverActivity or it was
-    // cancelled
-    intent.data?.let { authorizationComplete(it) } ?: authorizationCanceled()
-    finish()
+    // cancelled. If we have a response, complete the flow and only finish after completion to
+    // avoid cancelling the in-flight network request.
+    intent.data?.let {
+      if (!completionStarted) {
+        completionStarted = true
+        // Clear the intent's data to avoid re-triggering completion on subsequent resumes
+        intent = Intent(intent).apply { data = null }
+        authorizationComplete(it)
+      }
+      // Do not call finish() here; authorizationComplete will finish when done
+    }
+      ?: run {
+        authorizationCanceled()
+        finish()
+      }
   }
 
   override fun onNewIntent(intent: Intent) {
@@ -69,6 +83,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
     outState.putBoolean(KEY_AUTHORIZATION_STARTED, authorizationStarted)
+    outState.putBoolean(KEY_COMPLETION_STARTED, completionStarted)
   }
 
   /**
@@ -80,7 +95,8 @@ internal class SSOManagerActivity : AppCompatActivity() {
   private fun hydrateState(state: Bundle?) {
     if (state == null) return finish()
     authorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false)
-    state.getString(URI_KEY)?.let { desiredUri = Uri.parse(it) }
+    completionStarted = state.getBoolean(KEY_COMPLETION_STARTED, false)
+    state.getString(URI_KEY)?.let { desiredUri = it.toUri() }
   }
 
   /**
@@ -90,12 +106,19 @@ internal class SSOManagerActivity : AppCompatActivity() {
    */
   private fun authorizationComplete(uri: Uri) {
     lifecycleScope.launch {
-      if (SSOService.hasPendingExternalAccountConnection()) {
-        ClerkLog.d("authorizationComplete called with external connection")
-        SSOService.completeExternalConnection()
-      } else {
-        ClerkLog.d("authorizationComplete called with redirect: $uri")
-        SSOService.completeAuthenticateWithRedirect(uri)
+      try {
+        // Mark the Activity result as success so callers don't observe RESULT_CANCELED
+        setResult(RESULT_OK, Intent())
+        if (SSOService.hasPendingExternalAccountConnection()) {
+          ClerkLog.d("authorizationComplete called with external connection")
+          SSOService.completeExternalConnection()
+        } else {
+          ClerkLog.d("authorizationComplete called with redirect: $uri")
+          SSOService.completeAuthenticateWithRedirect(uri)
+        }
+      } finally {
+        // Finish only after the completion call returns so coroutines aren't cancelled early
+        finish()
       }
     }
   }
@@ -144,6 +167,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
       Intent(context, SSOManagerActivity::class.java)
 
     internal const val URI_KEY = "uri"
-    internal const val IS_EXTERNAL_CONNECTION = "is_external_connection"
+    internal const val KEY_COMPLETION_STARTED = "completion_started"
   }
 }

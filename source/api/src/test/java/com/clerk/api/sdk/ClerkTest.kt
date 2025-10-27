@@ -447,4 +447,98 @@ class ClerkTest {
     // Then
     assertFalse(debugMode)
   }
+
+  @Test
+  fun `clearSessionAndUserState nulls both sessionFlow and userFlow`() = runTest {
+    // Given - setup initial state with active session and user
+    val activeSessionId = "active_session_id"
+
+    every { mockClient.lastActiveSessionId } returns activeSessionId
+    every { mockClient.sessions } returns listOf(mockSession)
+    every { mockClient.activeSessions() } returns listOf(mockSession)
+    every { mockSession.id } returns activeSessionId
+    every { mockSession.user } returns mockUser
+    initializeClerkWithClient(mockClient)
+
+    // Verify initial state has session and user
+    assertEquals(mockSession, Clerk.sessionFlow.value)
+    assertEquals(mockUser, Clerk.userFlow.value)
+    assertEquals(mockSession, Clerk.session)
+    assertEquals(mockUser, Clerk.user)
+    assertTrue(Clerk.isSignedIn)
+
+    // When - clear session and user state (simulating sign out)
+    Clerk.clearSessionAndUserState()
+
+    // Then - verify both flows are null
+    assertNull(Clerk.sessionFlow.value)
+    assertNull(Clerk.userFlow.value)
+    assertNull(Clerk.session)
+    assertNull(Clerk.user)
+    assertFalse(Clerk.isSignedIn)
+  }
+
+  @Test
+  fun `session property returns sessionFlow value`() = runTest {
+    // Given - setup initial state
+    val activeSessionId = "active_session_id"
+
+    every { mockClient.lastActiveSessionId } returns activeSessionId
+    every { mockClient.sessions } returns listOf(mockSession)
+    every { mockClient.activeSessions() } returns listOf(mockSession)
+    every { mockSession.id } returns activeSessionId
+    initializeClerkWithClient(mockClient)
+
+    // When
+    val sessionFromProperty = Clerk.session
+    val sessionFromFlow = Clerk.sessionFlow.value
+
+    // Then - both should return the same value
+    assertEquals(sessionFromFlow, sessionFromProperty)
+    assertEquals(mockSession, sessionFromProperty)
+  }
+
+  @Test
+  fun `user property returns userFlow value`() = runTest {
+    // Given - setup initial state
+    val activeSessionId = "active_session_id"
+
+    every { mockClient.lastActiveSessionId } returns activeSessionId
+    every { mockClient.sessions } returns listOf(mockSession)
+    every { mockClient.activeSessions() } returns listOf(mockSession)
+    every { mockSession.id } returns activeSessionId
+    every { mockSession.user } returns mockUser
+    initializeClerkWithClient(mockClient)
+
+    // When
+    val userFromProperty = Clerk.user
+    val userFromFlow = Clerk.userFlow.value
+
+    // Then - both should return the same value
+    assertEquals(userFromFlow, userFromProperty)
+    assertEquals(mockUser, userFromProperty)
+  }
+
+  @Test
+  fun `updateSessionAndUserState updates both flows correctly`() = runTest {
+    // Given - setup initial state with no session
+    simulateUninitializedClient()
+    assertNull(Clerk.sessionFlow.value)
+    assertNull(Clerk.userFlow.value)
+
+    // When - update client to have an active session
+    val activeSessionId = "active_session_id"
+    every { mockClient.lastActiveSessionId } returns activeSessionId
+    every { mockClient.sessions } returns listOf(mockSession)
+    every { mockClient.activeSessions() } returns listOf(mockSession)
+    every { mockSession.id } returns activeSessionId
+    every { mockSession.user } returns mockUser
+    Clerk.updateClient(mockClient)
+
+    // Then - both flows should be updated
+    assertEquals(mockSession, Clerk.sessionFlow.value)
+    assertEquals(mockUser, Clerk.userFlow.value)
+    assertEquals(mockSession, Clerk.session)
+    assertEquals(mockUser, Clerk.user)
+  }
 }

@@ -227,10 +227,7 @@ object Clerk {
    * [Client.sessions]. Returns `null` when no session is active or if the SDK is not initialized.
    */
   val session: Session?
-    get() =
-      if (::client.isInitialized) {
-        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
-      } else null
+    get() = sessionFlow.value
 
   /**
    * The active locale for the current session.
@@ -246,7 +243,7 @@ object Clerk {
    * @return `true` if there is an active session with a user, `false` otherwise.
    */
   val isSignedIn: Boolean
-    get() = session != null
+    get() = sessionFlow.value != null
 
   // endregion
 
@@ -269,7 +266,7 @@ object Clerk {
    * Returns `null` if no session is active or if the SDK is not initialized.
    */
   val user: User?
-    get() = session?.user
+    get() = userFlow.value
 
   // endregion
 
@@ -449,11 +446,24 @@ object Clerk {
    * user.
    */
   internal fun updateSessionAndUserState() {
-    val currentSession = if (::client.isInitialized) session else null
+    val currentSession =
+      if (::client.isInitialized) {
+        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
+      } else null
     val currentUser = currentSession?.user
 
     _session.value = currentSession
     _userFlow.value = currentUser
+  }
+
+  /**
+   * Internal method to clear session and user state flows.
+   *
+   * Should be called when signing out to immediately clear local session state.
+   */
+  internal fun clearSessionAndUserState() {
+    _session.value = null
+    _userFlow.value = null
   }
 
   // endregion

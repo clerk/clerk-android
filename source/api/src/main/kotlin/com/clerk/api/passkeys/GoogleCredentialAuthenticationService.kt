@@ -153,7 +153,9 @@ internal object GoogleCredentialAuthenticationService {
    *   authentication, or a [ClerkErrorResponse] if session creation fails.
    */
   private suspend fun createSignIn(): ClerkResult<SignIn, ClerkErrorResponse> {
-    return ClerkApi.signIn.createSignIn(mapOf(STRATEGY to PasskeyHelper.passkeyStrategy))
+    return ClerkApi.signIn.createSignIn(
+      mapOf(STRATEGY to PasskeyHelper.passkeyStrategy, "locale" to Clerk.locale.value.orEmpty())
+    )
   }
 
   /**

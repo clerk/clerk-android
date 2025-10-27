@@ -1,5 +1,6 @@
 package com.clerk.api.signin
 
+import com.clerk.api.Clerk
 import com.clerk.api.Clerk.signIn
 import com.clerk.api.Constants.Strategy.BACKUP_CODE
 import com.clerk.api.Constants.Strategy.EMAIL_CODE
@@ -620,9 +621,17 @@ data class SignIn(
      */
     suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
-        is CreateParams.Strategy.Transfer -> ClerkApi.signIn.createSignIn(mapOf(TRANSFER to "true"))
         is CreateParams.Strategy.Passkey -> PasskeyService.signInWithPasskey()
-        else -> ClerkApi.signIn.createSignIn(params.toMap())
+        else -> {
+          val baseMap =
+            if (params is CreateParams.Strategy.Transfer) {
+              mapOf(TRANSFER to "true")
+            } else {
+              params.toMap()
+            }
+          val paramMap = baseMap + ("locale" to Clerk.locale.value.orEmpty())
+          ClerkApi.signIn.createSignIn(paramMap)
+        }
       }
     }
 

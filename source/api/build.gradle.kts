@@ -19,6 +19,8 @@ android {
     buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.api.get()}\"")
   }
 
+  testOptions { unitTests.isIncludeAndroidResources = true }
+
   buildTypes {
     debug { isMinifyEnabled = false }
     release {
@@ -109,6 +111,7 @@ dependencies {
   compileOnly(libs.androidx.compose.foundation)
 
   testImplementation(kotlin("test"))
+  testImplementation(libs.androidx.appcompat)
   testImplementation(libs.androidx.arch.test)
   testImplementation(libs.core.ktx)
   testImplementation(libs.junit)
