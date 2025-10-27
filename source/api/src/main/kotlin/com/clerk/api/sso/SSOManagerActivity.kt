@@ -98,6 +98,8 @@ internal class SSOManagerActivity : AppCompatActivity() {
   private fun authorizationComplete(uri: Uri) {
     lifecycleScope.launch {
       try {
+        // Mark the Activity result as success so callers don't observe RESULT_CANCELED
+        setResult(RESULT_OK, Intent())
         if (SSOService.hasPendingExternalAccountConnection()) {
           ClerkLog.d("authorizationComplete called with external connection")
           SSOService.completeExternalConnection()
