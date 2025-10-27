@@ -90,19 +90,25 @@ class SSOManagerActivityTest {
     every { SSOService.hasPendingExternalAccountConnection() } returns false
     coEvery { SSOService.completeAuthenticateWithRedirect(any()) } throws RuntimeException("boom")
 
-    val app = ApplicationProvider.getApplicationContext<Application>()
-    val responseUri = Uri.parse("clerk://callback?rotating_token_nonce=abc")
-    val intent =
-      SSOManagerActivity.createResponseHandlingIntent(app, responseUri).apply {
-        putExtra(com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED, true)
-      }
+    val originalHandler = Thread.getDefaultUncaughtExceptionHandler()
+    Thread.setDefaultUncaughtExceptionHandler { _, _ -> /* swallow coroutine exception */ }
+    try {
+      val app = ApplicationProvider.getApplicationContext<Application>()
+      val responseUri = Uri.parse("clerk://callback?rotating_token_nonce=abc")
+      val intent =
+        SSOManagerActivity.createResponseHandlingIntent(app, responseUri).apply {
+          putExtra(com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED, true)
+        }
 
-    val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
-    val activity = controller.create().resume().get()
+      val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
+      val activity = controller.create().resume().get()
 
-    val shadow = Shadows.shadowOf(activity)
-    // Result is set to OK before the service call
-    assertEquals(Activity.RESULT_OK, shadow.resultCode)
+      val shadow = Shadows.shadowOf(activity)
+      // Result is set to OK before the service call
+      assertEquals(Activity.RESULT_OK, shadow.resultCode)
+    } finally {
+      Thread.setDefaultUncaughtExceptionHandler(originalHandler)
+    }
   }
 
   @Test
