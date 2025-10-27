@@ -54,8 +54,9 @@ internal fun UserProfilePasswordSectionImpl(
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
       )
       if (isPasswordEnabled) {
-
-        Row(modifier = Modifier.fillMaxWidth().padding(vertical = dp16)) {
+        Row(
+          modifier = Modifier.fillMaxWidth().padding(vertical = dp16).padding(horizontal = dp24)
+        ) {
           Icon(
             modifier = Modifier.size(dp24),
             painter = painterResource(R.drawable.ic_lock),
