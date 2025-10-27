@@ -1,6 +1,8 @@
 package com.clerk.ui.auth
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -39,54 +41,58 @@ internal fun AuthStateProvider(backStack: NavBackStack<NavKey>, content: @Compos
 @Composable
 fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
   val backStack = rememberNavBackStack(AuthDestination.AuthStart)
-  AuthStateProvider(backStack) {
-    NavDisplay(
-      modifier = modifier,
-      backStack = backStack,
-      onBack = { backStack.removeLastOrNull() },
-      entryProvider =
-        entryProvider {
-          entry<AuthDestination.AuthStart> { key -> AuthStartView(onAuthComplete = onAuthComplete) }
-          entry<AuthDestination.SignInFactorOne> { key ->
-            SignInFactorOneView(factor = key.factor, onAuthComplete = onAuthComplete)
-          }
-          entry<AuthDestination.SignInFactorOneUseAnotherMethod> { key ->
-            SignInFactorAlternativeMethodsView(
-              currentFactor = key.currentFactor,
-              onAuthComplete = onAuthComplete,
-            )
-          }
-          entry<AuthDestination.SignInFactorTwo> { key ->
-            SignInFactorTwoView(factor = key.factor, onAuthComplete = onAuthComplete)
-          }
-          entry<AuthDestination.SignInFactorTwoUseAnotherMethod> { key ->
-            SignInFactorAlternativeMethodsView(
-              currentFactor = key.currentFactor,
-              isSecondFactor = true,
-              onAuthComplete = onAuthComplete,
-            )
-          }
-          entry<AuthDestination.SignInForgotPassword> { key ->
-            SignInFactorOneForgotPasswordView(
-              onClickFactor = { backStack.removeLastOrNull() },
-              onAuthComplete = onAuthComplete,
-            )
-          }
-          entry<AuthDestination.SignInSetNewPassword> {
-            SignInSetNewPasswordView(onAuthComplete = onAuthComplete)
-          }
-          entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
-          entry<AuthDestination.SignUpCollectField> { key ->
-            SignUpCollectFieldView(field = key.field, onAuthComplete = onAuthComplete)
-          }
-          entry<AuthDestination.SignUpCode> { key ->
-            SignUpCodeView(field = key.field, onAuthComplete = onAuthComplete)
-          }
-          entry<AuthDestination.SignUpCompleteProfile> {
-            SignUpCompleteProfileView(progress = it.progress, onAuthComplete = onAuthComplete)
-          }
-        },
-    )
+  Scaffold { innerPadding ->
+    AuthStateProvider(backStack) {
+      NavDisplay(
+        modifier = modifier.padding(innerPadding),
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider =
+          entryProvider {
+            entry<AuthDestination.AuthStart> { key ->
+              AuthStartView(onAuthComplete = onAuthComplete)
+            }
+            entry<AuthDestination.SignInFactorOne> { key ->
+              SignInFactorOneView(factor = key.factor, onAuthComplete = onAuthComplete)
+            }
+            entry<AuthDestination.SignInFactorOneUseAnotherMethod> { key ->
+              SignInFactorAlternativeMethodsView(
+                currentFactor = key.currentFactor,
+                onAuthComplete = onAuthComplete,
+              )
+            }
+            entry<AuthDestination.SignInFactorTwo> { key ->
+              SignInFactorTwoView(factor = key.factor, onAuthComplete = onAuthComplete)
+            }
+            entry<AuthDestination.SignInFactorTwoUseAnotherMethod> { key ->
+              SignInFactorAlternativeMethodsView(
+                currentFactor = key.currentFactor,
+                isSecondFactor = true,
+                onAuthComplete = onAuthComplete,
+              )
+            }
+            entry<AuthDestination.SignInForgotPassword> { key ->
+              SignInFactorOneForgotPasswordView(
+                onClickFactor = { backStack.removeLastOrNull() },
+                onAuthComplete = onAuthComplete,
+              )
+            }
+            entry<AuthDestination.SignInSetNewPassword> {
+              SignInSetNewPasswordView(onAuthComplete = onAuthComplete)
+            }
+            entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
+            entry<AuthDestination.SignUpCollectField> { key ->
+              SignUpCollectFieldView(field = key.field, onAuthComplete = onAuthComplete)
+            }
+            entry<AuthDestination.SignUpCode> { key ->
+              SignUpCodeView(field = key.field, onAuthComplete = onAuthComplete)
+            }
+            entry<AuthDestination.SignUpCompleteProfile> {
+              SignUpCompleteProfileView(progress = it.progress, onAuthComplete = onAuthComplete)
+            }
+          },
+      )
+    }
   }
 }
 
