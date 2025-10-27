@@ -56,9 +56,16 @@ internal class SSOManagerActivity : AppCompatActivity() {
       return
     }
     // subsequent runs, we either got the response back from OAuthReceiverActivity or it was
-    // cancelled
-    intent.data?.let { authorizationComplete(it) } ?: authorizationCanceled()
-    finish()
+    // cancelled. If we have a response, complete the flow and only finish after completion to
+    // avoid cancelling the in-flight network request.
+    intent.data?.let {
+      authorizationComplete(it)
+      // Do not call finish() here; authorizationComplete will finish when done
+    }
+      ?: run {
+        authorizationCanceled()
+        finish()
+      }
   }
 
   override fun onNewIntent(intent: Intent) {
@@ -90,12 +97,17 @@ internal class SSOManagerActivity : AppCompatActivity() {
    */
   private fun authorizationComplete(uri: Uri) {
     lifecycleScope.launch {
-      if (SSOService.hasPendingExternalAccountConnection()) {
-        ClerkLog.d("authorizationComplete called with external connection")
-        SSOService.completeExternalConnection()
-      } else {
-        ClerkLog.d("authorizationComplete called with redirect: $uri")
-        SSOService.completeAuthenticateWithRedirect(uri)
+      try {
+        if (SSOService.hasPendingExternalAccountConnection()) {
+          ClerkLog.d("authorizationComplete called with external connection")
+          SSOService.completeExternalConnection()
+        } else {
+          ClerkLog.d("authorizationComplete called with redirect: $uri")
+          SSOService.completeAuthenticateWithRedirect(uri)
+        }
+      } finally {
+        // Finish only after the completion call returns so coroutines aren't cancelled early
+        finish()
       }
     }
   }
