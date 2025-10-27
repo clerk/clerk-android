@@ -2,6 +2,7 @@ package com.clerk.ui.core.scaffold
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +26,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
 fun ClerkThemedProfileScaffold(
-  content: @Composable () -> Unit,
+  content: @Composable ColumnScope.() -> Unit,
   modifier: Modifier = Modifier,
   errorMessage: String? = null,
   hasLogo: Boolean = false,

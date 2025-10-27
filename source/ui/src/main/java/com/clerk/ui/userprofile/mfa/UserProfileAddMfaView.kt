@@ -6,7 +6,7 @@ import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.ui.userprofile.totp.UserProfileMfaAddTotpView
 
 @Composable
-private fun UserProfileAddMfaView(viewType: ViewType) {
+internal fun UserProfileAddMfaView(viewType: ViewType) {
   UserProfileAddMfaViewImpl(viewType = viewType)
 }
 

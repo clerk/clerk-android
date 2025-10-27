@@ -88,6 +88,7 @@ fun UserProfileMfaAddTotpView(totpResource: TOTPResource, modifier: Modifier = M
       )
       Spacers.Vertical.Spacer24()
       ClerkTextButton(
+        modifier = Modifier.align(Alignment.CenterHorizontally),
         text = stringResource(R.string.scan_qr_code_instead),
         onClick = {},
         textStyle = ClerkMaterialTheme.typography.bodyMedium,
