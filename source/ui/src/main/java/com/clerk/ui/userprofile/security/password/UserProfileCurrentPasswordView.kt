@@ -23,14 +23,20 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
 internal fun UserProfileCurrentPasswordView(
+  passwordAction: PasswordAction,
   modifier: Modifier = Modifier,
   onNext: (String) -> Unit,
 ) {
-  UserProfileCurrentPasswordViewImpl(modifier = modifier, onNext = onNext)
+  UserProfileCurrentPasswordViewImpl(
+    modifier = modifier,
+    passwordAction = passwordAction,
+    onNext = onNext,
+  )
 }
 
 @Composable
 private fun UserProfileCurrentPasswordViewImpl(
+  passwordAction: PasswordAction,
   modifier: Modifier = Modifier,
   onNext: (String) -> Unit,
 ) {
@@ -61,6 +67,7 @@ private fun UserProfileCurrentPasswordViewImpl(
           )
           Spacers.Vertical.Spacer24()
           ClerkButton(
+            isEnabled = currentPassword.isNotBlank(),
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.next),
             onClick = { onNext(currentPassword) },
@@ -74,5 +81,7 @@ private fun UserProfileCurrentPasswordViewImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme { UserProfileCurrentPasswordViewImpl(onNext = {}) }
+  ClerkMaterialTheme {
+    UserProfileCurrentPasswordViewImpl(passwordAction = PasswordAction.Add, onNext = {})
+  }
 }

@@ -72,7 +72,7 @@ internal fun UserProfilePasswordSectionImpl(
         }
         UserProfileButtonRow(
           text = stringResource(R.string.change_password),
-          onClick = { onAction(PasswordAction.Change) },
+          onClick = { onAction(PasswordAction.Reset) },
         )
       } else {
         UserProfileButtonRow(
@@ -114,5 +114,5 @@ private fun PreviewAddPassword() {
 
 enum class PasswordAction {
   Add,
-  Change,
+  Reset,
 }

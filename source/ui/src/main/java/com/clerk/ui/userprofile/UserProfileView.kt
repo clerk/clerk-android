@@ -10,6 +10,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
+import com.clerk.ui.userprofile.security.password.PasswordAction
 import com.clerk.ui.userprofile.security.password.UserProfileCurrentPasswordView
 import com.clerk.ui.userprofile.security.password.UserProfileNewPasswordView
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
@@ -40,7 +41,13 @@ fun UserProfileView(modifier: Modifier = Modifier) {
         entry<UserProfileDestination.UserProfile> { key -> }
         entry<UserProfileDestination.UserProfileSecurity> { key ->
           UserProfileSecurityView(
-            onAction = { backStack.add(UserProfileDestination.UpdatePasswordCurrent) }
+            onAction = { action ->
+              if (action == PasswordAction.Add) {
+                backStack.add(UserProfileDestination.UpdatePasswordNew(passwordAction = action))
+              } else {
+                backStack.add(UserProfileDestination.UpdatePasswordCurrent(action))
+              }
+            }
           )
         }
         entry<UserProfileDestination.UserProfileUpdate> { key ->
@@ -48,13 +55,22 @@ fun UserProfileView(modifier: Modifier = Modifier) {
         }
         entry<UserProfileDestination.UpdatePasswordCurrent> { key ->
           UserProfileCurrentPasswordView(
-            onNext = {
-              backStack.add(UserProfileDestination.UpdatePasswordNew(currentPassword = it))
-            }
+            passwordAction = key.action,
+            onNext = { currentPassword ->
+              backStack.add(
+                UserProfileDestination.UpdatePasswordNew(
+                  currentPassword = currentPassword,
+                  passwordAction = key.action,
+                )
+              )
+            },
           )
         }
         entry<UserProfileDestination.UpdatePasswordNew> { key ->
-          UserProfileNewPasswordView(currentPassword = key.currentPassword)
+          UserProfileNewPasswordView(
+            currentPassword = key.currentPassword,
+            passwordAction = key.passwordAction,
+          )
         }
       },
   )
@@ -69,7 +85,11 @@ internal object UserProfileDestination {
 
   @Serializable data object UserProfileUpdate : NavKey
 
-  @Serializable data object UpdatePasswordCurrent : NavKey
+  @Serializable data class UpdatePasswordCurrent(val action: PasswordAction) : NavKey
 
-  @Serializable data class UpdatePasswordNew(val currentPassword: String) : NavKey
+  @Serializable
+  data class UpdatePasswordNew(
+    val currentPassword: String? = null,
+    val passwordAction: PasswordAction,
+  ) : NavKey
 }
