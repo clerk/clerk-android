@@ -21,32 +21,29 @@ import com.clerk.ui.core.input.PasswordKeyboardOptions
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
 
 @Composable
 internal fun UserProfileCurrentPasswordView(
   passwordAction: PasswordAction,
   modifier: Modifier = Modifier,
-  onNext: (String) -> Unit,
 ) {
-  UserProfileCurrentPasswordViewImpl(
-    modifier = modifier,
-    passwordAction = passwordAction,
-    onNext = onNext,
-  )
+  UserProfileCurrentPasswordViewImpl(modifier = modifier, passwordAction = passwordAction)
 }
 
 @Composable
 private fun UserProfileCurrentPasswordViewImpl(
   passwordAction: PasswordAction,
   modifier: Modifier = Modifier,
-  onNext: (String) -> Unit,
 ) {
+  val userProfileState = LocalUserProfileState.current
   var currentPassword by rememberSaveable { mutableStateOf("") }
   ClerkMaterialTheme {
     ClerkThemedProfileScaffold(
       modifier = modifier,
       hasBackButton = true,
-      onBackPressed = {},
+      onBackPressed = { userProfileState.navigateBack() },
       title =
         if (passwordAction == PasswordAction.Add) stringResource(R.string.add_password)
         else stringResource(R.string.update_password),
@@ -71,7 +68,14 @@ private fun UserProfileCurrentPasswordViewImpl(
             isEnabled = currentPassword.isNotBlank(),
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.next),
-            onClick = { onNext(currentPassword) },
+            onClick = {
+              userProfileState.navigateTo(
+                UserProfileDestination.UpdatePasswordNew(
+                  currentPassword = currentPassword,
+                  passwordAction = passwordAction,
+                )
+              )
+            },
           )
         }
       },
@@ -82,7 +86,5 @@ private fun UserProfileCurrentPasswordViewImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    UserProfileCurrentPasswordViewImpl(passwordAction = PasswordAction.Reset, onNext = {})
-  }
+  ClerkMaterialTheme { UserProfileCurrentPasswordViewImpl(passwordAction = PasswordAction.Reset) }
 }

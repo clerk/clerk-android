@@ -26,18 +26,28 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun UserProfilePasskeySection(modifier: Modifier = Modifier, onError: (String) -> Unit) {
+internal fun UserProfilePasskeySection(
+  onError: (String) -> Unit,
+  modifier: Modifier = Modifier,
+  onClickRename: (String) -> Unit,
+) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   val sortedPasskeys = user?.passkeys?.sortedBy { it.createdAt }.orEmpty().toImmutableList()
-  UserProfilePasskeySectionImpl(passkeys = sortedPasskeys, modifier = modifier, onError = onError)
+  UserProfilePasskeySectionImpl(
+    passkeys = sortedPasskeys,
+    modifier = modifier,
+    onError = onError,
+    onClickRename = onClickRename,
+  )
 }
 
 @Composable
 private fun UserProfilePasskeySectionImpl(
   passkeys: ImmutableList<Passkey>,
+  onError: (String) -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfilePasskeyViewModel = viewModel(),
-  onError: (String) -> Unit,
+  onClickRename: (String) -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   when (val s = state) {
@@ -61,7 +71,7 @@ private fun UserProfilePasskeySectionImpl(
       )
       Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
         passkeys.forEachIndexed { index, passkey ->
-          UserProfilePasskeyRow(passkey = passkey, onClickRename = {})
+          UserProfilePasskeyRow(passkey = passkey, onClickRename = { onClickRename(passkey.id) })
           if (index < passkeys.lastIndex) {
             Spacers.Vertical.Spacer32()
           }
@@ -80,6 +90,7 @@ private fun UserProfilePasskeySectionImpl(
 private fun Preview() {
   UserProfilePasskeySectionImpl(
     onError = {},
+    onClickRename = {},
     passkeys =
       persistentListOf(
         Passkey(

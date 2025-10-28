@@ -34,19 +34,18 @@ import com.clerk.ui.core.input.PasswordKeyboardOptions
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
 
 @Composable
 internal fun UserProfileNewPasswordView(
   currentPassword: String?,
   passwordAction: PasswordAction,
-  onSuccess: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   UserProfileNewPasswordViewImpl(
     modifier = modifier,
     passwordAction = passwordAction,
     currentPassword = currentPassword,
-    onSuccess = onSuccess,
   )
 }
 
@@ -54,14 +53,14 @@ internal fun UserProfileNewPasswordView(
 private fun UserProfileNewPasswordViewImpl(
   passwordAction: PasswordAction,
   currentPassword: String?,
-  onSuccess: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfileChangePasswordViewModel = viewModel(),
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
+  val userProfileState = LocalUserProfileState.current
   LaunchedEffect(state) {
     if (state is UserProfileChangePasswordViewModel.State.Success) {
-      onSuccess()
+      userProfileState.pop(2)
     }
   }
   val errorMessage = (state as? UserProfileChangePasswordViewModel.State.Error)?.message
@@ -170,10 +169,6 @@ private fun SignOutOtherDevicesContent(
 @Composable
 private fun Preview() {
   ClerkMaterialTheme {
-    UserProfileNewPasswordViewImpl(
-      passwordAction = PasswordAction.Add,
-      "MySecretPassword123",
-      onSuccess = {},
-    )
+    UserProfileNewPasswordViewImpl(passwordAction = PasswordAction.Add, "MySecretPassword123")
   }
 }

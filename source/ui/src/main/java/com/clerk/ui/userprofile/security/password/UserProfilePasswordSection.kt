@@ -24,22 +24,21 @@ import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
+import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 
 @Composable
-internal fun UserProfilePasswordSection(
-  modifier: Modifier = Modifier,
-  onAction: (PasswordAction) -> Unit,
-) {
-  UserProfilePasswordSectionImpl(modifier = modifier, onAction = onAction)
+internal fun UserProfilePasswordSection(modifier: Modifier = Modifier) {
+  UserProfilePasswordSectionImpl(modifier = modifier)
 }
 
 @Composable
 internal fun UserProfilePasswordSectionImpl(
   modifier: Modifier = Modifier,
   isPasswordEnabled: Boolean = Clerk.user?.passwordEnabled == true,
-  onAction: (PasswordAction) -> Unit,
 ) {
+  val userProfileState = LocalUserProfileState.current
   ClerkMaterialTheme {
     Column(
       modifier =
@@ -72,12 +71,20 @@ internal fun UserProfilePasswordSectionImpl(
         }
         UserProfileButtonRow(
           text = stringResource(R.string.change_password),
-          onClick = { onAction(PasswordAction.Reset) },
+          onClick = {
+            userProfileState.navigateTo(
+              UserProfileDestination.UpdatePasswordCurrent(PasswordAction.Reset)
+            )
+          },
         )
       } else {
         UserProfileButtonRow(
           text = stringResource(R.string.add_password),
-          onClick = { onAction(PasswordAction.Add) },
+          onClick = {
+            userProfileState.navigateTo(
+              UserProfileDestination.UpdatePasswordNew(passwordAction = PasswordAction.Add)
+            )
+          },
         )
       }
     }
@@ -93,7 +100,7 @@ private fun Preview() {
       modifier =
         Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
     ) {
-      UserProfilePasswordSectionImpl(onAction = {}, isPasswordEnabled = true)
+      UserProfilePasswordSectionImpl(isPasswordEnabled = true)
     }
   }
 }
@@ -107,7 +114,7 @@ private fun PreviewAddPassword() {
       modifier =
         Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
     ) {
-      UserProfilePasswordSectionImpl(onAction = {})
+      UserProfilePasswordSectionImpl()
     }
   }
 }

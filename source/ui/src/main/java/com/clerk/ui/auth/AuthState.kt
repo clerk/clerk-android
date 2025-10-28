@@ -14,6 +14,8 @@ import com.clerk.api.signin.startingSecondFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.firstFieldToCollect
 import com.clerk.api.signup.firstFieldToVerify
+import com.clerk.ui.core.common.NavigableState
+import com.clerk.ui.core.navigation.pop
 import com.clerk.ui.signup.code.SignUpCodeField
 import com.clerk.ui.signup.collectfield.CollectField
 
@@ -29,7 +31,7 @@ private const val USERNAME = "username"
 internal class AuthState(
   val mode: AuthMode = AuthMode.SignInOrUp,
   val backStack: NavBackStack<NavKey>,
-) {
+) : NavigableState {
 
   // Auth start fields
   var authStartIdentifier by mutableStateOf("")
@@ -49,16 +51,20 @@ internal class AuthState(
   var signUpEmail by mutableStateOf("")
   var signUpPhoneNumber by mutableStateOf("")
 
-  internal fun navigateTo(destination: NavKey) {
+  override fun navigateTo(destination: NavKey) {
     backStack.add(destination)
   }
 
-  internal fun navigateBack() {
+  override fun navigateBack() {
     backStack.removeLastOrNull()
   }
 
-  internal fun navigateToAuthStart() {
+  override fun clearBackStack() {
     backStack.clear()
+  }
+
+  override fun pop(numberOfScreens: Int) {
+    backStack.pop(numberOfScreens)
   }
 
   internal fun setToStepForStatus(signIn: SignIn, onAuthComplete: () -> Unit) {
