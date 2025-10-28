@@ -70,6 +70,7 @@ fun UserProfileView(modifier: Modifier = Modifier) {
           UserProfileNewPasswordView(
             currentPassword = key.currentPassword,
             passwordAction = key.passwordAction,
+            onSuccess = backStack::removeLastOrNull,
           )
         }
       },
