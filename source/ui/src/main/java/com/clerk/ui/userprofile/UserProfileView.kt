@@ -7,6 +7,7 @@ import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.clerk.ui.core.navigation.pop
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
@@ -70,7 +71,7 @@ fun UserProfileView(modifier: Modifier = Modifier) {
           UserProfileNewPasswordView(
             currentPassword = key.currentPassword,
             passwordAction = key.passwordAction,
-            onSuccess = backStack::removeLastOrNull,
+            onSuccess = { backStack.pop(2) },
           )
         }
       },

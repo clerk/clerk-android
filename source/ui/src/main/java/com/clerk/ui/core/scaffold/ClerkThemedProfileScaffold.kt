@@ -35,7 +35,7 @@ fun ClerkThemedProfileScaffold(
   title: String? = null,
   onBackPressed: () -> Unit = {},
   horizontalPadding: Dp = dp18,
-  backgroundColor: Color = ClerkMaterialTheme.colors.background,
+  backgroundColor: Color? = null,
   bottomContent: (@Composable () -> Unit)? = null,
   contentTopPadding: Dp = dp24,
 ) {
@@ -51,7 +51,10 @@ fun ClerkThemedProfileScaffold(
     ) { innerPadding ->
       Column(
         modifier =
-          Modifier.fillMaxWidth().fillMaxSize().background(backgroundColor).padding(innerPadding),
+          Modifier.fillMaxWidth()
+            .fillMaxSize()
+            .background(backgroundColor ?: ClerkMaterialTheme.colors.background)
+            .padding(innerPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
         ClerkTopAppBar(

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -20,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -30,6 +30,7 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.input.PasswordKeyboardOptions
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -100,7 +101,7 @@ private fun UpdatePasswordContent(isLoading: Boolean = false, onClick: (String, 
       label = stringResource(R.string.new_password),
       visualTransformation = PasswordVisualTransformation(),
       inputContentType = ContentType.NewPassword,
-      keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
+      keyboardOptions = PasswordKeyboardOptions.copy(imeAction = ImeAction.Next),
     )
     Spacers.Vertical.Spacer16()
     ClerkTextField(
@@ -110,7 +111,7 @@ private fun UpdatePasswordContent(isLoading: Boolean = false, onClick: (String, 
       label = stringResource(R.string.confirm_password),
       visualTransformation = PasswordVisualTransformation(),
       inputContentType = ContentType.NewPassword,
-      keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
+      keyboardOptions = PasswordKeyboardOptions,
     )
     Spacers.Vertical.Spacer20()
     SignOutOtherDevicesContent(

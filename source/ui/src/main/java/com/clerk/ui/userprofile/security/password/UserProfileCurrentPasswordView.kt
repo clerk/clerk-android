@@ -2,7 +2,6 @@ package com.clerk.ui.userprofile.security.password
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,6 +17,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.input.PasswordKeyboardOptions
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -63,7 +63,7 @@ private fun UserProfileCurrentPasswordViewImpl(
             onValueChange = { currentPassword = it },
             label = stringResource(R.string.current_password),
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
+            keyboardOptions = PasswordKeyboardOptions,
             inputContentType = ContentType.Password,
           )
           Spacers.Vertical.Spacer24()
