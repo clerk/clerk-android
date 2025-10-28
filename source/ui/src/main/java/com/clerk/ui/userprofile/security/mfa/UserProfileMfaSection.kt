@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,6 +15,7 @@ import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
@@ -58,13 +57,16 @@ private fun UserProfileMfaSectionImpl(
         color = ClerkMaterialTheme.colors.mutedForeground,
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
       )
-      LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
-        items(mfaItems) { mfaItem ->
+      Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
+        mfaItems.forEachIndexed { index, mfaItem ->
           UserProfileMfaRow(
             style = mfaItem.style,
             isDefault = mfaItem.isDefault,
             onRemove = onRemove,
           )
+          if (index < mfaItems.lastIndex) {
+            Spacers.Vertical.Spacer16()
+          }
         }
       }
 

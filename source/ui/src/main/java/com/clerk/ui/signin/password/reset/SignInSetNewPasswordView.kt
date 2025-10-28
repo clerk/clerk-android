@@ -150,7 +150,7 @@ private fun SignOutOfOtherDevicesRow(
   ) {
     Text(
       text = stringResource(R.string.sign_out_of_all_other_devices),
-      style = ClerkMaterialTheme.typography.titleMedium,
+      style = ClerkMaterialTheme.typography.bodyLarge,
     )
     Spacer(modifier = Modifier.weight(1f))
     Switch(

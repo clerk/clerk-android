@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
@@ -77,6 +78,7 @@ private fun UserProfileSecurityViewImpl(
       modifier = Modifier.then(modifier),
       snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
+      val scrollState = rememberScrollState()
       when (state) {
         is UserProfileSecurityViewModel.State.Loading,
         UserProfileSecurityViewModel.State.Idle -> {
@@ -92,10 +94,10 @@ private fun UserProfileSecurityViewImpl(
         else -> {
           Column(
             modifier =
-              Modifier.fillMaxWidth()
-                .fillMaxSize()
+              Modifier.fillMaxSize()
                 .background(ClerkMaterialTheme.colors.muted)
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
           ) {
             ClerkTopAppBar(
@@ -113,6 +115,7 @@ private fun UserProfileSecurityViewImpl(
               isDeleteSelfEnabled,
               onAction = onAction,
             )
+
             UserProfileSecurityFooter()
           }
         }

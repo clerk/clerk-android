@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -52,7 +50,14 @@ private fun UserProfileDevicesSectionImpl(
           style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
         )
         Spacers.Vertical.Spacer16()
-        LazyColumn { items(devices) { UserProfileDeviceRow(session = it, onError = {}) } }
+        Column(modifier = Modifier.fillMaxWidth()) {
+          devices.forEachIndexed { index, session ->
+            UserProfileDeviceRow(session = session, onError = {})
+            if (index < devices.lastIndex) {
+              Spacers.Vertical.Spacer16()
+            }
+          }
+        }
       }
     }
   }
