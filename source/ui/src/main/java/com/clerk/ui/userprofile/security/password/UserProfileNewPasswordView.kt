@@ -11,6 +11,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -37,25 +38,40 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 internal fun UserProfileNewPasswordView(
   currentPassword: String?,
   passwordAction: PasswordAction,
+  onSuccess: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  UserProfileNewPasswordViewImpl(modifier = modifier, currentPassword = currentPassword)
+  UserProfileNewPasswordViewImpl(
+    modifier = modifier,
+    passwordAction = passwordAction,
+    currentPassword = currentPassword,
+    onSuccess = onSuccess,
+  )
 }
 
 @Composable
 private fun UserProfileNewPasswordViewImpl(
+  passwordAction: PasswordAction,
   currentPassword: String?,
+  onSuccess: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfileChangePasswordViewModel = viewModel(),
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
+  LaunchedEffect(state) {
+    if (state is UserProfileChangePasswordViewModel.State.Success) {
+      onSuccess()
+    }
+  }
   val errorMessage = (state as? UserProfileChangePasswordViewModel.State.Error)?.message
   ClerkThemedProfileScaffold(
     modifier = modifier,
     errorMessage = errorMessage,
     hasBackButton = true,
     contentTopPadding = dp12,
-    title = stringResource(R.string.update_password),
+    title =
+      if (passwordAction == PasswordAction.Reset) stringResource(R.string.update_password)
+      else stringResource(R.string.add_password),
     content = {
       UpdatePasswordContent(
         isLoading = state is UserProfileChangePasswordViewModel.State.Loading,
@@ -96,7 +112,7 @@ private fun UpdatePasswordContent(isLoading: Boolean = false, onClick: (String, 
       inputContentType = ContentType.NewPassword,
       keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
     )
-    Spacers.Vertical.Spacer16()
+    Spacers.Vertical.Spacer20()
     SignOutOtherDevicesContent(
       signOutOfOtherDevices = signOutOfOtherDevices,
       onCheckChange = { signOutOfOtherDevices = !it },
@@ -104,6 +120,8 @@ private fun UpdatePasswordContent(isLoading: Boolean = false, onClick: (String, 
     Spacers.Vertical.Spacer24()
     ClerkButton(
       isLoading = isLoading,
+      isEnabled =
+        newPassword.isNotBlank() && confirmPassword.isNotBlank() && newPassword == confirmPassword,
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.save),
       onClick = { onClick(newPassword, signOutOfOtherDevices) },
@@ -150,5 +168,11 @@ private fun SignOutOtherDevicesContent(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme { UserProfileNewPasswordViewImpl("MySecretPassword123") }
+  ClerkMaterialTheme {
+    UserProfileNewPasswordViewImpl(
+      passwordAction = PasswordAction.Add,
+      "MySecretPassword123",
+      onSuccess = {},
+    )
+  }
 }
