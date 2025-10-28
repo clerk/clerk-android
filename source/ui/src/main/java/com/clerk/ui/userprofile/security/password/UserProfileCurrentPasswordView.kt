@@ -9,9 +9,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
@@ -46,24 +47,24 @@ private fun UserProfileCurrentPasswordViewImpl(
       modifier = modifier,
       hasBackButton = true,
       onBackPressed = {},
-      title = stringResource(R.string.update_password),
+      title =
+        if (passwordAction == PasswordAction.Add) stringResource(R.string.add_password)
+        else stringResource(R.string.update_password),
       content = {
-        Column(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
           Text(
             text = stringResource(R.string.enter_your_current_password_to_set_a_new_one),
-            style = ClerkMaterialTheme.typography.bodyMedium,
+            style = ClerkMaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal),
             color = ClerkMaterialTheme.colors.mutedForeground,
           )
-          Spacers.Vertical.Spacer24()
+          Spacers.Vertical.Spacer12()
           ClerkTextField(
             value = currentPassword,
             onValueChange = { currentPassword = it },
             label = stringResource(R.string.current_password),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
+            inputContentType = ContentType.Password,
           )
           Spacers.Vertical.Spacer24()
           ClerkButton(
@@ -82,6 +83,6 @@ private fun UserProfileCurrentPasswordViewImpl(
 @Composable
 private fun Preview() {
   ClerkMaterialTheme {
-    UserProfileCurrentPasswordViewImpl(passwordAction = PasswordAction.Add, onNext = {})
+    UserProfileCurrentPasswordViewImpl(passwordAction = PasswordAction.Reset, onNext = {})
   }
 }
