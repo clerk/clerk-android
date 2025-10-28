@@ -27,7 +27,8 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun UserProfilePasskeySection(modifier: Modifier = Modifier, onError: (String) -> Unit) {
-  val sortedPasskeys = Clerk.user?.passkeys?.sortedBy { it.createdAt }.orEmpty().toImmutableList()
+  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val sortedPasskeys = user?.passkeys?.sortedBy { it.createdAt }.orEmpty().toImmutableList()
   UserProfilePasskeySectionImpl(passkeys = sortedPasskeys, modifier = modifier, onError = onError)
 }
 
