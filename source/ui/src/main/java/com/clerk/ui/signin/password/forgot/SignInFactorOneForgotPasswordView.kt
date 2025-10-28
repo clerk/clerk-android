@@ -96,7 +96,7 @@ private fun SignInFactorOneForgotPasswordViewImpl(
         snackbarHostState.showSnackbar(
           s.message ?: context.getString(R.string.something_went_wrong_please_try_again)
         )
-      ResetPasswordViewState.NotStarted -> authState.navigateToAuthStart()
+      ResetPasswordViewState.NotStarted -> authState.clearBackStack()
       is ResetPasswordViewState.ResetFactor ->
         authState.navigateTo(AuthDestination.SignInFactorOne(factor = s.factor))
       is ResetPasswordViewState.Success.SignIn ->

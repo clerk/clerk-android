@@ -21,7 +21,7 @@ internal fun AuthStateEffects(
         val msg = state.message ?: context.getString(R.string.something_went_wrong_please_try_again)
         snackbarHostState.showSnackbar(msg)
       }
-      AuthenticationViewState.NotStarted -> authState.navigateToAuthStart()
+      AuthenticationViewState.NotStarted -> authState.clearBackStack()
       is AuthenticationViewState.Success.SignIn -> {
         authState.setToStepForStatus(state.signIn, onAuthComplete)
         onReset()
