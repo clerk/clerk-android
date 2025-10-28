@@ -1,12 +1,9 @@
 package com.clerk.ui.userprofile.security.passkey
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,7 +18,7 @@ import com.clerk.api.passkeys.Passkey
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp32
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
@@ -61,11 +58,13 @@ private fun UserProfilePasskeySectionImpl(
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
-      LazyColumn(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = dp24),
-        verticalArrangement = Arrangement.spacedBy(dp32),
-      ) {
-        items(passkeys) { passkey -> UserProfilePasskeyRow(passkey = passkey, onClickRename = {}) }
+      Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
+        passkeys.forEachIndexed { index, passkey ->
+          UserProfilePasskeyRow(passkey = passkey, onClickRename = {})
+          if (index < passkeys.lastIndex) {
+            Spacers.Vertical.Spacer32()
+          }
+        }
       }
       UserProfileButtonRow(
         text = stringResource(R.string.add_a_passkey),
