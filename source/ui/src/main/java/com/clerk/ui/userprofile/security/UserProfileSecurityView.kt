@@ -274,27 +274,24 @@ private fun UserProfileSecurityContent(
   onError: (String) -> Unit,
   onAdd: () -> Unit,
 ) {
-  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
-  UserProfileStateProvider(backStack) {
-    if (configuration.isPasswordEnabled) {
-      UserProfilePasswordSection()
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-    }
-    if (configuration.isPasskeyEnabled) {
-      UserProfilePasskeySection(onError = onError)
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-    }
-    if (configuration.isMfaEnabled) {
-      UserProfileMfaSection(onRemove = {}, onAdd = onAdd)
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-    }
-    if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
-      UserProfileDevicesSection(devices = configuration.sessions)
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-    }
-    if (configuration.isDeleteSelfEnabled) {
-      UserProfileDeleteAccountSection(onDeleteAccount = {})
-    }
+  if (configuration.isPasswordEnabled) {
+    UserProfilePasswordSection()
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if (configuration.isPasskeyEnabled) {
+    UserProfilePasskeySection(onError = onError)
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if (configuration.isMfaEnabled) {
+    UserProfileMfaSection(onRemove = {}, onAdd = onAdd)
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
+    UserProfileDevicesSection(devices = configuration.sessions)
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if (configuration.isDeleteSelfEnabled) {
+    UserProfileDeleteAccountSection(onDeleteAccount = {})
   }
 }
 

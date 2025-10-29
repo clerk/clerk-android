@@ -20,6 +20,7 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.code.VerificationState as CodeVerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
+import kotlinx.serialization.Serializable
 
 @Composable
 fun UserProfileVerifyView(mode: Mode, modifier: Modifier = Modifier) {
@@ -145,10 +146,11 @@ private fun Mode.instructionString(): String {
 }
 
 @Immutable
+@Serializable
 sealed interface Mode {
-  data class Email(val emailAddress: EmailAddress) : Mode
+  @Serializable data class Email(val emailAddress: EmailAddress) : Mode
 
-  data class Phone(val phoneNumber: PhoneNumber) : Mode
+  @Serializable data class Phone(val phoneNumber: PhoneNumber) : Mode
 
-  data object Totp : Mode
+  @Serializable data object Totp : Mode
 }
