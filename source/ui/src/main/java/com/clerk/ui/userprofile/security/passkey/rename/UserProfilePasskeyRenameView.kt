@@ -44,7 +44,7 @@ private fun UserProfilePasskeyRenameViewImpl(
   viewModel: UserProfilePasskeyRenameViewModel = viewModel(),
 ) {
   val userProfileState = LocalUserProfileState.current
-  var passkeyName by rememberSaveable { mutableStateOf(passkeyName) }
+  var passkeyNameInput by rememberSaveable { mutableStateOf(passkeyName) }
   var originalPasskeyName by rememberSaveable { mutableStateOf(passkeyName) }
   val state by viewModel.state.collectAsStateWithLifecycle()
   val errorMessage = (state as? UserProfilePasskeyRenameViewModel.State.Error)?.message
@@ -69,8 +69,8 @@ private fun UserProfilePasskeyRenameViewImpl(
     )
     Spacers.Vertical.Spacer20()
     ClerkTextField(
-      value = passkeyName,
-      onValueChange = { passkeyName = it },
+      value = passkeyNameInput,
+      onValueChange = { passkeyNameInput = it },
       label = stringResource(R.string.name_of_passkey),
     )
     Spacers.Vertical.Spacer24()
