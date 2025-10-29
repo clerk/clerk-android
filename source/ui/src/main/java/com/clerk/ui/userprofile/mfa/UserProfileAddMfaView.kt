@@ -3,6 +3,7 @@ package com.clerk.ui.userprofile.mfa
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.userprofile.totp.UserProfileMfaAddTotpView
+import kotlinx.serialization.Serializable
 
 @Composable
 internal fun UserProfileAddMfaView(viewType: ViewType) {
@@ -18,10 +19,12 @@ private fun UserProfileAddMfaViewImpl(viewType: ViewType) {
   }
 }
 
+@Serializable
 internal sealed interface ViewType {
-  data object Sms : ViewType
 
-  data object AuthenticatorApp : ViewType
+  @Serializable data object Sms : ViewType
+
+  @Serializable data object AuthenticatorApp : ViewType
 }
 
 @PreviewLightDark

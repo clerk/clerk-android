@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -78,15 +77,8 @@ private fun UserProfileMfaAddSmsViewImpl(
   onClickUsePhoneNumber: () -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
-  val phoneUtil = PhoneNumberUtil.getInstance()
   var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
-  val context = LocalContext.current
-  val errorMessage: String? =
-    when (val s = state) {
-      is MfaAddSmsViewModel.State.Error ->
-        s.message ?: context.getString(R.string.something_went_wrong_please_try_again)
-      else -> null
-    }
+  val errorMessage: String? = (state as? MfaAddSmsViewModel.State.Error)?.message
 
   if (state is MfaAddSmsViewModel.State.Success) {
     onReserveForSecondFactorSuccess()
@@ -104,12 +96,12 @@ private fun UserProfileMfaAddSmsViewImpl(
       Spacers.Vertical.Spacer24()
       LazyColumn(verticalArrangement = Arrangement.spacedBy(dp12)) {
         items(availablePhoneNumbers) { phoneNumber ->
-          val proto = phoneUtil.parse(phoneNumber.phoneNumber, null)
-          val region = phoneUtil.getRegionCodeForNumber(proto)
+          val (resolvedRegion: String, flag, displayNumber: String) = parsePhoneNumber(phoneNumber)
+
           AddMfaSmsRow(
-            regionCode = region,
-            flag = CountryCodeUtils.regionToFlagEmoji(region),
-            phoneNumber = phoneNumber.phoneNumber,
+            regionCode = resolvedRegion,
+            flag = flag,
+            phoneNumber = displayNumber,
             selected = selectedNumber == phoneNumber,
             onSelected = { selectedNumber = phoneNumber },
           )
@@ -131,6 +123,41 @@ private fun UserProfileMfaAddSmsViewImpl(
       )
     },
   )
+}
+
+private fun parsePhoneNumber(phoneNumber: PhoneNumber): Triple<String, String, String> {
+  val phoneUtil = PhoneNumberUtil.getInstance()
+  val raw = phoneNumber.phoneNumber
+  val proto =
+    runCatching {
+        val formatted = if (raw.startsWith("+")) raw else "+$raw"
+        phoneUtil.parse(formatted, null)
+      }
+      .getOrNull()
+
+  val resolvedRegion: String =
+    when {
+      raw.startsWith("+1") || proto?.countryCode == 1 -> "US"
+      proto != null ->
+        phoneUtil.getRegionCodeForNumber(proto)
+          ?: phoneUtil.getRegionCodeForCountryCode(proto.countryCode)
+          ?: "UN"
+
+      else -> "UN"
+    }
+
+  // Safely build the flag emoji
+  val flag = runCatching { CountryCodeUtils.regionToFlagEmoji(resolvedRegion) }.getOrElse { "🏳️" }
+
+  // Format nicely for display if valid
+  val displayNumber: String =
+    when {
+      proto != null && phoneUtil.isValidNumber(proto) ->
+        phoneUtil.format(proto, PhoneNumberUtil.PhoneNumberFormat.NATIONAL)
+
+      else -> raw
+    }
+  return Triple(resolvedRegion, flag, displayNumber)
 }
 
 @Composable

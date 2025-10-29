@@ -4,8 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
+import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.phonenumber.PhoneNumber
-import com.clerk.api.phonenumber.setReservedForSecondFactor
+import com.clerk.api.phonenumber.makeDefaultSecondFactor
 import com.clerk.api.user.createBackupCodes
 import com.clerk.ui.core.common.guardUser
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,9 +23,10 @@ class UserProfileMfaViewModel : ViewModel() {
     _state.value = State.Loading
     guardUser(userDoesNotExist = { _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch {
-        phoneNumber?.setReservedForSecondFactor(true)?.onFailure {
-          _state.value = State.Error(it.errorMessage)
-        }
+        phoneNumber
+          ?.makeDefaultSecondFactor()
+          ?.onSuccess { _state.value = State.Success }
+          ?.onFailure { _state.value = State.Error(it.errorMessage) }
       }
     }
   }
@@ -44,5 +46,7 @@ class UserProfileMfaViewModel : ViewModel() {
     data object Loading : State
 
     data class Error(val message: String?) : State
+
+    data object Success : State
   }
 }

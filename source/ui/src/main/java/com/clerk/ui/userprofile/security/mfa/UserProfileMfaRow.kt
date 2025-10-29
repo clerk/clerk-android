@@ -75,7 +75,7 @@ internal fun UserProfileMfaRow(
               text = stringResource(R.string.set_as_default),
               isHidden =
                 style !is Style.Sms ||
-                  (Clerk.user?.totpEnabled != true && !style.phoneNumber.defaultSecondFactor),
+                  (Clerk.user?.totpEnabled != true && style.phoneNumber.defaultSecondFactor),
             ),
             DropDownItem(
               id = MfaAction.Regenerate,

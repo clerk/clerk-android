@@ -57,6 +57,7 @@ private fun UserProfileMfaSectionImpl(
         color = ClerkMaterialTheme.colors.mutedForeground,
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
       )
+      Spacers.Vertical.Spacer32()
       Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
         mfaItems.forEachIndexed { index, mfaItem ->
           UserProfileMfaRow(

@@ -619,11 +619,38 @@ internal interface UserApi {
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<ClerkPaginatedResponse<OrganizationSuggestion>, ClerkErrorResponse>
 
+  /**
+   * Sets whether a phone number is reserved for second-factor authentication.
+   *
+   * @param phoneNumberId The ID of the phone number to update.
+   * @param reservedForSecondFactor A boolean indicating if the phone number should be reserved for
+   *   2FA.
+   * @param sessionId Optional session ID. Defaults to the current session ID from [Clerk.session].
+   * @return A [ClerkResult] containing the updated [PhoneNumber] on success or a
+   *   [ClerkErrorResponse] on failure.
+   */
   @FormUrlEncoded
   @PATCH(ApiPaths.User.PhoneNumber.WITH_ID)
   suspend fun setReservedForSecondFactor(
     @Path(ApiParams.PHONE_NUMBER_ID) phoneNumberId: String,
     @Field("reserved_for_second_factor") reservedForSecondFactor: Boolean,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
+  ): ClerkResult<PhoneNumber, ClerkErrorResponse>
+
+  /**
+   * Sets a phone number as the default for second-factor authentication.
+   *
+   * @param phoneNumberId The ID of the phone number to set as the default second factor.
+   * @param defaultSecondFactor Must be `true` to set this phone number as the default.
+   * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session].
+   * @return [ClerkResult] containing the updated [PhoneNumber] on success or [ClerkErrorResponse]
+   *   on failure.
+   */
+  @FormUrlEncoded
+  @PATCH(ApiPaths.User.PhoneNumber.WITH_ID)
+  suspend fun makeDefaultSecondFactor(
+    @Path(ApiParams.PHONE_NUMBER_ID) phoneNumberId: String,
+    @Field("default_second_factor") defaultSecondFactor: Boolean,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 }
