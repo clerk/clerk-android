@@ -205,6 +205,9 @@ object Clerk {
   val mfaBackupCodeIsEnabled: Boolean
     get() = if (::environment.isInitialized) environment.mfaBackupCodeIsEnabled else false
 
+  val mfaAuthenticatorAppIsEnabled: Boolean
+    get() = if (::environment.isInitialized) environment.mfaAuthenticatorAppIsEnabled else false
+
   // endregion
 
   // region Session Management

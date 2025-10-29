@@ -161,14 +161,21 @@ private fun UserProfileSecurityMainContent(
         sheetState = sheetState,
         onDismissRequest = { showBottomSheet = false },
       ) {
-        BottomSheetContent()
+        BottomSheetContent(
+          mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
+          mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
+        )
       }
     }
   }
 }
 
 @Composable
-private fun BottomSheetContent(modifier: Modifier = Modifier) {
+private fun BottomSheetContent(
+  mfaPhoneCodeIsEnabled: Boolean,
+  mfaAuthenticatorAppIsEnabled: Boolean,
+  modifier: Modifier = Modifier,
+) {
   ClerkMaterialTheme {
     Column(
       modifier =
@@ -192,20 +199,24 @@ private fun BottomSheetContent(modifier: Modifier = Modifier) {
       )
       Spacers.Vertical.Spacer12()
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-      UserProfileIconActionRow(
-        iconSize = dp24,
-        iconResId = R.drawable.ic_phone,
-        text = stringResource(R.string.sms_code),
-        onClick = {},
-      )
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-      UserProfileIconActionRow(
-        iconSize = dp24,
-        iconResId = R.drawable.ic_key,
-        text = stringResource(R.string.authenticator_application),
-        onClick = {},
-      )
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+      if (mfaPhoneCodeIsEnabled) {
+        UserProfileIconActionRow(
+          iconSize = dp24,
+          iconResId = R.drawable.ic_phone,
+          text = stringResource(R.string.sms_code),
+          onClick = {},
+        )
+        HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+      }
+      if (mfaAuthenticatorAppIsEnabled) {
+        UserProfileIconActionRow(
+          iconSize = dp24,
+          iconResId = R.drawable.ic_key,
+          text = stringResource(R.string.authenticator_application),
+          onClick = {},
+        )
+        HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+      }
       Spacers.Vertical.Spacer24()
     }
   }
@@ -214,7 +225,25 @@ private fun BottomSheetContent(modifier: Modifier = Modifier) {
 @PreviewLightDark
 @Composable
 private fun PreviewBottomSheet() {
-  ClerkMaterialTheme { BottomSheetContent() }
+  ClerkMaterialTheme {
+    BottomSheetContent(mfaPhoneCodeIsEnabled = true, mfaAuthenticatorAppIsEnabled = true)
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewBottomSheetPhoneDisabled() {
+  ClerkMaterialTheme {
+    BottomSheetContent(mfaPhoneCodeIsEnabled = false, mfaAuthenticatorAppIsEnabled = true)
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewBottomSheetAuthAppDisabled() {
+  ClerkMaterialTheme {
+    BottomSheetContent(mfaPhoneCodeIsEnabled = true, mfaAuthenticatorAppIsEnabled = false)
+  }
 }
 
 @Composable
