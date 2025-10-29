@@ -5,20 +5,26 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -31,6 +37,7 @@ import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
@@ -42,59 +49,86 @@ import kotlinx.coroutines.launch
  * app as a second factor. It provides the necessary information for the user to configure their
  * app.
  *
- * @param totpResource The [TOTPResource] containing the secret and URI for setting up the
- *   authenticator.
  * @param modifier The [Modifier] to be applied to the layout.
  */
 @Composable
-fun UserProfileMfaAddTotpView(totpResource: TOTPResource, modifier: Modifier = Modifier) {
+internal fun UserProfileMfaAddTotpView(modifier: Modifier = Modifier) {
+  UserProfileMfaAddTotpViewImpl(modifier = modifier)
+}
+
+@Composable
+private fun UserProfileMfaAddTotpViewImpl(
+  modifier: Modifier = Modifier,
+  viewModel: UserProfileMfaTotpViewModel = viewModel(),
+) {
   val clipboard = LocalClipboard.current
   val scope = rememberCoroutineScope()
+  val state by viewModel.state.collectAsStateWithLifecycle()
   ClerkThemedProfileScaffold(
     modifier = modifier,
     title = stringResource(R.string.add_authenticator_application),
     onBackPressed = {},
     content = {
-      Text(
-        text = stringResource(R.string.set_up_a_new_sign_in_method),
-        style = ClerkMaterialTheme.typography.bodyMedium,
-        color = ClerkMaterialTheme.colors.mutedForeground,
-      )
-      DisplayTextWithActionButton(
-        text = totpResource.secret,
-        onClick = {
-          scope.launch {
-            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", totpResource.secret)))
-          }
-        },
-      )
-      Text(
-        text = stringResource(R.string.alternatively_if_your_authenticator_supports_totp),
-        style = ClerkMaterialTheme.typography.bodyMedium,
-        color = ClerkMaterialTheme.colors.mutedForeground,
-      )
-      DisplayTextWithActionButton(
-        text = totpResource.uri,
-        onClick = {
-          scope.launch {
-            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", totpResource.uri)))
-          }
-        },
-      )
-      ClerkButton(
-        modifier = Modifier.fillMaxWidth(),
-        text = stringResource(R.string.continue_text),
-        onClick = {},
-      )
-      Spacers.Vertical.Spacer24()
-      ClerkTextButton(
-        modifier = Modifier.align(Alignment.CenterHorizontally),
-        text = stringResource(R.string.scan_qr_code_instead),
-        onClick = {},
-        textStyle = ClerkMaterialTheme.typography.bodyMedium,
-      )
+      if (state is UserProfileMfaTotpViewModel.State.Loading) {
+        Box(
+          modifier =
+            Modifier.fillMaxSize().background(color = ClerkMaterialTheme.colors.background),
+          contentAlignment = Alignment.Center,
+        ) {
+          CircularProgressIndicator(color = ClerkMaterialTheme.colors.foreground)
+        }
+      }
+      UserProfileMfaAddTotpContent(state, scope, clipboard)
     },
   )
+}
+
+@Composable
+private fun ColumnScope.UserProfileMfaAddTotpContent(
+  state: UserProfileMfaTotpViewModel.State,
+  scope: CoroutineScope,
+  clipboard: Clipboard,
+) {
+  if (state is UserProfileMfaTotpViewModel.State.Success) {
+    Text(
+      text = stringResource(R.string.set_up_a_new_sign_in_method),
+      style = ClerkMaterialTheme.typography.bodyMedium,
+      color = ClerkMaterialTheme.colors.mutedForeground,
+    )
+    DisplayTextWithActionButton(
+      text = state.totpResource.secret,
+      onClick = {
+        scope.launch {
+          clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", state.totpResource.secret)))
+        }
+      },
+    )
+    Text(
+      text = stringResource(R.string.alternatively_if_your_authenticator_supports_totp),
+      style = ClerkMaterialTheme.typography.bodyMedium,
+      color = ClerkMaterialTheme.colors.mutedForeground,
+    )
+    DisplayTextWithActionButton(
+      text = state.totpResource.uri,
+      onClick = {
+        scope.launch {
+          clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", state.totpResource.uri)))
+        }
+      },
+    )
+    ClerkButton(
+      modifier = Modifier.fillMaxWidth(),
+      text = stringResource(R.string.continue_text),
+      onClick = {},
+    )
+    Spacers.Vertical.Spacer24()
+    ClerkTextButton(
+      modifier = Modifier.align(Alignment.CenterHorizontally),
+      text = stringResource(R.string.scan_qr_code_instead),
+      onClick = {},
+      textStyle = ClerkMaterialTheme.typography.bodyMedium,
+    )
+  }
 }
 
 @Composable
@@ -155,19 +189,5 @@ private fun TextDisplayBox(text: String, modifier: Modifier = Modifier) {
 @Composable
 private fun Preview() {
   Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme {
-    UserProfileMfaAddTotpView(
-      totpResource =
-        TOTPResource(
-          id = "1",
-          secret = "MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
-          uri =
-            "otpauth://totp/Clerk:georgevanjek@clerk.dev?algorithm=SHA1&digits=6" +
-              "&issuer=Clerk&period=30&secret=MATT2JN8YFCTF7BUC6Z2BUAUI3HKOSRC",
-          verified = true,
-          createdAt = 1L,
-          updatedAt = 1L,
-        )
-    )
-  }
+  ClerkMaterialTheme { UserProfileMfaAddTotpView() }
 }

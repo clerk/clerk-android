@@ -13,6 +13,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
+import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
+import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameView
 import com.clerk.ui.userprofile.security.password.PasswordAction
@@ -73,6 +75,9 @@ fun UserProfileView(modifier: Modifier = Modifier) {
           entry<UserProfileDestination.RenamePasskeyView> { key ->
             UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
           }
+          entry<UserProfileDestination.AddMfaView> { key ->
+            UserProfileAddMfaView(viewType = key.viewType)
+          }
         },
     )
   }
@@ -97,4 +102,6 @@ internal object UserProfileDestination {
     val currentPassword: String? = null,
     val passwordAction: PasswordAction,
   ) : NavKey
+
+  @Serializable data class AddMfaView(val viewType: ViewType) : NavKey
 }

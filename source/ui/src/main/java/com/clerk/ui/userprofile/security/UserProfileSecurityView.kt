@@ -45,7 +45,9 @@ import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.account.UserProfileIconActionRow
+import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
@@ -176,6 +178,7 @@ private fun BottomSheetContent(
   mfaAuthenticatorAppIsEnabled: Boolean,
   modifier: Modifier = Modifier,
 ) {
+  val userProfileState = LocalUserProfileState.current
   ClerkMaterialTheme {
     Column(
       modifier =
@@ -204,7 +207,7 @@ private fun BottomSheetContent(
           iconSize = dp24,
           iconResId = R.drawable.ic_phone,
           text = stringResource(R.string.sms_code),
-          onClick = {},
+          onClick = { userProfileState.navigateTo(UserProfileDestination.AddMfaView(ViewType.Sms)) },
         )
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
       }
@@ -213,7 +216,11 @@ private fun BottomSheetContent(
           iconSize = dp24,
           iconResId = R.drawable.ic_key,
           text = stringResource(R.string.authenticator_application),
-          onClick = {},
+          onClick = {
+            userProfileState.navigateTo(
+              UserProfileDestination.AddMfaView(ViewType.AuthenticatorApp)
+            )
+          },
         )
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
       }

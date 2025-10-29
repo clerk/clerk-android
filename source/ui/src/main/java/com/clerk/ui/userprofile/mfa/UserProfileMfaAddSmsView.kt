@@ -125,7 +125,8 @@ private fun UserProfileMfaAddSmsViewImpl(
       )
       Spacers.Vertical.Spacer24()
       ClerkTextButton(
-        text = stringResource(R.string.use_phone_number),
+        modifier = Modifier.align(Alignment.CenterHorizontally),
+        text = stringResource(R.string.add_phone_number),
         onClick = onClickUsePhoneNumber,
       )
     },

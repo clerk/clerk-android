@@ -158,4 +158,5 @@
     <string name="choose_how_you_d_like_to_receive_your_two_step_verification_code">Choose how you’d like to receive your two-step verification code.</string>
     <string name="authenticator_application">Authenticator application</string>
     <string name="sms_code">SMS Code</string>
+    <string name="add_phone_number">Add phone number</string>
 </resources>
