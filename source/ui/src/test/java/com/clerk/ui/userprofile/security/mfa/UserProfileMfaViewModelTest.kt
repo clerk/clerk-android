@@ -5,7 +5,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.phonenumber.PhoneNumber
-import com.clerk.api.phonenumber.setReservedForSecondFactor
+import com.clerk.api.phonenumber.makeDefaultSecondFactor
 import com.clerk.api.user.User
 import com.clerk.api.user.createBackupCodes
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -50,13 +50,15 @@ class UserProfileMfaViewModelTest {
     val phone = mockk<PhoneNumber>()
     every { Clerk.user } returns user
     val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "fail")))
-    coEvery { phone.setReservedForSecondFactor(true) } returns ClerkResult.Failure(error)
+    coEvery { phone.makeDefaultSecondFactor() } returns ClerkResult.Failure(error)
 
     val viewModel = UserProfileMfaViewModel()
 
-    viewModel.makeDefaultSecondFactor(phone)
     advanceUntilIdle()
 
+    viewModel.makeDefaultSecondFactor(phone)
+    assertEquals(UserProfileMfaViewModel.State.Loading, viewModel.state.value)
+    advanceUntilIdle()
     assertEquals(UserProfileMfaViewModel.State.Error("fail"), viewModel.state.value)
   }
 

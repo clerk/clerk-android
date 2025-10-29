@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -57,13 +58,15 @@ internal fun UserProfileMfaAddTotpView(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun UserProfileMfaAddTotpViewImpl(
+internal fun UserProfileMfaAddTotpViewImpl(
   modifier: Modifier = Modifier,
   viewModel: UserProfileMfaTotpViewModel = viewModel(),
+  previewState: UserProfileMfaTotpViewModel.State? = null,
 ) {
   val clipboard = LocalClipboard.current
   val scope = rememberCoroutineScope()
-  val state by viewModel.state.collectAsStateWithLifecycle()
+  val collectedState by viewModel.state.collectAsStateWithLifecycle()
+  val state = previewState ?: collectedState
   ClerkThemedProfileScaffold(
     modifier = modifier,
     title = stringResource(R.string.add_authenticator_application),
@@ -189,5 +192,19 @@ private fun TextDisplayBox(text: String, modifier: Modifier = Modifier) {
 @Composable
 private fun Preview() {
   Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme { UserProfileMfaAddTotpView() }
+  val fakeResource =
+    TOTPResource(
+      id = "totp_123",
+      secret = "JBSWY3DPEHPK3PXP",
+      uri =
+        "otpauth://totp/Example:User?secret=JBSWY3DPEHPK3PXP&issuer=Example&algorithm=SHA1&digits=6&period=30",
+      verified = false,
+      createdAt = 1_700_000_000_000,
+      updatedAt = 1_700_000_000_000,
+    )
+  ClerkMaterialTheme {
+    UserProfileMfaAddTotpViewImpl(
+      previewState = UserProfileMfaTotpViewModel.State.Success(totpResource = fakeResource)
+    )
+  }
 }
