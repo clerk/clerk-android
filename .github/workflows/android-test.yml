@@ -2,7 +2,7 @@ name: Android Unit Test
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "sam/clerk-ui" ]
 
 jobs:
   build:
