@@ -6,6 +6,7 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
+import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.user.createPhoneNumber
 import com.clerk.ui.core.common.guardUser
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,7 @@ class UserProfileAddPhoneViewModel : ViewModel() {
       viewModelScope.launch {
         user
           .createPhoneNumber(phoneNumber)
-          .onSuccess { _state.value = State.Success }
+          .onSuccess { _state.value = State.Success(it) }
           .onFailure { error ->
             ClerkLog.e(
               "UserProfileAddPhoneViewModel - Failed to add phone number: ${error.errorMessage}"
@@ -44,6 +45,6 @@ class UserProfileAddPhoneViewModel : ViewModel() {
 
     data class Error(val message: String?) : State
 
-    data object Success : State
+    data class Success(val phoneNumber: PhoneNumber) : State
   }
 }

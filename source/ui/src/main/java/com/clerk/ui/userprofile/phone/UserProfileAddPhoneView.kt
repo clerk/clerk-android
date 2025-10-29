@@ -21,6 +21,8 @@ import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.verify.Mode
 
 @Composable
 internal fun UserProfileAddPhoneView(modifier: Modifier = Modifier) {
@@ -37,7 +39,11 @@ private fun UserProfileAddPhoneViewImpl(
   val state by viewModel.state.collectAsStateWithLifecycle()
   val errorMessage = (state as? UserProfileAddPhoneViewModel.State.Error)?.message
   if (state is UserProfileAddPhoneViewModel.State.Success) {
-    userProfileState.navigateBack()
+    userProfileState.navigateTo(
+      UserProfileDestination.VerifyView(
+        mode = Mode.Phone((state as UserProfileAddPhoneViewModel.State.Success).phoneNumber)
+      )
+    )
   }
 
   ClerkThemedProfileScaffold(

@@ -13,8 +13,7 @@ internal fun UserProfileAddMfaView(viewType: ViewType) {
 @Composable
 private fun UserProfileAddMfaViewImpl(viewType: ViewType) {
   when (viewType) {
-    ViewType.Sms ->
-      UserProfileMfaAddSmsView(onClickUsePhoneNumber = {}, onReserveForSecondFactorSuccess = {})
+    ViewType.Sms -> UserProfileMfaAddSmsView(onReserveForSecondFactorSuccess = {})
     ViewType.AuthenticatorApp -> UserProfileMfaAddTotpView()
   }
 }
