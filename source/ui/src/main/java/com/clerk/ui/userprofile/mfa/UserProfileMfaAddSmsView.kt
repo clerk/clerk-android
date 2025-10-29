@@ -108,6 +108,7 @@ private fun UserProfileMfaAddSmsViewImpl(
   val errorMessage: String? = (state as? MfaAddSmsViewModel.State.Error)?.message
 
   if (state is MfaAddSmsViewModel.State.Success) {
+    viewModel.resetState()
     LaunchedEffect(Unit) { userProfileState.navigateBack() }
   }
 

@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.navigation3.runtime.rememberNavBackStack
+import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
@@ -120,7 +121,7 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
       text = stringResource(R.string.copy_to_clipboard),
       onClick = {
         scope.launch {
-          val clipData = ClipData.newPlainText("Backup codes", codes.joinToString(","))
+          val clipData = ClipData.newPlainText("Backup codes", codes.joinToString("\n"))
           clipboard.setClipEntry(ClipEntry(clipData))
         }
         Toast.makeText(context, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show()
@@ -135,35 +136,53 @@ fun saveLinesToFileCompat(
   fileName: String,
   lines: List<String>,
   mimeType: String = "text/plain",
-): Uri? {
-  return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-    // Android 10+
-    val content = lines.joinToString("\n")
-    val resolver = context.contentResolver
-    val values =
-      ContentValues().apply {
-        put(MediaStore.Downloads.DISPLAY_NAME, fileName)
-        put(MediaStore.Downloads.MIME_TYPE, mimeType)
-        put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-        put(MediaStore.Downloads.IS_PENDING, 1)
+) {
+  try {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      // Android 10+
+      val resolver = context.contentResolver
+      val values =
+        ContentValues().apply {
+          put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+          put(MediaStore.Downloads.MIME_TYPE, mimeType)
+          put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+          put(MediaStore.Downloads.IS_PENDING, 1)
+        }
+
+      val fileUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return
+      resolver.openOutputStream(fileUri)?.use { output ->
+        output.write(lines.joinToString("\n").toByteArray())
       }
 
-    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return null
-    resolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) }
-    values.clear()
-    values.put(MediaStore.Downloads.IS_PENDING, 0)
-    resolver.update(uri, values, null, null)
-    uri
-  } else {
-    // Pre-Android 10
-    val downloadsDir =
-      Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-    if (!downloadsDir.exists()) downloadsDir.mkdirs()
-    val file = File(downloadsDir, fileName)
-    file.writeText(lines.joinToString("\n"))
-    // Let the system index it so it appears in the Downloads app
-    MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), arrayOf(mimeType), null)
-    Uri.fromFile(file)
+      values.clear()
+      values.put(MediaStore.Downloads.IS_PENDING, 0)
+      resolver.update(fileUri, values, null, null)
+      fileUri
+    } else {
+      // Pre-Android 10
+      val downloadsDir =
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+      if (!downloadsDir.exists()) downloadsDir.mkdirs()
+      val file = File(downloadsDir, fileName)
+      file.writeText(lines.joinToString("\n"))
+      MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), arrayOf(mimeType), null)
+      Uri.fromFile(file)
+    }
+
+    Toast.makeText(
+        context,
+        context.getString(R.string.saved_to_downloads, fileName),
+        Toast.LENGTH_SHORT,
+      )
+      .show()
+  } catch (e: Exception) {
+    ClerkLog.e("Failed to save file: ${e.message}")
+    Toast.makeText(
+        context,
+        context.getString(R.string.failed_to_save_file, e.message),
+        Toast.LENGTH_LONG,
+      )
+      .show()
   }
 }
 

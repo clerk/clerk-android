@@ -163,4 +163,6 @@
     <string name="a_text_message_containing_a_verification_code_will_be_sent">A text message containing a verification code will be sent to this phone number. Message and data rates may apply.</string>
     <string name="add_backup_code_verification">Add backup code verification</string>
     <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="saved_to_downloads">Saved to Downloads: %1$s</string>
+    <string name="failed_to_save_file">Failed to save file: %1$s</string>
 </resources>
