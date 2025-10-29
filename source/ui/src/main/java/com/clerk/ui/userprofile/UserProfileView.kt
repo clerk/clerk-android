@@ -17,6 +17,7 @@ import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
 import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
 import com.clerk.ui.userprofile.security.BackupCodesView
+import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameView
 import com.clerk.ui.userprofile.security.password.PasswordAction
@@ -120,5 +121,7 @@ internal object UserProfileDestination {
 
   @Serializable data class VerifyView(val mode: Mode) : NavKey
 
-  @Serializable data class BackupCodeView(val codes: List<String>) : NavKey
+  @Serializable
+  data class BackupCodeView(val mfaType: MfaType = MfaType.BackupCodes, val codes: List<String>) :
+    NavKey
 }
