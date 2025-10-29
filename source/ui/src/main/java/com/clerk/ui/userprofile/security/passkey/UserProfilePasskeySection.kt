@@ -62,6 +62,7 @@ private fun UserProfilePasskeySectionImpl(
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
+      Spacers.Vertical.Spacer32()
       Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
         passkeys.forEachIndexed { index, passkey ->
           UserProfilePasskeyRow(

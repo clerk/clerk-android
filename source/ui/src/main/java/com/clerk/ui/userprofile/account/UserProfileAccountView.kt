@@ -75,7 +75,7 @@ private fun UserProfileAccountViewImpl(
       },
       bottomContent = {
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-        UserProfileAccountActionRow(
+        UserProfileIconActionRow(
           backgroundColor = ClerkMaterialTheme.colors.background,
           iconResId = R.drawable.ic_sign,
           text = stringResource(R.string.log_out),
@@ -136,13 +136,13 @@ enum class AvatarMode {
 @Composable
 private fun MainProfileActions(onClick: (UserProfileAction) -> Unit) {
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-    UserProfileAccountActionRow(
+    UserProfileIconActionRow(
       iconResId = R.drawable.ic_user,
       text = stringResource(R.string.profile),
       onClick = { onClick(UserProfileAction.Profile) },
     )
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-    UserProfileAccountActionRow(
+    UserProfileIconActionRow(
       iconResId = R.drawable.ic_lock,
       text = stringResource(R.string.security),
       onClick = { onClick(UserProfileAction.Security) },

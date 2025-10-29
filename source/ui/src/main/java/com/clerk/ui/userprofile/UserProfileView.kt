@@ -13,12 +13,17 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
+import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
+import com.clerk.ui.userprofile.mfa.ViewType
+import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameView
 import com.clerk.ui.userprofile.security.password.PasswordAction
 import com.clerk.ui.userprofile.security.password.UserProfileCurrentPasswordView
 import com.clerk.ui.userprofile.security.password.UserProfileNewPasswordView
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
+import com.clerk.ui.userprofile.verify.Mode
+import com.clerk.ui.userprofile.verify.UserProfileVerifyView
 import kotlinx.serialization.Serializable
 
 @SuppressLint("ComposeCompositionLocalUsage")
@@ -73,6 +78,12 @@ fun UserProfileView(modifier: Modifier = Modifier) {
           entry<UserProfileDestination.RenamePasskeyView> { key ->
             UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
           }
+          entry<UserProfileDestination.AddMfaView> { key ->
+            UserProfileAddMfaView(viewType = key.viewType)
+          }
+          entry<UserProfileDestination.AddPhoneView> { key -> UserProfileAddPhoneView() }
+
+          entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
         },
     )
   }
@@ -97,4 +108,10 @@ internal object UserProfileDestination {
     val currentPassword: String? = null,
     val passwordAction: PasswordAction,
   ) : NavKey
+
+  @Serializable data class AddMfaView(val viewType: ViewType) : NavKey
+
+  @Serializable data object AddPhoneView : NavKey
+
+  @Serializable data class VerifyView(val mode: Mode) : NavKey
 }

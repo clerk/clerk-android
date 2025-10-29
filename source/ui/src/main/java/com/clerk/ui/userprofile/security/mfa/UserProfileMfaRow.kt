@@ -75,7 +75,7 @@ internal fun UserProfileMfaRow(
               text = stringResource(R.string.set_as_default),
               isHidden =
                 style !is Style.Sms ||
-                  (Clerk.user?.totpEnabled != true && !style.phoneNumber.defaultSecondFactor),
+                  (Clerk.user?.totpEnabled != true && style.phoneNumber.defaultSecondFactor),
             ),
             DropDownItem(
               id = MfaAction.Regenerate,
@@ -151,7 +151,7 @@ fun Style.text(): String {
     Style.AuthenticatorApp -> stringResource(R.string.authenticator_app)
     is Style.Sms ->
       stringResource(
-        R.string.sms_code,
+        R.string.sms_code_with_number,
         this.phoneNumber.phoneNumber.formattedAsPhoneNumberIfPossible,
       )
     Style.BackupCodes -> stringResource(R.string.backup_codes)

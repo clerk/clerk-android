@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
@@ -28,9 +30,10 @@ internal fun UserProfileMfaSection(
   modifier: Modifier = Modifier,
   onAdd: () -> Unit,
 ) {
+  val user by Clerk.userFlow.collectAsStateWithLifecycle()
   UserProfileMfaSectionImpl(
     modifier = modifier,
-    mfaItems = buildMfaItemList(),
+    mfaItems = buildMfaItemList(user?.phoneNumbers.orEmpty()),
     onRemove = onRemove,
     onAdd = onAdd,
   )
@@ -57,6 +60,7 @@ private fun UserProfileMfaSectionImpl(
         color = ClerkMaterialTheme.colors.mutedForeground,
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
       )
+      Spacers.Vertical.Spacer32()
       Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
         mfaItems.forEachIndexed { index, mfaItem ->
           UserProfileMfaRow(
@@ -78,11 +82,9 @@ private fun UserProfileMfaSectionImpl(
   }
 }
 
-private fun buildMfaItemList(): ImmutableList<MfaItem> {
+private fun buildMfaItemList(phoneNumbers: List<PhoneNumber>): ImmutableList<MfaItem> {
   val mfaPhoneNumbers =
-    Clerk.user
-      ?.phoneNumbers
-      .orEmpty()
+    phoneNumbers
       .filter { it.reservedForSecondFactor }
       .sortedWith(
         compareByDescending<PhoneNumber> { it.defaultSecondFactor }.thenBy { it.createdAt }

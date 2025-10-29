@@ -170,3 +170,17 @@ suspend fun PhoneNumber.setReservedForSecondFactor(
     sessionId = Clerk.session?.id,
   )
 }
+
+/**
+ * Sets this phone number as the default for multi-factor authentication.
+ *
+ * When a user has multiple second-factor methods (e.g., multiple phone numbers, TOTP), this
+ * function designates the current phone number as the primary one to be used during a multi-factor
+ * authentication challenge.
+ *
+ * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun PhoneNumber.makeDefaultSecondFactor(): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+  return ClerkApi.user.makeDefaultSecondFactor(phoneNumberId = this.id, defaultSecondFactor = true)
+}

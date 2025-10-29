@@ -48,6 +48,14 @@ internal fun ClerkThemedAuthScaffold(
     Scaffold(
       modifier = Modifier.then(modifier),
       snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+      topBar = {
+        ClerkTopAppBar(
+          backgroundColor = ClerkMaterialTheme.colors.background,
+          onBackPressed = onBackPressed,
+          hasLogo = hasLogo,
+          hasBackButton = hasBackButton,
+        )
+      },
     ) { innerPadding ->
       Column(
         modifier =
@@ -57,11 +65,6 @@ internal fun ClerkThemedAuthScaffold(
             .background(ClerkMaterialTheme.colors.background),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
-        ClerkTopAppBar(
-          onBackPressed = onBackPressed,
-          hasLogo = hasLogo,
-          hasBackButton = hasBackButton,
-        )
         Spacers.Vertical.Spacer8()
         HeaderTextView(text = title, type = HeaderType.Title)
         subtitle?.let {
