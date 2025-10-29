@@ -1,7 +1,9 @@
 package com.clerk.ui.userprofile.security.device
 
+import app.cash.turbine.test
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.session.Session.SessionStatus
@@ -13,6 +15,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
@@ -20,7 +23,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -51,30 +53,33 @@ class AllDevicesViewModelTest {
 
     every { Clerk.user } returns user
     every { Clerk.session } returns currentSession
-    coEvery { user.allSessions() } returns ClerkResult.success(listOf(older, otherRecent, currentSession))
+    coEvery { user.allSessions() } returns
+      ClerkResult.success(listOf(older, otherRecent, currentSession))
 
     val viewModel = AllDevicesViewModel()
-
-    viewModel.allSessions()
-    advanceUntilIdle()
-
-    val successState = viewModel.state.value as AllDevicesViewModel.State.Success
-    assertEquals(listOf(currentSession, otherRecent, older), successState.devices)
+    viewModel.state.test {
+      var item = awaitItem()
+      if (item is AllDevicesViewModel.State.Idle) item = awaitItem()
+      if (item is AllDevicesViewModel.State.Loading) item = awaitItem()
+      val successState = item as AllDevicesViewModel.State.Success
+      assertEquals(listOf(currentSession, otherRecent, older), successState.devices)
+    }
   }
 
   @Test
   fun allSessions_failure_setsErrorState() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(ClerkErrorResponse.Error(longMessage = "bad")))
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "bad")))
     coEvery { user.allSessions() } returns ClerkResult.Failure(error)
 
     val viewModel = AllDevicesViewModel()
-
-    viewModel.allSessions()
-    advanceUntilIdle()
-
-    assertEquals(AllDevicesViewModel.State.Error("bad"), viewModel.state.value)
+    viewModel.state.test {
+      var item = awaitItem()
+      if (item is AllDevicesViewModel.State.Idle) item = awaitItem()
+      if (item is AllDevicesViewModel.State.Loading) item = awaitItem()
+      assertEquals(AllDevicesViewModel.State.Error("bad"), item)
+    }
   }
 
   private fun session(id: String, lastActiveAt: Long): Session =

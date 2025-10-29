@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.security.mfa
 
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.phonenumber.setReservedForSecondFactor
@@ -12,6 +13,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
@@ -47,7 +49,7 @@ class UserProfileMfaViewModelTest {
     val user = mockk<User>()
     val phone = mockk<PhoneNumber>()
     every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(ClerkErrorResponse.Error(longMessage = "fail")))
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "fail")))
     coEvery { phone.setReservedForSecondFactor(true) } returns ClerkResult.Failure(error)
 
     val viewModel = UserProfileMfaViewModel()
@@ -74,7 +76,7 @@ class UserProfileMfaViewModelTest {
   fun regenerateBackupCodes_failure_setsErrorState() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(ClerkErrorResponse.Error(longMessage = "boom")))
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     coEvery { user.createBackupCodes() } returns ClerkResult.Failure(error)
 
     val viewModel = UserProfileMfaViewModel()

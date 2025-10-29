@@ -99,6 +99,7 @@ dependencies {
 
   compileOnly(projects.clerk.source.api)
 
+  testImplementation(kotlin("test"))
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)
   testImplementation(libs.junit)
