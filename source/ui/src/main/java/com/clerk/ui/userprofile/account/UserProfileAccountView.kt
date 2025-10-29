@@ -66,6 +66,7 @@ private fun UserProfileAccountViewImpl(
       horizontalPadding = dp0,
       onBackPressed = onBackPressed,
       content = {
+        Spacers.Vertical.Spacer32()
         AvatarHeaderView(
           userFullName = userFullName,
           imageUrl = imageUrl,

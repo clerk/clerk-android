@@ -1,6 +1,13 @@
 package com.clerk.ui.userprofile.security
 
 import android.content.ClipData
+import android.content.ContentValues
+import android.content.Context
+import android.media.MediaScannerConnection
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -38,6 +45,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.UserProfileStateProvider
+import java.io.File
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
@@ -104,7 +112,7 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
     ClerkButton(
       modifier = Modifier.weight(1f),
       text = stringResource(R.string.download),
-      onClick = {},
+      onClick = { saveLinesToFileCompat(context, fileName = "backup_codes.txt", lines = codes) },
       configuration = ClerkButtonConfiguration(ClerkButtonConfiguration.ButtonStyle.Secondary),
     )
     ClerkButton(
@@ -119,6 +127,43 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
       },
       configuration = ClerkButtonConfiguration(ClerkButtonConfiguration.ButtonStyle.Secondary),
     )
+  }
+}
+
+fun saveLinesToFileCompat(
+  context: Context,
+  fileName: String,
+  lines: List<String>,
+  mimeType: String = "text/plain",
+): Uri? {
+  return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    // Android 10+
+    val content = lines.joinToString("\n")
+    val resolver = context.contentResolver
+    val values =
+      ContentValues().apply {
+        put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+        put(MediaStore.Downloads.MIME_TYPE, mimeType)
+        put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        put(MediaStore.Downloads.IS_PENDING, 1)
+      }
+
+    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return null
+    resolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) }
+    values.clear()
+    values.put(MediaStore.Downloads.IS_PENDING, 0)
+    resolver.update(uri, values, null, null)
+    uri
+  } else {
+    // Pre-Android 10
+    val downloadsDir =
+      Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+    if (!downloadsDir.exists()) downloadsDir.mkdirs()
+    val file = File(downloadsDir, fileName)
+    file.writeText(lines.joinToString("\n"))
+    // Let the system index it so it appears in the Downloads app
+    MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), arrayOf(mimeType), null)
+    Uri.fromFile(file)
   }
 }
 

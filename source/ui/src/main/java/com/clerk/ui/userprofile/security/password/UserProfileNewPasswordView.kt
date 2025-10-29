@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.dimens.dp16
@@ -34,6 +35,8 @@ import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.UserProfileStateProvider
 
 @Composable
 internal fun UserProfileNewPasswordView(
@@ -59,7 +62,11 @@ private fun UserProfileNewPasswordViewImpl(
   val userProfileState = LocalUserProfileState.current
   LaunchedEffect(state) {
     if (state is UserProfileChangePasswordViewModel.State.Success) {
-      userProfileState.pop(2)
+      if (passwordAction == PasswordAction.Add) {
+        userProfileState.navigateBack()
+      } else {
+        userProfileState.pop(2)
+      }
     }
   }
   val errorMessage = (state as? UserProfileChangePasswordViewModel.State.Error)?.message
@@ -166,7 +173,10 @@ private fun SignOutOtherDevicesContent(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    UserProfileNewPasswordViewImpl(passwordAction = PasswordAction.Add, "MySecretPassword123")
+  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
+  UserProfileStateProvider(backStack) {
+    ClerkMaterialTheme {
+      UserProfileNewPasswordViewImpl(passwordAction = PasswordAction.Add, "MySecretPassword123")
+    }
   }
 }
