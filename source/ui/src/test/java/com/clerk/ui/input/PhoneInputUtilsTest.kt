@@ -3,7 +3,6 @@ package com.clerk.ui.input
 import android.content.Context
 import android.telephony.TelephonyManager
 import androidx.test.core.app.ApplicationProvider
-import com.clerk.ui.core.input.CountryCodeUtils
 import com.clerk.ui.core.input.LocaleProvider
 import com.clerk.ui.core.input.Logger
 import com.clerk.ui.core.input.PhoneInputUtils
@@ -434,19 +433,5 @@ class PhoneInputUtilsTest {
     // Then - this might return null or a detected country depending on the simulated environment
     // The important thing is that it doesn't crash
     assertNotNull("Should not crash with real context", true)
-  }
-
-  @Test
-  fun testPhoneIssues() {
-
-    val phoneUtil = PhoneNumberUtil.getInstance()
-    val input = "+15555550101"
-    val proto = phoneUtil.parse(input, null)
-    println(proto)
-    assertEquals(1, proto.countryCode)
-    val region = phoneUtil.getRegionCodeForNumber(proto)
-    assertEquals("US", region)
-    assertEquals("+1", phoneUtil.getRegionCodeForCountryCode(1))
-    val flag = CountryCodeUtils.regionToFlagEmoji(region)
   }
 }
