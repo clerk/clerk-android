@@ -57,6 +57,11 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     }
   }
 
+  fun resetState() {
+    _verificationTextState.value = VerificationTextState.Default
+    _state.value = AuthState.Idle
+  }
+
   fun attemptPhoneNumber(phoneNumber: PhoneNumber, code: String) {
     _verificationTextState.value = VerificationTextState.Verifying
     viewModelScope.launch(Dispatchers.IO) {

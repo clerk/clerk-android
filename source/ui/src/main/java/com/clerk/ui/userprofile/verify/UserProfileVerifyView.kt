@@ -7,7 +7,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -20,6 +19,7 @@ import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.code.VerificationState as CodeVerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
 
 @Composable
 fun UserProfileVerifyView(mode: Mode, modifier: Modifier = Modifier) {
@@ -34,20 +34,24 @@ private fun UserProfileVerifyViewImpl(
 ) {
 
   val state by viewModel.state.collectAsStateWithLifecycle()
+  val userProfileState = LocalUserProfileState.current
   val verificationTextState by viewModel.verificationTextState.collectAsStateWithLifecycle()
-  val context = LocalContext.current
+
   LaunchedEffect(mode) { prepareCode(mode, viewModel) }
-  val errorMessage: String? =
-    when (val s = state) {
-      is UserProfileVerifyViewModel.AuthState.Error ->
-        s.error ?: context.getString(R.string.something_went_wrong_please_try_again)
-      else -> null
+  val errorMessage = (state as? UserProfileVerifyViewModel.AuthState.Error)?.error
+
+  LaunchedEffect(verificationTextState) {
+    if (verificationTextState is UserProfileVerifyViewModel.VerificationTextState.Verified) {
+      userProfileState.pop(2)
+      viewModel.resetState()
     }
+  }
 
   ClerkThemedProfileScaffold(
     modifier = modifier,
     title = mode.title(),
     errorMessage = errorMessage,
+    onBackPressed = { userProfileState.navigateBack() },
     hasBackButton = mode.hasBackButton(),
     content = {
       Text(

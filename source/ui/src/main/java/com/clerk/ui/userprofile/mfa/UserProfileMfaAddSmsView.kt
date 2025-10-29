@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.phonenumber.PhoneNumber
@@ -48,6 +50,7 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.UserProfileStateProvider
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import kotlinx.collections.immutable.ImmutableList
@@ -55,10 +58,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun UserProfileMfaAddSmsView(
-  modifier: Modifier = Modifier,
-  onReserveForSecondFactorSuccess: () -> Unit,
-) {
+fun UserProfileMfaAddSmsView(modifier: Modifier = Modifier) {
   val availablePhoneNumbers =
     remember(Clerk.user) { Clerk.user?.phoneNumbersAvailableForMfa() ?: emptyList() }
       .filter { it.verification?.status == Verification.Status.VERIFIED }
@@ -67,7 +67,6 @@ fun UserProfileMfaAddSmsView(
   UserProfileMfaAddSmsViewImpl(
     modifier = modifier,
     availablePhoneNumbers = availablePhoneNumbers.toImmutableList(),
-    onReserveForSecondFactorSuccess = onReserveForSecondFactorSuccess,
   )
 }
 
@@ -100,7 +99,6 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 @Composable
 private fun UserProfileMfaAddSmsViewImpl(
   availablePhoneNumbers: ImmutableList<PhoneNumber>,
-  onReserveForSecondFactorSuccess: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: MfaAddSmsViewModel = viewModel(),
 ) {
@@ -110,13 +108,14 @@ private fun UserProfileMfaAddSmsViewImpl(
   val errorMessage: String? = (state as? MfaAddSmsViewModel.State.Error)?.message
 
   if (state is MfaAddSmsViewModel.State.Success) {
-    onReserveForSecondFactorSuccess()
+    LaunchedEffect(Unit) { userProfileState.navigateBack() }
   }
 
   ClerkThemedProfileScaffold(
     errorMessage = errorMessage,
     modifier = modifier,
     title = stringResource(R.string.add_sms_code_verification),
+    onBackPressed = { userProfileState.navigateBack() },
     content = {
       if (availablePhoneNumbers.isEmpty()) {
         EmptyState()
@@ -282,21 +281,24 @@ private fun PreviewMfaRow() {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    UserProfileMfaAddSmsViewImpl(
-      onReserveForSecondFactorSuccess = {},
-      availablePhoneNumbers =
-        persistentListOf(
-          PhoneNumber(id = "1", phoneNumber = "+13012370655"),
-          PhoneNumber(id = "2", "+15246462566"),
-          PhoneNumber(id = "3", "+306912345678"),
-        ),
-    )
+  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
+  UserProfileStateProvider(backStack = backStack) {
+    ClerkMaterialTheme {
+      UserProfileMfaAddSmsViewImpl(
+        availablePhoneNumbers =
+          persistentListOf(
+            PhoneNumber(id = "1", phoneNumber = "+13012370655"),
+            PhoneNumber(id = "2", "+15246462566"),
+            PhoneNumber(id = "3", "+306912345678"),
+          )
+      )
+    }
   }
 }
 
 @PreviewLightDark
 @Composable
 private fun PreviewEmptyState() {
-  ClerkMaterialTheme { EmptyState() }
+  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
+  UserProfileStateProvider(backStack = backStack) { ClerkMaterialTheme { EmptyState() } }
 }

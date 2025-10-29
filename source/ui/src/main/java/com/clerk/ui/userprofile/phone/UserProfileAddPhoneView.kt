@@ -3,6 +3,7 @@ package com.clerk.ui.userprofile.phone
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -13,6 +14,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
@@ -22,6 +24,7 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.UserProfileStateProvider
 import com.clerk.ui.userprofile.verify.Mode
 
 @Composable
@@ -39,11 +42,13 @@ private fun UserProfileAddPhoneViewImpl(
   val state by viewModel.state.collectAsStateWithLifecycle()
   val errorMessage = (state as? UserProfileAddPhoneViewModel.State.Error)?.message
   if (state is UserProfileAddPhoneViewModel.State.Success) {
-    userProfileState.navigateTo(
-      UserProfileDestination.VerifyView(
-        mode = Mode.Phone((state as UserProfileAddPhoneViewModel.State.Success).phoneNumber)
+    LaunchedEffect(state) {
+      userProfileState.navigateTo(
+        UserProfileDestination.VerifyView(
+          mode = Mode.Phone((state as UserProfileAddPhoneViewModel.State.Success).phoneNumber)
+        )
       )
-    )
+    }
   }
 
   ClerkThemedProfileScaffold(
@@ -77,5 +82,6 @@ private fun UserProfileAddPhoneViewImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileAddPhoneViewImpl()
+  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
+  UserProfileStateProvider(backStack = backStack) { UserProfileAddPhoneViewImpl() }
 }
