@@ -3,6 +3,7 @@ package com.clerk.ui.userprofile.security.passkey.rename
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -19,18 +20,18 @@ import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
 
 @Composable
 fun UserProfilePasskeyRenameView(
   passkeyId: String,
   passkeyName: String,
   modifier: Modifier = Modifier,
-  onBackPressed: () -> Unit,
 ) {
+
   UserProfilePasskeyRenameViewImpl(
     modifier = modifier,
     passkeyName = passkeyName,
-    onBackPressed = onBackPressed,
     passkeyId = passkeyId,
   )
 }
@@ -39,19 +40,27 @@ fun UserProfilePasskeyRenameView(
 private fun UserProfilePasskeyRenameViewImpl(
   passkeyId: String,
   passkeyName: String,
-  onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfilePasskeyRenameViewModel = viewModel(),
 ) {
+  val userProfileState = LocalUserProfileState.current
   var passkeyName by rememberSaveable { mutableStateOf(passkeyName) }
+  var originalPasskeyName by rememberSaveable { mutableStateOf(passkeyName) }
   val state by viewModel.state.collectAsStateWithLifecycle()
   val errorMessage = (state as? UserProfilePasskeyRenameViewModel.State.Error)?.message
+
+  LaunchedEffect(state) {
+    if (state is UserProfilePasskeyRenameViewModel.State.Success) {
+      userProfileState.navigateBack()
+    }
+  }
+
   ClerkThemedProfileScaffold(
     modifier = modifier,
     hasBackButton = true,
     errorMessage = errorMessage,
     title = stringResource(R.string.rename_passkey),
-    onBackPressed = onBackPressed,
+    onBackPressed = { userProfileState.navigateBack() },
   ) {
     Text(
       text = stringResource(R.string.you_can_change_the_passkey_name),
@@ -68,7 +77,9 @@ private fun UserProfilePasskeyRenameViewImpl(
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.save),
-      onClick = { viewModel.renamePasskey(passkeyId) },
+      isEnabled = passkeyName.isNotBlank() && passkeyName != originalPasskeyName,
+      isLoading = state is UserProfilePasskeyRenameViewModel.State.Loading,
+      onClick = { viewModel.renamePasskey(passkeyId = passkeyId, newName = passkeyName) },
     )
   }
 }
@@ -77,10 +88,6 @@ private fun UserProfilePasskeyRenameViewImpl(
 @Composable
 private fun Preview() {
   ClerkMaterialTheme {
-    UserProfilePasskeyRenameView(
-      passkeyId = "123",
-      passkeyName = "One password",
-      onBackPressed = {},
-    )
+    UserProfilePasskeyRenameView(passkeyId = "123", passkeyName = "One password")
   }
 }

@@ -20,25 +20,18 @@ import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun UserProfilePasskeySection(
-  onError: (String) -> Unit,
-  modifier: Modifier = Modifier,
-  onClickRename: (String) -> Unit,
-) {
+internal fun UserProfilePasskeySection(onError: (String) -> Unit, modifier: Modifier = Modifier) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   val sortedPasskeys = user?.passkeys?.sortedBy { it.createdAt }.orEmpty().toImmutableList()
-  UserProfilePasskeySectionImpl(
-    passkeys = sortedPasskeys,
-    modifier = modifier,
-    onError = onError,
-    onClickRename = onClickRename,
-  )
+  UserProfilePasskeySectionImpl(passkeys = sortedPasskeys, modifier = modifier, onError = onError)
 }
 
 @Composable
@@ -47,9 +40,9 @@ private fun UserProfilePasskeySectionImpl(
   onError: (String) -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfilePasskeyViewModel = viewModel(),
-  onClickRename: (String) -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
+  val userProfileState = LocalUserProfileState.current
   when (val s = state) {
     is UserProfilePasskeyViewModel.State.Error -> onError(s.message)
     else -> {}
@@ -71,7 +64,17 @@ private fun UserProfilePasskeySectionImpl(
       )
       Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
         passkeys.forEachIndexed { index, passkey ->
-          UserProfilePasskeyRow(passkey = passkey, onClickRename = { onClickRename(passkey.id) })
+          UserProfilePasskeyRow(
+            passkey = passkey,
+            onClickRename = {
+              userProfileState.navigateTo(
+                UserProfileDestination.RenamePasskeyView(
+                  passkeyId = passkey.id,
+                  passkeyName = passkey.name,
+                )
+              )
+            },
+          )
           if (index < passkeys.lastIndex) {
             Spacers.Vertical.Spacer32()
           }
@@ -90,7 +93,6 @@ private fun UserProfilePasskeySectionImpl(
 private fun Preview() {
   UserProfilePasskeySectionImpl(
     onError = {},
-    onClickRename = {},
     passkeys =
       persistentListOf(
         Passkey(

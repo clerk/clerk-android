@@ -152,7 +152,7 @@ private fun UserProfileSecurityContent(
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
   }
   if (isPasskeyEnabled) {
-    UserProfilePasskeySection(onError = onError, onClickRename = {})
+    UserProfilePasskeySection(onError = onError)
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
   }
   if (isMfaEnabled) {

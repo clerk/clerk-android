@@ -14,6 +14,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
+import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameView
 import com.clerk.ui.userprofile.security.password.PasswordAction
 import com.clerk.ui.userprofile.security.password.UserProfileCurrentPasswordView
 import com.clerk.ui.userprofile.security.password.UserProfileNewPasswordView
@@ -69,6 +70,9 @@ fun UserProfileView(modifier: Modifier = Modifier) {
               passwordAction = key.passwordAction,
             )
           }
+          entry<UserProfileDestination.RenamePasskeyView> { key ->
+            UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
+          }
         },
     )
   }
@@ -84,6 +88,9 @@ internal object UserProfileDestination {
   @Serializable data object UserProfileUpdate : NavKey
 
   @Serializable data class UpdatePasswordCurrent(val action: PasswordAction) : NavKey
+
+  @Serializable
+  data class RenamePasskeyView(val passkeyId: String, val passkeyName: String) : NavKey
 
   @Serializable
   data class UpdatePasswordNew(

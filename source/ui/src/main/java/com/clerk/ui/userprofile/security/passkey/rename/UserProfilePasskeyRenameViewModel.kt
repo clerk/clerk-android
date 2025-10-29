@@ -16,12 +16,12 @@ internal class UserProfilePasskeyRenameViewModel : ViewModel() {
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
 
-  fun renamePasskey(passkeyId: String) {
+  fun renamePasskey(passkeyId: String, newName: String) {
     guardUser(userDoesNotExist = { _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch {
         user.passkeys
           .find { it.id == passkeyId }
-          ?.update()
+          ?.update(name = newName)
           ?.onSuccess { _state.value = State.Success }
           ?.onFailure { _state.value = State.Error("Failed to rename passkey: ${it.errorMessage}") }
       }
