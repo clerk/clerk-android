@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +29,7 @@ import com.clerk.api.session.Session
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -105,30 +108,33 @@ private fun UserProfileSecurityMainContent(
   val userProfileState = LocalUserProfileState.current
   val scrollState = rememberScrollState()
   val coroutineScope = rememberCoroutineScope()
-  Column(
-    modifier =
-      Modifier.fillMaxSize()
-        .background(ClerkMaterialTheme.colors.muted)
-        .verticalScroll(scrollState),
-    horizontalAlignment = Alignment.CenterHorizontally,
-  ) {
-    ClerkTopAppBar(
-      hasLogo = false,
-      hasBackButton = true,
-      title = stringResource(R.string.security),
-      backgroundColor = ClerkMaterialTheme.colors.muted,
-      onBackPressed = { userProfileState.navigateBack() },
-    )
-    UserProfileSecurityContent(
-      isPasswordEnabled = isPasswordEnabled,
-      isPasskeyEnabled = isPasskeyEnabled,
-      isMfaEnabled = isMfaEnabled,
-      sessions = sessions,
-      isDeleteSelfEnabled = isDeleteSelfEnabled,
-      onError = { message -> coroutineScope.launch { snackbarHostState.showSnackbar(message) } },
-    )
+  Scaffold(snackbarHost = { ClerkErrorSnackbar(snackbarHostState) }) { innerPadding ->
+    Column(
+      modifier =
+        Modifier.fillMaxSize()
+          .padding(innerPadding)
+          .background(ClerkMaterialTheme.colors.muted)
+          .verticalScroll(scrollState),
+      horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+      ClerkTopAppBar(
+        hasLogo = false,
+        hasBackButton = true,
+        title = stringResource(R.string.security),
+        backgroundColor = ClerkMaterialTheme.colors.muted,
+        onBackPressed = { userProfileState.navigateBack() },
+      )
+      UserProfileSecurityContent(
+        isPasswordEnabled = isPasswordEnabled,
+        isPasskeyEnabled = isPasskeyEnabled,
+        isMfaEnabled = isMfaEnabled,
+        sessions = sessions,
+        isDeleteSelfEnabled = isDeleteSelfEnabled,
+        onError = { message -> coroutineScope.launch { snackbarHostState.showSnackbar(message) } },
+      )
 
-    UserProfileSecurityFooter()
+      UserProfileSecurityFooter()
+    }
   }
 }
 

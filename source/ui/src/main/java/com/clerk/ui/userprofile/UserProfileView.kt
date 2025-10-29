@@ -1,8 +1,6 @@
 package com.clerk.ui.userprofile
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -38,45 +36,41 @@ internal fun UserProfileStateProvider(
 @Composable
 fun UserProfileView(modifier: Modifier = Modifier) {
   val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
-  Scaffold { innerPadding ->
-    UserProfileStateProvider(backStack) {
-      val userProfileState = LocalUserProfileState.current
-      NavDisplay(
-        modifier = modifier.padding(innerPadding),
-        backStack = backStack,
-        entryProvider =
-          entryProvider {
-            entry<UserProfileDestination.UserProfileAccount> { key ->
-              UserProfileAccountView(
-                onClick = {
-                  when (it) {
-                    UserProfileAction.Profile -> TODO()
-                    UserProfileAction.Security ->
-                      backStack.add(UserProfileDestination.UserProfileSecurity)
-                  }
-                },
-                onBackPressed = { userProfileState.navigateBack() },
-                onClickEdit = { backStack.add(UserProfileDestination.UserProfileUpdate) },
-              )
-            }
-            entry<UserProfileDestination.UserProfile> { key -> }
-            entry<UserProfileDestination.UserProfileSecurity> { key -> UserProfileSecurityView() }
+  UserProfileStateProvider(backStack) {
+    val userProfileState = LocalUserProfileState.current
+    NavDisplay(
+      modifier = modifier,
+      backStack = backStack,
+      entryProvider =
+        entryProvider {
+          entry<UserProfileDestination.UserProfileAccount> { key ->
+            UserProfileAccountView(
+              onClick = {
+                when (it) {
+                  UserProfileAction.Profile -> TODO()
+                  UserProfileAction.Security ->
+                    backStack.add(UserProfileDestination.UserProfileSecurity)
+                }
+              },
+              onBackPressed = { userProfileState.navigateBack() },
+              onClickEdit = { backStack.add(UserProfileDestination.UserProfileUpdate) },
+            )
+          }
+          entry<UserProfileDestination.UserProfile> { key -> }
+          entry<UserProfileDestination.UserProfileSecurity> { key -> UserProfileSecurityView() }
 
-            entry<UserProfileDestination.UserProfileUpdate> { key ->
-              UserProfileUpdateProfileView()
-            }
-            entry<UserProfileDestination.UpdatePasswordCurrent> { key ->
-              UserProfileCurrentPasswordView(passwordAction = key.action)
-            }
-            entry<UserProfileDestination.UpdatePasswordNew> { key ->
-              UserProfileNewPasswordView(
-                currentPassword = key.currentPassword,
-                passwordAction = key.passwordAction,
-              )
-            }
-          },
-      )
-    }
+          entry<UserProfileDestination.UserProfileUpdate> { key -> UserProfileUpdateProfileView() }
+          entry<UserProfileDestination.UpdatePasswordCurrent> { key ->
+            UserProfileCurrentPasswordView(passwordAction = key.action)
+          }
+          entry<UserProfileDestination.UpdatePasswordNew> { key ->
+            UserProfileNewPasswordView(
+              currentPassword = key.currentPassword,
+              passwordAction = key.passwordAction,
+            )
+          }
+        },
+    )
   }
 }
 
