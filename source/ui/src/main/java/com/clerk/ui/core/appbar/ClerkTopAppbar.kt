@@ -4,8 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -30,41 +34,50 @@ fun ClerkTopAppBar(
   hasLogo: Boolean = true,
   hasBackButton: Boolean = true,
   title: String? = null,
-  backgroundColor: Color = Color.Unspecified,
+  backgroundColor: Color = ClerkMaterialTheme.colors.muted, // sensible default
 ) {
   ClerkMaterialTheme {
-    Row(
-      modifier =
+    Box(modifier = Modifier.fillMaxWidth().then(modifier).background(backgroundColor)) {
+      // 1) Paint behind the status bar (exact height)
+      Spacer(
         Modifier.fillMaxWidth()
-          .then(modifier)
-          .background(color = backgroundColor)
-          .padding(vertical = dp8),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      if (hasBackButton) {
-        IconButton(onClick = onBackPressed) {
-          Icon(
-            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-            contentDescription = stringResource(R.string.back),
-            tint = ClerkMaterialTheme.colors.foreground,
+          .background(backgroundColor)
+          .windowInsetsTopHeight(WindowInsets.statusBars)
+      )
+
+      // 2) Pad content down by the status-bar inset
+      Row(
+        modifier =
+          Modifier.fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(vertical = dp8),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        if (hasBackButton) {
+          IconButton(onClick = onBackPressed) {
+            Icon(
+              imageVector = Icons.AutoMirrored.Default.ArrowBack,
+              contentDescription = stringResource(R.string.back),
+              tint = ClerkMaterialTheme.colors.foreground,
+            )
+          }
+        }
+
+        Spacer(Modifier.weight(1f))
+        title?.let {
+          Text(
+            text = it,
+            style = ClerkMaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
+            color = ClerkMaterialTheme.colors.foreground,
           )
         }
-      }
+        if (hasLogo) OrganizationAvatar()
+        Spacer(Modifier.weight(1f))
 
-      Spacer(modifier = Modifier.weight(1f))
-      title?.let {
-        Text(
-          text = it,
-          style = ClerkMaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
-          color = ClerkMaterialTheme.colors.foreground,
-        )
-      }
-      if (hasLogo) {
-        OrganizationAvatar()
-      }
-      Spacer(modifier = Modifier.weight(1f))
-      if (hasBackButton) {
-        IconButton(onClick = {}) {}
+        // keep layout symmetric
+        if (hasBackButton) {
+          IconButton(onClick = {}) {}
+        }
       }
     }
   }

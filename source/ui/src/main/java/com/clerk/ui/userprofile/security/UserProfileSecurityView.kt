@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
 import com.clerk.api.session.Session
 import com.clerk.ui.R
@@ -46,6 +47,7 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.UserProfileStateProvider
 import com.clerk.ui.userprofile.account.UserProfileIconActionRow
 import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
@@ -60,6 +62,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun UserProfileSecurityView() {
+
   UserProfileSecurityViewImpl(
     isPasswordEnabled = Clerk.passwordIsEnabled,
     isPasskeyEnabled = Clerk.passkeyIsEnabled,
@@ -126,15 +129,10 @@ private fun UserProfileSecurityMainContent(
   val coroutineScope = rememberCoroutineScope()
   val sheetState = rememberModalBottomSheetState()
   var showBottomSheet by remember { mutableStateOf(false) }
-  Scaffold(snackbarHost = { ClerkErrorSnackbar(snackbarHostState) }) { innerPadding ->
-    Column(
-      modifier =
-        Modifier.fillMaxSize()
-          .padding(innerPadding)
-          .background(ClerkMaterialTheme.colors.muted)
-          .verticalScroll(scrollState),
-      horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+  Scaffold(
+    containerColor = ClerkMaterialTheme.colors.muted,
+    snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+    topBar = {
       ClerkTopAppBar(
         hasLogo = false,
         hasBackButton = true,
@@ -142,6 +140,16 @@ private fun UserProfileSecurityMainContent(
         backgroundColor = ClerkMaterialTheme.colors.muted,
         onBackPressed = { userProfileState.navigateBack() },
       )
+    },
+  ) { innerPadding ->
+    Column(
+      modifier =
+        Modifier.fillMaxSize()
+          .background(ClerkMaterialTheme.colors.muted)
+          .padding(innerPadding)
+          .verticalScroll(scrollState),
+      horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
       UserProfileSecurityContent(
         SecurityContentConfiguration(
           isPasswordEnabled = isPasswordEnabled,
@@ -232,24 +240,33 @@ private fun BottomSheetContent(
 @PreviewLightDark
 @Composable
 private fun PreviewBottomSheet() {
-  ClerkMaterialTheme {
-    BottomSheetContent(mfaPhoneCodeIsEnabled = true, mfaAuthenticatorAppIsEnabled = true)
+  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
+  UserProfileStateProvider(backStack) {
+    ClerkMaterialTheme {
+      BottomSheetContent(mfaPhoneCodeIsEnabled = true, mfaAuthenticatorAppIsEnabled = true)
+    }
   }
 }
 
 @PreviewLightDark
 @Composable
 private fun PreviewBottomSheetPhoneDisabled() {
-  ClerkMaterialTheme {
-    BottomSheetContent(mfaPhoneCodeIsEnabled = false, mfaAuthenticatorAppIsEnabled = true)
+  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
+  UserProfileStateProvider(backStack) {
+    ClerkMaterialTheme {
+      BottomSheetContent(mfaPhoneCodeIsEnabled = false, mfaAuthenticatorAppIsEnabled = true)
+    }
   }
 }
 
 @PreviewLightDark
 @Composable
 private fun PreviewBottomSheetAuthAppDisabled() {
-  ClerkMaterialTheme {
-    BottomSheetContent(mfaPhoneCodeIsEnabled = true, mfaAuthenticatorAppIsEnabled = false)
+  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
+  UserProfileStateProvider(backStack) {
+    ClerkMaterialTheme {
+      BottomSheetContent(mfaPhoneCodeIsEnabled = true, mfaAuthenticatorAppIsEnabled = false)
+    }
   }
 }
 
@@ -259,24 +276,27 @@ private fun UserProfileSecurityContent(
   onError: (String) -> Unit,
   onAdd: () -> Unit,
 ) {
-  if (configuration.isPasswordEnabled) {
-    UserProfilePasswordSection()
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if (configuration.isPasskeyEnabled) {
-    UserProfilePasskeySection(onError = onError)
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if (configuration.isMfaEnabled) {
-    UserProfileMfaSection(onRemove = {}, onAdd = onAdd)
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
-    UserProfileDevicesSection(devices = configuration.sessions)
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if (configuration.isDeleteSelfEnabled) {
-    UserProfileDeleteAccountSection(onDeleteAccount = {})
+  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
+  UserProfileStateProvider(backStack) {
+    if (configuration.isPasswordEnabled) {
+      UserProfilePasswordSection()
+      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
+    if (configuration.isPasskeyEnabled) {
+      UserProfilePasskeySection(onError = onError)
+      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
+    if (configuration.isMfaEnabled) {
+      UserProfileMfaSection(onRemove = {}, onAdd = onAdd)
+      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
+    if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
+      UserProfileDevicesSection(devices = configuration.sessions)
+      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
+    if (configuration.isDeleteSelfEnabled) {
+      UserProfileDeleteAccountSection(onDeleteAccount = {})
+    }
   }
 }
 
