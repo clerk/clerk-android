@@ -3,10 +3,9 @@ package com.clerk.ui.userprofile.security
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -141,6 +140,7 @@ private fun UserProfileSecurityMainContent(
         onBackPressed = { userProfileState.navigateBack() },
       )
     },
+    bottomBar = { UserProfileSecurityFooter() },
   ) { innerPadding ->
     Column(
       modifier =
@@ -161,8 +161,6 @@ private fun UserProfileSecurityMainContent(
         onError = { message -> coroutineScope.launch { snackbarHostState.showSnackbar(message) } },
         onAdd = { showBottomSheet = true },
       )
-
-      UserProfileSecurityFooter()
     }
     if (showBottomSheet) {
       ModalBottomSheet(
@@ -301,10 +299,14 @@ private fun UserProfileSecurityContent(
 }
 
 @Composable
-private fun ColumnScope.UserProfileSecurityFooter() {
-  Spacer(modifier = Modifier.weight(1f))
-  SecuredByClerkView()
-  Spacers.Vertical.Spacer24()
+private fun UserProfileSecurityFooter() {
+  Column(
+    modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
+    horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
+    Spacers.Vertical.Spacer12()
+    SecuredByClerkView()
+  }
 }
 
 @PreviewLightDark
