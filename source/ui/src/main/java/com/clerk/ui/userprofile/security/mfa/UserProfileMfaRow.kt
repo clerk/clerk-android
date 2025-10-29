@@ -14,12 +14,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.phonenumber.PhoneNumber
@@ -34,6 +37,8 @@ import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import kotlinx.collections.immutable.persistentListOf
 
@@ -48,7 +53,18 @@ internal fun UserProfileMfaRow(
   viewModel: UserProfileMfaViewModel = viewModel(),
 ) {
   val hasHeader = isDefault || title != null
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  val userProfileState = LocalUserProfileState.current
 
+  if (state is UserProfileMfaViewModel.State.BackupCodesGenerated) {
+    LaunchedEffect(Unit) {
+      userProfileState.navigateTo(
+        UserProfileDestination.BackupCodeView(
+          (state as UserProfileMfaViewModel.State.BackupCodesGenerated).codes
+        )
+      )
+    }
+  }
   ClerkMaterialTheme {
     Row(
       modifier =

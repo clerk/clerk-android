@@ -26,7 +26,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.ClerkTextField
@@ -68,7 +67,6 @@ private fun UserProfileNewPasswordViewImpl(
     modifier = modifier,
     errorMessage = errorMessage,
     hasBackButton = true,
-    contentTopPadding = dp12,
     title =
       if (passwordAction == PasswordAction.Reset) stringResource(R.string.update_password)
       else stringResource(R.string.add_password),

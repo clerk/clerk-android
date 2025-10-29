@@ -38,14 +38,12 @@ fun ClerkTopAppBar(
 ) {
   ClerkMaterialTheme {
     Box(modifier = Modifier.fillMaxWidth().then(modifier).background(backgroundColor)) {
-      // 1) Paint behind the status bar (exact height)
       Spacer(
         Modifier.fillMaxWidth()
           .background(backgroundColor)
           .windowInsetsTopHeight(WindowInsets.statusBars)
       )
 
-      // 2) Pad content down by the status-bar inset
       Row(
         modifier =
           Modifier.fillMaxWidth()

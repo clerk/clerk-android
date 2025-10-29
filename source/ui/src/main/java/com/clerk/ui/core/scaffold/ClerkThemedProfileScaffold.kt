@@ -19,7 +19,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp18
-import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
@@ -36,7 +35,6 @@ fun ClerkThemedProfileScaffold(
   horizontalPadding: Dp = dp18,
   backgroundColor: Color? = null,
   bottomContent: (@Composable () -> Unit)? = null,
-  contentTopPadding: Dp = dp24,
   content: @Composable ColumnScope.() -> Unit,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
@@ -48,6 +46,15 @@ fun ClerkThemedProfileScaffold(
     Scaffold(
       modifier = Modifier.then(modifier),
       snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+      topBar = {
+        ClerkTopAppBar(
+          backgroundColor = ClerkMaterialTheme.colors.background,
+          hasLogo = hasLogo,
+          hasBackButton = hasBackButton,
+          title = title,
+          onBackPressed = onBackPressed,
+        )
+      },
     ) { innerPadding ->
       Column(
         modifier =
@@ -57,13 +64,6 @@ fun ClerkThemedProfileScaffold(
             .padding(innerPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
-        ClerkTopAppBar(
-          hasLogo = hasLogo,
-          hasBackButton = hasBackButton,
-          title = title,
-          onBackPressed = onBackPressed,
-        )
-        Spacer(modifier = Modifier.padding(top = contentTopPadding))
         Column(modifier = Modifier.padding(horizontal = horizontalPadding)) { content() }
 
         Spacer(modifier = Modifier.weight(1f))

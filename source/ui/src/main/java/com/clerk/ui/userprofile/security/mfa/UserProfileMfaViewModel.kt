@@ -35,7 +35,10 @@ class UserProfileMfaViewModel : ViewModel() {
     _state.value = State.Loading
     guardUser(userDoesNotExist = { _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch {
-        user.createBackupCodes().onFailure { _state.value = State.Error(it.errorMessage) }
+        user
+          .createBackupCodes()
+          .onSuccess { _state.value = State.BackupCodesGenerated(it.codes) }
+          .onFailure { _state.value = State.Error(it.errorMessage) }
       }
     }
   }
@@ -48,5 +51,7 @@ class UserProfileMfaViewModel : ViewModel() {
     data class Error(val message: String?) : State
 
     data object Success : State
+
+    data class BackupCodesGenerated(val codes: List<String>) : State
   }
 }

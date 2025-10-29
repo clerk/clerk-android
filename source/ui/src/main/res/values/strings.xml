@@ -20,7 +20,7 @@
     <string name="resend_with_pararm">Resend (%1$d)</string>
     <string name="resend">Resend</string>
     <string name="didn_t_receive_a_code">"Didn't receive a code? "</string>
-    <string name="verifying">Verifying...</string>
+    <string name="verifying">Verifying…</string>
     <string name="passkey_icon">Passkey icon</string>
     <string name="using_your_passkey">Using your passkey confirms it\'s you. Your device may ask for your fingerprint, face or screen lock.</string>
     <string name="use_your_passkey">Use your passkey</string>
@@ -161,4 +161,6 @@
     <string name="add_phone_number">Add phone number</string>
     <string name="there_are_no_available_phone_numbers">There are no available phone numbers to register for SMS code two-step verification, please add a new one.</string>
     <string name="a_text_message_containing_a_verification_code_will_be_sent">A text message containing a verification code will be sent to this phone number. Message and data rates may apply.</string>
+    <string name="add_backup_code_verification">Add backup code verification</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
 </resources>
