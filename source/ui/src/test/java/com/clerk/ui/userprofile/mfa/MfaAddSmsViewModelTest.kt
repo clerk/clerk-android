@@ -1,6 +1,8 @@
 package com.clerk.ui.userprofile.mfa
 
+import app.cash.turbine.test
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.phonenumber.setReservedForSecondFactor
@@ -14,7 +16,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -38,24 +39,26 @@ class MfaAddSmsViewModelTest {
     coEvery { phoneNumber.setReservedForSecondFactor(true) } returns ClerkResult.success(mockk())
 
     val viewModel = MfaAddSmsViewModel()
-
-    viewModel.reserveForSecondFactor(phoneNumber)
-    advanceUntilIdle()
-
-    assertEquals(MfaAddSmsViewModel.State.Success, viewModel.state.value)
+    viewModel.state.test {
+      assertEquals(MfaAddSmsViewModel.State.Idle, awaitItem())
+      viewModel.reserveForSecondFactor(phoneNumber)
+      assertEquals(MfaAddSmsViewModel.State.Loading, awaitItem())
+      assertEquals(MfaAddSmsViewModel.State.Success, awaitItem())
+    }
   }
 
   @Test
   fun reserveForSecondFactor_failure_setsErrorState() = runTest {
     val phoneNumber = mockk<PhoneNumber>()
-    val error = ClerkErrorResponse(errors = listOf(ClerkErrorResponse.Error(longMessage = "fail")))
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "fail")))
     coEvery { phoneNumber.setReservedForSecondFactor(true) } returns ClerkResult.Failure(error)
 
     val viewModel = MfaAddSmsViewModel()
-
-    viewModel.reserveForSecondFactor(phoneNumber)
-    advanceUntilIdle()
-
-    assertEquals(MfaAddSmsViewModel.State.Error("fail"), viewModel.state.value)
+    viewModel.state.test {
+      assertEquals(MfaAddSmsViewModel.State.Idle, awaitItem())
+      viewModel.reserveForSecondFactor(phoneNumber)
+      assertEquals(MfaAddSmsViewModel.State.Loading, awaitItem())
+      assertEquals(MfaAddSmsViewModel.State.Error("fail"), awaitItem())
+    }
   }
 }

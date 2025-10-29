@@ -2,7 +2,7 @@ name: Android Unit Test
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "sam/clerk-ui" ]
 
 jobs:
   build:
@@ -21,4 +21,4 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew :source:api:testDebugUnitTest
+        run: ./gradlew :source:api:testDebugUnitTest && ./gradlew :source:ui:testDebugUnitTest

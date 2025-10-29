@@ -41,33 +41,34 @@ import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
 import java.io.File
 import java.io.FileOutputStream
 
 @Composable
-internal fun UserProfileUpdateProfileView(modifier: Modifier = Modifier, onSuccess: () -> Unit) {
-  UserProfileUpdateProfileViewImpl(modifier = modifier, onSuccess = onSuccess)
+internal fun UserProfileUpdateProfileView(modifier: Modifier = Modifier) {
+  UserProfileUpdateProfileViewImpl(modifier = modifier)
 }
 
 @Composable
 private fun UserProfileUpdateProfileViewImpl(
   modifier: Modifier = Modifier,
   viewModel: UpdateProfileViewModel = viewModel(),
-  onSuccess: () -> Unit,
 ) {
+  val userProfileState = LocalUserProfileState.current
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   val state by viewModel.state.collectAsState()
   val errorMessage = (state as? UpdateProfileViewModel.State.Error)?.message
   LaunchedEffect(state) {
     if (state is UpdateProfileViewModel.State.Success) {
-      onSuccess()
+      userProfileState.navigateBack()
       viewModel.reset()
     }
   }
 
   val context = LocalContext.current
 
-  val (takePhotoLauncher, pickPhotoLauncher) = CreateLaunchers(context, viewModel)
+  val (takePhotoLauncher, pickPhotoLauncher) = createLaunchers(context, viewModel)
 
   ClerkMaterialTheme {
     ClerkThemedProfileScaffold(
@@ -75,7 +76,7 @@ private fun UserProfileUpdateProfileViewImpl(
       title = stringResource(R.string.account),
       hasBackButton = true,
       horizontalPadding = dp0,
-      onBackPressed = {},
+      onBackPressed = { userProfileState.navigateBack() },
       errorMessage = errorMessage,
       content = {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -106,7 +107,7 @@ private fun UserProfileUpdateProfileViewImpl(
 }
 
 @Composable
-private fun CreateLaunchers(
+private fun createLaunchers(
   context: Context,
   viewModel: UpdateProfileViewModel,
 ): Pair<
@@ -180,7 +181,7 @@ private fun ProfileFields(isLoading: Boolean, viewModel: UpdateProfileViewModel)
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileUpdateProfileViewImpl(onSuccess = {})
+  UserProfileUpdateProfileViewImpl()
 }
 
 private const val IMAGE_COMPRESSION = 100

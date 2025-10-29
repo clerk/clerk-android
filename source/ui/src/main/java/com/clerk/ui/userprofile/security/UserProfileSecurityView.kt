@@ -12,12 +12,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,44 +25,41 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.session.Session
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
 import com.clerk.ui.userprofile.security.passkey.UserProfilePasskeySection
-import com.clerk.ui.userprofile.security.password.PasswordAction
 import com.clerk.ui.userprofile.security.password.UserProfilePasswordSection
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.launch
 
 @Composable
-internal fun UserProfileSecurityView(
-  modifier: Modifier = Modifier,
-  onAction: (PasswordAction) -> Unit,
-) {
+internal fun UserProfileSecurityView() {
   UserProfileSecurityViewImpl(
-    modifier = modifier,
     isPasswordEnabled = Clerk.passwordIsEnabled,
     isPasskeyEnabled = Clerk.passkeyIsEnabled,
     isMfaEnabled = Clerk.mfaIsEnabled,
     isDeleteSelfEnabled = Clerk.deleteSelfIsEnabled,
-    onAction = onAction,
   )
 }
 
 @Composable
 private fun UserProfileSecurityViewImpl(
-  modifier: Modifier = Modifier,
   viewModel: UserProfileSecurityViewModel = viewModel(),
   isPasswordEnabled: Boolean = false,
   isPasskeyEnabled: Boolean = false,
   isMfaEnabled: Boolean = false,
   isDeleteSelfEnabled: Boolean = false,
-  onAction: (PasswordAction) -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
@@ -74,52 +71,69 @@ private fun UserProfileSecurityViewImpl(
   }
   LaunchedEffect(Unit) { viewModel.loadSessions() }
   ClerkMaterialTheme {
-    Scaffold(
-      modifier = Modifier.then(modifier),
-      snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-    ) { innerPadding ->
-      val scrollState = rememberScrollState()
-      when (state) {
-        is UserProfileSecurityViewModel.State.Loading,
-        UserProfileSecurityViewModel.State.Idle -> {
-          Box(
-            modifier =
-              Modifier.fillMaxSize()
-                .background(ClerkMaterialTheme.colors.muted)
-                .padding(innerPadding)
-          ) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-          }
-        }
-        else -> {
-          Column(
-            modifier =
-              Modifier.fillMaxSize()
-                .background(ClerkMaterialTheme.colors.muted)
-                .padding(innerPadding)
-                .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.CenterHorizontally,
-          ) {
-            ClerkTopAppBar(
-              hasLogo = false,
-              hasBackButton = true,
-              title = stringResource(R.string.security),
-              backgroundColor = ClerkMaterialTheme.colors.muted,
-              onBackPressed = {},
-            )
-            UserProfileSecurityContent(
-              isPasswordEnabled,
-              isPasskeyEnabled,
-              isMfaEnabled,
-              state,
-              isDeleteSelfEnabled,
-              onAction = onAction,
-            )
-
-            UserProfileSecurityFooter()
-          }
+    when (state) {
+      is UserProfileSecurityViewModel.State.Loading,
+      UserProfileSecurityViewModel.State.Idle -> {
+        Box(modifier = Modifier.fillMaxSize().background(ClerkMaterialTheme.colors.muted)) {
+          CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
       }
+      else -> {
+        UserProfileSecurityMainContent(
+          isPasswordEnabled = isPasswordEnabled,
+          isPasskeyEnabled = isPasskeyEnabled,
+          isMfaEnabled = isMfaEnabled,
+          isDeleteSelfEnabled = isDeleteSelfEnabled,
+          snackbarHostState = snackbarHostState,
+          sessions =
+            (state as? UserProfileSecurityViewModel.State.Success)
+              ?.sessions
+              .orEmpty()
+              .toImmutableList(),
+        )
+      }
+    }
+  }
+}
+
+@Composable
+private fun UserProfileSecurityMainContent(
+  isPasswordEnabled: Boolean,
+  isPasskeyEnabled: Boolean,
+  isMfaEnabled: Boolean,
+  isDeleteSelfEnabled: Boolean,
+  snackbarHostState: SnackbarHostState,
+  sessions: ImmutableList<Session>,
+) {
+  val userProfileState = LocalUserProfileState.current
+  val scrollState = rememberScrollState()
+  val coroutineScope = rememberCoroutineScope()
+  Scaffold(snackbarHost = { ClerkErrorSnackbar(snackbarHostState) }) { innerPadding ->
+    Column(
+      modifier =
+        Modifier.fillMaxSize()
+          .padding(innerPadding)
+          .background(ClerkMaterialTheme.colors.muted)
+          .verticalScroll(scrollState),
+      horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+      ClerkTopAppBar(
+        hasLogo = false,
+        hasBackButton = true,
+        title = stringResource(R.string.security),
+        backgroundColor = ClerkMaterialTheme.colors.muted,
+        onBackPressed = { userProfileState.navigateBack() },
+      )
+      UserProfileSecurityContent(
+        isPasswordEnabled = isPasswordEnabled,
+        isPasskeyEnabled = isPasskeyEnabled,
+        isMfaEnabled = isMfaEnabled,
+        sessions = sessions,
+        isDeleteSelfEnabled = isDeleteSelfEnabled,
+        onError = { message -> coroutineScope.launch { snackbarHostState.showSnackbar(message) } },
+      )
+
+      UserProfileSecurityFooter()
     }
   }
 }
@@ -129,29 +143,24 @@ private fun UserProfileSecurityContent(
   isPasswordEnabled: Boolean,
   isPasskeyEnabled: Boolean,
   isMfaEnabled: Boolean,
-  state: UserProfileSecurityViewModel.State,
+  sessions: ImmutableList<Session>,
   isDeleteSelfEnabled: Boolean,
-  onAction: (PasswordAction) -> Unit,
+  onError: (String) -> Unit,
 ) {
   if (isPasswordEnabled) {
-    UserProfilePasswordSection(onAction = onAction)
+    UserProfilePasswordSection()
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
   }
   if (isPasskeyEnabled) {
-    UserProfilePasskeySection() {}
+    UserProfilePasskeySection(onError = onError)
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
   }
   if (isMfaEnabled) {
     UserProfileMfaSection(onRemove = {}, onAdd = {})
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
   }
-  if (
-    (state as? UserProfileSecurityViewModel.State.Success)
-      ?.sessions
-      ?.mapNotNull { it.latestActivity }
-      ?.isNotEmpty() == true
-  ) {
-    UserProfileDevicesSection(devices = state.sessions.toImmutableList())
+  if ((sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
+    UserProfileDevicesSection(devices = sessions)
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
   }
   if (isDeleteSelfEnabled) {
@@ -175,7 +184,6 @@ private fun Preview() {
       isPasswordEnabled = true,
       isMfaEnabled = true,
       isDeleteSelfEnabled = true,
-      onAction = {},
     )
   }
 }

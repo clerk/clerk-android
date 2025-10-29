@@ -27,7 +27,6 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
 fun ClerkThemedProfileScaffold(
-  content: @Composable ColumnScope.() -> Unit,
   modifier: Modifier = Modifier,
   errorMessage: String? = null,
   hasLogo: Boolean = false,
@@ -38,6 +37,7 @@ fun ClerkThemedProfileScaffold(
   backgroundColor: Color? = null,
   bottomContent: (@Composable () -> Unit)? = null,
   contentTopPadding: Dp = dp24,
+  content: @Composable ColumnScope.() -> Unit,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
   LaunchedEffect(errorMessage) {

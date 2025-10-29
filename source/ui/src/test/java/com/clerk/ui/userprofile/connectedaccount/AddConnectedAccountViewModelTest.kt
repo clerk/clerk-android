@@ -4,6 +4,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.reauthorize
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
@@ -12,28 +13,28 @@ import com.clerk.api.sso.ResultType
 import com.clerk.api.user.User
 import com.clerk.api.user.createExternalAccount
 import com.clerk.ui.userprofile.MainDispatcherRule
-import io.mockk.any
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.After
+import org.junit.Before
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AddConnectedAccountViewModelTest {
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
-  @BeforeTest
+  @Before
   fun setUp() {
     mockkObject(Clerk)
     every { Clerk.user } returns null
@@ -43,7 +44,7 @@ class AddConnectedAccountViewModelTest {
     mockkObject(SignIn.Companion)
   }
 
-  @AfterTest
+  @After
   fun tearDown() {
     unmockkObject(SignIn.Companion)
     unmockkStatic("com.clerk.api.externalaccount.ExternalAccountKt")
@@ -71,7 +72,7 @@ class AddConnectedAccountViewModelTest {
   fun connectExternalAccount_failure_setsErrorState() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(ClerkErrorResponse.Error(longMessage = "fail")))
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "fail")))
     coEvery { user.createExternalAccount(any()) } returns ClerkResult.Failure(error)
 
     val viewModel = AddConnectedAccountViewModel()
@@ -91,7 +92,10 @@ class AddConnectedAccountViewModelTest {
     viewModel.connectExternalAccount(OAuthProvider.GITHUB)
     advanceUntilIdle()
 
-    assertEquals(AddConnectedAccountViewModel.State.Error("User does not exist"), viewModel.state.value)
+    assertEquals(
+      AddConnectedAccountViewModel.State.Error("User does not exist"),
+      viewModel.state.value,
+    )
   }
 
   @Test
@@ -121,12 +125,15 @@ class AddConnectedAccountViewModelTest {
     viewModel.connectExternalAccount(OAuthProvider.GOOGLE)
     advanceUntilIdle()
 
-    assertEquals(AddConnectedAccountViewModel.State.Error("Unknown result type"), viewModel.state.value)
+    assertEquals(
+      AddConnectedAccountViewModel.State.Error("Unknown result type"),
+      viewModel.state.value,
+    )
   }
 
   @Test
   fun googleOneTap_failure_setsErrorState() = runTest {
-    val error = ClerkErrorResponse(errors = listOf(ClerkErrorResponse.Error(longMessage = "nope")))
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "nope")))
     every { Clerk.user } returns mockk()
     every { Clerk.isGoogleOneTapEnabled } returns true
     coEvery { SignIn.authenticateWithGoogleOneTap() } returns ClerkResult.Failure(error)

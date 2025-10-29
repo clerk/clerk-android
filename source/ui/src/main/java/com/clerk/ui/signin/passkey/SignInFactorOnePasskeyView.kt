@@ -77,7 +77,7 @@ private fun SignInFactorOnePasskeyViewImpl(
     onBackPressed = authState::navigateBack,
     title = stringResource(R.string.use_your_passkey),
     subtitle = stringResource(R.string.using_your_passkey),
-    onClickIdentifier = { authState.navigateToAuthStart() },
+    onClickIdentifier = { authState.clearBackStack() },
     identifier = factor.safeIdentifier,
     snackbarHostState = snackbarHostState,
   ) {

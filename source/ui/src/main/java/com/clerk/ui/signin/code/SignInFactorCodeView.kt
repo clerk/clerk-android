@@ -108,7 +108,7 @@ private fun SignInFactorCodeViewImpl(
     subtitle = SignInFactorCodeUiHelper.subtitleForStrategy(factor),
     identifier = factor.safeIdentifier,
     snackbarHostState = snackbarHostState,
-    onClickIdentifier = { authState.navigateToAuthStart() },
+    onClickIdentifier = { authState.clearBackStack() },
   ) {
     ClerkCodeInputField(
       verificationState = verificationTextState.verificationState(),

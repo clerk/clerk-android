@@ -1,22 +1,21 @@
 package com.clerk.ui.userprofile.verify
 
+import app.cash.turbine.test
 import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.attemptVerification
 import com.clerk.api.emailaddress.prepareVerification
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.phonenumber.PhoneNumber
-import com.clerk.api.phonenumber.attemptVerification
-import com.clerk.api.phonenumber.prepareVerification
 import com.clerk.api.user.User
 import com.clerk.api.user.attemptTotpVerification
 import com.clerk.ui.userprofile.MainDispatcherRule
-import io.mockk.any
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
@@ -24,7 +23,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -55,25 +53,27 @@ class UserProfileVerifyViewModelTest {
     coEvery { email.prepareVerification(any()) } returns ClerkResult.success(mockk())
 
     val viewModel = UserProfileVerifyViewModel()
-
-    viewModel.prepareEmailAddress(email)
-    advanceUntilIdle()
-
-    assertEquals(UserProfileVerifyViewModel.AuthState.Success, viewModel.state.value)
+    viewModel.state.test {
+      assertEquals(UserProfileVerifyViewModel.AuthState.Idle, awaitItem())
+      viewModel.prepareEmailAddress(email)
+      assertEquals(UserProfileVerifyViewModel.AuthState.Loading, awaitItem())
+      assertEquals(UserProfileVerifyViewModel.AuthState.Success, awaitItem())
+    }
   }
 
   @Test
   fun prepareEmailAddress_failure_setsError() = runTest {
     val email = mockk<EmailAddress>()
-    val error = ClerkErrorResponse(errors = listOf(ClerkErrorResponse.Error(longMessage = "fail")))
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "fail")))
     coEvery { email.prepareVerification(any()) } returns ClerkResult.Failure(error)
 
     val viewModel = UserProfileVerifyViewModel()
-
-    viewModel.prepareEmailAddress(email)
-    advanceUntilIdle()
-
-    assertEquals(UserProfileVerifyViewModel.AuthState.Error("fail"), viewModel.state.value)
+    viewModel.state.test {
+      assertEquals(UserProfileVerifyViewModel.AuthState.Idle, awaitItem())
+      viewModel.prepareEmailAddress(email)
+      assertEquals(UserProfileVerifyViewModel.AuthState.Loading, awaitItem())
+      assertEquals(UserProfileVerifyViewModel.AuthState.Error("fail"), awaitItem())
+    }
   }
 
   @Test
@@ -82,28 +82,27 @@ class UserProfileVerifyViewModelTest {
     coEvery { email.attemptVerification(any()) } returns ClerkResult.success(mockk())
 
     val viewModel = UserProfileVerifyViewModel()
-
-    viewModel.attemptEmailAddress(email, "123456")
-    advanceUntilIdle()
-
-    assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verified, viewModel.verificationTextState.value)
+    viewModel.verificationTextState.test {
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
+      viewModel.attemptEmailAddress(email, "123456")
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verified, awaitItem())
+    }
   }
 
   @Test
   fun attemptEmailAddress_failure_updatesVerificationError() = runTest {
     val email = mockk<EmailAddress>()
-    val error = ClerkErrorResponse(errors = listOf(ClerkErrorResponse.Error(longMessage = "bad")))
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "bad")))
     coEvery { email.attemptVerification(any()) } returns ClerkResult.Failure(error)
 
     val viewModel = UserProfileVerifyViewModel()
-
-    viewModel.attemptEmailAddress(email, "123456")
-    advanceUntilIdle()
-
-    assertEquals(
-      UserProfileVerifyViewModel.VerificationTextState.Error("bad"),
-      viewModel.verificationTextState.value,
-    )
+    viewModel.verificationTextState.test {
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
+      viewModel.attemptEmailAddress(email, "123456")
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Error("bad"), awaitItem())
+    }
   }
 
   @Test
@@ -113,29 +112,28 @@ class UserProfileVerifyViewModelTest {
     coEvery { user.attemptTotpVerification(any()) } returns ClerkResult.success(mockk())
 
     val viewModel = UserProfileVerifyViewModel()
-
-    viewModel.attemptTotp("654321")
-    advanceUntilIdle()
-
-    assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verified, viewModel.verificationTextState.value)
+    viewModel.verificationTextState.test {
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
+      viewModel.attemptTotp("654321")
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verified, awaitItem())
+    }
   }
 
   @Test
   fun attemptTotp_failure_setsError() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(ClerkErrorResponse.Error(longMessage = "oops")))
+    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "oops")))
     coEvery { user.attemptTotpVerification(any()) } returns ClerkResult.Failure(error)
 
     val viewModel = UserProfileVerifyViewModel()
-
-    viewModel.attemptTotp("654321")
-    advanceUntilIdle()
-
-    assertEquals(
-      UserProfileVerifyViewModel.VerificationTextState.Error("oops"),
-      viewModel.verificationTextState.value,
-    )
+    viewModel.verificationTextState.test {
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
+      viewModel.attemptTotp("654321")
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Error("oops"), awaitItem())
+    }
   }
 
   @Test
@@ -143,13 +141,14 @@ class UserProfileVerifyViewModelTest {
     every { Clerk.user } returns null
 
     val viewModel = UserProfileVerifyViewModel()
-
-    viewModel.attemptTotp("654321")
-    advanceUntilIdle()
-
-    assertEquals(
-      UserProfileVerifyViewModel.VerificationTextState.Error("User does not exist"),
-      viewModel.verificationTextState.value,
-    )
+    viewModel.verificationTextState.test {
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
+      viewModel.attemptTotp("654321")
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
+      assertEquals(
+        UserProfileVerifyViewModel.VerificationTextState.Error("User does not exist"),
+        awaitItem(),
+      )
+    }
   }
 }

@@ -89,7 +89,7 @@ private fun SignInFactorOnePasswordViewImpl(
   ClerkThemedAuthScaffold(
     onBackPressed = authState::navigateBack,
     identifier = factor.safeIdentifier,
-    onClickIdentifier = { authState.navigateToAuthStart() },
+    onClickIdentifier = { authState.clearBackStack() },
     modifier = modifier,
     title = stringResource(R.string.enter_password),
     subtitle = stringResource(R.string.enter_the_password_associated_with_your_account),

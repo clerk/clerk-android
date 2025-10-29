@@ -408,6 +408,7 @@ internal interface UserApi {
    * @return [ClerkResult] containing the updated [Passkey] on success or [ClerkErrorResponse] on
    *   failure
    */
+  @FormUrlEncoded
   @PATCH(ApiPaths.User.Passkey.WITH_ID)
   suspend fun updatePasskey(
     @Path(ApiParams.PASSKEY_ID) passkeyId: String,

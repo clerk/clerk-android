@@ -152,4 +152,7 @@
     <string name="enter_your_current_password_to_set_a_new_one">Enter your current password to set a new one</string>
     <string name="current_password">Current password</string>
     <string name="it_is_recommended_to_sign_out">It is recommended to sign out of all other devices which may have used your old password.</string>
+    <string name="rename_passkey">Rename Passkey</string>
+    <string name="you_can_change_the_passkey_name">You can change the passkey name to make it easier to find</string>
+    <string name="name_of_passkey">Name of passkey</string>
 </resources>

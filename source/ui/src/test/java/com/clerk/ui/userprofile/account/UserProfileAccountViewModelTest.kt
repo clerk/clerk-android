@@ -10,7 +10,10 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserProfileAccountViewModelTest {
@@ -18,6 +21,8 @@ class UserProfileAccountViewModelTest {
   @BeforeTest
   fun setUp() {
     mockkObject(Clerk)
+    // Ensure launched coroutines run immediately for this simple verification
+    kotlinx.coroutines.Dispatchers.setMain(UnconfinedTestDispatcher())
   }
 
   @AfterTest
@@ -32,6 +37,7 @@ class UserProfileAccountViewModelTest {
     val viewModel = UserProfileAccountViewModel()
 
     viewModel.signOut()
+    advanceUntilIdle()
 
     coVerify { Clerk.signOut() }
   }
