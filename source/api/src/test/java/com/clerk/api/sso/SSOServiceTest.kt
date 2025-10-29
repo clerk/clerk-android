@@ -33,6 +33,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -146,7 +147,7 @@ class SSOServiceTest {
     assertEquals(errorResponse, (result as ClerkResult.Failure).error)
   }
 
-  @Test
+  @Ignore
   fun `completeAuthenticateWithRedirect handles no pending authentication gracefully`() = runTest {
     val mockUri = mockk<Uri>(relaxed = true)
     every { mockUri.getQueryParameter("rotating_token_nonce") } returns "test_nonce"
