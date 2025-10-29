@@ -151,7 +151,7 @@ fun Style.text(): String {
     Style.AuthenticatorApp -> stringResource(R.string.authenticator_app)
     is Style.Sms ->
       stringResource(
-        R.string.sms_code,
+        R.string.sms_code_with_number,
         this.phoneNumber.phoneNumber.formattedAsPhoneNumberIfPossible,
       )
     Style.BackupCodes -> stringResource(R.string.backup_codes)

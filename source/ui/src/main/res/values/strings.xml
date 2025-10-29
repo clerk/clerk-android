@@ -127,7 +127,7 @@
     <string name="phone_number_will_be_removed">%1$s will be removed from this account. You will no longer be able to sign in using this phone number.</string>
     <string name="verification_codes_will_no_longer_be_required">Verification codes from this authenticator will no longer be required when signing in.</string>
     <string name="authenticator_app">Authenticator app</string>
-    <string name="sms_code">SMS code %1$s</string>
+    <string name="sms_code_with_number">SMS code %1$s</string>
     <string name="backup_codes">Backup codes</string>
     <string name="add_two_step_verification">Add two-step verification</string>
     <string name="change_password">Change password</string>
@@ -155,4 +155,7 @@
     <string name="rename_passkey">Rename Passkey</string>
     <string name="you_can_change_the_passkey_name">You can change the passkey name to make it easier to find</string>
     <string name="name_of_passkey">Name of passkey</string>
+    <string name="choose_how_you_d_like_to_receive_your_two_step_verification_code">Choose how you’d like to receive your two-step verification code.</string>
+    <string name="authenticator_application">Authenticator application</string>
+    <string name="sms_code">SMS Code</string>
 </resources>
