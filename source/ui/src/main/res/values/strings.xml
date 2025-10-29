@@ -159,4 +159,6 @@
     <string name="authenticator_application">Authenticator application</string>
     <string name="sms_code">SMS Code</string>
     <string name="add_phone_number">Add phone number</string>
+    <string name="there_are_no_available_phone_numbers">There are no available phone numbers to register for SMS code two-step verification, please add a new one.</string>
+    <string name="a_text_message_containing_a_verification_code_will_be_sent">A text message containing a verification code will be sent to this phone number. Message and data rates may apply.</string>
 </resources>

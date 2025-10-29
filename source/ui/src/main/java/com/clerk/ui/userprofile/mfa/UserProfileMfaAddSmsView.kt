@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
@@ -37,6 +38,7 @@ import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp10
 import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.CountryCodeUtils
@@ -59,13 +61,42 @@ fun UserProfileMfaAddSmsView(
     remember(Clerk.user) { Clerk.user?.phoneNumbersAvailableForMfa() ?: emptyList() }
       .filter { it.verification?.status == Verification.Status.VERIFIED }
       .sortedBy { it.createdAt }
+  if (availablePhoneNumbers.isEmpty()) {
+    EmptyState()
+  } else {
+    UserProfileMfaAddSmsViewImpl(
+      modifier = modifier,
+      availablePhoneNumbers = availablePhoneNumbers.toImmutableList(),
+      onClickUsePhoneNumber = onClickUsePhoneNumber,
+      onReserveForSecondFactorSuccess = onReserveForSecondFactorSuccess,
+    )
+  }
+}
 
-  UserProfileMfaAddSmsViewImpl(
-    modifier = modifier,
-    availablePhoneNumbers = availablePhoneNumbers.toImmutableList(),
-    onClickUsePhoneNumber = onClickUsePhoneNumber,
-    onReserveForSecondFactorSuccess = onReserveForSecondFactorSuccess,
-  )
+@Composable
+private fun EmptyState(modifier: Modifier = Modifier) {
+  ClerkMaterialTheme {
+    Column(
+      modifier =
+        Modifier.fillMaxWidth()
+          .background(color = ClerkMaterialTheme.colors.background)
+          .padding(dp24)
+          .then(modifier),
+      verticalArrangement = Arrangement.spacedBy(dp24),
+    ) {
+      Text(
+        text = stringResource(R.string.there_are_no_available_phone_numbers),
+        style = ClerkMaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
+        color = ClerkMaterialTheme.colors.mutedForeground,
+      )
+
+      ClerkButton(
+        modifier = Modifier.fillMaxWidth(),
+        text = stringResource(R.string.add_phone_number),
+        onClick = {},
+      )
+    }
+  }
 }
 
 @Composable
@@ -260,4 +291,10 @@ private fun Preview() {
         ),
     )
   }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewEmptyState() {
+  ClerkMaterialTheme { EmptyState() }
 }
