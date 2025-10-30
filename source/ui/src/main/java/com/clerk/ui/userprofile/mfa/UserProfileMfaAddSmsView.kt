@@ -120,8 +120,9 @@ private fun UserProfileMfaAddSmsViewImpl(
             codes = (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes!!,
           )
         )
+      } else {
+        userProfileState.navigateBack()
       }
-      userProfileState.navigateBack()
     }
   }
 
