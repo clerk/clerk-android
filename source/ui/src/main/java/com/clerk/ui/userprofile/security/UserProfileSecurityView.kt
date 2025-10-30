@@ -27,6 +27,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -128,6 +129,7 @@ private fun UserProfileSecurityMainContent(
   val coroutineScope = rememberCoroutineScope()
   val sheetState = rememberModalBottomSheetState()
   var showBottomSheet by remember { mutableStateOf(false) }
+  val context = LocalContext.current
   Scaffold(
     containerColor = ClerkMaterialTheme.colors.muted,
     snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
@@ -158,7 +160,13 @@ private fun UserProfileSecurityMainContent(
           sessions = sessions,
           isDeleteSelfEnabled = isDeleteSelfEnabled,
         ),
-        onError = { message -> coroutineScope.launch { snackbarHostState.showSnackbar(message) } },
+        onError = { message ->
+          coroutineScope.launch {
+            snackbarHostState.showSnackbar(
+              message ?: context.getString(R.string.something_went_wrong_please_try_again)
+            )
+          }
+        },
         onAdd = { showBottomSheet = true },
       )
     }
@@ -271,7 +279,7 @@ private fun PreviewBottomSheetAuthAppDisabled() {
 @Composable
 private fun UserProfileSecurityContent(
   configuration: SecurityContentConfiguration,
-  onError: (String) -> Unit,
+  onError: (String?) -> Unit,
   onAdd: () -> Unit,
 ) {
   if (configuration.isPasswordEnabled) {

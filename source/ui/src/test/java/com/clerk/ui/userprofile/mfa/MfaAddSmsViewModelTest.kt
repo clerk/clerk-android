@@ -36,14 +36,15 @@ class MfaAddSmsViewModelTest {
   @Test
   fun reserveForSecondFactor_success_setsSuccessState() = runTest {
     val phoneNumber = mockk<PhoneNumber>()
-    coEvery { phoneNumber.setReservedForSecondFactor(true) } returns ClerkResult.success(mockk())
+    coEvery { phoneNumber.setReservedForSecondFactor(true) } returns
+      ClerkResult.success(phoneNumber)
 
     val viewModel = MfaAddSmsViewModel()
     viewModel.state.test {
       assertEquals(MfaAddSmsViewModel.State.Idle, awaitItem())
       viewModel.reserveForSecondFactor(phoneNumber)
       assertEquals(MfaAddSmsViewModel.State.Loading, awaitItem())
-      assertEquals(MfaAddSmsViewModel.State.Success, awaitItem())
+      assertEquals(MfaAddSmsViewModel.State.Success(phoneNumber), awaitItem())
     }
   }
 

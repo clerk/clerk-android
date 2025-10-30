@@ -38,13 +38,18 @@ private fun UserProfileVerifyViewImpl(
   val userProfileState = LocalUserProfileState.current
   val verificationTextState by viewModel.verificationTextState.collectAsStateWithLifecycle()
 
-  LaunchedEffect(mode) { prepareCode(mode, viewModel) }
+  LaunchedEffect(mode) {
+    // Ensure stale state from a previous verification does not auto-pop this screen
+    viewModel.resetState()
+    prepareCode(mode, viewModel)
+  }
   val errorMessage = (state as? UserProfileVerifyViewModel.AuthState.Error)?.error
 
   LaunchedEffect(verificationTextState) {
     if (verificationTextState is UserProfileVerifyViewModel.VerificationTextState.Verified) {
-      userProfileState.pop(2)
+      // Reset first so the coroutine is not cancelled before state is cleared
       viewModel.resetState()
+      userProfileState.pop(2)
     }
   }
 

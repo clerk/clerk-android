@@ -51,6 +51,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.UserProfileStateProvider
+import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import kotlinx.collections.immutable.ImmutableList
@@ -104,13 +105,46 @@ private fun UserProfileMfaAddSmsViewImpl(
 ) {
   val userProfileState = LocalUserProfileState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
-  var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
   val errorMessage: String? = (state as? MfaAddSmsViewModel.State.Error)?.message
 
   if (state is MfaAddSmsViewModel.State.Success) {
-    LaunchedEffect(Unit) { userProfileState.navigateBack() }
+    LaunchedEffect(Unit) {
+      viewModel.resetState()
+      if (
+        (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes != null &&
+          (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes?.isNotEmpty() == true
+      ) {
+        userProfileState.navigateTo(
+          UserProfileDestination.BackupCodeView(
+            mfaType = MfaType.PhoneCode,
+            codes = (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes!!,
+          )
+        )
+      } else {
+        userProfileState.navigateBack()
+      }
+    }
   }
 
+  UserProfileMfaAddSmsContent(
+    errorMessage = errorMessage,
+    modifier = modifier,
+    availablePhoneNumbers = availablePhoneNumbers,
+    isLoading = state is MfaAddSmsViewModel.State.Loading,
+    onReserveForSecondFactor = { viewModel.reserveForSecondFactor(it) },
+  )
+}
+
+@Composable
+private fun UserProfileMfaAddSmsContent(
+  errorMessage: String?,
+  availablePhoneNumbers: ImmutableList<PhoneNumber>,
+  modifier: Modifier = Modifier,
+  isLoading: Boolean = false,
+  onReserveForSecondFactor: (PhoneNumber) -> Unit,
+) {
+  val userProfileState = LocalUserProfileState.current
+  var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
   ClerkThemedProfileScaffold(
     errorMessage = errorMessage,
     modifier = modifier,
@@ -143,9 +177,9 @@ private fun UserProfileMfaAddSmsViewImpl(
         ClerkButton(
           modifier = Modifier.fillMaxWidth(),
           text = stringResource(R.string.continue_text),
-          isLoading = state is MfaAddSmsViewModel.State.Loading,
-          isEnabled = selectedNumber != null && state !is MfaAddSmsViewModel.State.Loading,
-          onClick = { viewModel.reserveForSecondFactor(selectedNumber!!) },
+          isLoading = isLoading,
+          isEnabled = selectedNumber != null,
+          onClick = { onReserveForSecondFactor(selectedNumber!!) },
         )
         Spacers.Vertical.Spacer24()
         ClerkTextButton(

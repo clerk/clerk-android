@@ -21,9 +21,13 @@ internal class MfaAddSmsViewModel : ViewModel() {
     viewModelScope.launch {
       phoneNumber
         .setReservedForSecondFactor(true)
-        .onSuccess { _state.value = State.Success }
+        .onSuccess { _state.value = State.Success(it) }
         .onFailure { _state.value = State.Error(it.errorMessage) }
     }
+  }
+
+  fun resetState() {
+    _state.value = State.Idle
   }
 
   sealed interface State {
@@ -31,7 +35,7 @@ internal class MfaAddSmsViewModel : ViewModel() {
 
     data object Loading : State
 
-    data object Success : State
+    data class Success(val phoneNumber: PhoneNumber) : State
 
     data class Error(val message: String?) : State
   }

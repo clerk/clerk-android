@@ -16,6 +16,8 @@ import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
 import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
+import com.clerk.ui.userprofile.security.BackupCodesView
+import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameView
 import com.clerk.ui.userprofile.security.password.PasswordAction
@@ -24,6 +26,7 @@ import com.clerk.ui.userprofile.security.password.UserProfileNewPasswordView
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
 import com.clerk.ui.userprofile.verify.Mode
 import com.clerk.ui.userprofile.verify.UserProfileVerifyView
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
 
 @SuppressLint("ComposeCompositionLocalUsage")
@@ -84,6 +87,9 @@ fun UserProfileView(modifier: Modifier = Modifier) {
           entry<UserProfileDestination.AddPhoneView> { key -> UserProfileAddPhoneView() }
 
           entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
+          entry<UserProfileDestination.BackupCodeView> { key ->
+            BackupCodesView(codes = key.codes.toImmutableList())
+          }
         },
     )
   }
@@ -114,4 +120,8 @@ internal object UserProfileDestination {
   @Serializable data object AddPhoneView : NavKey
 
   @Serializable data class VerifyView(val mode: Mode) : NavKey
+
+  @Serializable
+  data class BackupCodeView(val mfaType: MfaType = MfaType.BackupCodes, val codes: List<String>) :
+    NavKey
 }

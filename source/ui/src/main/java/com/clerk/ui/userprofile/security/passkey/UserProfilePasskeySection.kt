@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -28,7 +29,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun UserProfilePasskeySection(onError: (String) -> Unit, modifier: Modifier = Modifier) {
+internal fun UserProfilePasskeySection(onError: (String?) -> Unit, modifier: Modifier = Modifier) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   val sortedPasskeys = user?.passkeys?.sortedBy { it.createdAt }.orEmpty().toImmutableList()
   UserProfilePasskeySectionImpl(passkeys = sortedPasskeys, modifier = modifier, onError = onError)
@@ -37,15 +38,16 @@ internal fun UserProfilePasskeySection(onError: (String) -> Unit, modifier: Modi
 @Composable
 private fun UserProfilePasskeySectionImpl(
   passkeys: ImmutableList<Passkey>,
-  onError: (String) -> Unit,
+  onError: (String?) -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfilePasskeyViewModel = viewModel(),
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val userProfileState = LocalUserProfileState.current
-  when (val s = state) {
-    is UserProfilePasskeyViewModel.State.Error -> onError(s.message)
-    else -> {}
+  val errorMessage = (state as? UserProfilePasskeyViewModel.State.Error)?.message
+
+  if (state is UserProfilePasskeyViewModel.State.Error) {
+    LaunchedEffect(Unit) { onError(errorMessage) }
   }
 
   ClerkMaterialTheme {
@@ -62,7 +64,9 @@ private fun UserProfilePasskeySectionImpl(
         style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
-      Spacers.Vertical.Spacer32()
+      if (passkeys.isNotEmpty()) {
+        Spacers.Vertical.Spacer24()
+      }
       Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
         passkeys.forEachIndexed { index, passkey ->
           UserProfilePasskeyRow(

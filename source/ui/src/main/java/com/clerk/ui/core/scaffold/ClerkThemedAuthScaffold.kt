@@ -65,7 +65,6 @@ internal fun ClerkThemedAuthScaffold(
             .background(ClerkMaterialTheme.colors.background),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
-        Spacers.Vertical.Spacer8()
         HeaderTextView(text = title, type = HeaderType.Title)
         subtitle?.let {
           Spacers.Vertical.Spacer8()
