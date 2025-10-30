@@ -16,7 +16,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,27 +28,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
 import com.clerk.api.session.Session
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp10
-import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.UserProfileDestination
-import com.clerk.ui.userprofile.UserProfileStateProvider
-import com.clerk.ui.userprofile.account.UserProfileIconActionRow
-import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
@@ -177,101 +169,11 @@ private fun UserProfileSecurityMainContent(
         sheetState = sheetState,
         onDismissRequest = { showBottomSheet = false },
       ) {
-        BottomSheetContent(
+        AddTwoStepVerificationBottomSheetContent(
           mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
           mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
         )
       }
-    }
-  }
-}
-
-@Composable
-private fun BottomSheetContent(
-  mfaPhoneCodeIsEnabled: Boolean,
-  mfaAuthenticatorAppIsEnabled: Boolean,
-  modifier: Modifier = Modifier,
-) {
-  val userProfileState = LocalUserProfileState.current
-  ClerkMaterialTheme {
-    Column(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(color = ClerkMaterialTheme.colors.background)
-          .then(modifier)
-    ) {
-      Text(
-        modifier = Modifier.align(Alignment.CenterHorizontally),
-        text = stringResource(R.string.add_two_step_verification),
-        color = ClerkMaterialTheme.colors.foreground,
-        style = ClerkMaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-      )
-      Spacers.Vertical.Spacer24()
-      Text(
-        modifier = Modifier.padding(horizontal = dp24),
-        text =
-          stringResource(R.string.choose_how_you_d_like_to_receive_your_two_step_verification_code),
-        color = ClerkMaterialTheme.colors.mutedForeground,
-        style = ClerkMaterialTheme.typography.bodyMedium,
-      )
-      Spacers.Vertical.Spacer12()
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-      if (mfaPhoneCodeIsEnabled) {
-        UserProfileIconActionRow(
-          iconSize = dp24,
-          iconResId = R.drawable.ic_phone,
-          text = stringResource(R.string.sms_code),
-          onClick = { userProfileState.navigateTo(UserProfileDestination.AddMfaView(ViewType.Sms)) },
-        )
-        HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-      }
-      if (mfaAuthenticatorAppIsEnabled) {
-        UserProfileIconActionRow(
-          iconSize = dp24,
-          iconResId = R.drawable.ic_key,
-          text = stringResource(R.string.authenticator_application),
-          onClick = {
-            userProfileState.navigateTo(
-              UserProfileDestination.AddMfaView(ViewType.AuthenticatorApp)
-            )
-          },
-        )
-        HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-      }
-      Spacers.Vertical.Spacer24()
-    }
-  }
-}
-
-@PreviewLightDark
-@Composable
-private fun PreviewBottomSheet() {
-  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
-  UserProfileStateProvider(backStack) {
-    ClerkMaterialTheme {
-      BottomSheetContent(mfaPhoneCodeIsEnabled = true, mfaAuthenticatorAppIsEnabled = true)
-    }
-  }
-}
-
-@PreviewLightDark
-@Composable
-private fun PreviewBottomSheetPhoneDisabled() {
-  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
-  UserProfileStateProvider(backStack) {
-    ClerkMaterialTheme {
-      BottomSheetContent(mfaPhoneCodeIsEnabled = false, mfaAuthenticatorAppIsEnabled = true)
-    }
-  }
-}
-
-@PreviewLightDark
-@Composable
-private fun PreviewBottomSheetAuthAppDisabled() {
-  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
-  UserProfileStateProvider(backStack) {
-    ClerkMaterialTheme {
-      BottomSheetContent(mfaPhoneCodeIsEnabled = true, mfaAuthenticatorAppIsEnabled = false)
     }
   }
 }

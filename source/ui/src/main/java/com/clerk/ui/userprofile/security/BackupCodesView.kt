@@ -33,7 +33,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -44,8 +43,7 @@ import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.UserProfileDestination
-import com.clerk.ui.userprofile.UserProfileStateProvider
+import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import java.io.File
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -222,8 +220,7 @@ internal enum class MfaType {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
-  UserProfileStateProvider(backStack) {
+  PreviewUserProfileStateProvider {
     BackupCodesView(
       codes =
         persistentListOf(
