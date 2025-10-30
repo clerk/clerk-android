@@ -84,7 +84,7 @@ data class User(
    * An array of all the ExternalAccount objects associated with the user via OAuth. Note: This
    * includes both verified & unverified external accounts.
    */
-  @SerialName("external_accounts") val externalAccounts: List<ExternalAccount>,
+  @SerialName("external_accounts") val externalAccounts: List<ExternalAccount>? = null,
 
   /** The user's first name. */
   @SerialName("first_name") val firstName: String? = null,
@@ -166,6 +166,7 @@ data class User(
 
   /** The user's username. */
   val username: String? = null,
+  val primaryPhoneNumber: PhoneNumber? = phoneNumbers.find { it.id == primaryPhoneNumberId },
 ) {
 
   /**
@@ -305,7 +306,15 @@ data class User(
   }
 
   val verifiedExternalAccounts: List<ExternalAccount>
-    get() = externalAccounts.filter { it.verification?.status == Verification.Status.VERIFIED }
+    get() =
+      externalAccounts.orEmpty().filter { it.verification?.status == Verification.Status.VERIFIED }
+
+  /**
+   * The primary [EmailAddress] object for the user. This is a convenience property that finds the
+   * full [EmailAddress] object from the [emailAddresses] list that matches the
+   * [primaryEmailAddressId]. Returns null if no primary email address is set or found.
+   */
+  val primaryEmailAddress = emailAddresses.find { it.id == primaryEmailAddressId }
 }
 
 /**
@@ -321,7 +330,6 @@ suspend fun User.get(): ClerkResult<User, ClerkErrorResponse> = ClerkApi.user.ge
 /**
  * Updates the current user, or the user with the given session ID, with the provided parameters.
  *
- * @param sessionId The session id of the user to update. If null, the current user is updated.
  * @param params The parameters to update the user with. **See**: [UpdateParams].
  * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
  *   [ClerkErrorResponse] if it failed.
