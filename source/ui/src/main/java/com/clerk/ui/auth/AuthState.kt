@@ -148,6 +148,6 @@ internal class AuthState(
 
 @Composable
 internal fun PreviewAuthStateProvider(content: @Composable () -> Unit) {
-  val backStack = rememberNavBackStack<NavKey>()
+  val backStack = rememberNavBackStack()
   AuthStateProvider(backStack) { content() }
 }

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.ui.core.common.NavigableState
 import com.clerk.ui.core.navigation.pop
 
@@ -28,6 +29,6 @@ internal class UserProfileState(val backStack: NavBackStack<NavKey>) : Navigable
 
 @Composable
 internal fun PreviewUserProfileStateProvider(content: @Composable () -> Unit) {
-  val backStack = NavBackStack<NavKey>()
+  val backStack = rememberNavBackStack()
   UserProfileStateProvider(backStack) { content() }
 }
