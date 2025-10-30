@@ -38,6 +38,7 @@ import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import kotlinx.collections.immutable.persistentListOf
@@ -46,7 +47,6 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun UserProfileMfaRow(
   style: Style,
-  onRemove: (Style) -> Unit,
   modifier: Modifier = Modifier,
   isDefault: Boolean = false,
   title: String? = null,
@@ -78,37 +78,7 @@ internal fun UserProfileMfaRow(
       MfaContent(isDefault, title, style)
 
       Spacer(Modifier.weight(1f))
-      ItemMoreMenu(
-        dropDownItems =
-          persistentListOf(
-            DropDownItem(
-              id = MfaAction.Remove,
-              text = stringResource(R.string.remove),
-              danger = true,
-              isHidden = style == Style.BackupCodes,
-            ),
-            DropDownItem(
-              id = MfaAction.SetAsDefault,
-              text = stringResource(R.string.set_as_default),
-              isHidden =
-                style !is Style.Sms ||
-                  (Clerk.user?.totpEnabled != true && style.phoneNumber.defaultSecondFactor),
-            ),
-            DropDownItem(
-              id = MfaAction.Regenerate,
-              text = stringResource(R.string.regenerate),
-              isHidden = style != Style.BackupCodes,
-            ),
-          ),
-        onClick = {
-          when (it) {
-            MfaAction.Remove -> onRemove(style)
-            MfaAction.SetAsDefault ->
-              viewModel.makeDefaultSecondFactor((style as? Style.Sms)?.phoneNumber)
-            MfaAction.Regenerate -> viewModel.regenerateBackupCodes()
-          }
-        },
-      )
+      MfaMoreMenu(style = style, viewModel = viewModel)
     }
   }
 }
@@ -199,18 +169,61 @@ sealed interface Style {
   data object BackupCodes : Style
 }
 
+@Composable
+private fun MfaMoreMenu(style: Style, viewModel: UserProfileMfaViewModel) {
+  ItemMoreMenu(
+    dropDownItems =
+      persistentListOf(
+        DropDownItem(
+          id = MfaAction.Remove,
+          text = stringResource(R.string.remove),
+          danger = true,
+          isHidden = style == Style.BackupCodes,
+        ),
+        DropDownItem(
+          id = MfaAction.SetAsDefault,
+          text = stringResource(R.string.set_as_default),
+          isHidden =
+            style !is Style.Sms ||
+              (Clerk.user?.totpEnabled != true && style.phoneNumber.defaultSecondFactor),
+        ),
+        DropDownItem(
+          id = MfaAction.Regenerate,
+          text = stringResource(R.string.regenerate),
+          isHidden = style != Style.BackupCodes,
+        ),
+      ),
+    onClick = { action ->
+      when (action) {
+        MfaAction.Remove ->
+          when (style) {
+            Style.AuthenticatorApp -> viewModel.deleteTotp()
+            Style.BackupCodes -> {}
+            is Style.Sms -> viewModel.deletePhoneNumber(style.phoneNumber)
+          }
+
+        MfaAction.SetAsDefault ->
+          viewModel.makeDefaultSecondFactor((style as? Style.Sms)?.phoneNumber)
+
+        MfaAction.Regenerate -> viewModel.regenerateBackupCodes()
+      }
+    },
+  )
+}
+
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    Column {
-      UserProfileMfaRow(style = Style.AuthenticatorApp, isDefault = true, onRemove = {})
-      UserProfileMfaRow(
-        style = Style.Sms(phoneNumber = PhoneNumber(id = "1", phoneNumber = "+15555550100")),
-        title = "Primary",
-        onRemove = {},
-      )
-      UserProfileMfaRow(style = Style.BackupCodes, onRemove = {})
+  PreviewUserProfileStateProvider {
+    ClerkMaterialTheme {
+      Column {
+        UserProfileMfaRow(style = Style.AuthenticatorApp, isDefault = true)
+        UserProfileMfaRow(
+          style = Style.Sms(phoneNumber = PhoneNumber(id = "1", phoneNumber = "+15555550100")),
+          title = "Primary",
+        )
+        UserProfileMfaRow(style = Style.BackupCodes)
+      }
     }
   }
 }

@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +45,7 @@ import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
+import com.clerk.ui.userprofile.UserProfileState
 import java.io.File
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -53,14 +55,16 @@ import kotlinx.coroutines.launch
 internal fun BackupCodesView(
   codes: ImmutableList<String>,
   modifier: Modifier = Modifier,
+  origin: Origin = Origin.BackupCodes,
   mfaType: MfaType = MfaType.BackupCodes,
 ) {
 
   val userProfileState = LocalUserProfileState.current
+  BackHandler { handleBack(userProfileState, origin) }
 
   ClerkThemedProfileScaffold(
     title = stringResource(R.string.add_backup_code_verification),
-    onBackPressed = { userProfileState.navigateBack() },
+    onBackPressed = { handleBack(userProfileState, origin) },
   ) {
     Column(
       modifier =
@@ -95,6 +99,16 @@ internal fun BackupCodesView(
       }
       ActionButtonRow(codes)
     }
+  }
+}
+
+private const val POP_TO_PROFILE = 3
+
+private fun handleBack(userProfileState: UserProfileState, origin: Origin) {
+  if (origin == Origin.AuthenticatorApp) {
+    userProfileState.pop(POP_TO_PROFILE)
+  } else {
+    userProfileState.navigateBack()
   }
 }
 
@@ -200,6 +214,11 @@ fun BackupCodeGrid(codes: ImmutableList<String>, modifier: Modifier = Modifier) 
       )
     }
   }
+}
+
+enum class Origin {
+  AuthenticatorApp,
+  BackupCodes,
 }
 
 @Composable

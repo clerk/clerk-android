@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.attemptVerification
 import com.clerk.api.emailaddress.prepareVerification
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -52,7 +53,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     viewModelScope.launch(Dispatchers.IO) {
       emailAddress
         .attemptVerification(code)
-        .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
+        .onSuccess { _verificationTextState.value = VerificationTextState.Verified() }
         .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
     }
   }
@@ -67,7 +68,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     viewModelScope.launch(Dispatchers.IO) {
       phoneNumber
         .attemptVerification(code)
-        .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
+        .onSuccess { _verificationTextState.value = VerificationTextState.Verified() }
         .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
     }
   }
@@ -82,8 +83,13 @@ internal class UserProfileVerifyViewModel : ViewModel() {
       viewModelScope.launch(Dispatchers.IO) {
         user
           .attemptTotpVerification(code)
-          .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
-          .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
+          .onSuccess {
+            _verificationTextState.value = VerificationTextState.Verified(it.backupCodes)
+          }
+          .onFailure {
+            ClerkLog.e("Error attempting TOTP verification ${it.errorMessage}")
+            _verificationTextState.value = VerificationTextState.Error(it.errorMessage)
+          }
       }
     }
   }
@@ -93,7 +99,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
 
     data object Verifying : VerificationTextState
 
-    data object Verified : VerificationTextState
+    data class Verified(val backupCodes: List<String>? = null) : VerificationTextState
 
     data class Error(val error: String?) : VerificationTextState
   }

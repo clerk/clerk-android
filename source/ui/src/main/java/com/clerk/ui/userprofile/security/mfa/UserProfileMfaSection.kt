@@ -25,16 +25,11 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun UserProfileMfaSection(
-  onRemove: (Style) -> Unit,
-  modifier: Modifier = Modifier,
-  onAdd: () -> Unit,
-) {
+internal fun UserProfileMfaSection(modifier: Modifier = Modifier, onAdd: () -> Unit) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   UserProfileMfaSectionImpl(
     modifier = modifier,
     mfaItems = buildMfaItemList(user?.phoneNumbers.orEmpty()),
-    onRemove = onRemove,
     onAdd = onAdd,
   )
 }
@@ -42,7 +37,6 @@ internal fun UserProfileMfaSection(
 @Composable
 private fun UserProfileMfaSectionImpl(
   mfaItems: ImmutableList<MfaItem>,
-  onRemove: (Style) -> Unit,
   modifier: Modifier = Modifier,
   onAdd: () -> Unit,
 ) {
@@ -65,11 +59,7 @@ private fun UserProfileMfaSectionImpl(
       }
       Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
         mfaItems.forEachIndexed { index, mfaItem ->
-          UserProfileMfaRow(
-            style = mfaItem.style,
-            isDefault = mfaItem.isDefault,
-            onRemove = onRemove,
-          )
+          UserProfileMfaRow(style = mfaItem.style, isDefault = mfaItem.isDefault)
           if (index < mfaItems.lastIndex) {
             Spacers.Vertical.Spacer16()
           }
@@ -130,6 +120,5 @@ private fun Preview() {
         MfaItem(style = Style.BackupCodes),
       ),
     onAdd = {},
-    onRemove = {},
   )
 }
