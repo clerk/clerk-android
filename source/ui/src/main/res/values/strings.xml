@@ -168,4 +168,5 @@
     <string name="close">Close</string>
     <string name="type_delete_to_continue">Type \"DELETE\" to continue</string>
     <string name="are_you_sure_you_want_to_delete_your_account">Are you sure you want to delete your account? This action is permanent and irreversible.</string>
+    <string name="email_addresses">Email Addresses</string>
 </resources>
