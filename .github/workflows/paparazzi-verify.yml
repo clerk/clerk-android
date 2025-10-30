@@ -1,0 +1,63 @@
+name: Paparazzi Verify
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  verify:
+    runs-on: macos-latest-xlarge
+
+    permissions:
+      contents: read
+      pull-requests: write  # for PR comment
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      # ⬇️ replace :source:ui with your module path(s)
+      - name: Verify Paparazzi snapshots
+        run: ./gradlew :source:ui:verifyPaparazziDebug --stacktrace
+
+      # Upload HTML report + image diffs when verification fails
+      - name: Upload Paparazzi report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paparazzi-report
+          retention-days: 7
+          path: |
+            **/build/reports/paparazzi/**
+            **/build/paparazzi/**
+
+      # Optional: leave a PR comment pointing people to the artifact
+      - name: Comment on PR with report hint
+        if: failure() && github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ❌ Paparazzi found snapshot diffs.
+            - Download the **paparazzi-report** artifact from this workflow to see the HTML report and image diffs.
+            - If the changes are expected, re-record locally and commit the updated golden images.
+
+      # Bonus: add a short summary to the run
+      - name: Add run summary
+        if: failure()
+        run: |
+          {
+            echo "### Paparazzi differences detected";
+            echo "";
+            echo "- A **paparazzi-report** artifact was uploaded with the HTML report and image diffs.";
+            echo "- If expected, re-record locally and commit updated goldens.";
+          } >> "$GITHUB_STEP_SUMMARY"

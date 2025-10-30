@@ -3,4 +3,5 @@
 We are a globally distributed team dedicated to providing the best developer experience with
 obsessive attention to every detail.
 
-This module contains the source code for the Clerk Android SDK
+This module contains the source code for the Clerk Android SDK APIs. This module allows you to
+interact with the Clerk APIs for User authentication and management. 

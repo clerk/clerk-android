@@ -1,0 +1,68 @@
+package com.clerk.ui.signin.help
+
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.core.net.toUri
+import com.clerk.api.log.ClerkLog
+import com.clerk.ui.R
+import com.clerk.ui.auth.LocalAuthState
+import com.clerk.ui.auth.PreviewAuthStateProvider
+import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
+import com.clerk.ui.theme.ClerkMaterialTheme
+import kotlinx.coroutines.launch
+
+@Composable
+fun SignInGetHelpView(modifier: Modifier = Modifier) {
+  val authState = LocalAuthState.current
+  val snackbarHostState = remember { SnackbarHostState() }
+  val scope = rememberCoroutineScope()
+  ClerkThemedAuthScaffold(
+    snackbarHostState = snackbarHostState,
+    modifier = modifier,
+    title = stringResource(R.string.get_help),
+    subtitle = stringResource(R.string.if_you_have_trouble_signing_into_your_account),
+    onBackPressed = { authState.navigateBack() },
+  ) {
+    val context = LocalContext.current
+    val emailIntent =
+      Intent(Intent.ACTION_SENDTO).apply {
+        data = "mailto:".toUri()
+        putExtra(Intent.EXTRA_EMAIL, arrayOf(stringResource(R.string.support_clerk_com)))
+      }
+
+    ClerkButton(
+      modifier = Modifier.fillMaxWidth(),
+      text = stringResource(R.string.email_support),
+      onClick = {
+        try {
+          context.startActivity(Intent.createChooser(emailIntent, "Contact Clerk Support"))
+        } catch (_: ActivityNotFoundException) {
+          ClerkLog.e("No email clients installed on device.")
+          scope.launch {
+            snackbarHostState.showSnackbar(
+              message = context.getString(R.string.no_email_clients_installed_on_device),
+              duration = SnackbarDuration.Short,
+            )
+          }
+        }
+      },
+    )
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewSignInGetHelpView() {
+  PreviewAuthStateProvider { ClerkMaterialTheme { SignInGetHelpView() } }
+}

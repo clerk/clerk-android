@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.flatMap
-import com.clerk.api.network.serialization.longErrorMessageOrNull
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.phonenumber.PhoneNumber
@@ -51,7 +51,7 @@ class AddPhoneViewModel : ViewModel() {
         .onFailure {
           Log.e(
             "AddPhoneViewModel",
-            "Failed to create phone number and prepare verification: ${it.longErrorMessageOrNull}",
+            "Failed to create phone number and prepare verification: ${it.errorMessage}",
           )
         }
     }
@@ -66,7 +66,7 @@ class AddPhoneViewModel : ViewModel() {
           _uiState.value = UiState.Verified
         }
         .onFailure {
-          Log.e("AddPhoneViewModel", "Failed to verify phone number: ${it.longErrorMessageOrNull}")
+          Log.e("AddPhoneViewModel", "Failed to verify phone number: ${it.errorMessage}")
         }
     }
   }
