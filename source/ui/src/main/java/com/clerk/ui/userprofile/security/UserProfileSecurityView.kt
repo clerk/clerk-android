@@ -199,7 +199,7 @@ private fun UserProfileSecurityContent(
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if (configuration.isMfaEnabled) {
-      UserProfileMfaSection(onRemove = {}, onAdd = onAdd)
+      UserProfileMfaSection(onAdd = onAdd)
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {

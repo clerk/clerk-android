@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.attemptVerification
 import com.clerk.api.emailaddress.prepareVerification
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -83,7 +84,10 @@ internal class UserProfileVerifyViewModel : ViewModel() {
         user
           .attemptTotpVerification(code)
           .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
-          .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
+          .onFailure {
+            ClerkLog.e("Error attempting TOTP verification ${it.errorMessage}")
+            _verificationTextState.value = VerificationTextState.Error(it.errorMessage)
+          }
       }
     }
   }

@@ -31,13 +31,16 @@ import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
-import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
+import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
+import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.verify.Mode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -92,6 +95,7 @@ private fun ColumnScope.UserProfileMfaAddTotpContent(
   scope: CoroutineScope,
   clipboard: Clipboard,
 ) {
+  val userProfileState = LocalUserProfileState.current
   if (state is UserProfileMfaTotpViewModel.State.Success) {
     Text(
       text = stringResource(R.string.set_up_a_new_sign_in_method),
@@ -122,15 +126,9 @@ private fun ColumnScope.UserProfileMfaAddTotpContent(
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.continue_text),
-      onClick = {},
+      onClick = { userProfileState.navigateTo(UserProfileDestination.VerifyView(mode = Mode.Totp)) },
     )
     Spacers.Vertical.Spacer24()
-    ClerkTextButton(
-      modifier = Modifier.align(Alignment.CenterHorizontally),
-      text = stringResource(R.string.scan_qr_code_instead),
-      onClick = {},
-      textStyle = ClerkMaterialTheme.typography.bodyMedium,
-    )
   }
 }
 
@@ -202,9 +200,11 @@ private fun Preview() {
       createdAt = 1_700_000_000_000,
       updatedAt = 1_700_000_000_000,
     )
-  ClerkMaterialTheme {
-    UserProfileMfaAddTotpViewImpl(
-      previewState = UserProfileMfaTotpViewModel.State.Success(totpResource = fakeResource)
-    )
+  PreviewUserProfileStateProvider {
+    ClerkMaterialTheme {
+      UserProfileMfaAddTotpViewImpl(
+        previewState = UserProfileMfaTotpViewModel.State.Success(totpResource = fakeResource)
+      )
+    }
   }
 }
