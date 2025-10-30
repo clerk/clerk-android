@@ -86,7 +86,7 @@ class UserProfileVerifyViewModelTest {
       assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
       viewModel.attemptEmailAddress(email, "123456")
       assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verified, awaitItem())
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verified(), awaitItem())
     }
   }
 
@@ -109,14 +109,17 @@ class UserProfileVerifyViewModelTest {
   fun attemptTotp_success_setsVerified() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
-    coEvery { user.attemptTotpVerification(any()) } returns ClerkResult.success(mockk())
+    val totpResource = mockk<com.clerk.api.network.model.totp.TOTPResource>(relaxed = true) {
+      every { backupCodes } returns null
+    }
+    coEvery { user.attemptTotpVerification(any()) } returns ClerkResult.success(totpResource)
 
     val viewModel = UserProfileVerifyViewModel()
     viewModel.verificationTextState.test {
       assertEquals(UserProfileVerifyViewModel.VerificationTextState.Default, awaitItem())
       viewModel.attemptTotp("654321")
       assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verifying, awaitItem())
-      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verified, awaitItem())
+      assertEquals(UserProfileVerifyViewModel.VerificationTextState.Verified(), awaitItem())
     }
   }
 
