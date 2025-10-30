@@ -1,5 +1,6 @@
 package com.clerk.ui.userprofile
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -23,4 +24,10 @@ internal class UserProfileState(val backStack: NavBackStack<NavKey>) : Navigable
   override fun pop(numberOfScreens: Int) {
     backStack.pop(numberOfScreens)
   }
+}
+
+@Composable
+internal fun PreviewUserProfileStateProvider(content: @Composable () -> Unit) {
+  val backStack = NavBackStack<NavKey>()
+  UserProfileStateProvider(backStack) { content() }
 }

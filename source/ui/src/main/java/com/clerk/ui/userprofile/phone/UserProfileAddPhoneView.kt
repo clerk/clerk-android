@@ -14,7 +14,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
@@ -23,8 +22,8 @@ import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.UserProfileDestination
-import com.clerk.ui.userprofile.UserProfileStateProvider
 import com.clerk.ui.userprofile.verify.Mode
 
 @Composable
@@ -82,6 +81,5 @@ private fun UserProfileAddPhoneViewImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
-  UserProfileStateProvider(backStack = backStack) { UserProfileAddPhoneViewImpl() }
+  PreviewUserProfileStateProvider { UserProfileAddPhoneViewImpl() }
 }
