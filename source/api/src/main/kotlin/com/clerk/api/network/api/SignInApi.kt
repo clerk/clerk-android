@@ -36,7 +36,7 @@ internal interface SignInApi {
   @FormUrlEncoded
   @POST(ApiPaths.Client.SignIn.BASE)
   suspend fun authenticateWithRedirect(
-    @Field("strategy") strategy: String,
+    @Field("strategy") strategy: String? = null,
     @Field("redirect_url") redirectUrl: String?,
     @Field("identifier") identifier: String? = null,
     @Field("email_address") emailAddress: String? = null,

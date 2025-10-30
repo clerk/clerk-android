@@ -115,5 +115,8 @@ fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull() = this.err
  *
  * @return The error message, or null.
  */
-val ClerkResult.Failure<ClerkErrorResponse>.longErrorMessageOrNull: String?
-  get() = this.error?.errors?.firstOrNull()?.longMessage
+val ClerkResult.Failure<ClerkErrorResponse>.errorMessage: String
+  get() =
+    this.error?.errors?.firstOrNull()?.longMessage
+      ?: this.error?.firstMessage()
+      ?: "Error occurred with unknown message."

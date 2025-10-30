@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "607281413125",
+    "project_id": "clerk-android",
+    "storage_bucket": "clerk-android.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607281413125:android:385b7d88c466181fbf306c",
+        "android_client_info": {
+          "package_name": "com.clerk.workbench"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhvEAxahgEIU27cXYtOdrtHzNy6e-rSSI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
