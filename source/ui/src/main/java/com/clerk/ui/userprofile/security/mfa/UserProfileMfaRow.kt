@@ -60,9 +60,10 @@ internal fun UserProfileMfaRow(
     LaunchedEffect(Unit) {
       userProfileState.navigateTo(
         UserProfileDestination.BackupCodeView(
-          (state as UserProfileMfaViewModel.State.BackupCodesGenerated).codes
+          codes = (state as UserProfileMfaViewModel.State.BackupCodesGenerated).codes
         )
       )
+      viewModel.resetState()
     }
   }
   ClerkMaterialTheme {
