@@ -63,7 +63,7 @@ internal fun AvatarView(
       model = imageUrl,
       contentDescription = stringResource(R.string.logo),
       modifier = Modifier.size(size.toDp()).clip(shape),
-      contentScale = ContentScale.Fit,
+      contentScale = ContentScale.FillBounds,
       loading = { CircularProgressIndicator(modifier = Modifier.size(dp24)) },
       error = {
         Icon(
