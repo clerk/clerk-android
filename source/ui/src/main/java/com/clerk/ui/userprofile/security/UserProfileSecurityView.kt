@@ -42,6 +42,8 @@ import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.account.UserProfileDeleteAccountConfirmationView
+import com.clerk.ui.userprofile.mfa.UserProfileAddMfaBottomSheetContent
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
@@ -120,7 +122,8 @@ private fun UserProfileSecurityMainContent(
   val scrollState = rememberScrollState()
   val coroutineScope = rememberCoroutineScope()
   val sheetState = rememberModalBottomSheetState()
-  var showBottomSheet by remember { mutableStateOf(false) }
+  var showAddMfaSheet by remember { mutableStateOf(false) }
+  var showDeleteAccountBottomSheet by remember { mutableStateOf(false) }
   val context = LocalContext.current
   Scaffold(
     containerColor = ClerkMaterialTheme.colors.muted,
@@ -159,20 +162,28 @@ private fun UserProfileSecurityMainContent(
             )
           }
         },
-        onAdd = { showBottomSheet = true },
+        onAdd = { showAddMfaSheet = true },
+        onClickDeleteAccount = { showDeleteAccountBottomSheet = true },
       )
     }
-    if (showBottomSheet) {
+    if (showAddMfaSheet || showDeleteAccountBottomSheet) {
       ModalBottomSheet(
         shape = RoundedCornerShape(topEnd = dp10, topStart = dp10),
         containerColor = ClerkMaterialTheme.colors.background,
         sheetState = sheetState,
-        onDismissRequest = { showBottomSheet = false },
+        onDismissRequest = { showAddMfaSheet = false },
       ) {
-        AddTwoStepVerificationBottomSheetContent(
-          mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
-          mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
-        )
+        if (showAddMfaSheet) {
+          UserProfileAddMfaBottomSheetContent(
+            mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
+            mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
+          )
+        }
+        if (showDeleteAccountBottomSheet) {
+          UserProfileDeleteAccountConfirmationView(
+            onClose = { showDeleteAccountBottomSheet = false }
+          )
+        }
       }
     }
   }
@@ -182,6 +193,7 @@ private fun UserProfileSecurityMainContent(
 private fun UserProfileSecurityContent(
   configuration: SecurityContentConfiguration,
   onError: (String?) -> Unit,
+  onClickDeleteAccount: () -> Unit,
   onAdd: () -> Unit,
 ) {
   if (configuration.isPasswordEnabled) {
@@ -201,7 +213,7 @@ private fun UserProfileSecurityContent(
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
   }
   if (configuration.isDeleteSelfEnabled) {
-    UserProfileDeleteAccountSection(onDeleteAccount = {})
+    UserProfileDeleteAccountSection(onDeleteAccount = onClickDeleteAccount)
   }
 }
 

@@ -25,7 +25,7 @@ import com.clerk.ui.userprofile.UserProfileStateProvider
 import com.clerk.ui.userprofile.account.UserProfileIconActionRow
 
 @Composable
-private fun UserProfileAddTwoStepVerificationBottomSheetContent(
+internal fun UserProfileAddMfaBottomSheetContent(
   mfaPhoneCodeIsEnabled: Boolean,
   mfaAuthenticatorAppIsEnabled: Boolean,
   modifier: Modifier = Modifier,
@@ -87,7 +87,7 @@ private fun PreviewBottomSheet() {
   val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
   UserProfileStateProvider(backStack) {
     ClerkMaterialTheme {
-      UserProfileAddTwoStepVerificationBottomSheetContent(
+      UserProfileAddMfaBottomSheetContent(
         mfaPhoneCodeIsEnabled = true,
         mfaAuthenticatorAppIsEnabled = true,
       )
@@ -100,7 +100,7 @@ private fun PreviewBottomSheet() {
 private fun PreviewBottomSheetPhoneDisabled() {
   PreviewUserProfileStateProvider {
     ClerkMaterialTheme {
-      UserProfileAddTwoStepVerificationBottomSheetContent(
+      UserProfileAddMfaBottomSheetContent(
         mfaPhoneCodeIsEnabled = false,
         mfaAuthenticatorAppIsEnabled = true,
       )
@@ -114,7 +114,7 @@ private fun PreviewBottomSheetAuthAppDisabled() {
   val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
   UserProfileStateProvider(backStack) {
     ClerkMaterialTheme {
-      UserProfileAddTwoStepVerificationBottomSheetContent(
+      UserProfileAddMfaBottomSheetContent(
         mfaPhoneCodeIsEnabled = true,
         mfaAuthenticatorAppIsEnabled = false,
       )
