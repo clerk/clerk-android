@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,8 +48,8 @@ internal fun UserProfileDeleteAccountConfirmationView(
   val userProfileState = LocalUserProfileState.current
   val state by viewModel.deleteAccountStateFlow.collectAsStateWithLifecycle()
   var input by remember { mutableStateOf("") }
-  if (state is UserProfileAccountViewModel.DeleteAccountState.Success) {
-    LaunchedEffect(Unit) {
+  LaunchedEffect(state) {
+    if (state is UserProfileAccountViewModel.DeleteAccountState.Success) {
       viewModel.resetState()
       userProfileState.clearBackStack()
     }
@@ -60,7 +61,7 @@ internal fun UserProfileDeleteAccountConfirmationView(
       viewModel.resetState()
     }
   }
-  LaunchedEffect(Unit) { viewModel.resetState() }
+  DisposableEffect(Unit) { onDispose { viewModel.resetState() } }
   ClerkMaterialTheme {
     Column(
       modifier =
