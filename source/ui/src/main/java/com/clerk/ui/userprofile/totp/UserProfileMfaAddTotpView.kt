@@ -103,7 +103,7 @@ private fun ColumnScope.UserProfileMfaAddTotpContent(
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
     DisplayTextWithActionButton(
-      text = state.totpResource.secret,
+      text = state.totpResource.secret!!,
       onClick = {
         scope.launch {
           clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", state.totpResource.secret)))
@@ -116,7 +116,7 @@ private fun ColumnScope.UserProfileMfaAddTotpContent(
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
     DisplayTextWithActionButton(
-      text = state.totpResource.uri,
+      text = state.totpResource.uri!!,
       onClick = {
         scope.launch {
           clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", state.totpResource.uri)))
@@ -197,6 +197,7 @@ private fun Preview() {
       uri =
         "otpauth://totp/Example:User?secret=JBSWY3DPEHPK3PXP&issuer=Example&algorithm=SHA1&digits=6&period=30",
       verified = false,
+      backupCodes = emptyList(),
       createdAt = 1_700_000_000_000,
       updatedAt = 1_700_000_000_000,
     )

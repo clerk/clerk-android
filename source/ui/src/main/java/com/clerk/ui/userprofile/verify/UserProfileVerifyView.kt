@@ -14,7 +14,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
@@ -62,8 +62,9 @@ private fun UserProfileVerifyViewImpl(
     onBackPressed = { userProfileState.navigateBack() },
     hasBackButton = mode.hasBackButton(),
     content = {
+      Spacers.Vertical.Spacer12()
       Text(
-        modifier = Modifier.padding(horizontal = dp8),
+        modifier = Modifier.padding(horizontal = dp24),
         text = mode.instructionString(),
         style = ClerkMaterialTheme.typography.bodyMedium,
         color = ClerkMaterialTheme.colors.mutedForeground,
@@ -115,6 +116,12 @@ private fun Preview() {
       )
     }
   }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewTotp() {
+  PreviewUserProfileStateProvider { ClerkMaterialTheme { UserProfileVerifyView(mode = Mode.Totp) } }
 }
 
 private fun Mode.showResend(): Boolean {
