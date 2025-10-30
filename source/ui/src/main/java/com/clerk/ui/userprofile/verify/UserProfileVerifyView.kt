@@ -22,6 +22,8 @@ import com.clerk.ui.signin.code.VerificationState as CodeVerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
+import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.security.Origin
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -39,19 +41,26 @@ private fun UserProfileVerifyViewImpl(
   val state by viewModel.state.collectAsStateWithLifecycle()
   val userProfileState = LocalUserProfileState.current
   val verificationTextState by viewModel.verificationTextState.collectAsStateWithLifecycle()
+  val errorMessage = (state as? UserProfileVerifyViewModel.AuthState.Error)?.error
 
   LaunchedEffect(mode) {
-    // Ensure stale state from a previous verification does not auto-pop this screen
     viewModel.resetState()
     prepareCode(mode, viewModel)
   }
-  val errorMessage = (state as? UserProfileVerifyViewModel.AuthState.Error)?.error
 
   LaunchedEffect(verificationTextState) {
     if (verificationTextState is UserProfileVerifyViewModel.VerificationTextState.Verified) {
-      // Reset first so the coroutine is not cancelled before state is cleared
-      viewModel.resetState()
-      userProfileState.pop(2)
+      (verificationTextState as UserProfileVerifyViewModel.VerificationTextState.Verified)
+        .backupCodes
+        ?.let {
+          userProfileState.navigateTo(
+            UserProfileDestination.BackupCodeView(origin = Origin.AuthenticatorApp, codes = it)
+          )
+        }
+        ?: run {
+          viewModel.resetState()
+          userProfileState.pop(2)
+        }
     }
   }
 
@@ -93,7 +102,7 @@ private fun UserProfileVerifyViewModel.VerificationTextState.getTextVerification
   return when (this) {
     UserProfileVerifyViewModel.VerificationTextState.Default -> CodeVerificationState.Default
     is UserProfileVerifyViewModel.VerificationTextState.Error -> CodeVerificationState.Error
-    UserProfileVerifyViewModel.VerificationTextState.Verified -> CodeVerificationState.Success
+    is UserProfileVerifyViewModel.VerificationTextState.Verified -> CodeVerificationState.Success
     UserProfileVerifyViewModel.VerificationTextState.Verifying -> CodeVerificationState.Verifying
   }
 }

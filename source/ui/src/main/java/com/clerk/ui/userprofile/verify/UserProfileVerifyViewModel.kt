@@ -53,7 +53,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     viewModelScope.launch(Dispatchers.IO) {
       emailAddress
         .attemptVerification(code)
-        .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
+        .onSuccess { _verificationTextState.value = VerificationTextState.Verified() }
         .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
     }
   }
@@ -68,7 +68,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
     viewModelScope.launch(Dispatchers.IO) {
       phoneNumber
         .attemptVerification(code)
-        .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
+        .onSuccess { _verificationTextState.value = VerificationTextState.Verified() }
         .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
     }
   }
@@ -83,7 +83,9 @@ internal class UserProfileVerifyViewModel : ViewModel() {
       viewModelScope.launch(Dispatchers.IO) {
         user
           .attemptTotpVerification(code)
-          .onSuccess { _verificationTextState.value = VerificationTextState.Verified }
+          .onSuccess {
+            _verificationTextState.value = VerificationTextState.Verified(it.backupCodes)
+          }
           .onFailure {
             ClerkLog.e("Error attempting TOTP verification ${it.errorMessage}")
             _verificationTextState.value = VerificationTextState.Error(it.errorMessage)
@@ -97,7 +99,7 @@ internal class UserProfileVerifyViewModel : ViewModel() {
 
     data object Verifying : VerificationTextState
 
-    data object Verified : VerificationTextState
+    data class Verified(val backupCodes: List<String>? = null) : VerificationTextState
 
     data class Error(val error: String?) : VerificationTextState
   }
