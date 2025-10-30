@@ -3,7 +3,6 @@ package com.clerk.workbench
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -16,7 +15,6 @@ class MainViewModel : ViewModel() {
 
   init {
     combine(Clerk.isInitialized, Clerk.sessionFlow) { isInitialized, session ->
-        ClerkLog.e("QQQ isInitialized: $isInitialized, session: $session")
         _uiState.value =
           when {
             !isInitialized -> UiState.Loading

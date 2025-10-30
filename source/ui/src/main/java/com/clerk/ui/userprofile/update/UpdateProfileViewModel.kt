@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.update
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.onFailure
@@ -66,6 +67,7 @@ class UpdateProfileViewModel : ViewModel() {
   }
 
   fun save(firstName: String?, lastName: String?, username: String?) {
+    ClerkLog.e("saving with values: $firstName, $lastName, $username")
     _state.value = State.Loading
     guardUser({ _state.value = State.Error("User not authenticated") }) { user ->
       viewModelScope.launch {
