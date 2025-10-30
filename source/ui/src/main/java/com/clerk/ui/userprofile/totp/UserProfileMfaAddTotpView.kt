@@ -38,6 +38,9 @@ import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
+import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.verify.Mode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -92,6 +95,7 @@ private fun ColumnScope.UserProfileMfaAddTotpContent(
   scope: CoroutineScope,
   clipboard: Clipboard,
 ) {
+  val userProfileState = LocalUserProfileState.current
   if (state is UserProfileMfaTotpViewModel.State.Success) {
     Text(
       text = stringResource(R.string.set_up_a_new_sign_in_method),
@@ -122,7 +126,7 @@ private fun ColumnScope.UserProfileMfaAddTotpContent(
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.continue_text),
-      onClick = {},
+      onClick = { userProfileState.navigateTo(UserProfileDestination.VerifyView(mode = Mode.Totp)) },
     )
     Spacers.Vertical.Spacer24()
     ClerkTextButton(

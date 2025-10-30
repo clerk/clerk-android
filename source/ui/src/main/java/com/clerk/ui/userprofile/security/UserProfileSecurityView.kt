@@ -243,6 +243,33 @@ private fun BottomSheetContent(
   }
 }
 
+@Composable
+private fun UserProfileSecurityContent(
+  configuration: SecurityContentConfiguration,
+  onError: (String?) -> Unit,
+  onAdd: () -> Unit,
+) {
+  if (configuration.isPasswordEnabled) {
+    UserProfilePasswordSection()
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if (configuration.isPasskeyEnabled) {
+    UserProfilePasskeySection(onError = onError)
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if (configuration.isMfaEnabled) {
+    UserProfileMfaSection(onRemove = {}, onAdd = onAdd)
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
+    UserProfileDevicesSection(devices = configuration.sessions)
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+  }
+  if (configuration.isDeleteSelfEnabled) {
+    UserProfileDeleteAccountSection(onDeleteAccount = {})
+  }
+}
+
 @PreviewLightDark
 @Composable
 private fun PreviewBottomSheet() {
@@ -273,33 +300,6 @@ private fun PreviewBottomSheetAuthAppDisabled() {
     ClerkMaterialTheme {
       BottomSheetContent(mfaPhoneCodeIsEnabled = true, mfaAuthenticatorAppIsEnabled = false)
     }
-  }
-}
-
-@Composable
-private fun UserProfileSecurityContent(
-  configuration: SecurityContentConfiguration,
-  onError: (String?) -> Unit,
-  onAdd: () -> Unit,
-) {
-  if (configuration.isPasswordEnabled) {
-    UserProfilePasswordSection()
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if (configuration.isPasskeyEnabled) {
-    UserProfilePasskeySection(onError = onError)
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if (configuration.isMfaEnabled) {
-    UserProfileMfaSection(onRemove = {}, onAdd = onAdd)
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
-    UserProfileDevicesSection(devices = configuration.sessions)
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if (configuration.isDeleteSelfEnabled) {
-    UserProfileDeleteAccountSection(onDeleteAccount = {})
   }
 }
 

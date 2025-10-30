@@ -1,25 +1,29 @@
 package com.clerk.ui.userprofile.verify
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.code.VerificationState as CodeVerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.UserProfileStateProvider
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -37,17 +41,15 @@ private fun UserProfileVerifyViewImpl(
   val state by viewModel.state.collectAsStateWithLifecycle()
   val userProfileState = LocalUserProfileState.current
   val verificationTextState by viewModel.verificationTextState.collectAsStateWithLifecycle()
+  val errorMessage = (state as? UserProfileVerifyViewModel.AuthState.Error)?.error
 
   LaunchedEffect(mode) {
-    // Ensure stale state from a previous verification does not auto-pop this screen
     viewModel.resetState()
     prepareCode(mode, viewModel)
   }
-  val errorMessage = (state as? UserProfileVerifyViewModel.AuthState.Error)?.error
 
   LaunchedEffect(verificationTextState) {
     if (verificationTextState is UserProfileVerifyViewModel.VerificationTextState.Verified) {
-      // Reset first so the coroutine is not cancelled before state is cleared
       viewModel.resetState()
       userProfileState.pop(2)
     }
@@ -60,8 +62,9 @@ private fun UserProfileVerifyViewImpl(
     onBackPressed = { userProfileState.navigateBack() },
     hasBackButton = mode.hasBackButton(),
     content = {
+      Spacers.Vertical.Spacer20()
       Text(
-        modifier = Modifier.align(Alignment.CenterHorizontally),
+        modifier = Modifier.padding(horizontal = dp8),
         text = mode.instructionString(),
         style = ClerkMaterialTheme.typography.bodyMedium,
         color = ClerkMaterialTheme.colors.mutedForeground,
@@ -106,10 +109,9 @@ private fun prepareCode(mode: Mode, viewModel: UserProfileVerifyViewModel) {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    UserProfileVerifyView(
-      mode = Mode.Email(emailAddress = EmailAddress(id = "id", emailAddress = "user@email.com"))
-    )
+  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
+  UserProfileStateProvider(backStack) {
+    ClerkMaterialTheme { UserProfileVerifyView(mode = Mode.Totp) }
   }
 }
 
