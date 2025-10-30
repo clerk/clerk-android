@@ -3,6 +3,7 @@ package com.clerk.ui.userprofile.security
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -56,7 +57,6 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun UserProfileSecurityView() {
-
   UserProfileSecurityViewImpl(
     isPasswordEnabled = Clerk.passwordIsEnabled,
     isPasskeyEnabled = Clerk.passkeyIsEnabled,
@@ -119,9 +119,7 @@ private fun UserProfileSecurityMainContent(
   sessions: ImmutableList<Session>,
 ) {
   val userProfileState = LocalUserProfileState.current
-  val scrollState = rememberScrollState()
   val coroutineScope = rememberCoroutineScope()
-  val sheetState = rememberModalBottomSheetState()
   var showAddMfaSheet by remember { mutableStateOf(false) }
   var showDeleteAccountBottomSheet by remember { mutableStateOf(false) }
   val context = LocalContext.current
@@ -139,15 +137,9 @@ private fun UserProfileSecurityMainContent(
     },
     bottomBar = { UserProfileSecurityFooter() },
   ) { innerPadding ->
-    Column(
-      modifier =
-        Modifier.fillMaxSize()
-          .background(ClerkMaterialTheme.colors.muted)
-          .padding(innerPadding)
-          .verticalScroll(scrollState),
-      horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-      UserProfileSecurityContent(
+    UserProfileSecurityContent(
+      innerPadding = innerPadding,
+      configuration =
         SecurityContentConfiguration(
           isPasswordEnabled = isPasswordEnabled,
           isPasskeyEnabled = isPasskeyEnabled,
@@ -155,65 +147,68 @@ private fun UserProfileSecurityMainContent(
           sessions = sessions,
           isDeleteSelfEnabled = isDeleteSelfEnabled,
         ),
-        onError = { message ->
-          coroutineScope.launch {
-            snackbarHostState.showSnackbar(
-              message ?: context.getString(R.string.something_went_wrong_please_try_again)
-            )
-          }
-        },
-        onAdd = { showAddMfaSheet = true },
-        onClickDeleteAccount = { showDeleteAccountBottomSheet = true },
-      )
-    }
-    if (showAddMfaSheet || showDeleteAccountBottomSheet) {
-      ModalBottomSheet(
-        shape = RoundedCornerShape(topEnd = dp10, topStart = dp10),
-        containerColor = ClerkMaterialTheme.colors.background,
-        sheetState = sheetState,
-        onDismissRequest = { showAddMfaSheet = false },
-      ) {
-        if (showAddMfaSheet) {
-          UserProfileAddMfaBottomSheetContent(
-            mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
-            mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
+      onAdd = { showAddMfaSheet = true },
+      onClickDeleteAccount = { showDeleteAccountBottomSheet = true },
+      onError = { message ->
+        coroutineScope.launch {
+          snackbarHostState.showSnackbar(
+            message ?: context.getString(R.string.something_went_wrong_please_try_again)
           )
         }
-        if (showDeleteAccountBottomSheet) {
-          UserProfileDeleteAccountConfirmationView(
-            onClose = { showDeleteAccountBottomSheet = false }
+      },
+    )
+    BottomSheetContent(
+      showMfaBottomSheet = showAddMfaSheet,
+      showDeleteAccountBottomSheet = showDeleteAccountBottomSheet,
+      onDismissMfa = { showAddMfaSheet = false },
+      onDismissDelete = { showDeleteAccountBottomSheet = false },
+      onError = { message ->
+        coroutineScope.launch {
+          snackbarHostState.showSnackbar(
+            message ?: context.getString(R.string.something_went_wrong_please_try_again)
           )
         }
-      }
-    }
+      },
+    )
   }
 }
 
 @Composable
 private fun UserProfileSecurityContent(
+  innerPadding: PaddingValues,
   configuration: SecurityContentConfiguration,
   onError: (String?) -> Unit,
   onClickDeleteAccount: () -> Unit,
   onAdd: () -> Unit,
 ) {
-  if (configuration.isPasswordEnabled) {
-    UserProfilePasswordSection()
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if (configuration.isPasskeyEnabled) {
-    UserProfilePasskeySection(onError = onError)
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if (configuration.isMfaEnabled) {
-    UserProfileMfaSection(onRemove = {}, onAdd = onAdd)
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
-    UserProfileDevicesSection(devices = configuration.sessions)
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-  }
-  if (configuration.isDeleteSelfEnabled) {
-    UserProfileDeleteAccountSection(onDeleteAccount = onClickDeleteAccount)
+  val scrollState = rememberScrollState()
+  Column(
+    modifier =
+      Modifier.fillMaxSize()
+        .background(ClerkMaterialTheme.colors.muted)
+        .padding(innerPadding)
+        .verticalScroll(scrollState),
+    horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
+    if (configuration.isPasswordEnabled) {
+      UserProfilePasswordSection()
+      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
+    if (configuration.isPasskeyEnabled) {
+      UserProfilePasskeySection(onError = onError)
+      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
+    if (configuration.isMfaEnabled) {
+      UserProfileMfaSection(onRemove = {}, onAdd = onAdd)
+      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
+    if ((configuration.sessions.mapNotNull { it.latestActivity }.isNotEmpty())) {
+      UserProfileDevicesSection(devices = configuration.sessions)
+      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
+    if (configuration.isDeleteSelfEnabled) {
+      UserProfileDeleteAccountSection(onDeleteAccount = onClickDeleteAccount)
+    }
   }
 }
 
@@ -225,6 +220,40 @@ private fun UserProfileSecurityFooter() {
   ) {
     Spacers.Vertical.Spacer12()
     SecuredByClerkView()
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BottomSheetContent(
+  showMfaBottomSheet: Boolean,
+  showDeleteAccountBottomSheet: Boolean,
+  onDismissMfa: () -> Unit,
+  onDismissDelete: () -> Unit,
+  onError: (String?) -> Unit,
+) {
+  val sheetState = rememberModalBottomSheetState()
+  if (showMfaBottomSheet || showDeleteAccountBottomSheet) {
+    ModalBottomSheet(
+      shape = RoundedCornerShape(topEnd = dp10, topStart = dp10),
+      containerColor = ClerkMaterialTheme.colors.background,
+      sheetState = sheetState,
+      onDismissRequest = {
+        // Dismiss any visible bottom sheet
+        onDismissMfa()
+        onDismissDelete()
+      },
+    ) {
+      if (showMfaBottomSheet) {
+        UserProfileAddMfaBottomSheetContent(
+          mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
+          mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
+        )
+      }
+      if (showDeleteAccountBottomSheet) {
+        UserProfileDeleteAccountConfirmationView(onClose = onDismissDelete, onError = onError)
+      }
+    }
   }
 }
 

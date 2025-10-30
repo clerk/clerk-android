@@ -43,6 +43,10 @@ class UserProfileAccountViewModel : ViewModel() {
     }
   }
 
+  fun resetState() {
+    _deleteAccountStateFlow.value = DeleteAccountState.Idle
+  }
+
   sealed interface DeleteAccountState {
     data object Idle : DeleteAccountState
 
