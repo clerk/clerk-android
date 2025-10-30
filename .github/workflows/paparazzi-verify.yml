@@ -14,16 +14,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: zulu
           java-version: 17
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v5
 
       # ⬇️ replace :source:ui with your module path(s)
       - name: Verify Paparazzi snapshots
@@ -32,7 +32,7 @@ jobs:
       # Upload HTML report + image diffs when verification fails
       - name: Upload Paparazzi report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: paparazzi-report
           retention-days: 7
