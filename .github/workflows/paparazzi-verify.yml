@@ -32,7 +32,7 @@ jobs:
       # Upload HTML report + image diffs when verification fails
       - name: Upload Paparazzi report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: paparazzi-report
           retention-days: 7
