@@ -30,5 +30,7 @@ val User.unconnectedProviders: List<OAuthProvider>
  * @return The user's full name as a string, or a string with null values if names are not set
  */
 fun User.fullName(): String {
-  return "$firstName $lastName"
+  val parts =
+    listOfNotNull(firstName?.takeIf { it.isNotBlank() }, lastName?.takeIf { it.isNotBlank() })
+  return parts.joinToString(separator = " ")
 }

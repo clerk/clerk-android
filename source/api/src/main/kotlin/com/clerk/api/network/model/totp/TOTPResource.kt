@@ -24,13 +24,14 @@ data class TOTPResource(
   val id: String,
 
   /** The base32-encoded secret key used for generating TOTP codes */
-  val secret: String,
+  val secret: String? = null,
 
   /** The otpauth:// URI that can be used to generate QR codes for authenticator apps */
-  val uri: String,
+  val uri: String? = null,
 
   /** Whether the TOTP setup has been verified by the user */
   val verified: Boolean,
+  @SerialName("backup_codes") val backupCodes: List<String>? = null,
 
   /** Timestamp when the TOTP resource was created (Unix timestamp in milliseconds) */
   @SerialName("created_at") val createdAt: Long,

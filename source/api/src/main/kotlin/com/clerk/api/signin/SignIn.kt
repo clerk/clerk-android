@@ -16,6 +16,7 @@ import com.clerk.api.Constants.Strategy.TRANSFER
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
@@ -327,7 +328,7 @@ data class SignIn(
      *
      * You can use [OAuthProvider] directly to authenticate with an OAuth provider.
      *
-     * @property strategy The OAuth provider strategy to use for authentication.
+     * @property provider The OAuth provider to use for authentication.
      * @property redirectUrl The URL to redirect to after authentication.
      * @property emailAddress The user's email address for pre-filling authentication forms.
      * @property legalAccepted Whether the user has accepted the legal terms.
@@ -370,18 +371,16 @@ data class SignIn(
    *
    * This interface is used to specify which verification strategy should be prepared before
    * attempting the first factor authentication.
-   *
-   * @property strategy The verification strategy to use for the first factor authentication.
    */
   sealed interface PrepareFirstFactorParams {
+    val strategy: String
+
     /**
      * Enumeration of available first factor verification strategies.
      *
      * Each strategy represents a different method of verifying the user's identity during the first
      * factor authentication step.
      */
-    val strategy: String
-
     @AutoMap
     @Serializable
     data class EmailCode(
@@ -483,7 +482,7 @@ data class SignIn(
      */
     sealed interface Strategy {
       /** The authentication strategy identifier. */
-      val strategy: String
+      val strategy: String?
 
       /**
        * Email code sign-in strategy.
@@ -552,6 +551,11 @@ data class SignIn(
 
       /** Passkey strategy for authentication using a passkey. */
       data class Passkey(override val strategy: String = PASSKEY) : Strategy
+
+      @AutoMap
+      @Serializable
+      data class Identifier(override val strategy: String? = null, val identifier: String) :
+        Strategy
     }
   }
 
@@ -761,11 +765,14 @@ suspend fun SignIn.prepareFirstFactor(
  *   verification on success, or a [ClerkErrorResponse] on failure.
  * @receiver The current [SignIn] object representing the sign-in session.
  */
-suspend fun SignIn.prepareSecondFactor(): ClerkResult<SignIn, ClerkErrorResponse> {
+suspend fun SignIn.prepareSecondFactor(
+  phoneNumberId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> {
   val params =
     SignIn.PrepareSecondFactorParams(
       phoneNumberId =
-        this.supportedSecondFactors?.find { it.strategy == "phone_code" }?.phoneNumberId
+        phoneNumberId
+          ?: this.supportedSecondFactors?.find { it.strategy == "phone_code" }?.phoneNumberId
     )
   return ClerkApi.signIn.prepareSecondFactor(id = this.id, params = params.toMap())
 }
@@ -874,3 +881,54 @@ suspend fun SignIn.get(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
+
+/**
+ * Authenticates with a redirect URL obtained from an OAuth provider after successful
+ * authentication.
+ *
+ * This function is typically called after the user has been redirected back to the application from
+ * the OAuth provider's authentication page. It handles the exchange of the authorization code or
+ * token from the redirect URL for a Clerk session.
+ *
+ * @return A [ClerkResult] containing the [OAuthResult] on successful authentication, or a
+ *   [ClerkErrorResponse] if authentication fails.
+ */
+suspend fun SignIn.authenticateWithRedirectUrl(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+  return SSOService.authenticateWithRedirect()
+}
+
+/**
+ * Finds the first factor that matches the given strategy and the current sign-in identifier.
+ *
+ * This function is used to identify the appropriate first factor for a given authentication
+ * strategy and the user's current identifier. It searches through the `supportedFirstFactors` list
+ * of the `SignIn` object and returns the first factor that matches both the provided strategy and
+ * the sign-in's identifier.
+ *
+ * @param strategy The [SignIn.PrepareFirstFactorParams] instance representing the desired
+ *   authentication strategy.
+ * @return The matching [Factor] object if found, or `null` if no matching factor is found or if
+ *   `supportedFirstFactors` is null.
+ */
+fun SignIn.identifyingFirstFactor(strategy: SignIn.PrepareFirstFactorParams): Factor? {
+  return this.supportedFirstFactors?.first {
+    it.strategy == strategy.strategy && it.safeIdentifier == this.identifier
+  }
+}
+
+val SignIn.resetPasswordFactor: Factor?
+  get() {
+    val resetPasswordEmailFactor =
+      identifyingFirstFactor(strategy = SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode())
+    if (resetPasswordEmailFactor != null) {
+      return resetPasswordEmailFactor
+    }
+
+    val resetPasswordPhoneFactor =
+      identifyingFirstFactor(strategy = SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode())
+    if (resetPasswordPhoneFactor != null) {
+      return resetPasswordPhoneFactor
+    }
+
+    return supportedFirstFactors?.firstOrNull { it.isResetFactor() }
+  }
