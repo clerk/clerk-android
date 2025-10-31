@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import com.clerk.api.user.User
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
@@ -74,6 +76,10 @@ fun UserProfileDetailViewImpl(
         Spacers.Vertical.Spacer32()
         UserProfileEmailSection(emailAddresses = emailAddresses)
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+        Text(
+          "Phone number".uppercase(),
+          style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
+        )
       }
     }
   }

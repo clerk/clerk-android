@@ -8,7 +8,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.isPrimary
@@ -17,6 +16,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
+import com.clerk.ui.userprofile.detail.emphasize
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -35,7 +35,7 @@ fun UserProfileEmailSection(
       Text(
         modifier = Modifier.padding(horizontal = dp24),
         text = stringResource(R.string.email_addresses).uppercase(),
-        style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+        style = ClerkMaterialTheme.typography.bodySmall.emphasize(),
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
       emailAddresses.forEach {

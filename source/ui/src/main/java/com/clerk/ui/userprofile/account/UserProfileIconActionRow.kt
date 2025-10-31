@@ -15,13 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -54,7 +54,7 @@ fun UserProfileIconActionRow(
       Spacers.Horizontal.Spacer16()
       Text(
         text = text,
-        style = ClerkMaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+        style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
         color = ClerkMaterialTheme.colors.foreground,
       )
     }
