@@ -170,4 +170,5 @@
     <string name="are_you_sure_you_want_to_delete_your_account">Are you sure you want to delete your account? This action is permanent and irreversible.</string>
     <string name="email_addresses">Email Addresses</string>
     <string name="mfa_reserved">MFA reserved</string>
+    <string name="connected_accounts">Connected accounts</string>
 </resources>
