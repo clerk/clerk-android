@@ -30,6 +30,7 @@ import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.connectedaccount.UserProfileExternalAccountSection
 import com.clerk.ui.userprofile.email.UserProfileEmailSection
 import com.clerk.ui.userprofile.phone.UserProfilePhoneSection
+import com.clerk.ui.userprofile.security.UserProfileSecurityFooter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -64,6 +65,7 @@ fun UserProfileDetailViewImpl(
           hasLogo = false,
         )
       },
+      bottomBar = { UserProfileSecurityFooter() },
     ) { innerPadding ->
       Column(
         modifier =

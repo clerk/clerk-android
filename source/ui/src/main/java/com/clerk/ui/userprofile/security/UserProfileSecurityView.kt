@@ -213,7 +213,7 @@ private fun UserProfileSecurityContent(
 }
 
 @Composable
-private fun UserProfileSecurityFooter() {
+internal fun UserProfileSecurityFooter() {
   Column(
     modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
     horizontalAlignment = Alignment.CenterHorizontally,
