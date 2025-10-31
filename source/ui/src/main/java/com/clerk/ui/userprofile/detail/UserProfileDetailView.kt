@@ -6,13 +6,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -31,6 +35,7 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
+import com.clerk.ui.userprofile.connectedaccount.UserProfileAddConnectedAccountView
 import com.clerk.ui.userprofile.connectedaccount.UserProfileExternalAccountSection
 import com.clerk.ui.userprofile.email.UserProfileEmailSection
 import com.clerk.ui.userprofile.phone.UserProfilePhoneSection
@@ -51,6 +56,7 @@ fun UserProfileDetailView(modifier: Modifier = Modifier) {
   )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileDetailViewImpl(
   emailAddresses: ImmutableList<EmailAddress>,
@@ -62,6 +68,9 @@ fun UserProfileDetailViewImpl(
   val userProfileState = LocalUserProfileState.current
   val scrollState = rememberScrollState()
   val scope = rememberCoroutineScope()
+  var showBottomSheet by remember { mutableStateOf(false) }
+  var bottomSheetType by remember { mutableStateOf<BottomSheetMode>(BottomSheetMode.EmailAddress) }
+
   ClerkMaterialTheme {
     Scaffold(
       modifier = modifier,
@@ -98,10 +107,49 @@ fun UserProfileDetailViewImpl(
         UserProfileExternalAccountSection(
           externalAccounts,
           onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
+          onClickAddAccount = {
+            bottomSheetType = BottomSheetMode.ExternalAccount
+            showBottomSheet = true
+          },
+        )
+      }
+
+      if (showBottomSheet) {
+        UserProfileDetailBottomSheet(
+          bottomSheetType = bottomSheetType,
+          onDismissRequest = { showBottomSheet = false },
         )
       }
     }
   }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun UserProfileDetailBottomSheet(
+  bottomSheetType: BottomSheetMode,
+  onDismissRequest: () -> Unit,
+) {
+  ModalBottomSheet(
+    onDismissRequest = onDismissRequest,
+    containerColor = ClerkMaterialTheme.colors.background,
+  ) {
+    when (bottomSheetType) {
+      BottomSheetMode.ExternalAccount -> {
+        UserProfileAddConnectedAccountView(onBackPressed = onDismissRequest)
+      }
+
+      BottomSheetMode.PhoneNumber -> {}
+
+      BottomSheetMode.EmailAddress -> {}
+    }
+  }
+}
+
+enum class BottomSheetMode {
+  ExternalAccount,
+  PhoneNumber,
+  EmailAddress,
 }
 
 @PreviewLightDark

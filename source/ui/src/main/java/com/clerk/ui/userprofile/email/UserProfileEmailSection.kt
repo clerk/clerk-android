@@ -48,7 +48,7 @@ fun UserProfileEmailSection(
         UserProfileEmailRow(isPrimary = it.isPrimary, emailAddress = it, onError = onError)
       }
       UserProfileButtonRow(
-        text = "Add email address",
+        text = stringResource(R.string.add_email_address),
         onClick = { userProfileState.navigateTo(UserProfileDestination.AddEmail) },
       )
     }
