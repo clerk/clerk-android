@@ -14,9 +14,9 @@ import com.clerk.api.emailaddress.isPrimary
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
-import com.clerk.ui.userprofile.detail.emphasize
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -35,7 +35,7 @@ fun UserProfileEmailSection(
       Text(
         modifier = Modifier.padding(horizontal = dp24),
         text = stringResource(R.string.email_addresses).uppercase(),
-        style = ClerkMaterialTheme.typography.bodySmall.emphasize(),
+        style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
       emailAddresses.forEach {

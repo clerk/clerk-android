@@ -24,6 +24,7 @@ import com.clerk.api.user.User
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -76,9 +77,12 @@ fun UserProfileDetailViewImpl(
         Spacers.Vertical.Spacer32()
         UserProfileEmailSection(emailAddresses = emailAddresses)
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+        Spacers.Vertical.Spacer16()
         Text(
-          "Phone number".uppercase(),
+          modifier = Modifier.padding(horizontal = dp24),
+          text = stringResource(R.string.phone_number).uppercase(),
           style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
+          color = ClerkMaterialTheme.colors.mutedForeground,
         )
       }
     }

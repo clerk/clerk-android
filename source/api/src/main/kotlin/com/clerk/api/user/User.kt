@@ -314,7 +314,7 @@ data class User(
    * full [EmailAddress] object from the [emailAddresses] list that matches the
    * [primaryEmailAddressId]. Returns null if no primary email address is set or found.
    */
-  val primaryEmailAddress = emailAddresses.find { it.id == primaryEmailAddressId }
+  val primaryEmailAddress = emailAddresses?.find { it.id == primaryEmailAddressId }
 }
 
 /**
