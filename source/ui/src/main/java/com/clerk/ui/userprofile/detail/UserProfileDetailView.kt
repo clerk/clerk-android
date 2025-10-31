@@ -8,8 +8,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -23,6 +26,7 @@ import com.clerk.api.user.User
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
@@ -34,6 +38,7 @@ import com.clerk.ui.userprofile.security.UserProfileSecurityFooter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.launch
 
 @Composable
 fun UserProfileDetailView(modifier: Modifier = Modifier) {
@@ -53,8 +58,10 @@ fun UserProfileDetailViewImpl(
   externalAccounts: ImmutableList<ExternalAccount>,
   modifier: Modifier = Modifier,
 ) {
+  val snackbarHostState = remember { SnackbarHostState() }
   val userProfileState = LocalUserProfileState.current
   val scrollState = rememberScrollState()
+  val scope = rememberCoroutineScope()
   ClerkMaterialTheme {
     Scaffold(
       modifier = modifier,
@@ -65,6 +72,7 @@ fun UserProfileDetailViewImpl(
           hasLogo = false,
         )
       },
+      snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
       bottomBar = { UserProfileSecurityFooter() },
     ) { innerPadding ->
       Column(
@@ -76,12 +84,21 @@ fun UserProfileDetailViewImpl(
       ) {
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
         Spacers.Vertical.Spacer32()
-        UserProfileEmailSection(emailAddresses = emailAddresses)
+        UserProfileEmailSection(
+          emailAddresses = emailAddresses,
+          onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
+        )
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
         Spacers.Vertical.Spacer16()
-        UserProfilePhoneSection(phoneNumbers = phoneNumbers)
+        UserProfilePhoneSection(
+          phoneNumbers = phoneNumbers,
+          onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
+        )
         Spacers.Vertical.Spacer16()
-        UserProfileExternalAccountSection(externalAccounts)
+        UserProfileExternalAccountSection(
+          externalAccounts,
+          onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
+        )
       }
     }
   }

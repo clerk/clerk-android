@@ -24,6 +24,7 @@ import kotlinx.collections.immutable.persistentListOf
 fun UserProfileExternalAccountSection(
   externalAccounts: ImmutableList<ExternalAccount>,
   modifier: Modifier = Modifier,
+  onError: (String) -> Unit,
 ) {
   ClerkMaterialTheme {
     Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
@@ -34,7 +35,7 @@ fun UserProfileExternalAccountSection(
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
       Spacers.Vertical.Spacer16()
-      externalAccounts.forEach { UserProfileExternalAccountRow(it) }
+      externalAccounts.forEach { UserProfileExternalAccountRow(it, onError = onError) }
       UserProfileButtonRow(text = stringResource(R.string.connect_account), onClick = {})
     }
   }
@@ -46,6 +47,7 @@ private fun Preview() {
   ClerkMaterialTheme {
     Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
       UserProfileExternalAccountSection(
+        onError = {},
         externalAccounts =
           persistentListOf(
             ExternalAccount(
@@ -70,7 +72,7 @@ private fun Preview() {
                   " https://www.googleapis.com/auth/userinfo.profile openid profile",
               createdAt = 1L,
             ),
-          )
+          ),
       )
     }
   }

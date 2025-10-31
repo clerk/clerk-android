@@ -11,12 +11,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.oauthProviderType
@@ -34,7 +39,23 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun UserProfileExternalAccountRow(externalAccount: ExternalAccount, modifier: Modifier = Modifier) {
+internal fun UserProfileExternalAccountRow(
+  externalAccount: ExternalAccount,
+  modifier: Modifier = Modifier,
+  viewModel: AddConnectedAccountViewModel = viewModel(),
+  onError: (String) -> Unit,
+) {
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  val context = LocalContext.current
+  LaunchedEffect(state) {
+    if (state is AddConnectedAccountViewModel.State.Error) {
+      onError(
+        (state as AddConnectedAccountViewModel.State.Error).message
+          ?: context.getString(R.string.something_went_wrong_please_try_again)
+      )
+      viewModel.resetState()
+    }
+  }
   val isPreview = LocalInspectionMode.current
   ClerkMaterialTheme {
     Row(
@@ -64,8 +85,9 @@ fun UserProfileExternalAccountRow(externalAccount: ExternalAccount, modifier: Mo
             ),
           onClick = {
             when (it) {
-              ExternalAccountAction.Reconnect -> TODO()
-              ExternalAccountAction.Remove -> TODO()
+              ExternalAccountAction.Reconnect ->
+                viewModel.connectExternalAccount(externalAccount.oauthProviderType)
+              ExternalAccountAction.Remove -> viewModel.removeConnectedAccount(externalAccount)
             }
           },
         )
@@ -114,6 +136,7 @@ enum class ExternalAccountAction {
 private fun Preview() {
   ClerkMaterialTheme {
     UserProfileExternalAccountRow(
+      onError = {},
       externalAccount =
         ExternalAccount(
           id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
@@ -125,7 +148,7 @@ private fun Preview() {
             "email https://www.googleapis.com/auth/userinfo.email" +
               " https://www.googleapis.com/auth/userinfo.profile openid profile",
           createdAt = 1L,
-        )
+        ),
     )
   }
 }

@@ -27,6 +27,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun UserProfilePhoneSection(
   phoneNumbers: ImmutableList<PhoneNumber>,
   modifier: Modifier = Modifier,
+  onError: (String) -> Unit,
 ) {
 
   val userProfileState = LocalUserProfileState.current
@@ -39,7 +40,7 @@ internal fun UserProfilePhoneSection(
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
       Spacers.Vertical.Spacer16()
-      phoneNumbers.forEach { UserProfilePhoneRow(phoneNumber = it, onError = {}) }
+      phoneNumbers.forEach { UserProfilePhoneRow(phoneNumber = it, onError = onError) }
 
       UserProfileButtonRow(
         text = stringResource(R.string.add_phone_number),
@@ -56,6 +57,7 @@ private fun Preview() {
     ClerkMaterialTheme {
       Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
         UserProfilePhoneSection(
+          onError = {},
           phoneNumbers =
             persistentListOf(
               PhoneNumber(
@@ -64,7 +66,7 @@ private fun Preview() {
                 reservedForSecondFactor = true,
               ),
               PhoneNumber(id = "phone_2", phoneNumber = "447911123456"),
-            )
+            ),
         )
       }
     }

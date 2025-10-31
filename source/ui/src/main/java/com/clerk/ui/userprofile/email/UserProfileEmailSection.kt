@@ -27,6 +27,7 @@ import kotlinx.collections.immutable.persistentListOf
 fun UserProfileEmailSection(
   emailAddresses: ImmutableList<EmailAddress>,
   modifier: Modifier = Modifier,
+  onError: (String) -> Unit,
 ) {
   val userProfileState = LocalUserProfileState.current
   ClerkMaterialTheme {
@@ -44,7 +45,7 @@ fun UserProfileEmailSection(
       )
       Spacers.Vertical.Spacer16()
       emailAddresses.forEach {
-        UserProfileEmailRow(isPrimary = it.isPrimary, emailAddress = it, onError = {})
+        UserProfileEmailRow(isPrimary = it.isPrimary, emailAddress = it, onError = onError)
       }
       UserProfileButtonRow(
         text = "Add email address",
@@ -58,23 +59,25 @@ fun UserProfileEmailSection(
 @Composable
 private fun Preview() {
   UserProfileEmailSection(
-    persistentListOf(
-      EmailAddress(
-        id = "123",
-        emailAddress = "user@example.com",
-        verification = Verification(status = Verification.Status.VERIFIED),
+    onError = {},
+    emailAddresses =
+      persistentListOf(
+        EmailAddress(
+          id = "123",
+          emailAddress = "user@example.com",
+          verification = Verification(status = Verification.Status.VERIFIED),
+        ),
+        EmailAddress(
+          id = "123",
+          emailAddress = "user@example.com",
+          verification = Verification(status = Verification.Status.UNVERIFIED),
+        ),
+        EmailAddress(
+          id = "123",
+          emailAddress = "user@example.com",
+          linkedTo = listOf(EmailAddress.LinkedEntity(id = "1", type = "email")),
+          verification = Verification(status = Verification.Status.VERIFIED),
+        ),
       ),
-      EmailAddress(
-        id = "123",
-        emailAddress = "user@example.com",
-        verification = Verification(status = Verification.Status.UNVERIFIED),
-      ),
-      EmailAddress(
-        id = "123",
-        emailAddress = "user@example.com",
-        linkedTo = listOf(EmailAddress.LinkedEntity(id = "1", type = "email")),
-        verification = Verification(status = Verification.Status.VERIFIED),
-      ),
-    )
   )
 }
