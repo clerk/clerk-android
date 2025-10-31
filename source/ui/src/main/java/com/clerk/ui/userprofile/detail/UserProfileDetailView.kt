@@ -87,9 +87,10 @@ fun UserProfileDetailViewImpl(
           style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
           color = ClerkMaterialTheme.colors.mutedForeground,
         )
-        phoneNumbers.forEach { UserProfilePhoneRow(it, onError = {}) }
+        phoneNumbers.forEach { UserProfilePhoneRow(phoneNumber = it, onError = {}) }
+
         UserProfileButtonRow(
-          text = "Add phone number",
+          text = stringResource(R.string.add_phone_number),
           onClick = { userProfileState.navigateTo(UserProfileDestination.AddPhoneView) },
         )
       }

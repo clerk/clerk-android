@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.phonenumber.isPrimary
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
@@ -26,6 +27,10 @@ import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
+import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.verify.Mode
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import kotlinx.collections.immutable.persistentListOf
 
@@ -35,11 +40,10 @@ internal fun UserProfilePhoneRow(
   phoneNumber: PhoneNumber,
   onError: (String) -> Unit,
   modifier: Modifier = Modifier,
-  isPrimary: Boolean = false,
   viewModel: UserProfileAddPhoneViewModel = viewModel(),
 ) {
-
   val isPreview = LocalInspectionMode.current
+  val userProfileState = LocalUserProfileState.current
 
   ClerkMaterialTheme {
     Row(
@@ -50,7 +54,7 @@ internal fun UserProfilePhoneRow(
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      PhoneWithBadge(isPrimary, phoneNumber)
+      PhoneWithBadge(phoneNumber)
       Spacer(modifier = Modifier.weight(1f))
       if (!isPreview) {
         ItemMoreMenu(
@@ -70,7 +74,10 @@ internal fun UserProfilePhoneRow(
           onClick = {
             when (it) {
               PhoneAction.SetAsPrimary -> viewModel.setAsPrimary(phoneNumber)
-              PhoneAction.Verify -> TODO()
+              PhoneAction.Verify ->
+                userProfileState.navigateTo(
+                  UserProfileDestination.VerifyView(mode = Mode.Phone(phoneNumber))
+                )
               PhoneAction.Remove -> viewModel.deletePhoneNumber(phoneNumber)
             }
           },
@@ -81,9 +88,9 @@ internal fun UserProfilePhoneRow(
 }
 
 @Composable
-private fun PhoneWithBadge(isPrimary: Boolean, phoneNumber: PhoneNumber) {
+private fun PhoneWithBadge(phoneNumber: PhoneNumber) {
   Column {
-    if (isPrimary) {
+    if (phoneNumber.isPrimary) {
       Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
       Spacers.Vertical.Spacer4()
     }
@@ -112,42 +119,41 @@ internal enum class PhoneAction {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    Column(
-      modifier =
-        Modifier.background(color = ClerkMaterialTheme.colors.muted).padding(vertical = dp24)
-    ) {
-      UserProfilePhoneRow(
-        isPrimary = true,
-        onError = {},
-        phoneNumber =
-          PhoneNumber(
-            id = "phone_1",
-            phoneNumber = "15555550100",
-            verification = Verification(Verification.Status.VERIFIED),
-          ),
-      )
-      UserProfilePhoneRow(
-        isPrimary = false,
-        onError = {},
-        phoneNumber =
-          PhoneNumber(
-            id = "phone_1",
-            phoneNumber = "15555550100",
-            reservedForSecondFactor = true,
-            verification = Verification(Verification.Status.VERIFIED),
-          ),
-      )
-      UserProfilePhoneRow(
-        isPrimary = false,
-        onError = {},
-        phoneNumber =
-          PhoneNumber(
-            id = "phone_1",
-            phoneNumber = "15555550100",
-            verification = Verification(Verification.Status.UNVERIFIED),
-          ),
-      )
+  PreviewUserProfileStateProvider {
+    ClerkMaterialTheme {
+      Column(
+        modifier =
+          Modifier.background(color = ClerkMaterialTheme.colors.muted).padding(vertical = dp24)
+      ) {
+        UserProfilePhoneRow(
+          onError = {},
+          phoneNumber =
+            PhoneNumber(
+              id = "phone_1",
+              phoneNumber = "15555550100",
+              verification = Verification(Verification.Status.VERIFIED),
+            ),
+        )
+        UserProfilePhoneRow(
+          onError = {},
+          phoneNumber =
+            PhoneNumber(
+              id = "phone_1",
+              phoneNumber = "15555550100",
+              reservedForSecondFactor = true,
+              verification = Verification(Verification.Status.VERIFIED),
+            ),
+        )
+        UserProfilePhoneRow(
+          onError = {},
+          phoneNumber =
+            PhoneNumber(
+              id = "phone_1",
+              phoneNumber = "15555550100",
+              verification = Verification(Verification.Status.UNVERIFIED),
+            ),
+        )
+      }
     }
   }
 }

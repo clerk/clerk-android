@@ -31,7 +31,7 @@ private const val USERNAME = "username"
 internal class AuthState(
   val mode: AuthMode = AuthMode.SignInOrUp,
   val backStack: NavBackStack<NavKey>,
-) : NavigableState {
+) : NavigableState<AuthDestination> {
 
   // Auth start fields
   var authStartIdentifier by mutableStateOf("")
@@ -65,6 +65,16 @@ internal class AuthState(
 
   override fun pop(numberOfScreens: Int) {
     backStack.pop(numberOfScreens)
+  }
+
+  override fun popTo(destination: AuthDestination) {
+    val targetIndex = backStack.indexOfLast { it == destination }
+    if (targetIndex == -1) return // Not found → no-op
+
+    val toPop = (backStack.size - 1) - targetIndex
+    if (toPop > 0) {
+      backStack.pop(toPop) // non-inclusive: leaves `destination` on top
+    }
   }
 
   internal fun setToStepForStatus(signIn: SignIn, onAuthComplete: () -> Unit) {

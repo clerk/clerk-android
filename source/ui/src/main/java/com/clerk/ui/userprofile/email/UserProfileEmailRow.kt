@@ -28,13 +28,15 @@ import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.verify.Mode
 import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun UserProfileEmailRow(
   emailAddress: EmailAddress,
-  onVerify: () -> Unit,
   onError: (String) -> Unit,
   modifier: Modifier = Modifier,
   isPrimary: Boolean = false,
@@ -42,6 +44,7 @@ internal fun UserProfileEmailRow(
 ) {
 
   val isPreview = LocalInspectionMode.current
+  val userProfileState = LocalUserProfileState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
   if (state is EmailViewModel.State.Failure) {
     onError((state as EmailViewModel.State.Failure).message)
@@ -75,7 +78,10 @@ internal fun UserProfileEmailRow(
           onClick = {
             when (it) {
               EmailAction.SetAsPrimary -> viewModel.setAsPrimary(emailAddress)
-              EmailAction.Verify -> onVerify()
+              EmailAction.Verify ->
+                userProfileState.navigateTo(
+                  UserProfileDestination.VerifyView(mode = Mode.Email(emailAddress))
+                )
               EmailAction.Remove -> viewModel.remove(emailAddress)
             }
           },
@@ -125,7 +131,6 @@ private fun Preview() {
       UserProfileEmailRow(
         isPrimary = true,
         onError = {},
-        onVerify = {},
         emailAddress =
           EmailAddress(
             id = "123",
@@ -136,7 +141,6 @@ private fun Preview() {
       UserProfileEmailRow(
         isPrimary = false,
         onError = {},
-        onVerify = {},
         emailAddress =
           EmailAddress(
             id = "123",
@@ -147,7 +151,6 @@ private fun Preview() {
       UserProfileEmailRow(
         isPrimary = false,
         onError = {},
-        onVerify = {},
         emailAddress =
           EmailAddress(
             id = "123",
