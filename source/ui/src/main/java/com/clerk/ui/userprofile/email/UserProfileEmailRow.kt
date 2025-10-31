@@ -1,6 +1,7 @@
 package com.clerk.ui.userprofile.email
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +25,7 @@ import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
@@ -94,17 +96,23 @@ internal fun UserProfileEmailRow(
 @Composable
 private fun EmailWithBadge(isPrimary: Boolean, emailAddress: EmailAddress) {
   Column {
-    if (isPrimary) {
-      Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
-      Spacers.Vertical.Spacer4()
-    }
-    if (emailAddress.verification?.status != Verification.Status.VERIFIED) {
-      Badge(text = stringResource(R.string.unverified), badgeType = ClerkBadgeType.Warning)
-      Spacers.Vertical.Spacer4()
-    }
-    if (emailAddress.linkedTo?.isNotEmpty() == true) {
-      Badge(text = stringResource(R.string.linked), badgeType = ClerkBadgeType.Secondary)
-      Spacers.Vertical.Spacer4()
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(dp4),
+    ) {
+      if (isPrimary) {
+        Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
+        Spacers.Vertical.Spacer4()
+      }
+      if (emailAddress.verification?.status != Verification.Status.VERIFIED) {
+        Badge(text = stringResource(R.string.unverified), badgeType = ClerkBadgeType.Warning)
+        Spacers.Vertical.Spacer4()
+      }
+      if (emailAddress.linkedTo?.isNotEmpty() == true) {
+        Badge(text = stringResource(R.string.linked), badgeType = ClerkBadgeType.Secondary)
+        Spacers.Vertical.Spacer4()
+      }
     }
     Text(
       text = emailAddress.emailAddress,

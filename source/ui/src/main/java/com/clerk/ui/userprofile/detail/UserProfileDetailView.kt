@@ -136,7 +136,11 @@ private fun ProfileContent(
   ) {
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     Spacers.Vertical.Spacer32()
-    UserProfileEmailSection(emailAddresses = emailAddresses, onError = onError)
+    UserProfileEmailSection(
+      emailAddresses = emailAddresses,
+      onError = onError,
+      onAddEmailClick = { onShowBottomSheet(BottomSheetMode.EmailAddress) },
+    )
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     Spacers.Vertical.Spacer16()
     UserProfilePhoneSection(
