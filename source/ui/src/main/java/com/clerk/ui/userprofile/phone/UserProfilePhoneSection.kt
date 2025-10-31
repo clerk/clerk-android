@@ -14,6 +14,7 @@ import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
@@ -37,6 +38,7 @@ internal fun UserProfilePhoneSection(
         style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
+      Spacers.Vertical.Spacer16()
       phoneNumbers.forEach { UserProfilePhoneRow(phoneNumber = it, onError = {}) }
 
       UserProfileButtonRow(
