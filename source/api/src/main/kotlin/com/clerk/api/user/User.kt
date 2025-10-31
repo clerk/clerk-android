@@ -75,7 +75,7 @@ data class User(
   @SerialName("delete_self_enabled") val deleteSelfEnabled: Boolean = false,
 
   /** An array of all the EmailAddress objects associated with the user. Includes the primary. */
-  @SerialName("email_addresses") val emailAddresses: List<EmailAddress>,
+  @SerialName("email_addresses") val emailAddresses: List<EmailAddress>? = null,
 
   /** A list of enterprise accounts associated with the user. */
   @SerialName("enterprise_accounts") val enterpriseAccounts: List<EnterpriseAccount>? = null,

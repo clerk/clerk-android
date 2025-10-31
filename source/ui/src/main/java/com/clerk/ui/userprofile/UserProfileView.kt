@@ -12,6 +12,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
+import com.clerk.ui.userprofile.detail.UserProfileDetailView
 import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
 import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
@@ -56,7 +57,8 @@ fun UserProfileView(modifier: Modifier = Modifier) {
             UserProfileAccountView(
               onClick = {
                 when (it) {
-                  UserProfileAction.Profile -> TODO()
+                  UserProfileAction.Profile ->
+                    backStack.add(UserProfileDestination.UserProfileDetail)
                   UserProfileAction.Security ->
                     backStack.add(UserProfileDestination.UserProfileSecurity)
                 }
@@ -90,6 +92,7 @@ fun UserProfileView(modifier: Modifier = Modifier) {
           entry<UserProfileDestination.BackupCodeView> { key ->
             BackupCodesView(origin = key.origin, codes = key.codes.toImmutableList())
           }
+          entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
         },
     )
   }
@@ -127,4 +130,6 @@ internal object UserProfileDestination {
     val mfaType: MfaType = MfaType.BackupCodes,
     val codes: List<String>,
   ) : NavKey
+
+  @Serializable data object UserProfileDetail : NavKey
 }

@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +41,7 @@ internal fun UserProfileEmailRow(
   viewModel: EmailViewModel = viewModel(),
 ) {
 
+  val isPreview = LocalInspectionMode.current
   val state by viewModel.state.collectAsStateWithLifecycle()
   if (state is EmailViewModel.State.Failure) {
     onError((state as EmailViewModel.State.Failure).message)
@@ -53,49 +55,56 @@ internal fun UserProfileEmailRow(
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      Column {
-        if (isPrimary) {
-          Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
-          Spacers.Vertical.Spacer4()
-        }
-        if (emailAddress.verification?.status != Verification.Status.VERIFIED) {
-          Badge(text = stringResource(R.string.unverified), badgeType = ClerkBadgeType.Warning)
-          Spacers.Vertical.Spacer4()
-        }
-        if (emailAddress.linkedTo?.isNotEmpty() == true) {
-          Badge(text = stringResource(R.string.linked), badgeType = ClerkBadgeType.Secondary)
-          Spacers.Vertical.Spacer4()
-        }
-        Text(
-          text = emailAddress.emailAddress,
-          style = ClerkMaterialTheme.typography.bodyLarge,
-          color = ClerkMaterialTheme.colors.foreground,
+      EmailWithBadge(isPrimary, emailAddress)
+      Spacer(modifier = Modifier.weight(1f))
+      if (!isPreview) {
+        ItemMoreMenu(
+          dropDownItems =
+            persistentListOf(
+              DropDownItem(
+                id = EmailAction.SetAsPrimary,
+                text = stringResource(R.string.set_as_primary),
+              ),
+              DropDownItem(id = EmailAction.Verify, text = stringResource(R.string.verify)),
+              DropDownItem(
+                id = EmailAction.Remove,
+                text = stringResource(R.string.remove_email),
+                danger = true,
+              ),
+            ),
+          onClick = {
+            when (it) {
+              EmailAction.SetAsPrimary -> viewModel.setAsPrimary(emailAddress)
+              EmailAction.Verify -> onVerify()
+              EmailAction.Remove -> viewModel.remove(emailAddress)
+            }
+          },
         )
       }
-      Spacer(modifier = Modifier.weight(1f))
-      ItemMoreMenu(
-        dropDownItems =
-          persistentListOf(
-            DropDownItem(
-              id = EmailAction.SetAsPrimary,
-              text = stringResource(R.string.set_as_primary),
-            ),
-            DropDownItem(id = EmailAction.Verify, text = stringResource(R.string.verify)),
-            DropDownItem(
-              id = EmailAction.Remove,
-              text = stringResource(R.string.remove_email),
-              danger = true,
-            ),
-          ),
-        onClick = {
-          when (it) {
-            EmailAction.SetAsPrimary -> viewModel.setAsPrimary(emailAddress)
-            EmailAction.Verify -> onVerify()
-            EmailAction.Remove -> viewModel.remove(emailAddress)
-          }
-        },
-      )
     }
+  }
+}
+
+@Composable
+private fun EmailWithBadge(isPrimary: Boolean, emailAddress: EmailAddress) {
+  Column {
+    if (isPrimary) {
+      Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
+      Spacers.Vertical.Spacer4()
+    }
+    if (emailAddress.verification?.status != Verification.Status.VERIFIED) {
+      Badge(text = stringResource(R.string.unverified), badgeType = ClerkBadgeType.Warning)
+      Spacers.Vertical.Spacer4()
+    }
+    if (emailAddress.linkedTo?.isNotEmpty() == true) {
+      Badge(text = stringResource(R.string.linked), badgeType = ClerkBadgeType.Secondary)
+      Spacers.Vertical.Spacer4()
+    }
+    Text(
+      text = emailAddress.emailAddress,
+      style = ClerkMaterialTheme.typography.bodyLarge,
+      color = ClerkMaterialTheme.colors.foreground,
+    )
   }
 }
 
