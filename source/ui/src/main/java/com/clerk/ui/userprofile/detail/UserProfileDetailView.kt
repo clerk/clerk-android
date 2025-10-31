@@ -8,7 +8,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -24,12 +23,11 @@ import com.clerk.api.user.User
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp1
-import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
+import com.clerk.ui.userprofile.connectedaccount.UserProfileExternalAccountSection
 import com.clerk.ui.userprofile.email.UserProfileEmailSection
 import com.clerk.ui.userprofile.phone.UserProfilePhoneSection
 import kotlinx.collections.immutable.ImmutableList
@@ -81,12 +79,7 @@ fun UserProfileDetailViewImpl(
         Spacers.Vertical.Spacer16()
         UserProfilePhoneSection(phoneNumbers = phoneNumbers)
         Spacers.Vertical.Spacer16()
-        Text(
-          modifier = Modifier.padding(horizontal = dp24),
-          text = stringResource(R.string.connected_accounts).uppercase(),
-          style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
-          color = ClerkMaterialTheme.colors.mutedForeground,
-        )
+        UserProfileExternalAccountSection(externalAccounts)
       }
     }
   }
@@ -116,7 +109,30 @@ private fun Preview() {
           PhoneNumber(id = "phone_1", phoneNumber = "15555550100", reservedForSecondFactor = true),
           PhoneNumber(id = "phone_2", phoneNumber = "15555550101"),
         ),
-        persistentListOf(),
+        persistentListOf(
+          ExternalAccount(
+            id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
+            identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
+            provider = "oauth_google",
+            providerUserId = "102662613248529322762",
+            emailAddress = "sam@clerk.dev",
+            approvedScopes =
+              "email https://www.googleapis.com/auth/userinfo.email" +
+                " https://www.googleapis.com/auth/userinfo.profile openid profile",
+            createdAt = 1L,
+          ),
+          ExternalAccount(
+            id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
+            identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
+            provider = "oauth_linear",
+            providerUserId = "102662613248529322762",
+            emailAddress = "sam@clerk.dev",
+            approvedScopes =
+              "email https://www.googleapis.com/auth/userinfo.email" +
+                " https://www.googleapis.com/auth/userinfo.profile openid profile",
+            createdAt = 1L,
+          ),
+        ),
       )
     }
   }
