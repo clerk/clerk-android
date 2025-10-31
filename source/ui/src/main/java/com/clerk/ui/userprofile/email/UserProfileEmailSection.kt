@@ -42,12 +42,7 @@ fun UserProfileEmailSection(
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
       emailAddresses.forEach {
-        UserProfileEmailRow(
-          isPrimary = it.isPrimary,
-          emailAddress = it,
-          onVerify = {},
-          onError = {},
-        )
+        UserProfileEmailRow(isPrimary = it.isPrimary, emailAddress = it, onError = {})
       }
       UserProfileButtonRow(
         text = "Add email address",

@@ -8,7 +8,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -24,16 +23,12 @@ import com.clerk.api.user.User
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp1
-import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
-import com.clerk.ui.userprofile.UserProfileDestination
-import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import com.clerk.ui.userprofile.email.UserProfileEmailSection
-import com.clerk.ui.userprofile.phone.UserProfilePhoneRow
+import com.clerk.ui.userprofile.phone.UserProfilePhoneSection
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -81,18 +76,7 @@ fun UserProfileDetailViewImpl(
         UserProfileEmailSection(emailAddresses = emailAddresses)
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
         Spacers.Vertical.Spacer16()
-        Text(
-          modifier = Modifier.padding(horizontal = dp24),
-          text = stringResource(R.string.phone_number).uppercase(),
-          style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
-          color = ClerkMaterialTheme.colors.mutedForeground,
-        )
-        phoneNumbers.forEach { UserProfilePhoneRow(phoneNumber = it, onError = {}) }
-
-        UserProfileButtonRow(
-          text = stringResource(R.string.add_phone_number),
-          onClick = { userProfileState.navigateTo(UserProfileDestination.AddPhoneView) },
-        )
+        UserProfilePhoneSection(phoneNumbers = phoneNumbers)
       }
     }
   }
@@ -118,7 +102,10 @@ private fun Preview() {
               linkedTo = listOf(EmailAddress.LinkedEntity("email_1", type = "OAUTH")),
             ),
           ),
-        persistentListOf(),
+        persistentListOf(
+          PhoneNumber(id = "phone_1", phoneNumber = "15555550100", reservedForSecondFactor = true),
+          PhoneNumber(id = "phone_2", phoneNumber = "15555550101"),
+        ),
         persistentListOf(),
       )
     }

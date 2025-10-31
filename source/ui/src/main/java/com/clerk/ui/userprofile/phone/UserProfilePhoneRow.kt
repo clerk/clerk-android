@@ -1,6 +1,7 @@
 package com.clerk.ui.userprofile.phone
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
@@ -89,18 +91,20 @@ internal fun UserProfilePhoneRow(
 
 @Composable
 private fun PhoneWithBadge(phoneNumber: PhoneNumber) {
-  Column {
-    if (phoneNumber.isPrimary) {
-      Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
-      Spacers.Vertical.Spacer4()
-    }
-    if (phoneNumber.verification?.status != Verification.Status.VERIFIED) {
-      Badge(text = stringResource(R.string.unverified), badgeType = ClerkBadgeType.Warning)
-      Spacers.Vertical.Spacer4()
-    }
-    if (phoneNumber.reservedForSecondFactor) {
-      Badge(text = stringResource(R.string.mfa_reserved), badgeType = ClerkBadgeType.Secondary)
-      Spacers.Vertical.Spacer4()
+  Column(modifier = Modifier.fillMaxWidth()) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(dp4)) {
+      if (phoneNumber.isPrimary) {
+        Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
+        Spacers.Vertical.Spacer4()
+      }
+      if (phoneNumber.verification?.status != Verification.Status.VERIFIED) {
+        Badge(text = stringResource(R.string.unverified), badgeType = ClerkBadgeType.Warning)
+        Spacers.Vertical.Spacer4()
+      }
+      if (phoneNumber.reservedForSecondFactor) {
+        Badge(text = stringResource(R.string.mfa_reserved), badgeType = ClerkBadgeType.Secondary)
+        Spacers.Vertical.Spacer4()
+      }
     }
     Text(
       text = phoneNumber.phoneNumber.formattedAsPhoneNumberIfPossible,
@@ -150,6 +154,7 @@ private fun Preview() {
             PhoneNumber(
               id = "phone_1",
               phoneNumber = "15555550100",
+              reservedForSecondFactor = true,
               verification = Verification(Verification.Status.UNVERIFIED),
             ),
         )
