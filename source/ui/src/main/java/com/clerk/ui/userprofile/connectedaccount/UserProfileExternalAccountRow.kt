@@ -1,6 +1,7 @@
 package com.clerk.ui.userprofile.connectedaccount
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.extensions.withDarkVariant
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
@@ -82,7 +84,7 @@ private fun EmailWithAccountBadge(externalAccount: ExternalAccount) {
     Row(horizontalArrangement = Arrangement.spacedBy(dp8)) {
       AsyncImage(
         modifier = Modifier.size(dp20),
-        model = externalAccount.oauthProviderType.logoUrl,
+        model = externalAccount.oauthProviderType.logoUrl?.withDarkVariant(isSystemInDarkTheme()),
         contentDescription = null,
         fallback = fallbackPainter,
       )
