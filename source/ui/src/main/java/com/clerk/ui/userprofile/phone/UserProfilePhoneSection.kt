@@ -16,9 +16,6 @@ import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
-import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -26,11 +23,11 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun UserProfilePhoneSection(
   phoneNumbers: ImmutableList<PhoneNumber>,
-  modifier: Modifier = Modifier,
   onError: (String) -> Unit,
+  modifier: Modifier = Modifier,
+  onAddPhoneNumberClick: () -> Unit,
 ) {
 
-  val userProfileState = LocalUserProfileState.current
   ClerkMaterialTheme {
     Column(modifier = modifier.fillMaxWidth()) {
       Text(
@@ -44,7 +41,7 @@ internal fun UserProfilePhoneSection(
 
       UserProfileButtonRow(
         text = stringResource(R.string.add_phone_number),
-        onClick = { userProfileState.navigateTo(UserProfileDestination.AddPhoneView) },
+        onClick = onAddPhoneNumberClick,
       )
     }
   }
@@ -53,22 +50,21 @@ internal fun UserProfilePhoneSection(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  PreviewUserProfileStateProvider {
-    ClerkMaterialTheme {
-      Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
-        UserProfilePhoneSection(
-          onError = {},
-          phoneNumbers =
-            persistentListOf(
-              PhoneNumber(
-                id = "phone_1",
-                phoneNumber = "15555550101",
-                reservedForSecondFactor = true,
-              ),
-              PhoneNumber(id = "phone_2", phoneNumber = "447911123456"),
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
+      UserProfilePhoneSection(
+        onError = {},
+        onAddPhoneNumberClick = {},
+        phoneNumbers =
+          persistentListOf(
+            PhoneNumber(
+              id = "phone_1",
+              phoneNumber = "15555550101",
+              reservedForSecondFactor = true,
             ),
-        )
-      }
+            PhoneNumber(id = "phone_2", phoneNumber = "447911123456"),
+          ),
+      )
     }
   }
 }

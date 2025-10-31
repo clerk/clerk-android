@@ -13,10 +13,8 @@ import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.detail.UserProfileDetailView
-import com.clerk.ui.userprofile.email.UserProfileAddEmailView
 import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
 import com.clerk.ui.userprofile.mfa.ViewType
-import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
 import com.clerk.ui.userprofile.security.BackupCodesView
 import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.Origin
@@ -87,14 +85,12 @@ fun UserProfileView(modifier: Modifier = Modifier) {
           entry<UserProfileDestination.AddMfaView> { key ->
             UserProfileAddMfaView(viewType = key.viewType)
           }
-          entry<UserProfileDestination.AddPhoneView> { key -> UserProfileAddPhoneView() }
 
           entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
           entry<UserProfileDestination.BackupCodeView> { key ->
             BackupCodesView(origin = key.origin, codes = key.codes.toImmutableList())
           }
           entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
-          entry<UserProfileDestination.AddEmail> { UserProfileAddEmailView() }
         },
     )
   }

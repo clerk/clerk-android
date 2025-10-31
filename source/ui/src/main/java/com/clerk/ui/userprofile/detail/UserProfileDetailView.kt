@@ -1,7 +1,9 @@
 package com.clerk.ui.userprofile.detail
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -37,9 +39,13 @@ import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.connectedaccount.UserProfileAddConnectedAccountView
 import com.clerk.ui.userprofile.connectedaccount.UserProfileExternalAccountSection
+import com.clerk.ui.userprofile.email.UserProfileAddEmailView
 import com.clerk.ui.userprofile.email.UserProfileEmailSection
+import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
 import com.clerk.ui.userprofile.phone.UserProfilePhoneSection
 import com.clerk.ui.userprofile.security.UserProfileSecurityFooter
+import com.clerk.ui.userprofile.verify.Mode
+import com.clerk.ui.userprofile.verify.UserProfileVerifyView
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -84,43 +90,66 @@ fun UserProfileDetailViewImpl(
       snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
       bottomBar = { UserProfileSecurityFooter() },
     ) { innerPadding ->
-      Column(
-        modifier =
-          Modifier.fillMaxSize()
-            .background(ClerkMaterialTheme.colors.background)
-            .padding(innerPadding)
-            .verticalScroll(scrollState)
-      ) {
-        HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-        Spacers.Vertical.Spacer32()
-        UserProfileEmailSection(
-          emailAddresses = emailAddresses,
-          onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
-        )
-        HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-        Spacers.Vertical.Spacer16()
-        UserProfilePhoneSection(
-          phoneNumbers = phoneNumbers,
-          onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
-        )
-        Spacers.Vertical.Spacer16()
-        UserProfileExternalAccountSection(
-          externalAccounts,
-          onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
-          onClickAddAccount = {
-            bottomSheetType = BottomSheetMode.ExternalAccount
-            showBottomSheet = true
-          },
-        )
-      }
+      ProfileContent(
+        innerPadding = innerPadding,
+        scrollState = scrollState,
+        emailAddresses = emailAddresses,
+        phoneNumbers = phoneNumbers,
+        externalAccounts = externalAccounts,
+        onShowBottomSheet = { type ->
+          bottomSheetType = type
+          showBottomSheet = true
+        },
+        onError = { errorMessage -> scope.launch { snackbarHostState.showSnackbar(errorMessage) } },
+      )
 
       if (showBottomSheet) {
         UserProfileDetailBottomSheet(
           bottomSheetType = bottomSheetType,
           onDismissRequest = { showBottomSheet = false },
+          onVerify = {
+            bottomSheetType = it
+            showBottomSheet = true
+          },
         )
       }
     }
+  }
+}
+
+@Composable
+private fun ProfileContent(
+  innerPadding: PaddingValues,
+  scrollState: ScrollState,
+  emailAddresses: ImmutableList<EmailAddress>,
+  phoneNumbers: ImmutableList<PhoneNumber>,
+  externalAccounts: ImmutableList<ExternalAccount>,
+  onShowBottomSheet: (BottomSheetMode) -> Unit,
+  onError: (String) -> Unit,
+) {
+  Column(
+    modifier =
+      Modifier.fillMaxSize()
+        .background(ClerkMaterialTheme.colors.background)
+        .padding(innerPadding)
+        .verticalScroll(scrollState)
+  ) {
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    Spacers.Vertical.Spacer32()
+    UserProfileEmailSection(emailAddresses = emailAddresses, onError = onError)
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    Spacers.Vertical.Spacer16()
+    UserProfilePhoneSection(
+      phoneNumbers = phoneNumbers,
+      onError = onError,
+      onAddPhoneNumberClick = { onShowBottomSheet(BottomSheetMode.PhoneNumber) },
+    )
+    Spacers.Vertical.Spacer16()
+    UserProfileExternalAccountSection(
+      externalAccounts,
+      onError = onError,
+      onClickAddAccount = { onShowBottomSheet(BottomSheetMode.ExternalAccount) },
+    )
   }
 }
 
@@ -129,6 +158,7 @@ fun UserProfileDetailViewImpl(
 private fun UserProfileDetailBottomSheet(
   bottomSheetType: BottomSheetMode,
   onDismissRequest: () -> Unit,
+  onVerify: (BottomSheetMode) -> Unit,
 ) {
   ModalBottomSheet(
     onDismissRequest = onDismissRequest,
@@ -139,17 +169,41 @@ private fun UserProfileDetailBottomSheet(
         UserProfileAddConnectedAccountView(onBackPressed = onDismissRequest)
       }
 
-      BottomSheetMode.PhoneNumber -> {}
+      BottomSheetMode.PhoneNumber -> {
+        UserProfileAddPhoneView(
+          onDismiss = onDismissRequest,
+          onError = {},
+          onVerify = { onVerify(BottomSheetMode.VerifyPhoneNumber(it.phoneNumber)) },
+        )
+      }
 
-      BottomSheetMode.EmailAddress -> {}
+      BottomSheetMode.EmailAddress -> {
+        UserProfileAddEmailView(
+          onVerify = { onVerify(BottomSheetMode.VerifyEmailAddress(it.emailAddress)) }
+        )
+      }
+      is BottomSheetMode.VerifyEmailAddress -> {
+        UserProfileVerifyView(mode = Mode.Email(bottomSheetType.emailAddress))
+      }
+      is BottomSheetMode.VerifyPhoneNumber -> {
+        UserProfileVerifyView(mode = Mode.Phone(bottomSheetType.phoneNumber))
+      }
     }
   }
 }
 
-enum class BottomSheetMode {
-  ExternalAccount,
-  PhoneNumber,
-  EmailAddress,
+sealed interface BottomSheetMode {
+  data object ExternalAccount : BottomSheetMode
+
+  data object PhoneNumber : BottomSheetMode
+
+  data object EmailAddress : BottomSheetMode
+
+  data class VerifyEmailAddress(val emailAddress: com.clerk.api.emailaddress.EmailAddress) :
+    BottomSheetMode
+
+  data class VerifyPhoneNumber(val phoneNumber: com.clerk.api.phonenumber.PhoneNumber) :
+    BottomSheetMode
 }
 
 @PreviewLightDark
