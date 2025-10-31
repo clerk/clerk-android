@@ -30,7 +30,10 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
+import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import com.clerk.ui.userprofile.email.UserProfileEmailSection
+import com.clerk.ui.userprofile.phone.UserProfilePhoneRow
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -40,8 +43,8 @@ fun UserProfileDetailView(modifier: Modifier = Modifier) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   UserProfileDetailViewImpl(
     emailAddresses = user.sortedEmailAddresses(),
-    phoneNumbers = persistentListOf(),
-    externalAccounts = persistentListOf(),
+    phoneNumbers = user.sortedPhoneNumbers(),
+    externalAccounts = user.sortedExternalAccounts(),
     modifier = modifier,
   )
 }
@@ -83,6 +86,11 @@ fun UserProfileDetailViewImpl(
           text = stringResource(R.string.phone_number).uppercase(),
           style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
           color = ClerkMaterialTheme.colors.mutedForeground,
+        )
+        phoneNumbers.forEach { UserProfilePhoneRow(it, onError = {}) }
+        UserProfileButtonRow(
+          text = "Add phone number",
+          onClick = { userProfileState.navigateTo(UserProfileDestination.AddPhoneView) },
         )
       }
     }

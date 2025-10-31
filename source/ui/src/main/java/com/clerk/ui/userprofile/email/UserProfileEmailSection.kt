@@ -16,6 +16,8 @@ import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -25,6 +27,7 @@ fun UserProfileEmailSection(
   emailAddresses: ImmutableList<EmailAddress>,
   modifier: Modifier = Modifier,
 ) {
+  val userProfileState = LocalUserProfileState.current
   ClerkMaterialTheme {
     Column(
       modifier =
@@ -46,7 +49,10 @@ fun UserProfileEmailSection(
           onError = {},
         )
       }
-      UserProfileButtonRow(text = "Add email address", onClick = {})
+      UserProfileButtonRow(
+        text = "Add email address",
+        onClick = { userProfileState.navigateTo(UserProfileDestination.AddEmail) },
+      )
     }
   }
 }

@@ -14,13 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
-import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
@@ -32,10 +33,10 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun UserProfilePhoneRow(
   phoneNumber: PhoneNumber,
-  onVerify: () -> Unit,
   onError: (String) -> Unit,
   modifier: Modifier = Modifier,
   isPrimary: Boolean = false,
+  viewModel: UserProfileAddPhoneViewModel = viewModel(),
 ) {
 
   val isPreview = LocalInspectionMode.current
@@ -45,7 +46,7 @@ internal fun UserProfilePhoneRow(
       modifier =
         Modifier.fillMaxWidth()
           .background(ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24, vertical = dp16)
+          .padding(horizontal = dp24, vertical = dp8)
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -68,9 +69,9 @@ internal fun UserProfilePhoneRow(
             ),
           onClick = {
             when (it) {
-              PhoneAction.SetAsPrimary -> TODO()
+              PhoneAction.SetAsPrimary -> viewModel.setAsPrimary(phoneNumber)
               PhoneAction.Verify -> TODO()
-              PhoneAction.Remove -> TODO()
+              PhoneAction.Remove -> viewModel.deletePhoneNumber(phoneNumber)
             }
           },
         )
@@ -119,7 +120,6 @@ private fun Preview() {
       UserProfilePhoneRow(
         isPrimary = true,
         onError = {},
-        onVerify = {},
         phoneNumber =
           PhoneNumber(
             id = "phone_1",
@@ -130,7 +130,6 @@ private fun Preview() {
       UserProfilePhoneRow(
         isPrimary = false,
         onError = {},
-        onVerify = {},
         phoneNumber =
           PhoneNumber(
             id = "phone_1",
@@ -142,7 +141,6 @@ private fun Preview() {
       UserProfilePhoneRow(
         isPrimary = false,
         onError = {},
-        onVerify = {},
         phoneNumber =
           PhoneNumber(
             id = "phone_1",

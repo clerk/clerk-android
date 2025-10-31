@@ -23,18 +23,20 @@ import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 
 @Composable
-fun UserProfileAddEmailView(modifier: Modifier = Modifier, onAddEmailSuccess: () -> Unit) {
-  UserProfileAddEmailViewImpl(modifier = modifier, onAddEmailSuccess = onAddEmailSuccess)
+fun UserProfileAddEmailView(modifier: Modifier = Modifier) {
+  UserProfileAddEmailViewImpl(modifier = modifier)
 }
 
 @Composable
 private fun UserProfileAddEmailViewImpl(
   modifier: Modifier = Modifier,
   viewModel: AddEmailViewModel = viewModel(),
-  onAddEmailSuccess: () -> Unit,
 ) {
+  val userProfileState = LocalUserProfileState.current
   var email by remember { mutableStateOf("") }
 
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -48,7 +50,7 @@ private fun UserProfileAddEmailViewImpl(
 
   LaunchedEffect(state) {
     if (state == AddEmailViewModel.State.Success) {
-      onAddEmailSuccess()
+      userProfileState.pop(2)
     }
   }
 
@@ -82,9 +84,11 @@ private fun UserProfileAddEmailViewImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
-      UserProfileAddEmailView(onAddEmailSuccess = {})
+  PreviewUserProfileStateProvider {
+    ClerkMaterialTheme {
+      Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
+        UserProfileAddEmailView()
+      }
     }
   }
 }
