@@ -15,7 +15,6 @@ import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.detail.UserProfileDetailView
 import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
 import com.clerk.ui.userprofile.mfa.ViewType
-import com.clerk.ui.userprofile.security.BackupCodesView
 import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.Origin
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
@@ -26,7 +25,6 @@ import com.clerk.ui.userprofile.security.password.UserProfileNewPasswordView
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
 import com.clerk.ui.userprofile.verify.Mode
 import com.clerk.ui.userprofile.verify.UserProfileVerifyView
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
 
 @SuppressLint("ComposeCompositionLocalUsage")
@@ -87,9 +85,7 @@ fun UserProfileView(modifier: Modifier = Modifier) {
           }
 
           entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
-          entry<UserProfileDestination.BackupCodeView> { key ->
-            BackupCodesView(origin = key.origin, codes = key.codes.toImmutableList())
-          }
+
           entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
         },
     )

@@ -9,13 +9,10 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -41,11 +38,8 @@ import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
-import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
-import com.clerk.ui.userprofile.UserProfileState
+import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import java.io.File
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -55,23 +49,16 @@ import kotlinx.coroutines.launch
 internal fun BackupCodesView(
   codes: ImmutableList<String>,
   modifier: Modifier = Modifier,
-  origin: Origin = Origin.BackupCodes,
   mfaType: MfaType = MfaType.BackupCodes,
+  onDismiss: () -> Unit,
 ) {
-
-  val userProfileState = LocalUserProfileState.current
-  BackHandler { handleBack(userProfileState, origin) }
-
-  ClerkThemedProfileScaffold(
-    title = stringResource(R.string.add_backup_code_verification),
-    onBackPressed = { handleBack(userProfileState, origin) },
-  ) {
+  Column(modifier = Modifier.fillMaxWidth().padding(bottom = dp24)) {
+    BottomSheetTopBar(
+      title = stringResource(R.string.add_authenticator_application),
+      onClosePressed = onDismiss,
+    )
     Column(
-      modifier =
-        Modifier.fillMaxSize()
-          .background(color = ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24)
-          .then(modifier),
+      modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).then(modifier),
       verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.Top),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -99,16 +86,6 @@ internal fun BackupCodesView(
       }
       ActionButtonRow(codes)
     }
-  }
-}
-
-private const val POP_TO_PROFILE = 3
-
-private fun handleBack(userProfileState: UserProfileState, origin: Origin) {
-  if (origin == Origin.AuthenticatorApp) {
-    userProfileState.pop(POP_TO_PROFILE)
-  } else {
-    userProfileState.navigateBack()
   }
 }
 
@@ -239,8 +216,9 @@ internal enum class MfaType {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  PreviewUserProfileStateProvider {
+  ClerkMaterialTheme {
     BackupCodesView(
+      onDismiss = {},
       codes =
         persistentListOf(
           "jsdwz752",
