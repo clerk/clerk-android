@@ -14,7 +14,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.network.model.backupcodes.BackupCodeResource
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
@@ -28,7 +27,7 @@ import kotlinx.serialization.Serializable
 @Composable
 fun UserProfileVerifyBottomSheetContent(
   mode: VerifyBottomSheetMode,
-  onVerified: (BackupCodeResource?) -> Unit,
+  onVerified: (List<String>?) -> Unit,
   onError: (String) -> Unit,
   modifier: Modifier = Modifier,
   onDismiss: () -> Unit,
@@ -46,7 +45,7 @@ fun UserProfileVerifyBottomSheetContent(
 private fun UserProfileVerifyBottomSheetContentImpl(
   mode: VerifyBottomSheetMode,
   onError: (String) -> Unit,
-  onVerified: (BackupCodeResource?) -> Unit,
+  onVerified: (List<String>?) -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfileVerifyViewModel = viewModel(),
   onDismiss: () -> Unit,
@@ -61,16 +60,25 @@ private fun UserProfileVerifyBottomSheetContentImpl(
     prepareCode(mode, viewModel)
   }
 
-  LaunchedEffect(verificationTextState) {
-    if (verificationTextState is UserProfileVerifyViewModel.VerificationTextState.Verified) {
-      (verificationTextState as UserProfileVerifyViewModel.VerificationTextState.Verified)
-        .backupCodes
-        ?.let {} ?: run {}
+  LaunchedEffect(errorMessage) {
+    errorMessage?.let {
       viewModel.resetState()
+      onError(it)
     }
   }
 
-  Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
+  LaunchedEffect(verificationTextState) {
+    if (verificationTextState is UserProfileVerifyViewModel.VerificationTextState.Verified) {
+      val backupCodes =
+        (verificationTextState as UserProfileVerifyViewModel.VerificationTextState.Verified)
+          .backupCodes
+
+      viewModel.resetState()
+      onVerified(backupCodes)
+    }
+  }
+
+  Column(modifier = Modifier.fillMaxWidth().then(modifier).padding(bottom = dp24)) {
     BottomSheetTopBar(title = mode.title(), onClosePressed = onDismiss)
     Spacers.Vertical.Spacer12()
     Text(

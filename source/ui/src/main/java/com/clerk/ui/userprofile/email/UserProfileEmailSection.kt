@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.emailaddress.isPrimary
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
@@ -25,8 +24,9 @@ import kotlinx.collections.immutable.persistentListOf
 fun UserProfileEmailSection(
   emailAddresses: ImmutableList<EmailAddress>,
   onError: (String) -> Unit,
-  modifier: Modifier = Modifier,
   onAddEmailClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  onVerify: (EmailAddress) -> Unit,
 ) {
 
   ClerkMaterialTheme {
@@ -43,9 +43,7 @@ fun UserProfileEmailSection(
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
       Spacers.Vertical.Spacer16()
-      emailAddresses.forEach {
-        UserProfileEmailRow(isPrimary = it.isPrimary, emailAddress = it, onError = onError)
-      }
+      emailAddresses.forEach { UserProfileEmailRow(emailAddress = it, onError = onError, onVerify) }
       UserProfileButtonRow(
         text = stringResource(R.string.add_email_address),
         onClick = onAddEmailClick,
@@ -60,6 +58,7 @@ private fun Preview() {
   UserProfileEmailSection(
     onError = {},
     onAddEmailClick = {},
+    onVerify = {},
     emailAddresses =
       persistentListOf(
         EmailAddress(

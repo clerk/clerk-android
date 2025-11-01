@@ -10,7 +10,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -26,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.user.User
@@ -37,15 +37,10 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
-import com.clerk.ui.userprofile.connectedaccount.UserProfileAddConnectedAccountView
 import com.clerk.ui.userprofile.connectedaccount.UserProfileExternalAccountSection
-import com.clerk.ui.userprofile.email.UserProfileAddEmailView
 import com.clerk.ui.userprofile.email.UserProfileEmailSection
-import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
 import com.clerk.ui.userprofile.phone.UserProfilePhoneSection
 import com.clerk.ui.userprofile.security.UserProfileSecurityFooter
-import com.clerk.ui.userprofile.verify.Mode
-import com.clerk.ui.userprofile.verify.UserProfileVerifyView
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -106,7 +101,13 @@ fun UserProfileDetailViewImpl(
       if (showBottomSheet) {
         UserProfileDetailBottomSheet(
           bottomSheetType = bottomSheetType,
-          onDismissRequest = { showBottomSheet = false },
+          onDismissRequest = {
+            ClerkLog.d("QQQ Dismissing bottom sheet")
+            showBottomSheet = false
+          },
+          onError = { errorMessage ->
+            scope.launch { snackbarHostState.showSnackbar(errorMessage) }
+          },
           onVerify = {
             bottomSheetType = it
             showBottomSheet = true
@@ -140,6 +141,7 @@ private fun ProfileContent(
       emailAddresses = emailAddresses,
       onError = onError,
       onAddEmailClick = { onShowBottomSheet(BottomSheetMode.EmailAddress) },
+      onVerify = { onShowBottomSheet(BottomSheetMode.VerifyEmailAddress(it)) },
     )
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     Spacers.Vertical.Spacer16()
@@ -154,45 +156,6 @@ private fun ProfileContent(
       onError = onError,
       onClickAddAccount = { onShowBottomSheet(BottomSheetMode.ExternalAccount) },
     )
-  }
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun UserProfileDetailBottomSheet(
-  bottomSheetType: BottomSheetMode,
-  onDismissRequest: () -> Unit,
-  onVerify: (BottomSheetMode) -> Unit,
-) {
-  ModalBottomSheet(
-    onDismissRequest = onDismissRequest,
-    containerColor = ClerkMaterialTheme.colors.background,
-  ) {
-    when (bottomSheetType) {
-      BottomSheetMode.ExternalAccount -> {
-        UserProfileAddConnectedAccountView(onBackPressed = onDismissRequest)
-      }
-
-      BottomSheetMode.PhoneNumber -> {
-        UserProfileAddPhoneView(
-          onDismiss = onDismissRequest,
-          onError = {},
-          onVerify = { onVerify(BottomSheetMode.VerifyPhoneNumber(it.phoneNumber)) },
-        )
-      }
-
-      BottomSheetMode.EmailAddress -> {
-        UserProfileAddEmailView(
-          onVerify = { onVerify(BottomSheetMode.VerifyEmailAddress(it.emailAddress)) }
-        )
-      }
-      is BottomSheetMode.VerifyEmailAddress -> {
-        UserProfileVerifyView(mode = Mode.Email(bottomSheetType.emailAddress))
-      }
-      is BottomSheetMode.VerifyPhoneNumber -> {
-        UserProfileVerifyView(mode = Mode.Phone(bottomSheetType.phoneNumber))
-      }
-    }
   }
 }
 

@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.emailaddress.EmailAddress
+import com.clerk.api.emailaddress.isPrimary
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
@@ -30,9 +31,6 @@ import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.UserProfileDestination
-import com.clerk.ui.userprofile.verify.Mode
 import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,13 +38,12 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun UserProfileEmailRow(
   emailAddress: EmailAddress,
   onError: (String) -> Unit,
+  onVerify: (EmailAddress) -> Unit,
   modifier: Modifier = Modifier,
-  isPrimary: Boolean = false,
   viewModel: EmailViewModel = viewModel(),
 ) {
 
   val isPreview = LocalInspectionMode.current
-  val userProfileState = LocalUserProfileState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
   if (state is EmailViewModel.State.Failure) {
     onError((state as EmailViewModel.State.Failure).message)
@@ -56,11 +53,12 @@ internal fun UserProfileEmailRow(
       modifier =
         Modifier.fillMaxWidth()
           .background(ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24, vertical = dp16)
+          .padding(horizontal = dp24)
+          .padding(top = dp16)
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      EmailWithBadge(isPrimary, emailAddress)
+      EmailWithBadge(emailAddress.isPrimary, emailAddress)
       Spacer(modifier = Modifier.weight(1f))
       if (!isPreview) {
         ItemMoreMenu(
@@ -69,8 +67,13 @@ internal fun UserProfileEmailRow(
               DropDownItem(
                 id = EmailAction.SetAsPrimary,
                 text = stringResource(R.string.set_as_primary),
+                isHidden = emailAddress.isPrimary,
               ),
-              DropDownItem(id = EmailAction.Verify, text = stringResource(R.string.verify)),
+              DropDownItem(
+                id = EmailAction.Verify,
+                text = stringResource(R.string.verify),
+                isHidden = emailAddress.verification?.status == Verification.Status.VERIFIED,
+              ),
               DropDownItem(
                 id = EmailAction.Remove,
                 text = stringResource(R.string.remove_email),
@@ -80,10 +83,7 @@ internal fun UserProfileEmailRow(
           onClick = {
             when (it) {
               EmailAction.SetAsPrimary -> viewModel.setAsPrimary(emailAddress)
-              EmailAction.Verify ->
-                userProfileState.navigateTo(
-                  UserProfileDestination.VerifyView(mode = Mode.Email(emailAddress))
-                )
+              EmailAction.Verify -> onVerify(emailAddress)
               EmailAction.Remove -> viewModel.remove(emailAddress)
             }
           },
@@ -97,7 +97,6 @@ internal fun UserProfileEmailRow(
 private fun EmailWithBadge(isPrimary: Boolean, emailAddress: EmailAddress) {
   Column {
     Row(
-      modifier = Modifier.fillMaxWidth(),
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.spacedBy(dp4),
     ) {
@@ -137,8 +136,8 @@ private fun Preview() {
         Modifier.background(color = ClerkMaterialTheme.colors.muted).padding(vertical = dp24)
     ) {
       UserProfileEmailRow(
-        isPrimary = true,
         onError = {},
+        onVerify = {},
         emailAddress =
           EmailAddress(
             id = "123",
@@ -147,8 +146,8 @@ private fun Preview() {
           ),
       )
       UserProfileEmailRow(
-        isPrimary = false,
         onError = {},
+        onVerify = {},
         emailAddress =
           EmailAddress(
             id = "123",
@@ -157,8 +156,8 @@ private fun Preview() {
           ),
       )
       UserProfileEmailRow(
-        isPrimary = false,
         onError = {},
+        onVerify = {},
         emailAddress =
           EmailAddress(
             id = "123",
