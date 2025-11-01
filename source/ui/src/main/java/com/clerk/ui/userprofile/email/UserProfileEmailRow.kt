@@ -1,6 +1,7 @@
 package com.clerk.ui.userprofile.email
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,17 +13,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.emailaddress.EmailAddress
+import com.clerk.api.emailaddress.isPrimary
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
@@ -33,13 +37,13 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun UserProfileEmailRow(
   emailAddress: EmailAddress,
-  onVerify: () -> Unit,
   onError: (String) -> Unit,
+  onVerify: (EmailAddress) -> Unit,
   modifier: Modifier = Modifier,
-  isPrimary: Boolean = false,
   viewModel: EmailViewModel = viewModel(),
 ) {
 
+  val isPreview = LocalInspectionMode.current
   val state by viewModel.state.collectAsStateWithLifecycle()
   if (state is EmailViewModel.State.Failure) {
     onError((state as EmailViewModel.State.Failure).message)
@@ -49,53 +53,71 @@ internal fun UserProfileEmailRow(
       modifier =
         Modifier.fillMaxWidth()
           .background(ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24, vertical = dp16)
+          .padding(horizontal = dp24)
+          .padding(top = dp16)
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      Column {
-        if (isPrimary) {
-          Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
-          Spacers.Vertical.Spacer4()
-        }
-        if (emailAddress.verification?.status != Verification.Status.VERIFIED) {
-          Badge(text = stringResource(R.string.unverified), badgeType = ClerkBadgeType.Warning)
-          Spacers.Vertical.Spacer4()
-        }
-        if (emailAddress.linkedTo?.isNotEmpty() == true) {
-          Badge(text = stringResource(R.string.linked), badgeType = ClerkBadgeType.Secondary)
-          Spacers.Vertical.Spacer4()
-        }
-        Text(
-          text = emailAddress.emailAddress,
-          style = ClerkMaterialTheme.typography.bodyLarge,
-          color = ClerkMaterialTheme.colors.foreground,
+      EmailWithBadge(emailAddress.isPrimary, emailAddress)
+      Spacer(modifier = Modifier.weight(1f))
+      if (!isPreview) {
+        ItemMoreMenu(
+          dropDownItems =
+            persistentListOf(
+              DropDownItem(
+                id = EmailAction.SetAsPrimary,
+                text = stringResource(R.string.set_as_primary),
+                isHidden = emailAddress.isPrimary,
+              ),
+              DropDownItem(
+                id = EmailAction.Verify,
+                text = stringResource(R.string.verify),
+                isHidden = emailAddress.verification?.status == Verification.Status.VERIFIED,
+              ),
+              DropDownItem(
+                id = EmailAction.Remove,
+                text = stringResource(R.string.remove_email),
+                danger = true,
+              ),
+            ),
+          onClick = {
+            when (it) {
+              EmailAction.SetAsPrimary -> viewModel.setAsPrimary(emailAddress)
+              EmailAction.Verify -> onVerify(emailAddress)
+              EmailAction.Remove -> viewModel.remove(emailAddress)
+            }
+          },
         )
       }
-      Spacer(modifier = Modifier.weight(1f))
-      ItemMoreMenu(
-        dropDownItems =
-          persistentListOf(
-            DropDownItem(
-              id = EmailAction.SetAsPrimary,
-              text = stringResource(R.string.set_as_primary),
-            ),
-            DropDownItem(id = EmailAction.Verify, text = stringResource(R.string.verify)),
-            DropDownItem(
-              id = EmailAction.Remove,
-              text = stringResource(R.string.remove_email),
-              danger = true,
-            ),
-          ),
-        onClick = {
-          when (it) {
-            EmailAction.SetAsPrimary -> viewModel.setAsPrimary(emailAddress)
-            EmailAction.Verify -> onVerify()
-            EmailAction.Remove -> viewModel.remove(emailAddress)
-          }
-        },
-      )
     }
+  }
+}
+
+@Composable
+private fun EmailWithBadge(isPrimary: Boolean, emailAddress: EmailAddress) {
+  Column {
+    Row(
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(dp4),
+    ) {
+      if (isPrimary) {
+        Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
+        Spacers.Vertical.Spacer4()
+      }
+      if (emailAddress.verification?.status != Verification.Status.VERIFIED) {
+        Badge(text = stringResource(R.string.unverified), badgeType = ClerkBadgeType.Warning)
+        Spacers.Vertical.Spacer4()
+      }
+      if (emailAddress.linkedTo?.isNotEmpty() == true) {
+        Badge(text = stringResource(R.string.linked), badgeType = ClerkBadgeType.Secondary)
+        Spacers.Vertical.Spacer4()
+      }
+    }
+    Text(
+      text = emailAddress.emailAddress,
+      style = ClerkMaterialTheme.typography.bodyLarge,
+      color = ClerkMaterialTheme.colors.foreground,
+    )
   }
 }
 
@@ -114,7 +136,6 @@ private fun Preview() {
         Modifier.background(color = ClerkMaterialTheme.colors.muted).padding(vertical = dp24)
     ) {
       UserProfileEmailRow(
-        isPrimary = true,
         onError = {},
         onVerify = {},
         emailAddress =
@@ -125,7 +146,6 @@ private fun Preview() {
           ),
       )
       UserProfileEmailRow(
-        isPrimary = false,
         onError = {},
         onVerify = {},
         emailAddress =
@@ -136,7 +156,6 @@ private fun Preview() {
           ),
       )
       UserProfileEmailRow(
-        isPrimary = false,
         onError = {},
         onVerify = {},
         emailAddress =

@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -25,6 +24,7 @@ import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -107,7 +107,7 @@ private fun AvatarHeaderView(
       userFullName?.let {
         Text(
           text = it,
-          style = ClerkMaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
+          style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
           color = ClerkMaterialTheme.colors.foreground,
         )
       }

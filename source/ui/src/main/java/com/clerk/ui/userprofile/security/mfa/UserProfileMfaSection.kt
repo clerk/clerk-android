@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
@@ -17,6 +16,7 @@ import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
@@ -52,7 +52,7 @@ private fun UserProfileMfaSectionImpl(
         modifier = Modifier.padding(horizontal = dp24),
         text = stringResource(R.string.two_step_verification).uppercase(),
         color = ClerkMaterialTheme.colors.mutedForeground,
-        style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+        style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
       )
       if (mfaItems.isNotEmpty()) {
         Spacers.Vertical.Spacer24()

@@ -6,7 +6,7 @@ import androidx.navigation3.runtime.NavKey
  * Represents the state of a component that can handle navigation actions. Provides a standardized
  * way to interact with a navigation controller.
  */
-internal interface NavigableState {
+internal interface NavigableState<T> {
   /**
    * Navigates to the specified destination.
    *
@@ -35,4 +35,14 @@ internal interface NavigableState {
    * and can be more intuitive for developers familiar with stack-based navigation.
    */
   fun pop(numberOfScreens: Int)
+
+  /**
+   * Pops the navigation back stack up to a specific destination.
+   *
+   * This function removes all destinations from the top of the back stack until the specified
+   * [destination] is reached. The specified [destination] itself is not popped.
+   *
+   * @param destination The [NavKey] of the destination to pop up to.
+   */
+  fun popTo(destination: T)
 }

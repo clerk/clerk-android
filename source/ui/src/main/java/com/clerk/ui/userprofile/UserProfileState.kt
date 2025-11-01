@@ -9,7 +9,8 @@ import com.clerk.ui.core.common.NavigableState
 import com.clerk.ui.core.navigation.pop
 
 @Stable
-internal class UserProfileState(val backStack: NavBackStack<NavKey>) : NavigableState {
+internal class UserProfileState(val backStack: NavBackStack<NavKey>) :
+  NavigableState<UserProfileDestination> {
   override fun navigateTo(destination: NavKey) {
     backStack.add(destination)
   }
@@ -24,6 +25,16 @@ internal class UserProfileState(val backStack: NavBackStack<NavKey>) : Navigable
 
   override fun pop(numberOfScreens: Int) {
     backStack.pop(numberOfScreens)
+  }
+
+  override fun popTo(destination: UserProfileDestination) {
+    val targetIndex = backStack.indexOfLast { it == destination }
+    if (targetIndex == -1) return // Not found → no-op
+
+    val toPop = (backStack.size - 1) - targetIndex
+    if (toPop > 0) {
+      backStack.pop(toPop) // non-inclusive: leaves `destination` on top
+    }
   }
 }
 

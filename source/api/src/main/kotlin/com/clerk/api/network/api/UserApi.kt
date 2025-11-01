@@ -468,7 +468,8 @@ internal interface UserApi {
    */
   @DELETE(ApiPaths.User.ExternalAccount.WITH_ID)
   suspend fun deleteExternalAccount(
-    @Path(ApiParams.EXTERNAL_ACCOUNT_ID) externalAccountId: String
+    @Path(ApiParams.EXTERNAL_ACCOUNT_ID) externalAccountId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   /**

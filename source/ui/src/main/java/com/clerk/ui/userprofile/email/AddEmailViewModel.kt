@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.email
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -23,10 +24,14 @@ internal class AddEmailViewModel : ViewModel() {
       viewModelScope.launch(Dispatchers.IO) {
         user
           .createEmailAddress(email)
-          .onSuccess { _state.value = State.Success }
+          .onSuccess { _state.value = State.Success(it) }
           .onFailure { _state.value = State.Error(it.errorMessage) }
       }
     }
+  }
+
+  fun resetState() {
+    _state.value = State.Idle
   }
 
   sealed interface State {
@@ -34,7 +39,7 @@ internal class AddEmailViewModel : ViewModel() {
 
     data object Loading : State
 
-    data object Success : State
+    data class Success(val emailAddress: EmailAddress) : State
 
     data class Error(val message: String?) : State
   }

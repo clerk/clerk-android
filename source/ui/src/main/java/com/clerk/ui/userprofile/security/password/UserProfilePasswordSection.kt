@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
@@ -21,6 +20,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp32
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
@@ -50,7 +50,7 @@ internal fun UserProfilePasswordSectionImpl(
         modifier = Modifier.padding(horizontal = dp24).then(modifier),
         text = stringResource(R.string.password).uppercase(),
         color = ClerkMaterialTheme.colors.mutedForeground,
-        style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+        style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
       )
       if (isPasswordEnabled) {
         Row(

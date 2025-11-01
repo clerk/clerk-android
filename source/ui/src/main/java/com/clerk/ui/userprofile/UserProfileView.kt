@@ -12,10 +12,9 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
+import com.clerk.ui.userprofile.detail.UserProfileDetailView
 import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
 import com.clerk.ui.userprofile.mfa.ViewType
-import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
-import com.clerk.ui.userprofile.security.BackupCodesView
 import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.Origin
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
@@ -26,7 +25,6 @@ import com.clerk.ui.userprofile.security.password.UserProfileNewPasswordView
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
 import com.clerk.ui.userprofile.verify.Mode
 import com.clerk.ui.userprofile.verify.UserProfileVerifyView
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
 
 @SuppressLint("ComposeCompositionLocalUsage")
@@ -56,7 +54,8 @@ fun UserProfileView(modifier: Modifier = Modifier) {
             UserProfileAccountView(
               onClick = {
                 when (it) {
-                  UserProfileAction.Profile -> TODO()
+                  UserProfileAction.Profile ->
+                    backStack.add(UserProfileDestination.UserProfileDetail)
                   UserProfileAction.Security ->
                     backStack.add(UserProfileDestination.UserProfileSecurity)
                 }
@@ -84,12 +83,10 @@ fun UserProfileView(modifier: Modifier = Modifier) {
           entry<UserProfileDestination.AddMfaView> { key ->
             UserProfileAddMfaView(viewType = key.viewType)
           }
-          entry<UserProfileDestination.AddPhoneView> { key -> UserProfileAddPhoneView() }
 
           entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
-          entry<UserProfileDestination.BackupCodeView> { key ->
-            BackupCodesView(origin = key.origin, codes = key.codes.toImmutableList())
-          }
+
+          entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
         },
     )
   }
@@ -127,4 +124,8 @@ internal object UserProfileDestination {
     val mfaType: MfaType = MfaType.BackupCodes,
     val codes: List<String>,
   ) : NavKey
+
+  @Serializable data object UserProfileDetail : NavKey
+
+  @Serializable data object AddEmail : NavKey
 }

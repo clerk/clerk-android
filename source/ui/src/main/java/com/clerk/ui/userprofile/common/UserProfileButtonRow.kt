@@ -10,12 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
@@ -24,8 +24,7 @@ fun UserProfileButtonRow(
   text: String,
   modifier: Modifier = Modifier,
   textColor: Color = ClerkMaterialTheme.colors.primary,
-  textStyle: TextStyle =
-    ClerkMaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+  textStyle: TextStyle = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
   onClick: () -> Unit,
 ) {
 

@@ -11,7 +11,18 @@ import com.clerk.automap.annotations.AutoMap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** The EmailAddress object represents an email address associated with a user. */
+/**
+ * The EmailAddress object represents an email address associated with a user.
+ *
+ * This class provides methods to create, retrieve, verify, and delete email addresses.
+ *
+ * @param id The unique identifier for the email address.
+ * @param emailAddress The email address value.
+ * @param verification The verification status of the email address.
+ * @param linkedTo A list of linked accounts or identifiers associated with this email address.
+ * @param createdAt The creation timestamp of the email address, as a Unix timestamp in
+ *   milliseconds.
+ */
 @Serializable
 data class EmailAddress(
   /** The unique identifier for the email address. */
@@ -25,6 +36,9 @@ data class EmailAddress(
 
   /** A list of linked accounts or identifiers associated with this email address. */
   @SerialName("linked_to") val linkedTo: List<LinkedEntity>? = null,
+
+  /** Created at timestamp */
+  @SerialName("created_at") val createdAt: Long? = null,
 ) {
 
   @Serializable data class LinkedEntity(val id: String, val type: String)

@@ -3,7 +3,10 @@ package com.clerk.ui.userprofile.connectedaccount
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.externalaccount.ExternalAccount
+import com.clerk.api.externalaccount.delete
 import com.clerk.api.externalaccount.reauthorize
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.onFailure
@@ -57,6 +60,22 @@ internal class AddConnectedAccountViewModel : ViewModel() {
       .onFailure { withContext(Dispatchers.Main) { _state.value = State.Error(it.errorMessage) } }
   }
 
+  fun removeConnectedAccount(externalAccount: ExternalAccount) {
+    viewModelScope.launch {
+      externalAccount
+        .delete()
+        .onSuccess { _state.value = State.ConnectedAccountRemoved }
+        .onFailure {
+          ClerkLog.e("Failed to remove connected account: ${it.errorMessage}")
+          _state.value = State.Error(it.errorMessage)
+        }
+    }
+  }
+
+  fun resetState() {
+    _state.value = State.Idle
+  }
+
   sealed interface State {
     data object Idle : State
 
@@ -65,5 +84,7 @@ internal class AddConnectedAccountViewModel : ViewModel() {
     data object Success : State
 
     data class Error(val message: String?) : State
+
+    data object ConnectedAccountRemoved : State
   }
 }

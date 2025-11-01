@@ -10,7 +10,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,6 +18,7 @@ import com.clerk.api.passkeys.Passkey
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
@@ -61,7 +61,7 @@ private fun UserProfilePasskeySectionImpl(
       Text(
         modifier = Modifier.padding(horizontal = dp24),
         text = stringResource(R.string.passkeys).uppercase(),
-        style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+        style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
       if (passkeys.isNotEmpty()) {
