@@ -25,7 +25,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.user.User
@@ -101,15 +100,16 @@ fun UserProfileDetailViewImpl(
       if (showBottomSheet) {
         UserProfileDetailBottomSheet(
           bottomSheetType = bottomSheetType,
-          onDismissRequest = {
-            ClerkLog.d("QQQ Dismissing bottom sheet")
-            showBottomSheet = false
-          },
+          onDismissRequest = { showBottomSheet = false },
           onError = { errorMessage ->
             scope.launch { snackbarHostState.showSnackbar(errorMessage) }
           },
           onVerify = {
             bottomSheetType = it
+            showBottomSheet = true
+          },
+          onShowBackupCodes = {
+            bottomSheetType = BottomSheetMode.BackupCodes(it)
             showBottomSheet = true
           },
         )
@@ -171,6 +171,8 @@ sealed interface BottomSheetMode {
 
   data class VerifyPhoneNumber(val phoneNumber: com.clerk.api.phonenumber.PhoneNumber) :
     BottomSheetMode
+
+  data class BackupCodes(val backupCodes: List<String>) : BottomSheetMode
 }
 
 @PreviewLightDark

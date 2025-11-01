@@ -6,13 +6,14 @@ import androidx.compose.runtime.Composable
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.connectedaccount.UserProfileAddConnectedAccountView
 import com.clerk.ui.userprofile.email.UserProfileAddEmailView
 import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
+import com.clerk.ui.userprofile.security.BackupCodesView
 import com.clerk.ui.userprofile.verify.UserProfileVerifyBottomSheetContent
 import com.clerk.ui.userprofile.verify.VerifyBottomSheetMode
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -21,6 +22,7 @@ internal fun UserProfileDetailBottomSheet(
   onDismissRequest: () -> Unit,
   onVerify: (BottomSheetMode) -> Unit,
   onError: (String) -> Unit,
+  onShowBackupCodes: (List<String>) -> Unit,
 ) {
   ModalBottomSheet(
     onDismissRequest = onDismissRequest,
@@ -31,6 +33,7 @@ internal fun UserProfileDetailBottomSheet(
       onDismissRequest = onDismissRequest,
       onVerify = onVerify,
       onError = onError,
+      onShowBackupCodes = onShowBackupCodes,
     )
   }
 }
@@ -41,21 +44,33 @@ private fun BottomSheetContent(
   onDismissRequest: () -> Unit,
   onVerify: (BottomSheetMode) -> Unit,
   onError: (String) -> Unit,
+  onShowBackupCodes: (List<String>) -> Unit,
 ) {
   when (bottomSheetType) {
     BottomSheetMode.ExternalAccount -> ExternalAccountSheet(onDismissRequest)
     BottomSheetMode.PhoneNumber -> PhoneNumberSheet(onDismissRequest, onError, onVerify)
     BottomSheetMode.EmailAddress -> EmailAddressSheet(onDismissRequest, onError, onVerify)
     is BottomSheetMode.VerifyEmailAddress ->
-      VerifyEmailSheet(bottomSheetType.emailAddress, onDismissRequest, onError)
+      VerifyEmailSheet(bottomSheetType.emailAddress, onDismissRequest, onError, onShowBackupCodes)
     is BottomSheetMode.VerifyPhoneNumber ->
-      VerifyPhoneSheet(bottomSheetType.phoneNumber, onDismissRequest, onError)
+      VerifyPhoneSheet(bottomSheetType.phoneNumber, onDismissRequest, onError, onShowBackupCodes)
+
+    is BottomSheetMode.BackupCodes ->
+      BackupCodesSheet(
+        codes = bottomSheetType.backupCodes.toImmutableList(),
+        onDismiss = onDismissRequest,
+      )
   }
 }
 
 @Composable
 private fun ExternalAccountSheet(onDismiss: () -> Unit) {
   UserProfileAddConnectedAccountView(onBackPressed = onDismiss)
+}
+
+@Composable
+private fun BackupCodesSheet(codes: ImmutableList<String>, onDismiss: () -> Unit) {
+  BackupCodesView(codes = codes, onDismiss = onDismiss)
 }
 
 @Composable
@@ -89,23 +104,39 @@ private fun VerifyEmailSheet(
   email: EmailAddress,
   onDismiss: () -> Unit,
   onError: (String) -> Unit,
+  onShowBackupCodes: (List<String>) -> Unit,
 ) {
-  val userProfileState = LocalUserProfileState.current
   UserProfileVerifyBottomSheetContent(
     mode = VerifyBottomSheetMode.Email(email),
     onError = onError,
-    onVerified = { backupCodes -> handleVerified(backupCodes, onDismiss, userProfileState) },
+    onVerified = { backupCodes ->
+      handleVerified(
+        backupCodes = backupCodes,
+        onDismiss = onDismiss,
+        onShowBackupCodes = onShowBackupCodes,
+      )
+    },
     onDismiss = onDismiss,
   )
 }
 
 @Composable
-private fun VerifyPhoneSheet(phone: PhoneNumber, onDismiss: () -> Unit, onError: (String) -> Unit) {
-  val userProfileState = LocalUserProfileState.current
+private fun VerifyPhoneSheet(
+  phone: PhoneNumber,
+  onDismiss: () -> Unit,
+  onError: (String) -> Unit,
+  onShowBackupCodes: (List<String>) -> Unit,
+) {
   UserProfileVerifyBottomSheetContent(
     mode = VerifyBottomSheetMode.Phone(phone),
     onError = onError,
-    onVerified = { backupCodes -> handleVerified(backupCodes, onDismiss, userProfileState) },
+    onVerified = { backupCodes ->
+      handleVerified(
+        backupCodes = backupCodes,
+        onDismiss = onDismiss,
+        onShowBackupCodes = onShowBackupCodes,
+      )
+    },
     onDismiss = onDismiss,
   )
 }
@@ -113,11 +144,11 @@ private fun VerifyPhoneSheet(phone: PhoneNumber, onDismiss: () -> Unit, onError:
 private fun handleVerified(
   backupCodes: List<String>?,
   onDismiss: () -> Unit,
-  userProfileState: com.clerk.ui.userprofile.UserProfileState,
+  onShowBackupCodes: (List<String>) -> Unit,
 ) {
   if (backupCodes == null) {
     onDismiss()
   } else {
-    userProfileState.navigateTo(UserProfileDestination.BackupCodeView(codes = backupCodes))
+    onShowBackupCodes(backupCodes)
   }
 }
