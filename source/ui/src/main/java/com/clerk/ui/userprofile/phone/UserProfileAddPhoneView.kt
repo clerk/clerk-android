@@ -55,15 +55,17 @@ private fun UserProfileAddPhoneViewImpl(
   val state by viewModel.state.collectAsStateWithLifecycle()
   val errorMessage = (state as? UserProfileAddPhoneViewModel.State.Error)?.message
 
-  if (state is UserProfileAddPhoneViewModel.State.Error && errorMessage != null) {
-    LaunchedEffect(errorMessage) { onError(errorMessage) }
-  }
-  if (state is UserProfileAddPhoneViewModel.State.Success) {
-    LaunchedEffect(state) {
+  LaunchedEffect(state) {
+    if (state is UserProfileAddPhoneViewModel.State.Error && errorMessage != null) {
+      onError(errorMessage)
+    }
+    if (state is UserProfileAddPhoneViewModel.State.Success) {
       val phoneNumber = (state as UserProfileAddPhoneViewModel.State.Success).phoneNumber
       onVerify(Mode.Phone(phoneNumber))
     }
+    viewModel.resetState()
   }
+
   Column(modifier = Modifier.fillMaxWidth().padding(bottom = dp24).then(modifier)) {
     BottomSheetTopBar(
       title = stringResource(R.string.add_email_address),

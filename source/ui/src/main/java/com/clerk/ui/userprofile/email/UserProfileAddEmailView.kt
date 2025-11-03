@@ -66,9 +66,9 @@ private fun UserProfileAddEmailViewImpl(
       val errorMessage = (state as AddEmailViewModel.State.Error).message
       if (errorMessage != null) {
         onError(errorMessage)
-        viewModel.resetState()
       }
     }
+    viewModel.resetState()
   }
 
   Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
