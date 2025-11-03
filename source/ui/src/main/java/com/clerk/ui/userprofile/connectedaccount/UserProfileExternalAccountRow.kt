@@ -3,12 +3,15 @@ package com.clerk.ui.userprofile.connectedaccount
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,9 +28,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.oauthProviderType
+import com.clerk.api.network.model.error.Error
+import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.logoUrl
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp16
+import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
@@ -117,18 +124,75 @@ private fun EmailWithAccountBadge(externalAccount: ExternalAccount) {
         style = ClerkMaterialTheme.typography.bodyMedium,
       )
     }
-    Spacers.Vertical.Spacer4()
-    Text(
-      text = externalAccount.emailAddress,
-      color = ClerkMaterialTheme.colors.foreground,
-      style = ClerkMaterialTheme.typography.bodyLarge,
-    )
+    Spacers.Vertical.Spacer8()
+    if (externalAccount.verification?.error != null) {
+      Row(horizontalArrangement = Arrangement.spacedBy(dp8)) {
+        Box(
+          modifier =
+            Modifier.size(dp20)
+              .background(
+                color = ClerkMaterialTheme.computedColors.backgroundDanger,
+                shape = RoundedCornerShape(dp2),
+              ),
+          contentAlignment = Alignment.Center,
+        ) {
+          Icon(
+            modifier = Modifier.size(dp16),
+            painter = painterResource(R.drawable.ic_warning),
+            contentDescription = null,
+            tint = ClerkMaterialTheme.colors.warning,
+          )
+        }
+        externalAccount.verification?.error?.message?.let {
+          Text(
+            text = it,
+            color = ClerkMaterialTheme.colors.danger,
+            style = ClerkMaterialTheme.typography.bodyMedium,
+          )
+        }
+      }
+    } else {
+      Text(
+        text = externalAccount.emailAddress,
+        color = ClerkMaterialTheme.colors.foreground,
+        style = ClerkMaterialTheme.typography.bodyLarge,
+      )
+    }
   }
 }
 
 enum class ExternalAccountAction {
   Reconnect,
   Remove,
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewWithError() {
+  ClerkMaterialTheme {
+    UserProfileExternalAccountRow(
+      onError = {},
+      externalAccount =
+        ExternalAccount(
+          id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
+          identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
+          provider = "oauth_google",
+          providerUserId = "102662613248529322762",
+          emailAddress = "sam@clerk.dev",
+          approvedScopes =
+            "email https://www.googleapis.com/auth/userinfo.email" +
+              " https://www.googleapis.com/auth/userinfo.profile openid profile",
+          createdAt = 1L,
+          verification =
+            Verification(
+              error =
+                Error(
+                  "This email address associated with this OAuth account is already claimed by another user."
+                )
+            ),
+        ),
+    )
+  }
 }
 
 @PreviewLightDark
