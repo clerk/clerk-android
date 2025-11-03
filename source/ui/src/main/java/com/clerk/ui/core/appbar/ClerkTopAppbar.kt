@@ -20,11 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.OrganizationAvatar
 import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
@@ -65,7 +65,7 @@ fun ClerkTopAppBar(
         title?.let {
           Text(
             text = it,
-            style = ClerkMaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
+            style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
             color = ClerkMaterialTheme.colors.foreground,
           )
         }

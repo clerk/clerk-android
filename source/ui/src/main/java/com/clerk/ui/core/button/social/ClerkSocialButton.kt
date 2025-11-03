@@ -5,6 +5,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -44,6 +45,7 @@ import com.clerk.ui.core.dimens.dp3
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.extensions.withDarkVariant
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
 
@@ -229,7 +231,7 @@ private fun SocialButtonIcon(
 ) {
   val mutedForeground = ClerkMaterialTheme.colors.mutedForeground
 
-  val model = provider.logoUrl?.takeUnless { it.isBlank() }
+  val model = provider.logoUrl?.takeUnless { it.isBlank() }?.withDarkVariant(isSystemInDarkTheme())
 
   val fallbackPainter =
     if (provider == OAuthProvider.GOOGLE) painterResource(R.drawable.ic_google)

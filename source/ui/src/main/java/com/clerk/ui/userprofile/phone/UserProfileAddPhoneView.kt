@@ -1,6 +1,11 @@
 package com.clerk.ui.userprofile.phone
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,52 +22,65 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkPhoneNumberField
-import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
-import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
-import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import com.clerk.ui.userprofile.verify.Mode
 
 @Composable
-internal fun UserProfileAddPhoneView(modifier: Modifier = Modifier) {
-  UserProfileAddPhoneViewImpl(modifier = modifier)
+internal fun UserProfileAddPhoneView(
+  onError: (String) -> Unit,
+  onVerify: (Mode.Phone) -> Unit,
+  modifier: Modifier = Modifier,
+  onDismiss: () -> Unit,
+) {
+  UserProfileAddPhoneViewImpl(
+    modifier = modifier,
+    onError = onError,
+    onVerify = onVerify,
+    onDismiss = onDismiss,
+  )
 }
 
 @Composable
 private fun UserProfileAddPhoneViewImpl(
+  onError: (String) -> Unit,
+  onVerify: (Mode.Phone) -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfileAddPhoneViewModel = viewModel(),
+  onDismiss: () -> Unit,
 ) {
-  val userProfileState = LocalUserProfileState.current
   var phoneNumber by rememberSaveable { mutableStateOf("") }
   val state by viewModel.state.collectAsStateWithLifecycle()
   val errorMessage = (state as? UserProfileAddPhoneViewModel.State.Error)?.message
-  if (state is UserProfileAddPhoneViewModel.State.Success) {
-    LaunchedEffect(state) {
-      userProfileState.navigateTo(
-        UserProfileDestination.VerifyView(
-          mode = Mode.Phone((state as UserProfileAddPhoneViewModel.State.Success).phoneNumber)
-        )
-      )
+
+  LaunchedEffect(state) {
+    if (state is UserProfileAddPhoneViewModel.State.Error && errorMessage != null) {
+      onError(errorMessage)
     }
+    if (state is UserProfileAddPhoneViewModel.State.Success) {
+      val phoneNumber = (state as UserProfileAddPhoneViewModel.State.Success).phoneNumber
+      onVerify(Mode.Phone(phoneNumber))
+    }
+    viewModel.resetState()
   }
 
-  ClerkThemedProfileScaffold(
-    modifier = modifier,
-    title = stringResource(R.string.add_phone_number),
-    errorMessage = errorMessage,
-    content = {
+  Column(modifier = Modifier.fillMaxWidth().padding(bottom = dp24).then(modifier)) {
+    BottomSheetTopBar(
+      title = stringResource(R.string.add_email_address),
+      onClosePressed = onDismiss,
+    )
+    Column(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = dp24),
+      verticalArrangement = Arrangement.spacedBy(dp24),
+    ) {
       Text(
         text = stringResource(R.string.a_text_message_containing_a_verification_code_will_be_sent),
         style = ClerkMaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
-      Spacers.Vertical.Spacer24()
       ClerkPhoneNumberField(value = phoneNumber, onValueChange = { phoneNumber = it })
-      Spacers.Vertical.Spacer24()
       ClerkButton(
         modifier = Modifier.fillMaxWidth(),
         text = stringResource(R.string.continue_text),
@@ -74,12 +92,17 @@ private fun UserProfileAddPhoneViewImpl(
             trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
           ),
       )
-    },
-  )
+    }
+  }
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  PreviewUserProfileStateProvider { UserProfileAddPhoneViewImpl() }
+
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
+      UserProfileAddPhoneViewImpl(onError = {}, onVerify = {}, onDismiss = {})
+    }
+  }
 }

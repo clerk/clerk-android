@@ -58,6 +58,7 @@ data class ExternalAccount(
 
   /** An object holding information on the verification of this external account. */
   val verification: Verification? = null,
+  @SerialName("created_at") val createdAt: Long,
 )
 
 /**

@@ -9,13 +9,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionActivity
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -47,7 +47,7 @@ private fun UserProfileDevicesSectionImpl(
           modifier = Modifier.padding(horizontal = dp24).then(modifier),
           text = stringResource(R.string.active_devices).uppercase(),
           color = ClerkMaterialTheme.colors.mutedForeground,
-          style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+          style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
         )
         Spacers.Vertical.Spacer16()
         Column(modifier = Modifier.fillMaxWidth()) {

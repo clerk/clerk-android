@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 
@@ -29,7 +30,7 @@ fun UserProfileDeleteAccountSection(modifier: Modifier = Modifier, onDeleteAccou
       Text(
         modifier = Modifier.padding(horizontal = dp24),
         text = stringResource(R.string.account).uppercase(),
-        style = ClerkMaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+        style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
       UserProfileButtonRow(

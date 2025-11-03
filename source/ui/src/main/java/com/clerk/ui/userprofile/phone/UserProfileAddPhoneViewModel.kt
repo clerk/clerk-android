@@ -7,7 +7,10 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.phonenumber.delete
+import com.clerk.api.user.User
 import com.clerk.api.user.createPhoneNumber
+import com.clerk.api.user.update
 import com.clerk.ui.core.common.guardUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +41,33 @@ class UserProfileAddPhoneViewModel : ViewModel() {
     }
   }
 
+  fun setAsPrimary(phoneNumber: PhoneNumber) {
+    guardUser({ _state.value = State.Error("User does not exist") }) { user ->
+      viewModelScope.launch {
+        user
+          .update(User.UpdateParams(primaryPhoneNumberId = phoneNumber.id))
+          .onSuccess { _state.value = State.SetPhoneAsPrimarySuccess }
+          .onFailure {
+            ClerkLog.e("Failed to update primary phone ")
+            _state.value = State.Error(it.errorMessage)
+          }
+      }
+    }
+  }
+
+  fun deletePhoneNumber(phoneNumber: PhoneNumber) {
+    viewModelScope.launch {
+      phoneNumber
+        .delete()
+        .onSuccess { _state.value = State.DeletedPhoneNumber }
+        .onFailure { _state.value = State.Error(it.errorMessage) }
+    }
+  }
+
+  fun resetState() {
+    _state.value = State.Idle
+  }
+
   sealed interface State {
     data object Idle : State
 
@@ -46,5 +76,9 @@ class UserProfileAddPhoneViewModel : ViewModel() {
     data class Error(val message: String?) : State
 
     data class Success(val phoneNumber: PhoneNumber) : State
+
+    data object SetPhoneAsPrimarySuccess : State
+
+    data object DeletedPhoneNumber : State
   }
 }
