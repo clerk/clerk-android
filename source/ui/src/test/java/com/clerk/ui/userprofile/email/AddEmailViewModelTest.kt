@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.email
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
+import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
@@ -44,14 +45,22 @@ class AddEmailViewModelTest {
   fun addEmail_success_emitsSuccessState() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
-    coEvery { user.createEmailAddress("user@example.com") } returns ClerkResult.success(mockk())
+    val emailAddress =
+      EmailAddress(
+        id = "email_id",
+        emailAddress = "user@example.com",
+        verification = null,
+        linkedTo = null,
+      )
+    coEvery { user.createEmailAddress("user@example.com") } returns
+      ClerkResult.success(emailAddress)
 
     val viewModel = AddEmailViewModel()
     viewModel.state.test {
       assertEquals(AddEmailViewModel.State.Idle, awaitItem())
       viewModel.addEmail("user@example.com")
       assertEquals(AddEmailViewModel.State.Loading, awaitItem())
-      assertEquals(AddEmailViewModel.State.Success, awaitItem())
+      assertEquals(AddEmailViewModel.State.Success(emailAddress), awaitItem())
     }
   }
 
