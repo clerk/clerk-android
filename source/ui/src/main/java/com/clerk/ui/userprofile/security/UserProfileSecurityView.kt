@@ -45,6 +45,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.account.UserProfileDeleteAccountConfirmationView
 import com.clerk.ui.userprofile.mfa.UserProfileAddMfaBottomSheetContent
+import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
@@ -120,8 +121,8 @@ private fun UserProfileSecurityMainContent(
 ) {
   val userProfileState = LocalUserProfileState.current
   val coroutineScope = rememberCoroutineScope()
-  var showAddMfaSheet by remember { mutableStateOf(false) }
-  var showDeleteAccountBottomSheet by remember { mutableStateOf(false) }
+  var showBottomSheet by remember { mutableStateOf(false) }
+  var currentSheetType by remember { mutableStateOf<BottomSheetType>(BottomSheetType.Password) }
   val context = LocalContext.current
   Scaffold(
     containerColor = ClerkMaterialTheme.colors.muted,
@@ -147,8 +148,14 @@ private fun UserProfileSecurityMainContent(
           sessions = sessions,
           isDeleteSelfEnabled = isDeleteSelfEnabled,
         ),
-      onAdd = { showAddMfaSheet = true },
-      onClickDeleteAccount = { showDeleteAccountBottomSheet = true },
+      onAdd = {
+        showBottomSheet = true
+        currentSheetType = BottomSheetType.ChooseMfa
+      },
+      onClickDeleteAccount = {
+        showBottomSheet = true
+        currentSheetType = BottomSheetType.DeleteAccount
+      },
       onError = { message ->
         coroutineScope.launch {
           snackbarHostState.showSnackbar(
@@ -158,10 +165,14 @@ private fun UserProfileSecurityMainContent(
       },
     )
     BottomSheetContent(
-      showMfaBottomSheet = showAddMfaSheet,
-      showDeleteAccountBottomSheet = showDeleteAccountBottomSheet,
-      onDismissMfa = { showAddMfaSheet = false },
-      onDismissDelete = { showDeleteAccountBottomSheet = false },
+      showBottomSheet = showBottomSheet,
+      currentSheetType = currentSheetType,
+      onDismissMfa = { showBottomSheet = false },
+      onDismissDelete = { showBottomSheet = false },
+      onClickMfaType = {
+        showBottomSheet = false
+        currentSheetType = BottomSheetType.AddMfa(it)
+      },
       onError = { message ->
         coroutineScope.launch {
           snackbarHostState.showSnackbar(
@@ -226,14 +237,15 @@ internal fun UserProfileSecurityFooter() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomSheetContent(
-  showMfaBottomSheet: Boolean,
-  showDeleteAccountBottomSheet: Boolean,
+  onClickMfaType: (ViewType) -> Unit,
+  showBottomSheet: Boolean,
+  currentSheetType: BottomSheetType,
   onDismissMfa: () -> Unit,
   onDismissDelete: () -> Unit,
   onError: (String?) -> Unit,
 ) {
   val sheetState = rememberModalBottomSheetState()
-  if (showMfaBottomSheet || showDeleteAccountBottomSheet) {
+  if (showBottomSheet) {
     ModalBottomSheet(
       shape = RoundedCornerShape(topEnd = dp10, topStart = dp10),
       containerColor = ClerkMaterialTheme.colors.background,
@@ -244,14 +256,19 @@ private fun BottomSheetContent(
         onDismissDelete()
       },
     ) {
-      if (showMfaBottomSheet) {
-        UserProfileAddMfaBottomSheetContent(
-          mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
-          mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
-        )
-      }
-      if (showDeleteAccountBottomSheet) {
-        UserProfileDeleteAccountConfirmationView(onClose = onDismissDelete, onError = onError)
+      when (currentSheetType) {
+        is BottomSheetType.AddMfa -> TODO()
+        BottomSheetType.ChooseMfa -> {
+          UserProfileAddMfaBottomSheetContent(
+            mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
+            mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
+            onClick = onClickMfaType,
+          )
+        }
+        BottomSheetType.DeleteAccount ->
+          UserProfileDeleteAccountConfirmationView(onClose = onDismissDelete, onError = onError)
+        BottomSheetType.Passkey -> TODO()
+        BottomSheetType.Password -> TODO()
       }
     }
   }
@@ -277,3 +294,15 @@ data class SecurityContentConfiguration(
   val isDeleteSelfEnabled: Boolean = true,
   val sessions: ImmutableList<Session> = persistentListOf(),
 )
+
+private sealed interface BottomSheetType {
+  data object DeleteAccount : BottomSheetType
+
+  data object Passkey : BottomSheetType
+
+  data object Password : BottomSheetType
+
+  data object ChooseMfa : BottomSheetType
+
+  data class AddMfa(val viewType: ViewType) : BottomSheetType
+}

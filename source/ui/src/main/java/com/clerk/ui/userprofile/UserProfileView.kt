@@ -20,8 +20,6 @@ import com.clerk.ui.userprofile.security.Origin
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameView
 import com.clerk.ui.userprofile.security.password.PasswordAction
-import com.clerk.ui.userprofile.security.password.UserProfileCurrentPasswordView
-import com.clerk.ui.userprofile.security.password.UserProfileNewPasswordView
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
 import com.clerk.ui.userprofile.verify.Mode
 import com.clerk.ui.userprofile.verify.UserProfileVerifyView
@@ -68,15 +66,7 @@ fun UserProfileView(modifier: Modifier = Modifier) {
           entry<UserProfileDestination.UserProfileSecurity> { key -> UserProfileSecurityView() }
 
           entry<UserProfileDestination.UserProfileUpdate> { key -> UserProfileUpdateProfileView() }
-          entry<UserProfileDestination.UpdatePasswordCurrent> { key ->
-            UserProfileCurrentPasswordView(passwordAction = key.action)
-          }
-          entry<UserProfileDestination.UpdatePasswordNew> { key ->
-            UserProfileNewPasswordView(
-              currentPassword = key.currentPassword,
-              passwordAction = key.passwordAction,
-            )
-          }
+
           entry<UserProfileDestination.RenamePasskeyView> { key ->
             UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
           }
