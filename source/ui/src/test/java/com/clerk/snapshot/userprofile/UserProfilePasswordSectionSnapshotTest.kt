@@ -28,31 +28,6 @@ class UserProfilePasswordSectionSnapshotTest : BaseSnapshotTest() {
   }
 
   @Test
-  fun passwordSectionAddPassword_Light() {
-    paparazzi.snapshot {
-      CompositionLocalProvider(
-        LocalUserProfileState provides
-          UserProfileState(backStack = mockk<NavBackStack<NavKey>>(relaxed = true))
-      ) {
-        UserProfilePasswordSectionImpl(onClick = {})
-      }
-    }
-  }
-
-  @Test
-  fun passwordSection_Dark() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
-    paparazzi.snapshot {
-      CompositionLocalProvider(
-        LocalUserProfileState provides
-          UserProfileState(backStack = mockk<NavBackStack<NavKey>>(relaxed = true))
-      ) {
-        UserProfilePasswordSectionImpl(onClick = {})
-      }
-    }
-  }
-
-  @Test
   fun passwordSectionAddPassword_Dark() {
     Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
     paparazzi.snapshot {
