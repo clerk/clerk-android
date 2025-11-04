@@ -49,6 +49,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.UserProfileStateProvider
+import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import kotlinx.collections.immutable.ImmutableList
@@ -79,10 +80,13 @@ fun UserProfileMfaAddSmsView(
 }
 
 @Composable
-private fun EmptyState(modifier: Modifier = Modifier, onAddPhoneNumber: () -> Unit) {
+private fun EmptyState(onAddPhoneNumber: () -> Unit, modifier: Modifier = Modifier) {
   ClerkMaterialTheme {
     Column(
-      modifier = Modifier.background(color = ClerkMaterialTheme.colors.background).then(modifier),
+      modifier =
+        Modifier.background(color = ClerkMaterialTheme.colors.background)
+          .padding(horizontal = dp24)
+          .then(modifier),
       verticalArrangement = Arrangement.spacedBy(dp24),
     ) {
       Text(
@@ -143,6 +147,7 @@ private fun UserProfileMfaAddSmsViewImpl(
     isLoading = state is MfaAddSmsViewModel.State.Loading,
     onReserveForSecondFactor = { viewModel.reserveForSecondFactor(it) },
     onAddPhoneNumber = onAddPhoneNumber,
+    onDismiss = onDismiss,
   )
 }
 
@@ -150,52 +155,58 @@ private fun UserProfileMfaAddSmsViewImpl(
 private fun UserProfileMfaAddSmsContent(
   availablePhoneNumbers: ImmutableList<PhoneNumber>,
   onReserveForSecondFactor: (PhoneNumber) -> Unit,
+  onAddPhoneNumber: () -> Unit,
   modifier: Modifier = Modifier,
   isLoading: Boolean = false,
-  onAddPhoneNumber: () -> Unit,
+  onDismiss: () -> Unit,
 ) {
   var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
-  Column(modifier = modifier) {
+  Column(modifier = modifier.padding(vertical = dp24)) {
+    BottomSheetTopBar(
+      title = stringResource(R.string.add_sms_code_verification),
+      onClosePressed = onDismiss,
+    )
     if (availablePhoneNumbers.isEmpty()) {
       EmptyState(onAddPhoneNumber = onAddPhoneNumber)
     } else {
-      Text(
-        modifier = Modifier.padding(horizontal = dp24),
-        text = stringResource(R.string.select_an_existing_phone_number),
-        style = ClerkMaterialTheme.typography.bodyMedium,
-      )
+      Column {
+        Text(
+          modifier = Modifier.padding(horizontal = dp24),
+          text = stringResource(R.string.select_an_existing_phone_number),
+          style = ClerkMaterialTheme.typography.bodyMedium,
+        )
+        Column(
+          modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24)
+        ) {
+          LazyColumn(verticalArrangement = Arrangement.spacedBy(dp12)) {
+            items(availablePhoneNumbers) { phoneNumber ->
+              val (resolvedRegion: String, flag, displayNumber: String) =
+                parsePhoneNumber(phoneNumber)
 
-      Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24)
-      ) {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(dp12)) {
-          items(availablePhoneNumbers) { phoneNumber ->
-            val (resolvedRegion: String, flag, displayNumber: String) =
-              parsePhoneNumber(phoneNumber)
-
-            AddMfaSmsRow(
-              regionCode = resolvedRegion,
-              flag = flag,
-              phoneNumber = displayNumber,
-              selected = selectedNumber == phoneNumber,
-              onSelected = { selectedNumber = phoneNumber },
-            )
+              AddMfaSmsRow(
+                regionCode = resolvedRegion,
+                flag = flag,
+                phoneNumber = displayNumber,
+                selected = selectedNumber == phoneNumber,
+                onSelected = { selectedNumber = phoneNumber },
+              )
+            }
           }
+          Spacers.Vertical.Spacer24()
+          ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(R.string.continue_text),
+            isLoading = isLoading,
+            isEnabled = selectedNumber != null,
+            onClick = { onReserveForSecondFactor(selectedNumber!!) },
+          )
+          Spacers.Vertical.Spacer24()
+          ClerkTextButton(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            text = stringResource(R.string.add_phone_number),
+            onClick = onAddPhoneNumber,
+          )
         }
-        Spacers.Vertical.Spacer24()
-        ClerkButton(
-          modifier = Modifier.fillMaxWidth(),
-          text = stringResource(R.string.continue_text),
-          isLoading = isLoading,
-          isEnabled = selectedNumber != null,
-          onClick = { onReserveForSecondFactor(selectedNumber!!) },
-        )
-        Spacers.Vertical.Spacer24()
-        ClerkTextButton(
-          modifier = Modifier.align(Alignment.CenterHorizontally),
-          text = stringResource(R.string.add_phone_number),
-          onClick = onAddPhoneNumber,
-        )
       }
     }
   }

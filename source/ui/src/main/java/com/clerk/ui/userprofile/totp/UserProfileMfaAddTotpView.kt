@@ -5,8 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -17,7 +15,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,15 +30,13 @@ import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp18
-import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
-import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
-import com.clerk.ui.userprofile.UserProfileDestination
+import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import com.clerk.ui.userprofile.verify.Mode
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
@@ -56,79 +51,87 @@ import kotlinx.coroutines.launch
  * @param modifier The [Modifier] to be applied to the layout.
  */
 @Composable
-internal fun UserProfileMfaAddTotpView(modifier: Modifier = Modifier) {
-  UserProfileMfaAddTotpViewImpl(modifier = modifier)
+internal fun UserProfileMfaAddTotpView(
+  onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
+  onVerify: (Mode) -> Unit,
+) {
+  UserProfileMfaAddTotpViewImpl(modifier = modifier, onDismiss = onDismiss, onVerify = onVerify)
 }
 
 @Composable
 internal fun UserProfileMfaAddTotpViewImpl(
+  onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfileMfaTotpViewModel = viewModel(),
   previewState: UserProfileMfaTotpViewModel.State? = null,
+  onVerify: (Mode) -> Unit,
 ) {
-  val clipboard = LocalClipboard.current
-  val scope = rememberCoroutineScope()
+
   val collectedState by viewModel.state.collectAsStateWithLifecycle()
   val state = previewState ?: collectedState
-  ClerkThemedProfileScaffold(
-    modifier = modifier,
+  BottomSheetTopBar(
     title = stringResource(R.string.add_authenticator_application),
-    onBackPressed = {},
-    content = {
-      if (state is UserProfileMfaTotpViewModel.State.Loading) {
-        Box(
-          modifier =
-            Modifier.fillMaxSize().background(color = ClerkMaterialTheme.colors.background),
-          contentAlignment = Alignment.Center,
-        ) {
-          CircularProgressIndicator(color = ClerkMaterialTheme.colors.foreground)
-        }
-      }
-      UserProfileMfaAddTotpContent(state, scope, clipboard)
-    },
+    onClosePressed = onDismiss,
   )
+  if (state is UserProfileMfaTotpViewModel.State.Loading) {
+    Box(
+      modifier = Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.background),
+      contentAlignment = Alignment.Center,
+    ) {
+      CircularProgressIndicator(color = ClerkMaterialTheme.colors.foreground)
+    }
+  } else {
+    UserProfileMfaAddTotpContent(modifier = modifier, state = state, onVerify = onVerify)
+  }
 }
 
 @Composable
-private fun ColumnScope.UserProfileMfaAddTotpContent(
+private fun UserProfileMfaAddTotpContent(
   state: UserProfileMfaTotpViewModel.State,
-  scope: CoroutineScope,
-  clipboard: Clipboard,
+  modifier: Modifier = Modifier,
+  onVerify: (Mode) -> Unit,
 ) {
-  val userProfileState = LocalUserProfileState.current
-  if (state is UserProfileMfaTotpViewModel.State.Success) {
-    Text(
-      text = stringResource(R.string.set_up_a_new_sign_in_method),
-      style = ClerkMaterialTheme.typography.bodyMedium,
-      color = ClerkMaterialTheme.colors.mutedForeground,
-    )
-    DisplayTextWithActionButton(
-      text = state.totpResource.secret!!,
-      onClick = {
-        scope.launch {
-          clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", state.totpResource.secret)))
-        }
-      },
-    )
-    Text(
-      text = stringResource(R.string.alternatively_if_your_authenticator_supports_totp),
-      style = ClerkMaterialTheme.typography.bodyMedium,
-      color = ClerkMaterialTheme.colors.mutedForeground,
-    )
-    DisplayTextWithActionButton(
-      text = state.totpResource.uri!!,
-      onClick = {
-        scope.launch {
-          clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", state.totpResource.uri)))
-        }
-      },
-    )
-    ClerkButton(
-      modifier = Modifier.fillMaxWidth(),
-      text = stringResource(R.string.continue_text),
-      onClick = { userProfileState.navigateTo(UserProfileDestination.VerifyView(mode = Mode.Totp)) },
-    )
-    Spacers.Vertical.Spacer24()
+  val clipboard = LocalClipboard.current
+  val scope = rememberCoroutineScope()
+  Column(
+    modifier =
+      Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24).then(modifier)
+  ) {
+    if (state is UserProfileMfaTotpViewModel.State.Success) {
+      Text(
+        text = stringResource(R.string.set_up_a_new_sign_in_method),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+        color = ClerkMaterialTheme.colors.mutedForeground,
+      )
+      DisplayTextWithActionButton(
+        text = state.totpResource.secret!!,
+        onClick = {
+          scope.launch {
+            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", state.totpResource.secret)))
+          }
+        },
+      )
+      Text(
+        text = stringResource(R.string.alternatively_if_your_authenticator_supports_totp),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+        color = ClerkMaterialTheme.colors.mutedForeground,
+      )
+      DisplayTextWithActionButton(
+        text = state.totpResource.uri!!,
+        onClick = {
+          scope.launch {
+            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", state.totpResource.uri)))
+          }
+        },
+      )
+      ClerkButton(
+        modifier = Modifier.fillMaxWidth(),
+        text = stringResource(R.string.continue_text),
+        onClick = { onVerify(Mode.Totp) },
+      )
+      Spacers.Vertical.Spacer24()
+    }
   }
 }
 
@@ -204,7 +207,9 @@ private fun Preview() {
   PreviewUserProfileStateProvider {
     ClerkMaterialTheme {
       UserProfileMfaAddTotpViewImpl(
-        previewState = UserProfileMfaTotpViewModel.State.Success(totpResource = fakeResource)
+        previewState = UserProfileMfaTotpViewModel.State.Success(totpResource = fakeResource),
+        onDismiss = {},
+        onVerify = {},
       )
     }
   }

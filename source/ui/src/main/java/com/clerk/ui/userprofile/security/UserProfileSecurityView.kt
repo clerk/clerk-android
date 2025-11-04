@@ -43,21 +43,12 @@ import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.account.UserProfileDeleteAccountConfirmationView
-import com.clerk.ui.userprofile.mfa.UserProfileAddMfaBottomSheetContent
-import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
-import com.clerk.ui.userprofile.mfa.ViewType
-import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
 import com.clerk.ui.userprofile.security.passkey.UserProfilePasskeySection
 import com.clerk.ui.userprofile.security.password.PasswordAction
-import com.clerk.ui.userprofile.security.password.UserProfileCurrentPasswordView
-import com.clerk.ui.userprofile.security.password.UserProfileNewPasswordView
 import com.clerk.ui.userprofile.security.password.UserProfilePasswordSection
-import com.clerk.ui.userprofile.verify.Mode
-import com.clerk.ui.userprofile.verify.UserProfileVerifyView
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -189,39 +180,42 @@ private fun UserProfileSecurityMainContent(
     BottomSheetContent(
       showBottomSheet = showBottomSheet,
       currentSheetType = currentSheetType,
-      onDismiss = { showBottomSheet = false },
-      onClickMfaType = {
-        showBottomSheet = false
-        currentSheetType = BottomSheetType.AddMfa(it)
-        showBottomSheet = true
-      },
-      onCurrentPasswordEntered = { password, action ->
-        showBottomSheet = true
-        currentSheetType =
-          BottomSheetType.NewPassword(currentPassword = password, passwordAction = action)
-      },
-      onAddPhoneNumber = {
-        showBottomSheet = false
-        currentSheetType = BottomSheetType.AddPhoneNumber
-        showBottomSheet = true
-      },
-      onNavigateToBackupCodes = {
-        showBottomSheet = false
-        currentSheetType = BottomSheetType.BackupCodes(it)
-        showBottomSheet = true
-      },
-      onVerify = {
-        showBottomSheet = false
-        currentSheetType = BottomSheetType.Verify(it)
-        showBottomSheet = true
-      },
-      onError = { message ->
-        coroutineScope.launch {
-          snackbarHostState.showSnackbar(
-            message ?: context.getString(R.string.something_went_wrong_please_try_again)
-          )
-        }
-      },
+      callbacks =
+        BottomSheetCallbacks(
+          onDismiss = { showBottomSheet = false },
+          onClickMfaType = {
+            showBottomSheet = false
+            currentSheetType = BottomSheetType.AddMfa(it)
+            showBottomSheet = true
+          },
+          onCurrentPasswordEntered = { password, action ->
+            showBottomSheet = true
+            currentSheetType =
+              BottomSheetType.NewPassword(currentPassword = password, passwordAction = action)
+          },
+          onAddPhoneNumber = {
+            showBottomSheet = false
+            currentSheetType = BottomSheetType.AddPhoneNumber
+            showBottomSheet = true
+          },
+          onNavigateToBackupCodes = {
+            showBottomSheet = false
+            currentSheetType = BottomSheetType.BackupCodes(it)
+            showBottomSheet = true
+          },
+          onVerify = {
+            showBottomSheet = false
+            currentSheetType = BottomSheetType.Verify(it)
+            showBottomSheet = true
+          },
+          onError = { message ->
+            coroutineScope.launch {
+              snackbarHostState.showSnackbar(
+                message ?: context.getString(R.string.something_went_wrong_please_try_again)
+              )
+            }
+          },
+        ),
     )
   }
 }
@@ -280,73 +274,20 @@ internal fun UserProfileSecurityFooter() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomSheetContent(
-  onClickMfaType: (ViewType) -> Unit,
-  onCurrentPasswordEntered: (String, PasswordAction) -> Unit,
   showBottomSheet: Boolean,
   currentSheetType: BottomSheetType,
-  onDismiss: () -> Unit,
-  onError: (String?) -> Unit,
-  onAddPhoneNumber: () -> Unit,
-  onNavigateToBackupCodes: (List<String>) -> Unit,
-  onVerify: (Mode) -> Unit,
+  callbacks: BottomSheetCallbacks,
 ) {
   val sheetState = rememberModalBottomSheetState()
   if (showBottomSheet) {
     ModalBottomSheet(
+      scrimColor = ClerkMaterialTheme.colors.neutral.copy(alpha = 0.5f),
       shape = RoundedCornerShape(topEnd = dp10, topStart = dp10),
       containerColor = ClerkMaterialTheme.colors.background,
       sheetState = sheetState,
-      onDismissRequest = { onDismiss() },
+      onDismissRequest = { callbacks.onDismiss() },
     ) {
-      when (currentSheetType) {
-        is BottomSheetType.AddMfa -> {
-          UserProfileAddMfaView(
-            currentSheetType.viewType,
-            onError = onError,
-            onDismiss = onDismiss,
-            onAddPhoneNumber = onAddPhoneNumber,
-            onNavigateToBackupCodes = onNavigateToBackupCodes,
-          )
-        }
-        BottomSheetType.ChooseMfa -> {
-          UserProfileAddMfaBottomSheetContent(
-            mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
-            mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
-            onClick = onClickMfaType,
-          )
-        }
-        BottomSheetType.DeleteAccount ->
-          UserProfileDeleteAccountConfirmationView(onClose = onDismiss, onError = onError)
-        is BottomSheetType.CurrentPassword -> {
-          UserProfileCurrentPasswordView(
-            currentSheetType.passwordAction,
-            onClosePressed = onDismiss,
-            onCurrentPasswordEntered = { currentPassword, passwordAction ->
-              onCurrentPasswordEntered(currentPassword, passwordAction)
-            },
-          )
-        }
-        is BottomSheetType.NewPassword -> {
-          UserProfileNewPasswordView(
-            currentPassword = currentSheetType.currentPassword,
-            passwordAction = currentSheetType.passwordAction,
-            onError = onError,
-            onPasswordChanged = { onDismiss() },
-          )
-        }
-
-        is BottomSheetType.BackupCodes -> {
-          BackupCodesView(codes = currentSheetType.codes.toImmutableList(), onDismiss = onDismiss)
-        }
-
-        BottomSheetType.AddPhoneNumber -> {
-          UserProfileAddPhoneView(onError = onError, onVerify = onVerify, onDismiss = onDismiss)
-        }
-
-        is BottomSheetType.Verify -> {
-          UserProfileVerifyView(mode = currentSheetType.mode)
-        }
-      }
+      BottomSheetBody(currentSheetType = currentSheetType, callbacks = callbacks)
     }
   }
 }
@@ -371,22 +312,3 @@ data class SecurityContentConfiguration(
   val isDeleteSelfEnabled: Boolean = true,
   val sessions: ImmutableList<Session> = persistentListOf(),
 )
-
-private sealed interface BottomSheetType {
-  data object DeleteAccount : BottomSheetType
-
-  data class CurrentPassword(val passwordAction: PasswordAction) : BottomSheetType
-
-  data class NewPassword(val currentPassword: String?, val passwordAction: PasswordAction) :
-    BottomSheetType
-
-  data object ChooseMfa : BottomSheetType
-
-  data class AddMfa(val viewType: ViewType) : BottomSheetType
-
-  data class BackupCodes(val codes: List<String>) : BottomSheetType
-
-  data object AddPhoneNumber : BottomSheetType
-
-  data class Verify(val mode: Mode) : BottomSheetType
-}
