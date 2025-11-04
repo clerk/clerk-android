@@ -99,6 +99,9 @@ private fun AvatarHeaderView(
   mode: AvatarMode = AvatarMode.VIEW,
   onClickEdit: () -> Unit,
 ) {
+  val name = userFullName?.takeIf { it.isNotBlank() }
+  val uname = username?.takeIf { it.isNotBlank() }
+
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     AvatarView(
       size = AvatarSize.X_LARGE,
@@ -107,22 +110,33 @@ private fun AvatarHeaderView(
       imageUrl = imageUrl,
     )
     Spacers.Vertical.Spacer12()
+
     if (mode == AvatarMode.VIEW) {
-      userFullName?.let {
+      if (name != null) {
+        // Show full name as title
         Text(
-          text = it,
+          text = name,
+          style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
+          color = ClerkMaterialTheme.colors.foreground,
+        )
+        // If username exists, show it under the full name (current behavior)
+        if (uname != null) {
+          Spacers.Vertical.Spacer4()
+          Text(
+            text = uname,
+            style = ClerkMaterialTheme.typography.bodyMedium,
+            color = ClerkMaterialTheme.colors.mutedForeground,
+          )
+        }
+      } else if (uname != null) {
+        // No full name: promote username to the same style as full name
+        Text(
+          text = uname,
           style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
           color = ClerkMaterialTheme.colors.foreground,
         )
       }
-      username?.takeIf { it.isNotEmpty() }?.let {
-        Spacers.Vertical.Spacer4()
-        Text(
-          text = it,
-          style = ClerkMaterialTheme.typography.bodyMedium,
-          color = ClerkMaterialTheme.colors.mutedForeground,
-        )
-      }
+
       Spacers.Vertical.Spacer8()
       ClerkButton(
         modifier = Modifier.defaultMinSize(minWidth = 120.dp),
