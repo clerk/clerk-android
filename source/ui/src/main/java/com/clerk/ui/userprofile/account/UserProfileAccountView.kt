@@ -41,6 +41,7 @@ internal fun UserProfileAccountView(
     modifier = modifier,
     imageUrl = Clerk.user?.imageUrl,
     userFullName = Clerk.user?.fullName(),
+    username = Clerk.user?.username,
     onClick = onClick,
     onBackPressed = onBackPressed,
     onEditAvatarClick = onClickEdit,
@@ -50,6 +51,7 @@ internal fun UserProfileAccountView(
 @Composable
 private fun UserProfileAccountViewImpl(
   userFullName: String?,
+  username: String?,
   onClick: (UserProfileAction) -> Unit,
   onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
@@ -69,6 +71,7 @@ private fun UserProfileAccountViewImpl(
         Spacers.Vertical.Spacer32()
         AvatarHeaderView(
           userFullName = userFullName,
+          username = username,
           imageUrl = imageUrl,
           onClickEdit = onEditAvatarClick,
         )
@@ -91,6 +94,7 @@ private fun UserProfileAccountViewImpl(
 @Composable
 private fun AvatarHeaderView(
   userFullName: String?,
+  username: String?,
   imageUrl: String?,
   mode: AvatarMode = AvatarMode.VIEW,
   onClickEdit: () -> Unit,
@@ -109,6 +113,14 @@ private fun AvatarHeaderView(
           text = it,
           style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
           color = ClerkMaterialTheme.colors.foreground,
+        )
+      }
+      username?.takeIf { it.isNotEmpty() }?.let {
+        Spacers.Vertical.Spacer4()
+        Text(
+          text = it,
+          style = ClerkMaterialTheme.typography.bodyMedium,
+          color = ClerkMaterialTheme.colors.mutedForeground,
         )
       }
       Spacers.Vertical.Spacer8()
@@ -163,6 +175,7 @@ private fun Preview() {
   ClerkMaterialTheme {
     UserProfileAccountViewImpl(
       userFullName = "Cameron Walker",
+      username = "cameronw",
       onClick = {},
       onBackPressed = {},
       onEditAvatarClick = {},
