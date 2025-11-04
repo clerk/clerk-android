@@ -56,9 +56,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun UserProfileSecurityView() {
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
   UserProfileSecurityViewImpl(
-    isPasswordEnabled = user?.passwordEnabled == true,
+    isPasswordEnabled = Clerk.passwordIsEnabled,
     isPasskeyEnabled = Clerk.passkeyIsEnabled,
     isMfaEnabled = Clerk.mfaIsEnabled,
     isDeleteSelfEnabled = Clerk.deleteSelfIsEnabled,
