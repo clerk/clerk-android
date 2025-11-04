@@ -22,7 +22,7 @@ class UserProfilePasswordSectionSnapshotTest : BaseSnapshotTest() {
         LocalUserProfileState provides
           UserProfileState(backStack = mockk<NavBackStack<NavKey>>(relaxed = true))
       ) {
-        UserProfilePasswordSectionImpl(isPasswordEnabled = true)
+        UserProfilePasswordSectionImpl(onClick = {})
       }
     }
   }
@@ -34,7 +34,7 @@ class UserProfilePasswordSectionSnapshotTest : BaseSnapshotTest() {
         LocalUserProfileState provides
           UserProfileState(backStack = mockk<NavBackStack<NavKey>>(relaxed = true))
       ) {
-        UserProfilePasswordSectionImpl(isPasswordEnabled = false)
+        UserProfilePasswordSectionImpl(onClick = {})
       }
     }
   }
@@ -47,7 +47,7 @@ class UserProfilePasswordSectionSnapshotTest : BaseSnapshotTest() {
         LocalUserProfileState provides
           UserProfileState(backStack = mockk<NavBackStack<NavKey>>(relaxed = true))
       ) {
-        UserProfilePasswordSectionImpl(isPasswordEnabled = true)
+        UserProfilePasswordSectionImpl(onClick = {})
       }
     }
   }
@@ -60,7 +60,7 @@ class UserProfilePasswordSectionSnapshotTest : BaseSnapshotTest() {
         LocalUserProfileState provides
           UserProfileState(backStack = mockk<NavBackStack<NavKey>>(relaxed = true))
       ) {
-        UserProfilePasswordSectionImpl(isPasswordEnabled = false)
+        UserProfilePasswordSectionImpl(onClick = {})
       }
     }
   }
