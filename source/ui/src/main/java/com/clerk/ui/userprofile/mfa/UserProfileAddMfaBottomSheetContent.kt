@@ -18,7 +18,6 @@ import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.UserProfileStateProvider
@@ -29,8 +28,9 @@ internal fun UserProfileAddMfaBottomSheetContent(
   mfaPhoneCodeIsEnabled: Boolean,
   mfaAuthenticatorAppIsEnabled: Boolean,
   modifier: Modifier = Modifier,
+  onClick: (ViewType) -> Unit,
 ) {
-  val userProfileState = LocalUserProfileState.current
+
   ClerkMaterialTheme {
     Column(
       modifier =
@@ -59,7 +59,7 @@ internal fun UserProfileAddMfaBottomSheetContent(
           iconSize = dp24,
           iconResId = R.drawable.ic_phone,
           text = stringResource(R.string.sms_code),
-          onClick = { userProfileState.navigateTo(UserProfileDestination.AddMfaView(ViewType.Sms)) },
+          onClick = { onClick(ViewType.Sms) },
         )
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
       }
@@ -68,11 +68,7 @@ internal fun UserProfileAddMfaBottomSheetContent(
           iconSize = dp24,
           iconResId = R.drawable.ic_key,
           text = stringResource(R.string.authenticator_application),
-          onClick = {
-            userProfileState.navigateTo(
-              UserProfileDestination.AddMfaView(ViewType.AuthenticatorApp)
-            )
-          },
+          onClick = { onClick(ViewType.AuthenticatorApp) },
         )
         HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
       }
@@ -90,6 +86,7 @@ private fun PreviewBottomSheet() {
       UserProfileAddMfaBottomSheetContent(
         mfaPhoneCodeIsEnabled = true,
         mfaAuthenticatorAppIsEnabled = true,
+        onClick = {},
       )
     }
   }
@@ -103,6 +100,7 @@ private fun PreviewBottomSheetPhoneDisabled() {
       UserProfileAddMfaBottomSheetContent(
         mfaPhoneCodeIsEnabled = false,
         mfaAuthenticatorAppIsEnabled = true,
+        onClick = {},
       )
     }
   }
@@ -117,6 +115,7 @@ private fun PreviewBottomSheetAuthAppDisabled() {
       UserProfileAddMfaBottomSheetContent(
         mfaPhoneCodeIsEnabled = true,
         mfaAuthenticatorAppIsEnabled = false,
+        onClick = {},
       )
     }
   }

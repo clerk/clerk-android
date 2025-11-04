@@ -27,25 +27,28 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.dimens.dp16
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.input.PasswordKeyboardOptions
-import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
+import com.clerk.ui.userprofile.common.BottomSheetTopBar
 
 @Composable
 internal fun UserProfileNewPasswordView(
   currentPassword: String?,
   passwordAction: PasswordAction,
+  onPasswordChanged: () -> Unit,
+  onError: (String) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   UserProfileNewPasswordViewImpl(
     modifier = modifier,
     passwordAction = passwordAction,
     currentPassword = currentPassword,
+    onError = onError,
+    onPasswordChanged = onPasswordChanged,
   )
 }
 
@@ -53,41 +56,39 @@ internal fun UserProfileNewPasswordView(
 private fun UserProfileNewPasswordViewImpl(
   passwordAction: PasswordAction,
   currentPassword: String?,
+  onPasswordChanged: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfileChangePasswordViewModel = viewModel(),
+  onError: (String) -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
-  val userProfileState = LocalUserProfileState.current
+
   LaunchedEffect(state) {
     if (state is UserProfileChangePasswordViewModel.State.Success) {
-      if (passwordAction == PasswordAction.Add) {
-        userProfileState.navigateBack()
-      } else {
-        userProfileState.pop(2)
-      }
+      onPasswordChanged()
+    }
+    if (state is UserProfileChangePasswordViewModel.State.Error) {
+      onError((state as UserProfileChangePasswordViewModel.State.Error).message)
     }
   }
-  val errorMessage = (state as? UserProfileChangePasswordViewModel.State.Error)?.message
-  ClerkThemedProfileScaffold(
-    modifier = modifier,
-    errorMessage = errorMessage,
-    hasBackButton = true,
-    title =
-      if (passwordAction == PasswordAction.Reset) stringResource(R.string.update_password)
-      else stringResource(R.string.add_password),
-    content = {
-      UpdatePasswordContent(
-        isLoading = state is UserProfileChangePasswordViewModel.State.Loading,
-        onClick = { newPassword, signOutOtherSessions ->
-          viewModel.resetPassword(
-            currentPassword = currentPassword,
-            newPassword = newPassword,
-            signOutOfOtherSessions = signOutOtherSessions,
-          )
-        },
-      )
-    },
-  )
+  Column(modifier = modifier.fillMaxWidth().padding(bottom = dp24)) {
+    BottomSheetTopBar(
+      title =
+        if (passwordAction == PasswordAction.Reset) stringResource(R.string.update_password)
+        else stringResource(R.string.add_password),
+      onClosePressed = {},
+    )
+    UpdatePasswordContent(
+      isLoading = state is UserProfileChangePasswordViewModel.State.Loading,
+      onClick = { newPassword, signOutOtherSessions ->
+        viewModel.resetPassword(
+          currentPassword = currentPassword,
+          newPassword = newPassword,
+          signOutOfOtherSessions = signOutOtherSessions,
+        )
+      },
+    )
+  }
 }
 
 @Composable
@@ -95,7 +96,7 @@ private fun UpdatePasswordContent(isLoading: Boolean = false, onClick: (String, 
   var newPassword by rememberSaveable { mutableStateOf("") }
   var confirmPassword by rememberSaveable { mutableStateOf("") }
   var signOutOfOtherDevices by rememberSaveable { mutableStateOf(false) }
-  Column(modifier = Modifier.fillMaxWidth()) {
+  Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24)) {
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
       value = newPassword,
@@ -171,9 +172,12 @@ private fun SignOutOtherDevicesContent(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  PreviewUserProfileStateProvider {
-    ClerkMaterialTheme {
-      UserProfileNewPasswordViewImpl(passwordAction = PasswordAction.Add, "MySecretPassword123")
-    }
+  ClerkMaterialTheme {
+    UserProfileNewPasswordViewImpl(
+      passwordAction = PasswordAction.Add,
+      "MySecretPassword123",
+      onError = {},
+      onPasswordChanged = {},
+    )
   }
 }

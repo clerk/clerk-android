@@ -43,12 +43,11 @@ import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.account.UserProfileDeleteAccountConfirmationView
-import com.clerk.ui.userprofile.mfa.UserProfileAddMfaBottomSheetContent
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
 import com.clerk.ui.userprofile.security.passkey.UserProfilePasskeySection
+import com.clerk.ui.userprofile.security.password.PasswordAction
 import com.clerk.ui.userprofile.security.password.UserProfilePasswordSection
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -120,8 +119,10 @@ private fun UserProfileSecurityMainContent(
 ) {
   val userProfileState = LocalUserProfileState.current
   val coroutineScope = rememberCoroutineScope()
-  var showAddMfaSheet by remember { mutableStateOf(false) }
-  var showDeleteAccountBottomSheet by remember { mutableStateOf(false) }
+  var showBottomSheet by remember { mutableStateOf(false) }
+  var currentSheetType by remember {
+    mutableStateOf<BottomSheetType>(BottomSheetType.DeleteAccount)
+  }
   val context = LocalContext.current
   Scaffold(
     containerColor = ClerkMaterialTheme.colors.muted,
@@ -147,8 +148,26 @@ private fun UserProfileSecurityMainContent(
           sessions = sessions,
           isDeleteSelfEnabled = isDeleteSelfEnabled,
         ),
-      onAdd = { showAddMfaSheet = true },
-      onClickDeleteAccount = { showDeleteAccountBottomSheet = true },
+      onAdd = {
+        showBottomSheet = true
+        currentSheetType = BottomSheetType.ChooseMfa
+      },
+      onClickDeleteAccount = {
+        showBottomSheet = true
+        currentSheetType = BottomSheetType.DeleteAccount
+      },
+      onClickAddPassword = {
+        showBottomSheet = true
+        currentSheetType =
+          when (it) {
+            PasswordAction.Add ->
+              BottomSheetType.NewPassword(currentPassword = null, PasswordAction.Add)
+
+            PasswordAction.Reset -> {
+              BottomSheetType.CurrentPassword(PasswordAction.Reset)
+            }
+          }
+      },
       onError = { message ->
         coroutineScope.launch {
           snackbarHostState.showSnackbar(
@@ -158,17 +177,44 @@ private fun UserProfileSecurityMainContent(
       },
     )
     BottomSheetContent(
-      showMfaBottomSheet = showAddMfaSheet,
-      showDeleteAccountBottomSheet = showDeleteAccountBottomSheet,
-      onDismissMfa = { showAddMfaSheet = false },
-      onDismissDelete = { showDeleteAccountBottomSheet = false },
-      onError = { message ->
-        coroutineScope.launch {
-          snackbarHostState.showSnackbar(
-            message ?: context.getString(R.string.something_went_wrong_please_try_again)
-          )
-        }
-      },
+      showBottomSheet = showBottomSheet,
+      currentSheetType = currentSheetType,
+      callbacks =
+        BottomSheetCallbacks(
+          onDismiss = { showBottomSheet = false },
+          onClickMfaType = {
+            showBottomSheet = false
+            currentSheetType = BottomSheetType.AddMfa(it)
+            showBottomSheet = true
+          },
+          onCurrentPasswordEntered = { password, action ->
+            showBottomSheet = true
+            currentSheetType =
+              BottomSheetType.NewPassword(currentPassword = password, passwordAction = action)
+          },
+          onAddPhoneNumber = {
+            showBottomSheet = false
+            currentSheetType = BottomSheetType.AddPhoneNumber
+            showBottomSheet = true
+          },
+          onNavigateToBackupCodes = {
+            showBottomSheet = false
+            currentSheetType = BottomSheetType.BackupCodes(it)
+            showBottomSheet = true
+          },
+          onVerify = {
+            showBottomSheet = false
+            currentSheetType = BottomSheetType.Verify(it)
+            showBottomSheet = true
+          },
+          onError = { message ->
+            coroutineScope.launch {
+              snackbarHostState.showSnackbar(
+                message ?: context.getString(R.string.something_went_wrong_please_try_again)
+              )
+            }
+          },
+        ),
     )
   }
 }
@@ -179,6 +225,7 @@ private fun UserProfileSecurityContent(
   configuration: SecurityContentConfiguration,
   onError: (String?) -> Unit,
   onClickDeleteAccount: () -> Unit,
+  onClickAddPassword: (PasswordAction) -> Unit,
   onAdd: () -> Unit,
 ) {
   val scrollState = rememberScrollState()
@@ -191,7 +238,7 @@ private fun UserProfileSecurityContent(
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
     if (configuration.isPasswordEnabled) {
-      UserProfilePasswordSection()
+      UserProfilePasswordSection(onClick = onClickAddPassword)
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if (configuration.isPasskeyEnabled) {
@@ -226,33 +273,20 @@ internal fun UserProfileSecurityFooter() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomSheetContent(
-  showMfaBottomSheet: Boolean,
-  showDeleteAccountBottomSheet: Boolean,
-  onDismissMfa: () -> Unit,
-  onDismissDelete: () -> Unit,
-  onError: (String?) -> Unit,
+  showBottomSheet: Boolean,
+  currentSheetType: BottomSheetType,
+  callbacks: BottomSheetCallbacks,
 ) {
   val sheetState = rememberModalBottomSheetState()
-  if (showMfaBottomSheet || showDeleteAccountBottomSheet) {
+  if (showBottomSheet) {
     ModalBottomSheet(
+      scrimColor = ClerkMaterialTheme.colors.neutral.copy(alpha = 0.5f),
       shape = RoundedCornerShape(topEnd = dp10, topStart = dp10),
       containerColor = ClerkMaterialTheme.colors.background,
       sheetState = sheetState,
-      onDismissRequest = {
-        // Dismiss any visible bottom sheet
-        onDismissMfa()
-        onDismissDelete()
-      },
+      onDismissRequest = { callbacks.onDismiss() },
     ) {
-      if (showMfaBottomSheet) {
-        UserProfileAddMfaBottomSheetContent(
-          mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
-          mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
-        )
-      }
-      if (showDeleteAccountBottomSheet) {
-        UserProfileDeleteAccountConfirmationView(onClose = onDismissDelete, onError = onError)
-      }
+      BottomSheetBody(currentSheetType = currentSheetType, callbacks = callbacks)
     }
   }
 }

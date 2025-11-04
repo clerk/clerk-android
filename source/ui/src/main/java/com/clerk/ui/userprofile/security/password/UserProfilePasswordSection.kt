@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -24,21 +26,23 @@ import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
-import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 
 @Composable
-internal fun UserProfilePasswordSection(modifier: Modifier = Modifier) {
-  UserProfilePasswordSectionImpl(modifier = modifier)
+internal fun UserProfilePasswordSection(
+  modifier: Modifier = Modifier,
+  onClick: (PasswordAction) -> Unit,
+) {
+  UserProfilePasswordSectionImpl(modifier = modifier, onClick = onClick)
 }
 
 @Composable
 internal fun UserProfilePasswordSectionImpl(
   modifier: Modifier = Modifier,
-  isPasswordEnabled: Boolean = Clerk.user?.passwordEnabled == true,
+  onClick: (PasswordAction) -> Unit,
 ) {
-  val userProfileState = LocalUserProfileState.current
+  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val isPasswordEnabled = user?.passwordEnabled == true
   ClerkMaterialTheme {
     Column(
       modifier =
@@ -71,20 +75,12 @@ internal fun UserProfilePasswordSectionImpl(
         }
         UserProfileButtonRow(
           text = stringResource(R.string.change_password),
-          onClick = {
-            userProfileState.navigateTo(
-              UserProfileDestination.UpdatePasswordCurrent(PasswordAction.Reset)
-            )
-          },
+          onClick = { onClick(PasswordAction.Reset) },
         )
       } else {
         UserProfileButtonRow(
           text = stringResource(R.string.add_password),
-          onClick = {
-            userProfileState.navigateTo(
-              UserProfileDestination.UpdatePasswordNew(passwordAction = PasswordAction.Add)
-            )
-          },
+          onClick = { onClick(PasswordAction.Add) },
         )
       }
     }
@@ -100,7 +96,7 @@ private fun Preview() {
       modifier =
         Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
     ) {
-      UserProfilePasswordSectionImpl(isPasswordEnabled = true)
+      UserProfilePasswordSectionImpl(onClick = {})
     }
   }
 }
@@ -114,7 +110,7 @@ private fun PreviewAddPassword() {
       modifier =
         Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
     ) {
-      UserProfilePasswordSectionImpl()
+      UserProfilePasswordSectionImpl(onClick = {})
     }
   }
 }

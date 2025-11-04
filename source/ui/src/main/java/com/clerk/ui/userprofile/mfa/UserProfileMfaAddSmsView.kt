@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -45,14 +44,12 @@ import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.CountryCodeUtils
-import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.UserProfileStateProvider
-import com.clerk.ui.userprofile.security.MfaType
+import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import kotlinx.collections.immutable.ImmutableList
@@ -60,7 +57,13 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun UserProfileMfaAddSmsView(modifier: Modifier = Modifier) {
+fun UserProfileMfaAddSmsView(
+  onDismiss: () -> Unit,
+  onNavigateToBackupCodes: (List<String>) -> Unit,
+  onError: (String) -> Unit,
+  modifier: Modifier = Modifier,
+  onAddPhoneNumber: () -> Unit,
+) {
   val availablePhoneNumbers =
     remember(Clerk.user) { Clerk.user?.phoneNumbersAvailableForMfa() ?: emptyList() }
       .filter { it.verification?.status == Verification.Status.VERIFIED }
@@ -69,17 +72,20 @@ fun UserProfileMfaAddSmsView(modifier: Modifier = Modifier) {
   UserProfileMfaAddSmsViewImpl(
     modifier = modifier,
     availablePhoneNumbers = availablePhoneNumbers.toImmutableList(),
+    onDismiss = onDismiss,
+    onNavigateToBackupCodes = onNavigateToBackupCodes,
+    onError = onError,
+    onAddPhoneNumber = onAddPhoneNumber,
   )
 }
 
 @Composable
-private fun EmptyState(modifier: Modifier = Modifier) {
-  val userProfileState = LocalUserProfileState.current
+private fun EmptyState(onAddPhoneNumber: () -> Unit, modifier: Modifier = Modifier) {
   ClerkMaterialTheme {
     Column(
       modifier =
-        Modifier.fillMaxSize()
-          .background(color = ClerkMaterialTheme.colors.background)
+        Modifier.background(color = ClerkMaterialTheme.colors.background)
+          .padding(horizontal = dp24)
           .then(modifier),
       verticalArrangement = Arrangement.spacedBy(dp24),
     ) {
@@ -92,7 +98,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
       ClerkButton(
         modifier = Modifier.fillMaxWidth(),
         text = stringResource(R.string.add_phone_number),
-        onClick = { userProfileState.navigateTo(UserProfileDestination.AddPhoneView) },
+        onClick = onAddPhoneNumber,
       )
     }
   }
@@ -101,96 +107,109 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 @Composable
 private fun UserProfileMfaAddSmsViewImpl(
   availablePhoneNumbers: ImmutableList<PhoneNumber>,
+  onNavigateToBackupCodes: (List<String>) -> Unit,
+  onDismiss: () -> Unit,
+  onError: (String) -> Unit,
   modifier: Modifier = Modifier,
   viewModel: MfaAddSmsViewModel = viewModel(),
+  onAddPhoneNumber: () -> Unit,
 ) {
-  val userProfileState = LocalUserProfileState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
-  val errorMessage: String? = (state as? MfaAddSmsViewModel.State.Error)?.message
 
-  if (state is MfaAddSmsViewModel.State.Success) {
-    LaunchedEffect(Unit) {
-      viewModel.resetState()
-      if (
-        (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes != null &&
-          (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes?.isNotEmpty() == true
-      ) {
-        userProfileState.navigateTo(
-          UserProfileDestination.BackupCodeView(
-            mfaType = MfaType.PhoneCode,
-            codes = (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes!!,
-          )
-        )
-      } else {
-        userProfileState.navigateBack()
+  LaunchedEffect(state) {
+    when (state) {
+      is MfaAddSmsViewModel.State.Error -> {
+        if ((state as MfaAddSmsViewModel.State.Error).message != null) {
+          onError((state as MfaAddSmsViewModel.State.Error).message!!)
+        }
       }
+      is MfaAddSmsViewModel.State.Success -> {
+        if (
+          (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes != null &&
+            (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes?.isNotEmpty() ==
+              true
+        ) {
+          onNavigateToBackupCodes(
+            (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes!!
+          )
+        } else {
+          onDismiss()
+        }
+      }
+      else -> {}
     }
+    viewModel.resetState()
   }
 
   UserProfileMfaAddSmsContent(
-    errorMessage = errorMessage,
     modifier = modifier,
     availablePhoneNumbers = availablePhoneNumbers,
     isLoading = state is MfaAddSmsViewModel.State.Loading,
     onReserveForSecondFactor = { viewModel.reserveForSecondFactor(it) },
+    onAddPhoneNumber = onAddPhoneNumber,
+    onDismiss = onDismiss,
   )
 }
 
 @Composable
 private fun UserProfileMfaAddSmsContent(
-  errorMessage: String?,
   availablePhoneNumbers: ImmutableList<PhoneNumber>,
+  onReserveForSecondFactor: (PhoneNumber) -> Unit,
+  onAddPhoneNumber: () -> Unit,
   modifier: Modifier = Modifier,
   isLoading: Boolean = false,
-  onReserveForSecondFactor: (PhoneNumber) -> Unit,
+  onDismiss: () -> Unit,
 ) {
-  val userProfileState = LocalUserProfileState.current
   var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
-  ClerkThemedProfileScaffold(
-    errorMessage = errorMessage,
-    modifier = modifier,
-    title = stringResource(R.string.add_sms_code_verification),
-    onBackPressed = { userProfileState.navigateBack() },
-    content = {
-      if (availablePhoneNumbers.isEmpty()) {
-        EmptyState()
-      } else {
+  Column(modifier = modifier.padding(vertical = dp24)) {
+    BottomSheetTopBar(
+      title = stringResource(R.string.add_sms_code_verification),
+      onClosePressed = onDismiss,
+    )
+    if (availablePhoneNumbers.isEmpty()) {
+      EmptyState(onAddPhoneNumber = onAddPhoneNumber)
+    } else {
+      Column {
         Text(
-          stringResource(R.string.select_an_existing_phone_number),
+          modifier = Modifier.padding(horizontal = dp24),
+          text = stringResource(R.string.select_an_existing_phone_number),
           style = ClerkMaterialTheme.typography.bodyMedium,
         )
-        Spacers.Vertical.Spacer24()
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(dp12)) {
-          items(availablePhoneNumbers) { phoneNumber ->
-            val (resolvedRegion: String, flag, displayNumber: String) =
-              parsePhoneNumber(phoneNumber)
+        Column(
+          modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24)
+        ) {
+          LazyColumn(verticalArrangement = Arrangement.spacedBy(dp12)) {
+            items(availablePhoneNumbers) { phoneNumber ->
+              val (resolvedRegion: String, flag, displayNumber: String) =
+                parsePhoneNumber(phoneNumber)
 
-            AddMfaSmsRow(
-              regionCode = resolvedRegion,
-              flag = flag,
-              phoneNumber = displayNumber,
-              selected = selectedNumber == phoneNumber,
-              onSelected = { selectedNumber = phoneNumber },
-            )
+              AddMfaSmsRow(
+                regionCode = resolvedRegion,
+                flag = flag,
+                phoneNumber = displayNumber,
+                selected = selectedNumber == phoneNumber,
+                onSelected = { selectedNumber = phoneNumber },
+              )
+            }
           }
+          Spacers.Vertical.Spacer24()
+          ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(R.string.continue_text),
+            isLoading = isLoading,
+            isEnabled = selectedNumber != null,
+            onClick = { onReserveForSecondFactor(selectedNumber!!) },
+          )
+          Spacers.Vertical.Spacer24()
+          ClerkTextButton(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            text = stringResource(R.string.add_phone_number),
+            onClick = onAddPhoneNumber,
+          )
         }
-        Spacers.Vertical.Spacer24()
-        ClerkButton(
-          modifier = Modifier.fillMaxWidth(),
-          text = stringResource(R.string.continue_text),
-          isLoading = isLoading,
-          isEnabled = selectedNumber != null,
-          onClick = { onReserveForSecondFactor(selectedNumber!!) },
-        )
-        Spacers.Vertical.Spacer24()
-        ClerkTextButton(
-          modifier = Modifier.align(Alignment.CenterHorizontally),
-          text = stringResource(R.string.add_phone_number),
-          onClick = { userProfileState.navigateTo(UserProfileDestination.AddPhoneView) },
-        )
       }
-    },
-  )
+    }
+  }
 }
 
 private fun parsePhoneNumber(phoneNumber: PhoneNumber): Triple<String, String, String> {
@@ -324,7 +343,11 @@ private fun Preview() {
             PhoneNumber(id = "1", phoneNumber = "+13012370655"),
             PhoneNumber(id = "2", "+15246462566"),
             PhoneNumber(id = "3", "+306912345678"),
-          )
+          ),
+        onDismiss = {},
+        onNavigateToBackupCodes = {},
+        onError = {},
+        onAddPhoneNumber = {},
       )
     }
   }
@@ -334,5 +357,7 @@ private fun Preview() {
 @Composable
 private fun PreviewEmptyState() {
   val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
-  UserProfileStateProvider(backStack = backStack) { ClerkMaterialTheme { EmptyState() } }
+  UserProfileStateProvider(backStack = backStack) {
+    ClerkMaterialTheme { EmptyState(onAddPhoneNumber = {}) }
+  }
 }
