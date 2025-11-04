@@ -24,20 +24,20 @@ import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.input.PasswordKeyboardOptions
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
 
 @Composable
 internal fun UserProfileCurrentPasswordView(
   passwordAction: PasswordAction,
-  modifier: Modifier = Modifier,
   onClosePressed: () -> Unit,
+  modifier: Modifier = Modifier,
+  onCurrentPasswordEntered: (currentPassword: String, passwordAction: PasswordAction) -> Unit,
 ) {
   UserProfileCurrentPasswordViewImpl(
     modifier = modifier,
     passwordAction = passwordAction,
     onClosePressed = onClosePressed,
+    onCurrentPasswordEntered = onCurrentPasswordEntered,
   )
 }
 
@@ -46,8 +46,8 @@ private fun UserProfileCurrentPasswordViewImpl(
   passwordAction: PasswordAction,
   onClosePressed: () -> Unit,
   modifier: Modifier = Modifier,
+  onCurrentPasswordEntered: (currentPassword: String, passwordAction: PasswordAction) -> Unit,
 ) {
-  val userProfileState = LocalUserProfileState.current
   var currentPassword by rememberSaveable { mutableStateOf("") }
   ClerkMaterialTheme {
     Column(modifier = modifier) {
@@ -58,7 +58,9 @@ private fun UserProfileCurrentPasswordViewImpl(
         onClosePressed = onClosePressed,
       )
 
-      Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(bottom = dp24)) {
+      Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24)
+      ) {
         Text(
           text = stringResource(R.string.enter_your_current_password_to_set_a_new_one),
           style = ClerkMaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal),
@@ -78,14 +80,7 @@ private fun UserProfileCurrentPasswordViewImpl(
           isEnabled = currentPassword.isNotBlank(),
           modifier = Modifier.fillMaxWidth(),
           text = stringResource(R.string.next),
-          onClick = {
-            userProfileState.navigateTo(
-              UserProfileDestination.UpdatePasswordNew(
-                currentPassword = currentPassword,
-                passwordAction = passwordAction,
-              )
-            )
-          },
+          onClick = { onCurrentPasswordEntered(currentPassword, passwordAction) },
         )
       }
     }
@@ -97,7 +92,11 @@ private fun UserProfileCurrentPasswordViewImpl(
 private fun Preview() {
   ClerkMaterialTheme {
     Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
-      UserProfileCurrentPasswordViewImpl(passwordAction = PasswordAction.Reset, onClosePressed = {})
+      UserProfileCurrentPasswordViewImpl(
+        passwordAction = PasswordAction.Reset,
+        onClosePressed = {},
+        onCurrentPasswordEntered = { _, _ -> },
+      )
     }
   }
 }

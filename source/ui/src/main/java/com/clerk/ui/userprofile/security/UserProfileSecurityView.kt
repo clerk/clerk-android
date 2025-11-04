@@ -50,6 +50,9 @@ import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
 import com.clerk.ui.userprofile.security.passkey.UserProfilePasskeySection
+import com.clerk.ui.userprofile.security.password.PasswordAction
+import com.clerk.ui.userprofile.security.password.UserProfileCurrentPasswordView
+import com.clerk.ui.userprofile.security.password.UserProfileNewPasswordView
 import com.clerk.ui.userprofile.security.password.UserProfilePasswordSection
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -58,8 +61,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun UserProfileSecurityView() {
+  val user by Clerk.userFlow.collectAsStateWithLifecycle()
   UserProfileSecurityViewImpl(
-    isPasswordEnabled = Clerk.passwordIsEnabled,
+    isPasswordEnabled = user?.passwordEnabled == true,
     isPasskeyEnabled = Clerk.passkeyIsEnabled,
     isMfaEnabled = Clerk.mfaIsEnabled,
     isDeleteSelfEnabled = Clerk.deleteSelfIsEnabled,
@@ -122,7 +126,9 @@ private fun UserProfileSecurityMainContent(
   val userProfileState = LocalUserProfileState.current
   val coroutineScope = rememberCoroutineScope()
   var showBottomSheet by remember { mutableStateOf(false) }
-  var currentSheetType by remember { mutableStateOf<BottomSheetType>(BottomSheetType.Password) }
+  var currentSheetType by remember {
+    mutableStateOf<BottomSheetType>(BottomSheetType.DeleteAccount)
+  }
   val context = LocalContext.current
   Scaffold(
     containerColor = ClerkMaterialTheme.colors.muted,
@@ -156,6 +162,18 @@ private fun UserProfileSecurityMainContent(
         showBottomSheet = true
         currentSheetType = BottomSheetType.DeleteAccount
       },
+      onClickAddPassword = {
+        showBottomSheet = true
+        currentSheetType =
+          when (it) {
+            PasswordAction.Add ->
+              BottomSheetType.NewPassword(currentPassword = null, PasswordAction.Add)
+
+            PasswordAction.Reset -> {
+              BottomSheetType.CurrentPassword(PasswordAction.Reset)
+            }
+          }
+      },
       onError = { message ->
         coroutineScope.launch {
           snackbarHostState.showSnackbar(
@@ -167,11 +185,15 @@ private fun UserProfileSecurityMainContent(
     BottomSheetContent(
       showBottomSheet = showBottomSheet,
       currentSheetType = currentSheetType,
-      onDismissMfa = { showBottomSheet = false },
-      onDismissDelete = { showBottomSheet = false },
+      onDismiss = { showBottomSheet = false },
       onClickMfaType = {
         showBottomSheet = false
         currentSheetType = BottomSheetType.AddMfa(it)
+      },
+      onCurrentPasswordEntered = { password, action ->
+        showBottomSheet = true
+        currentSheetType =
+          BottomSheetType.NewPassword(currentPassword = password, passwordAction = action)
       },
       onError = { message ->
         coroutineScope.launch {
@@ -190,6 +212,7 @@ private fun UserProfileSecurityContent(
   configuration: SecurityContentConfiguration,
   onError: (String?) -> Unit,
   onClickDeleteAccount: () -> Unit,
+  onClickAddPassword: (PasswordAction) -> Unit,
   onAdd: () -> Unit,
 ) {
   val scrollState = rememberScrollState()
@@ -202,7 +225,10 @@ private fun UserProfileSecurityContent(
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
     if (configuration.isPasswordEnabled) {
-      UserProfilePasswordSection()
+      UserProfilePasswordSection(
+        onClick = onClickAddPassword,
+        isPasswordEnabled = configuration.isPasswordEnabled,
+      )
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if (configuration.isPasskeyEnabled) {
@@ -238,10 +264,10 @@ internal fun UserProfileSecurityFooter() {
 @Composable
 private fun BottomSheetContent(
   onClickMfaType: (ViewType) -> Unit,
+  onCurrentPasswordEntered: (String, PasswordAction) -> Unit,
   showBottomSheet: Boolean,
   currentSheetType: BottomSheetType,
-  onDismissMfa: () -> Unit,
-  onDismissDelete: () -> Unit,
+  onDismiss: () -> Unit,
   onError: (String?) -> Unit,
 ) {
   val sheetState = rememberModalBottomSheetState()
@@ -250,14 +276,10 @@ private fun BottomSheetContent(
       shape = RoundedCornerShape(topEnd = dp10, topStart = dp10),
       containerColor = ClerkMaterialTheme.colors.background,
       sheetState = sheetState,
-      onDismissRequest = {
-        // Dismiss any visible bottom sheet
-        onDismissMfa()
-        onDismissDelete()
-      },
+      onDismissRequest = { onDismiss() },
     ) {
       when (currentSheetType) {
-        is BottomSheetType.AddMfa -> TODO()
+        is BottomSheetType.AddMfa -> {}
         BottomSheetType.ChooseMfa -> {
           UserProfileAddMfaBottomSheetContent(
             mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
@@ -266,9 +288,25 @@ private fun BottomSheetContent(
           )
         }
         BottomSheetType.DeleteAccount ->
-          UserProfileDeleteAccountConfirmationView(onClose = onDismissDelete, onError = onError)
+          UserProfileDeleteAccountConfirmationView(onClose = onDismiss, onError = onError)
         BottomSheetType.Passkey -> TODO()
-        BottomSheetType.Password -> TODO()
+        is BottomSheetType.CurrentPassword -> {
+          UserProfileCurrentPasswordView(
+            currentSheetType.passwordAction,
+            onClosePressed = onDismiss,
+            onCurrentPasswordEntered = { currentPassword, passwordAction ->
+              onCurrentPasswordEntered(currentPassword, passwordAction)
+            },
+          )
+        }
+        is BottomSheetType.NewPassword -> {
+          UserProfileNewPasswordView(
+            currentPassword = currentSheetType.currentPassword,
+            passwordAction = currentSheetType.passwordAction,
+            onError = onError,
+            onPasswordChanged = { onDismiss() },
+          )
+        }
       }
     }
   }
@@ -300,7 +338,10 @@ private sealed interface BottomSheetType {
 
   data object Passkey : BottomSheetType
 
-  data object Password : BottomSheetType
+  data class CurrentPassword(val passwordAction: PasswordAction) : BottomSheetType
+
+  data class NewPassword(val currentPassword: String?, val passwordAction: PasswordAction) :
+    BottomSheetType
 
   data object ChooseMfa : BottomSheetType
 

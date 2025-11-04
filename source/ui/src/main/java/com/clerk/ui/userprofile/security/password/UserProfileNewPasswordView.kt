@@ -96,7 +96,7 @@ private fun UpdatePasswordContent(isLoading: Boolean = false, onClick: (String, 
   var newPassword by rememberSaveable { mutableStateOf("") }
   var confirmPassword by rememberSaveable { mutableStateOf("") }
   var signOutOfOtherDevices by rememberSaveable { mutableStateOf(false) }
-  Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
+  Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24)) {
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
       value = newPassword,
