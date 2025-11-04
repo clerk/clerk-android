@@ -45,7 +45,9 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.account.UserProfileDeleteAccountConfirmationView
 import com.clerk.ui.userprofile.mfa.UserProfileAddMfaBottomSheetContent
+import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
 import com.clerk.ui.userprofile.mfa.ViewType
+import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
@@ -54,6 +56,8 @@ import com.clerk.ui.userprofile.security.password.PasswordAction
 import com.clerk.ui.userprofile.security.password.UserProfileCurrentPasswordView
 import com.clerk.ui.userprofile.security.password.UserProfileNewPasswordView
 import com.clerk.ui.userprofile.security.password.UserProfilePasswordSection
+import com.clerk.ui.userprofile.verify.Mode
+import com.clerk.ui.userprofile.verify.UserProfileVerifyView
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -189,11 +193,27 @@ private fun UserProfileSecurityMainContent(
       onClickMfaType = {
         showBottomSheet = false
         currentSheetType = BottomSheetType.AddMfa(it)
+        showBottomSheet = true
       },
       onCurrentPasswordEntered = { password, action ->
         showBottomSheet = true
         currentSheetType =
           BottomSheetType.NewPassword(currentPassword = password, passwordAction = action)
+      },
+      onAddPhoneNumber = {
+        showBottomSheet = false
+        currentSheetType = BottomSheetType.AddPhoneNumber
+        showBottomSheet = true
+      },
+      onNavigateToBackupCodes = {
+        showBottomSheet = false
+        currentSheetType = BottomSheetType.BackupCodes(it)
+        showBottomSheet = true
+      },
+      onVerify = {
+        showBottomSheet = false
+        currentSheetType = BottomSheetType.Verify(it)
+        showBottomSheet = true
       },
       onError = { message ->
         coroutineScope.launch {
@@ -225,10 +245,7 @@ private fun UserProfileSecurityContent(
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
     if (configuration.isPasswordEnabled) {
-      UserProfilePasswordSection(
-        onClick = onClickAddPassword,
-        isPasswordEnabled = configuration.isPasswordEnabled,
-      )
+      UserProfilePasswordSection(onClick = onClickAddPassword)
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if (configuration.isPasskeyEnabled) {
@@ -269,6 +286,9 @@ private fun BottomSheetContent(
   currentSheetType: BottomSheetType,
   onDismiss: () -> Unit,
   onError: (String?) -> Unit,
+  onAddPhoneNumber: () -> Unit,
+  onNavigateToBackupCodes: (List<String>) -> Unit,
+  onVerify: (Mode) -> Unit,
 ) {
   val sheetState = rememberModalBottomSheetState()
   if (showBottomSheet) {
@@ -279,7 +299,15 @@ private fun BottomSheetContent(
       onDismissRequest = { onDismiss() },
     ) {
       when (currentSheetType) {
-        is BottomSheetType.AddMfa -> {}
+        is BottomSheetType.AddMfa -> {
+          UserProfileAddMfaView(
+            currentSheetType.viewType,
+            onError = onError,
+            onDismiss = onDismiss,
+            onAddPhoneNumber = onAddPhoneNumber,
+            onNavigateToBackupCodes = onNavigateToBackupCodes,
+          )
+        }
         BottomSheetType.ChooseMfa -> {
           UserProfileAddMfaBottomSheetContent(
             mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
@@ -289,7 +317,6 @@ private fun BottomSheetContent(
         }
         BottomSheetType.DeleteAccount ->
           UserProfileDeleteAccountConfirmationView(onClose = onDismiss, onError = onError)
-        BottomSheetType.Passkey -> TODO()
         is BottomSheetType.CurrentPassword -> {
           UserProfileCurrentPasswordView(
             currentSheetType.passwordAction,
@@ -306,6 +333,18 @@ private fun BottomSheetContent(
             onError = onError,
             onPasswordChanged = { onDismiss() },
           )
+        }
+
+        is BottomSheetType.BackupCodes -> {
+          BackupCodesView(codes = currentSheetType.codes.toImmutableList(), onDismiss = onDismiss)
+        }
+
+        BottomSheetType.AddPhoneNumber -> {
+          UserProfileAddPhoneView(onError = onError, onVerify = onVerify, onDismiss = onDismiss)
+        }
+
+        is BottomSheetType.Verify -> {
+          UserProfileVerifyView(mode = currentSheetType.mode)
         }
       }
     }
@@ -336,8 +375,6 @@ data class SecurityContentConfiguration(
 private sealed interface BottomSheetType {
   data object DeleteAccount : BottomSheetType
 
-  data object Passkey : BottomSheetType
-
   data class CurrentPassword(val passwordAction: PasswordAction) : BottomSheetType
 
   data class NewPassword(val currentPassword: String?, val passwordAction: PasswordAction) :
@@ -346,4 +383,10 @@ private sealed interface BottomSheetType {
   data object ChooseMfa : BottomSheetType
 
   data class AddMfa(val viewType: ViewType) : BottomSheetType
+
+  data class BackupCodes(val codes: List<String>) : BottomSheetType
+
+  data object AddPhoneNumber : BottomSheetType
+
+  data class Verify(val mode: Mode) : BottomSheetType
 }

@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -30,21 +32,17 @@ import com.clerk.ui.userprofile.common.UserProfileButtonRow
 internal fun UserProfilePasswordSection(
   modifier: Modifier = Modifier,
   onClick: (PasswordAction) -> Unit,
-  isPasswordEnabled: Boolean,
 ) {
-  UserProfilePasswordSectionImpl(
-    modifier = modifier,
-    onClick = onClick,
-    isPasswordEnabled = isPasswordEnabled,
-  )
+  UserProfilePasswordSectionImpl(modifier = modifier, onClick = onClick)
 }
 
 @Composable
 internal fun UserProfilePasswordSectionImpl(
   modifier: Modifier = Modifier,
-  isPasswordEnabled: Boolean,
   onClick: (PasswordAction) -> Unit,
 ) {
+  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val isPasswordEnabled = user?.passwordEnabled == true
   ClerkMaterialTheme {
     Column(
       modifier =
@@ -98,7 +96,7 @@ private fun Preview() {
       modifier =
         Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
     ) {
-      UserProfilePasswordSectionImpl(isPasswordEnabled = true, onClick = {})
+      UserProfilePasswordSectionImpl(onClick = {})
     }
   }
 }
@@ -112,7 +110,7 @@ private fun PreviewAddPassword() {
       modifier =
         Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
     ) {
-      UserProfilePasswordSectionImpl(onClick = {}, isPasswordEnabled = true)
+      UserProfilePasswordSectionImpl(onClick = {})
     }
   }
 }

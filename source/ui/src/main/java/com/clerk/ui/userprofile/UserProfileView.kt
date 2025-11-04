@@ -13,7 +13,6 @@ import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.detail.UserProfileDetailView
-import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
 import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.Origin
@@ -69,9 +68,6 @@ fun UserProfileView(modifier: Modifier = Modifier) {
 
           entry<UserProfileDestination.RenamePasskeyView> { key ->
             UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
-          }
-          entry<UserProfileDestination.AddMfaView> { key ->
-            UserProfileAddMfaView(viewType = key.viewType)
           }
 
           entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
