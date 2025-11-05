@@ -5,8 +5,10 @@ import androidx.compose.ui.graphics.Color
 /**
  * Computed color variants derived from the base Clerk colors. These colors are calculated at
  * runtime based on the current theme and system settings.
+ *
+ * Access this through [ClerkMaterialTheme.computedColors] within a `ClerkMaterialTheme` scope.
  */
-data class ComputedColors(
+public data class ComputedColors(
   /** Primary color in pressed state (lightened or darkened based on theme) */
   val primaryPressed: Color,
   /** Subtle border color with reduced opacity */

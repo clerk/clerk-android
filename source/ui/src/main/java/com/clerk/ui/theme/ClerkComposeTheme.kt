@@ -52,7 +52,7 @@ internal val LocalClerkDesign =
  * Clerk Theming refers to the customization of your Clerk components to better reflect your
  * product's brand.
  *
- * Clerk components such as [com.clerk.ui.core.button.standard.ClerkButtonWithPressedState] and
+ * Clerk components such as [com.clerk.ui.core.button.standard.ClerkButton] and
  * [com.clerk.ui.core.input.ClerkTextField] use values provided here when retrieving default values.
  * This theme system seamlessly integrates with Material3 theming while providing Clerk-specific
  * design tokens and computed colors.
@@ -69,6 +69,44 @@ internal val LocalClerkDesign =
  * additional computed color variants optimized for common UI patterns like pressed states, borders,
  * and semantic colors.
  *
+ * ## Per-Element Theming
+ *
+ * You can apply custom themes to individual UI elements by wrapping them with `ClerkMaterialTheme`:
+ *
+ * ```kotlin
+ * @Composable
+ * fun MyScreen() {
+ *   // Default theme for most elements
+ *   ClerkMaterialTheme {
+ *     Column {
+ *       ClerkButton(text = "Default Button", onClick = {})
+ *
+ *       // Custom theme for this specific button
+ *       ClerkMaterialTheme(
+ *         clerkTheme = ClerkTheme(
+ *           colors = ClerkColors(primary = Color(0xFF00FF00))
+ *         )
+ *       ) {
+ *         ClerkButton(text = "Green Button", onClick = {})
+ *       }
+ *
+ *       // Another element with different theme
+ *       ClerkMaterialTheme(
+ *         clerkTheme = ClerkTheme(
+ *           colors = ClerkColors(primary = Color(0xFFFF0000))
+ *         )
+ *       ) {
+ *         ClerkTextField(
+ *           value = "",
+ *           onValueChange = {},
+ *           label = "Red-themed Input"
+ *         )
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ *
  * ## Theme Access
  *
  * Use the [ClerkMaterialTheme] object to access theme values within your composables:
@@ -77,7 +115,7 @@ internal val LocalClerkDesign =
  * fun MyComponent() {
  *   ClerkMaterialTheme {
  *     val primary = ClerkMaterialTheme.colors.primary
- *     val pressedColor = ClerkMaterialTheme.computed.primaryPressed
+ *     val pressedColor = ClerkMaterialTheme.computedColors.primaryPressed
  *     val borderRadius = ClerkMaterialTheme.design.borderRadius
  *
  *     // Use the values in your component
@@ -95,15 +133,19 @@ internal val LocalClerkDesign =
  * your Clerk theme, ensuring seamless integration between Clerk and Material components.
  *
  * @param clerkTheme The Clerk theme to apply. If null, uses the globally configured theme from
- *   [Clerk.customTheme] or system defaults.
+ *   [Clerk.customTheme] or system defaults. When provided, this theme will override the parent theme
+ *   for all components within this ClerkMaterialTheme scope, allowing per-element theming.
  * @param content The composable content that will have access to the themed values.
  */
 @Composable
-internal fun ClerkMaterialTheme(
-  clerkTheme: ClerkTheme? = Clerk.customTheme,
+public fun ClerkMaterialTheme(
+  clerkTheme: ClerkTheme? = null,
   content: @Composable () -> Unit,
 ) {
-  ClerkThemeProvider(theme = clerkTheme) {
+  // Use provided theme, or fall back to global theme
+  val effectiveTheme = clerkTheme ?: Clerk.customTheme
+  
+  ClerkThemeProvider(theme = effectiveTheme) {
     val colors = ClerkThemeProviderAccess.colors
     val design = ClerkThemeProviderAccess.design
 
@@ -134,8 +176,23 @@ internal fun ClerkMaterialTheme(
  * This object provides a clean API for accessing Clerk theme values, similar to how MaterialTheme
  * exposes its values. Use these properties within @Composable functions to access the current theme
  * configuration.
+ *
+ * ## Usage
+ *
+ * Access theme values within a `ClerkMaterialTheme` scope:
+ *
+ * ```kotlin
+ * @Composable
+ * fun MyComponent() {
+ *   ClerkMaterialTheme {
+ *     val primaryColor = ClerkMaterialTheme.colors.primary
+ *     val borderRadius = ClerkMaterialTheme.design.borderRadius
+ *     val bodyTextStyle = ClerkMaterialTheme.typography.bodyMedium
+ *   }
+ * }
+ * ```
  */
-internal object ClerkMaterialTheme {
+public object ClerkMaterialTheme {
 
   /**
    * Retrieves the current [ClerkThemeColors] at the call site's position in the hierarchy.
@@ -198,8 +255,10 @@ internal object ClerkMaterialTheme {
  * ClerkColors instance. Since colors are guaranteed to be non-null within a ClerkMaterialTheme
  * context (they fall back to defaults), this wrapper eliminates the need for null checks and !!
  * operators in UI components.
+ *
+ * Access this through [ClerkMaterialTheme.colors] within a `ClerkMaterialTheme` scope.
  */
-class ClerkThemeColors internal constructor(private val colors: ClerkColors) {
+public class ClerkThemeColors internal constructor(private val colors: ClerkColors) {
   /** Main brand color used for primary actions and highlights. */
   val primary: Color
     get() = colors.primary!!
