@@ -115,6 +115,7 @@ private fun UserProfileMfaAddSmsViewImpl(
   onAddPhoneNumber: () -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
+  var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
 
   LaunchedEffect(state) {
     when (state) {
@@ -122,6 +123,8 @@ private fun UserProfileMfaAddSmsViewImpl(
         if ((state as MfaAddSmsViewModel.State.Error).message != null) {
           onError((state as MfaAddSmsViewModel.State.Error).message!!)
         }
+        selectedNumber = null
+        viewModel.resetState()
       }
       is MfaAddSmsViewModel.State.Success -> {
         if (
@@ -135,16 +138,19 @@ private fun UserProfileMfaAddSmsViewImpl(
         } else {
           onDismiss()
         }
+        selectedNumber = null
+        viewModel.resetState()
       }
       else -> {}
     }
-    viewModel.resetState()
   }
 
   UserProfileMfaAddSmsContent(
     modifier = modifier,
     availablePhoneNumbers = availablePhoneNumbers,
     isLoading = state is MfaAddSmsViewModel.State.Loading,
+    selectedNumber = selectedNumber,
+    onSelectedNumberChange = { selectedNumber = it },
     onReserveForSecondFactor = { viewModel.reserveForSecondFactor(it) },
     onAddPhoneNumber = onAddPhoneNumber,
     onDismiss = onDismiss,
@@ -159,8 +165,9 @@ private fun UserProfileMfaAddSmsContent(
   modifier: Modifier = Modifier,
   isLoading: Boolean = false,
   onDismiss: () -> Unit,
+  selectedNumber: PhoneNumber?,
+  onSelectedNumberChange: (PhoneNumber?) -> Unit,
 ) {
-  var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
   Column(modifier = modifier.padding(vertical = dp24)) {
     BottomSheetTopBar(
       title = stringResource(R.string.add_sms_code_verification),
@@ -188,7 +195,7 @@ private fun UserProfileMfaAddSmsContent(
                 flag = flag,
                 phoneNumber = displayNumber,
                 selected = selectedNumber == phoneNumber,
-                onSelected = { selectedNumber = phoneNumber },
+                onSelected = { onSelectedNumberChange(phoneNumber) },
               )
             }
           }
@@ -337,7 +344,8 @@ private fun PreviewMfaRow() {
 private fun Preview() {
   PreviewUserProfileStateProvider {
     ClerkMaterialTheme {
-      UserProfileMfaAddSmsViewImpl(
+      var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
+      UserProfileMfaAddSmsContent(
         availablePhoneNumbers =
           persistentListOf(
             PhoneNumber(id = "1", phoneNumber = "+13012370655"),
@@ -345,9 +353,11 @@ private fun Preview() {
             PhoneNumber(id = "3", "+306912345678"),
           ),
         onDismiss = {},
-        onNavigateToBackupCodes = {},
-        onError = {},
         onAddPhoneNumber = {},
+        selectedNumber = selectedNumber,
+        onSelectedNumberChange = { selectedNumber = it },
+        isLoading = false,
+        onReserveForSecondFactor = {},
       )
     }
   }
