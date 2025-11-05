@@ -71,12 +71,44 @@ internal val LocalClerkDesign =
  *
  * ## Per-Element Theming
  *
- * You can apply custom themes to individual UI elements by wrapping them with `ClerkMaterialTheme`:
+ * You can apply custom themes to individual UI elements in two ways:
+ *
+ * ### Method 1: Using the `theme` parameter (Recommended)
+ *
+ * Many Clerk components support a `theme` parameter that allows you to apply a custom theme directly:
  *
  * ```kotlin
  * @Composable
  * fun MyScreen() {
- *   // Default theme for most elements
+ *   Column {
+ *     // Default theme button
+ *     ClerkButton(text = "Default Button", onClick = {})
+ *
+ *     // Custom themed button using theme parameter
+ *     ClerkButton(
+ *       text = "Green Button",
+ *       onClick = {},
+ *       theme = ClerkTheme(colors = ClerkColors(primary = Color(0xFF00FF00)))
+ *     )
+ *
+ *     // Custom themed text field
+ *     ClerkTextField(
+ *       value = "",
+ *       onValueChange = {},
+ *       label = "Red-themed Input",
+ *       theme = ClerkTheme(colors = ClerkColors(primary = Color(0xFFFF0000)))
+ *     )
+ *   }
+ * }
+ * ```
+ *
+ * ### Method 2: Wrapping with ClerkMaterialTheme
+ *
+ * You can also wrap elements with `ClerkMaterialTheme` for more control:
+ *
+ * ```kotlin
+ * @Composable
+ * fun MyScreen() {
  *   ClerkMaterialTheme {
  *     Column {
  *       ClerkButton(text = "Default Button", onClick = {})
@@ -88,19 +120,6 @@ internal val LocalClerkDesign =
  *         )
  *       ) {
  *         ClerkButton(text = "Green Button", onClick = {})
- *       }
- *
- *       // Another element with different theme
- *       ClerkMaterialTheme(
- *         clerkTheme = ClerkTheme(
- *           colors = ClerkColors(primary = Color(0xFFFF0000))
- *         )
- *       ) {
- *         ClerkTextField(
- *           value = "",
- *           onValueChange = {},
- *           label = "Red-themed Input"
- *         )
  *       }
  *     }
  *   }

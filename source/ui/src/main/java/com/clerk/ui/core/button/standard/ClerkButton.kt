@@ -60,6 +60,8 @@ import com.clerk.ui.theme.DefaultColors
  * @param padding The padding to apply to the button content.
  * @param configuration Configuration controlling size, emphasis, and other visuals.
  * @param icons Optional leading and trailing icons, including their colors.
+ * @param theme Optional theme to apply to this button. If provided, overrides the parent theme
+ *   for this component, allowing per-element theming.
  *
  * Example:
  * ```kotlin
@@ -67,6 +69,15 @@ import com.clerk.ui.theme.DefaultColors
  *   text = "Continue",
  *   onClick = { /* action */ },
  *   configuration = ClerkButtonDefaults.configuration(style = ClerkButtonConfig.ButtonStyle.Primary)
+ * )
+ * ```
+ *
+ * Per-element theming example:
+ * ```kotlin
+ * ClerkButton(
+ *   text = "Custom Themed Button",
+ *   onClick = { },
+ *   theme = ClerkTheme(colors = ClerkColors(primary = Color(0xFF00FF00)))
  * )
  * ```
  */
@@ -80,6 +91,7 @@ fun ClerkButton(
   padding: ClerkButtonPadding = ClerkButtonDefaults.padding(),
   configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
+  theme: ClerkTheme? = null,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
@@ -94,6 +106,7 @@ fun ClerkButton(
     interactionSource = interactionSource,
     icons = icons,
     padding = padding,
+    theme = theme,
   )
 }
 
@@ -155,8 +168,9 @@ private fun ClerkButtonImpl(
   configuration: ClerkButtonConfiguration,
   modifier: Modifier = Modifier,
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
+  theme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = theme) {
     val tokens = buildButtonTokens(config = configuration, isPressed = isPressedCombined)
 
     val surfaceModifier =

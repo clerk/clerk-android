@@ -58,6 +58,8 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  * @param isError Whether the field should be displayed in an error state with error styling
  * @param enabled Whether the text field is enabled and accepts user input
  * @param inputContentType The content type for autofill hints, defaults to [ContentType.Username]
+ * @param theme Optional theme to apply to this text field. If provided, overrides the parent theme
+ *   for this component, allowing per-element theming.
  */
 @Composable
 fun ClerkTextField(
@@ -76,6 +78,7 @@ fun ClerkTextField(
   inputContentType: ContentType = ContentType.Username,
   visualTransformation: VisualTransformation = VisualTransformation.None,
   keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+  theme: ClerkTheme? = null,
 ) {
   var isVisible by remember {
     mutableStateOf(visualTransformation !is PasswordVisualTransformation)
@@ -85,19 +88,18 @@ fun ClerkTextField(
 
   LaunchedEffect(isFocused) { onFocusChange(isFocused) }
 
-  val textFieldColors = getTextFieldColors()
+  ClerkMaterialTheme(clerkTheme = theme) {
+    val textFieldColors = getTextFieldColors()
 
-  val labelStyle =
-    if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
-    else MaterialTheme.typography.bodyLarge
-  val labelColor =
-    when {
-      isError -> ClerkMaterialTheme.colors.danger
-      isFocused -> ClerkMaterialTheme.colors.primary
-      else -> ClerkMaterialTheme.colors.mutedForeground
-    }
-
-  ClerkMaterialTheme {
+    val labelStyle =
+      if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
+      else MaterialTheme.typography.bodyLarge
+    val labelColor =
+      when {
+        isError -> ClerkMaterialTheme.colors.danger
+        isFocused -> ClerkMaterialTheme.colors.primary
+        else -> ClerkMaterialTheme.colors.mutedForeground
+      }
     OutlinedTextField(
       interactionSource = interactionSource,
       modifier = modifier.fillMaxWidth().semantics { contentType = inputContentType },
