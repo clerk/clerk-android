@@ -25,7 +25,6 @@ class UiActivity2 : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
     setContent {
       WorkbenchTheme {
         val state by viewModel.uiState.collectAsStateWithLifecycle()

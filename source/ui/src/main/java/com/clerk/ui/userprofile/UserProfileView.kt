@@ -19,12 +19,10 @@ import androidx.navigation3.ui.NavDisplay
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.detail.UserProfileDetailView
-import com.clerk.ui.userprofile.mfa.ViewType
 import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.Origin
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameView
-import com.clerk.ui.userprofile.security.password.PasswordAction
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
 import com.clerk.ui.userprofile.verify.Mode
 import com.clerk.ui.userprofile.verify.UserProfileVerifyView
@@ -52,19 +50,25 @@ fun UserProfileView(modifier: Modifier = Modifier) {
     NavDisplay(
       modifier = modifier,
       backStack = backStack,
+      onBack = { backStack.removeLastOrNull() },
       transitionSpec = {
-        val spec = tween<IntOffset>(durationMillis = 250)
+        val spec = tween<IntOffset>(durationMillis = 300)
         slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
           slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
       },
       popTransitionSpec = {
-        val spec = tween<IntOffset>(durationMillis = 250)
+        val spec = tween<IntOffset>(durationMillis = 300)
         slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
           slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
       },
+      predictivePopTransitionSpec = { distance ->
+        // Use the provided distance to align with the system back gesture
+        slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+          slideOutHorizontally(targetOffsetX = { distance })
+      },
       entryProvider =
         entryProvider {
-          entry<UserProfileDestination.UserProfileAccount> { key ->
+          entry<UserProfileDestination.UserProfileAccount> {
             UserProfileAccountView(
               onClick = {
                 when (it) {
@@ -78,10 +82,9 @@ fun UserProfileView(modifier: Modifier = Modifier) {
               onClickEdit = { backStack.add(UserProfileDestination.UserProfileUpdate) },
             )
           }
-          entry<UserProfileDestination.UserProfile> { key -> }
-          entry<UserProfileDestination.UserProfileSecurity> { key -> UserProfileSecurityView() }
+          entry<UserProfileDestination.UserProfileSecurity> { UserProfileSecurityView() }
 
-          entry<UserProfileDestination.UserProfileUpdate> { key -> UserProfileUpdateProfileView() }
+          entry<UserProfileDestination.UserProfileUpdate> { UserProfileUpdateProfileView() }
 
           entry<UserProfileDestination.RenamePasskeyView> { key ->
             UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
@@ -98,26 +101,12 @@ fun UserProfileView(modifier: Modifier = Modifier) {
 internal object UserProfileDestination {
   @Serializable data object UserProfileAccount : NavKey
 
-  @Serializable data object UserProfile : NavKey
-
   @Serializable data object UserProfileSecurity : NavKey
 
   @Serializable data object UserProfileUpdate : NavKey
 
-  @Serializable data class UpdatePasswordCurrent(val action: PasswordAction) : NavKey
-
   @Serializable
   data class RenamePasskeyView(val passkeyId: String, val passkeyName: String) : NavKey
-
-  @Serializable
-  data class UpdatePasswordNew(
-    val currentPassword: String? = null,
-    val passwordAction: PasswordAction,
-  ) : NavKey
-
-  @Serializable data class AddMfaView(val viewType: ViewType) : NavKey
-
-  @Serializable data object AddPhoneView : NavKey
 
   @Serializable data class VerifyView(val mode: Mode) : NavKey
 
@@ -129,6 +118,4 @@ internal object UserProfileDestination {
   ) : NavKey
 
   @Serializable data object UserProfileDetail : NavKey
-
-  @Serializable data object AddEmail : NavKey
 }
