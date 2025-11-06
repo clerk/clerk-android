@@ -25,9 +25,9 @@ import com.clerk.api.phonenumber.isPrimary
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
-import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
@@ -65,7 +65,7 @@ internal fun UserProfilePhoneRow(
         Modifier.fillMaxWidth()
           .background(ClerkMaterialTheme.colors.background)
           .padding(start = dp24)
-          .padding(vertical = dp16)
+          .padding(vertical = dp8)
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -82,7 +82,7 @@ internal fun UserProfilePhoneRow(
               DropDownItem(id = PhoneAction.Verify, text = stringResource(R.string.verify)),
               DropDownItem(
                 id = PhoneAction.Remove,
-                text = stringResource(R.string.remove_email),
+                text = stringResource(R.string.remove_phone_number),
                 danger = true,
               ),
             ),
@@ -104,8 +104,8 @@ internal fun UserProfilePhoneRow(
 
 @Composable
 private fun PhoneWithBadge(phoneNumber: PhoneNumber) {
-  Column(modifier = Modifier.fillMaxWidth()) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(dp4)) {
+  Column {
+    Row(horizontalArrangement = Arrangement.spacedBy(dp4)) {
       if (phoneNumber.isPrimary) {
         Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
         Spacers.Vertical.Spacer4()

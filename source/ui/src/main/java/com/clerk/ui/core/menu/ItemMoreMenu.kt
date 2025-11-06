@@ -2,6 +2,7 @@ package com.clerk.ui.core.menu
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
@@ -31,7 +32,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.DpOffset
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -65,10 +68,12 @@ internal fun <T> ItemMoreMenu(
       expanded = expanded,
       onDismissRequest = { expanded = false },
       shape = ClerkMaterialTheme.shape,
+      offset = DpOffset(x = dp12.unaryMinus(), y = dp12),
     ) {
       dropDownItems.forEach { item ->
         if (item.isHidden) return@forEach
         DropdownMenuItem(
+          contentPadding = PaddingValues(horizontal = dp12, vertical = dp12),
           leadingIcon =
             item.leadingIcon?.let { iconVec ->
               { Icon(imageVector = iconVec, contentDescription = null) }
@@ -113,7 +118,7 @@ private fun Preview() {
       Spacer(modifier = Modifier.weight(1f))
       ItemMoreMenu(
         dropDownItems =
-          persistentListOf<DropDownItem<PreviewItemMoreMenu>>(
+          persistentListOf(
             DropDownItem(
               id = PreviewItemMoreMenu.VERIFY,
               text = stringResource(R.string.verify),
