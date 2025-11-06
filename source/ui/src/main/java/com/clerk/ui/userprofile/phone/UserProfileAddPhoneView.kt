@@ -32,8 +32,8 @@ import com.clerk.ui.userprofile.verify.Mode
 internal fun UserProfileAddPhoneView(
   onError: (String) -> Unit,
   onVerify: (Mode.Phone) -> Unit,
-  modifier: Modifier = Modifier,
   onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   UserProfileAddPhoneViewImpl(
     modifier = modifier,

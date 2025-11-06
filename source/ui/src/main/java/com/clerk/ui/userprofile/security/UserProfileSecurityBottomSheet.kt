@@ -100,16 +100,14 @@ internal fun NewPasswordSheet(type: BottomSheetType.NewPassword, callbacks: Bott
     currentPassword = type.currentPassword,
     passwordAction = type.passwordAction,
     onError = callbacks.onError,
+    onDismiss = callbacks.onDismiss,
     onPasswordChanged = { callbacks.onDismiss() },
   )
 }
 
 @Composable
 internal fun BackupCodesSheet(type: BottomSheetType.BackupCodes, callbacks: BottomSheetCallbacks) {
-  com.clerk.ui.userprofile.security.BackupCodesView(
-    codes = type.codes.toImmutableList(),
-    onDismiss = callbacks.onDismiss,
-  )
+  BackupCodesView(codes = type.codes.toImmutableList(), onDismiss = callbacks.onDismiss)
 }
 
 @Composable

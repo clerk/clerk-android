@@ -265,8 +265,9 @@ internal fun UserProfileSecurityFooter() {
     modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
-    Spacers.Vertical.Spacer12()
+    Spacers.Vertical.Spacer24()
     SecuredByClerkView()
+    Spacers.Vertical.Spacer24()
   }
 }
 
@@ -286,6 +287,8 @@ private fun BottomSheetContent(
       sheetState = sheetState,
       onDismissRequest = { callbacks.onDismiss() },
     ) {
+      callbacks.onDismiss()
+
       BottomSheetBody(currentSheetType = currentSheetType, callbacks = callbacks)
     }
   }
