@@ -150,6 +150,7 @@ private fun ProfileContent(
       onError = onError,
       onAddPhoneNumberClick = { onShowBottomSheet(BottomSheetMode.PhoneNumber) },
     )
+    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     Spacers.Vertical.Spacer16()
     UserProfileExternalAccountSection(
       externalAccounts,

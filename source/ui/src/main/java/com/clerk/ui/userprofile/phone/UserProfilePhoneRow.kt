@@ -10,11 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.phonenumber.PhoneNumber
@@ -22,9 +25,9 @@ import com.clerk.api.phonenumber.isPrimary
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
+import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
-import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
@@ -46,13 +49,23 @@ internal fun UserProfilePhoneRow(
 ) {
   val isPreview = LocalInspectionMode.current
   val userProfileState = LocalUserProfileState.current
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  LaunchedEffect(state) {
+    if (
+      state is UserProfileAddPhoneViewModel.State.Error &&
+        (state as UserProfileAddPhoneViewModel.State.Error).message != null
+    ) {
+      onError((state as UserProfileAddPhoneViewModel.State.Error).message!!)
+    }
+  }
 
   ClerkMaterialTheme {
     Row(
       modifier =
         Modifier.fillMaxWidth()
           .background(ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24, vertical = dp8)
+          .padding(start = dp24)
+          .padding(vertical = dp16)
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {

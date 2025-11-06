@@ -111,7 +111,8 @@ private fun BoxScope.EditButton(
     )
 
     DropdownMenu(
-      modifier = Modifier.defaultMinSize(minWidth = 144.dp),
+      modifier =
+        Modifier.background(ClerkMaterialTheme.colors.background).defaultMinSize(minWidth = 144.dp),
       expanded = expanded.value,
       onDismissRequest = { expanded.value = false },
     ) {
