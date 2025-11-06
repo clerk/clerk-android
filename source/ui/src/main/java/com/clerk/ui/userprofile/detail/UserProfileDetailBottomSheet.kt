@@ -38,6 +38,7 @@ internal fun UserProfileDetailBottomSheet(
   }
 
   ModalBottomSheet(
+    scrimColor = ClerkMaterialTheme.colors.neutral.copy(alpha = .5f),
     onDismissRequest = { animatedDismiss() },
     containerColor = ClerkMaterialTheme.colors.background,
     sheetState = sheetState,
