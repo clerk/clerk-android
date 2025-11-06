@@ -2,7 +2,9 @@ package com.clerk.ui.userprofile.detail
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -14,6 +16,7 @@ import com.clerk.ui.userprofile.verify.UserProfileVerifyBottomSheetContent
 import com.clerk.ui.userprofile.verify.VerifyBottomSheetMode
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,13 +27,24 @@ internal fun UserProfileDetailBottomSheet(
   onError: (String) -> Unit,
   onShowBackupCodes: (List<String>) -> Unit,
 ) {
+  val sheetState = rememberModalBottomSheetState()
+  val scope = rememberCoroutineScope()
+
+  fun animatedDismiss() {
+    scope.launch {
+      sheetState.hide()
+      onDismissRequest()
+    }
+  }
+
   ModalBottomSheet(
-    onDismissRequest = onDismissRequest,
+    onDismissRequest = { animatedDismiss() },
     containerColor = ClerkMaterialTheme.colors.background,
+    sheetState = sheetState,
   ) {
     BottomSheetContent(
       bottomSheetType = bottomSheetType,
-      onDismissRequest = onDismissRequest,
+      onDismissRequest = { animatedDismiss() },
       onVerify = onVerify,
       onError = onError,
       onShowBackupCodes = onShowBackupCodes,
