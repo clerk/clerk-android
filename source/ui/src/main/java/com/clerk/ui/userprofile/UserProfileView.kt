@@ -1,10 +1,16 @@
 package com.clerk.ui.userprofile
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -37,6 +43,7 @@ internal fun UserProfileStateProvider(
   CompositionLocalProvider(LocalUserProfileState provides userProfileState) { content() }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun UserProfileView(modifier: Modifier = Modifier) {
   val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
@@ -45,6 +52,16 @@ fun UserProfileView(modifier: Modifier = Modifier) {
     NavDisplay(
       modifier = modifier,
       backStack = backStack,
+      transitionSpec = {
+        val spec = tween<IntOffset>(durationMillis = 250)
+        slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+          slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+      },
+      popTransitionSpec = {
+        val spec = tween<IntOffset>(durationMillis = 250)
+        slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+          slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+      },
       entryProvider =
         entryProvider {
           entry<UserProfileDestination.UserProfileAccount> { key ->
