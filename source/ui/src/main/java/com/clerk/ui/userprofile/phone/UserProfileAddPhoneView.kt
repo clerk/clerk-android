@@ -67,12 +67,9 @@ private fun UserProfileAddPhoneViewImpl(
   }
 
   Column(modifier = Modifier.fillMaxWidth().padding(bottom = dp24).then(modifier)) {
-    BottomSheetTopBar(
-      title = stringResource(R.string.add_email_address),
-      onClosePressed = onDismiss,
-    )
+    BottomSheetTopBar(title = stringResource(R.string.add_phone_number), onClosePressed = onDismiss)
     Column(
-      modifier = Modifier.fillMaxWidth().padding(horizontal = dp24),
+      modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24),
       verticalArrangement = Arrangement.spacedBy(dp24),
     ) {
       Text(

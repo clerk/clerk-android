@@ -81,6 +81,7 @@ private fun UserProfileAddEmailViewImpl(
       verticalArrangement = Arrangement.spacedBy(dp24),
     ) {
       Text(
+        color = ClerkMaterialTheme.colors.mutedForeground,
         text = stringResource(R.string.you_ll_need_to_verify_this_email_address),
         style = ClerkMaterialTheme.typography.bodyMedium,
       )
