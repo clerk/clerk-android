@@ -57,7 +57,7 @@ private fun UserProfileMfaSectionImpl(
       if (mfaItems.isNotEmpty()) {
         Spacers.Vertical.Spacer24()
       }
-      Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
+      Column(modifier = Modifier.fillMaxWidth().padding(start = dp24)) {
         mfaItems.forEachIndexed { index, mfaItem ->
           UserProfileMfaRow(style = mfaItem.style, isDefault = mfaItem.isDefault)
           if (index < mfaItems.lastIndex) {

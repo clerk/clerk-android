@@ -61,7 +61,7 @@ internal fun <T> ItemMoreMenu(
     }
 
     DropdownMenu(
-      modifier = Modifier.width(IntrinsicSize.Min),
+      modifier = Modifier.width(IntrinsicSize.Min).background(ClerkMaterialTheme.colors.background),
       expanded = expanded,
       onDismissRequest = { expanded = false },
       shape = ClerkMaterialTheme.shape,

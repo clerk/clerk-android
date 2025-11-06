@@ -67,7 +67,7 @@ private fun UserProfilePasskeySectionImpl(
       if (passkeys.isNotEmpty()) {
         Spacers.Vertical.Spacer24()
       }
-      Column(modifier = Modifier.fillMaxWidth().padding(horizontal = dp24)) {
+      Column(modifier = Modifier.fillMaxWidth().padding(start = dp24)) {
         passkeys.forEachIndexed { index, passkey ->
           UserProfilePasskeyRow(
             passkey = passkey,
