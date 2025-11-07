@@ -149,6 +149,7 @@ private fun ProfileContent(
       phoneNumbers = phoneNumbers,
       onError = onError,
       onAddPhoneNumberClick = { onShowBottomSheet(BottomSheetMode.PhoneNumber) },
+      onVerify = { onShowBottomSheet(BottomSheetMode.VerifyPhoneNumber(it)) },
     )
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     Spacers.Vertical.Spacer16()

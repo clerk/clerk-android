@@ -32,10 +32,6 @@ import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.LocalUserProfileState
-import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
-import com.clerk.ui.userprofile.UserProfileDestination
-import com.clerk.ui.userprofile.verify.Mode
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import kotlinx.collections.immutable.persistentListOf
 
@@ -45,10 +41,10 @@ internal fun UserProfilePhoneRow(
   phoneNumber: PhoneNumber,
   onError: (String) -> Unit,
   modifier: Modifier = Modifier,
+  onVerify: (PhoneNumber) -> Unit,
   viewModel: UserProfileAddPhoneViewModel = viewModel(),
 ) {
   val isPreview = LocalInspectionMode.current
-  val userProfileState = LocalUserProfileState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
   LaunchedEffect(state) {
     if (
@@ -89,10 +85,7 @@ internal fun UserProfilePhoneRow(
           onClick = {
             when (it) {
               PhoneAction.SetAsPrimary -> viewModel.setAsPrimary(phoneNumber)
-              PhoneAction.Verify ->
-                userProfileState.navigateTo(
-                  UserProfileDestination.VerifyView(mode = Mode.Phone(phoneNumber))
-                )
+              PhoneAction.Verify -> onVerify(phoneNumber)
               PhoneAction.Remove -> viewModel.deletePhoneNumber(phoneNumber)
             }
           },
@@ -136,42 +129,43 @@ internal enum class PhoneAction {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  PreviewUserProfileStateProvider {
-    ClerkMaterialTheme {
-      Column(
-        modifier =
-          Modifier.background(color = ClerkMaterialTheme.colors.muted).padding(vertical = dp24)
-      ) {
-        UserProfilePhoneRow(
-          onError = {},
-          phoneNumber =
-            PhoneNumber(
-              id = "phone_1",
-              phoneNumber = "15555550100",
-              verification = Verification(Verification.Status.VERIFIED),
-            ),
-        )
-        UserProfilePhoneRow(
-          onError = {},
-          phoneNumber =
-            PhoneNumber(
-              id = "phone_1",
-              phoneNumber = "15555550100",
-              reservedForSecondFactor = true,
-              verification = Verification(Verification.Status.VERIFIED),
-            ),
-        )
-        UserProfilePhoneRow(
-          onError = {},
-          phoneNumber =
-            PhoneNumber(
-              id = "phone_1",
-              phoneNumber = "15555550100",
-              reservedForSecondFactor = true,
-              verification = Verification(Verification.Status.UNVERIFIED),
-            ),
-        )
-      }
+  ClerkMaterialTheme {
+    Column(
+      modifier =
+        Modifier.background(color = ClerkMaterialTheme.colors.muted).padding(vertical = dp24)
+    ) {
+      UserProfilePhoneRow(
+        onError = {},
+        onVerify = {},
+        phoneNumber =
+          PhoneNumber(
+            id = "phone_1",
+            phoneNumber = "15555550100",
+            verification = Verification(Verification.Status.VERIFIED),
+          ),
+      )
+      UserProfilePhoneRow(
+        onError = {},
+        onVerify = {},
+        phoneNumber =
+          PhoneNumber(
+            id = "phone_1",
+            phoneNumber = "15555550100",
+            reservedForSecondFactor = true,
+            verification = Verification(Verification.Status.VERIFIED),
+          ),
+      )
+      UserProfilePhoneRow(
+        onError = {},
+        onVerify = {},
+        phoneNumber =
+          PhoneNumber(
+            id = "phone_1",
+            phoneNumber = "15555550100",
+            reservedForSecondFactor = true,
+            verification = Verification(Verification.Status.UNVERIFIED),
+          ),
+      )
     }
   }
 }

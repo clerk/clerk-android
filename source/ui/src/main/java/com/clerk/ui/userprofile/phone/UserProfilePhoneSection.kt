@@ -26,6 +26,7 @@ internal fun UserProfilePhoneSection(
   onError: (String) -> Unit,
   modifier: Modifier = Modifier,
   onAddPhoneNumberClick: () -> Unit,
+  onVerify: (PhoneNumber) -> Unit,
 ) {
 
   ClerkMaterialTheme {
@@ -37,7 +38,9 @@ internal fun UserProfilePhoneSection(
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
       Spacers.Vertical.Spacer16()
-      phoneNumbers.forEach { UserProfilePhoneRow(phoneNumber = it, onError = onError) }
+      phoneNumbers.forEach {
+        UserProfilePhoneRow(phoneNumber = it, onError = onError, onVerify = onVerify)
+      }
 
       UserProfileButtonRow(
         text = stringResource(R.string.add_phone_number),
@@ -55,6 +58,7 @@ private fun Preview() {
       UserProfilePhoneSection(
         onError = {},
         onAddPhoneNumberClick = {},
+        onVerify = {},
         phoneNumbers =
           persistentListOf(
             PhoneNumber(
