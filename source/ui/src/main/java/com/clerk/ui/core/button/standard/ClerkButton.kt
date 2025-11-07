@@ -42,7 +42,6 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
-import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
@@ -79,7 +78,6 @@ fun ClerkButton(
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
   isLoading: Boolean = false,
-  padding: ClerkButtonPadding = ClerkButtonDefaults.padding(),
   configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
@@ -592,7 +590,6 @@ private fun PreviewIconOnly() {
             trailingIcon = R.drawable.ic_edit,
             trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
           ),
-        padding = ClerkButtonPadding(horizontal = dp8, vertical = dp0),
         onClick = {},
       )
     }
