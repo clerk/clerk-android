@@ -11,6 +11,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -28,15 +30,11 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.Clerk
 import com.clerk.ui.R
-import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
-import com.clerk.ui.core.button.standard.ClerkButtonDefaults
-import com.clerk.ui.core.button.standard.ClerkButtonPadding
-import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp3
+import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
-import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.dimens.dp96
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -91,24 +89,23 @@ private fun BoxScope.EditButton(
 ) {
   val expanded = remember { mutableStateOf(false) }
   Box(modifier = Modifier.align(Alignment.BottomEnd)) {
-    ClerkButton(
-      text = null,
-      configuration =
-        ClerkButtonConfiguration(
-          size = ClerkButtonConfiguration.Size.Small,
-          emphasis = ClerkButtonConfiguration.Emphasis.High,
-          style = ClerkButtonConfiguration.ButtonStyle.Secondary,
-          backgroundColorOverride = ClerkMaterialTheme.colors.muted,
-        ),
-      isEnabled = true,
-      icons =
-        ClerkButtonDefaults.icons(
-          trailingIcon = R.drawable.ic_edit,
-          trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-        ),
-      padding = ClerkButtonPadding(horizontal = dp8, vertical = dp0),
-      onClick = { expanded.value = true },
-    )
+    Surface(
+      modifier =
+        Modifier.size(dp32)
+          .shadow(
+            elevation = dp3,
+            spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.5f),
+            shape = ClerkMaterialTheme.shape,
+          ),
+      shape = ClerkMaterialTheme.shape,
+    ) {
+      Box(contentAlignment = Alignment.Center) {
+        Icon(
+          painter = painterResource(R.drawable.ic_edit),
+          contentDescription = stringResource(R.string.edit_avatar),
+        )
+      }
+    }
 
     DropdownMenu(
       modifier =

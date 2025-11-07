@@ -139,6 +139,7 @@ private fun AvatarHeaderView(
         modifier = Modifier.defaultMinSize(minWidth = 120.dp),
         text = stringResource(R.string.update_profile),
         onClick = onClickEdit,
+        isEnabled = true,
         configuration =
           ClerkButtonDefaults.configuration(
             style = ClerkButtonConfiguration.ButtonStyle.Secondary,

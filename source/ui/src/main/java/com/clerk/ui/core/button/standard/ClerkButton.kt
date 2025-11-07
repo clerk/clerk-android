@@ -36,7 +36,6 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp2
@@ -78,6 +77,7 @@ fun ClerkButton(
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
   isLoading: Boolean = false,
+  paddingValues: PaddingValues = PaddingValues(),
   configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
@@ -91,6 +91,7 @@ fun ClerkButton(
     isEnabled = isEnabled,
     isLoading = isLoading,
     isPressedCombined = pressed,
+    paddingValues = paddingValues,
     icons = icons,
   )
 }
@@ -111,6 +112,7 @@ internal fun ClerkButtonWithPressedState(
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
   isLoading: Boolean = false,
+  paddingValues: PaddingValues = PaddingValues(),
   configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
@@ -124,6 +126,7 @@ internal fun ClerkButtonWithPressedState(
     isPressedCombined = pressed || isPressed,
     configuration = configuration,
     icons = icons,
+    paddingValues = paddingValues,
     isLoading = isLoading,
   )
 }
@@ -154,6 +157,7 @@ private fun ClerkButtonImpl(
   isLoading: Boolean,
   configuration: ClerkButtonConfiguration,
   modifier: Modifier = Modifier,
+  paddingValues: PaddingValues,
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
   ClerkMaterialTheme {
@@ -175,7 +179,7 @@ private fun ClerkButtonImpl(
       modifier = surfaceModifier,
       shape = ClerkMaterialTheme.shape,
       enabled = isEnabled,
-      contentPadding = PaddingValues(dp0),
+      contentPadding = paddingValues,
       colors =
         ButtonDefaults.buttonColors(
           containerColor =
@@ -190,6 +194,7 @@ private fun ClerkButtonImpl(
         text = text,
         tokens = tokens,
         size = configuration.size,
+        paddingValues = paddingValues,
       )
     }
   }
@@ -214,10 +219,14 @@ private fun ButtonContent(
   isEnabled: Boolean,
   text: String?,
   size: ClerkButtonConfiguration.Size,
+  paddingValues: PaddingValues,
   tokens: ButtonStyleTokens,
 ) {
   if (isLoading) {
-    Box(modifier = Modifier.fillMaxWidth().padding(dp12), contentAlignment = Alignment.Center) {
+    Box(
+      modifier = Modifier.fillMaxWidth().padding(paddingValues),
+      contentAlignment = Alignment.Center,
+    ) {
       CircularProgressIndicator(
         strokeWidth = dp2,
         color = tokens.foreground.copy(alpha = 0.5f),
