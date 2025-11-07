@@ -1,12 +1,11 @@
 package com.clerk.ui.core.button.standard
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,10 +13,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,7 +29,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -50,26 +49,28 @@ import com.clerk.ui.theme.DefaultColors
 /**
  * A custom button component styled according to Clerk's design system.
  *
- * This button is built on top of Material3's [Surface] to provide Clerk's specific look and feel,
- * including variants for style, emphasis, and size.
+ * This button is built on top of Material3's `Button` to provide Clerk's specific look and feel,
+ * including variants for style, emphasis, and size. It can display a text label, icons, or a
+ * combination of both. It also supports loading and disabled states.
  *
- * @param text Label displayed on the button.
- * @param onClick Invoked when the button is pressed.
- * @param modifier Compose `Modifier` for layout and semantics.
- * @param isEnabled When false, applies disabled styling and prevents clicks.
- * @param isLoading When true, shows a loading indicator instead of the button content.
- * @param padding The padding to apply to the button content.
- * @param configuration Configuration controlling size, emphasis, and other visuals.
- * @param icons Optional leading and trailing icons, including their colors.
+ * @param text The text label displayed on the button. If `null`, only icons will be shown.
+ * @param onClick A lambda to be invoked when the button is pressed.
+ * @param modifier The `Modifier` to be applied to the button.
+ * @param isEnabled When `false`, the button will be visually disabled and will not respond to
+ *   clicks.
+ * @param isLoading When `true`, a circular progress indicator is shown instead of the button's
+ *   content.
+ * @param padding The padding to apply to the button's content.
+ * @param configuration Configuration object that controls the button's visual appearance, including
+ *   its `style`, `size`, and `emphasis`. Use [ClerkButtonDefaults.configuration] to create an
+ *   instance.
+ * @param icons Configuration for optional leading and trailing icons. Use
+ *   [ClerkButtonDefaults.icons] to specify the icons and their colors.
  *
- * Example:
+ * Example of a primary button:
  * ```kotlin
  * ClerkButton(
  *   text = "Continue",
- *   onClick = { /* action */ },
- *   configuration = ClerkButtonDefaults.configuration(style = ClerkButtonConfig.ButtonStyle.Primary)
- * )
- * ```
  */
 @Composable
 fun ClerkButton(
@@ -92,9 +93,7 @@ fun ClerkButton(
     isEnabled = isEnabled,
     isLoading = isLoading,
     isPressedCombined = pressed,
-    interactionSource = interactionSource,
     icons = icons,
-    padding = padding,
   )
 }
 
@@ -114,7 +113,6 @@ internal fun ClerkButtonWithPressedState(
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
   isLoading: Boolean = false,
-  padding: ClerkButtonPadding = ClerkButtonDefaults.padding(),
   configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
@@ -126,8 +124,6 @@ internal fun ClerkButtonWithPressedState(
     modifier = modifier,
     isEnabled = isEnabled,
     isPressedCombined = pressed || isPressed,
-    interactionSource = interactionSource,
-    padding = padding,
     configuration = configuration,
     icons = icons,
     isLoading = isLoading,
@@ -141,8 +137,15 @@ internal fun ClerkButtonWithPressedState(
  * loading) and configuration. It combines all parameters to render the final button surface and its
  * content.
  *
+ * @param text Label displayed on the button.
+ * @param onClick Invoked when the button is pressed.
+ * @param isEnabled When false, applies disabled styling and prevents clicks.
  * @param isPressedCombined The combined pressed state from user interaction and explicit state.
- * @param interactionSource The [MutableInteractionSource] for tracking interactions.
+ * @param isLoading When true, shows a loading indicator instead of the button content.
+ * @param padding The padding to apply to the button content.
+ * @param configuration Configuration controlling size, emphasis, and other visuals.
+ * @param modifier Compose `Modifier` for layout and semantics.
+ * @param icons Optional leading and trailing icons, including their colors.
  */
 @Composable
 private fun ClerkButtonImpl(
@@ -150,9 +153,7 @@ private fun ClerkButtonImpl(
   onClick: () -> Unit,
   isEnabled: Boolean,
   isPressedCombined: Boolean,
-  interactionSource: MutableInteractionSource,
   isLoading: Boolean,
-  padding: ClerkButtonPadding,
   configuration: ClerkButtonConfiguration,
   modifier: Modifier = Modifier,
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
@@ -164,29 +165,28 @@ private fun ClerkButtonImpl(
       Modifier.height(tokens.height)
         .then(modifier)
         .let { mod ->
-          if (tokens.hasShadow && !isPressedCombined) {
+          if (tokens.hasShadow && !isPressedCombined && isEnabled) {
             mod.shadow(elevation = dp1, shape = ClerkMaterialTheme.shape)
           } else {
             mod
           }
         }
         .clip(ClerkMaterialTheme.shape)
-        .clickable(
-          interactionSource = interactionSource,
-          role = Role.Button,
-          onClick = onClick,
-          enabled = isEnabled,
-        )
 
-    Surface(
+    Button(
       modifier = surfaceModifier,
       shape = ClerkMaterialTheme.shape,
-      color = if (isEnabled) tokens.backgroundColor else tokens.backgroundColor.copy(alpha = 0.5f),
-      border = BorderStroke(tokens.borderWidth, tokens.borderColor),
+      enabled = isEnabled,
+      contentPadding = PaddingValues(dp0),
+      colors =
+        ButtonDefaults.buttonColors(
+          containerColor =
+            if (isEnabled) tokens.backgroundColor else tokens.backgroundColor.copy(alpha = 0.5f)
+        ),
+      onClick = onClick,
     ) {
       ButtonContent(
         isLoading = isLoading,
-        padding = padding,
         icons = icons,
         isEnabled = isEnabled,
         text = text,
@@ -212,7 +212,6 @@ private fun ClerkButtonImpl(
 @Composable
 private fun ButtonContent(
   isLoading: Boolean,
-  padding: ClerkButtonPadding,
   icons: ClerkButtonIcons,
   isEnabled: Boolean,
   text: String?,
@@ -229,7 +228,6 @@ private fun ButtonContent(
     }
   } else {
     Row(
-      modifier = Modifier.padding(horizontal = padding.horizontal, vertical = padding.vertical),
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.spacedBy(dp6, Alignment.CenterHorizontally),
     ) {

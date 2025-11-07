@@ -15,14 +15,14 @@
     <ID>LongMethod:SignUpCollectFieldView.kt$@Composable private fun SignUpCollectFieldViewImpl( collectField: CollectField, collectFieldHelper: CollectFieldHelper, progress: Int, onAuthComplete: () -> Unit, modifier: Modifier = Modifier, viewModel: CollectFieldViewModel = viewModel(), )</ID>
     <ID>LongMethod:UserProfileSecurityView.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable private fun UserProfileSecurityMainContent( isPasswordEnabled: Boolean, isPasskeyEnabled: Boolean, isMfaEnabled: Boolean, isDeleteSelfEnabled: Boolean, snackbarHostState: SnackbarHostState, sessions: ImmutableList&lt;Session>, )</ID>
     <ID>LongParameterList:AuthStartView.kt$( authViewHelper: AuthStartViewHelper, phoneNumberFieldIsActive: Boolean, authStartPhoneNumber: String, authStartIdentifier: String, onPhoneNumberChange: (String) -> Unit, onIdentifierChange: (String) -> Unit, )</ID>
-    <ID>LongParameterList:ClerkButton.kt$( isLoading: Boolean, padding: ClerkButtonPadding, icons: ClerkButtonIcons, isEnabled: Boolean, text: String?, size: ClerkButtonConfiguration.Size, tokens: ButtonStyleTokens, )</ID>
-    <ID>LongParameterList:ClerkButton.kt$( text: String?, onClick: () -> Unit, isEnabled: Boolean, isPressedCombined: Boolean, interactionSource: MutableInteractionSource, isLoading: Boolean, padding: ClerkButtonPadding, configuration: ClerkButtonConfiguration, modifier: Modifier = Modifier, icons: ClerkButtonIcons = ClerkButtonDefaults.icons(), )</ID>
+    <ID>LongParameterList:ClerkButton.kt$( isLoading: Boolean, icons: ClerkButtonIcons, isEnabled: Boolean, text: String?, size: ClerkButtonConfiguration.Size, tokens: ButtonStyleTokens, )</ID>
+    <ID>LongParameterList:ClerkButton.kt$( text: String?, onClick: () -> Unit, isEnabled: Boolean, isPressedCombined: Boolean, isLoading: Boolean, configuration: ClerkButtonConfiguration, modifier: Modifier = Modifier, icons: ClerkButtonIcons = ClerkButtonDefaults.icons(), )</ID>
     <ID>LongParameterList:SignUpCollectFieldView.kt$( collectField: CollectField, collectFieldHelper: CollectFieldHelper, email: String, onEmailChange: (String) -> Unit, password: String, onPasswordChange: (String) -> Unit, phone: String, onPhoneChange: (String) -> Unit, username: String, onUsernameChange: (String) -> Unit, )</ID>
     <ID>LongParameterList:SignUpCompleteProfileView.kt$( firstEnabled: Boolean, lastEnabled: Boolean, first: String, last: String, onFirstChange: (String) -> Unit, onLastChange: (String) -> Unit, onFocusChange: (CompleteProfileField) -> Unit = {}, )</ID>
     <ID>LongParameterList:UserProfileDetailView.kt$( innerPadding: PaddingValues, scrollState: ScrollState, emailAddresses: ImmutableList&lt;EmailAddress>, phoneNumbers: ImmutableList&lt;PhoneNumber>, externalAccounts: ImmutableList&lt;ExternalAccount>, onShowBottomSheet: (BottomSheetMode) -> Unit, onError: (String) -> Unit, )</ID>
+    <ID>LongParameterList:UserProfileMfaAddSmsView.kt$( availablePhoneNumbers: ImmutableList&lt;PhoneNumber>, onReserveForSecondFactor: (PhoneNumber) -> Unit, onAddPhoneNumber: () -> Unit, modifier: Modifier = Modifier, isLoading: Boolean = false, onDismiss: () -> Unit, selectedNumber: PhoneNumber?, onSelectedNumberChange: (PhoneNumber?) -> Unit, )</ID>
     <ID>LongParameterList:UserProfileSecurityView.kt$( innerPadding: PaddingValues, configuration: SecurityContentConfiguration, onError: (String?) -> Unit, onClickDeleteAccount: () -> Unit, onClickAddPassword: (PasswordAction) -> Unit, onAdd: () -> Unit, )</ID>
     <ID>LongParameterList:UserProfileSecurityView.kt$( isPasswordEnabled: Boolean, isPasskeyEnabled: Boolean, isMfaEnabled: Boolean, isDeleteSelfEnabled: Boolean, snackbarHostState: SnackbarHostState, sessions: ImmutableList&lt;Session>, )</ID>
-    <ID>LongParameterList:UserProfileSecurityView.kt$( onClickMfaType: (ViewType) -> Unit, onCurrentPasswordEntered: (String, PasswordAction) -> Unit, showBottomSheet: Boolean, currentSheetType: BottomSheetType, onDismiss: () -> Unit, onError: (String?) -> Unit, )</ID>
     <ID>MagicNumber:ColorUtils.kt$4f</ID>
     <ID>MagicNumber:DeviceAttestationHelper.kt$DeviceAttestationHelper$8</ID>
     <ID>MagicNumber:UiActivity1.kt$UiActivity1$0xFFF9F9F9</ID>
@@ -38,7 +38,6 @@
     <ID>TooManyFunctions:Organization.kt$com.clerk.api.organizations.Organization.kt</ID>
     <ID>TooManyFunctions:OrganizationApi.kt$OrganizationApi</ID>
     <ID>TooManyFunctions:User.kt$com.clerk.api.user.User.kt</ID>
-    <ID>UnusedParameter:UserProfilePhoneRow.kt$onError: (String) -> Unit</ID>
     <ID>UnusedPrivateClass:ClerkApiResultCallAdapterFactory.kt$ApiException : Exception</ID>
     <ID>UnusedPrivateMember:UiActivity1.kt$UiActivity1$@Suppress("MagicNumber") @Composable private fun MainContent()</ID>
     <ID>UnusedPrivateMember:UiActivity2.kt$UiActivity2$@Suppress("MagicNumber") @Composable private fun MainContent()</ID>
