@@ -100,18 +100,12 @@ fun UserProfileDetailViewImpl(
       if (showBottomSheet) {
         UserProfileDetailBottomSheet(
           bottomSheetType = bottomSheetType,
-          onDismissRequest = { showBottomSheet = false },
+          onDismissRequest = {},
           onError = { errorMessage ->
             scope.launch { snackbarHostState.showSnackbar(errorMessage) }
           },
-          onVerify = {
-            bottomSheetType = it
-            showBottomSheet = true
-          },
-          onShowBackupCodes = {
-            bottomSheetType = BottomSheetMode.BackupCodes(it)
-            showBottomSheet = true
-          },
+          onVerify = {},
+          onShowBackupCodes = {},
         )
       }
     }
