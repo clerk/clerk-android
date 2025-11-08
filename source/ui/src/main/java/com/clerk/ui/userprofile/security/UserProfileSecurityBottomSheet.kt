@@ -112,11 +112,7 @@ internal fun BackupCodesSheet(type: BottomSheetType.BackupCodes, callbacks: Bott
 
 @Composable
 internal fun AddPhoneNumberSheet(callbacks: BottomSheetCallbacks) {
-  UserProfileAddPhoneView(
-    onError = callbacks.onError,
-    onVerify = callbacks.onVerify,
-    onDismiss = callbacks.onDismiss,
-  )
+  UserProfileAddPhoneView(onVerify = callbacks.onVerify, onDismiss = callbacks.onDismiss)
 }
 
 @Composable

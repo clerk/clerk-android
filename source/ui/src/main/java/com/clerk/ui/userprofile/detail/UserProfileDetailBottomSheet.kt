@@ -63,7 +63,7 @@ private fun BottomSheetContent(
 ) {
   when (bottomSheetType) {
     BottomSheetMode.ExternalAccount -> ExternalAccountSheet(onDismissRequest)
-    BottomSheetMode.PhoneNumber -> PhoneNumberSheet(onDismissRequest, onError, onVerify)
+    BottomSheetMode.PhoneNumber -> PhoneNumberSheet(onDismissRequest, onVerify)
     BottomSheetMode.EmailAddress -> EmailAddressSheet(onDismissRequest, onError, onVerify)
     is BottomSheetMode.VerifyEmailAddress ->
       VerifyEmailSheet(bottomSheetType.emailAddress, onDismissRequest, onError, onShowBackupCodes)
@@ -89,14 +89,9 @@ private fun BackupCodesSheet(codes: ImmutableList<String>, onDismiss: () -> Unit
 }
 
 @Composable
-private fun PhoneNumberSheet(
-  onDismiss: () -> Unit,
-  onError: (String) -> Unit,
-  onVerify: (BottomSheetMode) -> Unit,
-) {
+private fun PhoneNumberSheet(onDismiss: () -> Unit, onVerify: (BottomSheetMode) -> Unit) {
   UserProfileAddPhoneView(
     onDismiss = onDismiss,
-    onError = onError,
     onVerify = { onVerify(BottomSheetMode.VerifyPhoneNumber(it.phoneNumber)) },
   )
 }
