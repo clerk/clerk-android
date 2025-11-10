@@ -455,6 +455,7 @@ data class SignIn(
     /** The strategy used for second factor verification. */
     val strategy: String = PHONE_CODE,
     @SerialName("phone_number_id") val phoneNumberId: String? = null,
+    @SerialName("email_address_id") val emailAddressId: String? = null,
   )
 
   /**
