@@ -31,24 +31,17 @@ import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import com.clerk.ui.userprofile.verify.Mode
 
 @Composable
-fun UserProfileAddEmailView(
-  onError: (String) -> Unit,
+fun UserProfileAddEmailViewBottomSheetContent(
   onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
   onVerify: (Mode.Email) -> Unit,
 ) {
-  UserProfileAddEmailViewImpl(
-    modifier = modifier,
-    onVerify = onVerify,
-    onError = onError,
-    onDismiss = onDismiss,
-  )
+  UserProfileAddEmailViewImpl(modifier = modifier, onVerify = onVerify, onDismiss = onDismiss)
 }
 
 @Composable
 private fun UserProfileAddEmailViewImpl(
   onVerify: (Mode.Email) -> Unit,
-  onError: (String) -> Unit,
   onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: AddEmailViewModel = viewModel(),
@@ -60,15 +53,8 @@ private fun UserProfileAddEmailViewImpl(
   LaunchedEffect(state) {
     if (state is AddEmailViewModel.State.Success) {
       onVerify(Mode.Email((state as AddEmailViewModel.State.Success).emailAddress))
+      viewModel.resetState()
     }
-
-    if (state is AddEmailViewModel.State.Error) {
-      val errorMessage = (state as AddEmailViewModel.State.Error).message
-      if (errorMessage != null) {
-        onError(errorMessage)
-      }
-    }
-    viewModel.resetState()
   }
 
   Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
@@ -87,7 +73,12 @@ private fun UserProfileAddEmailViewImpl(
       )
       ClerkTextField(
         value = email,
-        onValueChange = { email = it },
+        isError = state is AddEmailViewModel.State.Error,
+        supportingText = (state as? AddEmailViewModel.State.Error)?.message,
+        onValueChange = {
+          viewModel.resetState()
+          email = it
+        },
         label = stringResource(R.string.enter_your_email),
         inputContentType = ContentType.EmailAddress,
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
@@ -108,7 +99,7 @@ private fun UserProfileAddEmailViewImpl(
 private fun Preview() {
   ClerkMaterialTheme {
     Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
-      UserProfileAddEmailView(onVerify = {}, onError = {}, onDismiss = {})
+      UserProfileAddEmailViewBottomSheetContent(onVerify = {}, onDismiss = {})
     }
   }
 }

@@ -9,7 +9,7 @@ import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.connectedaccount.UserProfileAddConnectedAccountView
-import com.clerk.ui.userprofile.email.UserProfileAddEmailView
+import com.clerk.ui.userprofile.email.UserProfileAddEmailViewBottomSheetContent
 import com.clerk.ui.userprofile.phone.UserProfileAddPhoneView
 import com.clerk.ui.userprofile.security.BackupCodesView
 import com.clerk.ui.userprofile.verify.UserProfileVerifyBottomSheetContent
@@ -24,7 +24,6 @@ internal fun UserProfileDetailBottomSheet(
   bottomSheetType: BottomSheetMode,
   onDismissRequest: () -> Unit,
   onVerify: (BottomSheetMode) -> Unit,
-  onError: (String) -> Unit,
   onShowBackupCodes: (List<String>) -> Unit,
 ) {
   val sheetState = rememberModalBottomSheetState()
@@ -47,7 +46,6 @@ internal fun UserProfileDetailBottomSheet(
       bottomSheetType = bottomSheetType,
       onDismissRequest = { animatedDismiss() },
       onVerify = onVerify,
-      onError = onError,
       onShowBackupCodes = onShowBackupCodes,
     )
   }
@@ -58,13 +56,12 @@ private fun BottomSheetContent(
   bottomSheetType: BottomSheetMode,
   onDismissRequest: () -> Unit,
   onVerify: (BottomSheetMode) -> Unit,
-  onError: (String) -> Unit,
   onShowBackupCodes: (List<String>) -> Unit,
 ) {
   when (bottomSheetType) {
     BottomSheetMode.ExternalAccount -> ExternalAccountSheet(onDismissRequest)
     BottomSheetMode.PhoneNumber -> PhoneNumberSheet(onDismissRequest, onVerify)
-    BottomSheetMode.EmailAddress -> EmailAddressSheet(onDismissRequest, onError, onVerify)
+    BottomSheetMode.EmailAddress -> EmailAddressSheet(onDismissRequest, onVerify)
     is BottomSheetMode.VerifyEmailAddress ->
       VerifyEmailSheet(bottomSheetType.emailAddress, onDismissRequest, onShowBackupCodes)
     is BottomSheetMode.VerifyPhoneNumber ->
@@ -97,14 +94,9 @@ private fun PhoneNumberSheet(onDismiss: () -> Unit, onVerify: (BottomSheetMode) 
 }
 
 @Composable
-private fun EmailAddressSheet(
-  onDismiss: () -> Unit,
-  onError: (String) -> Unit,
-  onVerify: (BottomSheetMode) -> Unit,
-) {
-  UserProfileAddEmailView(
+private fun EmailAddressSheet(onDismiss: () -> Unit, onVerify: (BottomSheetMode) -> Unit) {
+  UserProfileAddEmailViewBottomSheetContent(
     onDismiss = onDismiss,
-    onError = onError,
     onVerify = { onVerify(BottomSheetMode.VerifyEmailAddress(it.emailAddress)) },
   )
 }
