@@ -69,7 +69,8 @@ internal fun UserProfileExternalAccountRow(
       modifier =
         Modifier.fillMaxWidth()
           .background(ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24, vertical = dp8)
+          .padding(start = dp24)
+          .padding(vertical = dp16)
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {

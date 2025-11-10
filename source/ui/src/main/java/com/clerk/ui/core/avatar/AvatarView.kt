@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -11,13 +12,17 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -28,15 +33,12 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.Clerk
 import com.clerk.ui.R
-import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
-import com.clerk.ui.core.button.standard.ClerkButtonDefaults
-import com.clerk.ui.core.button.standard.ClerkButtonPadding
-import com.clerk.ui.core.dimens.dp0
+import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
-import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.dimens.dp96
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -89,43 +91,45 @@ private fun BoxScope.EditButton(
   onEditChoosePhoto: () -> Unit,
   onEditRemovePhoto: () -> Unit,
 ) {
-  val expanded = remember { mutableStateOf(false) }
+  var expanded by remember { mutableStateOf(false) }
   Box(modifier = Modifier.align(Alignment.BottomEnd)) {
-    ClerkButton(
-      text = null,
-      configuration =
-        ClerkButtonConfiguration(
-          size = ClerkButtonConfiguration.Size.Small,
-          emphasis = ClerkButtonConfiguration.Emphasis.High,
-          style = ClerkButtonConfiguration.ButtonStyle.Secondary,
-          backgroundColorOverride = ClerkMaterialTheme.colors.muted,
-        ),
-      isEnabled = true,
-      icons =
-        ClerkButtonDefaults.icons(
-          trailingIcon = R.drawable.ic_edit,
-          trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-        ),
-      padding = ClerkButtonPadding(horizontal = dp8, vertical = dp0),
-      onClick = { expanded.value = true },
-    )
+    Surface(
+      modifier =
+        Modifier.size(dp32)
+          .shadow(
+            elevation = dp1,
+            spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.02f),
+            ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.02f),
+            shape = ClerkMaterialTheme.shape,
+          ),
+      shape = ClerkMaterialTheme.shape,
+      onClick = { expanded = true },
+    ) {
+      Box(contentAlignment = Alignment.Center) {
+        Icon(
+          painter = painterResource(R.drawable.ic_edit),
+          contentDescription = stringResource(R.string.edit_avatar),
+        )
+      }
+    }
 
     DropdownMenu(
-      modifier = Modifier.defaultMinSize(minWidth = 144.dp),
-      expanded = expanded.value,
-      onDismissRequest = { expanded.value = false },
+      modifier =
+        Modifier.background(ClerkMaterialTheme.colors.background).defaultMinSize(minWidth = 144.dp),
+      expanded = expanded,
+      onDismissRequest = { expanded = false },
     ) {
       DropdownMenuItem(
         text = { Text(text = stringResource(R.string.take_a_photo)) },
         onClick = {
-          expanded.value = false
+          expanded = false
           onEditTakePhoto()
         },
       )
       DropdownMenuItem(
         text = { Text(text = stringResource(R.string.choose_photo)) },
         onClick = {
-          expanded.value = false
+          expanded = false
           onEditChoosePhoto()
         },
       )
@@ -137,7 +141,7 @@ private fun BoxScope.EditButton(
           )
         },
         onClick = {
-          expanded.value = false
+          expanded = false
           onEditRemovePhoto()
         },
       )
@@ -188,7 +192,7 @@ private fun AvatarSize.toDp(): Dp {
 @Composable
 private fun Preview() {
   ClerkMaterialTheme {
-    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
+    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp12)) {
       AvatarView(
         hasEditButton = true,
         imageUrl = null,

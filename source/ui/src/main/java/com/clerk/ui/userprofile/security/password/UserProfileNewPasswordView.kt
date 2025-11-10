@@ -41,6 +41,7 @@ internal fun UserProfileNewPasswordView(
   passwordAction: PasswordAction,
   onPasswordChanged: () -> Unit,
   onError: (String) -> Unit,
+  onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   UserProfileNewPasswordViewImpl(
@@ -49,6 +50,7 @@ internal fun UserProfileNewPasswordView(
     currentPassword = currentPassword,
     onError = onError,
     onPasswordChanged = onPasswordChanged,
+    onDismiss = onDismiss,
   )
 }
 
@@ -57,6 +59,7 @@ private fun UserProfileNewPasswordViewImpl(
   passwordAction: PasswordAction,
   currentPassword: String?,
   onPasswordChanged: () -> Unit,
+  onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfileChangePasswordViewModel = viewModel(),
   onError: (String) -> Unit,
@@ -76,7 +79,7 @@ private fun UserProfileNewPasswordViewImpl(
       title =
         if (passwordAction == PasswordAction.Reset) stringResource(R.string.update_password)
         else stringResource(R.string.add_password),
-      onClosePressed = {},
+      onClosePressed = onDismiss,
     )
     UpdatePasswordContent(
       isLoading = state is UserProfileChangePasswordViewModel.State.Loading,
@@ -178,6 +181,7 @@ private fun Preview() {
       "MySecretPassword123",
       onError = {},
       onPasswordChanged = {},
+      onDismiss = {},
     )
   }
 }

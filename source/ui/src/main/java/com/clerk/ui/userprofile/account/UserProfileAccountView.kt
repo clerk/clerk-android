@@ -113,13 +113,11 @@ private fun AvatarHeaderView(
 
     if (mode == AvatarMode.VIEW) {
       if (name != null) {
-        // Show full name as title
         Text(
           text = name,
           style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
           color = ClerkMaterialTheme.colors.foreground,
         )
-        // If username exists, show it under the full name (current behavior)
         if (uname != null) {
           Spacers.Vertical.Spacer4()
           Text(
@@ -129,7 +127,6 @@ private fun AvatarHeaderView(
           )
         }
       } else if (uname != null) {
-        // No full name: promote username to the same style as full name
         Text(
           text = uname,
           style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
@@ -142,6 +139,7 @@ private fun AvatarHeaderView(
         modifier = Modifier.defaultMinSize(minWidth = 120.dp),
         text = stringResource(R.string.update_profile),
         onClick = onClickEdit,
+        isEnabled = true,
         configuration =
           ClerkButtonDefaults.configuration(
             style = ClerkButtonConfiguration.ButtonStyle.Secondary,

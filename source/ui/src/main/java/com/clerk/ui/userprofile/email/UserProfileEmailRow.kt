@@ -53,8 +53,8 @@ internal fun UserProfileEmailRow(
       modifier =
         Modifier.fillMaxWidth()
           .background(ClerkMaterialTheme.colors.background)
-          .padding(horizontal = dp24)
-          .padding(top = dp16)
+          .padding(start = dp24)
+          .padding(vertical = dp16)
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -78,6 +78,7 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 
 dependencies {
   implementation(platform(libs.compose.bom))
+  implementation(libs.ads.mobile.sdk)
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.compose.foundation)
   implementation(libs.androidx.compose.icons)

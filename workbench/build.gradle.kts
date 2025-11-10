@@ -34,7 +34,7 @@ android {
 
   buildTypes {
     getByName("debug") {
-      firebaseAppDistribution {
+      firebaseAppDistributionDefault {
         artifactType = "APK"
         artifactPath = "workbench/build/outputs/apk/debug/workbench-debug.apk"
       }

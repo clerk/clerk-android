@@ -2,7 +2,9 @@ package com.clerk.ui.userprofile.detail
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -14,6 +16,7 @@ import com.clerk.ui.userprofile.verify.UserProfileVerifyBottomSheetContent
 import com.clerk.ui.userprofile.verify.VerifyBottomSheetMode
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,13 +27,25 @@ internal fun UserProfileDetailBottomSheet(
   onError: (String) -> Unit,
   onShowBackupCodes: (List<String>) -> Unit,
 ) {
+  val sheetState = rememberModalBottomSheetState()
+  val scope = rememberCoroutineScope()
+
+  fun animatedDismiss() {
+    scope.launch {
+      sheetState.hide()
+      onDismissRequest()
+    }
+  }
+
   ModalBottomSheet(
-    onDismissRequest = onDismissRequest,
+    scrimColor = ClerkMaterialTheme.colors.neutral.copy(alpha = .5f),
+    onDismissRequest = { animatedDismiss() },
     containerColor = ClerkMaterialTheme.colors.background,
+    sheetState = sheetState,
   ) {
     BottomSheetContent(
       bottomSheetType = bottomSheetType,
-      onDismissRequest = onDismissRequest,
+      onDismissRequest = { animatedDismiss() },
       onVerify = onVerify,
       onError = onError,
       onShowBackupCodes = onShowBackupCodes,
@@ -48,7 +63,7 @@ private fun BottomSheetContent(
 ) {
   when (bottomSheetType) {
     BottomSheetMode.ExternalAccount -> ExternalAccountSheet(onDismissRequest)
-    BottomSheetMode.PhoneNumber -> PhoneNumberSheet(onDismissRequest, onError, onVerify)
+    BottomSheetMode.PhoneNumber -> PhoneNumberSheet(onDismissRequest, onVerify)
     BottomSheetMode.EmailAddress -> EmailAddressSheet(onDismissRequest, onError, onVerify)
     is BottomSheetMode.VerifyEmailAddress ->
       VerifyEmailSheet(bottomSheetType.emailAddress, onDismissRequest, onError, onShowBackupCodes)
@@ -74,14 +89,9 @@ private fun BackupCodesSheet(codes: ImmutableList<String>, onDismiss: () -> Unit
 }
 
 @Composable
-private fun PhoneNumberSheet(
-  onDismiss: () -> Unit,
-  onError: (String) -> Unit,
-  onVerify: (BottomSheetMode) -> Unit,
-) {
+private fun PhoneNumberSheet(onDismiss: () -> Unit, onVerify: (BottomSheetMode) -> Unit) {
   UserProfileAddPhoneView(
     onDismiss = onDismiss,
-    onError = onError,
     onVerify = { onVerify(BottomSheetMode.VerifyPhoneNumber(it.phoneNumber)) },
   )
 }

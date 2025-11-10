@@ -39,6 +39,8 @@ fun ClerkSocialRow(
   modifier: Modifier = Modifier,
   onClick: (OAuthProvider) -> Unit = {},
 ) {
+  val isSingleProvider = providers.size == 1
+
   Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp8)) {
     val chunks = providers.chunked(MAX_BUTTONS_PER_ROW)
     chunks.forEachIndexed { rowIndex, rowProviders ->
@@ -51,33 +53,26 @@ fun ClerkSocialRow(
           if (shouldOffset) Arrangement.spacedBy(dp8, Alignment.CenterHorizontally)
           else Arrangement.spacedBy(dp8),
       ) {
-        if (shouldOffset) {
-          // Add offset spacer for brick pattern
+        if (shouldOffset && !isSingleProvider) {
           Spacer(modifier = Modifier.weight(ROW_WEIGHT))
+        }
 
-          rowProviders.forEach { provider ->
-            ClerkSocialButton(
-              provider = provider,
-              isEnabled = true,
-              onClick = onClick,
-              forceIconOnly = true,
-              modifier = Modifier.weight(1f),
-            )
-          }
+        rowProviders.forEach { provider ->
+          ClerkSocialButton(
+            provider = provider,
+            isEnabled = true,
+            onClick = onClick,
+            // full button with text if only one provider total
+            forceIconOnly = !isSingleProvider,
+            modifier = Modifier.weight(1f),
+          )
+        }
 
+        if (shouldOffset && !isSingleProvider) {
           Spacer(modifier = Modifier.weight(ROW_WEIGHT))
-        } else {
-          // Normal layout for full rows
-          rowProviders.forEach { provider ->
-            ClerkSocialButton(
-              provider = provider,
-              isEnabled = true,
-              onClick = onClick,
-              forceIconOnly = true,
-              modifier = Modifier.weight(1f),
-            )
-          }
-          // Add empty spaces to maintain equal spacing when less than 3 buttons in a row
+        }
+
+        if (!shouldOffset && !isSingleProvider) {
           repeat(MAX_BUTTONS_PER_ROW - rowProviders.size) { Spacer(modifier = Modifier.weight(1f)) }
         }
       }
@@ -88,14 +83,20 @@ fun ClerkSocialRow(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkSocialRow(
-    providers =
-      persistentListOf(
-        OAuthProvider.GOOGLE,
-        OAuthProvider.FACEBOOK,
-        OAuthProvider.TWITTER,
-        OAuthProvider.GITHUB,
-        OAuthProvider.LINKEDIN,
-      )
-  )
+  Column(verticalArrangement = Arrangement.spacedBy(dp8)) {
+    // One provider: full button with text
+    ClerkSocialRow(providers = persistentListOf(OAuthProvider.GOOGLE))
+
+    // Multiple providers: icon-only layout
+    ClerkSocialRow(
+      providers =
+        persistentListOf(
+          OAuthProvider.GOOGLE,
+          OAuthProvider.FACEBOOK,
+          OAuthProvider.TWITTER,
+          OAuthProvider.GITHUB,
+          OAuthProvider.LINKEDIN,
+        )
+    )
+  }
 }
