@@ -303,6 +303,11 @@ data class SignIn(
     @Serializable
     data class BackupCode(val code: String, override val strategy: String = BACKUP_CODE) :
       AttemptSecondFactorParams
+
+    @AutoMap
+    @Serializable
+    data class EmailCode(val code: String, override val strategy: String = EMAIL_CODE) :
+      AttemptSecondFactorParams
   }
 
   /**
