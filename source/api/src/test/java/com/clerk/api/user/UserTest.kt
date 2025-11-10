@@ -105,8 +105,8 @@ class UserTest {
     // Then
     assertTrue("Serialized JSON should contain unsafe_metadata", json.contains("unsafe_metadata"))
     assertTrue(
-      "Serialized JSON should contain the metadata value",
-      json.contains(unsafeMetadataJson),
+      "Serialized JSON should contain the escaped metadata value",
+      json.contains("""\"custom\":\"data\""""),
     )
   }
 
