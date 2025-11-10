@@ -193,6 +193,8 @@ data class User(
     @SerialName("public_metadata") val publicMetadata: String? = null,
     /** JSON string containing private metadata to update. */
     @SerialName("private_metadata") val privateMetadata: String? = null,
+    /** JSON string containing unsafe metadata to update. */
+    @SerialName("unsafe_metadata") val unsafeMetadata: String? = null,
   )
 
   /**
