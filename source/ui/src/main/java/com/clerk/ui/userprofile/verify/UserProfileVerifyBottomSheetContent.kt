@@ -28,7 +28,6 @@ import kotlinx.serialization.Serializable
 fun UserProfileVerifyBottomSheetContent(
   mode: VerifyBottomSheetMode,
   onVerified: (List<String>?) -> Unit,
-  onError: (String) -> Unit,
   modifier: Modifier = Modifier,
   onDismiss: () -> Unit,
 ) {
@@ -37,14 +36,12 @@ fun UserProfileVerifyBottomSheetContent(
     modifier = modifier,
     onVerified = onVerified,
     onDismiss = onDismiss,
-    onError = onError,
   )
 }
 
 @Composable
 private fun UserProfileVerifyBottomSheetContentImpl(
   mode: VerifyBottomSheetMode,
-  onError: (String) -> Unit,
   onVerified: (List<String>?) -> Unit,
   modifier: Modifier = Modifier,
   viewModel: UserProfileVerifyViewModel = viewModel(),
@@ -53,18 +50,10 @@ private fun UserProfileVerifyBottomSheetContentImpl(
 
   val state by viewModel.state.collectAsStateWithLifecycle()
   val verificationTextState by viewModel.verificationTextState.collectAsStateWithLifecycle()
-  val errorMessage = (state as? UserProfileVerifyViewModel.AuthState.Error)?.error
 
   LaunchedEffect(mode) {
     viewModel.resetState()
     prepareCode(mode, viewModel)
-  }
-
-  LaunchedEffect(errorMessage) {
-    errorMessage?.let {
-      viewModel.resetState()
-      onError(it)
-    }
   }
 
   LaunchedEffect(verificationTextState) {
@@ -90,6 +79,7 @@ private fun UserProfileVerifyBottomSheetContentImpl(
     Spacers.Vertical.Spacer24()
     ClerkCodeInputField(
       onTextChange = {
+        viewModel.resetState()
         if (it.length == 6) {
           when (mode) {
             is VerifyBottomSheetMode.Email -> viewModel.attemptEmailAddress(mode.emailAddress, it)
@@ -135,7 +125,6 @@ private fun Preview() {
         ),
       onDismiss = {},
       onVerified = {},
-      onError = {},
     )
   }
 }
@@ -148,7 +137,6 @@ private fun PreviewTotp() {
       mode = VerifyBottomSheetMode.Totp,
       onVerified = {},
       onDismiss = {},
-      onError = {},
     )
   }
 }

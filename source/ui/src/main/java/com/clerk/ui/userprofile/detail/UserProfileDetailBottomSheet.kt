@@ -66,9 +66,9 @@ private fun BottomSheetContent(
     BottomSheetMode.PhoneNumber -> PhoneNumberSheet(onDismissRequest, onVerify)
     BottomSheetMode.EmailAddress -> EmailAddressSheet(onDismissRequest, onError, onVerify)
     is BottomSheetMode.VerifyEmailAddress ->
-      VerifyEmailSheet(bottomSheetType.emailAddress, onDismissRequest, onError, onShowBackupCodes)
+      VerifyEmailSheet(bottomSheetType.emailAddress, onDismissRequest, onShowBackupCodes)
     is BottomSheetMode.VerifyPhoneNumber ->
-      VerifyPhoneSheet(bottomSheetType.phoneNumber, onDismissRequest, onError, onShowBackupCodes)
+      VerifyPhoneSheet(bottomSheetType.phoneNumber, onDismissRequest, onShowBackupCodes)
 
     is BottomSheetMode.BackupCodes ->
       BackupCodesSheet(
@@ -113,12 +113,10 @@ private fun EmailAddressSheet(
 private fun VerifyEmailSheet(
   email: EmailAddress,
   onDismiss: () -> Unit,
-  onError: (String) -> Unit,
   onShowBackupCodes: (List<String>) -> Unit,
 ) {
   UserProfileVerifyBottomSheetContent(
     mode = VerifyBottomSheetMode.Email(email),
-    onError = onError,
     onVerified = { backupCodes ->
       handleVerified(
         backupCodes = backupCodes,
@@ -134,12 +132,10 @@ private fun VerifyEmailSheet(
 private fun VerifyPhoneSheet(
   phone: PhoneNumber,
   onDismiss: () -> Unit,
-  onError: (String) -> Unit,
   onShowBackupCodes: (List<String>) -> Unit,
 ) {
   UserProfileVerifyBottomSheetContent(
     mode = VerifyBottomSheetMode.Phone(phone),
-    onError = onError,
     onVerified = { backupCodes ->
       handleVerified(
         backupCodes = backupCodes,

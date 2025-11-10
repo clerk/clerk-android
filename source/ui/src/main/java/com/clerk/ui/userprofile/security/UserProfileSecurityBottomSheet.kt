@@ -126,7 +126,6 @@ internal fun VerifySheet(type: BottomSheetType.Verify, callbacks: BottomSheetCal
         callbacks.onNavigateToBackupCodes(codes)
       }
     },
-    onError = callbacks.onError,
     onDismiss = callbacks.onDismiss,
   )
 }
