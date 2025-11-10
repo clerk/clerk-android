@@ -476,13 +476,17 @@ data class SignIn(
 
   sealed class PrepareSecondFactorStrategy {
 
-    data object PhoneCode : PrepareSecondFactorStrategy()
+    data class PhoneCode(val phoneNumberId: String? = null) : PrepareSecondFactorStrategy()
 
     data class EmailCode(val emailAddressId: String? = null) : PrepareSecondFactorStrategy()
 
     fun toParams(): PrepareSecondFactorParams =
       when (this) {
-        is PhoneCode -> PrepareSecondFactorParams(strategy = PrepareSecondFactorParams.PHONE_CODE)
+        is PhoneCode ->
+          PrepareSecondFactorParams(
+            strategy = PrepareSecondFactorParams.PHONE_CODE,
+            phoneNumberId = phoneNumberId,
+          )
         is EmailCode ->
           PrepareSecondFactorParams(
             strategy = PrepareSecondFactorParams.EMAIL_CODE,
@@ -804,7 +808,13 @@ suspend fun SignIn.prepareSecondFactor(): ClerkResult<SignIn, ClerkErrorResponse
   val strategy =
     when {
       supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE } ==
-        true -> SignIn.PrepareSecondFactorStrategy.PhoneCode
+        true ->
+        SignIn.PrepareSecondFactorStrategy.PhoneCode(
+          phoneNumberId =
+            supportedSecondFactors
+              .find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
+              ?.phoneNumberId
+        )
       supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE } ==
         true ->
         SignIn.PrepareSecondFactorStrategy.EmailCode(
