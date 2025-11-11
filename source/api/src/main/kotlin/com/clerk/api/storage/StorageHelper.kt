@@ -2,6 +2,7 @@ package com.clerk.api.storage
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.edit
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
 import com.clerk.api.log.ClerkLog
@@ -58,6 +59,23 @@ internal object StorageHelper {
       return
     }
     secureStorage.edit { remove(key.name) }
+  }
+
+  /**
+   * Resets the storage helper for testing purposes.
+   * This method should only be used in tests.
+   * Clears all stored values. To test uninitialized state, tests should call this
+   * and then test methods before calling initialize().
+   */
+  @VisibleForTesting
+  internal fun reset(context: Context? = null) {
+    if (::secureStorage.isInitialized) {
+      secureStorage.edit().clear().commit()
+    }
+    // If context is provided and storage is initialized, reinitialize to ensure clean state
+    context?.let {
+      initialize(it)
+    }
   }
 }
 
