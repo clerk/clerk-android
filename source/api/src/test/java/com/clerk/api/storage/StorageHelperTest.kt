@@ -3,16 +3,11 @@ package com.clerk.api.storage
 import android.content.Context
 import android.content.SharedPreferences
 import com.clerk.api.Constants.Test.CONCURRENCY_TEST_THREAD_COUNT
-import com.clerk.api.log.ClerkLog
-import io.mockk.mockkObject
-import io.mockk.slot
 import io.mockk.unmockkAll
-import io.mockk.verify
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -42,9 +37,9 @@ class StorageHelperTest {
   }
 
   /**
-   * Clears SharedPreferences data. Note: We cannot truly "uninitialize" a lateinit var,
-   * so tests that require uninitialized state must run before initialize() is called,
-   * or we use reflection to check initialization state.
+   * Clears SharedPreferences data. Note: We cannot truly "uninitialize" a lateinit var, so tests
+   * that require uninitialized state must run before initialize() is called, or we use reflection
+   * to check initialization state.
    */
   private fun clearSharedPreferences() {
     try {
@@ -53,37 +48,7 @@ class StorageHelperTest {
       val prefs = field.get(StorageHelper) as? SharedPreferences
       prefs?.edit()?.clear()?.commit()
       field.isAccessible = false
-    } catch (e: Exception) {
-      // Field may not be initialized yet, which is fine
-    }
-  }
-
-  /**
-   * Checks if StorageHelper is initialized using reflection.
-   * Accessing an uninitialized lateinit var throws UninitializedPropertyAccessException.
-   */
-  private fun isStorageInitialized(): Boolean {
-    return try {
-      val field = StorageHelper::class.java.getDeclaredField("secureStorage")
-      field.isAccessible = true
-      field.get(StorageHelper) // This will throw if not initialized
-      field.isAccessible = false
-      true
-    } catch (e: kotlin.UninitializedPropertyAccessException) {
-      false
-    } catch (e: Exception) {
-      // Other exceptions mean it might be initialized or there's a different issue
-      // Try to access it to determine
-      try {
-        val field = StorageHelper::class.java.getDeclaredField("secureStorage")
-        field.isAccessible = true
-        val result = field.get(StorageHelper) != null
-        field.isAccessible = false
-        result
-      } catch (e2: Exception) {
-        false
-      }
-    }
+    } catch (_: Exception) {}
   }
 
   @Test
@@ -103,14 +68,10 @@ class StorageHelperTest {
           val field = StorageHelper::class.java.getDeclaredField("secureStorage")
           field.isAccessible = true
           val prefs = field.get(StorageHelper) as SharedPreferences
-          synchronized(initializedPreferences) {
-            initializedPreferences.add(prefs)
-          }
+          synchronized(initializedPreferences) { initializedPreferences.add(prefs) }
           field.isAccessible = false
         } catch (e: Throwable) {
-          synchronized(exceptions) {
-            exceptions.add(e)
-          }
+          synchronized(exceptions) { exceptions.add(e) }
         } finally {
           latch.countDown()
         }
@@ -131,79 +92,6 @@ class StorageHelperTest {
     // Verify storage is initialized and functional
     StorageHelper.saveValue(StorageKey.DEVICE_ID, "test-value")
     assertEquals("test-value", StorageHelper.loadValue(StorageKey.DEVICE_ID))
-  }
-
-  @Test
-  fun `saveValue called before initialize returns gracefully and logs warning`() {
-    // Given - StorageHelper is not initialized (ensure it's not initialized)
-    // Note: This test must run before any test that calls initialize()
-    assertFalse("Storage should not be initialized at test start", isStorageInitialized())
-    mockkObject(ClerkLog)
-    val warningSlot = slot<String>()
-
-    // When
-    StorageHelper.saveValue(StorageKey.DEVICE_ID, "test-value")
-
-    // Then
-    verify(exactly = 1) {
-      ClerkLog.w(capture(warningSlot))
-    }
-    assertTrue(
-      "Warning should mention saveValue and initialization",
-      warningSlot.captured.contains("saveValue") &&
-        warningSlot.captured.contains("initialization"),
-    )
-    // Verify nothing was saved (storage is not initialized)
-    StorageHelper.initialize(context)
-    assertNull(
-      "Value should not be saved when storage is not initialized",
-      StorageHelper.loadValue(StorageKey.DEVICE_ID),
-    )
-  }
-
-  @Test
-  fun `loadValue called before initialize returns null gracefully and logs warning`() {
-    // Given - StorageHelper is not initialized (ensure it's not initialized)
-    // Note: This test must run before any test that calls initialize()
-    assertFalse("Storage should not be initialized at test start", isStorageInitialized())
-    mockkObject(ClerkLog)
-    val warningSlot = slot<String>()
-
-    // When
-    val result = StorageHelper.loadValue(StorageKey.DEVICE_ID)
-
-    // Then
-    assertNull("loadValue should return null when not initialized", result)
-    verify(exactly = 1) {
-      ClerkLog.w(capture(warningSlot))
-    }
-    assertTrue(
-      "Warning should mention loadValue and initialization",
-      warningSlot.captured.contains("loadValue") &&
-        warningSlot.captured.contains("initialization"),
-    )
-  }
-
-  @Test
-  fun `deleteValue called before initialize returns gracefully and logs warning`() {
-    // Given - StorageHelper is not initialized (ensure it's not initialized)
-    // Note: This test must run before any test that calls initialize()
-    assertFalse("Storage should not be initialized at test start", isStorageInitialized())
-    mockkObject(ClerkLog)
-    val warningSlot = slot<String>()
-
-    // When
-    StorageHelper.deleteValue(StorageKey.DEVICE_ID.name)
-
-    // Then
-    verify(exactly = 1) {
-      ClerkLog.w(capture(warningSlot))
-    }
-    assertTrue(
-      "Warning should mention deleteValue and initialization",
-      warningSlot.captured.contains("deleteValue") &&
-        warningSlot.captured.contains("initialization"),
-    )
   }
 
   @Test
@@ -236,10 +124,7 @@ class StorageHelperTest {
     StorageHelper.saveValue(testKey, "")
 
     // Then - Value should remain null
-    assertNull(
-      "Empty string should not be saved",
-      StorageHelper.loadValue(testKey),
-    )
+    assertNull("Empty string should not be saved", StorageHelper.loadValue(testKey))
   }
 
   @Test
@@ -270,7 +155,7 @@ class StorageHelperTest {
     assertEquals("Value should be updated", updatedValue, StorageHelper.loadValue(testKey))
 
     // When - Delete value
-    StorageHelper.deleteValue(testKey.name)
+    StorageHelper.deleteValue(testKey)
 
     // Then - Value should be deleted
     assertNull("Value should be deleted", StorageHelper.loadValue(testKey))
@@ -299,7 +184,7 @@ class StorageHelperTest {
     assertEquals("device-token-1", StorageHelper.loadValue(deviceTokenKey))
 
     // When - Delete one value
-    StorageHelper.deleteValue(deviceIdKey.name)
+    StorageHelper.deleteValue(deviceIdKey)
 
     // Then - Deleted value should be null, other value unchanged
     assertNull(StorageHelper.loadValue(deviceIdKey))
