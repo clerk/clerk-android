@@ -9,7 +9,6 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.authenticateWithRedirectUrl
 import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
@@ -158,8 +157,14 @@ internal class AuthStartViewModel : ViewModel() {
           withContext(Dispatchers.Main) {
             _state.value =
               when (it.resultType) {
-                ResultType.SIGN_IN -> AuthState.OAuthState.Success(signIn = it.signIn)
-                ResultType.SIGN_UP -> AuthState.OAuthState.Success(signUp = it.signUp)
+                ResultType.SIGN_IN -> {
+                  it.signIn?.let { signIn -> AuthState.OAuthState.SignInSuccess(signIn = signIn) }
+                    ?: AuthState.OAuthState.Error("Unknown result type from Google One Tap")
+                }
+                ResultType.SIGN_UP -> {
+                  it.signUp?.let { signUp -> AuthState.OAuthState.SignUpSuccess(signUp = signUp) }
+                    ?: AuthState.OAuthState.Error("Unknown result type from Google One Tap")
+                }
                 ResultType.UNKNOWN ->
                   AuthState.OAuthState.Error("Unknown result type from Google One Tap")
               }
@@ -181,8 +186,14 @@ internal class AuthStartViewModel : ViewModel() {
         .onSuccess {
           _state.value =
             when (it.resultType) {
-              ResultType.SIGN_IN -> AuthState.OAuthState.Success(signIn = it.signIn)
-              ResultType.SIGN_UP -> AuthState.OAuthState.Success(signUp = it.signUp)
+              ResultType.SIGN_IN -> {
+                it.signIn?.let { signIn -> AuthState.OAuthState.SignInSuccess(signIn = signIn) }
+                  ?: AuthState.OAuthState.Error("Unknown result type from OAuthProvider")
+              }
+              ResultType.SIGN_UP -> {
+                it.signUp?.let { signUp -> AuthState.OAuthState.SignUpSuccess(signUp = signUp) }
+                  ?: AuthState.OAuthState.Error("Unknown result type from OAuth Provider")
+              }
               ResultType.UNKNOWN ->
                 AuthState.OAuthState.Error("Unknown result type from OAuth provider")
             }
@@ -218,8 +229,8 @@ internal class AuthStartViewModel : ViewModel() {
     signIn
       .prepareFirstFactor(SignIn.PrepareFirstFactorParams.EnterpriseSSO())
       .onSuccess {
-        if (it.firstFactorVerification?.externalVerificationRedirectUrl != null) {
-          authenticateWithRedirect(it)
+        it.firstFactorVerification?.externalVerificationRedirectUrl?.let { url ->
+          authenticateWithRedirect(url)
         }
       }
       .onFailure { throwable ->
@@ -227,22 +238,27 @@ internal class AuthStartViewModel : ViewModel() {
       }
   }
 
-  private suspend fun authenticateWithRedirect(signIn: SignIn) {
-    signIn.authenticateWithRedirectUrl().onSuccess {
-      withContext(Dispatchers.Main) {
-        val successType =
-          when (it.resultType) {
-            ResultType.SIGN_IN -> AuthState.Success.SignInSuccess(signIn = it.signIn)
-            ResultType.SIGN_UP -> AuthState.Success.SignUpSuccess(signUp = it.signUp)
-            ResultType.UNKNOWN -> {
-              ClerkLog.e("Unknown result type after SSO redirect: ${it.resultType}")
-              AuthState.Error("Unknown result type after SSO redirect")
+  private suspend fun authenticateWithRedirect(externalVerificationRedirectUrl: String) {
+    SignIn.authenticateWithRedirect(
+        SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
+          redirectUrl = externalVerificationRedirectUrl
+        )
+      )
+      .onSuccess {
+        withContext(Dispatchers.Main) {
+          val successType =
+            when (it.resultType) {
+              ResultType.SIGN_IN -> AuthState.Success.SignInSuccess(signIn = it.signIn)
+              ResultType.SIGN_UP -> AuthState.Success.SignUpSuccess(signUp = it.signUp)
+              ResultType.UNKNOWN -> {
+                ClerkLog.e("Unknown result type after SSO redirect: ${it.resultType}")
+                AuthState.Error("Unknown result type after SSO redirect")
+              }
             }
-          }
 
-        _state.value = successType
+          _state.value = successType
+        }
       }
-    }
   }
 
   /** Represents the various states of the authentication process. */
@@ -279,7 +295,9 @@ internal class AuthStartViewModel : ViewModel() {
     sealed interface OAuthState : AuthState {
       data object Loading : OAuthState
 
-      data class Success(val signIn: SignIn? = null, val signUp: SignUp? = null) : AuthState
+      data class SignInSuccess(val signIn: SignIn) : AuthState
+
+      data class SignUpSuccess(val signUp: SignUp) : AuthState
 
       data class Error(val message: String?) : AuthState
     }

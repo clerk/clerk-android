@@ -24,7 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.signin.resetPasswordFactor
+import com.clerk.api.resetPasswordFactor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination

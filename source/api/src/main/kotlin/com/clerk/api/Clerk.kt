@@ -14,6 +14,8 @@ import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.environment.enabledFirstFactorAttributes
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
@@ -509,3 +511,12 @@ data class DeviceAttestationOptions(val applicationId: String, val cloudProjectN
  */
 fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthProvider> =
   this.map { OAuthProvider.fromStrategy(it.value.strategy) }
+
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
+  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+
+val SignIn.resetPasswordFactor: Factor?
+  get() =
+    identifyingFirstFactor(strategy = Constants.Strategy.RESET_PASSWORD_EMAIL_CODE)
+      ?: identifyingFirstFactor(strategy = Constants.Strategy.RESET_PASSWORD_PHONE_CODE)
+      ?: supportedFirstFactors?.firstOrNull { it.isResetFactor() }
