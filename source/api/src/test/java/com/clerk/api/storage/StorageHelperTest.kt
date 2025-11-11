@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.clerk.api.Constants.Test.CONCURRENCY_TEST_THREAD_COUNT
 import com.clerk.api.log.ClerkLog
-import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
