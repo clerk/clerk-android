@@ -303,6 +303,11 @@ data class SignIn(
     @Serializable
     data class BackupCode(val code: String, override val strategy: String = BACKUP_CODE) :
       AttemptSecondFactorParams
+
+    @AutoMap
+    @Serializable
+    data class EmailCode(val code: String, override val strategy: String = EMAIL_CODE) :
+      AttemptSecondFactorParams
   }
 
   /**
@@ -323,15 +328,18 @@ data class SignIn(
     val identifier: String?
 
     /**
-     * OAuth params for redirect authentication.
+     * Parameters for authenticating with an OAuth provider using a redirect flow.
      *
-     * You can use [OAuthProvider] directly to authenticate with an OAuth provider.
-     *
-     * @property strategy The OAuth provider strategy to use for authentication.
-     * @property redirectUrl The URL to redirect to after authentication.
-     * @property emailAddress The user's email address for pre-filling authentication forms.
-     * @property legalAccepted Whether the user has accepted the legal terms.
-     * @property identifier The user's identifier for authentication.
+     * @param provider The OAuth provider to use for authentication. You can use a predefined
+     *   [OAuthProvider] or a custom one.
+     * @param redirectUrl The URL to redirect to after the user completes the authentication flow
+     *   with the provider. Defaults to the first redirect URL configured in your Clerk Dashboard.
+     * @param emailAddress The user's email address, which can be used to pre-fill the
+     *   authentication form on the provider's site.
+     * @param legalAccepted Indicates whether the user has accepted any legal terms, such as a
+     *   privacy policy or terms of service.
+     * @param identifier The user's identifier for authentication, which can be an email address or
+     *   phone number.
      */
     @Serializable
     @AutoMap
@@ -440,17 +448,52 @@ data class SignIn(
   /**
    * A parameter object for preparing the second factor verification.
    *
-   * @property strategy The strategy used for second factor verification (e.g., "phone_code",
-   *   "totp").
-   * @property phoneNumberId The ID of the phone number to use for phone code verification.
+   * This class is used to specify the strategy and related details for preparing a second factor
+   * authentication method. For example, if you want to use a one-time code sent to the user's
+   * phone, you would set the strategy to "phone_code".
+   *
+   * @property strategy The strategy to use for second factor verification. Common values are
+   *   `phone_code` and `email_code`.
+   * @property phoneNumberId The ID of the phone number to use for `phone_code` verification. This
+   *   is typically retrieved from the `supportedSecondFactors` list on the `SignIn` object.
+   * @property emailAddressId The ID of the email address to use for `email_code` verification. This
+   *   is typically retrieved from the `supportedSecondFactors` list on the `SignIn` object.
+   * @see SignIn.prepareSecondFactor
    */
-  @AutoMap
   @Serializable
+  @AutoMap
   data class PrepareSecondFactorParams(
     /** The strategy used for second factor verification. */
     val strategy: String = PHONE_CODE,
     @SerialName("phone_number_id") val phoneNumberId: String? = null,
-  )
+    @SerialName("email_address_id") val emailAddressId: String? = null,
+  ) {
+    companion object {
+      const val PHONE_CODE = "phone_code"
+      const val EMAIL_CODE = "email_code"
+    }
+  }
+
+  sealed class PrepareSecondFactorStrategy {
+
+    data class PhoneCode(val phoneNumberId: String? = null) : PrepareSecondFactorStrategy()
+
+    data class EmailCode(val emailAddressId: String? = null) : PrepareSecondFactorStrategy()
+
+    fun toParams(): PrepareSecondFactorParams =
+      when (this) {
+        is PhoneCode ->
+          PrepareSecondFactorParams(
+            strategy = PrepareSecondFactorParams.PHONE_CODE,
+            phoneNumberId = phoneNumberId,
+          )
+        is EmailCode ->
+          PrepareSecondFactorParams(
+            strategy = PrepareSecondFactorParams.EMAIL_CODE,
+            emailAddressId = emailAddressId,
+          )
+      }
+  }
 
   /**
    * Parameters for resetting a user's password during the sign-in process.
@@ -754,20 +797,37 @@ suspend fun SignIn.prepareFirstFactor(
  * Prepares the second factor verification for the sign-in process.
  *
  * This function is used to initiate the second factor verification process, which is required for
- * multi-factor authentication (MFA) during the sign-in process. It automatically selects the
- * "phone_code" strategy if available among the supported second factors.
+ * multi-factor authentication (MFA) during the sign-in process. It automatically selects a
+ * supported strategy, prioritizing "phone_code" if available, otherwise "email_code".
  *
  * @return A [ClerkResult] containing the updated [SignIn] object with the prepared second factor
  *   verification on success, or a [ClerkErrorResponse] on failure.
  * @receiver The current [SignIn] object representing the sign-in session.
  */
 suspend fun SignIn.prepareSecondFactor(): ClerkResult<SignIn, ClerkErrorResponse> {
-  val params =
-    SignIn.PrepareSecondFactorParams(
-      phoneNumberId =
-        this.supportedSecondFactors?.find { it.strategy == "phone_code" }?.phoneNumberId
-    )
-  return ClerkApi.signIn.prepareSecondFactor(id = this.id, params = params.toMap())
+  val strategy =
+    when {
+      supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE } ==
+        true ->
+        SignIn.PrepareSecondFactorStrategy.PhoneCode(
+          phoneNumberId =
+            supportedSecondFactors
+              .find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
+              ?.phoneNumberId
+        )
+      supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE } ==
+        true ->
+        SignIn.PrepareSecondFactorStrategy.EmailCode(
+          emailAddressId =
+            supportedSecondFactors
+              .find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
+              ?.emailAddressId
+        )
+      else -> error("No supported second factor found")
+    }
+
+  val params = strategy.toParams()
+  return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
 }
 
 /**
