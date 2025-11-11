@@ -11,11 +11,12 @@ jobs:
         include:
           - module: ":source:api"
             path: "source/api"
+            label: "source-api"   # <— safe artifact label (no /)
           - module: ":source:ui"
             path: "source/ui"
+            label: "source-ui"
     steps:
       - uses: actions/checkout@v5
-
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
@@ -29,11 +30,12 @@ jobs:
       - name: Run unit tests for ${{ matrix.module }}
         run: ./gradlew ${{ matrix.module }}:testDebugUnitTest --build-cache --parallel
 
-      - name: Upload test results (${{ matrix.module }})
+      - name: Upload test results (${{ matrix.label }})
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ matrix.path }}
+          name: test-results-${{ matrix.label }}    # <— no slashes
           path: |
             ${{ matrix.path }}/build/test-results/**
             ${{ matrix.path }}/build/reports/tests/**
+          if-no-files-found: warn
