@@ -166,15 +166,15 @@ internal class ConfigurationManager {
       // Start all background initialization concurrently
       scope.launch {
         // Initialize device ID after storage is ready (storage is already initialized above)
-        val storageInitJob = async {
+        val deviceIdInitJob = async {
           DeviceIdGenerator.initialize()
         }
 
         // Launch data refresh independently (doesn't depend on storage)
         val dataRefreshJob = async { refreshClientAndEnvironment(options) }
 
-        // Wait for storage init before setting up lifecycle monitoring
-        storageInitJob.await()
+        // Wait for device ID init before setting up lifecycle monitoring
+        deviceIdInitJob.await()
 
         // Set up lifecycle monitoring for automatic refresh
         AppLifecycleListener.configure {
