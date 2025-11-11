@@ -73,6 +73,13 @@ internal fun AuthStartViewImpl(
         authState.setToStepForStatus(s.signUp!!, onAuthComplete = onAuthComplete)
         authStartViewModel.resetState()
       }
+      is AuthStartViewModel.AuthState.OAuthState.SignInSuccess -> {
+
+        authState.setToStepForStatus(s.signIn, onAuthComplete = onAuthComplete)
+      }
+      is AuthStartViewModel.AuthState.OAuthState.SignUpSuccess -> {
+        authState.setToStepForStatus(s.signUp, onAuthComplete = onAuthComplete)
+      }
       is AuthStartViewModel.AuthState.Error -> {
         snackbarHostState.showSnackbar(s.message ?: generic)
         authStartViewModel.resetState()

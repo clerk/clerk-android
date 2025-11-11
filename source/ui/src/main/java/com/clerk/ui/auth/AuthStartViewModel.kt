@@ -157,8 +157,14 @@ internal class AuthStartViewModel : ViewModel() {
           withContext(Dispatchers.Main) {
             _state.value =
               when (it.resultType) {
-                ResultType.SIGN_IN -> AuthState.OAuthState.Success(signIn = it.signIn)
-                ResultType.SIGN_UP -> AuthState.OAuthState.Success(signUp = it.signUp)
+                ResultType.SIGN_IN -> {
+                  it.signIn?.let { signIn -> AuthState.OAuthState.SignInSuccess(signIn = signIn) }
+                    ?: AuthState.OAuthState.Error("Unknown result type from Google One Tap")
+                }
+                ResultType.SIGN_UP -> {
+                  it.signUp?.let { signUp -> AuthState.OAuthState.SignUpSuccess(signUp = signUp) }
+                    ?: AuthState.OAuthState.Error("Unknown result type from Google One Tap")
+                }
                 ResultType.UNKNOWN ->
                   AuthState.OAuthState.Error("Unknown result type from Google One Tap")
               }
@@ -180,8 +186,14 @@ internal class AuthStartViewModel : ViewModel() {
         .onSuccess {
           _state.value =
             when (it.resultType) {
-              ResultType.SIGN_IN -> AuthState.OAuthState.Success(signIn = it.signIn)
-              ResultType.SIGN_UP -> AuthState.OAuthState.Success(signUp = it.signUp)
+              ResultType.SIGN_IN -> {
+                it.signIn?.let { signIn -> AuthState.OAuthState.SignInSuccess(signIn = signIn) }
+                  ?: AuthState.OAuthState.Error("Unknown result type from OAuthProvider")
+              }
+              ResultType.SIGN_UP -> {
+                it.signUp?.let { signUp -> AuthState.OAuthState.SignUpSuccess(signUp = signUp) }
+                  ?: AuthState.OAuthState.Error("Unknown result type from OAuth Provider")
+              }
               ResultType.UNKNOWN ->
                 AuthState.OAuthState.Error("Unknown result type from OAuth provider")
             }
@@ -283,7 +295,9 @@ internal class AuthStartViewModel : ViewModel() {
     sealed interface OAuthState : AuthState {
       data object Loading : OAuthState
 
-      data class Success(val signIn: SignIn? = null, val signUp: SignUp? = null) : AuthState
+      data class SignInSuccess(val signIn: SignIn) : AuthState
+
+      data class SignUpSuccess(val signUp: SignUp) : AuthState
 
       data class Error(val message: String?) : AuthState
     }
