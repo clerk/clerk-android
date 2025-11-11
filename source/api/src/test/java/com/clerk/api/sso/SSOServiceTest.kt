@@ -22,6 +22,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import java.lang.ref.WeakReference
+import kotlin.test.Ignore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -33,7 +34,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -44,7 +44,7 @@ import org.robolectric.RobolectricTestRunner
  * These tests focus on OAuth authentication flows and redirect handling. Tests for external account
  * connection functionality can be found in [ExternalAccountServiceTest].
  */
-@Ignore("Flaky tests, needs investigation")
+@Ignore("TODO: Fix these tests")
 @RunWith(RobolectricTestRunner::class)
 class SSOServiceTest {
   private val testDispatcher = StandardTestDispatcher()
@@ -148,7 +148,6 @@ class SSOServiceTest {
     assertEquals(errorResponse, (result as ClerkResult.Failure).error)
   }
 
-  @Ignore("Failing on github actions, needs investigation")
   @Test
   fun `completeAuthenticateWithRedirect handles no pending authentication gracefully`() = runTest {
     val mockUri = mockk<Uri>(relaxed = true)
@@ -161,7 +160,6 @@ class SSOServiceTest {
     assertFalse(SSOService.hasPendingAuthentication())
   }
 
-  @Ignore("Failing on github actions, needs investigation")
   @Test
   fun `completeExternalConnection handles no pending connection gracefully`() = runTest {
     // Should not throw when no pending connection
