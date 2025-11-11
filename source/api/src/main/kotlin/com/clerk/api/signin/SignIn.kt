@@ -526,7 +526,7 @@ data class SignIn(
      */
     sealed interface Strategy {
       /** The authentication strategy identifier. */
-      val strategy: String
+      val strategy: String?
 
       /**
        * Email code sign-in strategy.
@@ -595,6 +595,14 @@ data class SignIn(
 
       /** Passkey strategy for authentication using a passkey. */
       data class Passkey(override val strategy: String = PASSKEY) : Strategy
+
+      @AutoMap
+      @Serializable
+      data class Identifier(
+        override val strategy: String? = null,
+        val identifier: String,
+        val password: String? = null,
+      ) : Strategy
     }
   }
 

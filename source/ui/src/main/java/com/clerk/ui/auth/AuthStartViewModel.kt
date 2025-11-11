@@ -9,7 +9,6 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.authenticateWithRedirectUrl
 import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
@@ -218,8 +217,8 @@ internal class AuthStartViewModel : ViewModel() {
     signIn
       .prepareFirstFactor(SignIn.PrepareFirstFactorParams.EnterpriseSSO())
       .onSuccess {
-        if (it.firstFactorVerification?.externalVerificationRedirectUrl != null) {
-          authenticateWithRedirect(it)
+        it.firstFactorVerification?.externalVerificationRedirectUrl?.let { url ->
+          authenticateWithRedirect(url)
         }
       }
       .onFailure { throwable ->
@@ -227,22 +226,27 @@ internal class AuthStartViewModel : ViewModel() {
       }
   }
 
-  private suspend fun authenticateWithRedirect(signIn: SignIn) {
-    signIn.authenticateWithRedirectUrl().onSuccess {
-      withContext(Dispatchers.Main) {
-        val successType =
-          when (it.resultType) {
-            ResultType.SIGN_IN -> AuthState.Success.SignInSuccess(signIn = it.signIn)
-            ResultType.SIGN_UP -> AuthState.Success.SignUpSuccess(signUp = it.signUp)
-            ResultType.UNKNOWN -> {
-              ClerkLog.e("Unknown result type after SSO redirect: ${it.resultType}")
-              AuthState.Error("Unknown result type after SSO redirect")
+  private suspend fun authenticateWithRedirect(externalVerificationRedirectUrl: String) {
+    SignIn.authenticateWithRedirect(
+        SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
+          redirectUrl = externalVerificationRedirectUrl
+        )
+      )
+      .onSuccess {
+        withContext(Dispatchers.Main) {
+          val successType =
+            when (it.resultType) {
+              ResultType.SIGN_IN -> AuthState.Success.SignInSuccess(signIn = it.signIn)
+              ResultType.SIGN_UP -> AuthState.Success.SignUpSuccess(signUp = it.signUp)
+              ResultType.UNKNOWN -> {
+                ClerkLog.e("Unknown result type after SSO redirect: ${it.resultType}")
+                AuthState.Error("Unknown result type after SSO redirect")
+              }
             }
-          }
 
-        _state.value = successType
+          _state.value = successType
+        }
       }
-    }
   }
 
   /** Represents the various states of the authentication process. */
