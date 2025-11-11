@@ -52,12 +52,12 @@ internal object StorageHelper {
   }
 
   /** Delete value of string type from [secureStorage] */
-  internal fun deleteValue(name: String) {
+  internal fun deleteValue(key: StorageKey) {
     if (!isInitialized()) {
-      ClerkLog.w("StorageHelper.deleteValue called before initialization, ignoring delete for key: $name")
+      ClerkLog.w("StorageHelper.deleteValue called before initialization, ignoring delete for key: ${key.name}")
       return
     }
-    secureStorage.edit { remove(name) }
+    secureStorage.edit { remove(key.name) }
   }
 }
 
