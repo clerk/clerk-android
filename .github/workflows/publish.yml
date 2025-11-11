@@ -79,9 +79,6 @@ jobs:
         \`\`\`gradle
         implementation(\"com.clerk:clerk-android:$VERSION\")
         \`\`\`
-
-        ### 👥 Contributors
-        $CONTRIBUTORS"
         
         # Add changelog link if we have a previous tag
         if [ -n "$PREVIOUS_TAG" ]; then
