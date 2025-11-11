@@ -1,17 +1,22 @@
 name: Android Unit Test
-
 on:
   pull_request:
     branches: [ "main", "sam/clerk-ui" ]
 
 jobs:
-  build:
-
+  test-module:
     runs-on: macos-latest-xlarge
-
+    strategy:
+      matrix:
+        include:
+          - module: ":source:api"
+            path: "source/api"
+          - module: ":source:ui"
+            path: "source/ui"
     steps:
       - uses: actions/checkout@v5
-      - name: set up JDK 21
+
+      - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
           java-version: '21'
@@ -20,5 +25,15 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Build with Gradle
-        run: ./gradlew :source:api:testDebugUnitTest
+
+      - name: Run unit tests for ${{ matrix.module }}
+        run: ./gradlew ${{ matrix.module }}:testDebugUnitTest --build-cache --parallel
+
+      - name: Upload test results (${{ matrix.module }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.path }}
+          path: |
+            ${{ matrix.path }}/build/test-results/**
+            ${{ matrix.path }}/build/reports/tests/**
