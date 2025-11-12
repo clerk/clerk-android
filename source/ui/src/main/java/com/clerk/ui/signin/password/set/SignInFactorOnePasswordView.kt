@@ -14,11 +14,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -99,6 +100,7 @@ private fun SignInFactorOnePasswordViewImpl(
       onValueChange = { authState.signInPassword = it },
       label = stringResource(R.string.enter_your_password),
       visualTransformation = PasswordVisualTransformation(),
+      inputContentType = ContentType.Password,
       keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
     )
     Spacer(Modifier.height(dp24))
@@ -179,7 +181,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
   }
 }
 
-@Preview(device = "spec:width=300dp,height=891dp")
+@PreviewLightDark
 @Composable
 private fun PreviewSignInFactorOnePasswordView() {
   PreviewAuthStateProvider {

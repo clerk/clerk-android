@@ -44,6 +44,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.clerk.workbench.ui.theme.ClerkPrimary
 import com.clerk.workbench.ui.theme.WorkbenchTheme
+import com.jakewharton.processphoenix.ProcessPhoenix
 
 class MainActivity : ComponentActivity() {
 
@@ -54,7 +55,10 @@ class MainActivity : ComponentActivity() {
       val context = LocalContext.current
       WorkbenchTheme {
         MainContent(
-          onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
+          onSave = {
+            StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it)
+            ProcessPhoenix.triggerRebirth(context)
+          },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
           onClickFirstItem = { context.startActivity(Intent(context, UiActivity1::class.java)) },
           onClickSecondItem = { context.startActivity(Intent(context, UiActivity2::class.java)) },

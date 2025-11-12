@@ -7,12 +7,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
@@ -26,7 +24,6 @@ import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.DefaultColors
 
 /**
  * A Composable that displays a verification code input screen for sign-in authentication factors.
@@ -149,12 +146,11 @@ private fun SignInFactorCodeViewImpl(
  *
  * Demonstrates the component with a phone code factor for development and design purposes.
  */
-@Preview
+@PreviewLightDark
 @Composable
 private fun PreviewSignInFactorCodeView() {
-  PreviewAuthStateProvider {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-    ClerkMaterialTheme {
+  ClerkMaterialTheme {
+    PreviewAuthStateProvider {
       SignInFactorCodeView(
         Factor(StrategyKeys.PHONE_CODE, safeIdentifier = "sam@clerk.dev"),
         onAuthComplete = {},
