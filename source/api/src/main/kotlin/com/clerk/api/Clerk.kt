@@ -335,9 +335,10 @@ object Clerk {
    * user.
    */
   internal fun updateSessionAndUserState() {
-    val currentSession = if (::client.isInitialized) {
-      client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
-    } else null
+    val currentSession =
+      if (::client.isInitialized) {
+        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
+      } else null
     val currentUser = currentSession?.user
 
     _session.value = currentSession

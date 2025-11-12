@@ -22,7 +22,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="oauth"
+                    android:host="${applicationId}.oauth"
                     android:scheme="clerk" />
             </intent-filter>
         </activity>
