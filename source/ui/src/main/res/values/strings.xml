@@ -64,7 +64,7 @@
     <string name="use_phone_number">Use phone number</string>
     <string name="enter_your_email">Enter your email</string>
     <string name="enter_your_username">Enter your username</string>
-    <string name="enter_you_email_or_username">Enter you email or username</string>
+    <string name="enter_you_email_or_username">Enter your email or username</string>
     <string name="sign_in_with">Sign in with %1$s</string>
     <string name="something_went_wrong_please_try_again">Something went wrong, please try again</string>
     <string name="check_your_phone">Check your phone</string>

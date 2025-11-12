@@ -103,6 +103,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
 paparazzi = "app.cash.paparazzi:paparazzi:2.0.0-alpha02"
 ads-mobile-sdk = { group = "com.google.android.libraries.ads.mobile.sdk", name = "ads-mobile-sdk", version.ref = "adsMobileSdk" }
+processPhoenix = "com.jakewharton:process-phoenix:3.0.0"
 
 
 [plugins]

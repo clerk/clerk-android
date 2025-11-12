@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.ui.R
 import com.clerk.ui.core.button.social.ClerkSocialRow
@@ -51,7 +52,15 @@ internal fun AuthStartViewImpl(
   val state by authStartViewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val generic = stringResource(R.string.something_went_wrong_please_try_again)
-  var phoneActive by rememberSaveable { mutableStateOf(false) }
+  var phoneActive by rememberSaveable {
+    mutableStateOf(
+      authViewHelper.shouldStartOnPhoneNumber(
+        authState.authStartPhoneNumber,
+        authState.authStartIdentifier,
+      )
+    )
+  }
+
   val isContinueEnabled by
     remember(authState.authStartIdentifier, authState.authStartPhoneNumber, phoneActive) {
       derivedStateOf {
@@ -150,6 +159,7 @@ private fun AuthInputField(
   onPhoneNumberChange: (String) -> Unit,
   onIdentifierChange: (String) -> Unit,
 ) {
+  ClerkLog.e("QQQ ${authViewHelper.phoneNumberIsEnabled}")
   if (authViewHelper.phoneNumberIsEnabled && phoneNumberFieldIsActive) {
     ClerkPhoneNumberField(
       value = authStartPhoneNumber,

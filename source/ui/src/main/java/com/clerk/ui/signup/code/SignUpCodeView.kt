@@ -55,7 +55,16 @@ private fun SignUpCodeViewImpl(
   val snackbarHostState = remember { SnackbarHostState() }
 
   LaunchedEffect(field) { viewModel.prepare(field) }
-  AuthStateEffects(authState, state, snackbarHostState, onAuthComplete = onAuthComplete) {
+  AuthStateEffects(
+    authState,
+    state,
+    snackbarHostState,
+    onAuthComplete = {
+      viewModel.reset()
+      viewModel.resetVerificationState()
+      onAuthComplete()
+    },
+  ) {
     viewModel.reset()
   }
 

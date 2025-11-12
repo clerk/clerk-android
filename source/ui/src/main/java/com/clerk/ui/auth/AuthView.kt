@@ -1,12 +1,17 @@
 package com.clerk.ui.auth
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -42,6 +47,21 @@ fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
     NavDisplay(
       modifier = modifier,
       backStack = backStack,
+      transitionSpec = {
+        val spec = tween<IntOffset>(durationMillis = 300)
+        slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+          slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+      },
+      popTransitionSpec = {
+        val spec = tween<IntOffset>(durationMillis = 300)
+        slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+          slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+      },
+      predictivePopTransitionSpec = { distance ->
+        // Use the provided distance to align with the system back gesture
+        slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+          slideOutHorizontally(targetOffsetX = { distance })
+      },
       onBack = { backStack.removeLastOrNull() },
       entryProvider =
         entryProvider {

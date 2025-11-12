@@ -58,7 +58,7 @@ import com.clerk.ui.theme.DefaultColors
  *   clicks.
  * @param isLoading When `true`, a circular progress indicator is shown instead of the button's
  *   content.
- * @param padding The padding to apply to the button's content.
+ * @param paddingValues The padding to apply to the button's content.
  * @param configuration Configuration object that controls the button's visual appearance, including
  *   its `style`, `size`, and `emphasis`. Use [ClerkButtonDefaults.configuration] to create an
  *   instance.
@@ -88,9 +88,9 @@ fun ClerkButton(
     onClick = onClick,
     modifier = modifier,
     configuration = configuration,
-    isEnabled = isEnabled,
-    isLoading = isLoading,
-    isPressedCombined = pressed,
+    clerkButtonState =
+      ClerkButtonState(isEnabled = isEnabled, isLoading = isLoading, isPressedCombined = pressed),
+    interactionSource = interactionSource,
     paddingValues = paddingValues,
     icons = icons,
   )
@@ -122,53 +122,64 @@ internal fun ClerkButtonWithPressedState(
     text = text,
     onClick = onClick,
     modifier = modifier,
-    isEnabled = isEnabled,
-    isPressedCombined = pressed || isPressed,
+    clerkButtonState =
+      ClerkButtonState(
+        isEnabled = isEnabled,
+        isLoading = isLoading,
+        isPressedCombined = isPressed || pressed,
+      ),
+    interactionSource = interactionSource,
     configuration = configuration,
     icons = icons,
     paddingValues = paddingValues,
-    isLoading = isLoading,
   )
 }
 
 /**
  * The core implementation of the Clerk button.
  *
- * This private composable handles the button's appearance based on its state (enabled, pressed,
- * loading) and configuration. It combines all parameters to render the final button surface and its
- * content.
+ * This private composable handles the button's appearance based on its state and configuration. It
+ * combines all parameters to render the final button surface and its content.
  *
  * @param text Label displayed on the button.
  * @param onClick Invoked when the button is pressed.
- * @param isEnabled When false, applies disabled styling and prevents clicks.
- * @param isPressedCombined The combined pressed state from user interaction and explicit state.
- * @param isLoading When true, shows a loading indicator instead of the button content.
- * @param padding The padding to apply to the button content.
+ * @param clerkButtonState A state object containing `isEnabled`, `isLoading`, and
+ *   `isPressedCombined`.
  * @param configuration Configuration controlling size, emphasis, and other visuals.
  * @param modifier Compose `Modifier` for layout and semantics.
+ * @param paddingValues The padding to apply to the button content.
  * @param icons Optional leading and trailing icons, including their colors.
+ * @param interactionSource The [MutableInteractionSource] that will be used to dispatch press
+ *   events.
  */
 @Composable
 private fun ClerkButtonImpl(
   text: String?,
   onClick: () -> Unit,
-  isEnabled: Boolean,
-  isPressedCombined: Boolean,
-  isLoading: Boolean,
+  clerkButtonState: ClerkButtonState,
   configuration: ClerkButtonConfiguration,
-  modifier: Modifier = Modifier,
   paddingValues: PaddingValues,
+  interactionSource: MutableInteractionSource,
+  modifier: Modifier = Modifier,
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
   ClerkMaterialTheme {
-    val tokens = buildButtonTokens(config = configuration, isPressed = isPressedCombined)
+    val tokens =
+      buildButtonTokens(config = configuration, isPressed = clerkButtonState.isPressedCombined)
 
     val surfaceModifier =
       Modifier.height(tokens.height)
         .then(modifier)
         .let { mod ->
-          if (tokens.hasShadow && !isPressedCombined && isEnabled) {
-            mod.shadow(elevation = dp1, shape = ClerkMaterialTheme.shape)
+          if (
+            tokens.hasShadow && !clerkButtonState.isPressedCombined && clerkButtonState.isEnabled
+          ) {
+            mod.shadow(
+              elevation = dp1,
+              spotColor = ClerkMaterialTheme.colors.shadow,
+              ambientColor = ClerkMaterialTheme.colors.shadow,
+              shape = ClerkMaterialTheme.shape,
+            )
           } else {
             mod
           }
@@ -178,19 +189,21 @@ private fun ClerkButtonImpl(
     Button(
       modifier = surfaceModifier,
       shape = ClerkMaterialTheme.shape,
-      enabled = isEnabled,
+      enabled = clerkButtonState.isEnabled,
+      interactionSource = interactionSource,
       contentPadding = paddingValues,
       colors =
         ButtonDefaults.buttonColors(
           containerColor =
-            if (isEnabled) tokens.backgroundColor else tokens.backgroundColor.copy(alpha = 0.5f)
+            if (clerkButtonState.isEnabled) tokens.backgroundColor
+            else tokens.backgroundColor.copy(alpha = 0.5f)
         ),
       onClick = onClick,
     ) {
       ButtonContent(
-        isLoading = isLoading,
+        isLoading = clerkButtonState.isLoading,
         icons = icons,
-        isEnabled = isEnabled,
+        isEnabled = clerkButtonState.isEnabled,
         text = text,
         tokens = tokens,
         size = configuration.size,
@@ -199,6 +212,12 @@ private fun ClerkButtonImpl(
     }
   }
 }
+
+data class ClerkButtonState(
+  val isLoading: Boolean,
+  val isEnabled: Boolean,
+  val isPressedCombined: Boolean,
+)
 
 /**
  * Renders the content inside the button, which can be either the text with icons, or a loading

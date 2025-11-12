@@ -14,11 +14,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -87,7 +89,8 @@ private fun SignInFactorOnePasswordViewImpl(
   }
 
   ClerkThemedAuthScaffold(
-    onBackPressed = authState::navigateBack,
+    onBackPressed = { authState.navigateBack() },
+    snackbarHostState = snackbarHostState,
     identifier = factor.safeIdentifier,
     onClickIdentifier = { authState.clearBackStack() },
     modifier = modifier,
@@ -99,7 +102,9 @@ private fun SignInFactorOnePasswordViewImpl(
       onValueChange = { authState.signInPassword = it },
       label = stringResource(R.string.enter_your_password),
       visualTransformation = PasswordVisualTransformation(),
-      keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
+      inputContentType = ContentType.Password,
+      keyboardOptions =
+        KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Password),
     )
     Spacer(Modifier.height(dp24))
     ClerkButton(
@@ -179,7 +184,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
   }
 }
 
-@Preview(device = "spec:width=300dp,height=891dp")
+@PreviewLightDark
 @Composable
 private fun PreviewSignInFactorOnePasswordView() {
   PreviewAuthStateProvider {

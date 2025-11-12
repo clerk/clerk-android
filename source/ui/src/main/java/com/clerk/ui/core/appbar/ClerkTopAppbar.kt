@@ -54,7 +54,7 @@ fun ClerkTopAppBar(
         if (hasBackButton) {
           IconButton(onClick = onBackPressed) {
             Icon(
-              imageVector = Icons.AutoMirrored.Default.ArrowBack,
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = stringResource(R.string.back),
               tint = ClerkMaterialTheme.colors.foreground,
             )

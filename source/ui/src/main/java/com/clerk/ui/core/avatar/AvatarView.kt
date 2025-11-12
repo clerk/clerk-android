@@ -1,5 +1,6 @@
 package com.clerk.ui.core.avatar
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -36,6 +37,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp3
 import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
@@ -97,11 +99,12 @@ private fun BoxScope.EditButton(
       modifier =
         Modifier.size(dp32)
           .shadow(
-            elevation = dp1,
-            spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.02f),
-            ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.02f),
+            elevation = dp3,
+            spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f),
+            ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f),
             shape = ClerkMaterialTheme.shape,
           ),
+      border = BorderStroke(dp1, color = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f)),
       shape = ClerkMaterialTheme.shape,
       onClick = { expanded = true },
     ) {
@@ -114,38 +117,67 @@ private fun BoxScope.EditButton(
     }
 
     DropdownMenu(
-      modifier =
-        Modifier.background(ClerkMaterialTheme.colors.background).defaultMinSize(minWidth = 144.dp),
-      expanded = expanded,
+      expanded,
+      onEditTakePhoto,
+      onEditChoosePhoto,
+      onEditRemovePhoto,
       onDismissRequest = { expanded = false },
-    ) {
-      DropdownMenuItem(
-        text = { Text(text = stringResource(R.string.take_a_photo)) },
-        onClick = {
-          expanded = false
-          onEditTakePhoto()
-        },
-      )
-      DropdownMenuItem(
-        text = { Text(text = stringResource(R.string.choose_photo)) },
-        onClick = {
-          expanded = false
-          onEditChoosePhoto()
-        },
-      )
-      DropdownMenuItem(
-        text = {
-          Text(
-            text = stringResource(R.string.remove_photo),
-            color = ClerkMaterialTheme.colors.danger,
-          )
-        },
-        onClick = {
-          expanded = false
-          onEditRemovePhoto()
-        },
-      )
-    }
+    )
+  }
+}
+
+@Composable
+private fun DropdownMenu(
+  expanded: Boolean,
+  onEditTakePhoto: () -> Unit,
+  onEditChoosePhoto: () -> Unit,
+  onEditRemovePhoto: () -> Unit,
+  onDismissRequest: () -> Unit,
+) {
+
+  DropdownMenu(
+    modifier =
+      Modifier.background(ClerkMaterialTheme.colors.background).defaultMinSize(minWidth = 144.dp),
+    expanded = expanded,
+    onDismissRequest = onDismissRequest,
+  ) {
+    DropdownMenuItem(
+      text = {
+        Text(
+          text = stringResource(R.string.take_a_photo),
+          style = ClerkMaterialTheme.typography.bodyLarge,
+        )
+      },
+      onClick = {
+        onDismissRequest()
+        onEditTakePhoto()
+      },
+    )
+    DropdownMenuItem(
+      text = {
+        Text(
+          text = stringResource(R.string.choose_photo),
+          style = ClerkMaterialTheme.typography.bodyLarge,
+        )
+      },
+      onClick = {
+        onDismissRequest()
+        onEditChoosePhoto()
+      },
+    )
+    DropdownMenuItem(
+      text = {
+        Text(
+          text = stringResource(R.string.remove_photo),
+          color = ClerkMaterialTheme.colors.danger,
+          style = ClerkMaterialTheme.typography.bodyLarge,
+        )
+      },
+      onClick = {
+        onDismissRequest()
+        onEditRemovePhoto()
+      },
+    )
   }
 }
 

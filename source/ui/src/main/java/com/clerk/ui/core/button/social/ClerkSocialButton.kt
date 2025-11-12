@@ -1,3 +1,5 @@
+@file:Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+
 package com.clerk.ui.core.button.social
 
 import android.annotation.SuppressLint
@@ -7,13 +9,16 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -139,27 +144,60 @@ internal fun ClerkSocialButtonImpl(
   onClick: (OAuthProvider) -> Unit = {},
 ) {
   ClerkMaterialTheme {
-    Button(
-      enabled = isEnabled,
-      onClick = { onClick(provider) },
-      shape = ClerkMaterialTheme.shape,
-      interactionSource = interactionSource,
-      elevation = ButtonDefaults.buttonElevation(defaultElevation = dp3),
-      colors = getButtonColors(isPressedCombined),
-      contentPadding = ButtonDefaults.ContentPadding,
-      modifier =
-        modifier
-          .fillMaxWidth()
-          .shadow(
-            elevation = dp3,
+    BoxWithConstraints {
+      val availableWidth = LocalDensity.current.run { constraints.maxWidth.toDp() }
+      val iconOnly = forceIconOnly || availableWidth <= 180.dp
+
+      if (iconOnly) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+          Button(
+            enabled = isEnabled,
+            onClick = { onClick(provider) },
             shape = ClerkMaterialTheme.shape,
-            clip = true,
-            spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.6f),
-            ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.6f),
-          )
-          .defaultMinSize(minHeight = dp48, minWidth = 100.dp),
-    ) {
-      SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = forceIconOnly)
+            interactionSource = interactionSource,
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = dp3),
+            colors = getButtonColors(isPressedCombined),
+            contentPadding = ButtonDefaults.ContentPadding,
+            modifier =
+              Modifier.width(120.dp)
+                .height(dp48)
+                .shadow(
+                  elevation = dp3,
+                  shape = ClerkMaterialTheme.shape,
+                  clip = true,
+                  spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.4f),
+                  ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.4f),
+                )
+                .defaultMinSize(minWidth = 100.dp),
+          ) {
+            SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = true)
+          }
+        }
+      } else {
+        Button(
+          enabled = isEnabled,
+          onClick = { onClick(provider) },
+          shape = ClerkMaterialTheme.shape,
+          interactionSource = interactionSource,
+          elevation = ButtonDefaults.buttonElevation(defaultElevation = dp3),
+          colors = getButtonColors(isPressedCombined),
+          contentPadding = ButtonDefaults.ContentPadding,
+          modifier =
+            modifier
+              .fillMaxWidth()
+              .height(dp48)
+              .shadow(
+                elevation = dp3,
+                shape = ClerkMaterialTheme.shape,
+                clip = true,
+                spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.4f),
+                ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.4f),
+              )
+              .defaultMinSize(minWidth = 100.dp),
+        ) {
+          SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = false)
+        }
+      }
     }
   }
 }
@@ -245,8 +283,6 @@ private fun SocialButtonIcon(
     contentDescription = contentDescription,
     fallback = fallbackPainter,
     error = fallbackPainter,
-    onSuccess = { showingFallback = false },
-    onError = { showingFallback = true },
     alpha = if (isEnabled) 1f else 0.5f,
     modifier = Modifier.size(dp24),
     colorFilter =
@@ -315,7 +351,9 @@ private fun PreviewSocialRow() {
           OAuthProvider.APPLE,
           OAuthProvider.HUGGING_FACE,
           OAuthProvider.LINEAR,
-          OAuthProvider.BOX,
+          OAuthProvider.LINEAR,
+          OAuthProvider.LINEAR,
+          OAuthProvider.LINEAR,
         )
       )
     }

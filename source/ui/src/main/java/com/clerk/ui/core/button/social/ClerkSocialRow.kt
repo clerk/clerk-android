@@ -51,7 +51,7 @@ fun ClerkSocialRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement =
           if (shouldOffset) Arrangement.spacedBy(dp8, Alignment.CenterHorizontally)
-          else Arrangement.spacedBy(dp8),
+          else Arrangement.spacedBy(dp8, Alignment.CenterHorizontally),
       ) {
         if (shouldOffset && !isSingleProvider) {
           Spacer(modifier = Modifier.weight(ROW_WEIGHT))
