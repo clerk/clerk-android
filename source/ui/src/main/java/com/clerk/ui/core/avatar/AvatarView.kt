@@ -117,38 +117,67 @@ private fun BoxScope.EditButton(
     }
 
     DropdownMenu(
-      modifier =
-        Modifier.background(ClerkMaterialTheme.colors.background).defaultMinSize(minWidth = 144.dp),
-      expanded = expanded,
+      expanded,
+      onEditTakePhoto,
+      onEditChoosePhoto,
+      onEditRemovePhoto,
       onDismissRequest = { expanded = false },
-    ) {
-      DropdownMenuItem(
-        text = { Text(text = stringResource(R.string.take_a_photo)) },
-        onClick = {
-          expanded = false
-          onEditTakePhoto()
-        },
-      )
-      DropdownMenuItem(
-        text = { Text(text = stringResource(R.string.choose_photo)) },
-        onClick = {
-          expanded = false
-          onEditChoosePhoto()
-        },
-      )
-      DropdownMenuItem(
-        text = {
-          Text(
-            text = stringResource(R.string.remove_photo),
-            color = ClerkMaterialTheme.colors.danger,
-          )
-        },
-        onClick = {
-          expanded = false
-          onEditRemovePhoto()
-        },
-      )
-    }
+    )
+  }
+}
+
+@Composable
+private fun DropdownMenu(
+  expanded: Boolean,
+  onEditTakePhoto: () -> Unit,
+  onEditChoosePhoto: () -> Unit,
+  onEditRemovePhoto: () -> Unit,
+  onDismissRequest: () -> Unit,
+) {
+
+  DropdownMenu(
+    modifier =
+      Modifier.background(ClerkMaterialTheme.colors.background).defaultMinSize(minWidth = 144.dp),
+    expanded = expanded,
+    onDismissRequest = onDismissRequest,
+  ) {
+    DropdownMenuItem(
+      text = {
+        Text(
+          text = stringResource(R.string.take_a_photo),
+          style = ClerkMaterialTheme.typography.bodyLarge,
+        )
+      },
+      onClick = {
+        onDismissRequest()
+        onEditTakePhoto()
+      },
+    )
+    DropdownMenuItem(
+      text = {
+        Text(
+          text = stringResource(R.string.choose_photo),
+          style = ClerkMaterialTheme.typography.bodyLarge,
+        )
+      },
+      onClick = {
+        onDismissRequest()
+        onEditChoosePhoto()
+      },
+    )
+    DropdownMenuItem(
+      text = {
+        Text(
+          text = stringResource(R.string.remove_photo),
+          color = ClerkMaterialTheme.colors.danger,
+          style = ClerkMaterialTheme.typography.bodyLarge,
+        )
+      },
+      onClick = {
+        onDismissRequest()
+        onEditRemovePhoto()
+      },
+    )
   }
 }
 
