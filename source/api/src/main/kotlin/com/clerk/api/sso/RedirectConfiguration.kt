@@ -1,5 +1,7 @@
 package com.clerk.api.sso
 
+import com.clerk.api.Clerk
+
 /**
  * Internal configuration object for OAuth redirect URLs.
  *
@@ -17,5 +19,5 @@ internal object RedirectConfiguration {
    * providers. The custom scheme "clerk://" allows the application to handle the OAuth callback and
    * complete the authentication process.
    */
-  const val DEFAULT_REDIRECT_URL: String = "clerk://oauth"
+  val DEFAULT_REDIRECT_URL: String = "clerk://${Clerk.applicationId}.oauth"
 }
