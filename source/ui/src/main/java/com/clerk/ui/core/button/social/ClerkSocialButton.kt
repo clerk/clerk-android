@@ -1,3 +1,5 @@
+@file:Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+
 package com.clerk.ui.core.button.social
 
 import android.annotation.SuppressLint
