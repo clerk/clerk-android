@@ -283,8 +283,6 @@ private fun SocialButtonIcon(
     contentDescription = contentDescription,
     fallback = fallbackPainter,
     error = fallbackPainter,
-    onSuccess = { showingFallback = false },
-    onError = { showingFallback = true },
     alpha = if (isEnabled) 1f else 0.5f,
     modifier = Modifier.size(dp24),
     colorFilter =
