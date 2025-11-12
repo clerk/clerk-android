@@ -18,6 +18,7 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -102,7 +103,8 @@ private fun SignInFactorOnePasswordViewImpl(
       label = stringResource(R.string.enter_your_password),
       visualTransformation = PasswordVisualTransformation(),
       inputContentType = ContentType.Password,
-      keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
+      keyboardOptions =
+        KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Password),
     )
     Spacer(Modifier.height(dp24))
     ClerkButton(
