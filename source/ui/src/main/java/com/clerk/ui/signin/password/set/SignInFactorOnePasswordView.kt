@@ -88,7 +88,8 @@ private fun SignInFactorOnePasswordViewImpl(
   }
 
   ClerkThemedAuthScaffold(
-    onBackPressed = authState::navigateBack,
+    onBackPressed = { authState.navigateBack() },
+    snackbarHostState = snackbarHostState,
     identifier = factor.safeIdentifier,
     onClickIdentifier = { authState.clearBackStack() },
     modifier = modifier,

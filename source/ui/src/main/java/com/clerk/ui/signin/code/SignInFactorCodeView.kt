@@ -95,7 +95,11 @@ private fun SignInFactorCodeViewImpl(
     authState = authState,
     state = state,
     snackbarHostState = snackbarHostState,
-    onAuthComplete = onAuthComplete,
+    onAuthComplete = {
+      onAuthComplete()
+      viewModel.resetState()
+      viewModel.resetVerificationState()
+    },
     onReset = { viewModel.resetState() },
   )
   ClerkThemedAuthScaffold(
