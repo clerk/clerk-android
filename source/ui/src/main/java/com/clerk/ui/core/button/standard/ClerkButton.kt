@@ -158,10 +158,10 @@ private fun ClerkButtonImpl(
   onClick: () -> Unit,
   clerkButtonState: ClerkButtonState,
   configuration: ClerkButtonConfiguration,
-  modifier: Modifier = Modifier,
   paddingValues: PaddingValues,
-  icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
   interactionSource: MutableInteractionSource,
+  modifier: Modifier = Modifier,
+  icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
 ) {
   ClerkMaterialTheme {
     val tokens =
@@ -174,7 +174,12 @@ private fun ClerkButtonImpl(
           if (
             tokens.hasShadow && !clerkButtonState.isPressedCombined && clerkButtonState.isEnabled
           ) {
-            mod.shadow(elevation = dp1, shape = ClerkMaterialTheme.shape)
+            mod.shadow(
+              elevation = dp1,
+              spotColor = ClerkMaterialTheme.colors.shadow,
+              ambientColor = ClerkMaterialTheme.colors.shadow,
+              shape = ClerkMaterialTheme.shape,
+            )
           } else {
             mod
           }
