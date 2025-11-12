@@ -57,13 +57,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
-import com.clerk.ui.core.dimens.dp52
 import com.clerk.ui.core.dimens.dp56
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.signin.code.VerificationState
@@ -165,6 +164,7 @@ private fun OtpField(
     cursorBrush = SolidColor(Color.Transparent),
     modifier =
       Modifier.focusRequester(focusRequester)
+        .fillMaxWidth()
         .semantics { contentType = ContentType.SmsOtpCode }
         .then(modifier),
     decorationBox = { innerTextField ->
@@ -308,7 +308,8 @@ private fun OtpBoxRow(
   isError: Boolean,
 ) {
   Row(
-    horizontalArrangement = Arrangement.spacedBy(dp8),
+    modifier = Modifier.fillMaxWidth().padding(end = dp8),
+    horizontalArrangement = Arrangement.spacedBy(dp8, alignment = Alignment.CenterHorizontally),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     // Place the hidden inner text field at the start so the system paste/selection toolbar
@@ -321,7 +322,12 @@ private fun OtpBoxRow(
       val char = otpText.getOrNull(index)?.toString() ?: ""
       val isCurrentBox = if (showCaret) index == otpText.length else false
 
-      OtpBox(char = char, isCurrentBox = isCurrentBox, isError)
+      OtpBox(
+        modifier = Modifier.weight(1f).height(dp56),
+        char = char,
+        isCurrentBox = isCurrentBox,
+        isError = isError,
+      )
     }
   }
 }
@@ -329,12 +335,13 @@ private fun OtpBoxRow(
 /**
  * Displays a single box for the OTP input.
  *
+ * @param modifier The modifier for the box.
  * @param char The character to display in the box.
  * @param isCurrentBox Whether this box is the current one.
  * @param isError Whether an error occurred.
  */
 @Composable
-private fun OtpBox(char: String, isCurrentBox: Boolean, isError: Boolean) {
+private fun OtpBox(modifier: Modifier, char: String, isCurrentBox: Boolean, isError: Boolean) {
   val boxShape = ClerkMaterialTheme.shape
   val borderColor =
     when {
@@ -345,8 +352,7 @@ private fun OtpBox(char: String, isCurrentBox: Boolean, isError: Boolean) {
 
   Box(
     modifier =
-      Modifier.height(dp56)
-        .width(dp52)
+      modifier
         .clip(boxShape)
         .background(color = ClerkMaterialTheme.colors.input.copy(alpha = 1f), shape = boxShape)
         .border(width = dp1, color = borderColor, shape = boxShape),
@@ -389,7 +395,7 @@ private fun BlinkingCaret() {
   )
 }
 
-@PreviewLightDark
+@Preview(heightDp = 800, widthDp = 300)
 @Composable
 private fun Preview() {
   ClerkMaterialTheme {
