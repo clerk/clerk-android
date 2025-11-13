@@ -17,7 +17,6 @@ import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.verificationState
 import com.clerk.ui.core.dimens.dp28
 import com.clerk.ui.core.input.ClerkCodeInputField
-import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -82,7 +81,6 @@ private fun SignUpCodeViewImpl(
     spacingAfterIdentifier = dp28,
     snackbarHostState = snackbarHostState,
   ) {
-    ClerkLinearProgressIndicator(progress = 0)
     Spacers.Vertical.Spacer32()
     ClerkCodeInputField(
       verificationState = verificationTextState.verificationState(),

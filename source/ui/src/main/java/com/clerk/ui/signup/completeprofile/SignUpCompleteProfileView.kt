@@ -26,7 +26,6 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkTextField
-import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.toImmutableList
@@ -37,16 +36,8 @@ import kotlinx.collections.immutable.toImmutableList
  * inject specific values and flags.
  */
 @Composable
-fun SignUpCompleteProfileView(
-  progress: Int,
-  modifier: Modifier = Modifier,
-  onAuthComplete: () -> Unit,
-) {
-  SignUpCompleteProfileImpl(
-    progress = progress,
-    modifier = modifier,
-    onAuthComplete = onAuthComplete,
-  )
+fun SignUpCompleteProfileView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
+  SignUpCompleteProfileImpl(modifier = modifier, onAuthComplete = onAuthComplete)
 }
 
 /** Internal enum for focus tracking & label logic. */
@@ -58,7 +49,6 @@ internal enum class CompleteProfileField {
 /** Hoisted-state composable for previews/tests. You control all values here. */
 @Composable
 private fun SignUpCompleteProfileImpl(
-  progress: Int,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
   firstName: String = "",
@@ -104,8 +94,6 @@ private fun SignUpCompleteProfileImpl(
       verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      ClerkLinearProgressIndicator(progress = progress)
-
       InputRow(
         firstEnabled = firstEnabled,
         lastEnabled = lastEnabled,
@@ -172,7 +160,6 @@ private fun Preview_BothEnabled_Filled() {
       SignUpCompleteProfileImpl(
         firstNameEnabled = true,
         lastNameEnabled = true,
-        progress = 2,
         firstName = "Cal",
         lastName = "Raleigh",
         onAuthComplete = {},
@@ -189,7 +176,6 @@ private fun Preview_OnlyFirstEnabled_Empty() {
       SignUpCompleteProfileImpl(
         firstNameEnabled = true,
         lastNameEnabled = false,
-        progress = 1,
         firstName = "",
         lastName = "",
         onAuthComplete = {},
@@ -206,7 +192,6 @@ private fun Preview_OnlyLastEnabled_Partial() {
       SignUpCompleteProfileImpl(
         firstNameEnabled = false,
         lastNameEnabled = true,
-        progress = 3,
         firstName = "",
         lastName = "Daniels",
         onAuthComplete = {},

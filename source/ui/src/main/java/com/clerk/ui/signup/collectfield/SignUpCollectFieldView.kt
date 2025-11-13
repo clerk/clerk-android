@@ -28,7 +28,6 @@ import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
-import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 
 @Composable
@@ -36,14 +35,12 @@ fun SignUpCollectFieldView(
   field: CollectField,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
-  progress: Int = 0,
   collectFieldHelper: CollectFieldHelper = CollectFieldHelper(),
 ) {
   SignUpCollectFieldViewImpl(
     collectField = field,
     modifier = modifier,
     collectFieldHelper = collectFieldHelper,
-    progress = progress,
     onAuthComplete = onAuthComplete,
   )
 }
@@ -52,7 +49,6 @@ fun SignUpCollectFieldView(
 private fun SignUpCollectFieldViewImpl(
   collectField: CollectField,
   collectFieldHelper: CollectFieldHelper,
-  progress: Int,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
   viewModel: CollectFieldViewModel = viewModel(),
@@ -88,7 +84,6 @@ private fun SignUpCollectFieldViewImpl(
       verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      ClerkLinearProgressIndicator(progress = progress)
       InputField(
         collectField = collectField,
         collectFieldHelper = collectFieldHelper,

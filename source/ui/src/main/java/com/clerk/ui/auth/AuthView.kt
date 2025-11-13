@@ -65,7 +65,7 @@ fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
       onBack = { backStack.removeLastOrNull() },
       entryProvider =
         entryProvider {
-          entry<AuthDestination.AuthStart> { key -> AuthStartView(onAuthComplete = onAuthComplete) }
+          entry<AuthDestination.AuthStart> { AuthStartView(onAuthComplete = onAuthComplete) }
           entry<AuthDestination.SignInFactorOne> { key ->
             SignInFactorOneView(factor = key.factor, onAuthComplete = onAuthComplete)
           }
@@ -85,7 +85,7 @@ fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
               onAuthComplete = onAuthComplete,
             )
           }
-          entry<AuthDestination.SignInForgotPassword> { key ->
+          entry<AuthDestination.SignInForgotPassword> {
             SignInFactorOneForgotPasswordView(
               onClickFactor = { backStack.removeLastOrNull() },
               onAuthComplete = onAuthComplete,
@@ -102,7 +102,7 @@ fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
             SignUpCodeView(field = key.field, onAuthComplete = onAuthComplete)
           }
           entry<AuthDestination.SignUpCompleteProfile> {
-            SignUpCompleteProfileView(progress = it.progress, onAuthComplete = onAuthComplete)
+            SignUpCompleteProfileView(onAuthComplete = onAuthComplete)
           }
         },
     )
