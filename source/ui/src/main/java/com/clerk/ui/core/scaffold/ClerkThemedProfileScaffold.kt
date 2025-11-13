@@ -20,8 +20,6 @@ import androidx.compose.ui.unit.Dp
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.error.ClerkErrorSnackbar
-import com.clerk.ui.core.footer.SecuredByClerkView
-import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
@@ -69,12 +67,6 @@ fun ClerkThemedProfileScaffold(
         Spacer(modifier = Modifier.weight(1f))
 
         bottomContent?.invoke()
-
-        Spacers.Vertical.Spacer24()
-
-        SecuredByClerkView()
-
-        Spacers.Vertical.Spacer24()
       }
     }
   }
