@@ -24,3 +24,5 @@ local.properties
 /workbench/build/
 /source/ui/build/
 /.kotlin/sessions/
+/.kotlin/metadata/
+/source/telemetry/build/

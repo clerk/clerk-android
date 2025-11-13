@@ -40,6 +40,9 @@ jvmTarget = "17"
 minSdk = "24"
 compileSdk = "36"
 adsMobileSdk = "0.21.0-beta01"
+kotlinStdlib = "2.2.21"
+kotlinTest = "2.2.21"
+runner = "1.5.2"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
@@ -104,6 +107,9 @@ androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "u
 paparazzi = "app.cash.paparazzi:paparazzi:2.0.0-alpha02"
 ads-mobile-sdk = { group = "com.google.android.libraries.ads.mobile.sdk", name = "ads-mobile-sdk", version.ref = "adsMobileSdk" }
 processPhoenix = "com.jakewharton:process-phoenix:3.0.0"
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdlib" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
+androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 
 
 [plugins]
@@ -122,3 +128,6 @@ sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "sortD
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 google-gms = { id = "com.google.gms.google-services", version.ref = "googleGms" }
 firebase-appDistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appDistrubution" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+android-lint = { id = "com.android.lint", version.ref = "agp" }
