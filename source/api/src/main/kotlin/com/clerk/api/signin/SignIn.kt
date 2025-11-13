@@ -365,8 +365,7 @@ data class SignIn(
     @AutoMap
     data class EnterpriseSSO(
       val strategy: String = ENTERPRISE_SSO,
-      @SerialName("redirect_url")
-      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+      @SerialName("redirect_url") override val redirectUrl: String,
       @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
       @SerialName("email_address") override val emailAddress: String? = null,
       override val identifier: String? = null,
@@ -428,16 +427,14 @@ data class SignIn(
     @Serializable
     data class OAuth(
       override val strategy: String,
-      @SerialName("redirect_url")
-      val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+      @SerialName("redirect_url") val redirectUrl: String,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class EnterpriseSSO(
       override val strategy: String = ENTERPRISE_SSO,
-      @SerialName("redirect_url")
-      val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+      @SerialName("redirect_url") val redirectUrl: String,
     ) : PrepareFirstFactorParams
 
     @AutoMap

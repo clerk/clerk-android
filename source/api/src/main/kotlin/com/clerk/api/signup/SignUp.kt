@@ -285,8 +285,7 @@ data class SignUp(
     @Serializable
     data class OAuth(
       @MapProperty("providerData?.strategy") @SerialName("strategy") val provider: OAuthProvider,
-      @SerialName("redirect_url")
-      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+      @SerialName("redirect_url") override val redirectUrl: String,
       override val identifier: String? = null,
       @SerialName("email_address") override val emailAddress: String? = null,
       @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,

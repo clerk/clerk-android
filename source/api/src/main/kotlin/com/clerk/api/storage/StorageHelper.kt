@@ -2,8 +2,10 @@ package com.clerk.api.storage
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.edit
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.storage.StorageHelper.secureStorage
 
 /**
@@ -22,8 +24,19 @@ internal object StorageHelper {
     secureStorage = context.getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
   }
 
+  /** Checks if storage has been initialized. */
+  private fun isInitialized(): Boolean {
+    return ::secureStorage.isInitialized
+  }
+
   /** Save value of string type to [secureStorage] */
   internal fun saveValue(key: StorageKey, value: String) {
+    if (!isInitialized()) {
+      ClerkLog.w(
+        "StorageHelper.saveValue called before initialization, ignoring save for key: ${key.name}"
+      )
+      return
+    }
     if (value.isNotEmpty()) {
       secureStorage.edit(commit = true) { putString(key.name, value) }
       return
@@ -32,12 +45,38 @@ internal object StorageHelper {
 
   /** Load value of string type from [secureStorage] */
   internal fun loadValue(key: StorageKey): String? {
+    if (!isInitialized()) {
+      ClerkLog.w(
+        "StorageHelper.loadValue called before initialization, returning null for key: ${key.name}"
+      )
+      return null
+    }
     return secureStorage.getString(key.name, null)
   }
 
   /** Delete value of string type from [secureStorage] */
-  internal fun deleteValue(name: String) {
-    secureStorage.edit { remove(name) }
+  internal fun deleteValue(key: StorageKey) {
+    if (!isInitialized()) {
+      ClerkLog.w(
+        "StorageHelper.deleteValue called before initialization, ignoring delete for key: ${key.name}"
+      )
+      return
+    }
+    secureStorage.edit { remove(key.name) }
+  }
+
+  /**
+   * Resets the storage helper for testing purposes. This method should only be used in tests.
+   * Clears all stored values. To test uninitialized state, tests should call this and then test
+   * methods before calling initialize().
+   */
+  @VisibleForTesting
+  internal fun reset(context: Context? = null) {
+    if (::secureStorage.isInitialized) {
+      secureStorage.edit().clear().commit()
+    }
+    // If context is provided and storage is initialized, reinitialize to ensure clean state
+    context?.let { initialize(it) }
   }
 }
 

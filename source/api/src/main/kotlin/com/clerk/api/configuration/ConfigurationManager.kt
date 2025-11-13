@@ -153,6 +153,12 @@ internal class ConfigurationManager {
           PublishableKeyHelper().extractApiUrl(publishableKey)
         }
       Clerk.baseUrl = baseUrl
+      Clerk.applicationId = context.applicationContext.packageName
+
+      // Initialize storage synchronously before configuring ClerkApi to ensure interceptors
+      // can safely access StorageHelper without race conditions
+      ensureStorageInitialized()
+
       ClerkApi.configure(Clerk.baseUrl, context.applicationContext)
 
       // Mark as configured before starting async operations
@@ -160,18 +166,14 @@ internal class ConfigurationManager {
 
       // Start all background initialization concurrently
       scope.launch {
-        // Launch storage initialization in background
-        val storageInitJob = async {
-          ensureStorageInitialized()
-          // Initialize device ID after storage is ready
-          DeviceIdGenerator.initialize()
-        }
+        // Initialize device ID after storage is ready (storage is already initialized above)
+        val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
 
         // Launch data refresh independently (doesn't depend on storage)
         val dataRefreshJob = async { refreshClientAndEnvironment(options) }
 
-        // Wait for storage init before setting up lifecycle monitoring
-        storageInitJob.await()
+        // Wait for device ID init before setting up lifecycle monitoring
+        deviceIdInitJob.await()
 
         // Set up lifecycle monitoring for automatic refresh
         AppLifecycleListener.configure {
