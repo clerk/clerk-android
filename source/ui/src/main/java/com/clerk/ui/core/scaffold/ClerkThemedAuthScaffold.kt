@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -79,7 +78,7 @@ internal fun ClerkThemedAuthScaffold(
           ClerkButton(
             paddingValues = PaddingValues(horizontal = dp8),
             modifier = Modifier.defaultMinSize(minWidth = 120.dp),
-            text = stringResource(R.string.update_profile),
+            text = identifier,
             onClick = onClickIdentifier,
             isEnabled = true,
             configuration =
