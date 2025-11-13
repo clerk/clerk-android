@@ -12,22 +12,30 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.theme.ClerkElementTheme
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.mergeElementTheme
 
 @Composable
-internal fun HeaderTextView(text: String, type: HeaderType, modifier: Modifier = Modifier) {
-  val (style, color) =
-    when (type) {
-      HeaderType.Title ->
-        ClerkMaterialTheme.typography.titleMedium
-          .withMediumWeight()
-          .copy(fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = 0.sp) to
-          ClerkMaterialTheme.colors.foreground
-      HeaderType.Subtitle ->
-        ClerkMaterialTheme.typography.bodyLarge to ClerkMaterialTheme.colors.mutedForeground
-    }
-
+internal fun HeaderTextView(
+  text: String,
+  type: HeaderType,
+  modifier: Modifier = Modifier,
+  elementTheme: ClerkElementTheme? = null,
+) {
   ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
+    val (style, color) =
+      when (type) {
+        HeaderType.Title ->
+          mergedTheme.typography.titleMedium
+            .withMediumWeight()
+            .copy(fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = 0.sp) to
+            mergedTheme.colors.foreground
+        HeaderType.Subtitle ->
+          mergedTheme.typography.bodyLarge to mergedTheme.colors.mutedForeground
+      }
+
     Text(
       text = text,
       style = style,

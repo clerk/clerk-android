@@ -14,7 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp16
+import com.clerk.ui.theme.ClerkElementTheme
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.mergeElementTheme
 
 /**
  * A composable that displays a horizontal divider with text in the middle.
@@ -24,10 +26,16 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  *
  * @param text The text to display in the middle of the divider.
  * @param modifier The [Modifier] to be applied to the divider row.
+ * @param elementTheme Optional theme override for this element.
  */
 @Composable
-fun TextDivider(text: String, modifier: Modifier = Modifier) {
+fun TextDivider(
+  text: String,
+  modifier: Modifier = Modifier,
+  elementTheme: ClerkElementTheme? = null,
+) {
   ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
     Row(
       modifier = Modifier.fillMaxWidth().then(modifier),
       horizontalArrangement = Arrangement.spacedBy(dp16, alignment = Alignment.CenterHorizontally),
@@ -36,17 +44,17 @@ fun TextDivider(text: String, modifier: Modifier = Modifier) {
       HorizontalDivider(
         modifier = Modifier.weight(1f),
         thickness = dp1,
-        color = ClerkMaterialTheme.computedColors.border,
+        color = mergedTheme.computedColors.border,
       )
       Text(
         text = text,
-        style = ClerkMaterialTheme.typography.bodyMedium,
-        color = ClerkMaterialTheme.colors.mutedForeground,
+        style = mergedTheme.typography.bodyMedium,
+        color = mergedTheme.colors.mutedForeground,
       )
       HorizontalDivider(
         modifier = Modifier.weight(1f),
         thickness = dp1,
-        color = ClerkMaterialTheme.computedColors.border,
+        color = mergedTheme.computedColors.border,
       )
     }
   }

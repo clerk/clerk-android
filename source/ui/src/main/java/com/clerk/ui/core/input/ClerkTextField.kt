@@ -38,7 +38,9 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
+import com.clerk.ui.theme.ClerkElementTheme
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.mergeElementTheme
 
 /**
  * A customizable text input field component following Clerk's design system.
@@ -76,6 +78,7 @@ fun ClerkTextField(
   inputContentType: ContentType = ContentType.Username,
   visualTransformation: VisualTransformation = VisualTransformation.None,
   keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+  elementTheme: ClerkElementTheme? = null,
 ) {
   var isVisible by remember {
     mutableStateOf(visualTransformation !is PasswordVisualTransformation)
@@ -85,19 +88,20 @@ fun ClerkTextField(
 
   LaunchedEffect(isFocused) { onFocusChange(isFocused) }
 
-  val textFieldColors = getTextFieldColors()
-
-  val labelStyle =
-    if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
-    else MaterialTheme.typography.bodyLarge
-  val labelColor =
-    when {
-      isError -> ClerkMaterialTheme.colors.danger
-      isFocused -> ClerkMaterialTheme.colors.primary
-      else -> ClerkMaterialTheme.colors.mutedForeground
-    }
-
   ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
+    val textFieldColors = getTextFieldColors(mergedTheme)
+
+    val labelStyle =
+      if (isFocused || value.isNotEmpty()) mergedTheme.typography.bodySmall
+      else MaterialTheme.typography.bodyLarge
+    val labelColor =
+      when {
+        isError -> mergedTheme.colors.danger
+        isFocused -> mergedTheme.colors.primary
+        else -> mergedTheme.colors.mutedForeground
+      }
+
     OutlinedTextField(
       interactionSource = interactionSource,
       modifier = modifier.fillMaxWidth().semantics { contentType = inputContentType },
@@ -106,7 +110,7 @@ fun ClerkTextField(
       keyboardOptions = keyboardOptions,
       maxLines = maxLines,
       enabled = enabled,
-      shape = ClerkMaterialTheme.shape,
+      shape = androidx.compose.foundation.shape.RoundedCornerShape(mergedTheme.design.borderRadius),
       isError = isError,
       colors = textFieldColors,
       visualTransformation =
@@ -117,7 +121,7 @@ fun ClerkTextField(
         },
       leadingIcon =
         leadingIcon?.let { resId ->
-          { ClickableIcon(resId = resId, onClick = {}, contentDescription = null) }
+          { ClickableIcon(resId = resId, onClick = {}, contentDescription = null, tint = mergedTheme.colors.mutedForeground) }
         },
       trailingIcon = {
         TrailingIcon(
@@ -129,21 +133,22 @@ fun ClerkTextField(
               isVisible = !isVisible
             }
           },
+          theme = mergedTheme,
         )
       },
       placeholder = placeholder?.let { ph -> { Text(ph) } },
       label = label?.let { text -> { Text(text = text, style = labelStyle, color = labelColor) } },
-      textStyle = ClerkMaterialTheme.typography.bodyLarge,
+      textStyle = mergedTheme.typography.bodyLarge,
       supportingText =
         supportingText?.let { support ->
           {
             Text(
               modifier = Modifier.padding(top = dp4),
               text = support,
-              style = ClerkMaterialTheme.typography.bodySmall,
+              style = mergedTheme.typography.bodySmall,
               color =
-                if (isError) ClerkMaterialTheme.colors.danger
-                else ClerkMaterialTheme.colors.mutedForeground,
+                if (isError) mergedTheme.colors.danger
+                else mergedTheme.colors.mutedForeground,
             )
           }
         },
@@ -157,6 +162,7 @@ private fun TrailingIcon(
   isError: Boolean,
   visualTransformation: VisualTransformation,
   onClick: () -> Unit,
+  theme: com.clerk.ui.theme.MergedElementTheme,
 ) {
 
   if (trailingIcon != null || isError || visualTransformation is PasswordVisualTransformation) {
@@ -167,22 +173,22 @@ private fun TrailingIcon(
         else -> trailingIcon!!
       }
     val tint =
-      if (isError) ClerkMaterialTheme.colors.danger else ClerkMaterialTheme.colors.mutedForeground
+      if (isError) theme.colors.danger else theme.colors.mutedForeground
     ClickableIcon(resId = resId, onClick = onClick, tint = tint, contentDescription = null)
   }
 }
 
 @Composable
-private fun getTextFieldColors(): TextFieldColors =
+private fun getTextFieldColors(theme: com.clerk.ui.theme.MergedElementTheme): TextFieldColors =
   OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = ClerkMaterialTheme.colors.primary,
-    focusedLabelColor = ClerkMaterialTheme.colors.primary,
-    unfocusedBorderColor = ClerkMaterialTheme.computedColors.inputBorder,
-    unfocusedTextColor = ClerkMaterialTheme.colors.foreground,
-    unfocusedContainerColor = ClerkMaterialTheme.colors.background,
-    focusedContainerColor = ClerkMaterialTheme.colors.background,
-    errorBorderColor = ClerkMaterialTheme.colors.danger,
-    errorSupportingTextColor = ClerkMaterialTheme.colors.danger,
+    focusedBorderColor = theme.colors.primary,
+    focusedLabelColor = theme.colors.primary,
+    unfocusedBorderColor = theme.computedColors.inputBorder,
+    unfocusedTextColor = theme.colors.foreground,
+    unfocusedContainerColor = theme.colors.background,
+    focusedContainerColor = theme.colors.background,
+    errorBorderColor = theme.colors.danger,
+    errorSupportingTextColor = theme.colors.danger,
   )
 
 /**
@@ -197,7 +203,7 @@ private fun getTextFieldColors(): TextFieldColors =
 private fun ClickableIcon(
   @DrawableRes resId: Int,
   onClick: () -> Unit,
-  tint: androidx.compose.ui.graphics.Color = ClerkMaterialTheme.colors.mutedForeground,
+  tint: androidx.compose.ui.graphics.Color,
   contentDescription: String? = null,
 ) {
   Icon(

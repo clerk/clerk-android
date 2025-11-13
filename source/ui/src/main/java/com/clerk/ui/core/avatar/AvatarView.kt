@@ -43,7 +43,9 @@ import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp96
+import com.clerk.ui.theme.ClerkElementTheme
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.mergeElementTheme
 
 @Composable
 internal fun AvatarView(
@@ -56,34 +58,39 @@ internal fun AvatarView(
   onEditTakePhoto: () -> Unit = {},
   onEditChoosePhoto: () -> Unit = {},
   onEditRemovePhoto: () -> Unit = {},
+  elementTheme: ClerkElementTheme? = null,
 ) {
-  val placeholder =
-    when (avatarType) {
-      AvatarType.USER -> R.drawable.ic_user
-      AvatarType.ORGANIZATION -> R.drawable.ic_organization
-    }
+  ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
+    val placeholder =
+      when (avatarType) {
+        AvatarType.USER -> R.drawable.ic_user
+        AvatarType.ORGANIZATION -> R.drawable.ic_organization
+      }
 
-  Box(modifier = Modifier.wrapContentSize().then(modifier), contentAlignment = Alignment.Center) {
-    SubcomposeAsyncImage(
-      model = imageUrl,
-      contentDescription = stringResource(R.string.logo),
-      modifier = Modifier.size(size.toDp()).clip(shape),
-      contentScale = ContentScale.FillBounds,
-      loading = { CircularProgressIndicator(modifier = Modifier.size(dp24)) },
-      error = {
-        Icon(
-          painter = painterResource(placeholder),
-          contentDescription = null,
-          tint = ClerkMaterialTheme.colors.foreground,
-        )
-      },
-    )
-    if (hasEditButton) {
-      EditButton(
-        onEditTakePhoto = onEditTakePhoto,
-        onEditChoosePhoto = onEditChoosePhoto,
-        onEditRemovePhoto = onEditRemovePhoto,
+    Box(modifier = Modifier.wrapContentSize().then(modifier), contentAlignment = Alignment.Center) {
+      SubcomposeAsyncImage(
+        model = imageUrl,
+        contentDescription = stringResource(R.string.logo),
+        modifier = Modifier.size(size.toDp()).clip(shape),
+        contentScale = ContentScale.FillBounds,
+        loading = { CircularProgressIndicator(modifier = Modifier.size(dp24)) },
+        error = {
+          Icon(
+            painter = painterResource(placeholder),
+            contentDescription = null,
+            tint = mergedTheme.colors.foreground,
+          )
+        },
       )
+      if (hasEditButton) {
+        EditButton(
+          onEditTakePhoto = onEditTakePhoto,
+          onEditChoosePhoto = onEditChoosePhoto,
+          onEditRemovePhoto = onEditRemovePhoto,
+          elementTheme = elementTheme,
+        )
+      }
     }
   }
 }
@@ -93,38 +100,43 @@ private fun BoxScope.EditButton(
   onEditTakePhoto: () -> Unit,
   onEditChoosePhoto: () -> Unit,
   onEditRemovePhoto: () -> Unit,
+  elementTheme: ClerkElementTheme? = null,
 ) {
-  var expanded by remember { mutableStateOf(false) }
-  Box(modifier = Modifier.align(Alignment.BottomEnd)) {
-    Surface(
-      modifier =
-        Modifier.size(dp32)
-          .shadow(
-            elevation = dp3,
-            spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f),
-            ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f),
-            shape = ClerkMaterialTheme.shape,
-          ),
-      border = BorderStroke(dp1, color = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f)),
-      shape = ClerkMaterialTheme.shape,
-      onClick = { expanded = true },
-    ) {
-      Box(contentAlignment = Alignment.Center) {
-        Icon(
-          painter = painterResource(R.drawable.ic_edit),
-          contentDescription = stringResource(R.string.edit_avatar),
-          tint = ClerkMaterialTheme.colors.mutedForeground,
-        )
+  ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.align(Alignment.BottomEnd)) {
+      Surface(
+        modifier =
+          Modifier.size(dp32)
+            .shadow(
+              elevation = dp3,
+              spotColor = mergedTheme.colors.shadow.copy(alpha = 0.08f),
+              ambientColor = mergedTheme.colors.shadow.copy(alpha = 0.08f),
+              shape = androidx.compose.foundation.shape.RoundedCornerShape(mergedTheme.design.borderRadius),
+            ),
+        border = BorderStroke(dp1, color = mergedTheme.colors.shadow.copy(alpha = 0.08f)),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(mergedTheme.design.borderRadius),
+        onClick = { expanded = true },
+      ) {
+        Box(contentAlignment = Alignment.Center) {
+          Icon(
+            painter = painterResource(R.drawable.ic_edit),
+            contentDescription = stringResource(R.string.edit_avatar),
+            tint = mergedTheme.colors.mutedForeground,
+          )
+        }
       }
-    }
 
-    DropdownMenu(
-      expanded,
-      onEditTakePhoto,
-      onEditChoosePhoto,
-      onEditRemovePhoto,
-      onDismissRequest = { expanded = false },
-    )
+      DropdownMenu(
+        expanded,
+        onEditTakePhoto,
+        onEditChoosePhoto,
+        onEditRemovePhoto,
+        onDismissRequest = { expanded = false },
+        elementTheme = elementTheme,
+      )
+    }
   }
 }
 
@@ -135,52 +147,55 @@ private fun DropdownMenu(
   onEditChoosePhoto: () -> Unit,
   onEditRemovePhoto: () -> Unit,
   onDismissRequest: () -> Unit,
+  elementTheme: ClerkElementTheme? = null,
 ) {
-
-  DropdownMenu(
-    modifier =
-      Modifier.background(ClerkMaterialTheme.colors.background).defaultMinSize(minWidth = 144.dp),
-    expanded = expanded,
-    onDismissRequest = onDismissRequest,
-    offset = DpOffset(0.dp, dp12),
-  ) {
-    DropdownMenuItem(
-      text = {
-        Text(
-          text = stringResource(R.string.take_a_photo),
-          style = ClerkMaterialTheme.typography.bodyLarge,
-        )
-      },
-      onClick = {
-        onDismissRequest()
-        onEditTakePhoto()
-      },
-    )
-    DropdownMenuItem(
-      text = {
-        Text(
-          text = stringResource(R.string.choose_photo),
-          style = ClerkMaterialTheme.typography.bodyLarge,
-        )
-      },
-      onClick = {
-        onDismissRequest()
-        onEditChoosePhoto()
-      },
-    )
-    DropdownMenuItem(
-      text = {
-        Text(
-          text = stringResource(R.string.remove_photo),
-          color = ClerkMaterialTheme.colors.danger,
-          style = ClerkMaterialTheme.typography.bodyLarge,
-        )
-      },
-      onClick = {
-        onDismissRequest()
-        onEditRemovePhoto()
-      },
-    )
+  ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
+    DropdownMenu(
+      modifier =
+        Modifier.background(mergedTheme.colors.background).defaultMinSize(minWidth = 144.dp),
+      expanded = expanded,
+      onDismissRequest = onDismissRequest,
+      offset = DpOffset(0.dp, dp12),
+    ) {
+      DropdownMenuItem(
+        text = {
+          Text(
+            text = stringResource(R.string.take_a_photo),
+            style = mergedTheme.typography.bodyLarge,
+          )
+        },
+        onClick = {
+          onDismissRequest()
+          onEditTakePhoto()
+        },
+      )
+      DropdownMenuItem(
+        text = {
+          Text(
+            text = stringResource(R.string.choose_photo),
+            style = mergedTheme.typography.bodyLarge,
+          )
+        },
+        onClick = {
+          onDismissRequest()
+          onEditChoosePhoto()
+        },
+      )
+      DropdownMenuItem(
+        text = {
+          Text(
+            text = stringResource(R.string.remove_photo),
+            color = mergedTheme.colors.danger,
+            style = mergedTheme.typography.bodyLarge,
+          )
+        },
+        onClick = {
+          onDismissRequest()
+          onEditRemovePhoto()
+        },
+      )
+    }
   }
 }
 
@@ -194,15 +209,18 @@ fun OrganizationAvatar(
   modifier: Modifier = Modifier,
   shape: Shape? = null,
   size: AvatarSize = AvatarSize.MEDIUM,
+  elementTheme: ClerkElementTheme? = null,
 ) {
   val url = Clerk.organizationLogoUrl
   ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
     AvatarView(
       imageUrl = url,
       size = size,
-      shape = shape ?: ClerkMaterialTheme.shape,
+      shape = shape ?: androidx.compose.foundation.shape.RoundedCornerShape(mergedTheme.design.borderRadius),
       modifier = modifier,
       avatarType = AvatarType.ORGANIZATION,
+      elementTheme = elementTheme,
     )
   }
 }

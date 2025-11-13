@@ -31,7 +31,9 @@ import com.clerk.ui.core.header.HeaderTextView
 import com.clerk.ui.core.header.HeaderType
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.spacers.Spacers
+import com.clerk.ui.theme.ClerkElementTheme
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.mergeElementTheme
 
 @Composable
 internal fun ClerkThemedAuthScaffold(
@@ -45,15 +47,17 @@ internal fun ClerkThemedAuthScaffold(
   identifier: String? = null,
   onClickIdentifier: () -> Unit = {},
   spacingAfterIdentifier: Dp = dp32,
+  elementTheme: ClerkElementTheme? = null,
   content: @Composable () -> Unit,
 ) {
   ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
     Scaffold(
       modifier = Modifier.then(modifier),
       snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
       topBar = {
         ClerkTopAppBar(
-          backgroundColor = ClerkMaterialTheme.colors.background,
+          backgroundColor = mergedTheme.colors.background,
           onBackPressed = onBackPressed,
           hasLogo = hasLogo,
           hasBackButton = hasBackButton,
@@ -65,13 +69,13 @@ internal fun ClerkThemedAuthScaffold(
           Modifier.fillMaxWidth()
             .padding(innerPadding)
             .padding(horizontal = dp18)
-            .background(ClerkMaterialTheme.colors.background),
+            .background(mergedTheme.colors.background),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
-        HeaderTextView(text = title, type = HeaderType.Title)
+        HeaderTextView(text = title, type = HeaderType.Title, elementTheme = elementTheme)
         subtitle?.let {
           Spacers.Vertical.Spacer8()
-          HeaderTextView(text = it, type = HeaderType.Subtitle)
+          HeaderTextView(text = it, type = HeaderType.Subtitle, elementTheme = elementTheme)
         }
         identifier?.let {
           Spacers.Vertical.Spacer8()
@@ -89,8 +93,9 @@ internal fun ClerkThemedAuthScaffold(
             icons =
               ClerkButtonDefaults.icons(
                 trailingIcon = R.drawable.ic_edit,
-                trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+                trailingIconColor = mergedTheme.colors.mutedForeground,
               ),
+            elementTheme = elementTheme,
           )
         }
         Spacer(modifier = Modifier.height(spacingAfterIdentifier))

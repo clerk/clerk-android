@@ -41,8 +41,10 @@ import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
+import com.clerk.ui.theme.ClerkElementTheme
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
+import com.clerk.ui.theme.mergeElementTheme
 
 /**
  * A custom button component styled according to Clerk's design system.
@@ -80,6 +82,7 @@ fun ClerkButton(
   paddingValues: PaddingValues = PaddingValues(),
   configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
+  elementTheme: ClerkElementTheme? = null,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
@@ -93,6 +96,7 @@ fun ClerkButton(
     interactionSource = interactionSource,
     paddingValues = paddingValues,
     icons = icons,
+    elementTheme = elementTheme,
   )
 }
 
@@ -115,6 +119,7 @@ internal fun ClerkButtonWithPressedState(
   paddingValues: PaddingValues = PaddingValues(),
   configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
+  elementTheme: ClerkElementTheme? = null,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
@@ -132,6 +137,7 @@ internal fun ClerkButtonWithPressedState(
     configuration = configuration,
     icons = icons,
     paddingValues = paddingValues,
+    elementTheme = elementTheme,
   )
 }
 
@@ -162,10 +168,16 @@ private fun ClerkButtonImpl(
   interactionSource: MutableInteractionSource,
   modifier: Modifier = Modifier,
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
+  elementTheme: ClerkElementTheme? = null,
 ) {
   ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
     val tokens =
-      buildButtonTokens(config = configuration, isPressed = clerkButtonState.isPressedCombined)
+      buildButtonTokens(
+        config = configuration,
+        isPressed = clerkButtonState.isPressedCombined,
+        theme = mergedTheme,
+      )
 
     val surfaceModifier =
       Modifier.height(tokens.height)
@@ -176,19 +188,19 @@ private fun ClerkButtonImpl(
           ) {
             mod.shadow(
               elevation = dp1,
-              spotColor = ClerkMaterialTheme.colors.shadow,
-              ambientColor = ClerkMaterialTheme.colors.shadow,
-              shape = ClerkMaterialTheme.shape,
+              spotColor = mergedTheme.colors.shadow,
+              ambientColor = mergedTheme.colors.shadow,
+              shape = androidx.compose.foundation.shape.RoundedCornerShape(mergedTheme.design.borderRadius),
             )
           } else {
             mod
           }
         }
-        .clip(ClerkMaterialTheme.shape)
+        .clip(androidx.compose.foundation.shape.RoundedCornerShape(mergedTheme.design.borderRadius))
 
     Button(
       modifier = surfaceModifier,
-      shape = ClerkMaterialTheme.shape,
+      shape = androidx.compose.foundation.shape.RoundedCornerShape(mergedTheme.design.borderRadius),
       enabled = clerkButtonState.isEnabled,
       interactionSource = interactionSource,
       contentPadding = paddingValues,
@@ -208,6 +220,7 @@ private fun ClerkButtonImpl(
         tokens = tokens,
         size = configuration.size,
         paddingValues = paddingValues,
+        theme = mergedTheme,
       )
     }
   }
@@ -240,6 +253,7 @@ private fun ButtonContent(
   size: ClerkButtonConfiguration.Size,
   paddingValues: PaddingValues,
   tokens: ButtonStyleTokens,
+  theme: com.clerk.ui.theme.MergedElementTheme,
 ) {
   if (isLoading) {
     Box(
@@ -259,7 +273,7 @@ private fun ButtonContent(
     ) {
       val iconSize = if (size == ClerkButtonConfiguration.Size.Small) dp12 else dp24
       icons.leadingIcon?.let {
-        val iconColor = icons.leadingIconColor ?: ClerkMaterialTheme.colors.primaryForeground
+        val iconColor = icons.leadingIconColor ?: theme.colors.primaryForeground
         Icon(
           modifier = Modifier.size(iconSize),
           painter = painterResource(it),
@@ -277,7 +291,7 @@ private fun ButtonContent(
         )
       }
       icons.trailingIcon?.let {
-        val iconColor = icons.trailingIconColor ?: ClerkMaterialTheme.colors.primaryForeground
+        val iconColor = icons.trailingIconColor ?: theme.colors.primaryForeground
         Icon(
           painter = painterResource(it),
           contentDescription = null,

@@ -18,7 +18,9 @@ import androidx.compose.ui.unit.sp
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.theme.ClerkElementTheme
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.mergeElementTheme
 
 /**
  * A badge component that displays text with various styling options.
@@ -36,34 +38,36 @@ fun Badge(
   text: String,
   modifier: Modifier = Modifier,
   badgeType: ClerkBadgeType = ClerkBadgeType.Primary,
+  elementTheme: ClerkElementTheme? = null,
 ) {
-  val (backgroundColor, contentColor) =
-    when (badgeType) {
-      ClerkBadgeType.Primary ->
-        ClerkMaterialTheme.colors.primary to ClerkMaterialTheme.colors.primaryForeground
-      ClerkBadgeType.Secondary ->
-        ClerkMaterialTheme.colors.muted to ClerkMaterialTheme.colors.mutedForeground
-      ClerkBadgeType.Positive ->
-        ClerkMaterialTheme.computedColors.backgroundSuccess to ClerkMaterialTheme.colors.success
-      ClerkBadgeType.Negative ->
-        ClerkMaterialTheme.computedColors.backgroundDanger to ClerkMaterialTheme.colors.danger
-      ClerkBadgeType.Warning ->
-        ClerkMaterialTheme.computedColors.backgroundWarning to ClerkMaterialTheme.colors.warning
-    }
-
-  val borderColor =
-    when (badgeType) {
-      ClerkBadgeType.Primary -> Color.Transparent
-      ClerkBadgeType.Secondary -> ClerkMaterialTheme.computedColors.buttonBorder
-      ClerkBadgeType.Positive -> ClerkMaterialTheme.colors.success
-      ClerkBadgeType.Negative -> ClerkMaterialTheme.colors.danger
-      ClerkBadgeType.Warning -> ClerkMaterialTheme.colors.warning
-    }
-
   ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
+    val (backgroundColor, contentColor) =
+      when (badgeType) {
+        ClerkBadgeType.Primary ->
+          mergedTheme.colors.primary to mergedTheme.colors.primaryForeground
+        ClerkBadgeType.Secondary ->
+          mergedTheme.colors.muted to mergedTheme.colors.mutedForeground
+        ClerkBadgeType.Positive ->
+          mergedTheme.computedColors.backgroundSuccess to mergedTheme.colors.success
+        ClerkBadgeType.Negative ->
+          mergedTheme.computedColors.backgroundDanger to mergedTheme.colors.danger
+        ClerkBadgeType.Warning ->
+          mergedTheme.computedColors.backgroundWarning to mergedTheme.colors.warning
+      }
+
+    val borderColor =
+      when (badgeType) {
+        ClerkBadgeType.Primary -> Color.Transparent
+        ClerkBadgeType.Secondary -> mergedTheme.computedColors.buttonBorder
+        ClerkBadgeType.Positive -> mergedTheme.colors.success
+        ClerkBadgeType.Negative -> mergedTheme.colors.danger
+        ClerkBadgeType.Warning -> mergedTheme.colors.warning
+      }
+
     Surface(
       modifier = Modifier.then(modifier),
-      shape = ClerkMaterialTheme.shape,
+      shape = androidx.compose.foundation.shape.RoundedCornerShape(mergedTheme.design.borderRadius),
       color = backgroundColor,
       contentColor = contentColor,
       border = BorderStroke(dp1, borderColor),

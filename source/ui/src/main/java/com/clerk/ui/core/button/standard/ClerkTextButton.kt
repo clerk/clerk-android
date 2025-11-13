@@ -18,8 +18,10 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.theme.ClerkElementTheme
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
+import com.clerk.ui.theme.mergeElementTheme
 
 /**
  * A simple composable that displays a clickable text.
@@ -32,26 +34,32 @@ import com.clerk.ui.theme.DefaultColors
  * @param textColor The color of the text. Defaults to the primary color from [ClerkMaterialTheme].
  * @param textStyle The style of the text. Defaults to `titleSmall` typography from
  *   [ClerkMaterialTheme].
+ * @param elementTheme Optional theme override for this element.
  * @param onClick Lambda to be invoked when the button is clicked.
  */
 @Composable
 fun ClerkTextButton(
   text: String,
   modifier: Modifier = Modifier,
-  textColor: Color = ClerkMaterialTheme.colors.primary,
-  textStyle: TextStyle = ClerkMaterialTheme.typography.titleSmall,
+  textColor: Color? = null,
+  textStyle: TextStyle? = null,
   boundedRipple: Boolean = true,
   rippleColor: Color = Color.Unspecified, // Unspecified -> uses LocalContentColor
+  elementTheme: ClerkElementTheme? = null,
   onClick: () -> Unit,
 ) {
   val interaction = remember { MutableInteractionSource() }
 
   ClerkMaterialTheme {
+    val mergedTheme = mergeElementTheme(elementTheme)
+    val finalTextColor = textColor ?: mergedTheme.colors.primary
+    val finalTextStyle = textStyle ?: mergedTheme.typography.titleSmall
+    
     Box(
       modifier =
         modifier
           .padding(horizontal = dp8)
-          .clip(ClerkMaterialTheme.shape) // masks ripple to this shape
+          .clip(androidx.compose.foundation.shape.RoundedCornerShape(mergedTheme.design.borderRadius)) // masks ripple to this shape
           .clickable(
             interactionSource = interaction,
             indication = ripple(bounded = boundedRipple, color = rippleColor),
@@ -60,7 +68,7 @@ fun ClerkTextButton(
           )
           .padding(horizontal = dp8, vertical = dp6)
     ) {
-      Text(text = text, color = textColor, style = textStyle)
+      Text(text = text, color = finalTextColor, style = finalTextStyle)
     }
   }
 }
