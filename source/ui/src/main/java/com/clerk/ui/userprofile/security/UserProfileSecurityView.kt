@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,8 +37,6 @@ import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp10
 import com.clerk.ui.core.error.ClerkErrorSnackbar
-import com.clerk.ui.core.footer.SecuredByClerkView
-import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
@@ -136,7 +132,6 @@ private fun UserProfileSecurityMainContent(
         onBackPressed = { userProfileState.navigateBack() },
       )
     },
-    bottomBar = { UserProfileSecurityFooter() },
   ) { innerPadding ->
     UserProfileSecurityContent(
       innerPadding = innerPadding,
@@ -256,18 +251,6 @@ private fun UserProfileSecurityContent(
     if (configuration.isDeleteSelfEnabled) {
       UserProfileDeleteAccountSection(onDeleteAccount = onClickDeleteAccount)
     }
-  }
-}
-
-@Composable
-internal fun UserProfileSecurityFooter() {
-  Column(
-    modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
-    horizontalAlignment = Alignment.CenterHorizontally,
-  ) {
-    Spacers.Vertical.Spacer24()
-    SecuredByClerkView()
-    Spacers.Vertical.Spacer24()
   }
 }
 

@@ -434,7 +434,8 @@ data class SignIn(
     @Serializable
     data class EnterpriseSSO(
       override val strategy: String = ENTERPRISE_SSO,
-      @SerialName("redirect_url") val redirectUrl: String,
+      @SerialName("redirect_url")
+      val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : PrepareFirstFactorParams
 
     @AutoMap

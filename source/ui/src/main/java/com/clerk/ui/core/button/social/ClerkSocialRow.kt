@@ -1,22 +1,20 @@
 package com.clerk.ui.core.button.social
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.ui.core.dimens.dp8
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 private const val MAX_BUTTONS_PER_ROW = 3
-
-private const val ROW_WEIGHT = 0.5f
 
 /**
  * A composable row layout for displaying multiple social authentication buttons.
@@ -43,44 +41,61 @@ fun ClerkSocialRow(
 
   Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp8)) {
     val chunks = providers.chunked(MAX_BUTTONS_PER_ROW)
+
+    // Special-case: single provider gets a full-width button with text
+    if (isSingleProvider) {
+      Row(modifier = Modifier.fillMaxWidth()) {
+        ClerkSocialButton(
+          provider = providers.first(),
+          isEnabled = true,
+          onClick = onClick,
+          forceIconOnly = false,
+          modifier = Modifier.fillMaxWidth(),
+        )
+      }
+      return@Column
+    }
+
     chunks.forEachIndexed { rowIndex, rowProviders ->
       val isLastRow = rowIndex == chunks.size - 1
-      val shouldOffset = isLastRow && rowProviders.size != MAX_BUTTONS_PER_ROW
+
+      // Build exactly 3 equal-width slots for every row. For the last row, use a brick pattern
+      // so that 1 item is centered and 2 items sit at the edges.
+      val rowSlots: List<OAuthProvider?> =
+        when {
+          // Full rows: fill left-to-right, pad trailing with nulls (placeholders)
+          !isLastRow || rowProviders.size == MAX_BUTTONS_PER_ROW ->
+            rowProviders + List(MAX_BUTTONS_PER_ROW - rowProviders.size) { null }
+          // Last row with 1 item: center
+          rowProviders.size == 1 -> listOf(null, rowProviders[0], null)
+          // Last row with 2 items: edges
+          rowProviders.size == 2 -> listOf(rowProviders[0], null, rowProviders[1])
+          else -> rowProviders
+        }
 
       Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement =
-          if (shouldOffset) Arrangement.spacedBy(dp8, Alignment.CenterHorizontally)
-          else Arrangement.spacedBy(dp8, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(dp8, Alignment.CenterHorizontally),
       ) {
-        if (shouldOffset && !isSingleProvider) {
-          Spacer(modifier = Modifier.weight(ROW_WEIGHT))
-        }
-
-        rowProviders.forEach { provider ->
-          ClerkSocialButton(
-            provider = provider,
-            isEnabled = true,
-            onClick = onClick,
-            // full button with text if only one provider total
-            forceIconOnly = !isSingleProvider,
-            modifier = Modifier.weight(1f),
-          )
-        }
-
-        if (shouldOffset && !isSingleProvider) {
-          Spacer(modifier = Modifier.weight(ROW_WEIGHT))
-        }
-
-        if (!shouldOffset && !isSingleProvider) {
-          repeat(MAX_BUTTONS_PER_ROW - rowProviders.size) { Spacer(modifier = Modifier.weight(1f)) }
+        rowSlots.forEach { slotProvider ->
+          Box(modifier = Modifier.weight(1f)) {
+            if (slotProvider != null) {
+              ClerkSocialButton(
+                provider = slotProvider,
+                isEnabled = true,
+                onClick = onClick,
+                forceIconOnly = true,
+                modifier = Modifier.fillMaxWidth(),
+              )
+            }
+          }
         }
       }
     }
   }
 }
 
-@PreviewLightDark
+@Preview(widthDp = 200)
 @Composable
 private fun Preview() {
   Column(verticalArrangement = Arrangement.spacedBy(dp8)) {

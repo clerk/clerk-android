@@ -30,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.Clerk
@@ -112,6 +113,7 @@ private fun BoxScope.EditButton(
         Icon(
           painter = painterResource(R.drawable.ic_edit),
           contentDescription = stringResource(R.string.edit_avatar),
+          tint = ClerkMaterialTheme.colors.mutedForeground,
         )
       }
     }
@@ -140,6 +142,7 @@ private fun DropdownMenu(
       Modifier.background(ClerkMaterialTheme.colors.background).defaultMinSize(minWidth = 144.dp),
     expanded = expanded,
     onDismissRequest = onDismissRequest,
+    offset = DpOffset(0.dp, dp12),
   ) {
     DropdownMenuItem(
       text = {

@@ -1,6 +1,7 @@
 package com.clerk.ui.signup.completeprofile
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
@@ -26,7 +29,6 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkTextField
-import com.clerk.ui.core.progress.ClerkLinearProgressIndicator
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.toImmutableList
@@ -37,16 +39,8 @@ import kotlinx.collections.immutable.toImmutableList
  * inject specific values and flags.
  */
 @Composable
-fun SignUpCompleteProfileView(
-  progress: Int,
-  modifier: Modifier = Modifier,
-  onAuthComplete: () -> Unit,
-) {
-  SignUpCompleteProfileImpl(
-    progress = progress,
-    modifier = modifier,
-    onAuthComplete = onAuthComplete,
-  )
+fun SignUpCompleteProfileView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
+  SignUpCompleteProfileImpl(modifier = modifier, onAuthComplete = onAuthComplete)
 }
 
 /** Internal enum for focus tracking & label logic. */
@@ -58,7 +52,6 @@ internal enum class CompleteProfileField {
 /** Hoisted-state composable for previews/tests. You control all values here. */
 @Composable
 private fun SignUpCompleteProfileImpl(
-  progress: Int,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
   firstName: String = "",
@@ -104,8 +97,6 @@ private fun SignUpCompleteProfileImpl(
       verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      ClerkLinearProgressIndicator(progress = progress)
-
       InputRow(
         firstEnabled = firstEnabled,
         lastEnabled = lastEnabled,
@@ -137,29 +128,66 @@ private fun InputRow(
   onLastChange: (String) -> Unit,
   onFocusChange: (CompleteProfileField) -> Unit = {},
 ) {
-  Row(
-    modifier = Modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.spacedBy(dp12, alignment = Alignment.CenterHorizontally),
-  ) {
-    if (firstEnabled) {
-      ClerkTextField(
-        modifier = Modifier.weight(1f),
-        value = first,
-        inputContentType = ContentType.PersonFirstName,
-        onValueChange = onFirstChange,
-        label = stringResource(R.string.first_name),
-        onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
-      )
-    }
-    if (lastEnabled) {
-      ClerkTextField(
-        modifier = Modifier.weight(1f),
-        value = last,
-        inputContentType = ContentType.PersonLastName,
-        onValueChange = onLastChange,
-        label = stringResource(R.string.last_name),
-        onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
-      )
+  BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+    val enabledCount = (if (firstEnabled) 1 else 0) + (if (lastEnabled) 1 else 0)
+    val spacing = dp12
+    // Minimum width per field to comfortably show label/placeholder without truncation
+    val minFieldWidth = 160.dp
+    val shouldStack = enabledCount > 1 && maxWidth < (minFieldWidth * 2 + spacing)
+
+    if (shouldStack) {
+      Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(spacing, alignment = Alignment.CenterVertically),
+      ) {
+        if (firstEnabled) {
+          ClerkTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = first,
+            inputContentType = ContentType.PersonFirstName,
+            onValueChange = onFirstChange,
+            label = stringResource(R.string.first_name),
+            onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
+          )
+        }
+        if (lastEnabled) {
+          ClerkTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = last,
+            inputContentType = ContentType.PersonLastName,
+            onValueChange = onLastChange,
+            label = stringResource(R.string.last_name),
+            onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
+          )
+        }
+      }
+    } else {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement =
+          Arrangement.spacedBy(spacing, alignment = Alignment.CenterHorizontally),
+      ) {
+        if (firstEnabled) {
+          ClerkTextField(
+            modifier = Modifier.weight(1f),
+            value = first,
+            inputContentType = ContentType.PersonFirstName,
+            onValueChange = onFirstChange,
+            label = stringResource(R.string.first_name),
+            onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
+          )
+        }
+        if (lastEnabled) {
+          ClerkTextField(
+            modifier = Modifier.weight(1f),
+            value = last,
+            inputContentType = ContentType.PersonLastName,
+            onValueChange = onLastChange,
+            label = stringResource(R.string.last_name),
+            onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
+          )
+        }
+      }
     }
   }
 }
@@ -172,7 +200,22 @@ private fun Preview_BothEnabled_Filled() {
       SignUpCompleteProfileImpl(
         firstNameEnabled = true,
         lastNameEnabled = true,
-        progress = 2,
+        firstName = "Cal",
+        lastName = "Raleigh",
+        onAuthComplete = {},
+      )
+    }
+  }
+}
+
+@Preview(widthDp = 200)
+@Composable
+private fun Preview_BothEnabled_Filled_Small_Screen() {
+  PreviewAuthStateProvider {
+    ClerkMaterialTheme {
+      SignUpCompleteProfileImpl(
+        firstNameEnabled = true,
+        lastNameEnabled = true,
         firstName = "Cal",
         lastName = "Raleigh",
         onAuthComplete = {},
@@ -189,7 +232,6 @@ private fun Preview_OnlyFirstEnabled_Empty() {
       SignUpCompleteProfileImpl(
         firstNameEnabled = true,
         lastNameEnabled = false,
-        progress = 1,
         firstName = "",
         lastName = "",
         onAuthComplete = {},
@@ -206,7 +248,6 @@ private fun Preview_OnlyLastEnabled_Partial() {
       SignUpCompleteProfileImpl(
         firstNameEnabled = false,
         lastNameEnabled = true,
-        progress = 3,
         firstName = "",
         lastName = "Daniels",
         onAuthComplete = {},
