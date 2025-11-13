@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.logoUrl
 import com.clerk.api.sso.providerName
@@ -75,6 +76,7 @@ fun ClerkSocialButton(
   isEnabled: Boolean = true,
   forceIconOnly: Boolean = false,
   onClick: (OAuthProvider) -> Unit = {},
+  clerkTheme: ClerkTheme? = null,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
@@ -86,6 +88,7 @@ fun ClerkSocialButton(
     forceIconOnly = forceIconOnly,
     modifier = modifier,
     onClick = onClick,
+    clerkTheme = clerkTheme,
   )
 }
 
@@ -107,6 +110,7 @@ internal fun ClerkSocialButton(
   modifier: Modifier = Modifier,
   isEnabled: Boolean = true,
   onClick: (OAuthProvider) -> Unit = {},
+  clerkTheme: ClerkTheme? = null,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
@@ -117,6 +121,7 @@ internal fun ClerkSocialButton(
     interactionSource = interactionSource,
     modifier = modifier,
     onClick = onClick,
+    clerkTheme = clerkTheme,
   )
 }
 
@@ -142,8 +147,9 @@ internal fun ClerkSocialButtonImpl(
   modifier: Modifier = Modifier,
   forceIconOnly: Boolean = false,
   onClick: (OAuthProvider) -> Unit = {},
+  clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     BoxWithConstraints {
       val availableWidth = LocalDensity.current.run { constraints.maxWidth.toDp() }
       val iconOnly = forceIconOnly || availableWidth <= 180.dp

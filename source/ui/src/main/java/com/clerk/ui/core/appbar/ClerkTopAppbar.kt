@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.OrganizationAvatar
 import com.clerk.ui.core.dimens.dp8
@@ -34,13 +35,20 @@ fun ClerkTopAppBar(
   hasLogo: Boolean = true,
   hasBackButton: Boolean = true,
   title: String? = null,
-  backgroundColor: Color = ClerkMaterialTheme.colors.muted, // sensible default
+  backgroundColor: Color? = null, // sensible default
+  clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme {
-    Box(modifier = Modifier.fillMaxWidth().then(modifier).background(backgroundColor)) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
+    val resolvedBackgroundColor = backgroundColor ?: ClerkMaterialTheme.colors.muted
+    Box(
+      modifier =
+        Modifier.fillMaxWidth()
+          .then(modifier)
+          .background(resolvedBackgroundColor)
+    ) {
       Spacer(
         Modifier.fillMaxWidth()
-          .background(backgroundColor)
+          .background(resolvedBackgroundColor)
           .windowInsetsTopHeight(WindowInsets.statusBars)
       )
 
@@ -69,7 +77,7 @@ fun ClerkTopAppBar(
             color = ClerkMaterialTheme.colors.foreground,
           )
         }
-        if (hasLogo) OrganizationAvatar()
+        if (hasLogo) OrganizationAvatar(clerkTheme = clerkTheme)
         Spacer(Modifier.weight(1f))
 
         // keep layout symmetric

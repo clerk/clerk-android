@@ -30,18 +30,25 @@ import generateDangerPaletteHsl
  * @param modifier The [Modifier] to be applied to the [SnackbarHost].
  */
 @Composable
-fun ClerkErrorSnackbar(snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
-  val dangerPalette = ClerkMaterialTheme.computedColors.backgroundDanger.generateDangerPaletteHsl()
-  SnackbarHost(snackbarHostState) { data ->
-    Snackbar(
-      modifier = modifier.windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars)),
-      containerColor = dangerPalette.danger950,
-      contentColor = dangerPalette.danger25,
-      dismissActionContentColor = dangerPalette.danger150,
-      actionContentColor = dangerPalette.danger150,
-      actionColor = dangerPalette.danger150,
-      snackbarData = data,
-    )
+fun ClerkErrorSnackbar(
+  snackbarHostState: SnackbarHostState,
+  modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
+) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
+    val dangerPalette =
+      ClerkMaterialTheme.computedColors.backgroundDanger.generateDangerPaletteHsl()
+    SnackbarHost(snackbarHostState) { data ->
+      Snackbar(
+        modifier = modifier.windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars)),
+        containerColor = dangerPalette.danger950,
+        contentColor = dangerPalette.danger25,
+        dismissActionContentColor = dangerPalette.danger150,
+        actionContentColor = dangerPalette.danger150,
+        actionColor = dangerPalette.danger150,
+        snackbarData = data,
+      )
+    }
   }
 }
 

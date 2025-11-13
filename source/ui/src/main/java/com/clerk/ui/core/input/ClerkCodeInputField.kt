@@ -58,6 +58,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -101,6 +102,7 @@ fun ClerkCodeInputField(
   timerDuration: Int = DEFAULT_TIMER_LENGTH,
   verificationState: VerificationState = VerificationState.Default,
   showResend: Boolean = true,
+  clerkTheme: ClerkTheme? = null,
 ) {
   var timeLeft by remember { mutableIntStateOf(timerDuration) }
 
@@ -111,7 +113,7 @@ fun ClerkCodeInputField(
     }
   }
 
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val selectionColors = rememberSelectionColors()
 
     CompositionLocalProvider(LocalTextSelectionColors provides selectionColors) {

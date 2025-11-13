@@ -80,6 +80,7 @@ fun ClerkButton(
   paddingValues: PaddingValues = PaddingValues(),
   configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
+  clerkTheme: ClerkTheme? = null,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
@@ -93,6 +94,7 @@ fun ClerkButton(
     interactionSource = interactionSource,
     paddingValues = paddingValues,
     icons = icons,
+    clerkTheme = clerkTheme,
   )
 }
 
@@ -115,6 +117,7 @@ internal fun ClerkButtonWithPressedState(
   paddingValues: PaddingValues = PaddingValues(),
   configuration: ClerkButtonConfiguration = ClerkButtonDefaults.configuration(),
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
+  clerkTheme: ClerkTheme? = null,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
@@ -132,6 +135,7 @@ internal fun ClerkButtonWithPressedState(
     configuration = configuration,
     icons = icons,
     paddingValues = paddingValues,
+    clerkTheme = clerkTheme,
   )
 }
 
@@ -162,8 +166,9 @@ private fun ClerkButtonImpl(
   interactionSource: MutableInteractionSource,
   modifier: Modifier = Modifier,
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
+  clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val tokens =
       buildButtonTokens(config = configuration, isPressed = clerkButtonState.isPressedCombined)
 
