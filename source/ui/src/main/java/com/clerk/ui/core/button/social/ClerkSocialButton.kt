@@ -165,8 +165,8 @@ internal fun ClerkSocialButtonImpl(
                   elevation = dp3,
                   shape = ClerkMaterialTheme.shape,
                   clip = true,
-                  spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.4f),
-                  ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.4f),
+                  spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f),
+                  ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f),
                 )
                 .defaultMinSize(minWidth = 100.dp),
           ) {

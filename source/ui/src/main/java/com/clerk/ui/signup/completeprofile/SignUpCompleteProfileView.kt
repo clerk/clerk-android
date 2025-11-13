@@ -1,6 +1,7 @@
 package com.clerk.ui.signup.completeprofile
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
@@ -125,29 +128,66 @@ private fun InputRow(
   onLastChange: (String) -> Unit,
   onFocusChange: (CompleteProfileField) -> Unit = {},
 ) {
-  Row(
-    modifier = Modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.spacedBy(dp12, alignment = Alignment.CenterHorizontally),
-  ) {
-    if (firstEnabled) {
-      ClerkTextField(
-        modifier = Modifier.weight(1f),
-        value = first,
-        inputContentType = ContentType.PersonFirstName,
-        onValueChange = onFirstChange,
-        label = stringResource(R.string.first_name),
-        onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
-      )
-    }
-    if (lastEnabled) {
-      ClerkTextField(
-        modifier = Modifier.weight(1f),
-        value = last,
-        inputContentType = ContentType.PersonLastName,
-        onValueChange = onLastChange,
-        label = stringResource(R.string.last_name),
-        onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
-      )
+  BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+    val enabledCount = (if (firstEnabled) 1 else 0) + (if (lastEnabled) 1 else 0)
+    val spacing = dp12
+    // Minimum width per field to comfortably show label/placeholder without truncation
+    val minFieldWidth = 160.dp
+    val shouldStack = enabledCount > 1 && maxWidth < (minFieldWidth * 2 + spacing)
+
+    if (shouldStack) {
+      Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(spacing, alignment = Alignment.CenterVertically),
+      ) {
+        if (firstEnabled) {
+          ClerkTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = first,
+            inputContentType = ContentType.PersonFirstName,
+            onValueChange = onFirstChange,
+            label = stringResource(R.string.first_name),
+            onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
+          )
+        }
+        if (lastEnabled) {
+          ClerkTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = last,
+            inputContentType = ContentType.PersonLastName,
+            onValueChange = onLastChange,
+            label = stringResource(R.string.last_name),
+            onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
+          )
+        }
+      }
+    } else {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement =
+          Arrangement.spacedBy(spacing, alignment = Alignment.CenterHorizontally),
+      ) {
+        if (firstEnabled) {
+          ClerkTextField(
+            modifier = Modifier.weight(1f),
+            value = first,
+            inputContentType = ContentType.PersonFirstName,
+            onValueChange = onFirstChange,
+            label = stringResource(R.string.first_name),
+            onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
+          )
+        }
+        if (lastEnabled) {
+          ClerkTextField(
+            modifier = Modifier.weight(1f),
+            value = last,
+            inputContentType = ContentType.PersonLastName,
+            onValueChange = onLastChange,
+            label = stringResource(R.string.last_name),
+            onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
+          )
+        }
+      }
     }
   }
 }
@@ -155,6 +195,22 @@ private fun InputRow(
 @PreviewLightDark
 @Composable
 private fun Preview_BothEnabled_Filled() {
+  PreviewAuthStateProvider {
+    ClerkMaterialTheme {
+      SignUpCompleteProfileImpl(
+        firstNameEnabled = true,
+        lastNameEnabled = true,
+        firstName = "Cal",
+        lastName = "Raleigh",
+        onAuthComplete = {},
+      )
+    }
+  }
+}
+
+@Preview(widthDp = 200)
+@Composable
+private fun Preview_BothEnabled_Filled_Small_Screen() {
   PreviewAuthStateProvider {
     ClerkMaterialTheme {
       SignUpCompleteProfileImpl(
