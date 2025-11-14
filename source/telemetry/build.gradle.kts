@@ -28,7 +28,15 @@ kotlin {
 
     commonTest { dependencies { implementation(libs.kotlin.test) } }
 
-    androidMain { dependencies {} }
+    androidMain {
+      dependencies {
+        implementation(libs.ktor.client.core)
+        implementation(libs.ktor.client.negototiation)
+        implementation(libs.ktor.client.okhttp)
+        implementation(libs.ktor.serialization.kotlinx.json)
+        implementation(libs.okhttp)
+      }
+    }
 
     getByName("androidDeviceTest") {
       dependencies {
