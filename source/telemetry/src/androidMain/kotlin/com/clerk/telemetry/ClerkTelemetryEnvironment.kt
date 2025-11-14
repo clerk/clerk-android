@@ -13,15 +13,15 @@ class ClerkTelemetryEnvironment : TelemetryEnvironment {
   }
 
   override suspend fun isTelemetryEnabled(): Boolean {
-    return Clerk.settings.telemetryEnabled
+    return Clerk.telemetryEnabled
   }
 
   override suspend fun isDebugModeEnabled(): Boolean {
-    return Clerk.settings.debugMode
+    return Clerk.debugMode
   }
 
   override suspend fun publishableKey(): String? {
     val key = Clerk.publishableKey
-    return key.takeIf { it.isNotEmpty() }
+    return key.takeIf { !it.isNullOrEmpty() }
   }
 }

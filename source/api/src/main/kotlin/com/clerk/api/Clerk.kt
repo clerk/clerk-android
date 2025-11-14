@@ -105,7 +105,17 @@ object Clerk {
    *
    * This key determines the API base URL and connects the app to the correct Clerk instance.
    */
-  internal var publishableKey: String? = null
+  var publishableKey: String? = null
+
+  /**
+   * Whether to enable telemetry for the SDK.
+   *
+   * When enabled, the SDK may collect anonymous diagnostic and usage data to help improve Clerk's
+   * products and services. This data does not include any personal identifiable information (PII).
+   *
+   * Set this via [ClerkConfigurationOptions] in the [initialize] method. Defaults to `true`.
+   */
+  var telemetryEnabled: Boolean = true
 
   /**
    * The name of the application, as configured in the Clerk Dashboard.
@@ -418,6 +428,7 @@ object Clerk {
     this.applicationContext = WeakReference(context)
     this.applicationId = options?.deviceAttestationOptions?.applicationId
     this.customTheme = theme
+    this.telemetryEnabled = options?.telemetryEnabled ?: true
     configurationManager.configure(
       context = context,
       publishableKey = publishableKey,
@@ -513,6 +524,7 @@ data class ClerkConfigurationOptions(
   val enableDebugMode: Boolean = false,
   val deviceAttestationOptions: DeviceAttestationOptions? = null,
   val proxyUrl: String? = null,
+  val telemetryEnabled: Boolean = true,
 )
 
 /**
