@@ -25,6 +25,9 @@
     <ID>LongParameterList:UserProfileMfaAddSmsView.kt$( availablePhoneNumbers: ImmutableList&lt;PhoneNumber>, onReserveForSecondFactor: (PhoneNumber) -> Unit, onAddPhoneNumber: () -> Unit, modifier: Modifier = Modifier, isLoading: Boolean = false, onDismiss: () -> Unit, selectedNumber: PhoneNumber?, onSelectedNumberChange: (PhoneNumber?) -> Unit, )</ID>
     <ID>LongParameterList:UserProfileSecurityView.kt$( innerPadding: PaddingValues, configuration: SecurityContentConfiguration, onError: (String?) -> Unit, onClickDeleteAccount: () -> Unit, onClickAddPassword: (PasswordAction) -> Unit, onAdd: () -> Unit, )</ID>
     <ID>LongParameterList:UserProfileSecurityView.kt$( isPasswordEnabled: Boolean, isPasskeyEnabled: Boolean, isMfaEnabled: Boolean, isDeleteSelfEnabled: Boolean, snackbarHostState: SnackbarHostState, sessions: ImmutableList&lt;Session>, )</ID>
+    <ID>MagicNumber:AndroidTelemetryEventThrottler.kt$AndroidTelemetryEventThrottler$1000L</ID>
+    <ID>MagicNumber:AndroidTelemetryEventThrottler.kt$AndroidTelemetryEventThrottler$24L</ID>
+    <ID>MagicNumber:AndroidTelemetryEventThrottler.kt$AndroidTelemetryEventThrottler$60L</ID>
     <ID>MagicNumber:ColorUtils.kt$4f</ID>
     <ID>MagicNumber:DeviceAttestationHelper.kt$DeviceAttestationHelper$8</ID>
     <ID>MagicNumber:UiActivity1.kt$UiActivity1$0xFFF9F9F9</ID>
