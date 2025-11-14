@@ -6,11 +6,13 @@ import com.clerk.api.Clerk.isInitialized
 import com.clerk.api.Clerk.sessionFlow
 import com.clerk.api.Clerk.userFlow
 import com.clerk.api.configuration.ConfigurationManager
+import com.clerk.api.configuration.PublishableKeyHelper
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
+import com.clerk.api.network.model.environment.InstanceEnvironmentType
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.environment.enabledFirstFactorAttributes
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -24,6 +26,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
+import com.clerk.sdk.BuildConfig
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -98,6 +101,13 @@ object Clerk {
   val isInitialized: StateFlow<Boolean> = configurationManager.isInitialized
 
   /**
+   * The publishable key from Clerk Dashboard used for API authentication.
+   *
+   * This key determines the API base URL and connects the app to the correct Clerk instance.
+   */
+  internal var publishableKey: String? = null
+
+  /**
    * The name of the application, as configured in the Clerk Dashboard.
    *
    * Used for display purposes in authentication UI and other contexts. Returns `null` if the SDK is
@@ -105,6 +115,20 @@ object Clerk {
    */
   val applicationName: String?
     get() = if (::environment.isInitialized) environment.displayConfig.applicationName else null
+
+  /**
+   * The current version of the Clerk Android SDK.
+   *
+   * @return A string representing the semantic version of the SDK (e.g., "1.0.0").
+   */
+  val version: String
+    get() = BuildConfig.SDK_VERSION
+
+  val instanceEnvironmentType: InstanceEnvironmentType
+    get() =
+      if (PublishableKeyHelper().isLive(publishableKey = publishableKey))
+        InstanceEnvironmentType.PRODUCTION
+      else InstanceEnvironmentType.DEVELOPMENT
 
   /**
    * A list of enabled first factor attributes, sorted by priority.

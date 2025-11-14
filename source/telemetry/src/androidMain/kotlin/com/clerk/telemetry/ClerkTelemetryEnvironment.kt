@@ -2,14 +2,14 @@ package com.clerk.telemetry
 
 import com.clerk.api.Clerk
 
-class ClerkTelemetryEnvironment() : TelemetryEnvironment {
+class ClerkTelemetryEnvironment : TelemetryEnvironment {
 
   override val sdkName: String = "clerk-android"
   override val sdkVersion: String = Clerk.version // adjust to your static version access
 
   override suspend fun instanceTypeString(): String {
     // adjust to your actual model
-    return Clerk.instanceType.rawValue
+    return Clerk.instanceEnvironmentType.name
   }
 
   override suspend fun isTelemetryEnabled(): Boolean {

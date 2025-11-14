@@ -83,13 +83,6 @@ internal class ConfigurationManager {
   /** Internal mutable state flow for device attestation status. */
   private val _isDeviceAttested = MutableStateFlow(false)
 
-  /**
-   * The publishable key from Clerk Dashboard used for API authentication.
-   *
-   * This key determines the API base URL and connects the app to the correct Clerk instance.
-   */
-  internal lateinit var publishableKey: String
-
   /** Flag to track if configuration has been started to prevent duplicate initialization. */
   private var hasConfigured = false
 
@@ -143,7 +136,7 @@ internal class ConfigurationManager {
 
     try {
       this.context = WeakReference(context.applicationContext)
-      this.publishableKey = publishableKey
+      Clerk.publishableKey = publishableKey
       LocaleProvider.initialize()
 
       val baseUrl =
