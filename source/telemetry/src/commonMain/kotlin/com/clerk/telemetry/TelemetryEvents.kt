@@ -6,7 +6,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 object TelemetryEvents {
-  // Sampling rates matching JS/iOS
+
   private const val METHOD_INVOKED_SAMPLING_RATE = 0.1
   private const val VIEW_DID_APPEAR_SAMPLING_RATE = 0.1
 
@@ -39,7 +39,6 @@ object TelemetryEvents {
   }
 }
 
-// tiny helper if you want quick payloads
 fun telemetryPayload(vararg pairs: Pair<String, Any?>): Map<String, JsonElement> = buildJsonObject {
   pairs.forEach { (k, v) ->
     when (v) {
