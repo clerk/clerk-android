@@ -30,6 +30,7 @@ kotlin {
 
     androidMain {
       dependencies {
+        implementation(projects.source.api)
         implementation(libs.ktor.client.core)
         implementation(libs.ktor.client.negototiation)
         implementation(libs.ktor.client.okhttp)
