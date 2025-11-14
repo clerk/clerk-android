@@ -2,13 +2,19 @@ package com.clerk.telemetry
 
 import com.clerk.api.Clerk
 
+private const val CLERK_ANDROID = "clerk-android"
+
+/**
+ * An implementation of [TelemetryEnvironment] that retrieves configuration and state directly from
+ * the main [Clerk] singleton. This class acts as a bridge between the telemetry system and the core
+ * Clerk SDK's settings.
+ */
 class ClerkTelemetryEnvironment : TelemetryEnvironment {
 
-  override val sdkName: String = "clerk-android"
-  override val sdkVersion: String = Clerk.version // adjust to your static version access
+  override val sdkName: String = CLERK_ANDROID
+  override val sdkVersion: String = Clerk.version
 
   override suspend fun instanceTypeString(): String {
-    // adjust to your actual model
     return Clerk.instanceEnvironmentType.name
   }
 
