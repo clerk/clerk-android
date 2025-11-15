@@ -1,56 +1,63 @@
 [versions]
 activityKtx = "1.11.0"
+adsMobileSdk = "0.21.0-beta01"
 agp = "8.13.1"
 appcompat = "1.7.1"
 automap = "0.1.1"
 chucker = "4.2.0"
 composeBom = "2025.11.00"
 core = "1.7.0"
+coreKtx = "1.17.0"
 coreKtxVersion = "1.7.0"
 detekt = "1.23.8"
 dokka = "1.9.20"
+espressoCore = "3.7.0"
 firebase-appDistrubution = "5.2.0"
 googleGms = "4.4.4"
-kotlin = "2.2.21"
+junit = "1.3.0"
 ksp = "2.3.2"
 lifecycleProcess = "2.9.4"
+material = "1.13.0"
 material3 = "1.4.0"
 materialKolor = "4.0.4"
 mavenPublish = "0.35.0"
+navigation3 = "1.0.0-beta01"
 navigationCompose = "2.9.6"
 okhttp = "5.3.0"
+paparazziPlugin = "2.0.0-alpha02"
 retrofit = "3.0.0"
 robolectric = "4.16"
+runner = "1.5.2"
 sortDependencies = "0.15"
 spotless = "8.0.0"
-coreKtx = "1.17.0"
-junit = "1.3.0"
-espressoCore = "3.7.0"
-material = "1.13.0"
-uiToolingPreviewAndroid = "1.9.4"
-paparazziPlugin = "2.0.0-alpha02"
 turbineVersion = "1.2.1"
-navigation3 = "1.0.0-beta01"
+uiToolingPreviewAndroid = "1.9.4"
+
 
 # Build Versions -- Do not delete
 clerk-api = "0.1.19"
 clerk-ui = "0.1.0-SNAPSHOT"
 jdk = "17"
 jvmTarget = "17"
+kotlin = "2.2.21"
 minSdk = "24"
 compileSdk = "36"
-adsMobileSdk = "0.21.0-beta01"
+kotlinStdlib = "2.2.21"
+kotlinTest = "2.2.21"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
+ads-mobile-sdk = { group = "com.google.android.libraries.ads.mobile.sdk", name = "ads-mobile-sdk", version.ref = "adsMobileSdk" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"
 androidx-browser = "androidx.browser:browser:1.9.0"
-androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 androidx-compose-icons = "org.jetbrains.compose.material:material-icons-core:1.7.3"
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 androidx-core = { module = "androidx.test:core", version.ref = "core" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-credentials = "androidx.credentials:credentials:1.5.0"
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junit" }
 androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.9.4"
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.9.4"
@@ -59,10 +66,13 @@ androidx-lifecycle-viewmodel-compose = "androidx.lifecycle:lifecycle-viewmodel-c
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.5.0"
+androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
 chucker-debug = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
 clerk-automap-annotations = { module = "com.clerk:automap-annotations", version.ref = "automap" }
 clerk-automap-processor = { module = "com.clerk:automap-processor", version.ref = "automap" }
@@ -71,19 +81,26 @@ coil-okhttp = "io.coil-kt.coil3:coil-network-okhttp:3.3.0"
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-lints = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
-firebase-bom = "com.google.firebase:firebase-bom:34.4.0"
 firebase-appDistribution = "com.google.firebase:firebase-appdistribution:17.0.0"
+firebase-bom = "com.google.firebase:firebase-bom:34.4.0"
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.1.1"
-google-playIntegrity = "com.google.android.play:integrity:1.5.0"
 google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.18"
+google-playIntegrity = "com.google.android.play:integrity:1.5.0"
 junit = "junit:junit:4.13.2"
 jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdlib" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
 kotlinx-coroutines-test = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"
 kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.7.1-0.6.x-compat"
 kotlinx-immutable = "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0"
 kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
 ksp-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
+ktor-client-core = "io.ktor:ktor-client-core:2.3.0"
+ktor-client-negototiation = "io.ktor:ktor-client-content-negotiation:2.3.0"
+ktor-client-okhttp = "io.ktor:ktor-client-okhttp:2.3.0"
+ktor-serialization-kotlinx-json = "io.ktor:ktor-serialization-kotlinx-json:2.3.0"
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 mockito = "org.mockito:mockito-core:5.20.0"
@@ -91,34 +108,32 @@ mockk = "io.mockk:mockk:1.14.6"
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+paparazzi = "app.cash.paparazzi:paparazzi:2.0.0-alpha02"
+processPhoenix = "com.jakewharton:process-phoenix:3.0.0"
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-kotlinx = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbineVersion" }
 versioning-plugin = { module = "org.jetbrains.dokka:versioning-plugin", version.ref = "dokka" }
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junit" }
-androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
-paparazzi = "app.cash.paparazzi:paparazzi:2.0.0-alpha02"
-ads-mobile-sdk = { group = "com.google.android.libraries.ads.mobile.sdk", name = "ads-mobile-sdk", version.ref = "adsMobileSdk" }
-processPhoenix = "com.jakewharton:process-phoenix:3.0.0"
 
 
 [plugins]
-paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazziPlugin" }
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+android-lint = { id = "com.android.lint", version.ref = "agp" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+firebase-appDistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appDistrubution" }
+google-gms = { id = "com.google.gms.google-services", version.ref = "googleGms" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
+paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazziPlugin" }
 sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "sortDependencies" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
-google-gms = { id = "com.google.gms.google-services", version.ref = "googleGms" }
-firebase-appDistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appDistrubution" }
+

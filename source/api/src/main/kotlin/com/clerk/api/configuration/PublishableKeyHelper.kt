@@ -26,4 +26,14 @@ internal class PublishableKeyHelper {
       error("Invalid publishable key")
     }
   }
+
+  /**
+   * Helper function that checks if the provided publishable key is a live key.
+   *
+   * @param publishableKey The publishable key to check.
+   * @return `true` if the key is a live key, `false` otherwise.
+   */
+  internal fun isLive(publishableKey: String?): Boolean {
+    return publishableKey != null && publishableKey.startsWith(TOKEN_PREFIX_LIVE)
+  }
 }

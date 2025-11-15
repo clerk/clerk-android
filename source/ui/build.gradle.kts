@@ -97,6 +97,7 @@ dependencies {
   implementation(libs.material)
   implementation(libs.material3)
   implementation(libs.materialKolor)
+  implementation(projects.source.telemetry)
 
   compileOnly(projects.clerk.source.api)
 

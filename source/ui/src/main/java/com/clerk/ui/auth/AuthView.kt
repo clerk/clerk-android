@@ -7,9 +7,11 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.runtime.NavBackStack
@@ -18,6 +20,11 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.telemetry.ClerkTelemetryEnvironment
+import com.clerk.telemetry.TelemetryCollector
+import com.clerk.telemetry.TelemetryEvents
+import com.clerk.telemetry.TelemetryModule
+import com.clerk.telemetry.telemetryPayload
 import com.clerk.ui.signin.SignInFactorOneView
 import com.clerk.ui.signin.SignInFactorTwoView
 import com.clerk.ui.signin.alternativemethods.SignInFactorAlternativeMethodsView
@@ -34,16 +41,50 @@ import kotlinx.serialization.Serializable
 @SuppressLint("ComposeCompositionLocalUsage")
 internal val LocalAuthState = staticCompositionLocalOf<AuthState> { error("No AuthState provided") }
 
+@SuppressLint("ComposeCompositionLocalUsage")
+internal val LocalTelemetryCollector =
+  staticCompositionLocalOf<TelemetryCollector> { error("No telemetry provided") }
+
 @Composable
-internal fun AuthStateProvider(backStack: NavBackStack<NavKey>, content: @Composable () -> Unit) {
-  val authState = remember { AuthState(backStack = backStack) }
-  CompositionLocalProvider(LocalAuthState provides authState) { content() }
+private fun rememberTelemetryCollector(): TelemetryCollector {
+  val context = LocalContext.current.applicationContext
+
+  val environment = remember { ClerkTelemetryEnvironment() }
+
+  return remember { TelemetryModule.createCollector(context = context, environment = environment) }
 }
 
 @Composable
-fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
+internal fun TelemetryProvider(
+  telemetryCollector: TelemetryCollector = rememberTelemetryCollector(),
+  content: @Composable () -> Unit,
+) {
+  CompositionLocalProvider(LocalTelemetryCollector provides telemetryCollector) { content() }
+}
+
+@Composable
+internal fun AuthStateProvider(backStack: NavBackStack<NavKey>, content: @Composable () -> Unit) {
+  val authState = remember { AuthState(backStack = backStack) }
+  TelemetryProvider { CompositionLocalProvider(LocalAuthState provides authState) { content() } }
+}
+
+@Composable
+fun AuthView(
+  modifier: Modifier = Modifier,
+  telemetryCollector: TelemetryCollector? = rememberTelemetryCollector(),
+  onAuthComplete: () -> Unit = {},
+) {
   val backStack = rememberNavBackStack(AuthDestination.AuthStart)
-  AuthStateProvider(backStack) {
+  AuthStateProvider(backStack = backStack) {
+    val authState = LocalAuthState.current
+    LaunchedEffect(Unit) {
+      telemetryCollector?.record(
+        TelemetryEvents.viewDidAppear(
+          viewName = "AuthView",
+          payload = telemetryPayload("mode" to authState.mode.name),
+        )
+      )
+    }
     NavDisplay(
       modifier = modifier,
       backStack = backStack,
@@ -112,7 +153,7 @@ fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  AuthView()
+  AuthView(telemetryCollector = null)
 }
 
 internal object AuthDestination {

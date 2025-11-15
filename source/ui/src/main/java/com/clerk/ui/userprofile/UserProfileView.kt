@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
@@ -16,6 +17,9 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.clerk.telemetry.TelemetryEvents
+import com.clerk.ui.auth.LocalTelemetryCollector
+import com.clerk.ui.auth.TelemetryProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.detail.UserProfileDetailView
@@ -37,8 +41,10 @@ internal fun UserProfileStateProvider(
   backStack: NavBackStack<NavKey>,
   content: @Composable () -> Unit,
 ) {
-  val userProfileState = UserProfileState(backStack = backStack)
-  CompositionLocalProvider(LocalUserProfileState provides userProfileState) { content() }
+  TelemetryProvider {
+    val userProfileState = UserProfileState(backStack = backStack)
+    CompositionLocalProvider(LocalUserProfileState provides userProfileState) { content() }
+  }
 }
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -47,6 +53,10 @@ fun UserProfileView(modifier: Modifier = Modifier) {
   val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
   UserProfileStateProvider(backStack) {
     val userProfileState = LocalUserProfileState.current
+    val telemetry = LocalTelemetryCollector.current
+
+    LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
+
     NavDisplay(
       modifier = modifier,
       backStack = backStack,
