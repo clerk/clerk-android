@@ -34,8 +34,8 @@ fun ClerkThemedProfileScaffold(
   horizontalPadding: Dp = dp18,
   backgroundColor: Color? = null,
   bottomContent: (@Composable () -> Unit)? = null,
-  content: @Composable ColumnScope.() -> Unit,
   clerkTheme: ClerkTheme? = null,
+  content: @Composable ColumnScope.() -> Unit,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
   LaunchedEffect(errorMessage) {
