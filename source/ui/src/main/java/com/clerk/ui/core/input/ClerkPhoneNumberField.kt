@@ -45,6 +45,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -108,12 +110,14 @@ fun ClerkPhoneNumberField(
   modifier: Modifier = Modifier,
   errorText: String? = null,
   onValueChange: (String) -> Unit,
+  clerkTheme: ClerkTheme? = null,
 ) {
   ClerkPhoneNumberFieldImpl(
     modifier = modifier,
     errorText = errorText,
     value = value,
     onValueChange = onValueChange,
+    clerkTheme = clerkTheme,
   )
 }
 
@@ -187,6 +191,7 @@ internal fun ClerkPhoneNumberFieldImpl(
   value: String,
   modifier: Modifier = Modifier,
   errorText: String? = null,
+  clerkTheme: ClerkTheme? = null,
 ) {
   val defaultCountry = PhoneInputUtils.getDefaultCountry()
   val currentCountry = remember(value) { findMatchingCountry(value, defaultCountry) }
@@ -198,7 +203,7 @@ internal fun ClerkPhoneNumberFieldImpl(
     onValueChange = onValueChange,
   )
 
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
     val computedColors = LocalComputedColors.current
 
     Row(

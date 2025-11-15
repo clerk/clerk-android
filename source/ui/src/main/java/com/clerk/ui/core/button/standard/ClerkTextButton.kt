@@ -38,15 +38,18 @@ import com.clerk.ui.theme.DefaultColors
 fun ClerkTextButton(
   text: String,
   modifier: Modifier = Modifier,
-  textColor: Color = ClerkMaterialTheme.colors.primary,
-  textStyle: TextStyle = ClerkMaterialTheme.typography.titleSmall,
+  textColor: Color? = null,
+  textStyle: TextStyle? = null,
   boundedRipple: Boolean = true,
   rippleColor: Color = Color.Unspecified, // Unspecified -> uses LocalContentColor
+  clerkTheme: ClerkTheme? = null,
   onClick: () -> Unit,
 ) {
   val interaction = remember { MutableInteractionSource() }
 
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+    val resolvedTextColor = textColor ?: ClerkMaterialTheme.colors.primary
+    val resolvedTextStyle = textStyle ?: ClerkMaterialTheme.typography.titleSmall
     Box(
       modifier =
         modifier
@@ -60,7 +63,7 @@ fun ClerkTextButton(
           )
           .padding(horizontal = dp8, vertical = dp6)
     ) {
-      Text(text = text, color = textColor, style = textStyle)
+      Text(text = text, color = resolvedTextColor, style = resolvedTextStyle)
     }
   }
 }

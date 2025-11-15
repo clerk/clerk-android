@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -26,8 +28,8 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  * @param modifier The [Modifier] to be applied to the divider row.
  */
 @Composable
-fun TextDivider(text: String, modifier: Modifier = Modifier) {
-  ClerkMaterialTheme {
+fun TextDivider(text: String, modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
     Row(
       modifier = Modifier.fillMaxWidth().then(modifier),
       horizontalArrangement = Arrangement.spacedBy(dp16, alignment = Alignment.CenterHorizontally),

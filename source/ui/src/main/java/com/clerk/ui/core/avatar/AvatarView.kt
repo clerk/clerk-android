@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -194,9 +195,10 @@ fun OrganizationAvatar(
   modifier: Modifier = Modifier,
   shape: Shape? = null,
   size: AvatarSize = AvatarSize.MEDIUM,
+  clerkTheme: ClerkTheme? = null,
 ) {
   val url = Clerk.organizationLogoUrl
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
     AvatarView(
       imageUrl = url,
       size = size,

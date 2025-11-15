@@ -33,6 +33,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp20
@@ -57,6 +59,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  * @param supportingText Optional supporting/helper text displayed below the input field
  * @param isError Whether the field should be displayed in an error state with error styling
  * @param enabled Whether the text field is enabled and accepts user input
+ * @param maxLines The maximum number of lines to display
  * @param inputContentType The content type for autofill hints, defaults to [ContentType.Username]
  */
 @Composable
@@ -76,6 +79,7 @@ fun ClerkTextField(
   inputContentType: ContentType = ContentType.Username,
   visualTransformation: VisualTransformation = VisualTransformation.None,
   keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+  clerkTheme: ClerkTheme? = null,
 ) {
   var isVisible by remember {
     mutableStateOf(visualTransformation !is PasswordVisualTransformation)
@@ -85,19 +89,19 @@ fun ClerkTextField(
 
   LaunchedEffect(isFocused) { onFocusChange(isFocused) }
 
-  val textFieldColors = getTextFieldColors()
+  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+    val textFieldColors = getTextFieldColors()
 
-  val labelStyle =
-    if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
-    else MaterialTheme.typography.bodyLarge
-  val labelColor =
-    when {
-      isError -> ClerkMaterialTheme.colors.danger
-      isFocused -> ClerkMaterialTheme.colors.primary
-      else -> ClerkMaterialTheme.colors.mutedForeground
-    }
+    val labelStyle =
+      if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
+      else MaterialTheme.typography.bodyLarge
+    val labelColor =
+      when {
+        isError -> ClerkMaterialTheme.colors.danger
+        isFocused -> ClerkMaterialTheme.colors.primary
+        else -> ClerkMaterialTheme.colors.mutedForeground
+      }
 
-  ClerkMaterialTheme {
     OutlinedTextField(
       interactionSource = interactionSource,
       modifier = modifier.fillMaxWidth().semantics { contentType = inputContentType },

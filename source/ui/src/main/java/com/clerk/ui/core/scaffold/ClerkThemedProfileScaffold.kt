@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
+import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.error.ClerkErrorSnackbar
@@ -33,6 +35,7 @@ fun ClerkThemedProfileScaffold(
   horizontalPadding: Dp = dp18,
   backgroundColor: Color? = null,
   bottomContent: (@Composable () -> Unit)? = null,
+  clerkTheme: ClerkTheme? = null,
   content: @Composable ColumnScope.() -> Unit,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
@@ -40,10 +43,11 @@ fun ClerkThemedProfileScaffold(
     if (errorMessage != null) snackbarHostState.showSnackbar(errorMessage)
   }
 
-  ClerkMaterialTheme {
+  val effectiveTheme = clerkTheme ?: Clerk.customTheme
+  ClerkMaterialTheme(clerkTheme = effectiveTheme) {
     Scaffold(
       modifier = Modifier.then(modifier),
-      snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+      snackbarHost = { ClerkErrorSnackbar(snackbarHostState, clerkTheme = effectiveTheme) },
       topBar = {
         ClerkTopAppBar(
           backgroundColor = ClerkMaterialTheme.colors.background,
@@ -51,6 +55,7 @@ fun ClerkThemedProfileScaffold(
           hasBackButton = hasBackButton,
           title = title,
           onBackPressed = onBackPressed,
+          clerkTheme = effectiveTheme,
         )
       },
     ) { innerPadding ->
