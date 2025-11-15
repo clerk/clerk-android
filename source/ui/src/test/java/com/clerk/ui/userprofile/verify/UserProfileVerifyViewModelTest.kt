@@ -109,9 +109,10 @@ class UserProfileVerifyViewModelTest {
   fun attemptTotp_success_setsVerified() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
-    val totpResource = mockk<com.clerk.api.network.model.totp.TOTPResource>(relaxed = true) {
-      every { backupCodes } returns null
-    }
+    val totpResource =
+      mockk<com.clerk.api.network.model.totp.TOTPResource>(relaxed = true) {
+        every { backupCodes } returns null
+      }
     coEvery { user.attemptTotpVerification(any()) } returns ClerkResult.success(totpResource)
 
     val viewModel = UserProfileVerifyViewModel()
