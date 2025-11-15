@@ -11,10 +11,13 @@ jobs:
         include:
           - module: ":source:api"
             path: "source/api"
-            label: "source-api"   # <— safe artifact label (no /)
+            label: "source-api"
           - module: ":source:ui"
             path: "source/ui"
             label: "source-ui"
+          - module: ":source:telemetry"
+            path: "source/telemetry"
+            label: "source-telemetry"
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 21
