@@ -99,7 +99,7 @@ class TelemetryCollector(
   ): RecordResult {
     return when {
       !environment.isTelemetryEnabled() -> RecordResult(false, "telemetry disabled")
-      environment.instanceTypeString() != "development" ->
+      environment.instanceTypeString().equals("development", ignoreCase = true) ->
         RecordResult(false, "production instance")
 
       else -> shouldBeSampled(prepared, eventSamplingRate)
