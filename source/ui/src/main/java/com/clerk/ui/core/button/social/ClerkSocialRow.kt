@@ -9,8 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.Clerk
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.dimens.dp8
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -29,6 +30,7 @@ private const val MAX_BUTTONS_PER_ROW = 3
  *
  * @param providers List of [OAuthProvider]s to display as social login buttons.
  * @param modifier Optional [Modifier] for theming and styling.
+ * @param clerkTheme Optional [ClerkTheme] for theming.
  * @param onClick Lambda to be invoked when any button is clicked, passing the selected
  *   [OAuthProvider].
  */
@@ -40,6 +42,7 @@ fun ClerkSocialRow(
   onClick: (OAuthProvider) -> Unit = {},
 ) {
   val isSingleProvider = providers.size == 1
+  val effectiveTheme = clerkTheme ?: Clerk.customTheme
 
   Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp8)) {
     val chunks = providers.chunked(MAX_BUTTONS_PER_ROW)
@@ -53,7 +56,7 @@ fun ClerkSocialRow(
           onClick = onClick,
           forceIconOnly = false,
           modifier = Modifier.fillMaxWidth(),
-          clerkTheme = clerkTheme,
+          clerkTheme = effectiveTheme,
         )
       }
       return@Column
@@ -76,25 +79,25 @@ fun ClerkSocialRow(
           else -> rowProviders
         }
 
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(dp8, Alignment.CenterHorizontally),
-        ) {
-          rowSlots.forEach { slotProvider ->
-            Box(modifier = Modifier.weight(1f)) {
-              if (slotProvider != null) {
-                ClerkSocialButton(
-                  provider = slotProvider,
-                  isEnabled = true,
-                  onClick = onClick,
-                  forceIconOnly = true,
-                  modifier = Modifier.fillMaxWidth(),
-                  clerkTheme = clerkTheme,
-                )
-              }
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(dp8, Alignment.CenterHorizontally),
+      ) {
+        rowSlots.forEach { slotProvider ->
+          Box(modifier = Modifier.weight(1f)) {
+            if (slotProvider != null) {
+              ClerkSocialButton(
+                provider = slotProvider,
+                isEnabled = true,
+                onClick = onClick,
+                forceIconOnly = true,
+                modifier = Modifier.fillMaxWidth(),
+                clerkTheme = effectiveTheme,
+              )
             }
           }
         }
+      }
     }
   }
 }

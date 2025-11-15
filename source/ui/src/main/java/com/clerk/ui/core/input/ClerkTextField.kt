@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp12
@@ -58,6 +59,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  * @param supportingText Optional supporting/helper text displayed below the input field
  * @param isError Whether the field should be displayed in an error state with error styling
  * @param enabled Whether the text field is enabled and accepts user input
+ * @param maxLines The maximum number of lines to display
  * @param inputContentType The content type for autofill hints, defaults to [ContentType.Username]
  */
 @Composable
@@ -87,7 +89,7 @@ fun ClerkTextField(
 
   LaunchedEffect(isFocused) { onFocusChange(isFocused) }
 
-  ClerkMaterialTheme(clerkTheme = clerkTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
     val textFieldColors = getTextFieldColors()
 
     val labelStyle =

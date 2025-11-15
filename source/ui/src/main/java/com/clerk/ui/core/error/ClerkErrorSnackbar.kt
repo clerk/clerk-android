@@ -35,12 +35,13 @@ fun ClerkErrorSnackbar(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme(clerkTheme = clerkTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
     val dangerPalette =
       ClerkMaterialTheme.computedColors.backgroundDanger.generateDangerPaletteHsl()
     SnackbarHost(snackbarHostState) { data ->
       Snackbar(
-        modifier = modifier.windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars)),
+        modifier =
+          modifier.windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars)),
         containerColor = dangerPalette.danger950,
         contentColor = dangerPalette.danger25,
         dismissActionContentColor = dangerPalette.danger150,
