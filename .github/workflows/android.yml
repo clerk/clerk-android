@@ -8,7 +8,7 @@ jobs:
     runs-on: macos-latest-xlarge
     strategy:
       matrix:
-        module: [":source:api", ":source:ui"]
+        module: [":source:api", ":source:ui", ":source:telemetry"]
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 21
