@@ -49,7 +49,7 @@ internal fun UserProfileStateProvider(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun UserProfileView(modifier: Modifier = Modifier) {
+fun UserProfileView(modifier: Modifier = Modifier, onDismiss: () -> Unit) {
   val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
   UserProfileStateProvider(backStack) {
     val userProfileState = LocalUserProfileState.current
@@ -60,7 +60,12 @@ fun UserProfileView(modifier: Modifier = Modifier) {
     NavDisplay(
       modifier = modifier,
       backStack = backStack,
-      onBack = { backStack.removeLastOrNull() },
+      onBack = {
+        val popped = backStack.removeLastOrNull()
+        if (popped == null) {
+          onDismiss()
+        }
+      },
       transitionSpec = {
         val spec = tween<IntOffset>(durationMillis = 300)
         slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith

@@ -2,33 +2,21 @@
 
 package com.clerk.ui.userbutton
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -37,97 +25,63 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.clerk.api.Clerk
+import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.auth.LocalTelemetryCollector
+import com.clerk.ui.auth.TelemetryProvider
 import com.clerk.ui.core.dimens.dp36
 
 /**
- * A circular avatar button that shows only when [user] is non-null. Tapping opens a sheet with
- * [UserProfileSheetContent].
+ * A circular button that displays the current user's avatar. The button is only visible when a user
+ * is signed in. Tapping it triggers the `onClick` lambda, which is typically used to open a user
+ * profile management interface.
+ *
+ * If the user has an image URL, it will be displayed. Otherwise, a default profile icon is shown.
+ *
+ * @param modifier The [Modifier] to be applied to the component.
+ * @param size The size of the circular button. Defaults to `36.dp`.
+ * @param onClick The lambda to be executed when the button is tapped.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserButton(
-  modifier: Modifier = Modifier,
-  size: Dp = dp36,
-  onViewDidAppearOnce: (() -> Unit)? = null,
-  onProfileOpened: (() -> Unit)? = null,
-  profileContent: @Composable () -> Unit = { DefaultUserProfileSheetContent() },
-  placeholderIconRes: Int? = null,
-) {
-  var sheetOpen by remember { mutableStateOf(false) }
-  val currentOnAppear by rememberUpdatedState(onViewDidAppearOnce)
-  val currentOnOpened by rememberUpdatedState(onProfileOpened)
+fun UserButton(modifier: Modifier = Modifier, size: Dp = dp36, onClick: () -> Unit) {
 
-  LaunchedEffect(Unit) { currentOnAppear?.invoke() }
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  TelemetryProvider {
+    val telemetryCollector = LocalTelemetryCollector.current
+    val user by Clerk.userFlow.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-  LaunchedEffect(user?.id) { if (user == null) sheetOpen = false }
+    LaunchedEffect(Unit) { telemetryCollector.record(TelemetryEvents.viewDidAppear("UserButton")) }
 
-  if (user != null) {
-    IconButton(
-      onClick = {
-        sheetOpen = true
-        currentOnOpened?.invoke()
-      }
-    ) {
-      Box(
-        modifier =
-          modifier.size(size).clip(CircleShape).semantics {
-            contentDescription = "Open user profile"
-          },
-        contentAlignment = Alignment.Center,
-      ) {
-        val model =
-          ImageRequest.Builder(LocalContext.current).data(user?.imageUrl).crossfade(true).build()
+    if (user != null) {
+      IconButton(onClick = { onClick() }) {
+        Box(
+          modifier =
+            modifier.size(size).clip(CircleShape).semantics {
+              contentDescription = context.getString(R.string.open_user_profile)
+            },
+          contentAlignment = Alignment.Center,
+        ) {
+          val model =
+            ImageRequest.Builder(LocalContext.current).data(user?.imageUrl).crossfade(true).build()
 
-        AsyncImage(
-          modifier = Modifier.matchParentSize().clip(CircleShape),
-          model = model,
-          contentDescription = "User avatar",
-          contentScale = ContentScale.Crop,
-          onError = { /* fall through to placeholder below */ },
-        )
-
-        if (user?.imageUrl?.isBlank() == true && placeholderIconRes != null) {
-          Icon(
-            painter = painterResource(id = R.drawable.ic_profile),
-            contentDescription = null,
-            modifier = Modifier.matchParentSize(),
+          AsyncImage(
+            modifier = Modifier.matchParentSize().clip(CircleShape),
+            model = model,
+            contentDescription = stringResource(R.string.user_avatar),
+            contentScale = ContentScale.Crop,
+            fallback = painterResource(id = R.drawable.ic_profile),
+            onError = { /* fall through to placeholder below */ },
           )
+
+          if (user?.imageUrl?.isBlank() == true) {
+            Icon(
+              painter = painterResource(id = R.drawable.ic_profile),
+              contentDescription = null,
+              modifier = Modifier.matchParentSize(),
+            )
+          }
         }
       }
     }
-  }
-
-  if (sheetOpen) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    UserProfileSheet(
-      sheetState = sheetState,
-      onDismiss = { sheetOpen = false },
-      content = profileContent,
-    )
-  }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun UserProfileSheet(
-  sheetState: SheetState,
-  onDismiss: () -> Unit,
-  content: @Composable () -> Unit,
-) {
-  ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) { content() }
-}
-
-/** Replace with your real profile UI */
-@Composable
-private fun DefaultUserProfileSheetContent() {
-  Surface {
-    Text(
-      modifier = Modifier.background(MaterialTheme.colorScheme.surface).padding(dp24),
-      text = "User Profile",
-      style = MaterialTheme.typography.titleLarge,
-    )
   }
 }
