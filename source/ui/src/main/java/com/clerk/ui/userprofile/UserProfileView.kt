@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -52,7 +53,6 @@ internal fun UserProfileStateProvider(
 fun UserProfileView(modifier: Modifier = Modifier, onDismiss: () -> Unit) {
   val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
   UserProfileStateProvider(backStack) {
-    val userProfileState = LocalUserProfileState.current
     val telemetry = LocalTelemetryCollector.current
 
     LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
@@ -61,9 +61,10 @@ fun UserProfileView(modifier: Modifier = Modifier, onDismiss: () -> Unit) {
       modifier = modifier,
       backStack = backStack,
       onBack = {
-        val popped = backStack.removeLastOrNull()
-        if (popped == null) {
+        if (backStack.size == 1) {
           onDismiss()
+        } else {
+          backStack.removeLastOrNull()
         }
       },
       transitionSpec = {
@@ -81,36 +82,46 @@ fun UserProfileView(modifier: Modifier = Modifier, onDismiss: () -> Unit) {
         slideInHorizontally(initialOffsetX = { -distance }) togetherWith
           slideOutHorizontally(targetOffsetX = { distance })
       },
-      entryProvider =
-        entryProvider {
-          entry<UserProfileDestination.UserProfileAccount> {
-            UserProfileAccountView(
-              onClick = {
-                when (it) {
-                  UserProfileAction.Profile ->
-                    backStack.add(UserProfileDestination.UserProfileDetail)
-                  UserProfileAction.Security ->
-                    backStack.add(UserProfileDestination.UserProfileSecurity)
-                }
-              },
-              onBackPressed = { userProfileState.navigateBack() },
-              onClickEdit = { backStack.add(UserProfileDestination.UserProfileUpdate) },
-            )
-          }
-          entry<UserProfileDestination.UserProfileSecurity> { UserProfileSecurityView() }
-
-          entry<UserProfileDestination.UserProfileUpdate> { UserProfileUpdateProfileView() }
-
-          entry<UserProfileDestination.RenamePasskeyView> { key ->
-            UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
-          }
-
-          entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
-
-          entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
-        },
+      entryProvider = entryProvider { UserProfileEntries(backStack, onDismiss) },
     )
   }
+}
+
+@Composable
+private fun EntryProviderScope<NavKey>.UserProfileEntries(
+  backStack: NavBackStack<NavKey>,
+  onDismiss: () -> Unit,
+) {
+  entry<UserProfileDestination.UserProfileAccount> {
+    UserProfileAccountView(
+      onClick = {
+        when (it) {
+          UserProfileAction.Profile -> backStack.add(UserProfileDestination.UserProfileDetail)
+
+          UserProfileAction.Security -> backStack.add(UserProfileDestination.UserProfileSecurity)
+        }
+      },
+      onBackPressed = {
+        if (backStack.size == 1) {
+          onDismiss()
+        } else {
+          backStack.removeLastOrNull()
+        }
+      },
+      onClickEdit = { backStack.add(UserProfileDestination.UserProfileUpdate) },
+    )
+  }
+  entry<UserProfileDestination.UserProfileSecurity> { UserProfileSecurityView() }
+
+  entry<UserProfileDestination.UserProfileUpdate> { UserProfileUpdateProfileView() }
+
+  entry<UserProfileDestination.RenamePasskeyView> { key ->
+    UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
+  }
+
+  entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
+
+  entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
 }
 
 internal object UserProfileDestination {

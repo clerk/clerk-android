@@ -1,5 +1,3 @@
-@file:Suppress("UnusedImport")
-
 package com.clerk.ui.userbutton
 
 import androidx.compose.foundation.layout.Box
@@ -10,6 +8,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
@@ -30,30 +33,30 @@ import com.clerk.ui.R
 import com.clerk.ui.auth.LocalTelemetryCollector
 import com.clerk.ui.auth.TelemetryProvider
 import com.clerk.ui.core.dimens.dp36
+import com.clerk.ui.userprofile.UserProfileView
 
 /**
- * A circular button that displays the current user's avatar. The button is only visible when a user
- * is signed in. Tapping it triggers the `onClick` lambda, which is typically used to open a user
- * profile management interface.
+ * Self-contained avatar button + user profile flow.
  *
- * If the user has an image URL, it will be displayed. Otherwise, a default profile icon is shown.
- *
- * @param modifier The [Modifier] to be applied to the component.
- * @param size The size of the circular button. Defaults to `36.dp`.
- * @param onClick The lambda to be executed when the button is tapped.
+ * Drop this into a TopAppBar actions slot; on tap it will open the full user profile UI in a
+ * full-screen dialog and close itself when done.
  */
 @Composable
-fun UserButton(modifier: Modifier = Modifier, size: Dp = dp36, onClick: () -> Unit) {
-
+fun UserButton(modifier: Modifier = Modifier, size: Dp = dp36) {
   TelemetryProvider {
-    val telemetryCollector = LocalTelemetryCollector.current
     val user by Clerk.userFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val telemetry = LocalTelemetryCollector.current
 
-    LaunchedEffect(Unit) { telemetryCollector.record(TelemetryEvents.viewDidAppear("UserButton")) }
+    var showProfile by rememberSaveable { mutableStateOf(false) }
 
+    LaunchedEffect(user?.id) {
+      if (user != null) {
+        telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
+      }
+    }
     if (user != null) {
-      IconButton(onClick = { onClick() }) {
+      IconButton(onClick = { showProfile = true }) {
         Box(
           modifier =
             modifier.size(size).clip(CircleShape).semantics {
@@ -80,6 +83,16 @@ fun UserButton(modifier: Modifier = Modifier, size: Dp = dp36, onClick: () -> Un
               modifier = Modifier.matchParentSize(),
             )
           }
+        }
+      }
+
+      if (showProfile) {
+        Dialog(
+          onDismissRequest = { showProfile = false },
+          properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+          // Full-screen profile view
+          UserProfileView(modifier = Modifier, onDismiss = { showProfile = false })
         }
       }
     }
