@@ -80,7 +80,7 @@ internal object StorageHelper {
   }
 }
 
-internal enum class StorageKey(val key: String) {
-  DEVICE_TOKEN("device_token"),
-  DEVICE_ID("device_id"),
+internal enum class StorageKey {
+  DEVICE_TOKEN,
+  DEVICE_ID,
 }
