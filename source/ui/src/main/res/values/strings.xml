@@ -174,4 +174,6 @@
     <string name="remove_connection">Remove connection</string>
     <string name="reconnect">Reconnect</string>
     <string name="edit_avatar">Edit avatar</string>
+    <string name="user_avatar">User avatar</string>
+    <string name="open_user_profile">Open user profile</string>
 </resources>

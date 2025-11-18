@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -69,22 +70,11 @@ internal fun AuthStateProvider(backStack: NavBackStack<NavKey>, content: @Compos
 }
 
 @Composable
-fun AuthView(
-  modifier: Modifier = Modifier,
-  telemetryCollector: TelemetryCollector? = rememberTelemetryCollector(),
-  onAuthComplete: () -> Unit = {},
-) {
+fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
   val backStack = rememberNavBackStack(AuthDestination.AuthStart)
   AuthStateProvider(backStack = backStack) {
     val authState = LocalAuthState.current
-    LaunchedEffect(Unit) {
-      telemetryCollector?.record(
-        TelemetryEvents.viewDidAppear(
-          viewName = "AuthView",
-          payload = telemetryPayload("mode" to authState.mode.name),
-        )
-      )
-    }
+    TrackScreenLoaded(authState.mode.name)
     NavDisplay(
       modifier = modifier,
       backStack = backStack,
@@ -103,49 +93,73 @@ fun AuthView(
         slideInHorizontally(initialOffsetX = { -distance }) togetherWith
           slideOutHorizontally(targetOffsetX = { distance })
       },
-      onBack = { backStack.removeLastOrNull() },
-      entryProvider =
-        entryProvider {
-          entry<AuthDestination.AuthStart> { AuthStartView(onAuthComplete = onAuthComplete) }
-          entry<AuthDestination.SignInFactorOne> { key ->
-            SignInFactorOneView(factor = key.factor, onAuthComplete = onAuthComplete)
-          }
-          entry<AuthDestination.SignInFactorOneUseAnotherMethod> { key ->
-            SignInFactorAlternativeMethodsView(
-              currentFactor = key.currentFactor,
-              onAuthComplete = onAuthComplete,
-            )
-          }
-          entry<AuthDestination.SignInFactorTwo> { key ->
-            SignInFactorTwoView(factor = key.factor, onAuthComplete = onAuthComplete)
-          }
-          entry<AuthDestination.SignInFactorTwoUseAnotherMethod> { key ->
-            SignInFactorAlternativeMethodsView(
-              currentFactor = key.currentFactor,
-              isSecondFactor = true,
-              onAuthComplete = onAuthComplete,
-            )
-          }
-          entry<AuthDestination.SignInForgotPassword> {
-            SignInFactorOneForgotPasswordView(
-              onClickFactor = { backStack.removeLastOrNull() },
-              onAuthComplete = onAuthComplete,
-            )
-          }
-          entry<AuthDestination.SignInSetNewPassword> {
-            SignInSetNewPasswordView(onAuthComplete = onAuthComplete)
-          }
-          entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
-          entry<AuthDestination.SignUpCollectField> { key ->
-            SignUpCollectFieldView(field = key.field, onAuthComplete = onAuthComplete)
-          }
-          entry<AuthDestination.SignUpCode> { key ->
-            SignUpCodeView(field = key.field, onAuthComplete = onAuthComplete)
-          }
-          entry<AuthDestination.SignUpCompleteProfile> {
-            SignUpCompleteProfileView(onAuthComplete = onAuthComplete)
-          }
-        },
+      onBack = {
+        if (backStack.size > 1) {
+          backStack.removeLastOrNull()
+        } else {
+          onAuthComplete()
+        }
+      },
+      entryProvider = entryProvider { AuthViewEntries(onAuthComplete, backStack) },
+    )
+  }
+}
+
+@Composable
+private fun EntryProviderScope<NavKey>.AuthViewEntries(
+  onAuthComplete: () -> Unit,
+  backStack: NavBackStack<NavKey>,
+) {
+  entry<AuthDestination.AuthStart> { AuthStartView(onAuthComplete = onAuthComplete) }
+  entry<AuthDestination.SignInFactorOne> { key ->
+    SignInFactorOneView(factor = key.factor, onAuthComplete = onAuthComplete)
+  }
+  entry<AuthDestination.SignInFactorOneUseAnotherMethod> { key ->
+    SignInFactorAlternativeMethodsView(
+      currentFactor = key.currentFactor,
+      onAuthComplete = onAuthComplete,
+    )
+  }
+  entry<AuthDestination.SignInFactorTwo> { key ->
+    SignInFactorTwoView(factor = key.factor, onAuthComplete = onAuthComplete)
+  }
+  entry<AuthDestination.SignInFactorTwoUseAnotherMethod> { key ->
+    SignInFactorAlternativeMethodsView(
+      currentFactor = key.currentFactor,
+      isSecondFactor = true,
+      onAuthComplete = onAuthComplete,
+    )
+  }
+  entry<AuthDestination.SignInForgotPassword> {
+    SignInFactorOneForgotPasswordView(
+      onClickFactor = { backStack.removeLastOrNull() },
+      onAuthComplete = onAuthComplete,
+    )
+  }
+  entry<AuthDestination.SignInSetNewPassword> {
+    SignInSetNewPasswordView(onAuthComplete = onAuthComplete)
+  }
+  entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
+  entry<AuthDestination.SignUpCollectField> { key ->
+    SignUpCollectFieldView(field = key.field, onAuthComplete = onAuthComplete)
+  }
+  entry<AuthDestination.SignUpCode> { key ->
+    SignUpCodeView(field = key.field, onAuthComplete = onAuthComplete)
+  }
+  entry<AuthDestination.SignUpCompleteProfile> {
+    SignUpCompleteProfileView(onAuthComplete = onAuthComplete)
+  }
+}
+
+@Composable
+private fun TrackScreenLoaded(mode: String) {
+  val telemetryCollector = LocalTelemetryCollector.current
+  LaunchedEffect(Unit) {
+    telemetryCollector.record(
+      TelemetryEvents.viewDidAppear(
+        viewName = "AuthView",
+        payload = telemetryPayload("mode" to mode),
+      )
     )
   }
 }
@@ -153,7 +167,7 @@ fun AuthView(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  AuthView(telemetryCollector = null)
+  AuthView()
 }
 
 internal object AuthDestination {
