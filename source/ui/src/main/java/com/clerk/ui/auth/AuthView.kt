@@ -1,6 +1,7 @@
 package com.clerk.ui.auth
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -14,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
-import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -70,7 +70,7 @@ internal fun AuthStateProvider(backStack: NavBackStack<NavKey>, content: @Compos
 }
 
 @Composable
-fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
+fun AuthView(modifier: Modifier = Modifier) {
   val backStack = rememberNavBackStack(AuthDestination.AuthStart)
   AuthStateProvider(backStack = backStack) {
     val authState = LocalAuthState.current
@@ -83,72 +83,65 @@ fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
         slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
           slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
       },
-      popTransitionSpec = {
-        val spec = tween<IntOffset>(durationMillis = 300)
-        slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-          slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-      },
-      predictivePopTransitionSpec = { distance ->
-        // Use the provided distance to align with the system back gesture
-        slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-          slideOutHorizontally(targetOffsetX = { distance })
-      },
+      popTransitionSpec = { exitTransition() },
+      predictivePopTransitionSpec = { distance -> exitTransition(distance = distance) },
       onBack = {
         if (backStack.size > 1) {
           backStack.removeLastOrNull()
-        } else {
-          onAuthComplete()
         }
       },
-      entryProvider = entryProvider { AuthViewEntries(onAuthComplete, backStack) },
+      entryProvider =
+        entryProvider {
+          entry<AuthDestination.AuthStart> { AuthStartView(onAuthComplete = { backStack.clear() }) }
+          entry<AuthDestination.SignInFactorOne> { key ->
+            SignInFactorOneView(factor = key.factor, onAuthComplete = { backStack.clear() })
+          }
+          entry<AuthDestination.SignInFactorOneUseAnotherMethod> { key ->
+            SignInFactorAlternativeMethodsView(
+              currentFactor = key.currentFactor,
+              onAuthComplete = { backStack.clear() },
+            )
+          }
+          entry<AuthDestination.SignInFactorTwo> { key ->
+            SignInFactorTwoView(factor = key.factor, onAuthComplete = { backStack.clear() })
+          }
+          entry<AuthDestination.SignInFactorTwoUseAnotherMethod> { key ->
+            SignInFactorAlternativeMethodsView(
+              currentFactor = key.currentFactor,
+              isSecondFactor = true,
+              onAuthComplete = { backStack.clear() },
+            )
+          }
+          entry<AuthDestination.SignInForgotPassword> {
+            SignInFactorOneForgotPasswordView(
+              onClickFactor = { backStack.removeLastOrNull() },
+              onAuthComplete = { backStack.clear() },
+            )
+          }
+          entry<AuthDestination.SignInSetNewPassword> {
+            SignInSetNewPasswordView(onAuthComplete = { backStack.clear() })
+          }
+          entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
+          entry<AuthDestination.SignUpCollectField> { key ->
+            SignUpCollectFieldView(field = key.field, onAuthComplete = { backStack.clear() })
+          }
+          entry<AuthDestination.SignUpCode> { key ->
+            SignUpCodeView(field = key.field, onAuthComplete = { backStack.clear() })
+          }
+          entry<AuthDestination.SignUpCompleteProfile> {
+            SignUpCompleteProfileView(onAuthComplete = { backStack.clear() })
+          }
+        },
     )
   }
 }
 
-@Composable
-private fun EntryProviderScope<NavKey>.AuthViewEntries(
-  onAuthComplete: () -> Unit,
-  backStack: NavBackStack<NavKey>,
-) {
-  entry<AuthDestination.AuthStart> { AuthStartView(onAuthComplete = onAuthComplete) }
-  entry<AuthDestination.SignInFactorOne> { key ->
-    SignInFactorOneView(factor = key.factor, onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignInFactorOneUseAnotherMethod> { key ->
-    SignInFactorAlternativeMethodsView(
-      currentFactor = key.currentFactor,
-      onAuthComplete = onAuthComplete,
-    )
-  }
-  entry<AuthDestination.SignInFactorTwo> { key ->
-    SignInFactorTwoView(factor = key.factor, onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignInFactorTwoUseAnotherMethod> { key ->
-    SignInFactorAlternativeMethodsView(
-      currentFactor = key.currentFactor,
-      isSecondFactor = true,
-      onAuthComplete = onAuthComplete,
-    )
-  }
-  entry<AuthDestination.SignInForgotPassword> {
-    SignInFactorOneForgotPasswordView(
-      onClickFactor = { backStack.removeLastOrNull() },
-      onAuthComplete = onAuthComplete,
-    )
-  }
-  entry<AuthDestination.SignInSetNewPassword> {
-    SignInSetNewPasswordView(onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
-  entry<AuthDestination.SignUpCollectField> { key ->
-    SignUpCollectFieldView(field = key.field, onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignUpCode> { key ->
-    SignUpCodeView(field = key.field, onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignUpCompleteProfile> {
-    SignUpCompleteProfileView(onAuthComplete = onAuthComplete)
-  }
+private fun exitTransition(distance: Int? = null): ContentTransform {
+  val spec = tween<IntOffset>(durationMillis = 300)
+  return slideInHorizontally(
+    animationSpec = spec,
+    initialOffsetX = { distance ?: -it },
+  ) togetherWith slideOutHorizontally(animationSpec = spec, targetOffsetX = { distance ?: it })
 }
 
 @Composable
