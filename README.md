@@ -93,6 +93,26 @@ class YourApplication : Application() {
 }
 ```
 
+### Customize Clerk typography
+
+Starting from the Clerk defaults makes it easy to override just the text styles you need. Use
+`ClerkTypographyDefaults` to access the baseline `TextStyle`s or to create a full `ClerkTypography`
+instance via a builder:
+
+```kotlin
+val customTypography =
+    ClerkTypographyDefaults.typography {
+        displaySmall = displaySmall.copy(fontWeight = FontWeight.SemiBold)
+        titleSmall = titleSmall.copy(letterSpacing = 0.sp)
+    }
+
+Clerk.initialize(
+    context = this,
+    publishableKey = "pk_test_...",
+    theme = ClerkTheme(typography = customTypography),
+)
+```
+
 ## Samples
 
 #### Quickstart

@@ -20,6 +20,9 @@ import androidx.compose.ui.text.TextStyle
  * - bodyLarge, bodyMedium, bodySmall
  * - labelLarge, labelMedium, labelSmall
  *
+ * Use [ClerkTypographyDefaults] when you need to start from Clerk's baseline styles and override
+ * only a subset.
+ *
  * Notes:
  * - Size is expressed as a floating-point number (commonly interpreted as points by consumers); UI
  *   layers should convert to the appropriate unit (e.g., sp) during mapping.
