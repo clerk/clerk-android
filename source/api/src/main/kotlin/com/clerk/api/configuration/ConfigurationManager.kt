@@ -83,13 +83,6 @@ internal class ConfigurationManager {
   /** Internal mutable state flow for device attestation status. */
   private val _isDeviceAttested = MutableStateFlow(false)
 
-  /**
-   * The publishable key from Clerk Dashboard used for API authentication.
-   *
-   * This key determines the API base URL and connects the app to the correct Clerk instance.
-   */
-  internal lateinit var publishableKey: String
-
   /** Flag to track if configuration has been started to prevent duplicate initialization. */
   private var hasConfigured = false
 
@@ -143,7 +136,7 @@ internal class ConfigurationManager {
 
     try {
       this.context = WeakReference(context.applicationContext)
-      this.publishableKey = publishableKey
+      Clerk.publishableKey = publishableKey
       LocaleProvider.initialize()
 
       val baseUrl =
@@ -276,50 +269,19 @@ internal class ConfigurationManager {
           val clientResult = clientDeferred.await()
           val environmentResult = environmentDeferred.await()
 
-          // Handle results independently
-          handleClientResult(clientResult)
-          handleEnvironmentResult(environmentResult)
-
-          // Update Clerk state if both operations succeeded
-          if (clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success) {
-            // Update state immediately
-            updateClerkState(clientResult.value, environmentResult.value)
-            _isInitialized.value = true
-
-            // Launch dependent operations concurrently
-            launch {
-              // Start token refresh as soon as client is available
-              if (Clerk.session != null) {
-                startTokenRefresh()
-              }
-            }
-
-            // Launch device attestation independently - don't block anything
-            launch {
-              launchDeviceAttestationInBackground(
-                applicationContext = context.applicationContext,
-                cloudProjectNumber = options?.deviceAttestationOptions?.cloudProjectNumber,
-                applicationId = options?.deviceAttestationOptions?.applicationId,
-                clientId = clientResult.value.id!!,
-                environment = environmentResult.value,
-              )
-            }
-
-            if (Clerk.debugMode) {
-              ClerkLog.d("Client and environment refresh completed successfully")
-            }
-          } else {
-            ClerkLog.e(
-              "Failed to refresh client and environment -" +
-                " client: ${clientResult.javaClass.simpleName}," +
-                " environment: ${environmentResult.javaClass.simpleName}"
-            )
-            _isInitialized.value = false
-          }
+          handleRefreshResults(
+            clientResult = clientResult,
+            environmentResult = environmentResult,
+            appContext = context.applicationContext,
+            options = options,
+          )
         }
       } catch (e: Exception) {
         ClerkLog.e("Exception during client and environment refresh: ${e.message}")
-        _isInitialized.value = false
+        // Use last-known values if available; otherwise keep uninitialized state
+        if (!_isInitialized.value) {
+          _isInitialized.value = hasAnyDataLoaded
+        }
       }
     }
   }
@@ -498,6 +460,64 @@ internal class ConfigurationManager {
     }
   }
 
+  private fun handleRefreshResults(
+    clientResult: ClerkResult<Client, *>,
+    environmentResult: ClerkResult<Environment, *>,
+    appContext: Context,
+    options: ClerkConfigurationOptions?,
+  ) {
+    // Log results
+    handleClientResult(clientResult)
+    handleEnvironmentResult(environmentResult)
+
+    // Update any available state immediately to allow degraded but usable UI
+    if (clientResult is ClerkResult.Success) {
+      Clerk.updateClient(clientResult.value)
+      hasAnyDataLoaded = true
+    }
+    if (environmentResult is ClerkResult.Success) {
+      Clerk.updateEnvironment(environmentResult.value)
+      hasAnyDataLoaded = true
+    }
+
+    // Mark initialization complete only if we have any usable data (either newly fetched
+    // or previously initialized) to avoid blank screens while still allowing last-known
+    // values to be used.
+    _isInitialized.value = hasAnyDataLoaded
+
+    // Launch dependent operations concurrently, only when inputs are available
+    scope.launch {
+      if (Clerk.session != null) {
+        startTokenRefresh()
+      }
+    }
+
+    if (clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success) {
+      // Launch device attestation only when both client and environment are present
+      scope.launch {
+        launchDeviceAttestationInBackground(
+          applicationContext = appContext,
+          cloudProjectNumber = options?.deviceAttestationOptions?.cloudProjectNumber,
+          applicationId = options?.deviceAttestationOptions?.applicationId,
+          clientId = clientResult.value.id!!,
+          environment = environmentResult.value,
+        )
+      }
+      if (Clerk.debugMode) {
+        ClerkLog.d("Client and environment refresh completed successfully")
+      }
+    } else {
+      ClerkLog.e(
+        "Partial or failed refresh - client: ${clientResult.javaClass.simpleName}, " +
+          "environment: ${environmentResult.javaClass.simpleName}. " +
+          "Proceeding with degraded mode."
+      )
+    }
+  }
+
+  /** Tracks whether any client or environment data has ever been loaded in this process. */
+  private var hasAnyDataLoaded: Boolean = false
+
   /** Logs API errors with appropriate detail based on error type. */
   private fun logApiError(
     operation: String,
@@ -508,20 +528,6 @@ internal class ConfigurationManager {
       ClerkResult.Failure.ErrorType.API -> ClerkLog.e("$operation API error: $error")
       ClerkResult.Failure.ErrorType.HTTP -> ClerkLog.e("$operation HTTP error: $error")
       ClerkResult.Failure.ErrorType.UNKNOWN -> ClerkLog.e("$operation unknown error: $error")
-    }
-  }
-
-  /**
-   * Updates the Clerk singleton state with successfully loaded data.
-   *
-   * This method is called only when both client and environment data have been loaded successfully.
-   */
-  private fun updateClerkState(client: Client, environment: Environment) {
-    Clerk.updateClient(client)
-    Clerk.updateEnvironment(environment)
-
-    if (Clerk.debugMode) {
-      ClerkLog.d("Clerk state updated - Client ID: ${client.id}, Sessions: ${client.sessions.size}")
     }
   }
 }

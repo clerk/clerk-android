@@ -33,9 +33,9 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     val response = chain.proceed(chain.request())
 
     // Only process JSON responses
-    if (response.isSuccessful && response.body?.contentType()?.subtype == "json") {
-      val responseBody = response.body?.string()
-      responseBody?.let {
+    if (response.isSuccessful && response.body.contentType()?.subtype == "json") {
+      val responseBody = response.body.string()
+      responseBody.let {
         try {
           // Parse the response to extract client if present
           val jsonElement = json.parseToJsonElement(it)
@@ -50,7 +50,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
           }
 
           // Return the original response with its body
-          val newBody = it.toResponseBody(response.body?.contentType())
+          val newBody = it.toResponseBody(response.body.contentType())
           return response.newBuilder().body(newBody).build()
         } catch (e: SerializationException) {
           ClerkLog.e("Error deserializing client: ${e.message}")
