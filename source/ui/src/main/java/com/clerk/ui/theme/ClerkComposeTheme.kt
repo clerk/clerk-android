@@ -48,6 +48,16 @@ internal val LocalComputedColors =
 internal val LocalClerkDesign =
   compositionLocalOf<ClerkDesign> { error("ClerkDesign not provided") }
 
+internal val LocalClerkThemeOverride = compositionLocalOf<ClerkTheme?> { null }
+
+@Composable
+internal fun ClerkThemeOverrideProvider(
+  clerkTheme: ClerkTheme?,
+  content: @Composable () -> Unit,
+) {
+  CompositionLocalProvider(LocalClerkThemeOverride provides clerkTheme, content = content)
+}
+
 /**
  * Clerk Theming refers to the customization of your Clerk components to better reflect your
  * product's brand.
@@ -94,16 +104,19 @@ internal val LocalClerkDesign =
  * This theme provider automatically configures Material3's [MaterialTheme] with colors derived from
  * your Clerk theme, ensuring seamless integration between Clerk and Material components.
  *
- * @param clerkTheme The Clerk theme to apply. If null, uses the globally configured theme from
- *   [Clerk.customTheme] or system defaults.
+ * @param clerkTheme The Clerk theme to apply. If null, uses any provided override or the globally
+ *   configured theme from [Clerk.customTheme].
  * @param content The composable content that will have access to the themed values.
  */
 @Composable
 internal fun ClerkMaterialTheme(
-  clerkTheme: ClerkTheme? = Clerk.customTheme,
+  clerkTheme: ClerkTheme? = null,
   content: @Composable () -> Unit,
 ) {
-  ClerkThemeProvider(theme = clerkTheme) {
+  val overrideTheme = LocalClerkThemeOverride.current
+  val resolvedTheme = clerkTheme ?: overrideTheme ?: Clerk.customTheme
+
+  ClerkThemeProvider(theme = resolvedTheme) {
     val colors = ClerkThemeProviderAccess.colors
     val design = ClerkThemeProviderAccess.design
 

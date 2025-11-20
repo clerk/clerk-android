@@ -89,7 +89,7 @@ fun ClerkTextField(
 
   LaunchedEffect(isFocused) { onFocusChange(isFocused) }
 
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val textFieldColors = getTextFieldColors()
 
     val labelStyle =

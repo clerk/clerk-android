@@ -36,6 +36,7 @@ import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.util.TextIconHelper
 import kotlinx.collections.immutable.ImmutableList
@@ -53,17 +54,20 @@ import kotlinx.collections.immutable.toImmutableList
 fun SignInFactorOneForgotPasswordView(
   onClickFactor: (Factor) -> Unit,
   modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
-  val socialProviders = Clerk.socialProviders
-  val alternativeFactors = Clerk.signIn?.alternativeFirstFactors()
-  SignInFactorOneForgotPasswordViewImpl(
-    socialProviders = socialProviders.toOAuthProvidersList().toImmutableList(),
-    modifier = modifier,
-    alternativeFactors = alternativeFactors.orEmpty().toImmutableList(),
-    onClickFactor = onClickFactor,
-    onAuthComplete = onAuthComplete,
-  )
+  ClerkThemeOverrideProvider(clerkTheme) {
+    val socialProviders = Clerk.socialProviders
+    val alternativeFactors = Clerk.signIn?.alternativeFirstFactors()
+    SignInFactorOneForgotPasswordViewImpl(
+      socialProviders = socialProviders.toOAuthProvidersList().toImmutableList(),
+      modifier = modifier,
+      alternativeFactors = alternativeFactors.orEmpty().toImmutableList(),
+      onClickFactor = onClickFactor,
+      onAuthComplete = onAuthComplete,
+    )
+  }
 }
 
 /**

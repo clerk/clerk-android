@@ -41,8 +41,7 @@ fun ClerkSocialRow(
   clerkTheme: ClerkTheme? = null,
   onClick: (OAuthProvider) -> Unit = {},
 ) {
-  val isSingleProvider = providers.size == 1
-  val effectiveTheme = clerkTheme ?: Clerk.customTheme
+    val isSingleProvider = providers.size == 1
 
   Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp8)) {
     val chunks = providers.chunked(MAX_BUTTONS_PER_ROW)
@@ -56,7 +55,7 @@ fun ClerkSocialRow(
           onClick = onClick,
           forceIconOnly = false,
           modifier = Modifier.fillMaxWidth(),
-          clerkTheme = effectiveTheme,
+            clerkTheme = clerkTheme,
         )
       }
       return@Column
@@ -92,7 +91,7 @@ fun ClerkSocialRow(
                 onClick = onClick,
                 forceIconOnly = true,
                 modifier = Modifier.fillMaxWidth(),
-                clerkTheme = effectiveTheme,
+                  clerkTheme = clerkTheme,
               )
             }
           }

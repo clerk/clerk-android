@@ -18,6 +18,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.auth.LocalTelemetryCollector
 import com.clerk.ui.auth.TelemetryProvider
@@ -31,6 +32,7 @@ import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRename
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
 import com.clerk.ui.userprofile.verify.Mode
 import com.clerk.ui.userprofile.verify.UserProfileVerifyView
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.serialization.Serializable
 
 @SuppressLint("ComposeCompositionLocalUsage")
@@ -50,40 +52,42 @@ internal fun UserProfileStateProvider(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun UserProfileView(modifier: Modifier = Modifier, onDismiss: () -> Unit) {
-  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
-  UserProfileStateProvider(backStack) {
-    val telemetry = LocalTelemetryCollector.current
+fun UserProfileView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null, onDismiss: () -> Unit) {
+  ClerkThemeOverrideProvider(clerkTheme) {
+    val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
+    UserProfileStateProvider(backStack) {
+      val telemetry = LocalTelemetryCollector.current
 
-    LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
+      LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
 
-    NavDisplay(
-      modifier = modifier,
-      backStack = backStack,
-      onBack = {
-        if (backStack.size == 1) {
-          onDismiss()
-        } else {
-          backStack.removeLastOrNull()
-        }
-      },
-      transitionSpec = {
-        val spec = tween<IntOffset>(durationMillis = 300)
-        slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-          slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-      },
-      popTransitionSpec = {
-        val spec = tween<IntOffset>(durationMillis = 300)
-        slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-          slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-      },
-      predictivePopTransitionSpec = { distance ->
-        // Use the provided distance to align with the system back gesture
-        slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-          slideOutHorizontally(targetOffsetX = { distance })
-      },
-      entryProvider = entryProvider { UserProfileEntries(backStack, onDismiss) },
-    )
+      NavDisplay(
+        modifier = modifier,
+        backStack = backStack,
+        onBack = {
+          if (backStack.size == 1) {
+            onDismiss()
+          } else {
+            backStack.removeLastOrNull()
+          }
+        },
+        transitionSpec = {
+          val spec = tween<IntOffset>(durationMillis = 300)
+          slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+            slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+        },
+        popTransitionSpec = {
+          val spec = tween<IntOffset>(durationMillis = 300)
+          slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+            slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+        },
+        predictivePopTransitionSpec = { distance ->
+          // Use the provided distance to align with the system back gesture
+          slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+            slideOutHorizontally(targetOffsetX = { distance })
+        },
+        entryProvider = entryProvider { UserProfileEntries(backStack, onDismiss) },
+      )
+    }
   }
 }
 

@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.ClerkTelemetryEnvironment
 import com.clerk.telemetry.TelemetryCollector
 import com.clerk.telemetry.TelemetryEvents
@@ -37,6 +38,7 @@ import com.clerk.ui.signup.code.SignUpCodeView
 import com.clerk.ui.signup.collectfield.CollectField
 import com.clerk.ui.signup.collectfield.SignUpCollectFieldView
 import com.clerk.ui.signup.completeprofile.SignUpCompleteProfileView
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.serialization.Serializable
 
 @SuppressLint("ComposeCompositionLocalUsage")
@@ -70,38 +72,44 @@ internal fun AuthStateProvider(backStack: NavBackStack<NavKey>, content: @Compos
 }
 
 @Composable
-fun AuthView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit = {}) {
-  val backStack = rememberNavBackStack(AuthDestination.AuthStart)
-  AuthStateProvider(backStack = backStack) {
-    val authState = LocalAuthState.current
-    TrackScreenLoaded(authState.mode.name)
-    NavDisplay(
-      modifier = modifier,
-      backStack = backStack,
-      transitionSpec = {
-        val spec = tween<IntOffset>(durationMillis = 300)
-        slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-          slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-      },
-      popTransitionSpec = {
-        val spec = tween<IntOffset>(durationMillis = 300)
-        slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-          slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-      },
-      predictivePopTransitionSpec = { distance ->
-        // Use the provided distance to align with the system back gesture
-        slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-          slideOutHorizontally(targetOffsetX = { distance })
-      },
-      onBack = {
-        if (backStack.size > 1) {
-          backStack.removeLastOrNull()
-        } else {
-          onAuthComplete()
-        }
-      },
-      entryProvider = entryProvider { AuthViewEntries(onAuthComplete, backStack) },
-    )
+fun AuthView(
+  modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
+  onAuthComplete: () -> Unit = {},
+) {
+  ClerkThemeOverrideProvider(clerkTheme) {
+    val backStack = rememberNavBackStack(AuthDestination.AuthStart)
+    AuthStateProvider(backStack = backStack) {
+      val authState = LocalAuthState.current
+      TrackScreenLoaded(authState.mode.name)
+      NavDisplay(
+        modifier = modifier,
+        backStack = backStack,
+        transitionSpec = {
+          val spec = tween<IntOffset>(durationMillis = 300)
+          slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+            slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+        },
+        popTransitionSpec = {
+          val spec = tween<IntOffset>(durationMillis = 300)
+          slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+            slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+        },
+        predictivePopTransitionSpec = { distance ->
+          // Use the provided distance to align with the system back gesture
+          slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+            slideOutHorizontally(targetOffsetX = { distance })
+        },
+        onBack = {
+          if (backStack.size > 1) {
+            backStack.removeLastOrNull()
+          } else {
+            onAuthComplete()
+          }
+        },
+        entryProvider = entryProvider { AuthViewEntries(onAuthComplete, backStack) },
+      )
+    }
   }
 }
 

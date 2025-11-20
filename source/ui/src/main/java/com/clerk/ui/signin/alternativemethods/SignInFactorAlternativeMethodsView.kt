@@ -12,10 +12,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.signin.alternativeFirstFactors
-import com.clerk.api.signin.alternativeSecondFactors
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.toOAuthProvidersList
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
@@ -27,6 +26,7 @@ import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.password.forgot.AlternativeFactorList
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.util.TextIconHelper
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -50,21 +50,24 @@ fun SignInFactorAlternativeMethodsView(
   currentFactor: Factor,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
+  clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
-  val socialProviders =
-    if (isSecondFactor) emptyList() else Clerk.socialProviders.toOAuthProvidersList()
-  val alternativeFactors =
-    if (isSecondFactor) Clerk.signIn?.alternativeSecondFactors(currentFactor)
-    else Clerk.signIn?.alternativeFirstFactors(currentFactor)
+  ClerkThemeOverrideProvider(clerkTheme) {
+    val socialProviders =
+      if (isSecondFactor) emptyList() else Clerk.socialProviders.toOAuthProvidersList()
+    val alternativeFactors =
+      if (isSecondFactor) Clerk.signIn?.alternativeSecondFactors(currentFactor)
+      else Clerk.signIn?.alternativeFirstFactors(currentFactor)
 
-  SignInFactorAlternativeMethodsViewImpl(
-    modifier = modifier,
-    alternativeFactors = alternativeFactors.orEmpty().toImmutableList(),
-    providers = socialProviders.toImmutableList(),
-    isSecondFactor = isSecondFactor,
-    onAuthComplete = onAuthComplete,
-  )
+    SignInFactorAlternativeMethodsViewImpl(
+      modifier = modifier,
+      alternativeFactors = alternativeFactors.orEmpty().toImmutableList(),
+      providers = socialProviders.toImmutableList(),
+      isSecondFactor = isSecondFactor,
+      onAuthComplete = onAuthComplete,
+    )
+  }
 }
 
 /**

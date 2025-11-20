@@ -38,8 +38,8 @@ fun ClerkTopAppBar(
   title: String? = null,
   backgroundColor: Color? = null, // sensible default
   clerkTheme: ClerkTheme? = null,
-) {
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ) {
+    ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val resolvedBackgroundColor = backgroundColor ?: ClerkMaterialTheme.colors.muted
     Box(modifier = Modifier.fillMaxWidth().then(modifier).background(resolvedBackgroundColor)) {
       Spacer(

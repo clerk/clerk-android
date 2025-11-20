@@ -47,7 +47,7 @@ fun ClerkTextButton(
 ) {
   val interaction = remember { MutableInteractionSource() }
 
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val resolvedTextColor = textColor ?: ClerkMaterialTheme.colors.primary
     val resolvedTextStyle = textStyle ?: ClerkMaterialTheme.typography.titleSmall
     Box(

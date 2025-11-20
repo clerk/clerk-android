@@ -150,7 +150,7 @@ internal fun ClerkSocialButtonImpl(
   onClick: (OAuthProvider) -> Unit = {},
   clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     BoxWithConstraints {
       val availableWidth = LocalDensity.current.run { constraints.maxWidth.toDp() }
       val iconOnly = forceIconOnly || availableWidth <= 180.dp

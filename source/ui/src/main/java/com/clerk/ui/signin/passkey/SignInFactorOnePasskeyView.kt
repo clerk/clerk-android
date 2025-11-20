@@ -30,6 +30,7 @@ import com.clerk.ui.core.dimens.dp72
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.theme.DefaultColors
 
 /**
@@ -42,13 +43,16 @@ import com.clerk.ui.theme.DefaultColors
 fun SignInFactorOnePasskeyView(
   factor: Factor,
   modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
-  SignInFactorOnePasskeyViewImpl(
-    modifier = modifier,
-    factor = factor,
-    onAuthComplete = onAuthComplete,
-  )
+  ClerkThemeOverrideProvider(clerkTheme) {
+    SignInFactorOnePasskeyViewImpl(
+      modifier = modifier,
+      factor = factor,
+      onAuthComplete = onAuthComplete,
+    )
+  }
 }
 
 @Composable

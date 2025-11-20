@@ -29,7 +29,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  */
 @Composable
 fun TextDivider(text: String, modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     Row(
       modifier = Modifier.fillMaxWidth().then(modifier),
       horizontalArrangement = Arrangement.spacedBy(dp16, alignment = Alignment.CenterHorizontally),

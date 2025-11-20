@@ -35,7 +35,7 @@ fun ClerkErrorSnackbar(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val dangerPalette =
       ClerkMaterialTheme.computedColors.backgroundDanger.generateDangerPaletteHsl()
     SnackbarHost(snackbarHostState) { data ->

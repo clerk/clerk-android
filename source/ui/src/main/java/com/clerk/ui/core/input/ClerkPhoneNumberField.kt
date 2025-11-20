@@ -203,7 +203,7 @@ internal fun ClerkPhoneNumberFieldImpl(
     onValueChange = onValueChange,
   )
 
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val computedColors = LocalComputedColors.current
 
     Row(

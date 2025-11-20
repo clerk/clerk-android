@@ -114,7 +114,7 @@ fun ClerkCodeInputField(
     }
   }
 
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val selectionColors = rememberSelectionColors()
 
     CompositionLocalProvider(LocalTextSelectionColors provides selectionColors) {

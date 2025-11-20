@@ -40,7 +40,7 @@ fun Badge(
   badgeType: ClerkBadgeType = ClerkBadgeType.Primary,
   clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+    ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val (backgroundColor, contentColor) =
       when (badgeType) {
         ClerkBadgeType.Primary ->
