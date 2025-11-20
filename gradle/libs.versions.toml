@@ -50,7 +50,7 @@ androidx-credentials = "androidx.credentials:credentials:1.5.0"
 androidx-lifecycle = "androidx.lifecycle:lifecycle-runtime-compose:2.10.0"
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime-ktx:2.10.0"
-androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4"
+androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0"
 androidx-lifecycle-viewmodel-compose = "androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4"
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.5.0"
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
