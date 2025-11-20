@@ -3,8 +3,8 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>CyclomaticComplexMethod:ClerkComposeTheme.kt$@Composable private fun generateComputedColors(colors: ClerkColors): ComputedColors</ID>
-    <ID>LongMethod:AuthStartView.kt$@Composable internal fun AuthStartViewImpl( onAuthComplete: () -> Unit, modifier: Modifier = Modifier, authViewHelper: AuthStartViewHelper = AuthStartViewHelper(), clerkTheme: ClerkTheme? = null, authStartViewModel: AuthStartViewModel = viewModel(), )</ID>
-    <ID>LongMethod:AuthView.kt$@Composable fun AuthView( modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null, onAuthComplete: () -> Unit = {}, )</ID>
+    <ID>CyclomaticComplexMethod:ClerkTextField.kt$@Composable fun ClerkTextField( value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier, onFocusChange: (Boolean) -> Unit = {}, @DrawableRes leadingIcon: Int? = null, @DrawableRes trailingIcon: Int? = null, label: String? = null, placeholder: String? = null, supportingText: String? = null, isError: Boolean = false, enabled: Boolean = true, maxLines: Int = 1, inputContentType: ContentType = ContentType.Username, visualTransformation: VisualTransformation = VisualTransformation.None, keyboardOptions: KeyboardOptions = KeyboardOptions.Default, clerkTheme: ClerkTheme? = null, )</ID>
+    <ID>LongMethod:AuthStartView.kt$@Composable internal fun AuthStartViewImpl( onAuthComplete: () -> Unit, modifier: Modifier = Modifier, authViewHelper: AuthStartViewHelper = AuthStartViewHelper(), authStartViewModel: AuthStartViewModel = viewModel(), )</ID>
     <ID>LongMethod:ClerkButton.kt$@PreviewLightDark @Composable private fun PreviewButton()</ID>
     <ID>LongMethod:ClerkPhoneNumberField.kt$@Composable private fun PhoneNumberInput( computedColors: ComputedColors, value: String, onValueChange: (String) -> Unit, countryCode: String, errorText: String? = null, )</ID>
     <ID>LongMethod:ClerkStandardButtonSnapshotTest.kt$ClerkStandardButtonSnapshotTest$@Test fun clerkButtonGallery()</ID>
