@@ -23,22 +23,29 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
+import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun AuthStartView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
-  AuthStartViewImpl(modifier = modifier, onAuthComplete = onAuthComplete)
+fun AuthStartView(
+  modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
+  onAuthComplete: () -> Unit,
+) {
+  AuthStartViewImpl(modifier = modifier, onAuthComplete = onAuthComplete, clerkTheme = clerkTheme)
 }
 
 @Composable
@@ -46,6 +53,7 @@ internal fun AuthStartViewImpl(
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
   authViewHelper: AuthStartViewHelper = AuthStartViewHelper(),
+  clerkTheme: ClerkTheme? = null,
   authStartViewModel: AuthStartViewModel = viewModel(),
 ) {
   val authState = LocalAuthState.current
@@ -101,50 +109,52 @@ internal fun AuthStartViewImpl(
     }
   }
 
-  ClerkThemedAuthScaffold(
-    modifier = modifier,
-    hasBackButton = false,
-    title = authViewHelper.titleString(authState.mode),
-    subtitle = authViewHelper.subtitleString(authState.mode),
-    snackbarHostState = snackbarHostState,
-  ) {
-    Column(
-      modifier = Modifier.fillMaxWidth(),
-      horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
+  ClerkThemeOverrideProvider(clerkTheme = clerkTheme) {
+    ClerkThemedAuthScaffold(
+      modifier = modifier,
+      hasBackButton = false,
+      title = authViewHelper.titleString(authState.mode),
+      subtitle = authViewHelper.subtitleString(authState.mode),
+      snackbarHostState = snackbarHostState,
     ) {
-      if (authViewHelper.showIdentifierField) {
-        AuthInputField(
-          authViewHelper = authViewHelper,
-          phoneNumberFieldIsActive = phoneActive,
-          authStartPhoneNumber = authState.authStartPhoneNumber,
-          authStartIdentifier = authState.authStartIdentifier,
-          onPhoneNumberChange = { authState.authStartPhoneNumber = it },
-          onIdentifierChange = { authState.authStartIdentifier = it },
-        )
+      Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
+      ) {
+        if (authViewHelper.showIdentifierField) {
+          AuthInputField(
+            authViewHelper = authViewHelper,
+            phoneNumberFieldIsActive = phoneActive,
+            authStartPhoneNumber = authState.authStartPhoneNumber,
+            authStartIdentifier = authState.authStartIdentifier,
+            onPhoneNumberChange = { authState.authStartPhoneNumber = it },
+            onIdentifierChange = { authState.authStartIdentifier = it },
+          )
 
-        AuthActionButtons(
-          authViewHelper = authViewHelper,
-          state =
-            AuthButtonsState(
-              isLoading = state is AuthStartViewModel.AuthState.Loading,
-              isEnabled = isContinueEnabled,
-              phoneNumberFieldIsActive = phoneActive,
-            ),
-          callbacks =
-            AuthButtonsCallbacks(
-              onStartAuth = {
-                authStartViewModel.startAuth(
-                  authMode = authState.mode,
-                  isPhoneNumberFieldActive = phoneActive,
-                  identifier = authState.authStartIdentifier,
-                  phoneNumber = authState.authStartPhoneNumber,
-                )
-              },
-              onSocialProviderClick = { authStartViewModel.authenticateWithSocialProvider(it) },
-              onPhoneNumberFieldToggle = { phoneActive = !phoneActive },
-            ),
-        )
+          AuthActionButtons(
+            authViewHelper = authViewHelper,
+            state =
+              AuthButtonsState(
+                isLoading = state is AuthStartViewModel.AuthState.Loading,
+                isEnabled = isContinueEnabled,
+                phoneNumberFieldIsActive = phoneActive,
+              ),
+            callbacks =
+              AuthButtonsCallbacks(
+                onStartAuth = {
+                  authStartViewModel.startAuth(
+                    authMode = authState.mode,
+                    isPhoneNumberFieldActive = phoneActive,
+                    identifier = authState.authStartIdentifier,
+                    phoneNumber = authState.authStartPhoneNumber,
+                  )
+                },
+                onSocialProviderClick = { authStartViewModel.authenticateWithSocialProvider(it) },
+                onPhoneNumberFieldToggle = { phoneActive = !phoneActive },
+              ),
+          )
+        }
       }
     }
   }
