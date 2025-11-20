@@ -1,31 +1,25 @@
 package com.clerk.ui.auth
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
-import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.telemetry.ClerkTelemetryEnvironment
-import com.clerk.telemetry.TelemetryCollector
 import com.clerk.telemetry.TelemetryEvents
-import com.clerk.telemetry.TelemetryModule
 import com.clerk.telemetry.telemetryPayload
+import com.clerk.ui.core.AuthStateProvider
+import com.clerk.ui.core.LocalAuthState
+import com.clerk.ui.core.LocalTelemetryCollector
 import com.clerk.ui.signin.SignInFactorOneView
 import com.clerk.ui.signin.SignInFactorTwoView
 import com.clerk.ui.signin.alternativemethods.SignInFactorAlternativeMethodsView
@@ -38,36 +32,6 @@ import com.clerk.ui.signup.collectfield.CollectField
 import com.clerk.ui.signup.collectfield.SignUpCollectFieldView
 import com.clerk.ui.signup.completeprofile.SignUpCompleteProfileView
 import kotlinx.serialization.Serializable
-
-@SuppressLint("ComposeCompositionLocalUsage")
-internal val LocalAuthState = staticCompositionLocalOf<AuthState> { error("No AuthState provided") }
-
-@SuppressLint("ComposeCompositionLocalUsage")
-internal val LocalTelemetryCollector =
-  staticCompositionLocalOf<TelemetryCollector> { error("No telemetry provided") }
-
-@Composable
-private fun rememberTelemetryCollector(): TelemetryCollector {
-  val context = LocalContext.current.applicationContext
-
-  val environment = remember { ClerkTelemetryEnvironment() }
-
-  return remember { TelemetryModule.createCollector(context = context, environment = environment) }
-}
-
-@Composable
-internal fun TelemetryProvider(
-  telemetryCollector: TelemetryCollector = rememberTelemetryCollector(),
-  content: @Composable () -> Unit,
-) {
-  CompositionLocalProvider(LocalTelemetryCollector provides telemetryCollector) { content() }
-}
-
-@Composable
-internal fun AuthStateProvider(backStack: NavBackStack<NavKey>, content: @Composable () -> Unit) {
-  val authState = remember { AuthState(backStack = backStack) }
-  TelemetryProvider { CompositionLocalProvider(LocalAuthState provides authState) { content() } }
-}
 
 @Composable
 fun AuthView(modifier: Modifier = Modifier) {

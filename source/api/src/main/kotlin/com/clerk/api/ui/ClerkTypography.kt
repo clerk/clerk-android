@@ -3,28 +3,31 @@ package com.clerk.api.ui
 import androidx.compose.ui.text.TextStyle
 
 /**
- * Platform-agnostic description of a complete typography scale used by Clerk UI components.
+ * A container for Clerk's typography styles, designed to integrate with Jetpack Compose.
  *
- * This container mirrors the Material3 typography slots to make it straightforward for UI
- * implementations (Compose/View) to map these definitions to concrete platform `TextStyle`s or
- * `Typeface`s.
+ * This class provides a way to customize the text styles used throughout the Clerk UI components.
+ * It mirrors a subset of the Material 3 typography scale, allowing you to override specific styles
+ * by providing your own [TextStyle] objects.
  *
- * Unlike UI-layer types, this API layer does not prescribe a specific rendering engine. Each entry
- * is represented by a lightweight [Font] that points to a font resource, a nominal size, and a
- * semantic weight ([ClerkFontWeight]) that downstream code can translate to platform equivalents.
+ * Any `TextStyle` not provided will fall back to Clerk's default styling.
  *
- * Slots correspond roughly to textual hierarchy levels, from larger display styles to small labels:
- * - displayLarge, displayMedium, displaySmall
- * - headlineLarge, headlineMedium, headlineSmall
- * - titleLarge, titleMedium, titleSmall
- * - bodyLarge, bodyMedium, bodySmall
- * - labelLarge, labelMedium, labelSmall
+ * The available typography slots correspond to different levels of textual hierarchy:
+ * - `headlineLarge`, `headlineMedium`, `headlineSmall`
+ * - `titleMedium`, `titleSmall`
+ * - `bodyLarge`, `bodyMedium`, `bodySmall`
+ * - `labelMedium`, `labelSmall`
  *
- * Notes:
- * - Size is expressed as a floating-point number (commonly interpreted as points by consumers); UI
- *   layers should convert to the appropriate unit (e.g., sp) during mapping.
- * - Weight values are provided via the [ClerkFontWeight] enum which wraps named constants defined
- *   in [ClerkFontWeights] instead of using hard-coded numbers.
+ * @property displaySmall A custom style for small display text.
+ * @property headlineLarge A custom style for large headline text.
+ * @property headlineMedium A custom style for medium headline text.
+ * @property headlineSmall A custom style for small headline text.
+ * @property titleMedium A custom style for medium title text.
+ * @property titleSmall A custom style for small title text.
+ * @property bodyLarge A custom style for large body text.
+ * @property bodyMedium A custom style for medium body text.
+ * @property bodySmall A custom style for small body text.
+ * @property labelMedium A custom style for medium label text.
+ * @property labelSmall A custom style for small label text.
  */
 class ClerkTypography(
   val displaySmall: TextStyle? = null,
