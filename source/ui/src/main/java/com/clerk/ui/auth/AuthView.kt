@@ -35,11 +35,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.serialization.Serializable
 
 @Composable
-fun AuthView(
-  modifier: Modifier = Modifier,
-  clerkTheme: ClerkTheme? = null,
-  onAuthComplete: () -> Unit = {},
-) {
+fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
     AuthStateProvider(backStack = backStack) {
@@ -65,8 +61,6 @@ fun AuthView(
         onBack = {
           if (backStack.size > 1) {
             backStack.removeLastOrNull()
-          } else {
-            onAuthComplete()
           }
         },
         entryProvider =
@@ -104,13 +98,13 @@ fun AuthView(
             }
             entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
             entry<AuthDestination.SignUpCollectField> { key ->
-              SignUpCollectFieldView(field = key.field, onAuthComplete = onAuthComplete)
+              SignUpCollectFieldView(field = key.field, onAuthComplete = { backStack.clear() })
             }
             entry<AuthDestination.SignUpCode> { key ->
-              SignUpCodeView(field = key.field, onAuthComplete = onAuthComplete)
+              SignUpCodeView(field = key.field, onAuthComplete = { backStack.clear() })
             }
             entry<AuthDestination.SignUpCompleteProfile> {
-              SignUpCompleteProfileView(onAuthComplete = onAuthComplete)
+              SignUpCompleteProfileView(onAuthComplete = { backStack.clear() })
             }
           },
       )
