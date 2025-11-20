@@ -18,6 +18,11 @@ class ClerkTypographyDefaultsTest {
   }
 
   @Test
+  fun `default helper matches zero-arg constructor`() {
+    assertEquals(ClerkTypography(), ClerkTypographyDefaults.default())
+  }
+
+  @Test
   fun `builder allows overriding individual slots`() {
     val typography =
       ClerkTypographyDefaults.typography {
