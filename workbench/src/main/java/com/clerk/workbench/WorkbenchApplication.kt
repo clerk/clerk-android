@@ -18,7 +18,7 @@ class WorkbenchApplication : Application() {
     publicKey?.let { key ->
       val typographyOverrides =
         ClerkTypography(
-          displaySmall = ClerkTypographyDefaults.displaySmall.copy(fontWeight = FontWeight.SemiBold),
+          displaySmall = ClerkTypographyDefaults.displaySmall.copy(fontWeight = FontWeight.SemiBold)
         )
 
       Clerk.initialize(

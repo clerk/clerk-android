@@ -19,8 +19,7 @@ class ClerkTypographyTest {
   fun `named overrides preserve other defaults`() {
     val typography =
       ClerkTypography(
-        displaySmall =
-          ClerkTypographyDefaults.displaySmall.copy(fontWeight = FontWeight.SemiBold),
+        displaySmall = ClerkTypographyDefaults.displaySmall.copy(fontWeight = FontWeight.SemiBold)
       )
 
     assertEquals(FontWeight.SemiBold, typography.displaySmall?.fontWeight)

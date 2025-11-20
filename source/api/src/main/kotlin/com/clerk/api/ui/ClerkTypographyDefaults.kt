@@ -150,9 +150,7 @@ object ClerkTypographyDefaults {
     return scope.build()
   }
 
-  /**
-   * Convenience helper for retrieving the full default [ClerkTypography] without any overrides.
-   */
+  /** Convenience helper for retrieving the full default [ClerkTypography] without any overrides. */
   fun default(): ClerkTypography = typography()
 }
 
@@ -165,7 +163,8 @@ object ClerkTypographyDefaults {
  * }
  * ```
  */
-class ClerkTypographyBuilder internal constructor(
+class ClerkTypographyBuilder
+internal constructor(
   var displaySmall: TextStyle,
   var headlineLarge: TextStyle,
   var headlineMedium: TextStyle,
