@@ -31,6 +31,7 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold

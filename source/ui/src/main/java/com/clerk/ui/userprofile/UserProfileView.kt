@@ -20,8 +20,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
-import com.clerk.ui.auth.LocalTelemetryCollector
-import com.clerk.ui.auth.TelemetryProvider
+import com.clerk.ui.core.composition.LocalTelemetryCollector
+import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction

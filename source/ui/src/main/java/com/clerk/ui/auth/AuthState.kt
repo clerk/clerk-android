@@ -15,6 +15,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.firstFieldToCollect
 import com.clerk.api.signup.firstFieldToVerify
 import com.clerk.ui.core.common.NavigableState
+import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.navigation.pop
 import com.clerk.ui.signup.code.SignUpCodeField
 import com.clerk.ui.signup.collectfield.CollectField

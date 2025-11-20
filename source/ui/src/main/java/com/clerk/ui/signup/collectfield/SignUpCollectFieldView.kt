@@ -21,11 +21,11 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
-import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
+import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField

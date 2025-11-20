@@ -31,8 +31,8 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
-import com.clerk.ui.auth.LocalTelemetryCollector
-import com.clerk.ui.auth.TelemetryProvider
+import com.clerk.ui.core.composition.LocalTelemetryCollector
+import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.UserProfileView
@@ -97,7 +97,6 @@ fun UserButton(modifier: Modifier = Modifier, size: Dp = dp36, clerkTheme: Clerk
             onDismissRequest = { showProfile = false },
             properties = DialogProperties(usePlatformDefaultWidth = false),
           ) {
-            // Full-screen profile view
             UserProfileView(modifier = Modifier, onDismiss = { showProfile = false })
           }
         }
