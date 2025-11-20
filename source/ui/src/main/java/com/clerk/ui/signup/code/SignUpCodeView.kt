@@ -13,9 +13,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
-import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.verificationState
+import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp28
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
