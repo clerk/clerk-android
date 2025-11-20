@@ -20,22 +20,26 @@ import androidx.compose.ui.text.TextStyle
  * - bodyLarge, bodyMedium, bodySmall
  * - labelLarge, labelMedium, labelSmall
  *
+ * Use the zero-argument constructor (`ClerkTypography()`) to start from Clerk's baseline styles and
+ * override only a subset via named parameters. If you need the raw `TextStyle` instances outside of
+ * the theme container, reference [ClerkTypographyDefaults] directly.
+ *
  * Notes:
  * - Size is expressed as a floating-point number (commonly interpreted as points by consumers); UI
  *   layers should convert to the appropriate unit (e.g., sp) during mapping.
  * - Weight values are provided via the [ClerkFontWeight] enum which wraps named constants defined
  *   in [ClerkFontWeights] instead of using hard-coded numbers.
  */
-class ClerkTypography(
-  val displaySmall: TextStyle? = null,
-  val headlineLarge: TextStyle? = null,
-  val headlineMedium: TextStyle? = null,
-  val headlineSmall: TextStyle? = null,
-  val titleMedium: TextStyle? = null,
-  val titleSmall: TextStyle? = null,
-  val bodyLarge: TextStyle? = null,
-  val bodyMedium: TextStyle? = null,
-  val bodySmall: TextStyle? = null,
-  val labelMedium: TextStyle? = null,
-  val labelSmall: TextStyle? = null,
+data class ClerkTypography(
+  val displaySmall: TextStyle? = ClerkTypographyDefaults.displaySmall,
+  val headlineLarge: TextStyle? = ClerkTypographyDefaults.headlineLarge,
+  val headlineMedium: TextStyle? = ClerkTypographyDefaults.headlineMedium,
+  val headlineSmall: TextStyle? = ClerkTypographyDefaults.headlineSmall,
+  val titleMedium: TextStyle? = ClerkTypographyDefaults.titleMedium,
+  val titleSmall: TextStyle? = ClerkTypographyDefaults.titleSmall,
+  val bodyLarge: TextStyle? = ClerkTypographyDefaults.bodyLarge,
+  val bodyMedium: TextStyle? = ClerkTypographyDefaults.bodyMedium,
+  val bodySmall: TextStyle? = ClerkTypographyDefaults.bodySmall,
+  val labelMedium: TextStyle? = ClerkTypographyDefaults.labelMedium,
+  val labelSmall: TextStyle? = ClerkTypographyDefaults.labelSmall,
 )

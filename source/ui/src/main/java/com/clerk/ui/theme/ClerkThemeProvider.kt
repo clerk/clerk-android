@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.ui.ClerkTypographyDefaults
 
 internal object DefaultColors {
   val light =
@@ -105,21 +106,19 @@ internal fun ClerkThemeProvider(theme: ClerkTheme? = null, content: @Composable 
 
 @Composable
 private fun generateTypography(theme: ClerkTheme?): Typography {
-  val typography =
-    Typography(
-      displaySmall = theme?.typography?.displaySmall ?: Typography().displaySmall,
-      headlineLarge = theme?.typography?.headlineLarge ?: Typography().headlineLarge,
-      headlineMedium = theme?.typography?.headlineMedium ?: Typography().headlineMedium,
-      headlineSmall = theme?.typography?.headlineSmall ?: Typography().headlineSmall,
-      titleMedium = theme?.typography?.titleMedium ?: Typography().titleMedium,
-      titleSmall = theme?.typography?.titleSmall ?: Typography().titleSmall,
-      bodyLarge = theme?.typography?.bodyLarge ?: Typography().bodyLarge,
-      bodyMedium = theme?.typography?.bodyMedium ?: Typography().bodyMedium,
-      bodySmall = theme?.typography?.bodySmall ?: Typography().bodySmall,
-      labelMedium = theme?.typography?.labelMedium ?: Typography().labelMedium,
-      labelSmall = theme?.typography?.labelSmall ?: Typography().labelSmall,
-    )
-  return typography
+  return Typography(
+    displaySmall = theme?.typography?.displaySmall ?: ClerkTypographyDefaults.displaySmall,
+    headlineLarge = theme?.typography?.headlineLarge ?: ClerkTypographyDefaults.headlineLarge,
+    headlineMedium = theme?.typography?.headlineMedium ?: ClerkTypographyDefaults.headlineMedium,
+    headlineSmall = theme?.typography?.headlineSmall ?: ClerkTypographyDefaults.headlineSmall,
+    titleMedium = theme?.typography?.titleMedium ?: ClerkTypographyDefaults.titleMedium,
+    titleSmall = theme?.typography?.titleSmall ?: ClerkTypographyDefaults.titleSmall,
+    bodyLarge = theme?.typography?.bodyLarge ?: ClerkTypographyDefaults.bodyLarge,
+    bodyMedium = theme?.typography?.bodyMedium ?: ClerkTypographyDefaults.bodyMedium,
+    bodySmall = theme?.typography?.bodySmall ?: ClerkTypographyDefaults.bodySmall,
+    labelMedium = theme?.typography?.labelMedium ?: ClerkTypographyDefaults.labelMedium,
+    labelSmall = theme?.typography?.labelSmall ?: ClerkTypographyDefaults.labelSmall,
+  )
 }
 
 @Composable
