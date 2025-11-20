@@ -40,7 +40,5 @@ fun SignInFactorOneView(
 @PreviewLightDark
 @Composable
 private fun PreviewSignInComponent() {
-  PreviewAuthStateProvider {
-    SignInFactorOneView(factor = Factor("passkey"), onAuthComplete = {})
-  }
+  PreviewAuthStateProvider { SignInFactorOneView(factor = Factor("passkey"), onAuthComplete = {}) }
 }

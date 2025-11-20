@@ -198,7 +198,7 @@ fun OrganizationAvatar(
   clerkTheme: ClerkTheme? = null,
 ) {
   val url = Clerk.organizationLogoUrl
-    ClerkMaterialTheme(clerkTheme = clerkTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     AvatarView(
       imageUrl = url,
       size = size,

@@ -51,10 +51,7 @@ internal val LocalClerkDesign =
 internal val LocalClerkThemeOverride = compositionLocalOf<ClerkTheme?> { null }
 
 @Composable
-internal fun ClerkThemeOverrideProvider(
-  clerkTheme: ClerkTheme?,
-  content: @Composable () -> Unit,
-) {
+internal fun ClerkThemeOverrideProvider(clerkTheme: ClerkTheme?, content: @Composable () -> Unit) {
   CompositionLocalProvider(LocalClerkThemeOverride provides clerkTheme, content = content)
 }
 
@@ -109,10 +106,7 @@ internal fun ClerkThemeOverrideProvider(
  * @param content The composable content that will have access to the themed values.
  */
 @Composable
-internal fun ClerkMaterialTheme(
-  clerkTheme: ClerkTheme? = null,
-  content: @Composable () -> Unit,
-) {
+internal fun ClerkMaterialTheme(clerkTheme: ClerkTheme? = null, content: @Composable () -> Unit) {
   val overrideTheme = LocalClerkThemeOverride.current
   val resolvedTheme = clerkTheme ?: overrideTheme ?: Clerk.customTheme
 

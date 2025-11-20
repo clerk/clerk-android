@@ -70,7 +70,7 @@ class YourApplication : Application() {
 ```xml
 
 <application
-    android:name=".YourApplication" 
+    android:name=".YourApplication"
     android:theme="@style/AppTheme">
     <!-- ... -->
 </application>
@@ -93,28 +93,6 @@ class YourApplication : Application() {
 }
 ```
 
-### Customize Clerk typography
-
-Starting from the Clerk defaults makes it easy to override just the text styles you need. Use
-`ClerkTypographyDefaults` to grab the baseline `TextStyle`s when instantiating `ClerkTypography`
-(or when using the builder helper, if you prefer that style):
-
-```kotlin
-val customTypography =
-    ClerkTypography(
-        displaySmall = ClerkTypographyDefaults.displaySmall.copy(fontWeight = FontWeight.SemiBold),
-        titleSmall = ClerkTypographyDefaults.titleSmall.copy(letterSpacing = 0.sp),
-    )
-
-Clerk.initialize(
-    context = this,
-    publishableKey = "pk_test_...",
-    theme = ClerkTheme(typography = customTypography),
-)
-```
-
-Need the stock values without overrides? Simply pass `ClerkTheme(typography = ClerkTypography())`.
-
 ## Samples
 
 #### Quickstart
@@ -129,7 +107,7 @@ authentication and reset password. See the [README](samples/custom-flows/README.
 
 #### Linear Clone
 `samples/linear-clone`: This is an example that shows how you might integrate with compose navigation, it is a native recreation of the Linear auth flow (which is web based)
-and includes Sign in with Google, Passkey authentication, Sign out, and Email Code Authentication. See the [README](samples/linear-clone/README.md) for more info. 
+and includes Sign in with Google, Passkey authentication, Sign out, and Email Code Authentication. See the [README](samples/linear-clone/README.md) for more info.
 
 ## Documentation
 

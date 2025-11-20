@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
-import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp18
@@ -43,37 +42,37 @@ fun ClerkThemedProfileScaffold(
     if (errorMessage != null) snackbarHostState.showSnackbar(errorMessage)
   }
 
-    ClerkMaterialTheme(clerkTheme = clerkTheme) {
-      Scaffold(
-        modifier = Modifier.then(modifier),
-        snackbarHost = { ClerkErrorSnackbar(snackbarHostState, clerkTheme = clerkTheme) },
-        topBar = {
-          ClerkTopAppBar(
-            backgroundColor = ClerkMaterialTheme.colors.background,
-            hasLogo = hasLogo,
-            hasBackButton = hasBackButton,
-            title = title,
-            onBackPressed = onBackPressed,
-            clerkTheme = clerkTheme,
-          )
-        },
-      ) { innerPadding ->
-        Column(
-          modifier =
-            Modifier.fillMaxWidth()
-              .fillMaxSize()
-              .background(backgroundColor ?: ClerkMaterialTheme.colors.background)
-              .padding(innerPadding),
-          horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-          Column(modifier = Modifier.padding(horizontal = horizontalPadding)) { content() }
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
+    Scaffold(
+      modifier = Modifier.then(modifier),
+      snackbarHost = { ClerkErrorSnackbar(snackbarHostState, clerkTheme = clerkTheme) },
+      topBar = {
+        ClerkTopAppBar(
+          backgroundColor = ClerkMaterialTheme.colors.background,
+          hasLogo = hasLogo,
+          hasBackButton = hasBackButton,
+          title = title,
+          onBackPressed = onBackPressed,
+          clerkTheme = clerkTheme,
+        )
+      },
+    ) { innerPadding ->
+      Column(
+        modifier =
+          Modifier.fillMaxWidth()
+            .fillMaxSize()
+            .background(backgroundColor ?: ClerkMaterialTheme.colors.background)
+            .padding(innerPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+      ) {
+        Column(modifier = Modifier.padding(horizontal = horizontalPadding)) { content() }
 
-          Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(1f))
 
-          bottomContent?.invoke()
-        }
+        bottomContent?.invoke()
       }
     }
+  }
 }
 
 @PreviewLightDark

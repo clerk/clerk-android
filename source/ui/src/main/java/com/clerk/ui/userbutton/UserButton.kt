@@ -68,7 +68,10 @@ fun UserButton(modifier: Modifier = Modifier, size: Dp = dp36, clerkTheme: Clerk
             contentAlignment = Alignment.Center,
           ) {
             val model =
-              ImageRequest.Builder(LocalContext.current).data(user?.imageUrl).crossfade(true).build()
+              ImageRequest.Builder(LocalContext.current)
+                .data(user?.imageUrl)
+                .crossfade(true)
+                .build()
 
             AsyncImage(
               modifier = Modifier.matchParentSize().clip(CircleShape),

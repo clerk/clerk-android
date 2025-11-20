@@ -22,6 +22,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.auth.LocalTelemetryCollector
 import com.clerk.ui.auth.TelemetryProvider
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.detail.UserProfileDetailView
@@ -32,7 +33,6 @@ import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRename
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
 import com.clerk.ui.userprofile.verify.Mode
 import com.clerk.ui.userprofile.verify.UserProfileVerifyView
-import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.serialization.Serializable
 
 @SuppressLint("ComposeCompositionLocalUsage")
@@ -52,7 +52,11 @@ internal fun UserProfileStateProvider(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun UserProfileView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null, onDismiss: () -> Unit) {
+fun UserProfileView(
+  modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
+  onDismiss: () -> Unit,
+) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
     UserProfileStateProvider(backStack) {
