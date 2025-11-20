@@ -111,6 +111,8 @@ dependencies {
   compileOnly(libs.androidx.compose.foundation)
 
   testImplementation(kotlin("test"))
+  testImplementation(platform(libs.compose.bom))
+  testImplementation(libs.androidx.compose.foundation)
   testImplementation(libs.androidx.appcompat)
   testImplementation(libs.androidx.arch.test)
   testImplementation(libs.core.ktx)
