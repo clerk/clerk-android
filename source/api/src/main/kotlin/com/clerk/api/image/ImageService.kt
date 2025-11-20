@@ -10,7 +10,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 
 /** Service for handling image operations including compression and multipart body creation. */
-class ImageService {
+internal class ImageService {
 
   /**
    * Creates a multipart body part from an image file for HTTP requests. The image is compressed
