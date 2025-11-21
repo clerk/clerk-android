@@ -52,11 +52,9 @@ internal val LocalClerkThemeOverride = compositionLocalOf<ClerkTheme?> { null }
 
 @Composable
 internal fun ClerkThemeOverrideProvider(clerkTheme: ClerkTheme?, content: @Composable () -> Unit) {
-  if (clerkTheme == null) {
-    content()
-  } else {
-    CompositionLocalProvider(LocalClerkThemeOverride provides clerkTheme, content = content)
-  }
+  val parentTheme = LocalClerkThemeOverride.current
+  val effectiveTheme = clerkTheme ?: parentTheme
+  CompositionLocalProvider(LocalClerkThemeOverride provides effectiveTheme, content = content)
 }
 
 /**
