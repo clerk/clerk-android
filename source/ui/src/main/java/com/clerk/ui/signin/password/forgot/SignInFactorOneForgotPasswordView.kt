@@ -172,19 +172,20 @@ internal fun AlternativeFactorList(
 @Composable
 private fun Preview() {
   PreviewAuthStateProvider {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-    SignInFactorOneForgotPasswordViewImpl(
-      socialProviders =
-        persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK, OAuthProvider.APPLE),
-      alternativeFactors =
-        persistentListOf(
-          Factor(StrategyKeys.PASSWORD),
-          Factor(StrategyKeys.PASSKEY),
-          Factor(strategy = StrategyKeys.EMAIL_CODE),
-          Factor(strategy = StrategyKeys.PHONE_CODE, safeIdentifier = "3012370655"),
-        ),
-      onClickFactor = {},
-      onAuthComplete = {},
-    )
+    ClerkThemeOverrideProvider(ClerkTheme(colors = DefaultColors.clerk)) {
+      SignInFactorOneForgotPasswordViewImpl(
+        socialProviders =
+          persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK, OAuthProvider.APPLE),
+        alternativeFactors =
+          persistentListOf(
+            Factor(StrategyKeys.PASSWORD),
+            Factor(StrategyKeys.PASSKEY),
+            Factor(strategy = StrategyKeys.EMAIL_CODE),
+            Factor(strategy = StrategyKeys.PHONE_CODE, safeIdentifier = "3012370655"),
+          ),
+        onClickFactor = {},
+        onAuthComplete = {},
+      )
+    }
   }
 }

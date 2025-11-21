@@ -192,8 +192,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
 @Composable
 private fun PreviewSignInFactorOnePasswordView() {
   PreviewAuthStateProvider {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-    ClerkMaterialTheme {
+    ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
       SignInFactorOnePasswordView(
         factor = Factor(strategy = StrategyKeys.PASSWORD, safeIdentifier = "sam@clerk.dev"),
         onAuthComplete = {},

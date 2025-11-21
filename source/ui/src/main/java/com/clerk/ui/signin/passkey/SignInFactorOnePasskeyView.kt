@@ -119,9 +119,9 @@ private fun SignInFactorOnePasskeyViewImpl(
 @Composable
 private fun PreviewSignInFactorOnePasskeyView() {
   PreviewAuthStateProvider {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
     SignInFactorOnePasskeyView(
       factor = Factor(strategy = StrategyKeys.PASSKEY, safeIdentifier = "sam@clerk.dev"),
+      clerkTheme = ClerkTheme(colors = DefaultColors.clerk),
       onAuthComplete = {},
     )
   }
