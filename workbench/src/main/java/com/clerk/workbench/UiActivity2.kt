@@ -20,8 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkColors
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.AuthView
 import com.clerk.ui.userbutton.UserButton
 import com.clerk.workbench.ui.theme.WorkbenchTheme
@@ -47,7 +45,7 @@ class UiActivity2 : ComponentActivity() {
               topBar = { TopAppBar(title = { Text("Home screen") }, actions = { UserButton() }) }
             ) {}
           } else {
-            AuthView(clerkTheme = ClerkTheme(colors = ClerkColors(primary = Color.Blue)))
+            AuthView()
           }
         }
       }
