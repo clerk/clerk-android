@@ -70,7 +70,7 @@ class YourApplication : Application() {
 ```xml
 
 <application
-    android:name=".YourApplication" 
+    android:name=".YourApplication"
     android:theme="@style/AppTheme">
     <!-- ... -->
 </application>
@@ -129,7 +129,7 @@ authentication and reset password. See the [README](samples/custom-flows/README.
 
 #### Linear Clone
 `samples/linear-clone`: This is an example that shows how you might integrate with compose navigation, it is a native recreation of the Linear auth flow (which is web based)
-and includes Sign in with Google, Passkey authentication, Sign out, and Email Code Authentication. See the [README](samples/linear-clone/README.md) for more info. 
+and includes Sign in with Google, Passkey authentication, Sign out, and Email Code Authentication. See the [README](samples/linear-clone/README.md) for more info.
 
 ## Documentation
 

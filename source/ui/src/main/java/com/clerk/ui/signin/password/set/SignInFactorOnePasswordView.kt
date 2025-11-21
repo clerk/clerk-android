@@ -32,17 +32,18 @@ import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthState
 import com.clerk.ui.auth.AuthStateEffects
-import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.theme.DefaultColors
 
 /**
@@ -59,13 +60,16 @@ import com.clerk.ui.theme.DefaultColors
 fun SignInFactorOnePasswordView(
   factor: Factor,
   modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
-  SignInFactorOnePasswordViewImpl(
-    modifier = modifier,
-    factor = factor,
-    onAuthComplete = onAuthComplete,
-  )
+  ClerkThemeOverrideProvider(clerkTheme) {
+    SignInFactorOnePasswordViewImpl(
+      modifier = modifier,
+      factor = factor,
+      onAuthComplete = onAuthComplete,
+    )
+  }
 }
 
 @Composable
@@ -188,8 +192,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
 @Composable
 private fun PreviewSignInFactorOnePasswordView() {
   PreviewAuthStateProvider {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-    ClerkMaterialTheme {
+    ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
       SignInFactorOnePasswordView(
         factor = Factor(strategy = StrategyKeys.PASSWORD, safeIdentifier = "sam@clerk.dev"),
         onAuthComplete = {},

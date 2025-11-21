@@ -5,14 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,12 +19,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.clerk.api.Clerk
 import com.clerk.ui.auth.AuthView
 import com.clerk.ui.userbutton.UserButton
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 
 class UiActivity2 : ComponentActivity() {
-  val viewModel: MainViewModel by viewModels()
 
   @OptIn(ExperimentalMaterial3Api::class)
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,37 +35,21 @@ class UiActivity2 : ComponentActivity() {
     )
     setContent {
       WorkbenchTheme {
-        val state by viewModel.uiState.collectAsStateWithLifecycle()
+        val user by Clerk.userFlow.collectAsStateWithLifecycle()
         Box(
           modifier = Modifier.fillMaxSize().background(color = Color(0xFFF9F9F9)),
           contentAlignment = Alignment.Center,
         ) {
-          when (state) {
-            MainViewModel.UiState.Loading -> CircularProgressIndicator()
-            MainViewModel.UiState.SignedIn -> {
-              Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                topBar = { TopAppBar(title = {}, actions = { UserButton() }) },
-              ) { innerPadding ->
-              }
-            }
-
-            MainViewModel.UiState.SignedOut -> {
-              AuthView {}
-            }
+          if (user != null) {
+            Scaffold(
+              topBar = { TopAppBar(title = { Text("Home screen") }, actions = { UserButton() }) }
+            ) {}
+          } else {
+            AuthView()
           }
         }
       }
     }
-  }
-
-  @Suppress("MagicNumber")
-  @Composable
-  private fun MainContent() {
-    Box(
-      modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background),
-      contentAlignment = Alignment.Center,
-    ) {}
   }
 }
 

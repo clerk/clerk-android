@@ -45,7 +45,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
@@ -203,7 +202,7 @@ internal fun ClerkPhoneNumberFieldImpl(
     onValueChange = onValueChange,
   )
 
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val computedColors = LocalComputedColors.current
 
     Row(

@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.OrganizationAvatar
@@ -39,7 +38,7 @@ fun ClerkTopAppBar(
   backgroundColor: Color? = null, // sensible default
   clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val resolvedBackgroundColor = backgroundColor ?: ClerkMaterialTheme.colors.muted
     Box(modifier = Modifier.fillMaxWidth().then(modifier).background(resolvedBackgroundColor)) {
       Spacer(

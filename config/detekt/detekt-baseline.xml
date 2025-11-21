@@ -3,8 +3,8 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>CyclomaticComplexMethod:ClerkComposeTheme.kt$@Composable private fun generateComputedColors(colors: ClerkColors): ComputedColors</ID>
-    <ID>CyclomaticComplexMethod:ClerkTextField.kt$@Composable fun ClerkTextField( value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier, onFocusChange: (Boolean) -> Unit = {}, @DrawableRes leadingIcon: Int? = null, @DrawableRes trailingIcon: Int? = null, label: String? = null, placeholder: String? = null, supportingText: String? = null, isError: Boolean = false, enabled: Boolean = true, maxLines: Int = 1, inputContentType: ContentType = ContentType.Username, visualTransformation: VisualTransformation = VisualTransformation.None, keyboardOptions: KeyboardOptions = KeyboardOptions.Default, clerkTheme: ClerkTheme? = null, )</ID>
-    <ID>LongMethod:AuthStartView.kt$@Composable internal fun AuthStartViewImpl( onAuthComplete: () -> Unit, modifier: Modifier = Modifier, authViewHelper: AuthStartViewHelper = AuthStartViewHelper(), authStartViewModel: AuthStartViewModel = viewModel(), )</ID>
+    <ID>LongMethod:AuthStartView.kt$@Composable internal fun AuthStartViewImpl( onAuthComplete: () -> Unit, modifier: Modifier = Modifier, authViewHelper: AuthStartViewHelper = AuthStartViewHelper(), clerkTheme: ClerkTheme? = null, authStartViewModel: AuthStartViewModel = viewModel(), )</ID>
+    <ID>LongMethod:AuthView.kt$@Composable fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null)</ID>
     <ID>LongMethod:ClerkButton.kt$@PreviewLightDark @Composable private fun PreviewButton()</ID>
     <ID>LongMethod:ClerkPhoneNumberField.kt$@Composable private fun PhoneNumberInput( computedColors: ComputedColors, value: String, onValueChange: (String) -> Unit, countryCode: String, errorText: String? = null, )</ID>
     <ID>LongMethod:ClerkStandardButtonSnapshotTest.kt$ClerkStandardButtonSnapshotTest$@Test fun clerkButtonGallery()</ID>
@@ -46,7 +46,6 @@
     <ID>TooManyFunctions:User.kt$com.clerk.api.user.User.kt</ID>
     <ID>UnusedPrivateClass:ClerkApiResultCallAdapterFactory.kt$ApiException : Exception</ID>
     <ID>UnusedPrivateMember:UiActivity1.kt$UiActivity1$@Suppress("MagicNumber") @Composable private fun MainContent()</ID>
-    <ID>UnusedPrivateMember:UiActivity2.kt$UiActivity2$@Suppress("MagicNumber") @Composable private fun MainContent()</ID>
     <ID>UnusedPrivateProperty:build.gradle.kts$val detektProjectBaseline by tasks.registering(DetektCreateBaselineTask::class) { description = "Overrides current baseline." buildUponDefaultConfig.set(true) ignoreFailures.set(true) parallel.set(true) setSource(files(rootDir)) config.setFrom(files("$rootDir/config/detekt/detekt.yml")) baseline.set(file("$rootDir/config/detekt/detekt-baseline.xml")) include("**/*.kt") include("**/*.kts") exclude("**/resources/**") exclude("**/build/**") }</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -20,16 +20,17 @@ import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
-import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp72
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.theme.DefaultColors
 
 /**
@@ -42,13 +43,16 @@ import com.clerk.ui.theme.DefaultColors
 fun SignInFactorOnePasskeyView(
   factor: Factor,
   modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
-  SignInFactorOnePasskeyViewImpl(
-    modifier = modifier,
-    factor = factor,
-    onAuthComplete = onAuthComplete,
-  )
+  ClerkThemeOverrideProvider(clerkTheme) {
+    SignInFactorOnePasskeyViewImpl(
+      modifier = modifier,
+      factor = factor,
+      onAuthComplete = onAuthComplete,
+    )
+  }
 }
 
 @Composable
@@ -115,9 +119,9 @@ private fun SignInFactorOnePasskeyViewImpl(
 @Composable
 private fun PreviewSignInFactorOnePasskeyView() {
   PreviewAuthStateProvider {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
     SignInFactorOnePasskeyView(
       factor = Factor(strategy = StrategyKeys.PASSKEY, safeIdentifier = "sam@clerk.dev"),
+      clerkTheme = ClerkTheme(colors = DefaultColors.clerk),
       onAuthComplete = {},
     )
   }

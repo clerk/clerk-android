@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
@@ -47,7 +46,7 @@ fun ClerkTextButton(
 ) {
   val interaction = remember { MutableInteractionSource() }
 
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val resolvedTextColor = textColor ?: ClerkMaterialTheme.colors.primary
     val resolvedTextStyle = textStyle ?: ClerkMaterialTheme.typography.titleSmall
     Box(
@@ -71,6 +70,7 @@ fun ClerkTextButton(
 @PreviewLightDark
 @Composable
 private fun PreviewTextButton() {
-  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme { ClerkTextButton(text = "Text Button", onClick = {}) }
+  ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
+    ClerkTextButton(text = "Text Button", onClick = {})
+  }
 }

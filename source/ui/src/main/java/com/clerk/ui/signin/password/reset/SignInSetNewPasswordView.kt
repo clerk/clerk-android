@@ -23,19 +23,21 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthState
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
-import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 /**
  * A view that allows the user to set a new password during the sign-in reset password flow.
@@ -43,8 +45,14 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  * @param modifier The [Modifier] to be applied to the view.
  */
 @Composable
-fun SignInSetNewPasswordView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
-  SignInSetNewPasswordViewImpl(modifier = modifier, onAuthComplete = onAuthComplete)
+fun SignInSetNewPasswordView(
+  modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
+  onAuthComplete: () -> Unit,
+) {
+  ClerkThemeOverrideProvider(clerkTheme) {
+    SignInSetNewPasswordViewImpl(modifier = modifier, onAuthComplete = onAuthComplete)
+  }
 }
 
 /**

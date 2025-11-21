@@ -32,7 +32,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -168,7 +167,7 @@ private fun ClerkButtonImpl(
   icons: ClerkButtonIcons = ClerkButtonDefaults.icons(),
   clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val tokens =
       buildButtonTokens(config = configuration, isPressed = clerkButtonState.isPressedCombined)
 
@@ -296,8 +295,7 @@ private fun ButtonContent(
 @PreviewLightDark
 @Composable
 private fun PreviewButton() {
-  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
     LazyColumn(
       modifier =
         Modifier.fillMaxSize()
@@ -585,8 +583,7 @@ private fun PreviewButton() {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  Clerk.customTheme = ClerkTheme(darkColors = ClerkColors(primary = Color.Red))
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = ClerkTheme(darkColors = ClerkColors(primary = Color.Red))) {
     Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp12)) {
       ClerkButton(
         modifier = Modifier.fillMaxWidth(),

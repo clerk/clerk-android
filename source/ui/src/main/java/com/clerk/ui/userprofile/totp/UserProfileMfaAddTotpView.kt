@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -192,7 +191,6 @@ private fun TextDisplayBox(text: String, modifier: Modifier = Modifier) {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
   val fakeResource =
     TOTPResource(
       id = "totp_123",
@@ -205,7 +203,7 @@ private fun Preview() {
       updatedAt = 1_700_000_000_000,
     )
   PreviewUserProfileStateProvider {
-    ClerkMaterialTheme {
+    ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
       UserProfileMfaAddTotpViewImpl(
         previewState = UserProfileMfaTotpViewModel.State.Success(totpResource = fakeResource),
         onDismiss = {},

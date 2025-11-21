@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
-import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -40,7 +39,7 @@ fun Badge(
   badgeType: ClerkBadgeType = ClerkBadgeType.Primary,
   clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val (backgroundColor, contentColor) =
       when (badgeType) {
         ClerkBadgeType.Primary ->

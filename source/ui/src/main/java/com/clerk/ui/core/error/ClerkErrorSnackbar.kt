@@ -13,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
@@ -35,7 +34,7 @@ fun ClerkErrorSnackbar(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
 ) {
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val dangerPalette =
       ClerkMaterialTheme.computedColors.backgroundDanger.generateDangerPaletteHsl()
     SnackbarHost(snackbarHostState) { data ->
@@ -56,8 +55,7 @@ fun ClerkErrorSnackbar(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
     val hostState = remember { SnackbarHostState() }
 
     ClerkErrorSnackbar(snackbarHostState = hostState)

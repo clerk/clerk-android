@@ -58,7 +58,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
@@ -114,7 +113,7 @@ fun ClerkCodeInputField(
     }
   }
 
-  ClerkMaterialTheme(clerkTheme = clerkTheme ?: Clerk.customTheme) {
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val selectionColors = rememberSelectionColors()
 
     CompositionLocalProvider(LocalTextSelectionColors provides selectionColors) {

@@ -20,17 +20,19 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
-import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
 
 /**
@@ -39,8 +41,14 @@ import kotlinx.collections.immutable.toImmutableList
  * inject specific values and flags.
  */
 @Composable
-fun SignUpCompleteProfileView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
-  SignUpCompleteProfileImpl(modifier = modifier, onAuthComplete = onAuthComplete)
+fun SignUpCompleteProfileView(
+  modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
+  onAuthComplete: () -> Unit,
+) {
+  ClerkThemeOverrideProvider(clerkTheme) {
+    SignUpCompleteProfileImpl(modifier = modifier, onAuthComplete = onAuthComplete)
+  }
 }
 
 /** Internal enum for focus tracking & label logic. */

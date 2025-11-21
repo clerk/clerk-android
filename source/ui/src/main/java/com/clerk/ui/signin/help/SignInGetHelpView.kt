@@ -15,9 +15,9 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.core.net.toUri
 import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
-import com.clerk.ui.auth.LocalAuthState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.coroutines.launch

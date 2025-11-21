@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.clerk.api.Clerk
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.dimens.dp8
@@ -42,7 +41,6 @@ fun ClerkSocialRow(
   onClick: (OAuthProvider) -> Unit = {},
 ) {
   val isSingleProvider = providers.size == 1
-  val effectiveTheme = clerkTheme ?: Clerk.customTheme
 
   Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp8)) {
     val chunks = providers.chunked(MAX_BUTTONS_PER_ROW)
@@ -56,7 +54,7 @@ fun ClerkSocialRow(
           onClick = onClick,
           forceIconOnly = false,
           modifier = Modifier.fillMaxWidth(),
-          clerkTheme = effectiveTheme,
+          clerkTheme = clerkTheme,
         )
       }
       return@Column
@@ -92,7 +90,7 @@ fun ClerkSocialRow(
                 onClick = onClick,
                 forceIconOnly = true,
                 modifier = Modifier.fillMaxWidth(),
-                clerkTheme = effectiveTheme,
+                clerkTheme = clerkTheme,
               )
             }
           }

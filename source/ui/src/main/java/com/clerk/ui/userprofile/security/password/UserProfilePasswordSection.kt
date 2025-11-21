@@ -90,8 +90,7 @@ internal fun UserProfilePasswordSectionImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  ClerkMaterialTheme {
+  ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
     Box(
       modifier =
         Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
@@ -104,7 +103,6 @@ private fun Preview() {
 @PreviewLightDark
 @Composable
 private fun PreviewAddPassword() {
-  Clerk.customTheme = null
   ClerkMaterialTheme {
     Box(
       modifier =
