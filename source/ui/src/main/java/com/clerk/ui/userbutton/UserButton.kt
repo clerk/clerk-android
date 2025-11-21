@@ -20,7 +20,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,7 +43,7 @@ import com.clerk.ui.userprofile.UserProfileView
  * full-screen dialog and close itself when done.
  */
 @Composable
-fun UserButton(modifier: Modifier = Modifier, size: Dp = dp36, clerkTheme: ClerkTheme? = null) {
+fun UserButton(clerkTheme: ClerkTheme? = null) {
   ClerkThemeOverrideProvider(clerkTheme) {
     TelemetryProvider {
       val user by Clerk.userFlow.collectAsStateWithLifecycle()
@@ -62,7 +61,7 @@ fun UserButton(modifier: Modifier = Modifier, size: Dp = dp36, clerkTheme: Clerk
         IconButton(onClick = { showProfile = true }) {
           Box(
             modifier =
-              modifier.size(size).clip(CircleShape).semantics {
+              Modifier.size(dp36).clip(CircleShape).semantics {
                 contentDescription = context.getString(R.string.open_user_profile)
               },
             contentAlignment = Alignment.Center,
@@ -95,9 +94,10 @@ fun UserButton(modifier: Modifier = Modifier, size: Dp = dp36, clerkTheme: Clerk
         if (showProfile) {
           Dialog(
             onDismissRequest = { showProfile = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false),
+            properties =
+              DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
           ) {
-            UserProfileView(modifier = Modifier, onDismiss = { showProfile = false })
+            UserProfileView(onDismiss = { showProfile = false })
           }
         }
       }

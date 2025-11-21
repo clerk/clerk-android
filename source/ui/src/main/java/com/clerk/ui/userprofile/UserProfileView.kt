@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
@@ -52,11 +51,7 @@ internal fun UserProfileStateProvider(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun UserProfileView(
-  modifier: Modifier = Modifier,
-  clerkTheme: ClerkTheme? = null,
-  onDismiss: () -> Unit,
-) {
+fun UserProfileView(clerkTheme: ClerkTheme? = null, onDismiss: () -> Unit) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
     UserProfileStateProvider(backStack) {
@@ -65,7 +60,6 @@ fun UserProfileView(
       LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
 
       NavDisplay(
-        modifier = modifier,
         backStack = backStack,
         onBack = {
           if (backStack.size == 1) {
