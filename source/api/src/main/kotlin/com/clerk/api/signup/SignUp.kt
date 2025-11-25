@@ -419,6 +419,7 @@ data class SignUp(
      * @param lastName The user's last name (optional).
      * @param username The user's username (optional).
      * @param phoneNumber The user's phone number in E.164 format (optional).
+     * @param legalAccepted Whether the user has accepted the legal terms and conditions (optional).
      */
     @AutoMap
     @Serializable
@@ -429,6 +430,7 @@ data class SignUp(
       @SerialName("last_name") val lastName: String? = null,
       val username: String? = null,
       @SerialName("phone_number") val phoneNumber: String? = null,
+      @SerialName("legal_accepted") val legalAccepted: Boolean? = null,
     ) : SignUpUpdateParams
   }
 
