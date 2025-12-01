@@ -32,17 +32,16 @@ internal class CollectFieldViewModel : ViewModel() {
       _state.value = AuthenticationViewState.Loading
 
       viewModelScope.launch(Dispatchers.IO) {
-        val signUp =
+        val params =
           when (collectField) {
-            CollectField.Email -> inProgressSignUp.update(SignUp.UpdateParams(emailAddress = email))
-            CollectField.Password ->
-              inProgressSignUp.update(SignUp.UpdateParams(password = password))
-            CollectField.Phone -> inProgressSignUp.update(SignUp.UpdateParams(phoneNumber = phone))
-            CollectField.Username ->
-              inProgressSignUp.update(SignUp.UpdateParams(username = username))
+            CollectField.Email -> SignUp.SignUpUpdateParams.Standard(emailAddress = email)
+            CollectField.Password -> SignUp.SignUpUpdateParams.Standard(password = password)
+            CollectField.Phone -> SignUp.SignUpUpdateParams.Standard(phoneNumber = phone)
+            CollectField.Username -> SignUp.SignUpUpdateParams.Standard(username = username)
           }
 
-        signUp
+        inProgressSignUp
+          .update(params)
           .onSuccess {
             withContext(Dispatchers.Main) {
               _state.value = AuthenticationViewState.Success.SignUp(it)
