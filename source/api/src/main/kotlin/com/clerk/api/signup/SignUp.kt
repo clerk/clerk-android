@@ -359,6 +359,7 @@ data class SignUp(
      * @param lastName The user's last name (optional).
      * @param username The user's username (optional).
      * @param phoneNumber The user's phone number in E.164 format (optional).
+     * @param legalAccepted Whether the user has accepted the legal terms and conditions (optional).
      */
     @AutoMap
     @Serializable
@@ -369,6 +370,7 @@ data class SignUp(
       @SerialName("last_name") val lastName: String? = null,
       val username: String? = null,
       @SerialName("phone_number") val phoneNumber: String? = null,
+      @SerialName("legal_accepted") val legalAccepted: Boolean? = null,
     ) : CreateParams
 
     /**
@@ -404,28 +406,32 @@ data class SignUp(
       CreateParams
   }
 
-  /**
-   * Standard sign-up update strategy, allowing the user to provide common details such as email,
-   * password, and personal information. The update parameters are just a mirror of the create
-   * parameters.
-   *
-   * @param emailAddress The user's email address (optional).
-   * @param password The user's password (optional).
-   * @param firstName The user's first name (optional).
-   * @param lastName The user's last name (optional).
-   * @param username The user's username (optional).
-   * @param phoneNumber The user's phone number in E.164 format (optional).
-   */
-  @AutoMap
-  @Serializable
-  data class UpdateParams(
-    @SerialName("email_address") val emailAddress: String? = null,
-    val password: String? = null,
-    @SerialName("first_name") val firstName: String? = null,
-    @SerialName("last_name") val lastName: String? = null,
-    val username: String? = null,
-    @SerialName("phone_number") val phoneNumber: String? = null,
-  )
+  sealed interface SignUpUpdateParams {
+    /**
+     * Standard sign-up update strategy, allowing the user to provide common details such as email,
+     * password, and personal information. The update parameters are just a mirror of the create
+     * parameters.
+     *
+     * @param emailAddress The user's email address (optional).
+     * @param password The user's password (optional).
+     * @param firstName The user's first name (optional).
+     * @param lastName The user's last name (optional).
+     * @param username The user's username (optional).
+     * @param phoneNumber The user's phone number in E.164 format (optional).
+     * @param legalAccepted Whether the user has accepted the legal terms and conditions (optional).
+     */
+    @AutoMap
+    @Serializable
+    data class Standard(
+      @SerialName("email_address") val emailAddress: String? = null,
+      val password: String? = null,
+      @SerialName("first_name") val firstName: String? = null,
+      @SerialName("last_name") val lastName: String? = null,
+      val username: String? = null,
+      @SerialName("phone_number") val phoneNumber: String? = null,
+      @SerialName("legal_accepted") val legalAccepted: Boolean? = null,
+    ) : SignUpUpdateParams
+  }
 
   companion object {
 

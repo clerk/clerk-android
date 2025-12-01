@@ -1,8 +1,8 @@
 package com.clerk.api.network.model.error
 
-import com.clerk.api.network.model.client.Client
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 /** Represents an error response from the Clerk API. */
 @Serializable
@@ -10,7 +10,7 @@ data class ClerkErrorResponse(
   /** An array of `ClerkAPIError` objects, each describing an individual error. */
   val errors: List<Error>,
   /** An object containing additional information about the error response. */
-  val meta: Meta? = null,
+  val meta: JsonObject? = null,
   /** A unique identifier for tracing the specific request, useful for debugging. */
   @SerialName("clerk_trace_id") val clerkTraceId: String? = null,
 )
@@ -25,7 +25,5 @@ data class Error(
   val code: String? = null,
   /** Additional information about the error. */
 )
-
-@Serializable data class Meta(val client: Client? = null)
 
 fun ClerkErrorResponse.firstMessage(): String? = this.errors.firstOrNull()?.message
