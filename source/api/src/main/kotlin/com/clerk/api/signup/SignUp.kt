@@ -503,8 +503,13 @@ data class SignUp(
     suspend fun authenticateWithRedirect(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      val strategy =
+        when (params) {
+          is AuthenticateWithRedirectParams.EnterpriseSSO -> params.strategy
+          is AuthenticateWithRedirectParams.OAuth -> params.provider.providerData.strategy
+        }
       return SSOService.authenticateWithRedirect(
-        strategy = params.toMap()[com.clerk.api.Constants.Fields.STRATEGY]!!,
+        strategy = strategy,
         redirectUrl = params.redirectUrl,
         identifier = params.identifier,
         emailAddress = params.emailAddress,
@@ -552,7 +557,7 @@ val SignUp.firstFieldToVerify: String?
  *   if the update failed.
  */
 suspend fun SignUp.update(
-  updateParams: SignUp.UpdateParams
+  updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
 }
