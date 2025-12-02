@@ -138,7 +138,7 @@ data class UserSettings(
     val name: String,
 
     /** The URL of the provider's logo image (optional) */
-    @SerialName("logo_url") val logoUrl: String?,
+    @SerialName("logo_url") val logoUrl: String? = null,
   )
 
   /**

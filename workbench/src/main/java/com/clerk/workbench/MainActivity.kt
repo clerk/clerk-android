@@ -43,8 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.clerk.workbench.ui.theme.ClerkPrimary
-import com.clerk.workbench.ui.theme.WorkbenchTheme
-import com.jakewharton.processphoenix.ProcessPhoenix
+import com.clerk.workbench.ui.theme.ClerkTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -53,15 +52,12 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
     setContent {
       val context = LocalContext.current
-      WorkbenchTheme {
+      ClerkTheme {
         MainContent(
-          onSave = {
-            StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it)
-            ProcessPhoenix.triggerRebirth(context)
-          },
+          onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
-          onClickFirstItem = { context.startActivity(Intent(context, UiActivity1::class.java)) },
-          onClickSecondItem = { context.startActivity(Intent(context, UiActivity2::class.java)) },
+          onClickFirstItem = { context.startActivity(Intent(context, UiActivity::class.java)) },
+          onClickSecondItem = {},
         )
       }
     }
@@ -278,7 +274,7 @@ private object Spacing {
 @PreviewLightDark
 @Composable
 private fun MainContentPreview() {
-  WorkbenchTheme {
+  ClerkTheme {
     MainContent(onSave = {}, onClear = {}, onClickFirstItem = {}, onClickSecondItem = {})
   }
 }
@@ -286,5 +282,5 @@ private fun MainContentPreview() {
 @PreviewLightDark
 @Composable
 private fun PreviewSettingsBottomSheet() {
-  WorkbenchTheme { SettingsBottomSheetContent(onClear = {}, onSave = {}) }
+  ClerkTheme { SettingsBottomSheetContent(onClear = {}, onSave = {}) }
 }
