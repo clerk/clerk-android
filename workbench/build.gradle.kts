@@ -42,6 +42,8 @@ android {
 dependencies {
   implementation(platform(libs.compose.bom))
   implementation(libs.activity.compose)
+  implementation(libs.androidx.activity)
+  implementation(libs.androidx.appcompat)
   implementation(libs.androidx.compose.icons)
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime)
@@ -49,6 +51,7 @@ dependencies {
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling)
   implementation(libs.androidx.ui.tooling.preview)
+  implementation(libs.material)
   implementation(libs.material3)
   implementation(projects.source.api)
 }

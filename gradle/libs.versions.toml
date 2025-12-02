@@ -36,6 +36,7 @@ jdk = "17"
 jvmTarget = "17"
 minSdk = "24"
 compileSdk = "36"
+activity = "1.12.0"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
@@ -94,6 +95,7 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
 paparazzi = "app.cash.paparazzi:paparazzi:2.0.0-alpha02"
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 
 
 [plugins]

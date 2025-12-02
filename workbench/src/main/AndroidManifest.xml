@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Clerk">
         <activity
+            android:name=".UiActivity"
+            android:exported="false" />
+
+
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Clerk">
