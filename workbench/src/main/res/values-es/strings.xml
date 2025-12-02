@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Banco de Trabajo</string>
+    <string name="sign_out">Cerrar Sesión</string>
+</resources>
