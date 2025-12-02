@@ -26,7 +26,7 @@ internal class CompleteProfileViewModel : ViewModel() {
       _state.value = AuthenticationViewState.Loading
       viewModelScope.launch(Dispatchers.IO) {
         signUp
-          .update(SignUp.UpdateParams(firstName = fistName, lastName = lastName))
+          .update(SignUp.SignUpUpdateParams.Standard(firstName = fistName, lastName = lastName))
           .onSuccess {
             withContext(Dispatchers.Main) {
               _state.value = AuthenticationViewState.Success.SignUp(it)
