@@ -1,0 +1,85 @@
+package com.clerk.ui.userprofile.connectedaccount
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.Clerk
+import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.user.unconnectedProviders
+import com.clerk.ui.R
+import com.clerk.ui.core.button.social.ClerkSocialRow
+import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.userprofile.common.BottomSheetTopBar
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+
+@Composable
+fun UserProfileAddConnectedAccountView(modifier: Modifier = Modifier, onBackPressed: () -> Unit) {
+  val unconnectedProviders = Clerk.user?.unconnectedProviders.orEmpty()
+  UserProfileAddConnectedAccountViewImpl(
+    modifier = modifier,
+    unconnectedProviders = unconnectedProviders.toImmutableList(),
+    onClosePressed = onBackPressed,
+  )
+}
+
+@Composable
+private fun UserProfileAddConnectedAccountViewImpl(
+  unconnectedProviders: ImmutableList<OAuthProvider>,
+  modifier: Modifier = Modifier,
+  viewModel: AddConnectedAccountViewModel = viewModel(),
+  onClosePressed: () -> Unit,
+) {
+  Column(modifier = Modifier.then(modifier)) {
+    BottomSheetTopBar(
+      title = stringResource(R.string.connect_account),
+      onClosePressed = onClosePressed,
+    )
+    Column(
+      modifier = Modifier.fillMaxWidth().padding(dp24),
+      verticalArrangement = Arrangement.spacedBy(dp24),
+    ) {
+      Text(
+        text = stringResource(R.string.link_another_login_option),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+        color = ClerkMaterialTheme.colors.mutedForeground,
+      )
+      ClerkSocialRow(
+        providers = unconnectedProviders,
+        onClick = { viewModel.connectExternalAccount(it) },
+      )
+    }
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun Preview() {
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
+      val unconnectedProviders =
+        persistentListOf(
+          OAuthProvider.GOOGLE,
+          OAuthProvider.FACEBOOK,
+          OAuthProvider.APPLE,
+          OAuthProvider.BOX,
+          OAuthProvider.GITHUB,
+        )
+      UserProfileAddConnectedAccountViewImpl(
+        unconnectedProviders = unconnectedProviders,
+        onClosePressed = {},
+      )
+    }
+  }
+}

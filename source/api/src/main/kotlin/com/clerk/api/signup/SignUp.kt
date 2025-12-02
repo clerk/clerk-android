@@ -4,6 +4,7 @@ package com.clerk.api.signup
 
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy as AuthStrategy
+import com.clerk.api.extensions.sortedByPriority
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
@@ -405,10 +406,6 @@ data class SignUp(
       CreateParams
   }
 
-  /**
-   * Parameters for updating an existing sign-up with additional information. These parameters
-   * mirror the create parameters and allow modification of sign-up data.
-   */
   sealed interface SignUpUpdateParams {
     /**
      * Standard sign-up update strategy, allowing the user to provide common details such as email,
@@ -506,16 +503,46 @@ data class SignUp(
     suspend fun authenticateWithRedirect(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      val strategy =
+        when (params) {
+          is AuthenticateWithRedirectParams.EnterpriseSSO -> params.strategy
+          is AuthenticateWithRedirectParams.OAuth -> params.provider.providerData.strategy
+        }
       return SSOService.authenticateWithRedirect(
-        strategy = params.toMap()[com.clerk.api.Constants.Fields.STRATEGY]!!,
+        strategy = strategy,
         redirectUrl = params.redirectUrl,
         identifier = params.identifier,
         emailAddress = params.emailAddress,
         legalAccepted = params.legalAccepted,
       )
     }
+
+    val fieldPriority: List<String> =
+      listOf("email_address", "phone_number", "username", "username")
   }
 }
+
+/**
+ * Helper property to get the first field that needs to be collected.
+ *
+ * This property returns the name of the first field in the `missingFields` list, sorted by
+ * priority. The priority order is defined by [SignUp.fieldPriority].
+ *
+ * @return The name of the first field to collect, or `null` if there are no missing fields.
+ */
+val SignUp.firstFieldToCollect: String?
+  get() = missingFields.sortedByPriority(SignUp.fieldPriority).firstOrNull()
+
+/**
+ * Helper property to get the first field that needs to be verified.
+ *
+ * This property returns the name of the first field in the `unverifiedFields` list, sorted by
+ * priority. The priority order is defined by [SignUp.fieldPriority].
+ *
+ * @return The name of the first field to verify, or `null` if there are no unverified fields.
+ */
+val SignUp.firstFieldToVerify: String?
+  get() = this.unverifiedFields.sortedByPriority(SignUp.fieldPriority).firstOrNull()
 
 /**
  * The [update] method is used to update the sign-up process with new information. This can be used

@@ -10,7 +10,7 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.network.serialization.longErrorMessageOrNull
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.sso.SSOReceiverActivity
 import com.clerk.api.user.User
@@ -235,6 +235,6 @@ internal object ExternalAccountService {
         )
 
       ClerkResult.Failure.ErrorType.UNKNOWN ->
-        ClerkResult.Companion.unknownFailure(Exception("${initialResult.longErrorMessageOrNull}"))
+        ClerkResult.Companion.unknownFailure(Exception("${initialResult.errorMessage}"))
     }
 }

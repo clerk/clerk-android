@@ -1,6 +1,5 @@
 package com.clerk.customflows
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
@@ -19,7 +18,6 @@ class MainViewModel : ViewModel() {
 
   init {
     combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
-        Log.e("QQQ", "isInitialized: $isInitialized, user: $user")
         _uiState.value =
           when {
             !isInitialized -> UiState.Loading

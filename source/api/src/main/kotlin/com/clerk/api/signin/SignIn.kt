@@ -434,7 +434,8 @@ data class SignIn(
     @Serializable
     data class EnterpriseSSO(
       override val strategy: String = ENTERPRISE_SSO,
-      @SerialName("redirect_url") val redirectUrl: String,
+      @SerialName("redirect_url")
+      val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
     ) : PrepareFirstFactorParams
 
     @AutoMap
@@ -523,7 +524,7 @@ data class SignIn(
      */
     sealed interface Strategy {
       /** The authentication strategy identifier. */
-      val strategy: String
+      val strategy: String?
 
       /**
        * Email code sign-in strategy.
@@ -592,6 +593,14 @@ data class SignIn(
 
       /** Passkey strategy for authentication using a passkey. */
       data class Passkey(override val strategy: String = PASSKEY) : Strategy
+
+      @AutoMap
+      @Serializable
+      data class Identifier(
+        override val strategy: String? = null,
+        val identifier: String,
+        val password: String? = null,
+      ) : Strategy
     }
   }
 
@@ -801,24 +810,29 @@ suspend fun SignIn.prepareFirstFactor(
  *   verification on success, or a [ClerkErrorResponse] on failure.
  * @receiver The current [SignIn] object representing the sign-in session.
  */
-suspend fun SignIn.prepareSecondFactor(): ClerkResult<SignIn, ClerkErrorResponse> {
+suspend fun SignIn.prepareSecondFactor(
+  phoneNumberId: String? = null,
+  emailAddressId: String? = null,
+): ClerkResult<SignIn, ClerkErrorResponse> {
   val strategy =
     when {
       supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE } ==
         true ->
         SignIn.PrepareSecondFactorStrategy.PhoneCode(
           phoneNumberId =
-            supportedSecondFactors
-              .find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
-              ?.phoneNumberId
+            phoneNumberId
+              ?: supportedSecondFactors
+                .find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
+                ?.phoneNumberId
         )
       supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE } ==
         true ->
         SignIn.PrepareSecondFactorStrategy.EmailCode(
           emailAddressId =
-            supportedSecondFactors
-              .find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
-              ?.emailAddressId
+            emailAddressId
+              ?: supportedSecondFactors
+                .find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
+                ?.emailAddressId
         )
       else -> error("No supported second factor found")
     }
