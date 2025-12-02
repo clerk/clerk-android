@@ -1,0 +1,138 @@
+name: Publish to Maven Central
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  create-release:
+    runs-on: macos-latest-xlarge
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      tag_name: ${{ steps.get_version.outputs.tag_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Fetch all history for tags
+
+      - name: Get version from libs.versions.toml
+        id: get_version
+        run: |
+          VERSION=$(grep '^clerk-sdk = ' gradle/libs.versions.toml | sed 's/clerk-sdk = "\(.*\)"/\1/')
+          TAG_NAME="v$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Found version: $VERSION"
+          echo "Tag name: $TAG_NAME"
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.get_version.outputs.tag_name }}
+          git push origin ${{ steps.get_version.outputs.tag_name }}
+
+      - name: Get previous tag
+        id: get_previous_tag
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+          echo "Previous tag: $PREVIOUS_TAG"
+
+      - name: Generate release notes
+        id: generate_notes
+        run: |
+          CURRENT_TAG="${{ steps.get_version.outputs.tag_name }}"
+          PREVIOUS_TAG="${{ steps.get_previous_tag.outputs.previous_tag }}"
+          VERSION="${{ steps.get_version.outputs.version }}"
+          
+          echo "Generating release notes from $PREVIOUS_TAG to $CURRENT_TAG"
+          
+          # Get commit messages since last tag
+          if [ -n "$PREVIOUS_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)
+          else
+            COMMITS=$(git log --pretty=format:"- %s (%h)" HEAD)
+          fi
+          
+          # Count changes
+          if [ -n "$PREVIOUS_TAG" ]; then
+            COMMIT_COUNT=$(git rev-list --count $PREVIOUS_TAG..HEAD)
+            FILES_CHANGED=$(git diff --name-only $PREVIOUS_TAG..HEAD | wc -l)
+          else
+            COMMIT_COUNT=$(git rev-list --count HEAD)
+            FILES_CHANGED=$(git ls-files | wc -l)
+          fi
+          
+          # Build release notes directly
+          RELEASE_NOTES="## What's Changed
+          
+          $COMMITS
+          
+          ### 🚀 Installation
+          
+          Add to your \`build.gradle\`:
+          \`\`\`gradle
+          implementation(\"com.clerk:clerk-android:$VERSION\")
+          \`\`\`
+          
+          ### 👥 Contributors
+          $CONTRIBUTORS"
+          
+          # Add changelog link if we have a previous tag
+          if [ -n "$PREVIOUS_TAG" ]; then
+            RELEASE_NOTES="$RELEASE_NOTES
+          
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...$CURRENT_TAG"
+          fi
+          
+          # Set output using heredoc
+          {
+            echo "RELEASE_NOTES<<EOF"
+            echo "$RELEASE_NOTES"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag_name }}
+          name: Release ${{ steps.get_version.outputs.tag_name }}
+          body: ${{ steps.generate_notes.outputs.RELEASE_NOTES }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    runs-on: macos-latest-xlarge
+    needs: create-release
+    if: always() && (github.event_name == 'release' || needs.create-release.result == 'success')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+        run: ./gradlew :source:api:publishMavenPublicationToMavenCentralRepository
