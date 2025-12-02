@@ -44,11 +44,11 @@ android {
 dependencies {
   implementation(platform(libs.compose.bom))
   implementation(libs.activity.compose)
-  implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime)
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling.preview)
+  implementation(libs.core.ktx)
   implementation(libs.material3)
   implementation(projects.source.api)
 

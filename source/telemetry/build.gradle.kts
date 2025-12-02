@@ -30,20 +30,20 @@ kotlin {
 
     androidMain {
       dependencies {
-        implementation(projects.source.api)
         implementation(libs.ktor.client.core)
         implementation(libs.ktor.client.negototiation)
         implementation(libs.ktor.client.okhttp)
         implementation(libs.ktor.serialization.kotlinx.json)
         implementation(libs.okhttp)
+        implementation(projects.source.api)
       }
     }
 
     getByName("androidDeviceTest") {
       dependencies {
         implementation(libs.androidx.core)
-        implementation(libs.androidx.junit)
         implementation(libs.androidx.runner)
+        implementation(libs.junit)
       }
     }
   }
