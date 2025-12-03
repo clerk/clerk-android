@@ -21,12 +21,18 @@ internal class CompleteProfileViewModel : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun updateSignUp(fistName: String, lastName: String) =
+  fun updateSignUp(firstName: String, lastName: String, legalAccepted: Boolean? = null) =
     guardSignUp(_state) { signUp ->
       _state.value = AuthenticationViewState.Loading
       viewModelScope.launch(Dispatchers.IO) {
         signUp
-          .update(SignUp.SignUpUpdateParams.Standard(firstName = fistName, lastName = lastName))
+          .update(
+            SignUp.SignUpUpdateParams.Standard(
+              firstName = firstName,
+              lastName = lastName,
+              legalAccepted = legalAccepted,
+            )
+          )
           .onSuccess {
             withContext(Dispatchers.Main) {
               _state.value = AuthenticationViewState.Success.SignUp(it)

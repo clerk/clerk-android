@@ -177,4 +177,8 @@
     <string name="user_avatar">Avatar χρήστη</string>
     <string name="open_user_profile">Άνοιγμα προφίλ χρήστη</string>
     <string name="secured_by">Ασφαλίζεται από</string>
+    <string name="i_agree_to_the">Συμφωνώ με τους</string>
+    <string name="terms_of_service">Όρους Χρήσης</string>
+    <string name="privacy_policy">Πολιτική Απορρήτου</string>
+    <string name="and_connector">και την</string>
 </resources>

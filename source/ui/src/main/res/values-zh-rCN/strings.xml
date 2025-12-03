@@ -177,4 +177,8 @@
     <string name="user_avatar">用户头像</string>
     <string name="open_user_profile">打开用户个人资料</string>
     <string name="secured_by">安全保护</string>
+    <string name="i_agree_to_the">我同意</string>
+    <string name="terms_of_service">服务条款</string>
+    <string name="privacy_policy">隐私政策</string>
+    <string name="and_connector">和</string>
 </resources>

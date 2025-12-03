@@ -177,4 +177,8 @@
     <string name="user_avatar">사용자 아바타</string>
     <string name="open_user_profile">사용자 프로필 열기</string>
     <string name="secured_by">보안 제공</string>
+    <string name="i_agree_to_the">동의합니다:</string>
+    <string name="terms_of_service">서비스 약관</string>
+    <string name="privacy_policy">개인정보 처리방침</string>
+    <string name="and_connector">및</string>
 </resources>

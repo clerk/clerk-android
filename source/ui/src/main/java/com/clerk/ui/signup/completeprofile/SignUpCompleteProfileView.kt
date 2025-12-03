@@ -57,6 +57,8 @@ internal enum class CompleteProfileField {
   LastName,
 }
 
+private const val LEGAL_ACCEPTED_FIELD = "legal_accepted"
+
 /** Hoisted-state composable for previews/tests. You control all values here. */
 @Composable
 private fun SignUpCompleteProfileImpl(
@@ -66,11 +68,20 @@ private fun SignUpCompleteProfileImpl(
   lastName: String = "",
   firstNameEnabled: Boolean = false,
   lastNameEnabled: Boolean = false,
+  legalConsentMissing: Boolean = false,
   viewModel: CompleteProfileViewModel = viewModel(),
 ) {
   val authState = LocalAuthState.current
   val firstEnabled = Clerk.isFirstNameEnabled || firstNameEnabled
   val lastEnabled = Clerk.isLastNameEnabled || lastNameEnabled
+
+  // Check if legal_accepted is in missing fields
+  val legalConsentRequired =
+    legalConsentMissing || (Clerk.signUp?.missingFields?.contains(LEGAL_ACCEPTED_FIELD) == true)
+  val termsUrl = Clerk.termsUrl
+  val privacyPolicyUrl = Clerk.privacyPolicyUrl
+  val hasLegalUrls = termsUrl != null || privacyPolicyUrl != null
+  val showLegalConsent = legalConsentRequired && hasLegalUrls
 
   authState.signUpFirstName = firstName
   authState.signUpLastName = lastName
@@ -87,8 +98,20 @@ private fun SignUpCompleteProfileImpl(
   val helper = rememberCompleteProfileHelper(enabledFields.toImmutableList())
 
   val isSubmitEnabled by
-    remember(authState.signUpFirstName, authState.signUpLastName, helper, enabledFields) {
-      derivedStateOf { helper.isSubmitEnabled(authState.signUpFirstName, authState.signUpLastName) }
+    remember(
+      authState.signUpFirstName,
+      authState.signUpLastName,
+      authState.signUpLegalAccepted,
+      helper,
+      enabledFields,
+      showLegalConsent,
+    ) {
+      derivedStateOf {
+        val profileFieldsValid =
+          helper.isSubmitEnabled(authState.signUpFirstName, authState.signUpLastName)
+        val legalConsentValid = !showLegalConsent || authState.signUpLegalAccepted
+        profileFieldsValid && legalConsentValid
+      }
     }
 
   ClerkThemedAuthScaffold(
@@ -115,12 +138,27 @@ private fun SignUpCompleteProfileImpl(
         onFocusChange = { helper.focusTo(it) },
       )
 
+      if (showLegalConsent) {
+        LegalConsentView(
+          isAccepted = authState.signUpLegalAccepted,
+          onAcceptedChange = { authState.signUpLegalAccepted = it },
+          termsUrl = termsUrl,
+          privacyPolicyUrl = privacyPolicyUrl,
+        )
+      }
+
       ClerkButton(
         modifier = Modifier.fillMaxWidth(),
         isEnabled = isSubmitEnabled,
         text = stringResource(helper.submitLabelRes()),
         isLoading = state is AuthenticationViewState.Loading,
-        onClick = { viewModel.updateSignUp(authState.signUpFirstName, authState.signUpLastName) },
+        onClick = {
+          viewModel.updateSignUp(
+            firstName = authState.signUpFirstName,
+            lastName = authState.signUpLastName,
+            legalAccepted = if (showLegalConsent) authState.signUpLegalAccepted else null,
+          )
+        },
       )
     }
   }
@@ -258,6 +296,23 @@ private fun Preview_OnlyLastEnabled_Partial() {
         lastNameEnabled = true,
         firstName = "",
         lastName = "Daniels",
+        onAuthComplete = {},
+      )
+    }
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun Preview_WithLegalConsent() {
+  PreviewAuthStateProvider {
+    ClerkMaterialTheme {
+      SignUpCompleteProfileImpl(
+        firstNameEnabled = true,
+        lastNameEnabled = true,
+        firstName = "Cal",
+        lastName = "Raleigh",
+        legalConsentMissing = true,
         onAuthComplete = {},
       )
     }

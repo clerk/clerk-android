@@ -230,6 +230,30 @@ object Clerk {
     get() = if (::environment.isInitialized) environment.displayConfig.branded else true
 
   /**
+   * The URL of the Terms of Service page for the application.
+   *
+   * This URL is configured in your Clerk Dashboard under legal settings and is used to display a
+   * link to the terms of service during sign-up flows when legal consent is required.
+   *
+   * @return The terms URL if configured, `null` otherwise. Returns `null` if the SDK is not yet
+   *   initialized.
+   */
+  val termsUrl: String?
+    get() = if (::environment.isInitialized) environment.displayConfig.termsUrl else null
+
+  /**
+   * The URL of the Privacy Policy page for the application.
+   *
+   * This URL is configured in your Clerk Dashboard under legal settings and is used to display a
+   * link to the privacy policy during sign-up flows when legal consent is required.
+   *
+   * @return The privacy policy URL if configured, `null` otherwise. Returns `null` if the SDK is
+   *   not yet initialized.
+   */
+  val privacyPolicyUrl: String?
+    get() = if (::environment.isInitialized) environment.displayConfig.privacyPolicyUrl else null
+
+  /**
    * Indicates whether MFA (Multi-Factor Authentication) via phone code is enabled.
    *
    * This setting is configured in your Clerk Dashboard. If enabled, users can add a phone number as

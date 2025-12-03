@@ -177,4 +177,8 @@
     <string name="user_avatar">صورة المستخدم الرمزية</string>
     <string name="open_user_profile">فتح ملف المستخدم الشخصي</string>
     <string name="secured_by">محمي بواسطة</string>
+    <string name="i_agree_to_the">أوافق على</string>
+    <string name="terms_of_service">شروط الخدمة</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="and_connector">و</string>
 </resources>
