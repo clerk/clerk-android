@@ -36,7 +36,7 @@ jdk = "17"
 jvmTarget = "17"
 minSdk = "24"
 compileSdk = "36"
-activity = "1.12.0"
+activity = "1.12.1"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
