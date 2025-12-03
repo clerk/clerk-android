@@ -176,4 +176,5 @@
     <string name="edit_avatar">编辑头像</string>
     <string name="user_avatar">用户头像</string>
     <string name="open_user_profile">打开用户个人资料</string>
+    <string name="secured_by">安全保护</string>
 </resources>

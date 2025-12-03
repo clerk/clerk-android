@@ -176,4 +176,5 @@
     <string name="edit_avatar">अवतार संपादित करें</string>
     <string name="user_avatar">उपयोगकर्ता अवतार</string>
     <string name="open_user_profile">उपयोगकर्ता प्रोफ़ाइल खोलें</string>
+    <string name="secured_by">द्वारा सुरक्षित</string>
 </resources>

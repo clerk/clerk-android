@@ -176,4 +176,5 @@
     <string name="edit_avatar">تحرير الصورة الرمزية</string>
     <string name="user_avatar">صورة المستخدم الرمزية</string>
     <string name="open_user_profile">فتح ملف المستخدم الشخصي</string>
+    <string name="secured_by">محمي بواسطة</string>
 </resources>

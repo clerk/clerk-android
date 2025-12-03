@@ -176,4 +176,5 @@
     <string name="edit_avatar">Επεξεργασία avatar</string>
     <string name="user_avatar">Avatar χρήστη</string>
     <string name="open_user_profile">Άνοιγμα προφίλ χρήστη</string>
+    <string name="secured_by">Ασφαλίζεται από</string>
 </resources>

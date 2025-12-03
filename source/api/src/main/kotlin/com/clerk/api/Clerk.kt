@@ -218,6 +218,18 @@ object Clerk {
       else false
 
   /**
+   * Indicates whether Clerk branding is enabled for the application.
+   *
+   * When enabled, the "Secured by Clerk" badge is displayed in authentication UI components. This
+   * setting is configured in your Clerk Dashboard under branding settings.
+   *
+   * @return `true` if branding is enabled, `false` otherwise. Returns `true` if the SDK is not yet
+   *   initialized.
+   */
+  val isBranded: Boolean
+    get() = if (::environment.isInitialized) environment.displayConfig.branded else true
+
+  /**
    * Indicates whether MFA (Multi-Factor Authentication) via phone code is enabled.
    *
    * This setting is configured in your Clerk Dashboard. If enabled, users can add a phone number as
