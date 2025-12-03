@@ -177,4 +177,8 @@
     <string name="user_avatar">ユーザーアバター</string>
     <string name="open_user_profile">ユーザープロフィールを開く</string>
     <string name="secured_by">セキュリティ提供</string>
+    <string name="i_agree_to_the">同意します:</string>
+    <string name="terms_of_service">利用規約</string>
+    <string name="privacy_policy">プライバシーポリシー</string>
+    <string name="and_connector">および</string>
 </resources>

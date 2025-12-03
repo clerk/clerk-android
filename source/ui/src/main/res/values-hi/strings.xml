@@ -177,4 +177,8 @@
     <string name="user_avatar">उपयोगकर्ता अवतार</string>
     <string name="open_user_profile">उपयोगकर्ता प्रोफ़ाइल खोलें</string>
     <string name="secured_by">द्वारा सुरक्षित</string>
+    <string name="i_agree_to_the">मैं सहमत हूं</string>
+    <string name="terms_of_service">सेवा की शर्तें</string>
+    <string name="privacy_policy">गोपनीयता नीति</string>
+    <string name="and_connector">और</string>
 </resources>

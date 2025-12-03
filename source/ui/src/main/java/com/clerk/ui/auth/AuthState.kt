@@ -51,6 +51,7 @@ internal class AuthState(
   var signUpUsername by mutableStateOf("")
   var signUpEmail by mutableStateOf("")
   var signUpPhoneNumber by mutableStateOf("")
+  var signUpLegalAccepted by mutableStateOf(false)
 
   override fun navigateTo(destination: NavKey) {
     backStack.add(destination)

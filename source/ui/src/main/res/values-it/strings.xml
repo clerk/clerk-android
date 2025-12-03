@@ -177,4 +177,8 @@
     <string name="user_avatar">Avatar utente</string>
     <string name="open_user_profile">Apri profilo utente</string>
     <string name="secured_by">Protetto da</string>
+    <string name="i_agree_to_the">Accetto i</string>
+    <string name="terms_of_service">Termini di Servizio</string>
+    <string name="privacy_policy">Informativa sulla Privacy</string>
+    <string name="and_connector">e l\'</string>
 </resources>
