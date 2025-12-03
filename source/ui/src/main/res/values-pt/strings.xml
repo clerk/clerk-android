@@ -176,4 +176,5 @@
     <string name="edit_avatar">Editar avatar</string>
     <string name="user_avatar">Avatar do usuário</string>
     <string name="open_user_profile">Abrir perfil do usuário</string>
+    <string name="secured_by">Protegido por</string>
 </resources>
