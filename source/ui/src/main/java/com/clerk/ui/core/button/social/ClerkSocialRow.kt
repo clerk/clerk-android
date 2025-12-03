@@ -72,14 +72,18 @@ fun ClerkSocialRow(
             rowProviders + List(MAX_BUTTONS_PER_ROW - rowProviders.size) { null }
           // Last row with 1 item: center
           rowProviders.size == 1 -> listOf(null, rowProviders[0], null)
-          // Last row with 2 items: edges
-          rowProviders.size == 2 -> listOf(rowProviders[0], null, rowProviders[1])
+          // Last row with 2 items: no middle spacer, buttons take full width
+          rowProviders.size == 2 -> rowProviders
           else -> rowProviders
         }
 
       Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(dp8, Alignment.CenterHorizontally),
+        horizontalArrangement =
+          when {
+            isLastRow && rowProviders.size == 2 -> Arrangement.spacedBy(dp8)
+            else -> Arrangement.spacedBy(dp8, Alignment.CenterHorizontally)
+          },
       ) {
         rowSlots.forEach { slotProvider ->
           Box(modifier = Modifier.weight(1f)) {
@@ -91,6 +95,7 @@ fun ClerkSocialRow(
                 forceIconOnly = true,
                 modifier = Modifier.fillMaxWidth(),
                 clerkTheme = clerkTheme,
+                expandIconWidth = isLastRow && rowProviders.size == 2,
               )
             }
           }
@@ -100,7 +105,7 @@ fun ClerkSocialRow(
   }
 }
 
-@Preview(widthDp = 200)
+@Preview
 @Composable
 private fun Preview() {
   Column(verticalArrangement = Arrangement.spacedBy(dp8)) {
@@ -108,15 +113,6 @@ private fun Preview() {
     ClerkSocialRow(providers = persistentListOf(OAuthProvider.GOOGLE))
 
     // Multiple providers: icon-only layout
-    ClerkSocialRow(
-      providers =
-        persistentListOf(
-          OAuthProvider.GOOGLE,
-          OAuthProvider.FACEBOOK,
-          OAuthProvider.TWITTER,
-          OAuthProvider.GITHUB,
-          OAuthProvider.LINKEDIN,
-        )
-    )
+    ClerkSocialRow(providers = persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK))
   }
 }

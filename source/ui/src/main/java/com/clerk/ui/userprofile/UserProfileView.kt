@@ -51,7 +51,7 @@ internal fun UserProfileStateProvider(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun UserProfileView(clerkTheme: ClerkTheme? = null, onDismiss: () -> Unit) {
+fun UserProfileView(clerkTheme: ClerkTheme? = null, onDismiss: () -> Unit = {}) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
     UserProfileStateProvider(backStack) {

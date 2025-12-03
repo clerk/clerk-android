@@ -77,6 +77,7 @@ fun ClerkSocialButton(
   forceIconOnly: Boolean = false,
   onClick: (OAuthProvider) -> Unit = {},
   clerkTheme: ClerkTheme? = null,
+  expandIconWidth: Boolean = false,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val pressed by interactionSource.collectIsPressedAsState()
@@ -85,8 +86,9 @@ fun ClerkSocialButton(
     isEnabled = isEnabled,
     isPressedCombined = pressed,
     interactionSource = interactionSource,
-    forceIconOnly = forceIconOnly,
     modifier = modifier,
+    forceIconOnly = forceIconOnly,
+    expandIconWidth = expandIconWidth,
     onClick = onClick,
     clerkTheme = clerkTheme,
   )
@@ -120,6 +122,8 @@ internal fun ClerkSocialButton(
     isPressedCombined = pressed || isPressed,
     interactionSource = interactionSource,
     modifier = modifier,
+    forceIconOnly = false,
+    expandIconWidth = false,
     onClick = onClick,
     clerkTheme = clerkTheme,
   )
@@ -146,6 +150,7 @@ internal fun ClerkSocialButtonImpl(
   interactionSource: MutableInteractionSource,
   modifier: Modifier = Modifier,
   forceIconOnly: Boolean = false,
+  expandIconWidth: Boolean = false,
   onClick: (OAuthProvider) -> Unit = {},
   clerkTheme: ClerkTheme? = null,
 ) {
@@ -165,14 +170,18 @@ internal fun ClerkSocialButtonImpl(
             colors = getButtonColors(isPressedCombined),
             contentPadding = ButtonDefaults.ContentPadding,
             modifier =
-              Modifier.width(120.dp)
+              (if (expandIconWidth) {
+                  Modifier.fillMaxWidth()
+                } else {
+                  Modifier.width(120.dp)
+                })
                 .height(dp48)
                 .shadow(
                   elevation = dp3,
                   shape = ClerkMaterialTheme.shape,
                   clip = true,
-                  spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f),
-                  ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f),
+                  spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.5f),
+                  ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.5f),
                 )
                 .defaultMinSize(minWidth = 100.dp),
           ) {
@@ -196,8 +205,8 @@ internal fun ClerkSocialButtonImpl(
                 elevation = dp3,
                 shape = ClerkMaterialTheme.shape,
                 clip = true,
-                spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.4f),
-                ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.4f),
+                spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.5f),
+                ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.5f),
               )
               .defaultMinSize(minWidth = 100.dp),
         ) {

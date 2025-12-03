@@ -9,9 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -20,8 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.ui.auth.AuthView
-import com.clerk.ui.userbutton.UserButton
+import com.clerk.ui.userprofile.UserProfileView
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 
 class UiActivity2 : ComponentActivity() {
@@ -41,11 +37,7 @@ class UiActivity2 : ComponentActivity() {
           contentAlignment = Alignment.Center,
         ) {
           if (user != null) {
-            Scaffold(
-              topBar = { TopAppBar(title = { Text("Home screen") }, actions = { UserButton() }) }
-            ) {}
-          } else {
-            AuthView()
+            UserProfileView()
           }
         }
       }
