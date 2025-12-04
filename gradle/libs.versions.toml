@@ -68,7 +68,7 @@ compose-lints = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.1.1"
 google-playIntegrity = "com.google.android.play:integrity:1.6.0"
-google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.19"
+google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.20"
 junit = "junit:junit:4.13.2"
 jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
