@@ -24,8 +24,8 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun UserProfilePhoneSection(
   phoneNumbers: ImmutableList<PhoneNumber>,
   onError: (String) -> Unit,
-  modifier: Modifier = Modifier,
   onAddPhoneNumberClick: () -> Unit,
+  modifier: Modifier = Modifier,
   onVerify: (PhoneNumber) -> Unit,
 ) {
 

@@ -40,8 +40,8 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun UserProfilePhoneRow(
   phoneNumber: PhoneNumber,
   onError: (String) -> Unit,
-  modifier: Modifier = Modifier,
   onVerify: (PhoneNumber) -> Unit,
+  modifier: Modifier = Modifier,
   viewModel: UserProfileAddPhoneViewModel = viewModel(),
 ) {
   val isPreview = LocalInspectionMode.current
@@ -112,6 +112,7 @@ private fun PhoneWithBadge(phoneNumber: PhoneNumber) {
         Spacers.Vertical.Spacer4()
       }
     }
+    Spacers.Vertical.Spacer4()
     Text(
       text = phoneNumber.phoneNumber.formattedAsPhoneNumberIfPossible,
       style = ClerkMaterialTheme.typography.bodyLarge,
