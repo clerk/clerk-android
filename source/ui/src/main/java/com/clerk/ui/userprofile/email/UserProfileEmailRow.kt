@@ -113,6 +113,7 @@ private fun EmailWithBadge(isPrimary: Boolean, emailAddress: EmailAddress) {
         Spacers.Vertical.Spacer4()
       }
     }
+    Spacers.Vertical.Spacer4()
     Text(
       text = emailAddress.emailAddress,
       style = ClerkMaterialTheme.typography.bodyLarge,
