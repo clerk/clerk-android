@@ -7,7 +7,7 @@ on:
 
 jobs:
   create-release:
-    runs-on: macos-latest-xlarge
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     if: github.event_name == 'workflow_dispatch'
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -109,7 +109,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
-    runs-on: macos-latest-xlarge
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: create-release
     if: always() && (github.event_name == 'release' || needs.create-release.result == 'success')
 
