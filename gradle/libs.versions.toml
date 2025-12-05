@@ -1,11 +1,11 @@
 [versions]
 adsMobileSdk = "0.21.0-beta01"
-activityKtx = "1.12.0"
+activityKtx = "1.12.1"
 agp = "8.13.1"
 appcompat = "1.7.1"
 automap = "0.1.1"
 chucker = "4.2.0"
-composeBom = "2025.11.01"
+composeBom = "2025.12.00"
 core = "1.7.0"
 coreKtxVersion = "1.7.0"
 detekt = "1.23.8"
@@ -30,7 +30,7 @@ turbineVersion = "1.2.1"
 uiToolingPreviewAndroid = "1.10.0"
 kotlinStdlib = "2.2.21"
 kotlinTest = "2.2.21"
-activity = "1.12.0"
+paparazziPlugin = "2.0.0-alpha02"
 
 # Build Versions -- Do not delete
 clerk-api = "0.1.22"
@@ -109,7 +109,7 @@ versioning-plugin = { module = "org.jetbrains.dokka:versioning-plugin", version.
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
 paparazzi = "app.cash.paparazzi:paparazzi:2.0.0-alpha02"
-androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activityKtx" }
 
 
 [plugins]
