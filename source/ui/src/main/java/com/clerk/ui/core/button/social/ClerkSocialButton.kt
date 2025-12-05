@@ -4,6 +4,7 @@ package com.clerk.ui.core.button.social
 
 import android.annotation.SuppressLint
 import androidx.annotation.VisibleForTesting
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -45,6 +46,7 @@ import com.clerk.api.sso.providerName
 import com.clerk.api.sso.setLogoUrl
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp3
@@ -196,6 +198,7 @@ internal fun ClerkSocialButtonImpl(
           interactionSource = interactionSource,
           elevation = ButtonDefaults.buttonElevation(defaultElevation = dp3),
           colors = getButtonColors(isPressedCombined),
+          border = BorderStroke(dp1, ClerkMaterialTheme.colors.shadow.copy(alpha = 0.05f)),
           contentPadding = ButtonDefaults.ContentPadding,
           modifier =
             modifier
