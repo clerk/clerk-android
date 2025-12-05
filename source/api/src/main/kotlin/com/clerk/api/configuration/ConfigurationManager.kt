@@ -7,6 +7,7 @@ import com.clerk.api.Constants.Config.API_TIMEOUT_SECONDS
 import com.clerk.api.Constants.Config.BACKOFF_BASE_DELAY_SECONDS
 import com.clerk.api.Constants.Config.EXPONENTIAL_BACKOFF_SHIFT
 import com.clerk.api.Constants.Config.MAX_ATTESTATION_RETRIES
+import com.clerk.api.Constants.Config.MAX_INITIALIZATION_RETRIES
 import com.clerk.api.Constants.Config.REFRESH_TOKEN_INTERVAL
 import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
 import com.clerk.api.attestation.DeviceAttestationHelper
@@ -83,6 +84,17 @@ internal class ConfigurationManager {
   /** Internal mutable state flow for device attestation status. */
   private val _isDeviceAttested = MutableStateFlow(false)
 
+  /** Internal mutable state flow for initialization errors. */
+  private val _initializationError = MutableStateFlow<Throwable?>(null)
+
+  /**
+   * Public read-only state flow for initialization errors.
+   *
+   * Emits the last error that occurred during initialization, or null if no error. This allows apps
+   * to detect and handle initialization failures gracefully.
+   */
+  val initializationError: StateFlow<Throwable?> = _initializationError.asStateFlow()
+
   /**
    * The publishable key from Clerk Dashboard used for API authentication.
    *
@@ -93,6 +105,9 @@ internal class ConfigurationManager {
   /** Flag to track if configuration has been started to prevent duplicate initialization. */
   private var hasConfigured = false
 
+  /** Stored configuration options for use in retry attempts. */
+  private var storedOptions: ClerkConfigurationOptions? = null
+
   /**
    * Internal job reference for ongoing refresh token operations.
    *
@@ -102,6 +117,9 @@ internal class ConfigurationManager {
 
   /** Internal job reference for ongoing device attestation operations. */
   private var attestationJob: Job? = null
+
+  /** Internal job reference for ongoing initialization operations. */
+  private var initializationJob: Job? = null
 
   /** Ensures storage is initialized when needed. */
   private fun ensureStorageInitialized() {
@@ -144,6 +162,7 @@ internal class ConfigurationManager {
     try {
       this.context = WeakReference(context.applicationContext)
       this.publishableKey = publishableKey
+      this.storedOptions = options
       LocaleProvider.initialize()
 
       val baseUrl =
@@ -165,29 +184,30 @@ internal class ConfigurationManager {
       hasConfigured = true
 
       // Start all background initialization concurrently
-      scope.launch {
-        // Initialize device ID after storage is ready (storage is already initialized above)
-        val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
+      initializationJob =
+        scope.launch {
+          // Initialize device ID after storage is ready (storage is already initialized above)
+          val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
 
-        // Launch data refresh independently (doesn't depend on storage)
-        val dataRefreshJob = async { refreshClientAndEnvironment(options) }
+          // Launch data refresh independently (doesn't depend on storage)
+          val dataRefreshJob = async { refreshClientAndEnvironment(options, retryCount = 0) }
 
-        // Wait for device ID init before setting up lifecycle monitoring
-        deviceIdInitJob.await()
+          // Wait for device ID init before setting up lifecycle monitoring
+          deviceIdInitJob.await()
 
-        // Set up lifecycle monitoring for automatic refresh
-        AppLifecycleListener.configure {
-          if (hasConfigured) {
-            scope.launch {
-              refreshClientAndEnvironment(options)
-              startTokenRefresh()
+          // Set up lifecycle monitoring for automatic refresh
+          AppLifecycleListener.configure {
+            if (hasConfigured) {
+              scope.launch {
+                refreshClientAndEnvironment(options, retryCount = 0)
+                startTokenRefresh()
+              }
             }
           }
-        }
 
-        // Data refresh can continue independently
-        dataRefreshJob.await()
-      }
+          // Data refresh can continue independently
+          dataRefreshJob.await()
+        }
 
       ClerkLog.d("ConfigurationManager configured successfully - background initialization started")
     } catch (e: Exception) {
@@ -244,10 +264,14 @@ internal class ConfigurationManager {
    * - Sets initialization status based on operation success
    * - Launches device attestation independently to avoid blocking
    * - Starts token refresh as soon as client data is available
+   * - Retries with exponential backoff on failure (up to MAX_INITIALIZATION_RETRIES)
    *
    * The method is safe to call multiple times and will not interfere with ongoing requests.
+   *
+   * @param options Configuration options for the SDK.
+   * @param retryCount Current retry attempt number (0 for initial attempt).
    */
-  private fun refreshClientAndEnvironment(options: ClerkConfigurationOptions?) {
+  private fun refreshClientAndEnvironment(options: ClerkConfigurationOptions?, retryCount: Int) {
     if (!hasConfigured) {
       ClerkLog.w("Attempted to refresh before configuration. Skipping.")
       return
@@ -257,11 +281,17 @@ internal class ConfigurationManager {
     val context = context?.get()
     if (context == null) {
       ClerkLog.w("Application context no longer available. Cannot refresh client and environment.")
+      _initializationError.value = IllegalStateException("Application context no longer available")
       return
     }
 
     if (Clerk.debugMode) {
-      ClerkLog.d("Starting client and environment refresh")
+      ClerkLog.d("Starting client and environment refresh (attempt ${retryCount + 1})")
+    }
+
+    // Clear error state on new attempt
+    if (retryCount == 0) {
+      _initializationError.value = null
     }
 
     scope.launch {
@@ -285,6 +315,7 @@ internal class ConfigurationManager {
             // Update state immediately
             updateClerkState(clientResult.value, environmentResult.value)
             _isInitialized.value = true
+            _initializationError.value = null
 
             // Launch dependent operations concurrently
             launch {
@@ -309,19 +340,91 @@ internal class ConfigurationManager {
               ClerkLog.d("Client and environment refresh completed successfully")
             }
           } else {
-            ClerkLog.e(
+            val errorMessage =
               "Failed to refresh client and environment -" +
                 " client: ${clientResult.javaClass.simpleName}," +
                 " environment: ${environmentResult.javaClass.simpleName}"
+            ClerkLog.e(errorMessage)
+            handleInitializationFailure(
+              error = IllegalStateException(errorMessage),
+              options = options,
+              retryCount = retryCount,
             )
-            _isInitialized.value = false
           }
         }
       } catch (e: Exception) {
         ClerkLog.e("Exception during client and environment refresh: ${e.message}")
-        _isInitialized.value = false
+        handleInitializationFailure(error = e, options = options, retryCount = retryCount)
       }
     }
+  }
+
+  /**
+   * Handles initialization failure by setting error state and scheduling retry if within limits.
+   *
+   * @param error The exception that caused the failure.
+   * @param options Configuration options for retry.
+   * @param retryCount Current retry attempt number.
+   */
+  private fun handleInitializationFailure(
+    error: Throwable,
+    options: ClerkConfigurationOptions?,
+    retryCount: Int,
+  ) {
+    _isInitialized.value = false
+    _initializationError.value = error
+
+    if (retryCount < MAX_INITIALIZATION_RETRIES) {
+      scope.launch { retryInitialization(options, retryCount + 1) }
+    } else {
+      ClerkLog.e(
+        "Max initialization retries ($MAX_INITIALIZATION_RETRIES) reached. " +
+          "Initialization failed permanently. Call Clerk.reinitialize() to retry manually."
+      )
+    }
+  }
+
+  /**
+   * Retries initialization after a delay with exponential backoff.
+   *
+   * @param options Configuration options for the SDK.
+   * @param retryCount Current retry attempt number.
+   */
+  private suspend fun retryInitialization(options: ClerkConfigurationOptions?, retryCount: Int) {
+    // Exponential backoff: 5s, 10s, 20s
+    val delaySeconds = BACKOFF_BASE_DELAY_SECONDS * (EXPONENTIAL_BACKOFF_SHIFT shl (retryCount - 1))
+    ClerkLog.d("Retrying initialization in ${delaySeconds}s (attempt $retryCount)")
+
+    delay(delaySeconds.seconds)
+
+    // Retry the initialization
+    refreshClientAndEnvironment(options, retryCount)
+  }
+
+  /**
+   * Manually triggers a reinitialization attempt.
+   *
+   * This method can be called by developers when initialization has failed and they want to retry
+   * manually, for example after network connectivity is restored.
+   *
+   * @return true if reinitialization was started, false if SDK is not configured or already
+   *   initialized.
+   */
+  fun reinitialize(): Boolean {
+    if (!hasConfigured) {
+      ClerkLog.w("Cannot reinitialize - SDK not configured. Call Clerk.initialize() first.")
+      return false
+    }
+
+    if (_isInitialized.value) {
+      ClerkLog.d("SDK already initialized. Skipping reinitialization.")
+      return false
+    }
+
+    ClerkLog.d("Manual reinitialization requested")
+    _initializationError.value = null
+    refreshClientAndEnvironment(storedOptions, retryCount = 0)
+    return true
   }
 
   /**
