@@ -133,10 +133,11 @@ enum class OAuthProvider {
      * responses that contain strategy strings.
      *
      * @param strategy The OAuth strategy string to convert (e.g., "oauth_google", "oauth_github").
-     *   The strategy string should match one of the supported provider strategies.
-     * @return The corresponding [OAuthProvider] enum value.
-     * @throws IllegalArgumentException If no matching provider is found for the given strategy
-     *   string.
+     *   The strategy string should match one of the supported provider strategies. For custom OAuth
+     *   providers, any strategy string starting with "oauth_" will return [CUSTOM]. Non-OAuth
+     *   strategies will return [UNKNOWN].
+     * @return The corresponding [OAuthProvider] enum value. Returns [CUSTOM] for unrecognized OAuth
+     *   strategies and [UNKNOWN] for non-OAuth strategies.
      *
      * ### Example usage:
      * ```kotlin
@@ -146,7 +147,10 @@ enum class OAuthProvider {
      */
     fun fromStrategy(strategy: String): OAuthProvider {
       return OAuthProvider.entries.find { it.providerData.strategy == strategy }
-        ?: error("Unknown strategy: $strategy")
+        ?: when {
+          strategy.startsWith("oauth_") -> CUSTOM
+          else -> UNKNOWN
+        }
     }
   }
 
