@@ -131,6 +131,9 @@ authentication and reset password. See the [README](samples/custom-flows/README.
 `samples/linear-clone`: This is an example that shows how you might integrate with compose navigation, it is a native recreation of the Linear auth flow (which is web based)
 and includes Sign in with Google, Passkey authentication, Sign out, and Email Code Authentication. See the [README](samples/linear-clone/README.md) for more info.
 
+#### Prebuilt UI
+`samples/prebuilt-ui`: This is an example that shows how to integrate the Clerk prebuilt UI components. See the [README](samples/prebuilt-ui/README.md) for more info. 
+
 ## Documentation
 
 - [Reference Documentation](https://clerk-android.clerkstage.dev)
