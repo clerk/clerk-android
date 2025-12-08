@@ -33,3 +33,5 @@ include(
   ":source:ui",
   ":workbench",
 )
+
+include(":samples:prebuilt-ui")
