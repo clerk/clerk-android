@@ -29,7 +29,7 @@ include(
   ":samples:custom-flows",
   ":samples:linear-clone",
   ":source:api",
-  "source:telemetry",
+  ":source:telemetry",
   ":source:ui",
   ":workbench",
 )

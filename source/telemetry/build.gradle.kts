@@ -3,6 +3,38 @@ plugins {
   alias(libs.plugins.android.kotlin.multiplatform.library)
   alias(libs.plugins.android.lint)
   alias(libs.plugins.kotlin.plugin.serialization)
+  alias(libs.plugins.mavenPublish)
+}
+
+// Configure Maven publishing for this module
+mavenPublishing {
+  coordinates("com.clerk", "clerk-android-telemetry", libs.versions.clerk.telemetry.get())
+
+  pom {
+    name.set("Clerk Android Telemetry")
+    description.set("Telemetry module for Clerk Android SDK")
+    inceptionYear.set("2025")
+    url.set("https://github.com/clerk/clerk-android")
+    licenses {
+      license {
+        name.set("MIT License")
+        url.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+        distribution.set("https://github.com/clerk/clerk-android/blob/main/LICENSE")
+      }
+    }
+    developers {
+      developer {
+        id.set("clerk")
+        name.set("Clerk")
+        url.set("https://clerk.com")
+      }
+    }
+    scm {
+      url.set("https://github.com/clerk/clerk-android")
+      connection.set("scm:git:git://github.com/clerk/clerk-android.git")
+      developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
+    }
+  }
 }
 
 kotlin {
