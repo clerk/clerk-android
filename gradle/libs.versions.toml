@@ -33,9 +33,9 @@ kotlinTest = "2.2.21"
 paparazziPlugin = "2.0.0-alpha02"
 
 # Build Versions -- Do not delete
-clerk-api = "0.1.22"
-clerk-telemetry = "0.1.0-SNAPSHOT"
-clerk-ui = "0.1.0-SNAPSHOT"
+clerk-api = "0.1.23"
+clerk-telemetry = "0.1.0"
+clerk-ui = "0.1.0"
 jdk = "17"
 jvmTarget = "17"
 kotlin = "2.2.21"

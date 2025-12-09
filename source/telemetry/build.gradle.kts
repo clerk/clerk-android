@@ -6,7 +6,6 @@ plugins {
   alias(libs.plugins.mavenPublish)
 }
 
-// Configure Maven publishing for this module
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-telemetry", libs.versions.clerk.telemetry.get())
 
