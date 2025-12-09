@@ -171,6 +171,8 @@ internal fun ClerkSocialButtonImpl(
             elevation = ButtonDefaults.buttonElevation(defaultElevation = dp3),
             colors = getButtonColors(isPressedCombined),
             contentPadding = ButtonDefaults.ContentPadding,
+            border =
+              BorderStroke(dp1, color = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f)),
             modifier =
               (if (expandIconWidth) {
                   Modifier.fillMaxWidth()
@@ -198,7 +200,7 @@ internal fun ClerkSocialButtonImpl(
           interactionSource = interactionSource,
           elevation = ButtonDefaults.buttonElevation(defaultElevation = dp3),
           colors = getButtonColors(isPressedCombined),
-          border = BorderStroke(dp1, ClerkMaterialTheme.colors.shadow.copy(alpha = 0.05f)),
+          border = BorderStroke(dp1, ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f)),
           contentPadding = ButtonDefaults.ContentPadding,
           modifier =
             modifier
