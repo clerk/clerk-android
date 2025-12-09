@@ -77,6 +77,8 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 }
 
 dependencies {
+  api(projects.source.telemetry)
+
   implementation(platform(libs.compose.bom))
   implementation(libs.ads.mobile.sdk)
   implementation(libs.androidx.appcompat)
@@ -96,7 +98,6 @@ dependencies {
   implementation(libs.kotlinx.immutable)
   implementation(libs.material3)
   implementation(libs.materialKolor)
-  implementation(projects.source.telemetry)
 
   compileOnly(projects.clerk.source.api)
 
