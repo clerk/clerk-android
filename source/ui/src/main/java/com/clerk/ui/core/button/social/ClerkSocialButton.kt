@@ -31,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalDensity
@@ -180,13 +179,6 @@ internal fun ClerkSocialButtonImpl(
                   Modifier.width(120.dp)
                 })
                 .height(dp48)
-                .shadow(
-                  elevation = dp3,
-                  shape = ClerkMaterialTheme.shape,
-                  clip = true,
-                  spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.5f),
-                  ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.5f),
-                )
                 .defaultMinSize(minWidth = 100.dp),
           ) {
             SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = true)
@@ -202,18 +194,7 @@ internal fun ClerkSocialButtonImpl(
           colors = getButtonColors(isPressedCombined),
           border = BorderStroke(dp1, ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f)),
           contentPadding = ButtonDefaults.ContentPadding,
-          modifier =
-            modifier
-              .fillMaxWidth()
-              .height(dp48)
-              .shadow(
-                elevation = dp3,
-                shape = ClerkMaterialTheme.shape,
-                clip = true,
-                spotColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.5f),
-                ambientColor = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.5f),
-              )
-              .defaultMinSize(minWidth = 100.dp),
+          modifier = modifier.fillMaxWidth().height(dp48).defaultMinSize(minWidth = 100.dp),
         ) {
           SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = false)
         }
