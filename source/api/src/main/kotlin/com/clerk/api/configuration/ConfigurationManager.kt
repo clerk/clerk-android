@@ -455,9 +455,7 @@ internal class ConfigurationManager {
         if (Clerk.debugMode) {
           ClerkLog.d("Connectivity restored - SDK already initialized, refreshing data")
         }
-        scope.launch {
-          refreshClientAndEnvironment(storedOptions, retryCount = 0)
-        }
+        scope.launch { refreshClientAndEnvironment(storedOptions, retryCount = 0) }
       }
     }
   }

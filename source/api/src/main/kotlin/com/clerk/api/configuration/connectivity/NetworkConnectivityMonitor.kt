@@ -76,8 +76,9 @@ internal object NetworkConnectivityMonitor {
       }
 
       override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
-        val hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-          capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        val hasInternet =
+          capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
         if (Clerk.debugMode) {
           ClerkLog.d("NetworkConnectivityMonitor: Capabilities changed, hasInternet=$hasInternet")
         }
@@ -107,7 +108,8 @@ internal object NetworkConnectivityMonitor {
 
     try {
       connectivityManager =
-        context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE)
+          as? ConnectivityManager
 
       connectivityManager?.let { cm ->
         // Check initial connectivity state
@@ -129,10 +131,7 @@ internal object NetworkConnectivityMonitor {
         isMonitoring = true
 
         ClerkLog.d("NetworkConnectivityMonitor configured and started")
-      }
-        ?: run {
-          ClerkLog.w("NetworkConnectivityMonitor: ConnectivityManager not available")
-        }
+      } ?: run { ClerkLog.w("NetworkConnectivityMonitor: ConnectivityManager not available") }
     } catch (e: Exception) {
       ClerkLog.e("NetworkConnectivityMonitor: Failed to configure: ${e.message}")
     }
@@ -145,13 +144,13 @@ internal object NetworkConnectivityMonitor {
    */
   private fun checkCurrentConnectivity(): Boolean {
     return try {
-      connectivityManager?.let { cm ->
-        val activeNetwork = cm.activeNetwork ?: return false
-        val capabilities = cm.getNetworkCapabilities(activeNetwork) ?: return false
-        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-          capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-      }
-        ?: false
+      val cm = connectivityManager ?: return false
+
+      val activeNetwork = cm.activeNetwork
+      val capabilities = activeNetwork?.let { cm.getNetworkCapabilities(it) }
+
+      capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
+        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     } catch (e: Exception) {
       ClerkLog.w("NetworkConnectivityMonitor: Error checking connectivity: ${e.message}")
       false
