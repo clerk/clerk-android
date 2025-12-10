@@ -11,6 +11,7 @@ import com.clerk.api.Constants.Config.MAX_INITIALIZATION_RETRIES
 import com.clerk.api.Constants.Config.REFRESH_TOKEN_INTERVAL
 import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
 import com.clerk.api.attestation.DeviceAttestationHelper
+import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
@@ -182,6 +183,9 @@ internal class ConfigurationManager {
 
       // Mark as configured before starting async operations
       hasConfigured = true
+
+      // Set up network connectivity monitoring for automatic retry on reconnection
+      configureConnectivityMonitor(context.applicationContext)
 
       // Start all background initialization concurrently
       initializationJob =
@@ -425,6 +429,37 @@ internal class ConfigurationManager {
     _initializationError.value = null
     refreshClientAndEnvironment(storedOptions, retryCount = 0)
     return true
+  }
+
+  /**
+   * Configures the network connectivity monitor to automatically retry initialization when
+   * connectivity is restored.
+   *
+   * This enables proactive initialization without requiring a background/foreground app cycle. When
+   * the device regains internet access after being offline, the SDK will automatically attempt to
+   * initialize if it hasn't completed initialization yet.
+   *
+   * @param context The application context used for ConnectivityManager access.
+   */
+  private fun configureConnectivityMonitor(context: Context) {
+    NetworkConnectivityMonitor.configure(context) {
+      // Callback invoked when connectivity is restored
+      if (!_isInitialized.value && hasConfigured) {
+        ClerkLog.d("Connectivity restored - attempting automatic reinitialization")
+        scope.launch {
+          _initializationError.value = null
+          refreshClientAndEnvironment(storedOptions, retryCount = 0)
+        }
+      } else if (_isInitialized.value) {
+        // Already initialized, but connectivity was restored - refresh data
+        if (Clerk.debugMode) {
+          ClerkLog.d("Connectivity restored - SDK already initialized, refreshing data")
+        }
+        scope.launch {
+          refreshClientAndEnvironment(storedOptions, retryCount = 0)
+        }
+      }
+    }
   }
 
   /**
