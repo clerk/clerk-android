@@ -54,7 +54,7 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 }
 
 mavenPublishing {
-  coordinates("com.clerk", "clerk-android", libs.versions.clerk.api.get())
+  coordinates("com.clerk", "clerk-android-api", libs.versions.clerk.api.get())
   publishToMavenCentral()
   pom {
     name.set("Clerk Android UI")
@@ -110,11 +110,11 @@ dependencies {
 
   compileOnly(libs.androidx.compose.foundation)
 
-  testImplementation(kotlin("test"))
   testImplementation(platform(libs.compose.bom))
-  testImplementation(libs.androidx.compose.foundation)
+  testImplementation(kotlin("test"))
   testImplementation(libs.androidx.appcompat)
   testImplementation(libs.androidx.arch.test)
+  testImplementation(libs.androidx.compose.foundation)
   testImplementation(libs.core.ktx)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
