@@ -9,9 +9,10 @@ class WorkbenchApplication : Application() {
   override fun onCreate() {
     super.onCreate()
     StorageHelper.initialize(this)
+
     val publicKey = StorageHelper.loadValue(StorageKey.PUBLIC_KEY)
-    publicKey?.let {
-      Clerk.initialize(this, it, options = ClerkConfigurationOptions(enableDebugMode = true))
+    publicKey?.let { key ->
+      Clerk.initialize(this, key, options = ClerkConfigurationOptions(enableDebugMode = true))
     }
   }
 }

@@ -1,14 +1,20 @@
 name: Android Unit Test
-
 on:
   pull_request:
     branches: [ "main", "sam/clerk-ui" ]
 
 jobs:
-  build:
-
+  test-module:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-
+    strategy:
+      matrix:
+        include:
+          - module: ":source:api"
+            path: "source/api"
+            label: "source-api"   # <— safe artifact label (no /)
+          - module: ":source:ui"
+            path: "source/ui"
+            label: "source-ui"
     steps:
       - uses: actions/checkout@v6
       - name: set up JDK 21
@@ -20,5 +26,16 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Build with Gradle
-        run: ./gradlew :source:api:testDebugUnitTest
+
+      - name: Run unit tests for ${{ matrix.module }}
+        run: ./gradlew ${{ matrix.module }}:testDebugUnitTest --build-cache --parallel
+
+      - name: Upload test results (${{ matrix.label }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.label }}    # <— no slashes
+          path: |
+            ${{ matrix.path }}/build/test-results/**
+            ${{ matrix.path }}/build/reports/tests/**
+          if-no-files-found: warn

@@ -24,9 +24,7 @@ internal object StorageHelper {
     secureStorage = context.getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
   }
 
-  /**
-   * Checks if storage has been initialized.
-   */
+  /** Checks if storage has been initialized. */
   private fun isInitialized(): Boolean {
     return ::secureStorage.isInitialized
   }
@@ -34,7 +32,9 @@ internal object StorageHelper {
   /** Save value of string type to [secureStorage] */
   internal fun saveValue(key: StorageKey, value: String) {
     if (!isInitialized()) {
-      ClerkLog.w("StorageHelper.saveValue called before initialization, ignoring save for key: ${key.name}")
+      ClerkLog.w(
+        "StorageHelper.saveValue called before initialization, ignoring save for key: ${key.name}"
+      )
       return
     }
     if (value.isNotEmpty()) {
@@ -46,7 +46,9 @@ internal object StorageHelper {
   /** Load value of string type from [secureStorage] */
   internal fun loadValue(key: StorageKey): String? {
     if (!isInitialized()) {
-      ClerkLog.w("StorageHelper.loadValue called before initialization, returning null for key: ${key.name}")
+      ClerkLog.w(
+        "StorageHelper.loadValue called before initialization, returning null for key: ${key.name}"
+      )
       return null
     }
     return secureStorage.getString(key.name, null)
@@ -55,17 +57,18 @@ internal object StorageHelper {
   /** Delete value of string type from [secureStorage] */
   internal fun deleteValue(key: StorageKey) {
     if (!isInitialized()) {
-      ClerkLog.w("StorageHelper.deleteValue called before initialization, ignoring delete for key: ${key.name}")
+      ClerkLog.w(
+        "StorageHelper.deleteValue called before initialization, ignoring delete for key: ${key.name}"
+      )
       return
     }
     secureStorage.edit { remove(key.name) }
   }
 
   /**
-   * Resets the storage helper for testing purposes.
-   * This method should only be used in tests.
-   * Clears all stored values. To test uninitialized state, tests should call this
-   * and then test methods before calling initialize().
+   * Resets the storage helper for testing purposes. This method should only be used in tests.
+   * Clears all stored values. To test uninitialized state, tests should call this and then test
+   * methods before calling initialize().
    */
   @VisibleForTesting
   internal fun reset(context: Context? = null) {
@@ -73,13 +76,11 @@ internal object StorageHelper {
       secureStorage.edit().clear().commit()
     }
     // If context is provided and storage is initialized, reinitialize to ensure clean state
-    context?.let {
-      initialize(it)
-    }
+    context?.let { initialize(it) }
   }
 }
 
-internal enum class StorageKey(val key: String) {
-  DEVICE_TOKEN("device_token"),
-  DEVICE_ID("device_id"),
+internal enum class StorageKey {
+  DEVICE_TOKEN,
+  DEVICE_ID,
 }

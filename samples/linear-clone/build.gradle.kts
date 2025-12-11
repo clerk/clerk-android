@@ -44,7 +44,6 @@ android {
 dependencies {
   implementation(platform(libs.compose.bom))
   implementation(libs.activity.compose)
-  implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime)
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.graphics)
@@ -52,9 +51,13 @@ dependencies {
   implementation(libs.androidx.ui.tooling.preview)
   implementation(libs.coil)
   implementation(libs.coil.okhttp)
+  implementation(libs.core.ktx)
   implementation(libs.kotlinx.serialization)
   implementation(libs.material3)
   implementation(libs.navigation.compose)
   implementation(projects.source.api)
+
   lintChecks(libs.compose.lints)
 }
+
+tasks.matching { it.name.startsWith("dokka") }.configureEach { enabled = false }

@@ -52,7 +52,7 @@ internal interface UserApi {
    *
    * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]
    * @return [ClerkResult] containing the [User] on success or [ClerkErrorResponse] on failure
-   * @see [com.clerk.user.User.get]
+   * @see [com.clerk.api.user.get]
    */
   @GET(ApiPaths.User.BASE)
   suspend fun getUser(
@@ -66,7 +66,7 @@ internal interface UserApi {
    * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]
    * @return [ClerkResult] containing the updated [User] on success or [ClerkErrorResponse] on
    *   failure
-   * @see [com.clerk.user.User.update]
+   * @see [com.clerk.api.user.update]
    */
   @PATCH(ApiPaths.User.BASE)
   @FormUrlEncoded
@@ -408,6 +408,7 @@ internal interface UserApi {
    * @return [ClerkResult] containing the updated [Passkey] on success or [ClerkErrorResponse] on
    *   failure
    */
+  @FormUrlEncoded
   @PATCH(ApiPaths.User.Passkey.WITH_ID)
   suspend fun updatePasskey(
     @Path(ApiParams.PASSKEY_ID) passkeyId: String,
@@ -467,7 +468,8 @@ internal interface UserApi {
    */
   @DELETE(ApiPaths.User.ExternalAccount.WITH_ID)
   suspend fun deleteExternalAccount(
-    @Path(ApiParams.EXTERNAL_ACCOUNT_ID) externalAccountId: String
+    @Path(ApiParams.EXTERNAL_ACCOUNT_ID) externalAccountId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   /**
@@ -528,7 +530,7 @@ internal interface UserApi {
    * @param sessionId Optional session ID for the operation
    * @return A [ClerkResult] containing either the accepted [OrganizationInvitation] on success or a
    *   [ClerkErrorResponse] on failure
-   * @see com.clerk.api.organizations.acceptInvitation
+   * @see com.clerk.api.organizations.accept
    */
   @POST(ApiPaths.User.ACCEPT_ORGANIZATION_INVITATION)
   suspend fun acceptUserOrganizationInvitation(
@@ -543,7 +545,7 @@ internal interface UserApi {
    * @param sessionId Optional session ID for the operation
    * @return A [ClerkResult] containing either the accepted [OrganizationSuggestion] on success or a
    *   [ClerkErrorResponse] on failure
-   * @see com.clerk.api.organizations.acceptSuggestion
+   * @see com.clerk.api.organizations.accept
    */
   @POST(ApiPaths.User.ACCEPT_ORGANIZATION_SUGGESTION)
   suspend fun acceptOrganizationSuggestion(
@@ -617,4 +619,39 @@ internal interface UserApi {
     @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<ClerkPaginatedResponse<OrganizationSuggestion>, ClerkErrorResponse>
+
+  /**
+   * Sets whether a phone number is reserved for second-factor authentication.
+   *
+   * @param phoneNumberId The ID of the phone number to update.
+   * @param reservedForSecondFactor A boolean indicating if the phone number should be reserved for
+   *   2FA.
+   * @param sessionId Optional session ID. Defaults to the current session ID from [Clerk.session].
+   * @return A [ClerkResult] containing the updated [PhoneNumber] on success or a
+   *   [ClerkErrorResponse] on failure.
+   */
+  @FormUrlEncoded
+  @PATCH(ApiPaths.User.PhoneNumber.WITH_ID)
+  suspend fun setReservedForSecondFactor(
+    @Path(ApiParams.PHONE_NUMBER_ID) phoneNumberId: String,
+    @Field("reserved_for_second_factor") reservedForSecondFactor: Boolean,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
+  ): ClerkResult<PhoneNumber, ClerkErrorResponse>
+
+  /**
+   * Sets a phone number as the default for second-factor authentication.
+   *
+   * @param phoneNumberId The ID of the phone number to set as the default second factor.
+   * @param defaultSecondFactor Must be `true` to set this phone number as the default.
+   * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session].
+   * @return [ClerkResult] containing the updated [PhoneNumber] on success or [ClerkErrorResponse]
+   *   on failure.
+   */
+  @FormUrlEncoded
+  @PATCH(ApiPaths.User.PhoneNumber.WITH_ID)
+  suspend fun makeDefaultSecondFactor(
+    @Path(ApiParams.PHONE_NUMBER_ID) phoneNumberId: String,
+    @Field("default_second_factor") defaultSecondFactor: Boolean,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
+  ): ClerkResult<PhoneNumber, ClerkErrorResponse>
 }

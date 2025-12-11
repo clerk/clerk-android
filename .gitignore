@@ -22,3 +22,8 @@ local.properties
 /samples/custom-flows/build/
 /source/api/build/
 /workbench/build/
+/source/ui/build/
+/.kotlin/sessions/
+/.kotlin/metadata/
+/source/telemetry/build/
+/samples/prebuilt-ui/build/

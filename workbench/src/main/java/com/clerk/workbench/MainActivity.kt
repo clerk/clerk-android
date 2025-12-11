@@ -40,10 +40,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.clerk.workbench.ui.theme.ClerkPrimary
-import com.clerk.workbench.ui.theme.ClerkTheme
+import com.clerk.workbench.ui.theme.WorkbenchTheme
+import com.jakewharton.processphoenix.ProcessPhoenix
 
 class MainActivity : ComponentActivity() {
 
@@ -52,12 +52,15 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
     setContent {
       val context = LocalContext.current
-      ClerkTheme {
+      WorkbenchTheme {
         MainContent(
-          onSave = { StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it) },
+          onSave = {
+            StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it)
+            ProcessPhoenix.triggerRebirth(context)
+          },
           onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
-          onClickFirstItem = { context.startActivity(Intent(context, UiActivity::class.java)) },
-          onClickSecondItem = {},
+          onClickFirstItem = { context.startActivity(Intent(context, UiActivity1::class.java)) },
+          onClickSecondItem = { context.startActivity(Intent(context, UiActivity2::class.java)) },
         )
       }
     }
@@ -269,18 +272,4 @@ private object Spacing {
   val dividerThickness = 1.dp
   val cardCornerRadius = 8.dp
   val dividerVerticalPadding = 10.dp
-}
-
-@PreviewLightDark
-@Composable
-private fun MainContentPreview() {
-  ClerkTheme {
-    MainContent(onSave = {}, onClear = {}, onClickFirstItem = {}, onClickSecondItem = {})
-  }
-}
-
-@PreviewLightDark
-@Composable
-private fun PreviewSettingsBottomSheet() {
-  ClerkTheme { SettingsBottomSheetContent(onClear = {}, onSave = {}) }
 }

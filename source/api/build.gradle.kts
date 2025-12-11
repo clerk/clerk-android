@@ -16,7 +16,7 @@ android {
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
-    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.sdk.get()}\"")
+    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.api.get()}\"")
   }
 
   testOptions { unitTests.isIncludeAndroidResources = true }
@@ -30,6 +30,15 @@ android {
   }
 
   buildFeatures { buildConfig = true }
+  packaging {
+    resources {
+      excludes += "/META-INF/LICENSE.md"
+      excludes += "/META-INF/NOTICE.md"
+      excludes += "/META-INF/LICENSE-notice.md"
+      excludes += "/META-INF/NOTICE"
+      excludes += "/META-INF/LICENSE*"
+    }
+  }
 }
 
 tasks.withType<DokkaTaskPartial>().configureEach {
@@ -45,10 +54,8 @@ tasks.withType<DokkaTaskPartial>().configureEach {
 }
 
 mavenPublishing {
-  signAllPublications()
-  coordinates("com.clerk", "clerk-android", libs.versions.clerk.sdk.get())
+  coordinates("com.clerk", "clerk-android-api", libs.versions.clerk.api.get())
   publishToMavenCentral()
-
   pom {
     name.set("Clerk Android UI")
     description.set("UI components for Clerk Android SDK")
@@ -77,6 +84,9 @@ mavenPublishing {
 }
 
 dependencies {
+  api(libs.kotlinx.serialization)
+
+  implementation(platform(libs.compose.bom))
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.browser)
   implementation(libs.androidx.credentials)
@@ -92,16 +102,19 @@ dependencies {
   implementation(libs.jwt.decode)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
-  implementation(libs.kotlinx.serialization)
   implementation(libs.ksp.api)
   implementation(libs.okhttp)
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
   implementation(libs.retrofit.kotlinx)
 
+  compileOnly(libs.androidx.compose.foundation)
+
+  testImplementation(platform(libs.compose.bom))
   testImplementation(kotlin("test"))
   testImplementation(libs.androidx.appcompat)
   testImplementation(libs.androidx.arch.test)
+  testImplementation(libs.androidx.compose.foundation)
   testImplementation(libs.core.ktx)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
