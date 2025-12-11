@@ -159,4 +159,4 @@ jobs:
         run: |
           ./gradlew :source:api:publishMavenPublicationToMavenCentralRepository \
                     :source:ui:publishMavenPublicationToMavenCentralRepository \
-                    :source:telemetry:publishMavenPublicationToMavenCentralRepository
+                    :source:telemetry:publishAndroidPublicationToMavenCentralRepository
