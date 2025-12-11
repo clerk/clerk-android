@@ -87,7 +87,6 @@ jobs:
           | Module | Version |
           |--------|---------|
           | clerk-api | $CLERK_API_VERSION |
-          | clerk-telemetry | $CLERK_TELEMETRY_VERSION |
           | clerk-ui | $CLERK_UI_VERSION |
           
           ## What's Changed
@@ -99,7 +98,6 @@ jobs:
           Add to your \`build.gradle\`:
           \`\`\`gradle
           implementation(\"com.clerk:clerk-api:$CLERK_API_VERSION\")
-          implementation(\"com.clerk:clerk-telemetry:$CLERK_TELEMETRY_VERSION\")
           implementation(\"com.clerk:clerk-ui:$CLERK_UI_VERSION\")
           \`\`\`
           
@@ -147,7 +145,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v3
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -158,4 +156,4 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
-        run: ./gradlew :source:api:publishMavenPublicationToMavenCentralRepository
+        run: ./gradlew :source:api:publishMavenPublicationToMavenCentralRepository && :source:ui:publishMavenPublicationToMavenCentralRepository && :source:telemetry:publishMavenPublicationToMavenCentralRepository

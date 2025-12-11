@@ -80,7 +80,7 @@ core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
 firebase-appDistribution = "com.google.firebase:firebase-appdistribution:17.0.0"
 firebase-bom = "com.google.firebase:firebase-bom:34.6.0"
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.1.1"
-google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.19"
+google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.20"
 google-playIntegrity = "com.google.android.play:integrity:1.6.0"
 junit = "junit:junit:4.13.2"
 jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
@@ -98,7 +98,7 @@ ktor-client-okhttp = "io.ktor:ktor-client-okhttp:3.3.3"
 ktor-serialization-kotlinx-json = "io.ktor:ktor-serialization-kotlinx-json:3.3.3"
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
-mockito = "org.mockito:mockito-core:5.20.0"
+mockito = "org.mockito:mockito-core:5.21.0"
 mockk = "io.mockk:mockk:1.14.6"
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
