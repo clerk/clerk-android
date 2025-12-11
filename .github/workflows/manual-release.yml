@@ -19,14 +19,25 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history for tags
 
-      - name: Get version from libs.versions.toml
+      - name: Get versions from libs.versions.toml
         id: get_version
         run: |
-          VERSION=$(grep '^clerk-sdk = ' gradle/libs.versions.toml | sed 's/clerk-sdk = "\(.*\)"/\1/')
-          TAG_NAME="v$VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          CLERK_API_VERSION=$(grep '^clerk-api = ' gradle/libs.versions.toml | sed 's/clerk-api = "\(.*\)"/\1/')
+          CLERK_TELEMETRY_VERSION=$(grep '^clerk-telemetry = ' gradle/libs.versions.toml | sed 's/clerk-telemetry = "\(.*\)"/\1/')
+          CLERK_UI_VERSION=$(grep '^clerk-ui = ' gradle/libs.versions.toml | sed 's/clerk-ui = "\(.*\)"/\1/')
+          
+          # Use clerk-api version for the tag
+          TAG_NAME="v$CLERK_API_VERSION"
+          
+          echo "clerk_api_version=$CLERK_API_VERSION" >> $GITHUB_OUTPUT
+          echo "clerk_telemetry_version=$CLERK_TELEMETRY_VERSION" >> $GITHUB_OUTPUT
+          echo "clerk_ui_version=$CLERK_UI_VERSION" >> $GITHUB_OUTPUT
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-          echo "Found version: $VERSION"
+          
+          echo "Found versions:"
+          echo "  clerk-api: $CLERK_API_VERSION"
+          echo "  clerk-telemetry: $CLERK_TELEMETRY_VERSION"
+          echo "  clerk-ui: $CLERK_UI_VERSION"
           echo "Tag name: $TAG_NAME"
 
       - name: Create and push tag
@@ -48,7 +59,9 @@ jobs:
         run: |
           CURRENT_TAG="${{ steps.get_version.outputs.tag_name }}"
           PREVIOUS_TAG="${{ steps.get_previous_tag.outputs.previous_tag }}"
-          VERSION="${{ steps.get_version.outputs.version }}"
+          CLERK_API_VERSION="${{ steps.get_version.outputs.clerk_api_version }}"
+          CLERK_TELEMETRY_VERSION="${{ steps.get_version.outputs.clerk_telemetry_version }}"
+          CLERK_UI_VERSION="${{ steps.get_version.outputs.clerk_ui_version }}"
           
           echo "Generating release notes from $PREVIOUS_TAG to $CURRENT_TAG"
           
@@ -69,7 +82,15 @@ jobs:
           fi
           
           # Build release notes directly
-          RELEASE_NOTES="## What's Changed
+          RELEASE_NOTES="## 📦 Module Versions
+          
+          | Module | Version |
+          |--------|---------|
+          | clerk-api | $CLERK_API_VERSION |
+          | clerk-telemetry | $CLERK_TELEMETRY_VERSION |
+          | clerk-ui | $CLERK_UI_VERSION |
+          
+          ## What's Changed
           
           $COMMITS
           
@@ -77,7 +98,9 @@ jobs:
           
           Add to your \`build.gradle\`:
           \`\`\`gradle
-          implementation(\"com.clerk:clerk-android:$VERSION\")
+          implementation(\"com.clerk:clerk-api:$CLERK_API_VERSION\")
+          implementation(\"com.clerk:clerk-telemetry:$CLERK_TELEMETRY_VERSION\")
+          implementation(\"com.clerk:clerk-ui:$CLERK_UI_VERSION\")
           \`\`\`
           
           ### 👥 Contributors
