@@ -123,6 +123,28 @@ object Clerk {
    * Used for display purposes in authentication UI and other contexts. Returns `null` if the SDK is
    * not yet initialized or the application name is not set.
    */
+  /**
+   * Reactive state for initialization errors.
+   *
+   * Observe this StateFlow to detect when initialization has failed. When combined with
+   * [isInitialized], this allows apps to handle initialization failures gracefully.
+   *
+   * Emits the last error that occurred during initialization, or null if initialization succeeded
+   * or hasn't been attempted yet.
+   *
+   * Example usage:
+   * ```kotlin
+   * combine(Clerk.isInitialized, Clerk.initializationError) { initialized, error ->
+   *     when {
+   *         initialized -> UiState.Ready
+   *         error != null -> UiState.InitializationFailed(error)
+   *         else -> UiState.Loading
+   *     }
+   * }
+   * ```
+   */
+  val initializationError: StateFlow<Throwable?> = configurationManager.initializationError
+
   val applicationName: String?
     get() = if (::environment.isInitialized) environment.displayConfig.applicationName else null
 
@@ -482,6 +504,31 @@ object Clerk {
    *   containing a [ClerkErrorResponse] if an error occurs.
    */
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> = SignOutService.signOut()
+
+  /**
+   * Manually triggers a reinitialization attempt after a failed initialization.
+   *
+   * This method is useful when initialization has failed (e.g., due to network issues when the app
+   * was cold-started by a push notification) and you want to retry after conditions have improved.
+   *
+   * The SDK will automatically retry initialization up to 3 times with exponential backoff, but
+   * this method allows manual retries after those automatic attempts have been exhausted.
+   *
+   * Example usage:
+   * ```kotlin
+   * // In your ViewModel or Activity
+   * if (Clerk.initializationError.value != null && !Clerk.isInitialized.value) {
+   *     val started = Clerk.reinitialize()
+   *     if (started) {
+   *         // Wait for isInitialized to become true
+   *     }
+   * }
+   * ```
+   *
+   * @return true if reinitialization was started, false if the SDK is not configured or is already
+   *   initialized.
+   */
+  fun reinitialize(): Boolean = configurationManager.reinitialize()
 
   // endregion
 

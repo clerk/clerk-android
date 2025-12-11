@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-module:
-    runs-on: macos-latest-xlarge
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       matrix:
         module: [":source:api", ":source:ui"]
