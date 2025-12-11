@@ -156,4 +156,7 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
-        run: ./gradlew :source:api:publishMavenPublicationToMavenCentralRepository && :source:ui:publishMavenPublicationToMavenCentralRepository && :source:telemetry:publishMavenPublicationToMavenCentralRepository
+        run: |
+          ./gradlew :source:api:publishMavenPublicationToMavenCentralRepository \
+                    :source:ui:publishMavenPublicationToMavenCentralRepository \
+                    :source:telemetry:publishMavenPublicationToMavenCentralRepository

@@ -41,6 +41,7 @@ android {
 // Configure Maven publishing for this module
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-ui", libs.versions.clerk.ui.get())
+  publishToMavenCentral()
 
   pom {
     name.set("Clerk Android UI")
