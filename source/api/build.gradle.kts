@@ -1,5 +1,3 @@
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
-
 plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.android.library)
@@ -41,12 +39,12 @@ android {
   }
 }
 
-tasks.withType<DokkaTaskPartial>().configureEach {
-  dependsOn(tasks.named("kspDebugKotlin"))
-  dependsOn(tasks.named("kspReleaseKotlin"))
-  dependencies { dokkaPlugin(libs.versioning.plugin) }
+tasks.matching { it.name.startsWith("dokka") }.configureEach {
+  dependsOn("kspDebugKotlin", "kspReleaseKotlin")
+}
+
+dokka {
   moduleName.set("Clerk Android API")
-  suppressInheritedMembers.set(true)
   dokkaSourceSets.configureEach {
     includes.from(listOf("module.md"))
     reportUndocumented.set(true)
@@ -85,6 +83,7 @@ mavenPublishing {
 }
 
 dependencies {
+  dokkaPlugin(libs.versioning.plugin)
   api(libs.kotlinx.serialization)
 
   implementation(platform(libs.compose.bom))

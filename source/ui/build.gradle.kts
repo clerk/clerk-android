@@ -1,5 +1,3 @@
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
-
 plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.android.library)
@@ -70,14 +68,13 @@ mavenPublishing {
   }
 }
 
-tasks.withType<DokkaTaskPartial>().configureEach {
-  dependencies { dokkaPlugin(libs.versioning.plugin) }
+dokka {
   moduleName.set("Clerk Android UI")
-  suppressInheritedMembers.set(true)
   dokkaSourceSets.configureEach { reportUndocumented.set(true) }
 }
 
 dependencies {
+  dokkaPlugin(libs.versioning.plugin)
   api(projects.clerk.source.api)
   api(projects.source.telemetry)
 
