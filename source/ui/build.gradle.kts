@@ -67,24 +67,6 @@ mavenPublishing {
       connection.set("scm:git:git://github.com/clerk/clerk-android.git")
       developerConnection.set("scm:git:ssh://github.com:clerk/clerk-android.git")
     }
-    // Fix the telemetry dependency artifact name - the KMP library publishes with an "-android"
-    // suffix
-    withXml {
-      val dependenciesNode =
-        asNode().children().find {
-          (it as? groovy.util.Node)?.name()?.toString()?.endsWith("dependencies") == true
-        } as? groovy.util.Node
-      dependenciesNode?.children()?.forEach { depNode ->
-        val dep = depNode as? groovy.util.Node
-        val artifactId =
-          dep?.children()?.find {
-            (it as? groovy.util.Node)?.name()?.toString()?.endsWith("artifactId") == true
-          } as? groovy.util.Node
-        if (artifactId?.text() == "clerk-android-telemetry") {
-          artifactId.setValue("clerk-android-telemetry-android")
-        }
-      }
-    }
   }
 }
 
