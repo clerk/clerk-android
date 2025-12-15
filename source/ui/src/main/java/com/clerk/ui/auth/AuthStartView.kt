@@ -21,7 +21,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -68,7 +67,6 @@ internal fun AuthStartViewImpl(
       )
     )
   }
-
   val isContinueEnabled by
     remember(authState.authStartIdentifier, authState.authStartPhoneNumber, phoneActive) {
       derivedStateOf {
@@ -132,29 +130,42 @@ internal fun AuthStartViewImpl(
             onIdentifierChange = { authState.authStartIdentifier = it },
           )
 
-          AuthActionButtons(
-            authViewHelper = authViewHelper,
-            state =
-              AuthButtonsState(
-                isLoading = state is AuthStartViewModel.AuthState.Loading,
-                isEnabled = isContinueEnabled,
-                phoneNumberFieldIsActive = phoneActive,
+          ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(R.string.continue_text),
+            isLoading = state is AuthStartViewModel.AuthState.Loading,
+            isEnabled = isContinueEnabled,
+            icons =
+              ClerkButtonDefaults.icons(
+                trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
               ),
-            callbacks =
-              AuthButtonsCallbacks(
-                onStartAuth = {
-                  authStartViewModel.startAuth(
-                    authMode = authState.mode,
-                    isPhoneNumberFieldActive = phoneActive,
-                    identifier = authState.authStartIdentifier,
-                    phoneNumber = authState.authStartPhoneNumber,
-                  )
-                },
-                onSocialProviderClick = { authStartViewModel.authenticateWithSocialProvider(it) },
-                onPhoneNumberFieldToggle = { phoneActive = !phoneActive },
-              ),
+            onClick = {
+              authStartViewModel.startAuth(
+                authMode = authState.mode,
+                isPhoneNumberFieldActive = phoneActive,
+                identifier = authState.authStartIdentifier,
+                phoneNumber = authState.authStartPhoneNumber,
+              )
+            },
           )
+
+          if (authViewHelper.showIdentifierSwitcher) {
+            ClerkTextButton(
+              text = authViewHelper.identifierSwitcherString(phoneActive),
+              onClick = { phoneActive = !phoneActive },
+            )
+          }
         }
+
+        if (authViewHelper.showOrDivider) {
+          TextDivider(stringResource(R.string.or))
+        }
+
+        ClerkSocialRow(
+          providers = authViewHelper.authenticatableSocialProviders.toImmutableList(),
+          onClick = { authStartViewModel.authenticateWithSocialProvider(it) },
+        )
       }
     }
   }
@@ -169,7 +180,6 @@ private fun AuthInputField(
   onPhoneNumberChange: (String) -> Unit,
   onIdentifierChange: (String) -> Unit,
 ) {
-  ClerkLog.e("QQQ ${authViewHelper.phoneNumberIsEnabled}")
   if (authViewHelper.phoneNumberIsEnabled && phoneNumberFieldIsActive) {
     ClerkPhoneNumberField(
       value = authStartPhoneNumber,
@@ -186,54 +196,6 @@ private fun AuthInputField(
         KeyboardOptions(keyboardType = authViewHelper.getKeyboardType(phoneNumberFieldIsActive)),
     )
   }
-}
-
-private data class AuthButtonsState(
-  val isLoading: Boolean = false,
-  val isEnabled: Boolean = true,
-  val phoneNumberFieldIsActive: Boolean = false,
-)
-
-private data class AuthButtonsCallbacks(
-  val onStartAuth: () -> Unit,
-  val onSocialProviderClick: (OAuthProvider) -> Unit,
-  val onPhoneNumberFieldToggle: () -> Unit,
-)
-
-@Composable
-private fun AuthActionButtons(
-  authViewHelper: AuthStartViewHelper,
-  state: AuthButtonsState,
-  callbacks: AuthButtonsCallbacks,
-) {
-  ClerkButton(
-    modifier = Modifier.fillMaxWidth(),
-    text = stringResource(R.string.continue_text),
-    isLoading = state.isLoading,
-    isEnabled = state.isEnabled,
-    icons =
-      ClerkButtonDefaults.icons(
-        trailingIcon = R.drawable.ic_triangle_right,
-        trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
-      ),
-    onClick = callbacks.onStartAuth,
-  )
-
-  if (authViewHelper.showIdentifierSwitcher) {
-    ClerkTextButton(
-      text = authViewHelper.identifierSwitcherString(state.phoneNumberFieldIsActive),
-      onClick = callbacks.onPhoneNumberFieldToggle,
-    )
-  }
-
-  if (authViewHelper.showOrDivider) {
-    TextDivider(stringResource(R.string.or))
-  }
-
-  ClerkSocialRow(
-    providers = authViewHelper.authenticatableSocialProviders.toImmutableList(),
-    onClick = callbacks.onSocialProviderClick,
-  )
 }
 
 @SuppressLint("VisibleForTests")
