@@ -14,7 +14,7 @@ import com.clerk.api.Clerk
  * The enum includes support for major OAuth providers such as:
  * - **Social platforms**: Facebook, Google, Twitter, Instagram, TikTok, Discord
  * - **Professional platforms**: LinkedIn, Microsoft, Slack
- * - **Developer platforms**: GitHub, GitLab, Bitbucket, Atlassian
+ * - **Developer platforms**: GitHub, GitLab, Bitbucket, Atlassian, Vercel
  * - **Business platforms**: HubSpot, Notion, Dropbox, Box, Xero
  * - **Entertainment platforms**: Spotify, Twitch
  * - **AI platforms**: Hugging Face
@@ -116,6 +116,9 @@ enum class OAuthProvider {
 
   /** Hugging Face OAuth authentication provider. */
   HUGGING_FACE,
+
+  /** Vercel OAuth authentication provider. */
+  VERCEL,
 
   /** Custom OAuth authentication provider for enterprise or specialized implementations. */
   CUSTOM,
@@ -235,6 +238,7 @@ enum class OAuthProvider {
             strategy = "oauth_huggingface",
             name = "Hugging Face",
           )
+        VERCEL -> OAuthProviderData(provider = "vercel", strategy = "oauth_vercel", name = "Vercel")
         CUSTOM -> OAuthProviderData(provider = "custom", strategy = "oauth_custom", name = "Custom")
         UNKNOWN ->
           OAuthProviderData(provider = "unknown", strategy = "oauth_unknown", name = "Unknown")
