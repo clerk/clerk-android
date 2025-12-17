@@ -7,6 +7,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.account.EnterpriseAccount
 import com.clerk.api.network.model.backupcodes.BackupCodeResource
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.image.ImageResource
@@ -328,6 +329,61 @@ data class User(
  *   [ClerkErrorResponse] if it failed.
  */
 suspend fun User.get(): ClerkResult<User, ClerkErrorResponse> = ClerkApi.user.getUser()
+
+/**
+ * Reloads the user by fetching a fresh [Client] and returning the updated [User] embedded in the
+ * active session.
+ *
+ * This intentionally "piggybacks" on `Client.get()` so that the SDK's global state (e.g.
+ * [Clerk.client], [Clerk.sessionFlow], [Clerk.userFlow]) can be updated via the normal client-sync
+ * mechanism.
+ */
+suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
+  return when (val clientResult = Client.get()) {
+    is ClerkResult.Success -> {
+      val client = clientResult.value
+
+      // Prefer the same "active session" selection strategy used by Clerk itself.
+      val userFromActiveSession =
+        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }?.user
+          ?: client.activeSessions().firstOrNull()?.user
+
+      // If the active session user doesn't match this receiver (or is absent), fall back to any
+      // session carrying this user's id (multi-session apps).
+      val userFromAnySession = client.sessions.firstOrNull { it.user?.id == this.id }?.user
+
+      // If the middleware already synced Clerk.client, prefer the freshly-derived Clerk.user.
+      val userFromClerk = Clerk.user?.takeIf { it.id == this.id }
+
+      val updated = userFromClerk ?: userFromAnySession ?: userFromActiveSession
+      if (updated != null) {
+        ClerkResult.success(updated)
+      } else {
+        // Extremely defensive: if the backend doesn't include `session.user` in the client payload.
+        // In that case, fall back to the dedicated "me" endpoint.
+        when (val meResult = ClerkApi.user.getUser()) {
+          is ClerkResult.Success -> meResult
+          is ClerkResult.Failure ->
+            ClerkResult.Failure(
+              error = meResult.error,
+              throwable = meResult.throwable,
+              code = meResult.code,
+              errorType = meResult.errorType,
+              tags = meResult.tags,
+            )
+        }
+      }
+    }
+    is ClerkResult.Failure ->
+      ClerkResult.Failure(
+        error = clientResult.error,
+        throwable = clientResult.throwable,
+        code = clientResult.code,
+        errorType = clientResult.errorType,
+        tags = clientResult.tags,
+      )
+  }
+}
 
 /**
  * Updates the current user, or the user with the given session ID, with the provided parameters.
