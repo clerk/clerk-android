@@ -188,6 +188,9 @@ data class SignIn(
     /** The user needs to create a new password. */
     @SerialName("needs_new_password") NEEDS_NEW_PASSWORD,
 
+    /** Client trust verification is required. */
+    @SerialName("needs_client_trust") NEEDS_CLIENT_TRUST,
+
     /** The sign-in process is in an unknown state. */
     UNKNOWN,
   }

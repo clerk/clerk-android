@@ -23,6 +23,7 @@ import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.signin.SignInFactorOneView
 import com.clerk.ui.signin.SignInFactorTwoView
 import com.clerk.ui.signin.alternativemethods.SignInFactorAlternativeMethodsView
+import com.clerk.ui.signin.clienttrust.SignInClientTrustView
 import com.clerk.ui.signin.help.SignInGetHelpView
 import com.clerk.ui.signin.password.forgot.SignInFactorOneForgotPasswordView
 import com.clerk.ui.signin.password.reset.SignInSetNewPasswordView
@@ -97,6 +98,9 @@ fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
               SignInSetNewPasswordView(onAuthComplete = { backStack.clear() })
             }
             entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
+            entry<AuthDestination.SignInClientTrust> { key ->
+              SignInClientTrustView(factor = key.factor, onAuthComplete = { backStack.clear() })
+            }
             entry<AuthDestination.SignUpCollectField> { key ->
               SignUpCollectFieldView(field = key.field, onAuthComplete = { backStack.clear() })
             }
@@ -148,6 +152,8 @@ internal object AuthDestination {
   @Serializable data object SignInSetNewPassword : NavKey
 
   @Serializable data object SignInGetHelp : NavKey
+
+  @Serializable data class SignInClientTrust(val factor: Factor) : NavKey
 
   @Serializable data class SignUpCollectField(val field: CollectField) : NavKey
 
