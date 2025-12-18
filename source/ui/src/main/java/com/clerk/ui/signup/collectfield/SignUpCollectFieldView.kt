@@ -35,11 +35,11 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
 @Composable
 fun SignUpCollectFieldView(
   field: CollectField,
+  onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
-  onAuthComplete: () -> Unit,
-  collectFieldHelper: CollectFieldHelper = CollectFieldHelper(),
 ) {
+  val collectFieldHelper = CollectFieldHelper()
   ClerkThemeOverrideProvider(clerkTheme) {
     SignUpCollectFieldViewImpl(
       collectField = field,

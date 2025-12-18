@@ -18,7 +18,10 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 
 @Composable
-fun UserProfileDeleteAccountSection(modifier: Modifier = Modifier, onDeleteAccount: () -> Unit) {
+internal fun UserProfileDeleteAccountSection(
+  modifier: Modifier = Modifier,
+  onDeleteAccount: () -> Unit,
+) {
   ClerkMaterialTheme {
     Column(
       modifier =

@@ -304,7 +304,7 @@ private fun Preview() {
   }
 }
 
-data class SecurityContentConfiguration(
+internal data class SecurityContentConfiguration(
   val isPasswordEnabled: Boolean = true,
   val isPasskeyEnabled: Boolean = true,
   val isMfaEnabled: Boolean = true,

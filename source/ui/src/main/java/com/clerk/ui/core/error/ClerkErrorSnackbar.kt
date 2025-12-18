@@ -29,7 +29,7 @@ import generateDangerPaletteHsl
  * @param modifier The [Modifier] to be applied to the [SnackbarHost].
  */
 @Composable
-fun ClerkErrorSnackbar(
+internal fun ClerkErrorSnackbar(
   snackbarHostState: SnackbarHostState,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,

@@ -180,7 +180,7 @@ private fun PreviewSignInFactorCodeView() {
  * - [Success]: Code verification succeeded
  * - [Error]: Code verification failed
  */
-sealed interface VerificationState {
+internal sealed interface VerificationState {
 
   /**
    * Default state indicating the component is ready for user input. Typically shows normal input

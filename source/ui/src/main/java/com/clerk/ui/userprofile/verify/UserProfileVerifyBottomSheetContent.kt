@@ -25,7 +25,7 @@ import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import kotlinx.serialization.Serializable
 
 @Composable
-fun UserProfileVerifyBottomSheetContent(
+internal fun UserProfileVerifyBottomSheetContent(
   mode: VerifyBottomSheetMode,
   onVerified: (List<String>?) -> Unit,
   modifier: Modifier = Modifier,
@@ -172,7 +172,7 @@ private fun VerifyBottomSheetMode.instructionString(): String {
 
 @Immutable
 @Serializable
-sealed interface VerifyBottomSheetMode {
+internal sealed interface VerifyBottomSheetMode {
   @Serializable data class Email(val emailAddress: EmailAddress) : VerifyBottomSheetMode
 
   @Serializable data class Phone(val phoneNumber: PhoneNumber) : VerifyBottomSheetMode

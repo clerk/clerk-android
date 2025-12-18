@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
  * This sealed interface is used to model the different stages that an authentication flow can be
  * in, such as not started, idle, loading, successful, or encountering an error.
  */
-typealias ClerkSignIn = SignIn
+internal typealias ClerkSignIn = SignIn
 
-typealias ClerkSignUp = SignUp
+internal typealias ClerkSignUp = SignUp
 
 internal sealed interface AuthenticationViewState {
   data object NotStarted : AuthenticationViewState
@@ -33,7 +33,7 @@ internal sealed interface AuthenticationViewState {
 }
 
 /** States for the code verification text, since it's not 1:1 with the view model states. */
-sealed interface VerificationUiState {
+internal sealed interface VerificationUiState {
   data object Idle : VerificationUiState
 
   data object Verifying : VerificationUiState

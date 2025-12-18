@@ -21,7 +21,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun UserProfileEmailSection(
+internal fun UserProfileEmailSection(
   emailAddresses: ImmutableList<EmailAddress>,
   onError: (String) -> Unit,
   onAddEmailClick: () -> Unit,

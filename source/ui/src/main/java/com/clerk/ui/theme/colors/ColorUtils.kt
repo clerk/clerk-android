@@ -2,7 +2,7 @@ import androidx.compose.ui.graphics.Color
 import kotlin.math.max
 import kotlin.math.min
 
-data class DangerPalette(
+internal data class DangerPalette(
   val danger25: Color,
   val danger50: Color,
   val danger100: Color,
@@ -95,7 +95,7 @@ private fun hsla(h: Float, s: Float, l: Float, a: Float): Color {
   return Color(r, g, b, a)
 }
 
-fun Color.generateDangerPaletteHsl(): DangerPalette {
+internal fun Color.generateDangerPaletteHsl(): DangerPalette {
   val base = rgbToHsl(this)
 
   // Step sizes are derived from list lengths (no hidden numbers).

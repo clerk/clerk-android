@@ -57,7 +57,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun UserProfileMfaAddSmsView(
+internal fun UserProfileMfaAddSmsView(
   onDismiss: () -> Unit,
   onNavigateToBackupCodes: (List<String>) -> Unit,
   onError: (String) -> Unit,
@@ -162,10 +162,10 @@ private fun UserProfileMfaAddSmsContent(
   availablePhoneNumbers: ImmutableList<PhoneNumber>,
   onReserveForSecondFactor: (PhoneNumber) -> Unit,
   onAddPhoneNumber: () -> Unit,
-  modifier: Modifier = Modifier,
-  isLoading: Boolean = false,
   onDismiss: () -> Unit,
   selectedNumber: PhoneNumber?,
+  modifier: Modifier = Modifier,
+  isLoading: Boolean = false,
   onSelectedNumberChange: (PhoneNumber?) -> Unit,
 ) {
   Column(modifier = modifier.padding(vertical = dp24)) {
@@ -255,7 +255,7 @@ private fun parsePhoneNumber(phoneNumber: PhoneNumber): Triple<String, String, S
 }
 
 @Composable
-fun AddMfaSmsRow(
+internal fun AddMfaSmsRow(
   flag: String,
   regionCode: String,
   phoneNumber: String,
@@ -291,7 +291,7 @@ fun AddMfaSmsRow(
 }
 
 @Composable
-fun CountryIndicator(region: String, flagEmoji: String, modifier: Modifier = Modifier) {
+internal fun CountryIndicator(region: String, flagEmoji: String, modifier: Modifier = Modifier) {
   Box(
     modifier =
       Modifier.height(44.dp)

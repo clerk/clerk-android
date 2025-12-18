@@ -1,5 +1,3 @@
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
-
 plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.android.library)
@@ -41,17 +39,21 @@ android {
   }
 }
 
-tasks.withType<DokkaTaskPartial>().configureEach {
-  dependsOn(tasks.named("kspDebugKotlin"))
-  dependsOn(tasks.named("kspReleaseKotlin"))
-  dependencies { dokkaPlugin(libs.versioning.plugin) }
+dokka {
   moduleName.set("Clerk Android API")
-  suppressInheritedMembers.set(true)
   dokkaSourceSets.configureEach {
     includes.from(listOf("module.md"))
     reportUndocumented.set(true)
   }
+  dokkaPublications.configureEach { suppressInheritedMembers.set(true) }
 }
+
+tasks
+  .matching { it.name.startsWith("dokkaGenerate") }
+  .configureEach {
+    dependsOn(tasks.named("kspDebugKotlin"))
+    dependsOn(tasks.named("kspReleaseKotlin"))
+  }
 
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-api", libs.versions.clerk.api.get())
@@ -129,6 +131,8 @@ dependencies {
   androidTestImplementation(libs.mockito)
   androidTestImplementation(libs.mockk)
   androidTestImplementation(libs.robolectric)
+
+  dokkaPlugin(libs.versioning.plugin)
 
   ksp(libs.clerk.automap.processor)
 }

@@ -1,5 +1,6 @@
 package com.clerk.ui.userbutton
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -42,6 +43,7 @@ import com.clerk.ui.userprofile.UserProfileView
  * Drop this into a TopAppBar actions slot; on tap it will open the full user profile UI in a
  * full-screen dialog and close itself when done.
  */
+@SuppressLint("LocalContextGetResourceValueCall", "ComposeModifierMissing")
 @Composable
 fun UserButton(clerkTheme: ClerkTheme? = null) {
   ClerkThemeOverrideProvider(clerkTheme) {

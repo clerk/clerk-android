@@ -120,7 +120,7 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
   }
 }
 
-fun saveLinesToFileCompat(
+private fun saveLinesToFileCompat(
   context: Context,
   fileName: String,
   lines: List<String>,
@@ -176,7 +176,7 @@ fun saveLinesToFileCompat(
 }
 
 @Composable
-fun BackupCodeGrid(codes: ImmutableList<String>, modifier: Modifier = Modifier) {
+private fun BackupCodeGrid(codes: ImmutableList<String>, modifier: Modifier = Modifier) {
   LazyVerticalGrid(
     modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).then(modifier),
     columns = GridCells.Fixed(count = 2),
@@ -193,7 +193,7 @@ fun BackupCodeGrid(codes: ImmutableList<String>, modifier: Modifier = Modifier) 
   }
 }
 
-enum class Origin {
+internal enum class Origin {
   AuthenticatorApp,
   BackupCodes,
 }

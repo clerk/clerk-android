@@ -146,7 +146,7 @@ private fun DisplayTextWithActionButton(text: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun CopyToClipboardButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun CopyToClipboardButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
   ClerkButton(
     modifier = Modifier.fillMaxWidth().then(modifier),
     text = stringResource(R.string.copy_to_clipboard),

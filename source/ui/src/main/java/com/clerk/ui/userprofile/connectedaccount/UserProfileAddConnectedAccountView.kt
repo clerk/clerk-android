@@ -25,7 +25,10 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun UserProfileAddConnectedAccountView(modifier: Modifier = Modifier, onBackPressed: () -> Unit) {
+internal fun UserProfileAddConnectedAccountView(
+  modifier: Modifier = Modifier,
+  onBackPressed: () -> Unit,
+) {
   val unconnectedProviders = Clerk.user?.unconnectedProviders.orEmpty()
   UserProfileAddConnectedAccountViewImpl(
     modifier = modifier,

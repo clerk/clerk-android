@@ -26,18 +26,18 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun ClerkThemedProfileScaffold(
-    modifier: Modifier = Modifier,
-    errorMessage: String? = null,
-    hasLogo: Boolean = false,
-    hasBackButton: Boolean = true,
-    title: String? = null,
-    onBackPressed: () -> Unit = {},
-    horizontalPadding: Dp = dp18,
-    backgroundColor: Color? = null,
-    bottomContent: (@Composable () -> Unit)? = null,
-    clerkTheme: ClerkTheme? = null,
-    content: @Composable ColumnScope.() -> Unit,
+internal fun ClerkThemedProfileScaffold(
+  modifier: Modifier = Modifier,
+  errorMessage: String? = null,
+  hasLogo: Boolean = false,
+  hasBackButton: Boolean = true,
+  title: String? = null,
+  onBackPressed: () -> Unit = {},
+  horizontalPadding: Dp = dp18,
+  backgroundColor: Color? = null,
+  bottomContent: (@Composable () -> Unit)? = null,
+  clerkTheme: ClerkTheme? = null,
+  content: @Composable ColumnScope.() -> Unit,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
   LaunchedEffect(errorMessage) {
@@ -46,26 +46,26 @@ fun ClerkThemedProfileScaffold(
 
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     Scaffold(
-        modifier = Modifier.then(modifier),
-        snackbarHost = { ClerkErrorSnackbar(snackbarHostState, clerkTheme = clerkTheme) },
-        topBar = {
-          ClerkTopAppBar(
-              backgroundColor = ClerkMaterialTheme.colors.background,
-              hasLogo = hasLogo,
-              hasBackButton = hasBackButton,
-              title = title,
-              onBackPressed = onBackPressed,
-              clerkTheme = clerkTheme,
-          )
-        },
+      modifier = Modifier.then(modifier),
+      snackbarHost = { ClerkErrorSnackbar(snackbarHostState, clerkTheme = clerkTheme) },
+      topBar = {
+        ClerkTopAppBar(
+          backgroundColor = ClerkMaterialTheme.colors.background,
+          hasLogo = hasLogo,
+          hasBackButton = hasBackButton,
+          title = title,
+          onBackPressed = onBackPressed,
+          clerkTheme = clerkTheme,
+        )
+      },
     ) { innerPadding ->
       Column(
-          modifier =
-              Modifier.fillMaxWidth()
-                  .fillMaxSize()
-                  .background(backgroundColor ?: ClerkMaterialTheme.colors.background)
-                  .padding(innerPadding),
-          horizontalAlignment = Alignment.CenterHorizontally,
+        modifier =
+          Modifier.fillMaxWidth()
+            .fillMaxSize()
+            .background(backgroundColor ?: ClerkMaterialTheme.colors.background)
+            .padding(innerPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
       ) {
         Column(modifier = Modifier.padding(horizontal = horizontalPadding)) { content() }
 
@@ -86,11 +86,11 @@ fun ClerkThemedProfileScaffold(
 private fun Preview() {
   ClerkMaterialTheme {
     ClerkThemedProfileScaffold(
-        title = "Security",
-        backgroundColor = ClerkMaterialTheme.colors.muted,
-        content = {
-          /* Content goes here */
-        },
+      title = "Security",
+      backgroundColor = ClerkMaterialTheme.colors.muted,
+      content = {
+        /* Content goes here */
+      },
     )
   }
 }

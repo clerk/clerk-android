@@ -78,7 +78,7 @@ internal fun UserProfilePasskeyRow(
   }
 }
 
-enum class PasskeyActions {
+internal enum class PasskeyActions {
   Rename,
   Remove,
 }
