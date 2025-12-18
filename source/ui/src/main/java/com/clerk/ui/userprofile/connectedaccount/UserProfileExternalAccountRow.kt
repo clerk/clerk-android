@@ -1,5 +1,6 @@
 package com.clerk.ui.userprofile.connectedaccount
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,7 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 internal fun UserProfileExternalAccountRow(
   externalAccount: ExternalAccount,
@@ -162,7 +164,7 @@ private fun EmailWithAccountBadge(externalAccount: ExternalAccount) {
   }
 }
 
-enum class ExternalAccountAction {
+internal enum class ExternalAccountAction {
   Reconnect,
   Remove,
 }

@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class UserProfileMfaViewModel : ViewModel() {
+internal class UserProfileMfaViewModel : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()

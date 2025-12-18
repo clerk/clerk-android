@@ -113,7 +113,7 @@ private fun PreviewAddPassword() {
   }
 }
 
-enum class PasswordAction {
+internal enum class PasswordAction {
   Add,
   Reset,
 }

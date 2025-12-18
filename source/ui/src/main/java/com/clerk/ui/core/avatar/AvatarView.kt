@@ -191,7 +191,7 @@ internal enum class AvatarType {
 }
 
 @Composable
-fun OrganizationAvatar(
+internal fun OrganizationAvatar(
   modifier: Modifier = Modifier,
   shape: Shape? = null,
   size: AvatarSize = AvatarSize.MEDIUM,

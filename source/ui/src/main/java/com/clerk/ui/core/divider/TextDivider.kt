@@ -27,7 +27,11 @@ import com.clerk.ui.theme.ClerkMaterialTheme
  * @param modifier The [Modifier] to be applied to the divider row.
  */
 @Composable
-fun TextDivider(text: String, modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
+internal fun TextDivider(
+  text: String,
+  modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
+) {
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     Row(
       modifier = Modifier.fillMaxWidth().then(modifier),

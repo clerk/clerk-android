@@ -26,7 +26,7 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun UserProfileIconActionRow(
+internal fun UserProfileIconActionRow(
   @DrawableRes iconResId: Int,
   text: String,
   modifier: Modifier = Modifier,

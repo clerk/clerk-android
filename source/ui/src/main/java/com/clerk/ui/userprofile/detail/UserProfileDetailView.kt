@@ -57,7 +57,7 @@ fun UserProfileDetailView(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserProfileDetailViewImpl(
+private fun UserProfileDetailViewImpl(
   emailAddresses: ImmutableList<EmailAddress>,
   phoneNumbers: ImmutableList<PhoneNumber>,
   externalAccounts: ImmutableList<ExternalAccount>,
@@ -156,7 +156,7 @@ private fun ProfileContent(
   }
 }
 
-sealed interface BottomSheetMode {
+internal sealed interface BottomSheetMode {
   data object ExternalAccount : BottomSheetMode
 
   data object PhoneNumber : BottomSheetMode
@@ -225,7 +225,7 @@ private fun Preview() {
   }
 }
 
-fun User?.sortedEmailAddresses(): ImmutableList<EmailAddress> {
+internal fun User?.sortedEmailAddresses(): ImmutableList<EmailAddress> {
   return this?.emailAddresses
     ?.sortedWith(
       compareByDescending<EmailAddress> { it == primaryEmailAddress }.thenBy { it.createdAt ?: 0L }
@@ -233,7 +233,7 @@ fun User?.sortedEmailAddresses(): ImmutableList<EmailAddress> {
     ?.toImmutableList() ?: persistentListOf()
 }
 
-fun User?.sortedPhoneNumbers(): ImmutableList<PhoneNumber> {
+internal fun User?.sortedPhoneNumbers(): ImmutableList<PhoneNumber> {
   return this?.phoneNumbers
     ?.sortedWith(
       compareByDescending<PhoneNumber> { it == primaryPhoneNumber }.thenBy { it.createdAt ?: 0L }
@@ -241,7 +241,7 @@ fun User?.sortedPhoneNumbers(): ImmutableList<PhoneNumber> {
     ?.toImmutableList() ?: persistentListOf()
 }
 
-fun User?.sortedExternalAccounts(): ImmutableList<ExternalAccount> {
+internal fun User?.sortedExternalAccounts(): ImmutableList<ExternalAccount> {
 
   return this?.externalAccounts
     ?.filter { account ->

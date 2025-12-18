@@ -13,7 +13,7 @@ import com.clerk.ui.R
  * well as a method to determine if a field is optional based on the Clerk configuration.
  */
 @Stable
-class CollectFieldHelper {
+internal class CollectFieldHelper {
   @Composable
   fun title(collectField: CollectField) =
     when (collectField) {

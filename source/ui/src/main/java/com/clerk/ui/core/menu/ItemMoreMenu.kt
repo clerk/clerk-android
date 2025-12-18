@@ -104,7 +104,7 @@ internal data class DropDownItem<T>(
   val isHidden: Boolean = false,
 )
 
-enum class PreviewItemMoreMenu {
+internal enum class PreviewItemMoreMenu {
   VERIFY,
   SET_AS_PRIMARY,
   REMOVE_EMAIL,

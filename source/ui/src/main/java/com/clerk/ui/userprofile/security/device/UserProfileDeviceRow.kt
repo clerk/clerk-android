@@ -41,7 +41,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun UserProfileDeviceRow(
+internal fun UserProfileDeviceRow(
   onError: (String?) -> Unit,
   session: Session,
   modifier: Modifier = Modifier,

@@ -107,7 +107,7 @@ private fun buildMfaItemList(phoneNumbers: List<PhoneNumber>): ImmutableList<Mfa
   return items
 }
 
-data class MfaItem(val style: Style, val isDefault: Boolean = false)
+private data class MfaItem(val style: Style, val isDefault: Boolean = false)
 
 @PreviewLightDark
 @Composable

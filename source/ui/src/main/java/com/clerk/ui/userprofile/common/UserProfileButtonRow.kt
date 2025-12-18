@@ -19,7 +19,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 
 @Composable
-fun UserProfileButtonRow(
+internal fun UserProfileButtonRow(
   text: String,
   modifier: Modifier = Modifier,
   textColor: Color = ClerkMaterialTheme.colors.primary,

@@ -34,7 +34,7 @@ jobs:
       run: chmod +x gradlew
     - name: Generate docs
       working-directory: main
-      run: ./gradlew dokkaHtmlMultiModule
+      run: ./gradlew dokkaGenerate
     - name: Verify and prepare docs
       run: |
         echo "Checking for docs directory..."

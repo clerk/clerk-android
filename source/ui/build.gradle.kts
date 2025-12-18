@@ -1,5 +1,3 @@
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
-
 plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.android.library)
@@ -70,11 +68,10 @@ mavenPublishing {
   }
 }
 
-tasks.withType<DokkaTaskPartial>().configureEach {
-  dependencies { dokkaPlugin(libs.versioning.plugin) }
+dokka {
   moduleName.set("Clerk Android UI")
-  suppressInheritedMembers.set(true)
   dokkaSourceSets.configureEach { reportUndocumented.set(true) }
+  dokkaPublications.configureEach { suppressInheritedMembers.set(true) }
 }
 
 dependencies {
@@ -111,6 +108,8 @@ dependencies {
   testImplementation(projects.clerk.source.api)
 
   testRuntimeOnly(libs.paparazzi)
+
+  dokkaPlugin(libs.versioning.plugin)
 
   lintChecks(libs.compose.lints)
 }

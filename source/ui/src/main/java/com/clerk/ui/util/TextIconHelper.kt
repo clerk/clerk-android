@@ -5,7 +5,7 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
 import com.clerk.ui.core.common.StrategyKeys
 
-class TextIconHelper {
+internal class TextIconHelper {
   /**
    * Returns the appropriate action text for a given sign-in factor.
    *

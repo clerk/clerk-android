@@ -69,7 +69,12 @@ allprojects {
 }
 
 // Root multi-module Dokka output
-tasks.dokkaHtmlMultiModule { outputDirectory.set(rootDir.resolve("docs/")) }
+dokka { dokkaPublications.html { outputDirectory.set(rootDir.resolve("docs/")) } }
+
+dependencies {
+  dokka(project(":source:api"))
+  dokka(project(":source:ui"))
+}
 
 subprojects {
   plugins.withType<JavaPlugin> {

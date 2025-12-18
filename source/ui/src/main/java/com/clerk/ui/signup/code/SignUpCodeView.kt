@@ -111,7 +111,7 @@ private fun Preview() {
 }
 
 @Serializable
-sealed interface SignUpCodeField {
+internal sealed interface SignUpCodeField {
   val value: String
 
   @Serializable data class Phone(override val value: String) : SignUpCodeField

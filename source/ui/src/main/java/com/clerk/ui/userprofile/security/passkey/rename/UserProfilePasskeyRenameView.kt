@@ -23,7 +23,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 
 @Composable
-fun UserProfilePasskeyRenameView(
+internal fun UserProfilePasskeyRenameView(
   passkeyId: String,
   passkeyName: String,
   modifier: Modifier = Modifier,

@@ -31,7 +31,7 @@ import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import com.clerk.ui.userprofile.verify.Mode
 
 @Composable
-fun UserProfileAddEmailViewBottomSheetContent(
+internal fun UserProfileAddEmailViewBottomSheetContent(
   onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
   onVerify: (Mode.Email) -> Unit,

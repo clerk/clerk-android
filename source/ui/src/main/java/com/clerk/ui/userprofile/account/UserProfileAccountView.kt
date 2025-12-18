@@ -153,7 +153,7 @@ private fun AvatarHeaderView(
   }
 }
 
-enum class AvatarMode {
+internal enum class AvatarMode {
   VIEW,
   EDIT,
 }

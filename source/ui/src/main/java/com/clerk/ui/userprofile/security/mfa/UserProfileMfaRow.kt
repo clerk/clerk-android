@@ -133,7 +133,7 @@ private fun RowScope.MfaIcon(title: String?, hasHeader: Boolean, style: Style) {
 }
 
 @Composable
-fun Style.text(): String {
+internal fun Style.text(): String {
   return when (this) {
     Style.AuthenticatorApp -> stringResource(R.string.authenticator_app)
     is Style.Sms ->
@@ -145,14 +145,14 @@ fun Style.text(): String {
   }
 }
 
-enum class MfaAction {
+internal enum class MfaAction {
   Remove,
   SetAsDefault,
   Regenerate,
 }
 
 @Composable
-fun Style.icon(): Int {
+internal fun Style.icon(): Int {
   return when (this) {
     Style.AuthenticatorApp -> R.drawable.ic_key
     is Style.Sms -> R.drawable.ic_phone
@@ -161,7 +161,7 @@ fun Style.icon(): Int {
 }
 
 @Stable
-sealed interface Style {
+internal sealed interface Style {
   data object AuthenticatorApp : Style
 
   data class Sms(val phoneNumber: PhoneNumber) : Style

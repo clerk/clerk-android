@@ -38,7 +38,7 @@ internal fun HeaderTextView(text: String, type: HeaderType, modifier: Modifier =
   }
 }
 
-enum class HeaderType {
+internal enum class HeaderType {
   Title,
   Subtitle,
 }

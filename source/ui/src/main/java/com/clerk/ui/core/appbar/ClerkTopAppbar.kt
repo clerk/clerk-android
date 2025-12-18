@@ -29,7 +29,7 @@ import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-fun ClerkTopAppBar(
+internal fun ClerkTopAppBar(
   onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
   hasLogo: Boolean = true,

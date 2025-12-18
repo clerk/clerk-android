@@ -9,7 +9,7 @@ private fun String.nbsp(): String = replace(" ", "\u00A0")
 
 private fun defaultRegion(): String = Locale.getDefault().country.takeIf { it.isNotBlank() } ?: "US"
 
-val String.formattedAsPhoneNumberIfPossible: String
+internal val String.formattedAsPhoneNumberIfPossible: String
   get() {
     val util = PhoneNumberUtil.getInstance()
     val region = defaultRegion()
@@ -32,16 +32,4 @@ val String.formattedAsPhoneNumberIfPossible: String
       out = formatter.inputDigit(c)
     }
     return out.nbsp()
-  }
-
-val String.isPhoneNumber: Boolean
-  get() {
-    val util = PhoneNumberUtil.getInstance()
-    val region = defaultRegion()
-    return try {
-      val parsed = util.parse(this, region)
-      util.isValidNumber(parsed)
-    } catch (_: NumberParseException) {
-      false
-    }
   }

@@ -21,7 +21,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun UserProfileExternalAccountSection(
+internal fun UserProfileExternalAccountSection(
   externalAccounts: ImmutableList<ExternalAccount>,
   onError: (String) -> Unit,
   modifier: Modifier = Modifier,

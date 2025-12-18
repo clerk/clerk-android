@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class UserProfileAccountViewModel : ViewModel() {
+internal class UserProfileAccountViewModel : ViewModel() {
 
   private val _deleteAccountStateFlow =
     MutableStateFlow<DeleteAccountState>(DeleteAccountState.Idle)

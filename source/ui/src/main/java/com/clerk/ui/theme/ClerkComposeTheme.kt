@@ -208,7 +208,7 @@ internal object ClerkMaterialTheme {
  * context (they fall back to defaults), this wrapper eliminates the need for null checks and !!
  * operators in UI components.
  */
-class ClerkThemeColors internal constructor(private val colors: ClerkColors) {
+internal class ClerkThemeColors internal constructor(private val colors: ClerkColors) {
   /** Main brand color used for primary actions and highlights. */
   val primary: Color
     get() = colors.primary!!

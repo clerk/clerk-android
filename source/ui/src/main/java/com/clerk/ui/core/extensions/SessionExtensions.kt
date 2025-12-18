@@ -8,7 +8,7 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-fun SessionActivity.deviceImage(): Int {
+internal fun SessionActivity.deviceImage(): Int {
   return if (this.isMobile == true) {
     R.drawable.ic_mobile
   } else {
@@ -16,7 +16,7 @@ fun SessionActivity.deviceImage(): Int {
   }
 }
 
-fun SessionActivity.deviceText(): Int {
+internal fun SessionActivity.deviceText(): Int {
   return if (this.isMobile == true) {
     R.string.mobile_device
   } else {
@@ -24,20 +24,20 @@ fun SessionActivity.deviceText(): Int {
   }
 }
 
-val SessionActivity.browserFormatted
+internal val SessionActivity.browserFormatted
   get() = joinNonNull(browserName, browserVersion)
-val SessionActivity.locationFormatted
+internal val SessionActivity.locationFormatted
   get() = joinNonNull(city, country, separator = ", ")
-val SessionActivity.ipAndLocationFormatted
+internal val SessionActivity.ipAndLocationFormatted
   get() = joinNonNull(ipAddress, "(${locationFormatted})")
 
-val Session.lastActiveRelativeTime
+internal val Session.lastActiveRelativeTime
   get() = formattedRelativeDateTime(this.lastActiveAt)
 
 private fun joinNonNull(vararg parts: String?, separator: String = " ") =
   parts.filterNotNull().joinToString(separator)
 
-fun formattedRelativeDateTime(timestampMillis: Long): String {
+internal fun formattedRelativeDateTime(timestampMillis: Long): String {
   val now = System.currentTimeMillis()
   val diff = now - timestampMillis
   val calendar = Calendar.getInstance().apply { timeInMillis = timestampMillis }
