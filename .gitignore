@@ -27,3 +27,4 @@ local.properties
 /.kotlin/metadata/
 /source/telemetry/build/
 /samples/prebuilt-ui/build/
+/docs/

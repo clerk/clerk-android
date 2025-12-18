@@ -24,6 +24,7 @@ import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
+import com.clerk.ui.signin.clienttrust.ClientTrustWarningMessage
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
@@ -54,6 +55,7 @@ fun SignInFactorCodeView(
   factor: Factor,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
+  isClientTrust: Boolean = false,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
@@ -62,6 +64,7 @@ fun SignInFactorCodeView(
       factor = factor,
       modifier = modifier,
       isSecondFactor = isSecondFactor,
+      isClientTrust = isClientTrust,
       onAuthComplete = onAuthComplete,
     )
   }
@@ -87,6 +90,7 @@ private fun SignInFactorCodeViewImpl(
   modifier: Modifier = Modifier,
   viewModel: SignInFactorCodeViewModel = viewModel(),
   isSecondFactor: Boolean = false,
+  isClientTrust: Boolean = false,
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
@@ -116,6 +120,9 @@ private fun SignInFactorCodeViewImpl(
     snackbarHostState = snackbarHostState,
     onClickIdentifier = { authState.clearBackStack() },
   ) {
+    if (isClientTrust) {
+      ClientTrustWarningMessage()
+    }
     ClerkCodeInputField(
       verificationState = verificationTextState.verificationState(),
       onTextChange = {
@@ -180,7 +187,7 @@ private fun PreviewSignInFactorCodeView() {
  * - [Success]: Code verification succeeded
  * - [Error]: Code verification failed
  */
-internal sealed interface VerificationState {
+sealed interface VerificationState {
 
   /**
    * Default state indicating the component is ready for user input. Typically shows normal input
