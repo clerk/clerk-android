@@ -343,10 +343,14 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
     is ClerkResult.Success -> {
       val client = clientResult.value
 
-      // Prefer the same "active session" selection strategy used by Clerk itself.
+      // Prefer the same "active session" selection strategy used by Clerk itself, but never
+      // accept a user whose id doesn't match the receiver (important for multi-session apps).
       val userFromActiveSession =
-        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }?.user
-          ?: client.activeSessions().firstOrNull()?.user
+        client
+          .activeSessions()
+          .firstOrNull { it.id == client.lastActiveSessionId && it.user?.id == this.id }
+          ?.user
+          ?: client.activeSessions().firstOrNull { it.user?.id == this.id }?.user
 
       // If the active session user doesn't match this receiver (or is absent), fall back to any
       // session carrying this user's id (multi-session apps).
