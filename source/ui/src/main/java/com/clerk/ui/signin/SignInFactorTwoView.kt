@@ -8,6 +8,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.signin.backupcode.SignInFactorTwoBackupCodeView
+import com.clerk.ui.signin.code.FactorMode
 import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.ui.signin.help.SignInGetHelpView
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
@@ -33,10 +34,11 @@ fun SignInFactorTwoView(
   ClerkThemeOverrideProvider(clerkTheme) {
     when (factor.strategy) {
       StrategyKeys.TOTP,
+      StrategyKeys.EMAIL_CODE,
       StrategyKeys.PHONE_CODE ->
         SignInFactorCodeView(
           factor = factor,
-          isSecondFactor = true,
+          mode = FactorMode.SecondFactor,
           modifier = modifier,
           onAuthComplete = onAuthComplete,
         )

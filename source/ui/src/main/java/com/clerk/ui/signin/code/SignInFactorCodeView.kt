@@ -1,5 +1,6 @@
 package com.clerk.ui.signin.code
 
+import androidx.compose.material3.Text
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -7,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,6 +28,22 @@ import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
+
+/**
+ * Represents the mode in which the factor code screen is operating.
+ *
+ * - [FirstFactor] uses first-factor prepare/attempt endpoints.
+ * - [SecondFactor] uses second-factor prepare/attempt endpoints.
+ * - [ClientTrust] uses second-factor endpoints and displays a client trust notice.
+ */
+enum class FactorMode {
+  FirstFactor,
+  SecondFactor,
+  ClientTrust;
+
+  val usesSecondFactorApi: Boolean
+    get() = this != FirstFactor
+}
 
 /**
  * A Composable that displays a verification code input screen for sign-in authentication factors.
@@ -54,6 +72,7 @@ fun SignInFactorCodeView(
   factor: Factor,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
+  mode: FactorMode = if (isSecondFactor) FactorMode.SecondFactor else FactorMode.FirstFactor,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
@@ -61,7 +80,7 @@ fun SignInFactorCodeView(
     SignInFactorCodeViewImpl(
       factor = factor,
       modifier = modifier,
-      isSecondFactor = isSecondFactor,
+      mode = mode,
       onAuthComplete = onAuthComplete,
     )
   }
@@ -86,7 +105,7 @@ private fun SignInFactorCodeViewImpl(
   factor: Factor,
   modifier: Modifier = Modifier,
   viewModel: SignInFactorCodeViewModel = viewModel(),
-  isSecondFactor: Boolean = false,
+  mode: FactorMode = FactorMode.FirstFactor,
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
@@ -94,7 +113,7 @@ private fun SignInFactorCodeViewImpl(
   val verificationTextState by viewModel.verificationUiState.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
 
-  LaunchedEffect(Unit) { viewModel.prepare(factor, isSecondFactor = isSecondFactor) }
+  LaunchedEffect(Unit) { viewModel.prepare(factor, mode = mode) }
 
   AuthStateEffects(
     authState = authState,
@@ -116,6 +135,15 @@ private fun SignInFactorCodeViewImpl(
     snackbarHostState = snackbarHostState,
     onClickIdentifier = { authState.clearBackStack() },
   ) {
+    if (mode == FactorMode.ClientTrust) {
+      Text(
+        text = stringResource(R.string.client_trust_new_device_notice),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+        color = ClerkMaterialTheme.colors.warning,
+        textAlign = TextAlign.Center,
+      )
+      Spacers.Vertical.Spacer24()
+    }
     ClerkCodeInputField(
       verificationState = verificationTextState.verificationState(),
       onTextChange = {
@@ -123,19 +151,19 @@ private fun SignInFactorCodeViewImpl(
           viewModel.resetState()
         }
         if (it.length == 6) {
-          viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = it)
+          viewModel.attempt(factor, mode = mode, code = it)
         }
       },
       showResend =
         SignInFactorCodeUiHelper.showResend(factor, verificationTextState.verificationState()),
-      onClickResend = { viewModel.prepare(factor, isSecondFactor = isSecondFactor) },
+      onClickResend = { viewModel.prepare(factor, mode = mode) },
     )
     Spacers.Vertical.Spacer24()
     if (SignInFactorCodeUiHelper.showUseAnotherMethod(factor)) {
       ClerkTextButton(
         text = stringResource(R.string.use_another_method),
         onClick = {
-          if (isSecondFactor) {
+          if (mode.usesSecondFactorApi) {
             authState.navigateTo(
               AuthDestination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
             )

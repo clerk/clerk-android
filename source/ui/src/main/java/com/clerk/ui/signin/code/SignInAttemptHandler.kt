@@ -10,6 +10,32 @@ import com.clerk.api.signin.attemptSecondFactor
 
 internal class SignInAttemptHandler {
 
+  internal suspend fun attemptEmailCode(
+    inProgressSignIn: SignIn,
+    code: String,
+    useSecondFactorApi: Boolean,
+    onSuccessCallback: suspend (SignIn) -> Unit,
+    onErrorCallback: suspend (String?) -> Unit,
+  ) {
+    if (useSecondFactorApi) {
+      inProgressSignIn
+        .attemptSecondFactor(SignIn.AttemptSecondFactorParams.EmailCode(code = code))
+        .onSuccess { onSuccessCallback(it) }
+        .onFailure {
+          ClerkLog.e("Error attempting email code as second factor: $it")
+          onErrorCallback(it.errorMessage)
+        }
+    } else {
+      inProgressSignIn
+        .attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
+        .onSuccess { onSuccessCallback(it) }
+        .onFailure {
+          ClerkLog.e("Error attempting email code: $it")
+          onErrorCallback(it.errorMessage)
+        }
+    }
+  }
+
   internal suspend fun attemptForTotp(
     inProgressSignIn: SignIn,
     code: String,
@@ -58,11 +84,11 @@ internal class SignInAttemptHandler {
   internal suspend fun attemptFirstFactorPhoneCode(
     inProgressSignIn: SignIn,
     code: String,
-    isSecondFactor: Boolean,
+    useSecondFactorApi: Boolean,
     onSuccessCallback: suspend (SignIn) -> Unit,
     onErrorCallback: suspend (String?) -> Unit,
   ) {
-    if (isSecondFactor) {
+    if (useSecondFactorApi) {
       inProgressSignIn
         .attemptSecondFactor(SignIn.AttemptSecondFactorParams.PhoneCode(code = code))
         .onSuccess { onSuccessCallback(it) }
@@ -87,12 +113,12 @@ internal class SignInAttemptHandler {
     onSuccessCallback: suspend (SignIn) -> Unit,
     onErrorCallback: suspend (String?) -> Unit,
   ) {
-    inProgressSignIn
-      .attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
-      .onSuccess { onSuccessCallback(it) }
-      .onFailure {
-        ClerkLog.e("Error attempting email code: $it")
-        onErrorCallback(it.errorMessage)
-      }
+    attemptEmailCode(
+      inProgressSignIn = inProgressSignIn,
+      code = code,
+      useSecondFactorApi = false,
+      onSuccessCallback = onSuccessCallback,
+      onErrorCallback = onErrorCallback,
+    )
   }
 }

@@ -21,6 +21,7 @@
     <string name="resend">다시 보내기</string>
     <string name="didn_t_receive_a_code">"코드를 받지 못하셨나요? "</string>
     <string name="verifying">확인 중…</string>
+    <string name="client_trust_new_device_notice">새로운 기기에서 로그인하고 있습니다. 계정을 안전하게 유지하기 위해 확인을 요청하고 있습니다.</string>
     <string name="passkey_icon">패스키 아이콘</string>
     <string name="using_your_passkey">패스키를 사용하면 본인임이 확인됩니다. 기기가 지문, 얼굴 인식 또는 화면 잠금을 요청할 수 있습니다.</string>
     <string name="use_your_passkey">패스키 사용</string>

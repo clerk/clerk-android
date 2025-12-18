@@ -21,6 +21,7 @@
     <string name="resend">重新发送</string>
     <string name="didn_t_receive_a_code">"没收到验证码？ "</string>
     <string name="verifying">正在验证…</string>
+    <string name="client_trust_new_device_notice">您正在从新设备登录。我们需要进行验证以保护您的账户安全。</string>
     <string name="passkey_icon">通行密钥图标</string>
     <string name="using_your_passkey">使用您的通行密钥可确认是您本人。您的设备可能会要求您提供指纹、面容或屏幕锁定。</string>
     <string name="use_your_passkey">使用您的通行密钥</string>

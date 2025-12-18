@@ -182,6 +182,9 @@ data class SignIn(
     /** The sign-in process needs a second factor verification. */
     @SerialName("needs_second_factor") NEEDS_SECOND_FACTOR,
 
+    /** Client trust verification is required. */
+    @SerialName("needs_client_trust") NEEDS_CLIENT_TRUST,
+
     /** The sign-in process needs an identifier. */
     @SerialName("needs_identifier") NEEDS_IDENTIFIER,
 
@@ -800,6 +803,25 @@ suspend fun SignIn.prepareFirstFactor(
 }
 
 /**
+ * Prepares the second factor verification for the sign-in process using the provided explicit
+ * strategy.
+ *
+ * This overload is useful when the factor/strategy is already known (e.g. user selected a method,
+ * or client trust requires a specific verification strategy) and you want to avoid implicit
+ * selection logic.
+ *
+ * @param strategy The second factor strategy to prepare.
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignIn.prepareSecondFactor(
+  strategy: SignIn.PrepareSecondFactorStrategy
+): ClerkResult<SignIn, ClerkErrorResponse> {
+  val params = strategy.toParams()
+  return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+}
+
+/**
  * Prepares the second factor verification for the sign-in process.
  *
  * This function is used to initiate the second factor verification process, which is required for
@@ -837,8 +859,7 @@ suspend fun SignIn.prepareSecondFactor(
       else -> error("No supported second factor found")
     }
 
-  val params = strategy.toParams()
-  return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+  return prepareSecondFactor(strategy)
 }
 
 /**

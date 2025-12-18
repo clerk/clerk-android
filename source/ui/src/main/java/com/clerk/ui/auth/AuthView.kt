@@ -23,6 +23,7 @@ import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.signin.SignInFactorOneView
 import com.clerk.ui.signin.SignInFactorTwoView
 import com.clerk.ui.signin.alternativemethods.SignInFactorAlternativeMethodsView
+import com.clerk.ui.signin.clienttrust.SignInClientTrustView
 import com.clerk.ui.signin.help.SignInGetHelpView
 import com.clerk.ui.signin.password.forgot.SignInFactorOneForgotPasswordView
 import com.clerk.ui.signin.password.reset.SignInSetNewPasswordView
@@ -87,6 +88,9 @@ fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
                 onAuthComplete = { backStack.clear() },
               )
             }
+            entry<AuthDestination.SignInClientTrust> { key ->
+              SignInClientTrustView(factor = key.factor, onAuthComplete = { backStack.clear() })
+            }
             entry<AuthDestination.SignInForgotPassword> {
               SignInFactorOneForgotPasswordView(
                 onClickFactor = { backStack.removeLastOrNull() },
@@ -142,6 +146,8 @@ internal object AuthDestination {
   @Serializable data class SignInFactorTwo(val factor: Factor) : NavKey
 
   @Serializable data class SignInFactorTwoUseAnotherMethod(val currentFactor: Factor) : NavKey
+
+  @Serializable data class SignInClientTrust(val factor: Factor) : NavKey
 
   @Serializable data object SignInForgotPassword : NavKey
 

@@ -21,6 +21,7 @@
     <string name="resend">أعد الإرسال</string>
     <string name="didn_t_receive_a_code">"لم تستلم رمزاً؟ "</string>
     <string name="verifying">جارٍ التحقق…</string>
+    <string name="client_trust_new_device_notice">أنت تسجل الدخول من جهاز جديد. نطلب التحقق للحفاظ على أمان حسابك.</string>
     <string name="passkey_icon">أيقونة مفتاح المرور</string>
     <string name="using_your_passkey">استخدام مفتاح المرور الخاص بك يؤكد أنك أنت. قد يطلب جهازك بصمة الإصبع أو الوجه أو قفل الشاشة.</string>
     <string name="use_your_passkey">استخدم مفتاح المرور الخاص بك</string>

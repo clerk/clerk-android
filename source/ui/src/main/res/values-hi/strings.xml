@@ -21,6 +21,7 @@
     <string name="resend">पुनः भेजें</string>
     <string name="didn_t_receive_a_code">"कोड नहीं मिला? "</string>
     <string name="verifying">सत्यापन हो रहा है…</string>
+    <string name="client_trust_new_device_notice">आप एक नए डिवाइस से साइन इन कर रहे हैं। हम आपके खाते को सुरक्षित रखने के लिए सत्यापन मांग रहे हैं।</string>
     <string name="passkey_icon">पासकी आइकन</string>
     <string name="using_your_passkey">अपनी पासकी का उपयोग करना पुष्टि करता है कि यह आप ही हैं। आपका डिवाइस आपकी फिंगरप्रिंट, चेहरे या स्क्रीन लॉक के लिए पूछ सकता है।</string>
     <string name="use_your_passkey">अपनी पासकी का उपयोग करें</string>

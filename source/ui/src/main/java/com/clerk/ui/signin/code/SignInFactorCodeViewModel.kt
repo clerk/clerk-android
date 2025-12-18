@@ -25,7 +25,7 @@ internal class SignInFactorCodeViewModel(
     MutableStateFlow(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun prepare(factor: Factor, isSecondFactor: Boolean) {
+  fun prepare(factor: Factor, mode: FactorMode = FactorMode.FirstFactor) {
     guardSignIn(_state) { inProgressSignIn ->
       _state.value = AuthenticationViewState.Loading
 
@@ -33,7 +33,11 @@ internal class SignInFactorCodeViewModel(
         viewModelScope.launch(Dispatchers.IO) {
           when (factor.strategy) {
             StrategyKeys.EMAIL_CODE -> {
-              prepareHandler.prepareForEmailCode(inProgressSignIn, factor) {
+              prepareHandler.prepareForEmailCode(
+                inProgressSignIn = inProgressSignIn,
+                factor = factor,
+                useSecondFactorApi = mode.usesSecondFactorApi,
+              ) {
                 _state.value = AuthenticationViewState.Error(it)
               }
             }
@@ -41,7 +45,7 @@ internal class SignInFactorCodeViewModel(
               prepareHandler.prepareForPhoneCode(
                 inProgressSignIn = inProgressSignIn,
                 factor = factor,
-                isSecondFactor = isSecondFactor,
+                useSecondFactorApi = mode.usesSecondFactorApi,
               ) {
                 _state.value = AuthenticationViewState.Error(it)
               }
@@ -61,7 +65,7 @@ internal class SignInFactorCodeViewModel(
     }
   }
 
-  fun attempt(factor: Factor, isSecondFactor: Boolean, code: String) {
+  fun attempt(factor: Factor, mode: FactorMode = FactorMode.FirstFactor, code: String) {
     _verificationUiState.value = VerificationUiState.Verifying
     guardSignIn(_state) { inProgressSignIn ->
       _state.value = AuthenticationViewState.Loading
@@ -77,9 +81,10 @@ internal class SignInFactorCodeViewModel(
       viewModelScope.launch(Dispatchers.IO) {
         when (factor.strategy) {
           StrategyKeys.EMAIL_CODE ->
-            attemptHandler.attemptFirstFactorEmailCode(
+            attemptHandler.attemptEmailCode(
               inProgressSignIn = inProgressSignIn,
               code = code,
+              useSecondFactorApi = mode.usesSecondFactorApi,
               onSuccessCallback = onSuccessCallback,
               onErrorCallback = onErrorCallback,
             )
@@ -88,7 +93,7 @@ internal class SignInFactorCodeViewModel(
             attemptHandler.attemptFirstFactorPhoneCode(
               inProgressSignIn = inProgressSignIn,
               code = code,
-              isSecondFactor = isSecondFactor,
+              useSecondFactorApi = mode.usesSecondFactorApi,
               onSuccessCallback = onSuccessCallback,
               onErrorCallback = onErrorCallback,
             )

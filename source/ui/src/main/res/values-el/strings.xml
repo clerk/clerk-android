@@ -21,6 +21,7 @@
     <string name="resend">Επανάληψη</string>
     <string name="didn_t_receive_a_code">"Δεν λάβατε κωδικό; "</string>
     <string name="verifying">Επαλήθευση…</string>
+    <string name="client_trust_new_device_notice">Συνδέεστε από μια νέα συσκευή. Ζητάμε επαλήθευση για να διατηρήσουμε τον λογαριασμό σας ασφαλή.</string>
     <string name="passkey_icon">Εικονίδιο κλειδιού πρόσβασης</string>
     <string name="using_your_passkey">Η χρήση του κλειδιού πρόσβασης σας επιβεβαιώνει ότι είστε εσείς. Η συσκευή σας μπορεί να ζητήσει το δακτυλικό σας αποτύπωμα, το πρόσωπό σας ή τον κωδικό κλειδώματος οθόνης.</string>
     <string name="use_your_passkey">Χρησιμοποιήστε το κλειδί πρόσβασης σας</string>

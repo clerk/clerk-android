@@ -21,6 +21,7 @@
     <string name="resend">Erneut senden</string>
     <string name="didn_t_receive_a_code">"Keinen Code erhalten? "</string>
     <string name="verifying">Wird überprüft…</string>
+    <string name="client_trust_new_device_notice">Sie melden sich von einem neuen Gerät an. Wir bitten um Verifizierung, um Ihr Konto sicher zu halten.</string>
     <string name="passkey_icon">Passkey-Symbol</string>
     <string name="using_your_passkey">Die Verwendung Ihres Passkeys bestätigt, dass Sie es sind. Ihr Gerät kann nach Ihrem Fingerabdruck, Gesicht oder Bildschirmsperre fragen.</string>
     <string name="use_your_passkey">Verwenden Sie Ihren Passkey</string>

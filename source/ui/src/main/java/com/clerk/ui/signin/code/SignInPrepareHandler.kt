@@ -56,7 +56,7 @@ internal class SignInPrepareHandler {
   internal suspend fun prepareForPhoneCode(
     inProgressSignIn: SignIn,
     factor: Factor,
-    isSecondFactor: Boolean,
+    useSecondFactorApi: Boolean,
     onError: (String) -> Unit,
   ) {
     val phoneNumberId = factor.phoneNumberId
@@ -65,9 +65,9 @@ internal class SignInPrepareHandler {
       return
     }
 
-    if (isSecondFactor) {
+    if (useSecondFactorApi) {
       inProgressSignIn
-        .prepareSecondFactor(phoneNumberId)
+        .prepareSecondFactor(SignIn.PrepareSecondFactorStrategy.PhoneCode(phoneNumberId))
         .onSuccess { ClerkLog.v("Successfully prepared second factor for phone code") }
         .onFailure { ClerkLog.e("Error preparing second factor for phone code: $it") }
     } else {
@@ -85,6 +85,7 @@ internal class SignInPrepareHandler {
   internal suspend fun prepareForEmailCode(
     inProgressSignIn: SignIn,
     factor: Factor,
+    useSecondFactorApi: Boolean,
     onError: (String) -> Unit,
   ) {
     val emailAddressId = factor.emailAddressId
@@ -93,14 +94,21 @@ internal class SignInPrepareHandler {
       return
     }
 
-    inProgressSignIn
-      .prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailAddressId)
-      )
-      .onSuccess { ClerkLog.v("Successfully prepared for email code: $it") }
-      .onFailure {
-        onError(it.errorMessage)
-        ClerkLog.e("Error preparing for email code: ${it.errorMessage}")
-      }
+    if (useSecondFactorApi) {
+      inProgressSignIn
+        .prepareSecondFactor(SignIn.PrepareSecondFactorStrategy.EmailCode(emailAddressId))
+        .onSuccess { ClerkLog.v("Successfully prepared second factor for email code: $it") }
+        .onFailure { ClerkLog.e("Error preparing second factor for email code: $it") }
+    } else {
+      inProgressSignIn
+        .prepareFirstFactor(
+          SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailAddressId)
+        )
+        .onSuccess { ClerkLog.v("Successfully prepared for email code: $it") }
+        .onFailure {
+          onError(it.errorMessage)
+          ClerkLog.e("Error preparing for email code: ${it.errorMessage}")
+        }
+    }
   }
 }

@@ -21,6 +21,7 @@
     <string name="resend">再送信</string>
     <string name="didn_t_receive_a_code">"コードを受信しませんでしたか？ "</string>
     <string name="verifying">確認中…</string>
+    <string name="client_trust_new_device_notice">新しいデバイスからサインインしています。アカウントを安全に保つため、確認を求めています。</string>
     <string name="passkey_icon">パスキーアイコン</string>
     <string name="using_your_passkey">パスキーを使用することで、本人であることが確認されます。デバイスが指紋、顔認証、または画面ロックを要求する場合があります。</string>
     <string name="use_your_passkey">パスキーを使用</string>

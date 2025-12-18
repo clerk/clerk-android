@@ -21,6 +21,7 @@
     <string name="resend">Renvoyer</string>
     <string name="didn_t_receive_a_code">"Vous n\'avez pas reçu de code ? "</string>
     <string name="verifying">Vérification en cours…</string>
+    <string name="client_trust_new_device_notice">Vous vous connectez depuis un nouvel appareil. Nous demandons une vérification pour sécuriser votre compte.</string>
     <string name="passkey_icon">Icône de clé d\'accès</string>
     <string name="using_your_passkey">L\'utilisation de votre clé d\'accès confirme que c\'est vous. Votre appareil peut demander votre empreinte digitale, votre visage ou le verrouillage de l\'écran.</string>
     <string name="use_your_passkey">Utiliser votre clé d\'accès</string>

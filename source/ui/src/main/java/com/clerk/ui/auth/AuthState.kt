@@ -96,6 +96,11 @@ internal class AuthState(
           backStack.add(AuthDestination.SignInFactorTwo(factor = it))
         } ?: backStack.add(AuthDestination.SignInGetHelp)
       }
+      SignIn.Status.NEEDS_CLIENT_TRUST -> {
+        signIn.startingSecondFactor?.let {
+          backStack.add(AuthDestination.SignInClientTrust(factor = it))
+        } ?: backStack.add(AuthDestination.SignInGetHelp)
+      }
       SignIn.Status.NEEDS_NEW_PASSWORD -> backStack.add(AuthDestination.SignInSetNewPassword)
       SignIn.Status.UNKNOWN -> return
     }

@@ -71,7 +71,7 @@ class SignInFactorCodeViewModelTest {
     every { Clerk.signIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
 
-    viewModel.prepare(factor, isSecondFactor = false)
+    viewModel.prepare(factor, mode = FactorMode.FirstFactor)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.state.test { assertEquals(AuthenticationViewState.NotStarted, awaitItem()) }
@@ -84,25 +84,27 @@ class SignInFactorCodeViewModelTest {
       val code = "123456"
 
       coEvery {
-        mockAttemptHandler.attemptFirstFactorEmailCode(
+        mockAttemptHandler.attemptEmailCode(
           inProgressSignIn = mockSignIn,
           code = code,
+          useSecondFactorApi = false,
           onSuccessCallback = any(),
           onErrorCallback = any(),
         )
       } coAnswers
         {
-          val onSuccess = args[2] as suspend (SignIn) -> Unit
+          val onSuccess = args[3] as suspend (SignIn) -> Unit
           onSuccess(mockSignIn)
         }
 
-      viewModel.attempt(factor, isSecondFactor = false, code)
+      viewModel.attempt(factor, mode = FactorMode.FirstFactor, code = code)
       testDispatcher.scheduler.advanceUntilIdle()
 
       coVerify {
-        mockAttemptHandler.attemptFirstFactorEmailCode(
+        mockAttemptHandler.attemptEmailCode(
           inProgressSignIn = mockSignIn,
           code = code,
+          useSecondFactorApi = false,
           onSuccessCallback = any(),
           onErrorCallback = any(),
         )
@@ -117,13 +119,13 @@ class SignInFactorCodeViewModelTest {
     runTest {
       val factor = Factor(strategy = StrategyKeys.PHONE_CODE)
       val code = "654321"
-      val isSecondFactor = true
+      val mode = FactorMode.SecondFactor
 
       coEvery {
         mockAttemptHandler.attemptFirstFactorPhoneCode(
           inProgressSignIn = mockSignIn,
           code = code,
-          isSecondFactor = isSecondFactor,
+          useSecondFactorApi = mode.usesSecondFactorApi,
           onSuccessCallback = any(),
           onErrorCallback = any(),
         )
@@ -133,14 +135,14 @@ class SignInFactorCodeViewModelTest {
           onSuccess(mockSignIn)
         }
 
-      viewModel.attempt(factor, isSecondFactor, code)
+      viewModel.attempt(factor, mode = mode, code = code)
       testDispatcher.scheduler.advanceUntilIdle()
 
       coVerify {
         mockAttemptHandler.attemptFirstFactorPhoneCode(
           inProgressSignIn = mockSignIn,
           code = code,
-          isSecondFactor = isSecondFactor,
+          useSecondFactorApi = mode.usesSecondFactorApi,
           onSuccessCallback = any(),
           onErrorCallback = any(),
         )
@@ -171,7 +173,7 @@ class SignInFactorCodeViewModelTest {
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
 
-      viewModel.attempt(factor, isSecondFactor = false, code)
+        viewModel.attempt(factor, mode = FactorMode.FirstFactor, code = code)
       testDispatcher.scheduler.advanceUntilIdle()
 
       assertEquals(AuthenticationViewState.Loading, awaitItem())
@@ -206,7 +208,7 @@ class SignInFactorCodeViewModelTest {
         onSuccess(mockSignIn)
       }
 
-    viewModel.attempt(factor, isSecondFactor = false, code)
+    viewModel.attempt(factor, mode = FactorMode.FirstFactor, code = code)
     testDispatcher.scheduler.advanceUntilIdle()
 
     coVerify {
@@ -243,7 +245,7 @@ class SignInFactorCodeViewModelTest {
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
 
-      viewModel.attempt(factor, isSecondFactor = true, code)
+      viewModel.attempt(factor, mode = FactorMode.SecondFactor, code = code)
       testDispatcher.scheduler.advanceUntilIdle()
 
       assertEquals(AuthenticationViewState.Loading, awaitItem())
@@ -266,22 +268,23 @@ class SignInFactorCodeViewModelTest {
     val code = "123456"
 
     coEvery {
-      mockAttemptHandler.attemptFirstFactorEmailCode(
+      mockAttemptHandler.attemptEmailCode(
         inProgressSignIn = mockSignIn,
         code = code,
+        useSecondFactorApi = false,
         onSuccessCallback = any(),
         onErrorCallback = any(),
       )
     } coAnswers
       {
-        val onError = args[3] as suspend (String?) -> Unit
+        val onError = args[4] as suspend (String?) -> Unit
         onError("error")
       }
 
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
 
-      viewModel.attempt(factor, isSecondFactor = false, code)
+      viewModel.attempt(factor, mode = FactorMode.FirstFactor, code = code)
 
       // First, the view model emits Loading; then, error from the handler
       assertEquals(AuthenticationViewState.Loading, awaitItem())
@@ -295,7 +298,7 @@ class SignInFactorCodeViewModelTest {
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
     val code = "123456"
 
-    viewModel.attempt(factor, isSecondFactor = false, code)
+    viewModel.attempt(factor, mode = FactorMode.FirstFactor, code = code)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.state.test { assertEquals(AuthenticationViewState.NotStarted, awaitItem()) }
@@ -308,7 +311,7 @@ class SignInFactorCodeViewModelTest {
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
 
-      viewModel.prepare(factor, isSecondFactor = false)
+      viewModel.prepare(factor, mode = FactorMode.FirstFactor)
 
       assertEquals(AuthenticationViewState.Loading, awaitItem())
     }
@@ -322,7 +325,7 @@ class SignInFactorCodeViewModelTest {
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
 
-      viewModel.attempt(factor, isSecondFactor = false, code)
+      viewModel.attempt(factor, mode = FactorMode.FirstFactor, code = code)
 
       assertEquals(AuthenticationViewState.Loading, awaitItem())
     }
