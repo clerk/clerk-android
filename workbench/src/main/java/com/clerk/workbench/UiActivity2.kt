@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.ui.auth.AuthView
-import com.clerk.ui.userprofile.UserProfileView
+import com.clerk.ui.userbutton.UserButton
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 
 class UiActivity2 : ComponentActivity() {
@@ -38,7 +38,7 @@ class UiActivity2 : ComponentActivity() {
           contentAlignment = Alignment.Center,
         ) {
           if (user != null) {
-            UserProfileView()
+            UserButton()
           } else {
             AuthView()
           }
