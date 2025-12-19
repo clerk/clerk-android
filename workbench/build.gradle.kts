@@ -6,6 +6,8 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.google.gms)
+  alias(libs.plugins.firebase.appDistribution)
 }
 
 android {
@@ -16,6 +18,8 @@ android {
     applicationId = "com.clerk.workbench"
     minSdk = libs.versions.minSdk.get().toInt()
     targetSdk = libs.versions.compileSdk.get().toInt()
+    versionCode = 5
+    versionName = "-debug"
 
     val isCI = System.getenv("CI")?.toBoolean() == true
     val clerkPublishableKey = project.findProperty(workbenchKey) as String?

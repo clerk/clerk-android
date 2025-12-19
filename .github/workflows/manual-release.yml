@@ -3,7 +3,23 @@ name: Manual Publish
 on:
   release:
     types: [published]
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      publish_api:
+        description: "Publish clerk-api module"
+        required: false
+        type: boolean
+        default: true
+      publish_ui:
+        description: "Publish clerk-ui module"
+        required: false
+        type: boolean
+        default: true
+      publish_telemetry:
+        description: "Publish clerk-telemetry module"
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   create-release:
@@ -158,6 +174,27 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
-          ./gradlew :source:api:publishMavenPublicationToMavenCentralRepository \
-                    :source:ui:publishMavenPublicationToMavenCentralRepository \
-                    :source:telemetry:publishAllPublicationsToMavenCentralRepository
+          TASKS=""
+
+          # For release events, publish all modules. For workflow_dispatch, use the inputs.
+          if [ "${{ github.event_name }}" == "release" ]; then
+            TASKS=":source:api:publishMavenPublicationToMavenCentralRepository :source:ui:publishMavenPublicationToMavenCentralRepository :source:telemetry:publishAllPublicationsToMavenCentralRepository"
+          else
+            if [ "${{ github.event.inputs.publish_api }}" == "true" ]; then
+              TASKS="$TASKS :source:api:publishMavenPublicationToMavenCentralRepository"
+            fi
+            if [ "${{ github.event.inputs.publish_ui }}" == "true" ]; then
+              TASKS="$TASKS :source:ui:publishMavenPublicationToMavenCentralRepository"
+            fi
+            if [ "${{ github.event.inputs.publish_telemetry }}" == "true" ]; then
+              TASKS="$TASKS :source:telemetry:publishAllPublicationsToMavenCentralRepository"
+            fi
+          fi
+
+          if [ -z "$TASKS" ]; then
+            echo "No modules selected for publishing"
+            exit 1
+          fi
+
+          echo "Publishing modules: $TASKS"
+          ./gradlew $TASKS
