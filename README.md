@@ -32,17 +32,36 @@
 
 ### Installation
 
-Add the Clerk Android SDK to your app's `build.gradle(.kts)`
+The Clerk Android SDK is available as two separate artifacts:
 
+- **`clerk-android-api`** – Core API and authentication logic (required)
+- **`clerk-android-ui`** – Prebuilt Jetpack Compose UI components (optional, includes API)
+
+Add the desired artifact to your app's `build.gradle(.kts)`:
+
+#### API Only
+
+Use this if you want to build your own custom UI:
 
 ```kotlin
 dependencies {
-    implementation("com.clerk:clerk-android:0.1.4")
+    implementation("com.clerk:clerk-android-api:0.1.28")
 }
 ```
 
-> 💡 **Tip:** Check [Maven Central](https://central.sonatype.com/artifact/com.clerk/clerk-android)
-> for the latest version.
+#### With Prebuilt UI Components
+
+Use this if you want to use the prebuilt Jetpack Compose UI components:
+
+```kotlin
+dependencies {
+    implementation("com.clerk:clerk-android-ui:0.1.3")
+}
+```
+
+> 💡 **Tip:** Check Maven Central for the latest versions:
+> [clerk-android-api](https://central.sonatype.com/artifact/com.clerk/clerk-android-api) |
+> [clerk-android-ui](https://central.sonatype.com/artifact/com.clerk/clerk-android-ui)
 
 
 ### Initialization
@@ -51,7 +70,7 @@ Before using any part of the SDK, you must call `Clerk.initialize()` in your App
 your publishable key and application context:
 
 ```kotlin
-import com.clerk.Clerk
+import com.clerk.api.Clerk
 
 class YourApplication : Application() {
     override fun onCreate() {
@@ -78,7 +97,8 @@ class YourApplication : Application() {
 
 ### Initialize with custom options
 ```kotlin
-import com.clerk.Clerk
+import com.clerk.api.Clerk
+import com.clerk.api.configuration.ClerkConfigurationOptions
 
 class YourApplication : Application() {
     override fun onCreate() {
@@ -100,6 +120,11 @@ Starting from the Clerk defaults makes it easy to override just the text styles 
 (or when using the builder helper, if you prefer that style):
 
 ```kotlin
+import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.ui.ClerkTypography
+import com.clerk.api.ui.ClerkTypographyDefaults
+
 val customTypography =
     ClerkTypography(
         displaySmall = ClerkTypographyDefaults.displaySmall.copy(fontWeight = FontWeight.SemiBold),
@@ -114,6 +139,43 @@ Clerk.initialize(
 ```
 
 Need the stock values without overrides? Simply pass `ClerkTheme(typography = ClerkTypography())`.
+
+## Prebuilt UI Components
+
+The `clerk-android-ui` artifact provides ready-to-use Jetpack Compose components for authentication and user management.
+
+### AuthView
+
+A complete sign-in and sign-up flow that handles all authentication methods configured in your Clerk dashboard:
+
+```kotlin
+import com.clerk.ui.auth.AuthView
+
+@Composable
+fun LoginScreen() {
+    AuthView()
+}
+```
+
+### UserButton
+
+A self-contained avatar button that opens the user profile in a dialog when tapped. Perfect for placing in a `TopAppBar`:
+
+```kotlin
+import com.clerk.ui.userbutton.UserButton
+
+@Composable
+fun MyTopAppBar() {
+    TopAppBar(
+        title = { Text("My App") },
+        actions = {
+            UserButton()
+        }
+    )
+}
+```
+
+Both components automatically adapt to your Clerk dashboard configuration and support theming via the optional `clerkTheme` parameter.
 
 ## Samples
 
