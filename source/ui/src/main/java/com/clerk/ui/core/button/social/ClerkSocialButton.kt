@@ -167,7 +167,6 @@ internal fun ClerkSocialButtonImpl(
             onClick = { onClick(provider) },
             shape = ClerkMaterialTheme.shape,
             interactionSource = interactionSource,
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = dp3),
             colors = getButtonColors(isPressedCombined),
             contentPadding = ButtonDefaults.ContentPadding,
             border =
