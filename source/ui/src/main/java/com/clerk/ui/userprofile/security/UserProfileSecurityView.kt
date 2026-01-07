@@ -261,7 +261,7 @@ private fun BottomSheetContent(
   currentSheetType: BottomSheetType,
   callbacks: BottomSheetCallbacks,
 ) {
-  val sheetState = rememberModalBottomSheetState()
+  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   val scope = rememberCoroutineScope()
   if (showBottomSheet) {
     ModalBottomSheet(
@@ -269,24 +269,20 @@ private fun BottomSheetContent(
       shape = RoundedCornerShape(topEnd = dp10, topStart = dp10),
       containerColor = ClerkMaterialTheme.colors.background,
       sheetState = sheetState,
-      onDismissRequest = {
-        scope.launch {
-          sheetState.hide()
-          callbacks.onDismiss()
-        }
-      },
+      onDismissRequest = callbacks.onDismiss,
     ) {
-      val animatedCallbacks =
+      val programmaticDismissCallbacks =
         callbacks.copy(
           onDismiss = {
             scope.launch {
               sheetState.hide()
+            }.invokeOnCompletion {
               callbacks.onDismiss()
             }
           }
         )
 
-      BottomSheetBody(currentSheetType = currentSheetType, callbacks = animatedCallbacks)
+      BottomSheetBody(currentSheetType = currentSheetType, callbacks = programmaticDismissCallbacks)
     }
   }
 }

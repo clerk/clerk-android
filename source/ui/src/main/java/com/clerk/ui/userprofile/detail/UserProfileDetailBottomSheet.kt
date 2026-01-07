@@ -26,25 +26,26 @@ internal fun UserProfileDetailBottomSheet(
   onVerify: (BottomSheetMode) -> Unit,
   onShowBackupCodes: (List<String>) -> Unit,
 ) {
-  val sheetState = rememberModalBottomSheetState()
+  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   val scope = rememberCoroutineScope()
 
-  fun animatedDismiss() {
+  fun programmaticDismiss() {
     scope.launch {
       sheetState.hide()
+    }.invokeOnCompletion {
       onDismissRequest()
     }
   }
 
   ModalBottomSheet(
     scrimColor = ClerkMaterialTheme.colors.neutral.copy(alpha = .5f),
-    onDismissRequest = { animatedDismiss() },
+    onDismissRequest = onDismissRequest,
     containerColor = ClerkMaterialTheme.colors.background,
     sheetState = sheetState,
   ) {
     BottomSheetContent(
       bottomSheetType = bottomSheetType,
-      onDismissRequest = { animatedDismiss() },
+      onDismissRequest = { programmaticDismiss() },
       onVerify = onVerify,
       onShowBackupCodes = onShowBackupCodes,
     )
