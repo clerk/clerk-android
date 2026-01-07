@@ -39,7 +39,7 @@ internal fun UserProfileButtonRow(
           .background(ClerkMaterialTheme.colors.background)
           .clickable(
             interactionSource = interactionSource,
-            indication = ripple(),
+            indication = ripple(color = ClerkMaterialTheme.colors.mutedForeground.copy(alpha = 0.1f)),
             role = Role.Button,
             onClick = onClick,
           )
