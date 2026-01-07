@@ -1,5 +1,6 @@
 package com.clerk.ui.core.button.standard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -41,7 +42,6 @@ import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.theme.DefaultColors
 
 /**
  * A custom button component styled according to Clerk's design system.
@@ -172,23 +172,7 @@ private fun ClerkButtonImpl(
       buildButtonTokens(config = configuration, isPressed = clerkButtonState.isPressedCombined)
 
     val surfaceModifier =
-      Modifier.height(tokens.height)
-        .then(modifier)
-        .let { mod ->
-          if (
-            tokens.hasShadow && !clerkButtonState.isPressedCombined && clerkButtonState.isEnabled
-          ) {
-            mod.shadow(
-              elevation = dp1,
-              spotColor = ClerkMaterialTheme.colors.shadow,
-              ambientColor = ClerkMaterialTheme.colors.shadow,
-              shape = ClerkMaterialTheme.shape,
-            )
-          } else {
-            mod
-          }
-        }
-        .clip(ClerkMaterialTheme.shape)
+      Modifier.height(tokens.height).then(modifier).clip(ClerkMaterialTheme.shape)
 
     Button(
       modifier = surfaceModifier,
@@ -196,6 +180,12 @@ private fun ClerkButtonImpl(
       enabled = clerkButtonState.isEnabled,
       interactionSource = interactionSource,
       contentPadding = paddingValues,
+      border =
+        if (configuration.style == ClerkButtonConfiguration.ButtonStyle.Secondary) {
+          BorderStroke(dp1, ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f))
+        } else {
+          null
+        },
       colors =
         ButtonDefaults.buttonColors(
           containerColor =
@@ -295,7 +285,7 @@ private fun ButtonContent(
 @PreviewLightDark
 @Composable
 private fun PreviewButton() {
-  ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
+  ClerkMaterialTheme {
     LazyColumn(
       modifier =
         Modifier.fillMaxSize()
