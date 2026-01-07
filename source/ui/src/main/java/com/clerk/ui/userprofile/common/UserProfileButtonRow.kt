@@ -2,13 +2,17 @@ package com.clerk.ui.userprofile.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.clerk.api.ui.ClerkTheme
@@ -26,13 +30,19 @@ internal fun UserProfileButtonRow(
   textStyle: TextStyle = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
   onClick: () -> Unit,
 ) {
+  val interactionSource = remember { MutableInteractionSource() }
 
   ClerkMaterialTheme {
     Box(
       modifier =
         Modifier.fillMaxWidth()
           .background(ClerkMaterialTheme.colors.background)
-          .clickable { onClick() }
+          .clickable(
+            interactionSource = interactionSource,
+            indication = ripple(),
+            role = Role.Button,
+            onClick = onClick,
+          )
           .padding(vertical = dp16)
           .padding(horizontal = dp24)
           .then(modifier)
