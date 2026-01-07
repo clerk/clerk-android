@@ -1,24 +1,19 @@
+package com.clerk.ui.theme.colors
+
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import kotlin.math.max
 import kotlin.math.min
 
-internal data class DangerPalette(
-  val danger25: Color,
-  val danger50: Color,
-  val danger100: Color,
-  val danger150: Color,
-  val danger200: Color,
-  val danger300: Color,
-  val danger400: Color,
-  val danger500: Color,
-  val danger600: Color,
-  val danger700: Color,
-  val danger750: Color,
-  val danger800: Color,
-  val danger850: Color,
-  val danger900: Color,
-  val danger950: Color,
-)
+private const val DARK_LUMINANCE_THRESHOLD = 0.5f
+
+/**
+ * Determines if this color is considered "dark" based on its luminance. A color is considered dark
+ * if its luminance is below 0.5. This matches the iOS implementation for calculating pressed button
+ * colors.
+ */
+internal val Color.isDark: Boolean
+  get() = luminance() < DARK_LUMINANCE_THRESHOLD
 
 private val LIGHT_SHADES = listOf("400", "300", "200", "150", "100", "50", "25")
 private val DARK_SHADES = listOf("600", "700", "750", "800", "850", "900", "950")

@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
-import generateDangerPaletteHsl
+import com.clerk.ui.theme.colors.generateDangerPaletteHsl
 
 /**
  * A composable that displays a Snackbar with Clerk's danger/error styling.

@@ -20,6 +20,7 @@ import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.theme.colors.ComputedColors
+import com.clerk.ui.theme.colors.isDark
 import com.materialkolor.ktx.darken
 import com.materialkolor.ktx.lighten
 
@@ -286,9 +287,10 @@ private fun generateComputedColors(colors: ClerkColors): ComputedColors {
   val computed =
     ComputedColors(
       primaryPressed =
-        if (isSystemInDarkTheme())
-          colors.primary?.lighten(PRIMARY_PRESSED_FACTOR) ?: Color.Transparent
-        else colors.primary?.darken(PRIMARY_PRESSED_FACTOR) ?: Color.Transparent,
+        colors.primary?.let { primary ->
+          if (primary.isDark) primary.lighten(PRIMARY_PRESSED_FACTOR)
+          else primary.darken(PRIMARY_PRESSED_FACTOR)
+        } ?: Color.Transparent,
       border = colors.border?.copy(alpha = BORDER_ALPHA_SUBTLE) ?: Color.Transparent,
       buttonBorder = colors.border?.copy(alpha = BUTTON_BORDER_ALPHA) ?: Color.Transparent,
       inputBorder = colors.border?.copy(alpha = INPUT_BORDER_ALPHA) ?: Color.Transparent,
