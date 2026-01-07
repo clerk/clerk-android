@@ -144,6 +144,11 @@ private fun DropdownMenu(
     expanded = expanded,
     onDismissRequest = onDismissRequest,
     offset = DpOffset(0.dp, dp12),
+    border =
+      BorderStroke(
+        width = dp1,
+        color = ClerkMaterialTheme.computedColors.border.copy(alpha = 0.06f),
+      ),
   ) {
     DropdownMenuItem(
       text = {
