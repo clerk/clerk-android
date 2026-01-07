@@ -18,7 +18,7 @@ android {
     applicationId = "com.clerk.workbench"
     minSdk = libs.versions.minSdk.get().toInt()
     targetSdk = libs.versions.compileSdk.get().toInt()
-    versionCode = 5
+    versionCode = 6
     versionName = "-debug"
 
     val isCI = System.getenv("CI")?.toBoolean() == true
