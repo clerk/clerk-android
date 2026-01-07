@@ -83,8 +83,12 @@ private fun SignUpCompleteProfileImpl(
   val hasLegalUrls = termsUrl != null || privacyPolicyUrl != null
   val showLegalConsent = legalConsentRequired && hasLegalUrls
 
-  authState.signUpFirstName = firstName
-  authState.signUpLastName = lastName
+  // Initialize authState values only once when provided (for previews/tests)
+  // This uses LaunchedEffect to prevent resetting user input on recomposition
+  androidx.compose.runtime.LaunchedEffect(Unit) {
+    if (firstName.isNotEmpty()) authState.signUpFirstName = firstName
+    if (lastName.isNotEmpty()) authState.signUpLastName = lastName
+  }
 
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }

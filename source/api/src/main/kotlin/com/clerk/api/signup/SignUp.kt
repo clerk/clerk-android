@@ -518,7 +518,7 @@ data class SignUp(
     }
 
     val fieldPriority: List<String> =
-      listOf("email_address", "phone_number", "username", "username")
+      listOf("email_address", "phone_number", "username", "password", "first_name", "last_name")
   }
 }
 
