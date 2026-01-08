@@ -51,9 +51,9 @@ jobs:
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
           echo "Found versions:"
-          echo "  clerk-api: $CLERK_API_VERSION"
-          echo "  clerk-telemetry: $CLERK_TELEMETRY_VERSION"
-          echo "  clerk-ui: $CLERK_UI_VERSION"
+          echo "  clerk-android-api: $CLERK_API_VERSION"
+          echo "  clerk-android-telemetry: $CLERK_TELEMETRY_VERSION"
+          echo "  clerk-android-ui: $CLERK_UI_VERSION"
           echo "Tag name: $TAG_NAME"
 
       - name: Create and push tag
@@ -102,8 +102,8 @@ jobs:
 
           | Module | Version |
           |--------|---------|
-          | clerk-api | $CLERK_API_VERSION |
-          | clerk-ui | $CLERK_UI_VERSION |
+          | clerk-android-api | $CLERK_API_VERSION |
+          | clerk-android-ui | $CLERK_UI_VERSION |
 
           ## What's Changed
 
@@ -113,8 +113,8 @@ jobs:
 
           Add to your \`build.gradle\`:
           \`\`\`gradle
-          implementation(\"com.clerk:clerk-api:$CLERK_API_VERSION\")
-          implementation(\"com.clerk:clerk-ui:$CLERK_UI_VERSION\")
+          implementation(\"com.clerk:clerk-android-api:$CLERK_API_VERSION\")
+          implementation(\"com.clerk:clerk-android-ui:$CLERK_UI_VERSION\")
           \`\`\`
 
           ### 👥 Contributors
