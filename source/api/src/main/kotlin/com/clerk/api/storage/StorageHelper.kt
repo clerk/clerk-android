@@ -6,7 +6,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.content.edit
 import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.storage.StorageHelper.secureStorage
 
 /**
  * Helper class to manage secure storage of data. SharedPreferences are used to store data, all keys
@@ -14,7 +13,7 @@ import com.clerk.api.storage.StorageHelper.secureStorage
  */
 internal object StorageHelper {
 
-  private lateinit var secureStorage: SharedPreferences
+  @Volatile private var secureStorage: SharedPreferences? = null
 
   /**
    * Synchronously initializes the secure storage. We do this synchronously because we need to
@@ -24,45 +23,43 @@ internal object StorageHelper {
     secureStorage = context.getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
   }
 
-  /** Checks if storage has been initialized. */
-  private fun isInitialized(): Boolean {
-    return ::secureStorage.isInitialized
-  }
-
   /** Save value of string type to [secureStorage] */
   internal fun saveValue(key: StorageKey, value: String) {
-    if (!isInitialized()) {
+    val prefs = secureStorage
+    if (prefs == null) {
       ClerkLog.w(
         "StorageHelper.saveValue called before initialization, ignoring save for key: ${key.name}"
       )
       return
     }
     if (value.isNotEmpty()) {
-      secureStorage.edit(commit = true) { putString(key.name, value) }
+      prefs.edit(commit = true) { putString(key.name, value) }
       return
     }
   }
 
   /** Load value of string type from [secureStorage] */
   internal fun loadValue(key: StorageKey): String? {
-    if (!isInitialized()) {
+    val prefs = secureStorage
+    if (prefs == null) {
       ClerkLog.w(
         "StorageHelper.loadValue called before initialization, returning null for key: ${key.name}"
       )
       return null
     }
-    return secureStorage.getString(key.name, null)
+    return prefs.getString(key.name, null)
   }
 
   /** Delete value of string type from [secureStorage] */
   internal fun deleteValue(key: StorageKey) {
-    if (!isInitialized()) {
+    val prefs = secureStorage
+    if (prefs == null) {
       ClerkLog.w(
         "StorageHelper.deleteValue called before initialization, ignoring delete for key: ${key.name}"
       )
       return
     }
-    secureStorage.edit { remove(key.name) }
+    prefs.edit { remove(key.name) }
   }
 
   /**
@@ -72,11 +69,17 @@ internal object StorageHelper {
    */
   @VisibleForTesting
   internal fun reset(context: Context? = null) {
-    if (::secureStorage.isInitialized) {
-      secureStorage.edit().clear().commit()
+    val prefs = secureStorage
+    if (prefs != null) {
+      prefs.edit().clear().commit()
     }
-    // If context is provided and storage is initialized, reinitialize to ensure clean state
-    context?.let { initialize(it) }
+    if (context != null) {
+      // Reinitialize to ensure clean state
+      initialize(context)
+    } else {
+      // Allow tests to simulate uninitialized state.
+      secureStorage = null
+    }
   }
 }
 

@@ -37,9 +37,8 @@ class StorageHelperTest {
   }
 
   /**
-   * Clears SharedPreferences data. Note: We cannot truly "uninitialize" a lateinit var, so tests
-   * that require uninitialized state must run before initialize() is called, or we use reflection
-   * to check initialization state.
+   * Clears SharedPreferences data. For tests that require uninitialized state, prefer
+   * [StorageHelper.reset] with no context.
    */
   private fun clearSharedPreferences() {
     try {
@@ -67,7 +66,8 @@ class StorageHelperTest {
           // Capture the initialized SharedPreferences instance
           val field = StorageHelper::class.java.getDeclaredField("secureStorage")
           field.isAccessible = true
-          val prefs = field.get(StorageHelper) as SharedPreferences
+          val prefs = field.get(StorageHelper) as? SharedPreferences
+          requireNotNull(prefs) { "secureStorage should be initialized after initialize()" }
           synchronized(initializedPreferences) { initializedPreferences.add(prefs) }
           field.isAccessible = false
         } catch (e: Throwable) {
@@ -189,5 +189,41 @@ class StorageHelperTest {
     // Then - Deleted value should be null, other value unchanged
     assertNull(StorageHelper.loadValue(deviceIdKey))
     assertEquals("device-token-1", StorageHelper.loadValue(deviceTokenKey))
+  }
+
+  @Test
+  fun `load save and delete never throw when racing with initialize`() {
+    // Given
+    StorageHelper.reset()
+    val executor = Executors.newFixedThreadPool(CONCURRENCY_TEST_THREAD_COUNT)
+    val latch = CountDownLatch(CONCURRENCY_TEST_THREAD_COUNT)
+    val exceptions = mutableListOf<Throwable>()
+
+    // When
+    repeat(CONCURRENCY_TEST_THREAD_COUNT) { index ->
+      executor.submit {
+        try {
+          repeat(50) { iteration ->
+            if ((index + iteration) % 3 == 0) {
+              StorageHelper.initialize(context)
+            } else {
+              StorageHelper.saveValue(StorageKey.DEVICE_ID, "value-$index-$iteration")
+              StorageHelper.loadValue(StorageKey.DEVICE_ID)
+              StorageHelper.deleteValue(StorageKey.DEVICE_ID)
+            }
+          }
+        } catch (e: Throwable) {
+          synchronized(exceptions) { exceptions.add(e) }
+        } finally {
+          latch.countDown()
+        }
+      }
+    }
+
+    latch.await()
+    executor.shutdown()
+
+    // Then
+    assertTrue("No exceptions should occur", exceptions.isEmpty())
   }
 }
