@@ -3,12 +3,10 @@ package com.clerk.customflows.otp.signin
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.attemptFirstFactor
-import com.clerk.api.signin.prepareFirstFactor
+import com.clerk.api.signin.verifyCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -33,15 +31,13 @@ class SMSOTPSignInViewModel : ViewModel() {
 
   fun submit(phoneNumber: String) {
     viewModelScope.launch {
-      SignIn.create(SignIn.CreateParams.Strategy.PhoneCode(phoneNumber)).flatMap {
-        it
-          .prepareFirstFactor(SignIn.PrepareFirstFactorParams.PhoneCode())
-          .onSuccess { _uiState.value = UiState.Verifying }
-          .onFailure {
-            // See https://clerk.com/docs/custom-flows/error-handling
-            // for more info on error handling
-          }
-      }
+      Clerk.auth
+        .signInWithOtp { phone = phoneNumber }
+        .onSuccess { _uiState.value = UiState.Verifying }
+        .onFailure {
+          // See https://clerk.com/docs/custom-flows/error-handling
+          // for more info on error handling
+        }
     }
   }
 
@@ -49,7 +45,7 @@ class SMSOTPSignInViewModel : ViewModel() {
     val inProgressSignIn = Clerk.signIn ?: return
     viewModelScope.launch {
       inProgressSignIn
-        .attemptFirstFactor(SignIn.AttemptFirstFactorParams.PhoneCode(code))
+        .verifyCode(code)
         .onSuccess {
           if (it.status == SignIn.Status.COMPLETE) {
             _uiState.value = UiState.Verified
