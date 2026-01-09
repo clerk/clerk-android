@@ -3,12 +3,12 @@ package com.clerk.customflows.emailpassword.signup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.VerificationType
 import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.attemptVerification
-import com.clerk.api.signup.prepareVerification
+import com.clerk.api.signup.sendCode
+import com.clerk.api.signup.verifyCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -34,8 +34,12 @@ class EmailPasswordSignUpViewModel : ViewModel() {
 
   fun submit(email: String, password: String) {
     viewModelScope.launch {
-      SignUp.create(SignUp.CreateParams.Standard(emailAddress = email, password = password))
-        .flatMap { it.prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailCode()) }
+      Clerk.auth
+        .signUp {
+          this.email = email
+          this.password = password
+        }
+        .flatMap { it.sendCode { this.email = email } }
         .onSuccess { _uiState.value = EmailPasswordSignUpUiState.Verifying }
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling
@@ -48,7 +52,7 @@ class EmailPasswordSignUpViewModel : ViewModel() {
     val inProgressSignUp = Clerk.signUp ?: return
     viewModelScope.launch {
       inProgressSignUp
-        .attemptVerification(SignUp.AttemptVerificationParams.EmailCode(code))
+        .verifyCode(code, VerificationType.EMAIL)
         .onSuccess { _uiState.value = EmailPasswordSignUpUiState.Verified }
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling

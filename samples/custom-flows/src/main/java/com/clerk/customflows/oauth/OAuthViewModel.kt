@@ -36,7 +36,8 @@ class OAuthViewModel : ViewModel() {
 
   fun signInWithOAuth(provider: OAuthProvider) {
     viewModelScope.launch {
-      SignIn.authenticateWithRedirect(SignIn.AuthenticateWithRedirectParams.OAuth(provider))
+      Clerk.auth
+        .signInWithOAuth(provider)
         .onSuccess {
           when (it.resultType) {
             ResultType.SIGN_IN -> {
