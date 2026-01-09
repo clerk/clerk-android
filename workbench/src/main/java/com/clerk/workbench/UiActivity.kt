@@ -29,7 +29,7 @@ class UiActivity : ComponentActivity() {
           contentAlignment = Alignment.Center,
         ) {
           if (user != null) {
-            Button(onClick = { scope.launch { Clerk.signOut() } }) { Text("Sign out") }
+            Button(onClick = { scope.launch { Clerk.auth.signOut() } }) { Text("Sign out") }
           } else {
             Button(onClick = {}) { Text("Sign in") }
           }

@@ -33,7 +33,8 @@ class MainViewModel : ViewModel() {
 
   fun signOut() {
     viewModelScope.launch {
-      Clerk.signOut()
+      Clerk.auth
+        .signOut()
         .onSuccess { _uiState.value = MainUiState.SignedOut }
         .onFailure { Log.e("MainViewModel", "${it.errorMessage}", it.throwable) }
     }
