@@ -3,10 +3,11 @@ package com.clerk.customflows.emailpassword.mfa
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.MfaType
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.attemptSecondFactor
+import com.clerk.api.signin.verifyMfaCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -17,7 +18,11 @@ class MFASignInViewModel : ViewModel() {
 
   fun submit(email: String, password: String) {
     viewModelScope.launch {
-      SignIn.create(SignIn.CreateParams.Strategy.Password(identifier = email, password = password))
+      Clerk.auth
+        .signInWithPassword {
+          identifier = email
+          this.password = password
+        }
         .onSuccess {
           if (it.status == SignIn.Status.NEEDS_SECOND_FACTOR) {
             // Display TOTP Form
@@ -38,7 +43,7 @@ class MFASignInViewModel : ViewModel() {
     val inProgressSignIn = Clerk.signIn ?: return
     viewModelScope.launch {
       inProgressSignIn
-        .attemptSecondFactor(SignIn.AttemptSecondFactorParams.TOTP(code))
+        .verifyMfaCode(code, MfaType.TOTP)
         .onSuccess {
           if (it.status == SignIn.Status.COMPLETE) {
             // User is now signed in and verified.
