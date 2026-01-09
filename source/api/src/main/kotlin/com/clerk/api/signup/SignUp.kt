@@ -3,6 +3,7 @@
 package com.clerk.api.signup
 
 import com.clerk.api.Clerk
+import com.clerk.api.Constants.Strategy as AuthStrategy
 import com.clerk.api.extensions.sortedByPriority
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
