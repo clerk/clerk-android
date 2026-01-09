@@ -441,7 +441,7 @@ data class SignUp(
      * @param params The strategy to use for creating the sign-up.
      * @return A [ClerkResult] containing either a [SignUp] object or a [ClerkErrorResponse].
      */
-    internal suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
+    suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
       val baseMap =
         if (params is CreateParams.Transfer) {
           mapOf("transfer" to "true")
@@ -459,9 +459,7 @@ data class SignUp(
      * @return A [ClerkResult] containing either the created [SignUp] object or a
      *   [ClerkErrorResponse].
      */
-    internal suspend fun create(
-      params: Map<String, String>
-    ): ClerkResult<SignUp, ClerkErrorResponse> {
+    suspend fun create(params: Map<String, String>): ClerkResult<SignUp, ClerkErrorResponse> {
       return ClerkApi.signUp.createSignUp(params)
     }
 
@@ -471,7 +469,7 @@ data class SignUp(
      * @param params The authentication parameters.
      * @return A [ClerkResult] containing either an [OAuthResult] or a [ClerkErrorResponse].
      */
-    internal suspend fun authenticateWithRedirect(
+    suspend fun authenticateWithRedirect(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       val strategy =
@@ -524,7 +522,7 @@ val SignUp.firstFieldToVerify: String?
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-internal suspend fun SignUp.update(
+suspend fun SignUp.update(
   updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
@@ -537,7 +535,7 @@ internal suspend fun SignUp.update(
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-internal suspend fun SignUp.prepareVerification(
+suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.signUp.prepareSignUpVerification(this.id, prepareVerification.strategy)
@@ -550,7 +548,7 @@ internal suspend fun SignUp.prepareVerification(
  * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-internal suspend fun SignUp.attemptVerification(
+suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.signUp.attemptSignUpVerification(

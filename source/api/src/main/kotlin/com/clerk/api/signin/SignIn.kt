@@ -627,13 +627,13 @@ data class SignIn(
     /**
      * Starts the sign in process.
      *
+     * **Note:** Prefer using `Clerk.auth.signIn` or other `Clerk.auth.*` methods for new code.
+     *
      * @param params The strategy to authenticate with.
      * @return A [ClerkResult] containing the created [SignIn] object on success, or a
      *   [ClerkErrorResponse] on failure.
      */
-    internal suspend fun create(
-      params: CreateParams.Strategy
-    ): ClerkResult<SignIn, ClerkErrorResponse> {
+    suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
         is CreateParams.Strategy.Passkey -> PasskeyService.signInWithPasskey()
         else -> {
@@ -656,9 +656,7 @@ data class SignIn(
      * @return A [ClerkResult] containing the created [SignIn] object on success, or a
      *   [ClerkErrorResponse] on failure.
      */
-    internal suspend fun create(
-      params: Map<String, String>
-    ): ClerkResult<SignIn, ClerkErrorResponse> {
+    suspend fun create(params: Map<String, String>): ClerkResult<SignIn, ClerkErrorResponse> {
       return ClerkApi.signIn.createSignIn(params)
     }
 
@@ -668,8 +666,7 @@ data class SignIn(
      * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
      *   failure.
      */
-    internal suspend fun authenticateWithGoogleOneTap():
-      ClerkResult<OAuthResult, ClerkErrorResponse> {
+    suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return GoogleSignInService().signInWithGoogle()
     }
 
@@ -679,7 +676,7 @@ data class SignIn(
      * @param params The parameters for the redirect-based authentication.
      * @return A [ClerkResult] containing the result of the authentication flow.
      */
-    internal suspend fun authenticateWithRedirect(
+    suspend fun authenticateWithRedirect(
       params: AuthenticateWithRedirectParams
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return SSOService.authenticateWithRedirect(
@@ -692,7 +689,7 @@ data class SignIn(
     }
 
     /** Authenticates using the Google Credential Manager. */
-    internal suspend fun authenticateWithGoogleCredential(
+    suspend fun authenticateWithGoogleCredential(
       credentialTypes: List<CredentialType>
     ): ClerkResult<SignIn, ClerkErrorResponse> {
       return GoogleCredentialAuthenticationService.signInWithGoogleCredential(
@@ -711,7 +708,7 @@ data class SignIn(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-internal suspend fun SignIn.prepareFirstFactor(
+suspend fun SignIn.prepareFirstFactor(
   params: SignIn.PrepareFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
@@ -725,7 +722,7 @@ internal suspend fun SignIn.prepareFirstFactor(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-internal suspend fun SignIn.prepareSecondFactor(
+suspend fun SignIn.prepareSecondFactor(
   phoneNumberId: String? = null,
   emailAddressId: String? = null,
 ): ClerkResult<SignIn, ClerkErrorResponse> {
@@ -763,7 +760,7 @@ internal suspend fun SignIn.prepareSecondFactor(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-internal suspend fun SignIn.attemptFirstFactor(
+suspend fun SignIn.attemptFirstFactor(
   params: SignIn.AttemptFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.attemptFirstFactor(id = this.id, params = params.toMap())
@@ -776,7 +773,7 @@ internal suspend fun SignIn.attemptFirstFactor(
  * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-internal suspend fun SignIn.attemptSecondFactor(
+suspend fun SignIn.attemptSecondFactor(
   params: SignIn.AttemptSecondFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.attemptSecondFactor(id = this.id, params = params.toMap())
@@ -789,7 +786,7 @@ internal suspend fun SignIn.attemptSecondFactor(
  * @return A [ClerkResult] containing the refreshed [SignIn] object on success, or a
  *   [ClerkErrorResponse] on failure.
  */
-internal suspend fun SignIn.get(
+suspend fun SignIn.get(
   rotatingTokenNonce: String? = null
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
