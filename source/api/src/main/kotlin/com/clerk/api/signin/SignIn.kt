@@ -395,34 +395,28 @@ data class SignIn(
     @AutoMap
     @Serializable
     data class EmailCode(
-      @SerialName("email_address_id")
-      val emailAddressId: String =
-        signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
+      @SerialName("email_address_id") val emailAddressId: String,
       override val strategy: String = EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class PhoneCode(
-      @SerialName("phone_number_id")
-      val phoneNumberId: String =
-        signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
+      @SerialName("phone_number_id") val phoneNumberId: String,
       override val strategy: String = PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class ResetPasswordEmailCode(
-      val emailAddressId: String =
-        signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
+      val emailAddressId: String,
       override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class ResetPasswordPhoneCode(
-      val phoneNumberId: String =
-        signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
+      val phoneNumberId: String,
       override val strategy: String = RESET_PASSWORD_PHONE_CODE,
     ) : PrepareFirstFactorParams
 
