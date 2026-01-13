@@ -42,7 +42,7 @@ class SignUpViewModel : ViewModel() {
   }
 
   fun verify(code: String) {
-    val inProgressSignUp = Clerk.signUp ?: return
+    val inProgressSignUp = Clerk.auth.signUp ?: return
     viewModelScope.launch {
       inProgressSignUp
         .verifyCode(code, VerificationType.EMAIL)

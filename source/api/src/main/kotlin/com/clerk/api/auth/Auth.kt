@@ -9,7 +9,9 @@ import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
 import com.clerk.api.session.fetchToken
 import com.clerk.api.session.revoke
+import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
+import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.SSOService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -55,6 +57,45 @@ class Auth internal constructor() {
    * sign-in, sign-out, session changes, and errors.
    */
   val events: Flow<AuthEvent> = _events.asSharedFlow()
+
+  // region Current Sign In/Sign Up State
+
+  /**
+   * The current sign-in attempt, if one is in progress.
+   *
+   * This represents an ongoing authentication flow and provides access to verification steps and
+   * authentication state. Returns `null` when no sign-in is active or if the SDK is not
+   * initialized.
+   *
+   * ### Example usage:
+   * ```kotlin
+   * val currentSignIn = Clerk.auth.signIn
+   * if (currentSignIn != null) {
+   *     // Handle ongoing sign-in
+   * }
+   * ```
+   */
+  val signIn: SignIn?
+    get() = if (Clerk.clientInitialized) Clerk.client.signIn else null
+
+  /**
+   * The current sign-up attempt, if one is in progress.
+   *
+   * This represents an ongoing user registration flow and provides access to verification steps and
+   * registration state. Returns `null` when no sign-up is active or if the SDK is not initialized.
+   *
+   * ### Example usage:
+   * ```kotlin
+   * val currentSignUp = Clerk.auth.signUp
+   * if (currentSignUp != null) {
+   *     // Handle ongoing sign-up
+   * }
+   * ```
+   */
+  val signUp: SignUp?
+    get() = if (Clerk.clientInitialized) Clerk.client.signUp else null
+
+  // endregion
 
   // region Session Management
 

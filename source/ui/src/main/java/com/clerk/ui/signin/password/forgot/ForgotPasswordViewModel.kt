@@ -46,7 +46,7 @@ internal class ForgotPasswordViewModel : ViewModel() {
   fun resetPassword() {
     _state.value = ResetPasswordViewState.Loading
     val signIn = Clerk.signIn
-    val resetPasswordFactor = Clerk.signIn?.resetPasswordFactor
+    val resetPasswordFactor = Clerk.auth.signIn?.resetPasswordFactor
     if (signIn == null || resetPasswordFactor == null) {
       _state.value = ResetPasswordViewState.NotStarted
       return
