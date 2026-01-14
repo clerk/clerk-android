@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 class EmailVerificationViewModel : ViewModel() {
 
   fun verify(code: String) {
-    val inProgressSignIn = Clerk.signIn
+    val inProgressSignIn = Clerk.auth.signIn
     viewModelScope.launch { inProgressSignIn?.verifyCode(code) }
   }
 }

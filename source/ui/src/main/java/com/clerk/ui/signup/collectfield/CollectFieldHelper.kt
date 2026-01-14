@@ -42,5 +42,5 @@ internal class CollectFieldHelper {
     }
 
   fun fieldIsOptional(collectField: CollectField) =
-    Clerk.signUp?.requiredFields?.contains(collectField.rawValue) ?: true
+    Clerk.auth.signUp?.requiredFields?.contains(collectField.rawValue) ?: true
 }

@@ -4,6 +4,7 @@ package com.clerk.ui.signin.code
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
@@ -38,6 +39,7 @@ class SignInFactorCodeViewModelTest {
   private val mockAttemptHandler = mockk<SignInAttemptHandler>(relaxed = true)
   private val mockPrepareHandler = mockk<SignInPrepareHandler>(relaxed = true)
   private val mockSignIn = mockk<SignIn>(relaxed = true)
+  private val mockAuth = mockk<Auth>(relaxed = true)
   private val testDispatcher = StandardTestDispatcher()
 
   private lateinit var viewModel: SignInFactorCodeViewModel
@@ -46,7 +48,8 @@ class SignInFactorCodeViewModelTest {
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
     mockkObject(Clerk)
-    every { Clerk.signIn } returns mockSignIn
+    every { Clerk.auth } returns mockAuth
+    every { mockAuth.signIn } returns mockSignIn
 
     viewModel =
       SignInFactorCodeViewModel(
@@ -68,7 +71,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun prepareShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
-    every { Clerk.signIn } returns null
+    every { mockAuth.signIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
 
     viewModel.prepare(factor, isSecondFactor = false)
@@ -291,7 +294,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun attemptShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
-    every { Clerk.signIn } returns null
+    every { mockAuth.signIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
     val code = "123456"
 

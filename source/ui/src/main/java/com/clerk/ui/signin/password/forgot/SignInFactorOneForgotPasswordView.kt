@@ -59,7 +59,7 @@ fun SignInFactorOneForgotPasswordView(
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val socialProviders = Clerk.socialProviders
-    val alternativeFactors = Clerk.signIn?.alternativeFirstFactors()
+    val alternativeFactors = Clerk.auth.signIn?.alternativeFirstFactors()
     SignInFactorOneForgotPasswordViewImpl(
       socialProviders = socialProviders.toOAuthProvidersList().toImmutableList(),
       modifier = modifier,

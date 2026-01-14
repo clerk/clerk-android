@@ -78,7 +78,7 @@ internal fun guardSignIn(
   state: MutableStateFlow<AuthenticationViewState>,
   block: (ClerkSignIn) -> Unit,
 ) {
-  val s = Clerk.signIn
+  val s = Clerk.auth.signIn
   if (s == null) {
     state.value = AuthenticationViewState.NotStarted
     null
@@ -105,7 +105,7 @@ internal fun guardSignUp(
   state: MutableStateFlow<AuthenticationViewState>,
   block: (ClerkSignUp) -> Unit,
 ) {
-  val s = Clerk.signUp
+  val s = Clerk.auth.signUp
   if (s == null) {
     state.value = AuthenticationViewState.NotStarted
     null
