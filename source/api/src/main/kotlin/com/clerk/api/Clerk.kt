@@ -19,7 +19,6 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
@@ -87,6 +86,10 @@ object Clerk {
    */
   lateinit var client: Client
     private set
+
+  /** Internal property to check if the client has been initialized. */
+  internal val clientInitialized: Boolean
+    get() = ::client.isInitialized
 
   /**
    * Reactive state indicating whether the Clerk SDK has completed initialization.
@@ -421,29 +424,6 @@ object Clerk {
    * @see Auth for all available authentication methods.
    */
   val auth: Auth = Auth()
-
-  // endregion
-
-  // region Sign In/Sign Up
-
-  /**
-   * The current sign-in attempt, if one is in progress.
-   *
-   * This represents an ongoing authentication flow and provides access to verification steps and
-   * authentication state. Returns `null` when no sign-in is active or if the SDK is not
-   * initialized.
-   */
-  val signIn: SignIn?
-    get() = if (::client.isInitialized) client.signIn else null
-
-  /**
-   * The current sign-up attempt, if one is in progress.
-   *
-   * This represents an ongoing user registration flow and provides access to verification steps and
-   * registration state. Returns `null` when no sign-up is active or if the SDK is not initialized.
-   */
-  val signUp: SignUp?
-    get() = if (::client.isInitialized) client.signUp else null
 
   // endregion
 
