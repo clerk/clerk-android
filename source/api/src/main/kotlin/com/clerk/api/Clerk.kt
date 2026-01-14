@@ -118,12 +118,6 @@ object Clerk {
   var telemetryEnabled: Boolean = true
 
   /**
-   * The name of the application, as configured in the Clerk Dashboard.
-   *
-   * Used for display purposes in authentication UI and other contexts. Returns `null` if the SDK is
-   * not yet initialized or the application name is not set.
-   */
-  /**
    * Reactive state for initialization errors.
    *
    * Observe this StateFlow to detect when initialization has failed. When combined with
@@ -145,6 +139,12 @@ object Clerk {
    */
   val initializationError: StateFlow<Throwable?> = configurationManager.initializationError
 
+  /**
+   * The name of the application, as configured in the Clerk Dashboard.
+   *
+   * Used for display purposes in authentication UI and other contexts. Returns `null` if the SDK is
+   * not yet initialized or the application name is not set.
+   */
   val applicationName: String?
     get() = if (::environment.isInitialized) environment.displayConfig.applicationName else null
 
@@ -221,7 +221,7 @@ object Clerk {
    * URL is configured in your Clerk Dashboard under branding settings. Returns `null` if the SDK is
    * not yet initialized or no logo URL is configured.
    */
-  val organizationLogoUrl: String?
+  val logoUrl: String?
     get() = if (::environment.isInitialized) environment.displayConfig.logoImageUrl else null
 
   /**
@@ -453,9 +453,7 @@ object Clerk {
    *
    * @param context The application context used for initialization and storage setup.
    * @param publishableKey The publishable key from your Clerk Dashboard that connects your app to
-   *   Clerk.
-   * @param options Enable additional options for the Clerk SDK. See [ClerkConfigurationOptions] for
-   *   details. Clerk. This key should be in the format `pk_test_...` or `pk_live_...`.
+   *   Clerk. This key should be in the format `pk_test_...` or `pk_live_...`.
    * @param options Optional configuration for enabling extra functionality. See
    *   [ClerkConfigurationOptions] for details.
    * @param theme Optional theme to customize the appearance of Clerk UI components. See

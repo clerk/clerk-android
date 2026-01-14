@@ -202,7 +202,7 @@ internal fun OrganizationAvatar(
   size: AvatarSize = AvatarSize.MEDIUM,
   clerkTheme: ClerkTheme? = null,
 ) {
-  val url = Clerk.organizationLogoUrl
+  val url = Clerk.logoUrl
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     AvatarView(
       imageUrl = url,
