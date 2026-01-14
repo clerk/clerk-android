@@ -42,7 +42,7 @@ class SMSOTPSignInViewModel : ViewModel() {
   }
 
   fun verify(code: String) {
-    val inProgressSignIn = Clerk.signIn ?: return
+    val inProgressSignIn = Clerk.auth.signIn ?: return
     viewModelScope.launch {
       inProgressSignIn
         .verifyCode(code)

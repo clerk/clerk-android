@@ -40,7 +40,7 @@ class MFASignInViewModel : ViewModel() {
   }
 
   fun verify(code: String) {
-    val inProgressSignIn = Clerk.signIn ?: return
+    val inProgressSignIn = Clerk.auth.signIn ?: return
     viewModelScope.launch {
       inProgressSignIn
         .verifyMfaCode(code, MfaType.TOTP)
