@@ -1,7 +1,6 @@
 package com.clerk.api.signin
 
 import com.clerk.api.Clerk
-import com.clerk.api.Clerk.signIn
 import com.clerk.api.Constants.Strategy.BACKUP_CODE
 import com.clerk.api.Constants.Strategy.EMAIL_CODE
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO

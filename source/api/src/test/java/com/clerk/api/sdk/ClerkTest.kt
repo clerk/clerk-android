@@ -317,7 +317,7 @@ class ClerkTest {
     simulateUninitializedClient()
 
     // When
-    val signIn = Clerk.signIn
+    val signIn = Clerk.auth.signIn
 
     // Then
     assertNull(signIn)
@@ -330,7 +330,7 @@ class ClerkTest {
     initializeClerkWithClient(mockClient)
 
     // When
-    val signIn = Clerk.signIn
+    val signIn = Clerk.auth.signIn
 
     // Then
     assertEquals(mockSignIn, signIn)
@@ -342,7 +342,7 @@ class ClerkTest {
     simulateUninitializedClient()
 
     // When
-    val signUp = Clerk.signUp
+    val signUp = Clerk.auth.signUp
 
     // Then
     assertNull(signUp)
@@ -355,7 +355,7 @@ class ClerkTest {
     initializeClerkWithClient(mockClient)
 
     // When
-    val signUp = Clerk.signUp
+    val signUp = Clerk.auth.signUp
 
     // Then
     assertEquals(mockSignUp, signUp)
