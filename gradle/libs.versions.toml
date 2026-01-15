@@ -1,7 +1,7 @@
 [versions]
 adsMobileSdk = "0.21.0-beta01"
 activityKtx = "1.12.2"
-agp = "8.13.2"
+agp = "9.0.0"
 appcompat = "1.7.1"
 automap = "0.1.1"
 chucker = "4.2.0"
