@@ -542,6 +542,32 @@ suspend fun SignUp.prepareVerification(
 }
 
 /**
+ * Sends a verification code to the phone number associated with this sign-up.
+ *
+ * This is a convenience method that prepares the phone code verification strategy. The verification
+ * code will be sent via SMS to the phone number already provided to the [SignUp] object.
+ *
+ * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignUp.sendPhoneCode(): ClerkResult<SignUp, ClerkErrorResponse> {
+  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.PhoneCode())
+}
+
+/**
+ * Sends a verification code to the email address associated with this sign-up.
+ *
+ * This is a convenience method that prepares the email code verification strategy. The verification
+ * code will be sent to the email address already provided to the [SignUp] object.
+ *
+ * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignUp.sendEmailCode(): ClerkResult<SignUp, ClerkErrorResponse> {
+  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailCode())
+}
+
+/**
  * Attempts to complete the verification process.
  *
  * @param params The verification attempt parameters.
