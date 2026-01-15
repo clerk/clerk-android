@@ -247,50 +247,6 @@ suspend fun SignIn.verifyWithPasskey(credential: String): ClerkResult<SignIn, Cl
 }
 
 /**
- * Sends an MFA verification code.
- *
- * @param block Builder block to configure where to send the MFA code.
- * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
- *   [ClerkErrorResponse] on failure.
- *
- * ### Example usage:
- * ```kotlin
- * signIn.sendMfaCode { phone = "+1234567890" }
- * // or
- * signIn.sendMfaCode { email = "user@email.com" }
- * ```
- */
-suspend fun SignIn.sendMfaCode(
-  block: SendCodeBuilder.() -> Unit
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  val builder = SendCodeBuilder().apply(block)
-  builder.validate()
-
-  val params =
-    if (builder.phone != null) {
-      val phoneNumberId =
-        supportedSecondFactors
-          ?.find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
-          ?.phoneNumberId
-      SignIn.PrepareSecondFactorParams(
-        strategy = SignIn.PrepareSecondFactorParams.PHONE_CODE,
-        phoneNumberId = phoneNumberId,
-      )
-    } else {
-      val emailAddressId =
-        supportedSecondFactors
-          ?.find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
-          ?.emailAddressId
-      SignIn.PrepareSecondFactorParams(
-        strategy = SignIn.PrepareSecondFactorParams.EMAIL_CODE,
-        emailAddressId = emailAddressId,
-      )
-    }
-
-  return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
-}
-
-/**
  * Verifies MFA with the provided code and type.
  *
  * @param code The MFA verification code.
