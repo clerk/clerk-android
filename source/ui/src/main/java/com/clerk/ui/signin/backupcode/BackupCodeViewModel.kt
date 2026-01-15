@@ -18,12 +18,12 @@ internal class BackupCodeViewModel : ViewModel() {
   val state = _state.asStateFlow()
 
   fun submit(backupCode: String) {
-    if (Clerk.auth.signIn == null) {
+    if (Clerk.auth.currentSignIn == null) {
       _state.value = AuthenticationViewState.NotStarted
       return
     }
     _state.value = AuthenticationViewState.Loading
-    val inProgressSignIn = Clerk.auth.signIn!!
+    val inProgressSignIn = Clerk.auth.currentSignIn!!
     viewModelScope.launch {
       inProgressSignIn
         .attemptSecondFactor(SignIn.AttemptSecondFactorParams.BackupCode(backupCode))

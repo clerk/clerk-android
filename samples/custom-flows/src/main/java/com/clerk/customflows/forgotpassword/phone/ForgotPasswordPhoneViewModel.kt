@@ -54,7 +54,7 @@ class ForgotPasswordPhoneViewModel : ViewModel() {
   }
 
   fun verify(code: String) {
-    val inProgressSignIn = Clerk.auth.signIn ?: return
+    val inProgressSignIn = Clerk.auth.currentSignIn ?: return
     viewModelScope.launch {
       inProgressSignIn
         .verifyCode(code)
@@ -68,7 +68,7 @@ class ForgotPasswordPhoneViewModel : ViewModel() {
   }
 
   fun setNewPassword(password: String) {
-    val inProgressSignIn = Clerk.auth.signIn ?: return
+    val inProgressSignIn = Clerk.auth.currentSignIn ?: return
     viewModelScope.launch {
       inProgressSignIn
         .resetPassword(password)

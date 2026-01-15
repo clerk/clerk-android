@@ -59,8 +59,8 @@ fun SignInFactorAlternativeMethodsView(
     val socialProviders =
       if (isSecondFactor) emptyList() else Clerk.socialProviders.toOAuthProvidersList()
     val alternativeFactors =
-      if (isSecondFactor) Clerk.auth.signIn?.alternativeSecondFactors(currentFactor)
-      else Clerk.auth.signIn?.alternativeFirstFactors(currentFactor)
+      if (isSecondFactor) Clerk.auth.currentSignIn?.alternativeSecondFactors(currentFactor)
+      else Clerk.auth.currentSignIn?.alternativeFirstFactors(currentFactor)
 
     SignInFactorAlternativeMethodsViewImpl(
       modifier = modifier,
