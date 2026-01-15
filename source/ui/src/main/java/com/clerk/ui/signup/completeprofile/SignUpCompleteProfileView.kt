@@ -78,7 +78,7 @@ private fun SignUpCompleteProfileImpl(
   // Check if legal_accepted is in missing fields
   val legalConsentRequired =
     legalConsentMissing ||
-      (Clerk.auth.signUp?.missingFields?.contains(LEGAL_ACCEPTED_FIELD) == true)
+      (Clerk.auth.currentSignUp?.missingFields?.contains(LEGAL_ACCEPTED_FIELD) == true)
   val termsUrl = Clerk.termsUrl
   val privacyPolicyUrl = Clerk.privacyPolicyUrl
   val hasLegalUrls = termsUrl != null || privacyPolicyUrl != null

@@ -150,7 +150,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
       ClerkTextButton(
         text = stringResource(R.string.forgot_password),
         onClick = {
-          Clerk.auth.signIn?.resetPasswordFactor?.let {
+          Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
             authState.navigateTo(AuthDestination.SignInForgotPassword)
           }
             ?: authState.navigateTo(
@@ -176,7 +176,7 @@ private fun Footer(authState: AuthState, factor: Factor) {
       ClerkTextButton(
         text = stringResource(R.string.forgot_password),
         onClick = {
-          Clerk.auth.signIn?.resetPasswordFactor?.let {
+          Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
             authState.navigateTo(AuthDestination.SignInForgotPassword)
           }
             ?: authState.navigateTo(

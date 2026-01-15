@@ -312,50 +312,50 @@ class ClerkTest {
   }
 
   @Test
-  fun `signIn returns null when client is not initialized`() = runTest {
+  fun `currentSignIn returns null when client is not initialized`() = runTest {
     // Given - simulate uninitialized client
     simulateUninitializedClient()
 
     // When
-    val signIn = Clerk.auth.signIn
+    val signIn = Clerk.auth.currentSignIn
 
     // Then
     assertNull(signIn)
   }
 
   @Test
-  fun `signIn returns sign in when client is initialized`() = runTest {
+  fun `currentSignIn returns sign in when client is initialized`() = runTest {
     // Given
     every { mockClient.signIn } returns mockSignIn
     initializeClerkWithClient(mockClient)
 
     // When
-    val signIn = Clerk.auth.signIn
+    val signIn = Clerk.auth.currentSignIn
 
     // Then
     assertEquals(mockSignIn, signIn)
   }
 
   @Test
-  fun `signUp returns null when client is not initialized`() = runTest {
+  fun `currentSignUp returns null when client is not initialized`() = runTest {
     // Given - simulate uninitialized client
     simulateUninitializedClient()
 
     // When
-    val signUp = Clerk.auth.signUp
+    val signUp = Clerk.auth.currentSignUp
 
     // Then
     assertNull(signUp)
   }
 
   @Test
-  fun `signUp returns sign up when client is initialized`() = runTest {
+  fun `currentSignUp returns sign up when client is initialized`() = runTest {
     // Given
     every { mockClient.signUp } returns mockSignUp
     initializeClerkWithClient(mockClient)
 
     // When
-    val signUp = Clerk.auth.signUp
+    val signUp = Clerk.auth.currentSignUp
 
     // Then
     assertEquals(mockSignUp, signUp)

@@ -85,13 +85,13 @@ class Auth internal constructor() {
    *
    * ### Example usage:
    * ```kotlin
-   * val currentSignIn = Clerk.auth.signIn
+   * val currentSignIn = Clerk.auth.currentSignIn
    * if (currentSignIn != null) {
    *     // Handle ongoing sign-in
    * }
    * ```
    */
-  val signIn: SignIn?
+  val currentSignIn: SignIn?
     get() = if (Clerk.clientInitialized) Clerk.client.signIn else null
 
   /**
@@ -102,13 +102,13 @@ class Auth internal constructor() {
    *
    * ### Example usage:
    * ```kotlin
-   * val currentSignUp = Clerk.auth.signUp
+   * val currentSignUp = Clerk.auth.currentSignUp
    * if (currentSignUp != null) {
    *     // Handle ongoing sign-up
    * }
    * ```
    */
-  val signUp: SignUp?
+  val currentSignUp: SignUp?
     get() = if (Clerk.clientInitialized) Clerk.client.signUp else null
 
   // endregion
