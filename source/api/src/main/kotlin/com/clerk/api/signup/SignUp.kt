@@ -389,21 +389,29 @@ data class SignUp(
      */
     object Transfer : CreateParams
 
-    /** The `SignUp` will be created with a ticket. */
-    @AutoMap @Serializable data class Ticket(val strategy: String = "ticket", val ticket: String)
+    /**
+     * The `SignUp` will be created with a ticket.
+     *
+     * @param ticket The ticket string for sign-up.
+     */
+    data class Ticket(val ticket: String) : CreateParams {
+      internal companion object {
+        const val STRATEGY = "ticket"
+      }
+    }
 
     /**
      * The `SignUp` will be created using a Google One Tap token.
      *
      * Note: the one tap token should be obtained by calling [SignIn.authenticateWithOneTap()].
      *
-     * @param strategy The authentication strategy (defaults to "google_one_tap").
      * @param token The Google One Tap token obtained from the authentication flow.
      */
-    @AutoMap
-    @Serializable
-    data class GoogleOneTap(val strategy: String = "google_one_tap", val token: String) :
-      CreateParams
+    data class GoogleOneTap(val token: String) : CreateParams {
+      internal companion object {
+        const val STRATEGY = "google_one_tap"
+      }
+    }
   }
 
   sealed interface SignUpUpdateParams {
@@ -443,10 +451,14 @@ data class SignUp(
      */
     suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
       val baseMap =
-        if (params is CreateParams.Transfer) {
-          mapOf("transfer" to "true")
-        } else {
-          params.toMap()
+        when (params) {
+          is CreateParams.None -> emptyMap()
+          is CreateParams.Transfer -> mapOf("transfer" to "true")
+          is CreateParams.Ticket ->
+            mapOf("strategy" to CreateParams.Ticket.STRATEGY, "ticket" to params.ticket)
+          is CreateParams.GoogleOneTap ->
+            mapOf("strategy" to CreateParams.GoogleOneTap.STRATEGY, "token" to params.token)
+          else -> params.toMap()
         }
       val paramMap = baseMap + ("locale" to Clerk.locale.value.orEmpty())
       return ClerkApi.signUp.createSignUp(paramMap)
