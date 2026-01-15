@@ -8,8 +8,9 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.attemptFirstFactor
 import com.clerk.api.signin.resetPassword
+import com.clerk.api.signin.sendResetPasswordCode
+import com.clerk.api.signin.verifyCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -34,8 +35,16 @@ class ForgotPasswordEmailViewModel : ViewModel() {
 
   fun createSignIn(email: String) {
     viewModelScope.launch {
-      SignIn.create(SignIn.CreateParams.Strategy.ResetPasswordEmailCode(identifier = email))
-        .onSuccess { updateStateFromStatus(it.status) }
+      Clerk.auth
+        .signIn { this.email = email }
+        .onSuccess { signIn ->
+          signIn
+            .sendResetPasswordCode { this.email = email }
+            .onSuccess { updateStateFromStatus(it.status) }
+            .onFailure {
+              Log.e(ForgotPasswordEmailViewModel::class.simpleName, it.errorMessage, it.throwable)
+            }
+        }
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling
           // for more info on error handling
@@ -45,10 +54,10 @@ class ForgotPasswordEmailViewModel : ViewModel() {
   }
 
   fun verify(code: String) {
-    val inProgressSignIn = Clerk.signIn ?: return
+    val inProgressSignIn = Clerk.auth.currentSignIn ?: return
     viewModelScope.launch {
       inProgressSignIn
-        .attemptFirstFactor(SignIn.AttemptFirstFactorParams.ResetPasswordEmailCode(code))
+        .verifyCode(code)
         .onSuccess { updateStateFromStatus(it.status) }
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling
@@ -59,10 +68,10 @@ class ForgotPasswordEmailViewModel : ViewModel() {
   }
 
   fun setNewPassword(password: String) {
-    val inProgressSignIn = Clerk.signIn ?: return
+    val inProgressSignIn = Clerk.auth.currentSignIn ?: return
     viewModelScope.launch {
       inProgressSignIn
-        .resetPassword(SignIn.ResetPasswordParams(password))
+        .resetPassword(password)
         .onSuccess { updateStateFromStatus(it.status) }
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling

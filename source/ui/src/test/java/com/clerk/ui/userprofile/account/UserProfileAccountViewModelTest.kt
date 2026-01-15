@@ -32,13 +32,13 @@ class UserProfileAccountViewModelTest {
 
   @Test
   fun signOut_invokesClerkSignOut() = runTest {
-    coEvery { Clerk.signOut() } returns ClerkResult.success(Unit)
+    coEvery { Clerk.auth.signOut() } returns ClerkResult.success(Unit)
 
     val viewModel = UserProfileAccountViewModel()
 
     viewModel.signOut()
     advanceUntilIdle()
 
-    coVerify { Clerk.signOut() }
+    coVerify { Clerk.auth.signOut() }
   }
 }
