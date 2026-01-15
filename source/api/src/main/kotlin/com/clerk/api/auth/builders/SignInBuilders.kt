@@ -1,5 +1,7 @@
 package com.clerk.api.auth.builders
 
+import com.clerk.api.auth.types.IdTokenProvider
+
 /**
  * Builder for sign-in with identifier.
  *
@@ -88,5 +90,32 @@ class SignInWithOtpBuilder {
     require(email == null || phone == null) {
       "Only one of email or phone should be provided, not both"
     }
+  }
+}
+
+/**
+ * Builder for sign-in with ID token.
+ *
+ * Use this builder to sign in with an ID token from an identity provider such as Google.
+ *
+ * ### Example usage:
+ * ```kotlin
+ * clerk.auth.signInWithIdToken {
+ *     token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     provider = IdTokenProvider.GOOGLE
+ * }
+ * ```
+ */
+@ClerkDsl
+class SignInWithIdTokenBuilder {
+  /** The ID token from the identity provider. */
+  var token: String? = null
+
+  /** The identity provider that issued the token. */
+  var provider: IdTokenProvider? = null
+
+  internal fun validate() {
+    require(token != null) { "Token must be provided" }
+    require(provider != null) { "Provider must be provided" }
   }
 }
