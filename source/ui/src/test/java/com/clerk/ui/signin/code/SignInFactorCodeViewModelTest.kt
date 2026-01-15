@@ -49,7 +49,7 @@ class SignInFactorCodeViewModelTest {
     Dispatchers.setMain(testDispatcher)
     mockkObject(Clerk)
     every { Clerk.auth } returns mockAuth
-    every { mockAuth.signIn } returns mockSignIn
+    every { mockAuth.currentSignIn } returns mockSignIn
 
     viewModel =
       SignInFactorCodeViewModel(
@@ -71,7 +71,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun prepareShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
-    every { mockAuth.signIn } returns null
+    every { mockAuth.currentSignIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
 
     viewModel.prepare(factor, isSecondFactor = false)
@@ -297,7 +297,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun attemptShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
-    every { mockAuth.signIn } returns null
+    every { mockAuth.currentSignIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
     val code = "123456"
 

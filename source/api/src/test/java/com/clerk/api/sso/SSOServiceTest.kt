@@ -91,7 +91,7 @@ class SSOServiceTest {
     every { ClerkApi.user } returns mockUserApi
     every { Clerk.applicationContext } returns WeakReference(mockContext)
     every { Clerk.auth } returns mockAuth
-    every { mockAuth.signIn } returns mockSignIn
+    every { mockAuth.currentSignIn } returns mockSignIn
 
     // Setup verification mock
     every { mockVerification.status } returns Verification.Status.VERIFIED
