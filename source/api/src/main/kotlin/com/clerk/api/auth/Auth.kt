@@ -7,6 +7,7 @@ import com.clerk.api.Constants.Strategy.PASSWORD
 import com.clerk.api.Constants.Strategy.PHONE_CODE
 import com.clerk.api.auth.builders.EnterpriseSsoBuilder
 import com.clerk.api.auth.builders.SignInIdentifierBuilder
+import com.clerk.api.auth.builders.SignInWithIdTokenBuilder
 import com.clerk.api.auth.builders.SignInWithOtpBuilder
 import com.clerk.api.auth.builders.SignInWithPasswordBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
@@ -257,23 +258,27 @@ class Auth internal constructor() {
   /**
    * Signs in with an ID token from an identity provider.
    *
-   * @param token The ID token from the identity provider.
-   * @param provider The ID token provider.
-   * @return A [ClerkResult] containing the [SignIn] object on success, or a [ClerkErrorResponse] on
+   * @param block Builder block to configure the token and provider.
+   * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
    *   failure.
    *
    * ### Example usage:
    * ```kotlin
-   * val result = clerk.auth.signInWithIdToken(idToken, IdTokenProvider.GOOGLE)
+   * val result = clerk.auth.signInWithIdToken {
+   *     token = idToken
+   *     provider = IdTokenProvider.GOOGLE
+   * }
    * ```
    */
   suspend fun signInWithIdToken(
-    token: String,
-    provider: IdTokenProvider,
+    block: SignInWithIdTokenBuilder.() -> Unit
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    return when (provider) {
+    val builder = SignInWithIdTokenBuilder().apply(block)
+    builder.validate()
+
+    return when (builder.provider!!) {
       IdTokenProvider.GOOGLE -> {
-        when (val result = ClerkApi.signIn.authenticateWithGoogle(token = token)) {
+        when (val result = ClerkApi.signIn.authenticateWithGoogle(token = builder.token!!)) {
           is ClerkResult.Success -> ClerkResult.success(OAuthResult(signIn = result.value))
           is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
         }
