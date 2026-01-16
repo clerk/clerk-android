@@ -62,11 +62,21 @@ internal class AuthState(
   }
 
   override fun clearBackStack() {
-    backStack.clear()
+    resetToRoot()
   }
 
   override fun pop(numberOfScreens: Int) {
     backStack.pop(numberOfScreens)
+  }
+
+  /**
+   * Safely resets the back stack to the root entry (AuthStart).
+   * This prevents NavDisplay crashes during rapid auth state transitions.
+   */
+  private fun resetToRoot() {
+    if (backStack.size > 1) {
+      backStack.pop(backStack.size - 1)
+    }
   }
 
   override fun popTo(destination: AuthDestination) {
@@ -85,7 +95,7 @@ internal class AuthState(
         onAuthComplete()
         return
       }
-      SignIn.Status.NEEDS_IDENTIFIER -> backStack.clear()
+      SignIn.Status.NEEDS_IDENTIFIER -> resetToRoot()
       SignIn.Status.NEEDS_FIRST_FACTOR -> {
         signIn.startingFirstFactor?.let {
           backStack.add(AuthDestination.SignInFactorOne(factor = it))
@@ -108,7 +118,7 @@ internal class AuthState(
 
   internal fun setToStepForStatus(signUp: SignUp, onAuthComplete: () -> Unit) {
     when (signUp.status) {
-      SignUp.Status.ABANDONED -> backStack.clear()
+      SignUp.Status.ABANDONED -> resetToRoot()
       SignUp.Status.MISSING_REQUIREMENTS -> handleMissingRequirements(signUp)
       SignUp.Status.COMPLETE -> {
         onAuthComplete()
@@ -134,7 +144,7 @@ internal class AuthState(
         if (emailAddress != null) {
           backStack.add(AuthDestination.SignUpCode(field = SignUpCodeField.Email(emailAddress)))
         } else {
-          backStack.clear()
+          resetToRoot()
         }
       }
       PHONE_NUMBER -> {
@@ -142,10 +152,10 @@ internal class AuthState(
         if (phoneNumber != null) {
           backStack.add(AuthDestination.SignUpCode(SignUpCodeField.Phone(phoneNumber)))
         } else {
-          backStack.clear()
+          resetToRoot()
         }
       }
-      else -> backStack.clear()
+      else -> resetToRoot()
     }
   }
 
