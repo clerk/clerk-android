@@ -5,7 +5,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   alias(libs.plugins.android.application) apply false
-  alias(libs.plugins.kotlin.android) apply false
   alias(libs.plugins.android.library) apply false
   alias(libs.plugins.spotless) apply false
   alias(libs.plugins.detekt) apply false
@@ -50,7 +49,13 @@ allprojects {
   configure<DetektExtension> {
     toolVersion = "1.23.8"
     allRules = true
+    baseline = file("$rootDir/config/detekt/detekt-baseline.xml")
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
   }
+
+  // Configure detekt tasks to use JVM 22 (highest supported by detekt 1.23.8)
+  tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach { jvmTarget = "22" }
+  tasks.withType<DetektCreateBaselineTask>().configureEach { jvmTarget = "22" }
 
   val detektProjectBaseline by
     tasks.registering(DetektCreateBaselineTask::class) {
@@ -84,9 +89,9 @@ subprojects {
   }
 
   plugins.withId("com.android.library") {
-    the<com.android.build.gradle.BaseExtension>().compileOptions {
-      sourceCompatibility = JavaVersion.VERSION_17
-      targetCompatibility = JavaVersion.VERSION_17
+    the<com.android.build.api.dsl.LibraryExtension>().compileOptions {
+      sourceCompatibility = JavaVersion.VERSION_21
+      targetCompatibility = JavaVersion.VERSION_21
     }
   }
 

@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.0.0" type="baseline" client="gradle" dependencies="false" name="AGP (9.0.0)" variant="all" version="9.0.0">
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="    android:width=&quot;216dp&quot;"
+        errorLine2="                   ~~~~~">
+        <location
+            file="src/main/res/drawable/ic_passkey.xml"
+            line="2"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="        val msg = state.message ?: context.getString(R.string.something_went_wrong_please_try_again)"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/clerk/ui/auth/AuthStateEffects.kt"
+            line="21"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="          s.message ?: context.getString(R.string.something_went_wrong_please_try_again)"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/clerk/ui/signin/password/forgot/SignInFactorOneForgotPasswordView.kt"
+            line="101"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="              message = context.getString(R.string.no_email_clients_installed_on_device),"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/clerk/ui/signin/help/SignInGetHelpView.kt"
+            line="54"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="            message ?: context.getString(R.string.something_went_wrong_please_try_again)"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/clerk/ui/userprofile/security/UserProfileSecurityView.kt"
+            line="169"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                message ?: context.getString(R.string.something_went_wrong_please_try_again)"
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/clerk/ui/userprofile/security/UserProfileSecurityView.kt"
+            line="208"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;signing_in_from_new_device&quot; is not translated in &quot;ar&quot; (Arabic), &quot;de&quot; (German), &quot;hi&quot; (Hindi), &quot;ko&quot; (Korean), &quot;pt&quot; (Portuguese), &quot;el&quot; (Greek), &quot;ja&quot; (Japanese), &quot;it&quot; (Italian), &quot;fr&quot; (French), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese)"
+        errorLine1="    &lt;string name=&quot;signing_in_from_new_device&quot;>You\&apos;re signing in from a new device. We\&apos;re asking for verification to keep your account secure.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="89"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;ar&quot; (Arabic) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ar/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;de&quot; (German) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;el&quot; (Greek) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-el/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;es&quot; (Spanish) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;fr&quot; (French) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;hi&quot; (Hindi) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-hi/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;it&quot; (Italian) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;ja&quot; (Japanese) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;ko&quot; (Korean) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ko/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;pt&quot; (Portuguese) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;support_clerk_com&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;zh&quot; (Chinese) here"
+        errorLine1="    &lt;string name=&quot;support_clerk_com&quot; translatable=&quot;false&quot;>support@clerk.com&lt;/string>"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="31"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;ar&quot; (Arabic) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ar/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;de&quot; (German) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;el&quot; (Greek) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-el/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;es&quot; (Spanish) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;fr&quot; (French) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;hi&quot; (Hindi) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-hi/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;it&quot; (Italian) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;ja&quot; (Japanese) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;ko&quot; (Korean) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ko/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;pt&quot; (Portuguese) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="Untranslatable"
+        message="The resource string &quot;password_filler&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;zh&quot; (Chinese) here"
+        errorLine1="    &lt;string name=&quot;password_filler&quot; translatable=&quot;false&quot;>•••••••••••••••••••••••••&lt;/string>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="134"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="VectorPath"
+        message="Very long vector path (4482 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector."
+        errorLine1="        android:pathData=&quot;M23.748,1.422C23.748,1.362 23.798,1.312 23.858,1.312H25.498C25.558,1.312 25.608,1.362 25.608,1.422V12.578C25.608,12.607 25.596,12.635 25.576,12.656C25.555,12.676 25.527,12.688 25.498,12.688H23.858C23.829,12.688 23.801,12.676 23.78,12.656C23.76,12.635 23.748,12.607 23.748,12.578V1.422ZM21.433,10.322C21.412,10.304 21.385,10.294 21.357,10.295C21.33,10.296 21.303,10.307 21.283,10.326C21.026,10.568 20.726,10.761 20.399,10.895C20.039,11.043 19.652,11.117 19.262,11.114C18.932,11.124 18.604,11.067 18.297,10.948C17.992,10.829 17.714,10.65 17.48,10.421C17.056,9.989 16.812,9.371 16.812,8.636C16.812,7.163 17.792,6.156 19.262,6.156C19.656,6.151 20.047,6.23 20.406,6.39C20.731,6.534 21.023,6.74 21.266,6.997C21.306,7.041 21.376,7.046 21.421,7.007L22.529,6.048C22.54,6.039 22.549,6.027 22.555,6.015C22.561,6.002 22.565,5.988 22.566,5.974C22.567,5.96 22.565,5.946 22.56,5.932C22.556,5.919 22.548,5.907 22.539,5.896C21.707,4.966 20.401,4.484 19.16,4.484C16.661,4.484 14.89,6.17 14.89,8.65C14.89,9.877 15.33,10.91 16.072,11.64C16.815,12.368 17.873,12.797 19.094,12.797C20.624,12.797 21.857,12.21 22.579,11.457C22.589,11.446 22.597,11.434 22.602,11.42C22.607,11.407 22.609,11.392 22.608,11.378C22.607,11.363 22.603,11.349 22.597,11.336C22.59,11.323 22.581,11.311 22.57,11.302L21.433,10.322ZM34.645,9.182C34.642,9.208 34.63,9.233 34.61,9.25C34.59,9.268 34.564,9.278 34.538,9.278H28.79C28.774,9.278 28.758,9.281 28.743,9.288C28.728,9.295 28.716,9.306 28.705,9.318C28.695,9.331 28.688,9.346 28.685,9.362C28.682,9.378 28.682,9.394 28.686,9.41C28.972,10.47 29.824,11.111 30.988,11.111C31.38,11.119 31.768,11.039 32.124,10.875C32.454,10.724 32.748,10.504 32.986,10.23C33,10.214 33.019,10.204 33.04,10.202C33.061,10.2 33.082,10.207 33.098,10.22L34.253,11.226C34.297,11.265 34.303,11.331 34.266,11.376C33.568,12.199 32.438,12.796 30.886,12.796C28.5,12.796 26.701,11.145 26.701,8.634C26.701,7.402 27.125,6.37 27.831,5.64C28.204,5.265 28.651,4.97 29.145,4.77C29.64,4.571 30.169,4.474 30.702,4.485C33.121,4.485 34.685,6.186 34.685,8.535C34.682,8.751 34.669,8.967 34.645,9.182ZM28.721,7.658C28.716,7.674 28.716,7.69 28.719,7.706C28.722,7.723 28.729,7.738 28.739,7.751C28.749,7.764 28.762,7.774 28.777,7.781C28.791,7.788 28.808,7.791 28.824,7.791H32.645C32.715,7.791 32.768,7.725 32.748,7.657C32.488,6.756 31.827,6.154 30.801,6.154C30.5,6.144 30.2,6.199 29.921,6.314C29.643,6.429 29.393,6.602 29.188,6.821C28.974,7.063 28.815,7.349 28.721,7.658ZM40.372,4.486C40.433,4.485 40.482,4.534 40.482,4.595V6.432C40.482,6.447 40.479,6.462 40.473,6.475C40.467,6.489 40.458,6.502 40.447,6.512C40.436,6.522 40.423,6.53 40.409,6.535C40.395,6.54 40.38,6.542 40.365,6.541C40.214,6.528 40.062,6.52 39.91,6.517C38.48,6.517 37.64,7.524 37.64,8.846V12.578C37.64,12.607 37.628,12.635 37.608,12.656C37.587,12.676 37.559,12.688 37.53,12.688H35.89C35.861,12.688 35.833,12.676 35.812,12.656C35.792,12.635 35.78,12.607 35.78,12.578V4.708C35.78,4.648 35.829,4.599 35.89,4.599H37.53C37.59,4.599 37.64,4.649 37.64,4.709V5.813C37.64,5.815 37.64,5.818 37.642,5.82C37.643,5.822 37.645,5.823 37.647,5.824C37.65,5.825 37.652,5.825 37.654,5.824C37.657,5.823 37.659,5.822 37.66,5.82C38.3,4.963 39.247,4.487 40.247,4.487L40.372,4.486ZM44.816,9.296C44.82,9.292 44.824,9.289 44.829,9.287C44.835,9.285 44.84,9.284 44.846,9.285C44.851,9.285 44.856,9.287 44.861,9.29C44.865,9.293 44.869,9.297 44.872,9.302L46.947,12.636C46.957,12.652 46.971,12.665 46.987,12.674C47.003,12.683 47.021,12.688 47.04,12.688H48.905C48.925,12.688 48.944,12.683 48.961,12.673C48.977,12.663 48.991,12.648 49.001,12.631C49.01,12.614 49.015,12.595 49.014,12.575C49.014,12.556 49.008,12.537 48.998,12.52L46.152,7.93C46.14,7.91 46.134,7.886 46.136,7.863C46.138,7.839 46.148,7.817 46.164,7.799L48.906,4.773C48.92,4.757 48.929,4.738 48.932,4.717C48.936,4.696 48.933,4.675 48.924,4.655C48.916,4.636 48.902,4.62 48.884,4.608C48.867,4.597 48.846,4.59 48.825,4.59H46.879C46.864,4.59 46.849,4.593 46.835,4.6C46.821,4.606 46.809,4.615 46.799,4.626L43.626,8.084C43.611,8.1 43.591,8.111 43.57,8.116C43.549,8.121 43.527,8.119 43.506,8.111C43.486,8.103 43.468,8.089 43.456,8.071C43.443,8.053 43.436,8.032 43.436,8.01V1.422C43.436,1.393 43.424,1.365 43.404,1.344C43.383,1.324 43.355,1.312 43.326,1.312H41.686C41.657,1.312 41.629,1.324 41.608,1.344C41.588,1.365 41.576,1.393 41.576,1.422V12.578C41.576,12.638 41.626,12.688 41.686,12.688H43.326C43.355,12.688 43.383,12.676 43.404,12.656C43.424,12.635 43.436,12.607 43.436,12.578V10.823C43.436,10.795 43.447,10.768 43.466,10.748L44.816,9.296Z&quot;"
+        errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/drawable/ic_clerk_logo.xml"
+            line="21"
+            column="27"/>
+    </issue>
+
+    <issue
+        id="ComposeModifierWithoutDefault"
+        message="This @Composable function has a modifier parameter but it doesn&apos;t have a default value.See https://slackhq.github.io/compose-lints/rules/#modifiers-should-have-default-parameters for more information."
+        errorLine1="private fun OtpBox(modifier: Modifier, char: String, isCurrentBox: Boolean, isError: Boolean) {"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/clerk/ui/core/input/ClerkCodeInputField.kt"
+            line="346"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="ComposeParameterOrder"
+        message="Parameters in a composable function should be ordered following this pattern: params without defaults, modifiers, params with defaults and optionally, a trailing function that might not have a default param.&#xA;Current params are: [value: String, modifier: Modifier = Modifier, errorText: String? = null, onValueChange: (String) -> Unit, clerkTheme: ClerkTheme? = null] but should be [value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier, errorText: String? = null, clerkTheme: ClerkTheme? = null].&#xA;See https://slackhq.github.io/compose-lints/rules/#ordering-composable-parameters-properly for more information."
+        errorLine1="fun ClerkPhoneNumberField("
+        errorLine2="                         ^">
+        <location
+            file="src/main/java/com/clerk/ui/core/input/ClerkPhoneNumberField.kt"
+            line="107"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="ComposeUnstableReceiver"
+        message="Instance composable functions on non-stable classes will always be recomposed. If possible, make the receiver type stable or refactor this function if that isn&apos;t possible. See https://slackhq.github.io/compose-lints/rules/#unstable-receivers for more information."
+        errorLine1="private fun EntryProviderScope&lt;NavKey>.UserProfileEntries("
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/clerk/ui/userprofile/UserProfileView.kt"
+            line="93"
+            column="13"/>
+    </issue>
+
+</issues>

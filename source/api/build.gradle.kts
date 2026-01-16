@@ -1,5 +1,4 @@
 plugins {
-  alias(libs.plugins.kotlin.android)
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.dokka)
@@ -114,12 +113,13 @@ dependencies {
   compileOnly(libs.androidx.compose.foundation)
 
   testImplementation(platform(libs.compose.bom))
-  testImplementation(kotlin("test"))
   testImplementation(libs.androidx.appcompat)
   testImplementation(libs.androidx.arch.test)
   testImplementation(libs.androidx.compose.foundation)
   testImplementation(libs.core.ktx)
   testImplementation(libs.junit)
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.mockito)
   testImplementation(libs.mockk)

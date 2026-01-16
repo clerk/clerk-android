@@ -13,6 +13,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.ui.userbutton.UserButton
 
+@Suppress("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun UserProfileTopBar() {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
