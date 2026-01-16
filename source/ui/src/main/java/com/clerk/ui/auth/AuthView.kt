@@ -67,48 +67,48 @@ fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
         entryProvider =
           entryProvider {
             entry<AuthDestination.AuthStart> {
-              AuthStartView(onAuthComplete = { backStack.clear() })
+              AuthStartView(onAuthComplete = { /* AuthView will unmount naturally */ })
             }
             entry<AuthDestination.SignInFactorOne> { key ->
-              SignInFactorOneView(factor = key.factor, onAuthComplete = { backStack.clear() })
+              SignInFactorOneView(factor = key.factor, onAuthComplete = { /* AuthView will unmount naturally */ })
             }
             entry<AuthDestination.SignInFactorOneUseAnotherMethod> { key ->
               SignInFactorAlternativeMethodsView(
                 currentFactor = key.currentFactor,
-                onAuthComplete = { backStack.clear() },
+                onAuthComplete = { /* AuthView will unmount naturally */ },
               )
             }
             entry<AuthDestination.SignInFactorTwo> { key ->
-              SignInFactorTwoView(factor = key.factor, onAuthComplete = { backStack.clear() })
+              SignInFactorTwoView(factor = key.factor, onAuthComplete = { /* AuthView will unmount naturally */ })
             }
             entry<AuthDestination.SignInFactorTwoUseAnotherMethod> { key ->
               SignInFactorAlternativeMethodsView(
                 currentFactor = key.currentFactor,
                 isSecondFactor = true,
-                onAuthComplete = { backStack.clear() },
+                onAuthComplete = { /* AuthView will unmount naturally */ },
               )
             }
             entry<AuthDestination.SignInForgotPassword> {
               SignInFactorOneForgotPasswordView(
                 onClickFactor = { backStack.removeLastOrNull() },
-                onAuthComplete = { backStack.clear() },
+                onAuthComplete = { /* AuthView will unmount naturally */ },
               )
             }
             entry<AuthDestination.SignInSetNewPassword> {
-              SignInSetNewPasswordView(onAuthComplete = { backStack.clear() })
+              SignInSetNewPasswordView(onAuthComplete = { /* AuthView will unmount naturally */ })
             }
             entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
             entry<AuthDestination.SignInClientTrust> { key ->
-              SignInClientTrustView(factor = key.factor, onAuthComplete = { backStack.clear() })
+              SignInClientTrustView(factor = key.factor, onAuthComplete = { /* AuthView will unmount naturally */ })
             }
             entry<AuthDestination.SignUpCollectField> { key ->
-              SignUpCollectFieldView(field = key.field, onAuthComplete = { backStack.clear() })
+              SignUpCollectFieldView(field = key.field, onAuthComplete = { /* AuthView will unmount naturally */ })
             }
             entry<AuthDestination.SignUpCode> { key ->
-              SignUpCodeView(field = key.field, onAuthComplete = { backStack.clear() })
+              SignUpCodeView(field = key.field, onAuthComplete = { /* AuthView will unmount naturally */ })
             }
             entry<AuthDestination.SignUpCompleteProfile> {
-              SignUpCompleteProfileView(onAuthComplete = { backStack.clear() })
+              SignUpCompleteProfileView(onAuthComplete = { /* AuthView will unmount naturally */ })
             }
           },
       )
