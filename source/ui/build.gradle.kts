@@ -1,5 +1,4 @@
 plugins {
-  alias(libs.plugins.kotlin.android)
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.dokka)
@@ -26,14 +25,16 @@ android {
     }
   }
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
   }
-  kotlin { jvmToolchain(17) }
+  kotlin { jvmToolchain(21) }
 
   buildFeatures { compose = true }
 
   testOptions { unitTests.isIncludeAndroidResources = true }
+
+  lint { baseline = file("lint-baseline.xml") }
 }
 
 // Configure Maven publishing for this module
@@ -98,9 +99,10 @@ dependencies {
   implementation(libs.material3)
   implementation(libs.materialKolor)
 
-  testImplementation(kotlin("test"))
   testImplementation(libs.androidx.core)
   testImplementation(libs.junit)
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.mockk)
   testImplementation(libs.robolectric)
