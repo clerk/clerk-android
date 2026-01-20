@@ -125,3 +125,31 @@ suspend fun EmailAddress.get(): ClerkResult<EmailAddress, ClerkErrorResponse> {
 suspend fun EmailAddress.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
   return ClerkApi.user.deleteEmailAddress(emailAddressId = this.id)
 }
+
+/**
+ * Sends a verification code to this email address.
+ *
+ * This is a convenience method that calls [prepareVerification] with the [EmailCode] strategy. A
+ * one-time verification code will be sent to this email address. Use [verifyCode] to complete the
+ * verification process.
+ *
+ * @return A [ClerkResult] containing the updated [EmailAddress] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun EmailAddress.sendCode(): ClerkResult<EmailAddress, ClerkErrorResponse> {
+  return prepareVerification(EmailAddress.PrepareVerificationParams.EmailCode())
+}
+
+/**
+ * Verifies this email address using the provided verification code.
+ *
+ * This is a convenience method that calls [attemptVerification] with the provided code. The
+ * verification code is typically received via email after calling [sendCode].
+ *
+ * @param code The one-time verification code received via email
+ * @return A [ClerkResult] containing the updated [EmailAddress] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun EmailAddress.verifyCode(code: String): ClerkResult<EmailAddress, ClerkErrorResponse> {
+  return attemptVerification(code)
+}
