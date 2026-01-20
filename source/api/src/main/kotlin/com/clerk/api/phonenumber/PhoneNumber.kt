@@ -184,3 +184,30 @@ suspend fun PhoneNumber.setReservedForSecondFactor(
 suspend fun PhoneNumber.makeDefaultSecondFactor(): ClerkResult<PhoneNumber, ClerkErrorResponse> {
   return ClerkApi.user.makeDefaultSecondFactor(phoneNumberId = this.id, defaultSecondFactor = true)
 }
+
+/**
+ * Sends a verification code to this phone number via SMS.
+ *
+ * This is a convenience method that calls [prepareVerification]. A one-time verification code will
+ * be sent to this phone number via SMS. Use [verifyCode] to complete the verification process.
+ *
+ * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun PhoneNumber.sendCode(): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+  return prepareVerification()
+}
+
+/**
+ * Verifies this phone number using the provided verification code.
+ *
+ * This is a convenience method that calls [attemptVerification] with the provided code. The
+ * verification code is typically received via SMS after calling [sendCode].
+ *
+ * @param code The one-time verification code received via SMS
+ * @return A [ClerkResult] containing the updated [PhoneNumber] on success, or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun PhoneNumber.verifyCode(code: String): ClerkResult<PhoneNumber, ClerkErrorResponse> {
+  return attemptVerification(code)
+}
