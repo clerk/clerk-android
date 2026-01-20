@@ -126,6 +126,39 @@ suspend fun OrganizationDomain.updateEnrollmentMode(
 }
 
 /**
+ * Sends a verification code to the specified email address for domain affiliation verification.
+ *
+ * This is a convenience method that calls [prepareAffiliationVerification]. A one-time verification
+ * code will be sent to the specified email address. Use [verifyCode] to complete the verification
+ * process.
+ *
+ * @param affiliationEmailAddress The email address to send the verification code to
+ * @return A [ClerkResult] containing the updated [OrganizationDomain] on success or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun OrganizationDomain.sendEmailCode(
+  affiliationEmailAddress: String
+): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
+  return prepareAffiliationVerification(affiliationEmailAddress)
+}
+
+/**
+ * Verifies the domain affiliation using the provided verification code.
+ *
+ * This is a convenience method that calls [attemptAffiliationVerification] with the provided code.
+ * The verification code is typically received via email after calling [sendEmailCode].
+ *
+ * @param code The verification code received via email
+ * @return A [ClerkResult] containing the updated [OrganizationDomain] on success or a
+ *   [ClerkErrorResponse] on failure
+ */
+suspend fun OrganizationDomain.verifyCode(
+  code: String
+): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
+  return attemptAffiliationVerification(code)
+}
+
+/**
  * When the Clerk API returns a collection of objects it uses a top level data tag in the JSON. This
  * class represents that JSON structure since we can't pass the list type to the clerk result.
  *
