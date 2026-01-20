@@ -3,6 +3,7 @@ package com.clerk.api.sso
 import android.content.Context
 import android.net.Uri
 import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SignInApi
@@ -59,6 +60,7 @@ class SSOServiceTest {
   private lateinit var mockUser: User
   private lateinit var mockExternalAccount: ExternalAccount
   private lateinit var mockVerification: Verification
+  private lateinit var mockAuth: Auth
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Before
@@ -76,6 +78,7 @@ class SSOServiceTest {
     mockUser = mockk(relaxed = true)
     mockExternalAccount = mockk(relaxed = true)
     mockVerification = mockk(relaxed = true)
+    mockAuth = mockk(relaxed = true)
 
     // Mock static objects
     mockkObject(ClerkApi)
@@ -87,7 +90,8 @@ class SSOServiceTest {
     every { ClerkApi.signIn } returns mockSignInApi
     every { ClerkApi.user } returns mockUserApi
     every { Clerk.applicationContext } returns WeakReference(mockContext)
-    every { Clerk.signIn } returns mockSignIn
+    every { Clerk.auth } returns mockAuth
+    every { mockAuth.currentSignIn } returns mockSignIn
 
     // Setup verification mock
     every { mockVerification.status } returns Verification.Status.VERIFIED

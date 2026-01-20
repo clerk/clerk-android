@@ -6,7 +6,6 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.resetPassword
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.guardSignIn
@@ -26,12 +25,7 @@ internal class ResetPasswordViewModel : ViewModel() {
       _state.value = AuthenticationViewState.Loading
       viewModelScope.launch(Dispatchers.IO) {
         signIn
-          .resetPassword(
-            SignIn.ResetPasswordParams(
-              password = newPassword,
-              signOutOfOtherSessions = signOutOtherSessions,
-            )
-          )
+          .resetPassword(newPassword = newPassword, signOutOfOtherSessions = signOutOtherSessions)
           .onSuccess {
             withContext(Dispatchers.Main) {
               _state.value = AuthenticationViewState.Success.SignIn(it)
@@ -40,8 +34,7 @@ internal class ResetPasswordViewModel : ViewModel() {
           .onFailure {
             ClerkLog.e("ResetPasswordViewModel, ${it.errorMessage}")
             withContext(Dispatchers.Main) {
-              _state.value =
-                AuthenticationViewState.Error(it.errorMessage ?: "Something went wrong")
+              _state.value = AuthenticationViewState.Error(it.errorMessage)
             }
           }
       }

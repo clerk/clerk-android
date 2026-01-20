@@ -389,21 +389,29 @@ data class SignUp(
      */
     object Transfer : CreateParams
 
-    /** The `SignUp` will be created with a ticket. */
-    @AutoMap @Serializable data class Ticket(val strategy: String = "ticket", val ticket: String)
+    /**
+     * The `SignUp` will be created with a ticket.
+     *
+     * @param ticket The ticket string for sign-up.
+     */
+    data class Ticket(val ticket: String) : CreateParams {
+      internal companion object {
+        const val STRATEGY = "ticket"
+      }
+    }
 
     /**
      * The `SignUp` will be created using a Google One Tap token.
      *
      * Note: the one tap token should be obtained by calling [SignIn.authenticateWithOneTap()].
      *
-     * @param strategy The authentication strategy (defaults to "google_one_tap").
      * @param token The Google One Tap token obtained from the authentication flow.
      */
-    @AutoMap
-    @Serializable
-    data class GoogleOneTap(val strategy: String = "google_one_tap", val token: String) :
-      CreateParams
+    data class GoogleOneTap(val token: String) : CreateParams {
+      internal companion object {
+        const val STRATEGY = "google_one_tap"
+      }
+    }
   }
 
   sealed interface SignUpUpdateParams {
@@ -436,52 +444,30 @@ data class SignUp(
   companion object {
 
     /**
-     * Initiates a new sign-up process and returns a `SignUp` object based on the provided strategy
-     * and optional parameters.
+     * Initiates a new sign-up process and returns a `SignUp` object.
      *
-     * Creates a new sign-up instance using the specified strategy.
-     *
-     * This method initiates a new sign-up process by sending the appropriate parameters to Clerk's
-     * API. It deactivates any existing sign-up process and stores the sign-up lifecycle state in
-     * the `status` property of the new `SignUp` object. If required fields are provided, the
-     * sign-up process can be completed in one step. If not, Clerk's flexible sign-up process allows
-     * multi-step flows.
-     *
-     * What you must pass to params depends on which sign-up options you have enabled in your Clerk
-     * application instance.
-     *
-     * @param params The strategy to use for creating the sign-up. See [CreateParams] for available
-     *   options.
-     * @return A [ClerkResult] containing either a [SignUp] object with the current status and
-     *   details of the sign-up process, or a [ClerkErrorResponse] if the operation failed. The
-     *   [SignUp.status] property reflects the current state of the sign-up.
-     * @see [SignUp]
+     * @param params The strategy to use for creating the sign-up.
+     * @return A [ClerkResult] containing either a [SignUp] object or a [ClerkErrorResponse].
      */
     suspend fun create(params: CreateParams): ClerkResult<SignUp, ClerkErrorResponse> {
       val baseMap =
-        if (params is CreateParams.Transfer) {
-          mapOf("transfer" to "true")
-        } else {
-          params.toMap()
+        when (params) {
+          is CreateParams.None -> emptyMap()
+          is CreateParams.Transfer -> mapOf("transfer" to "true")
+          is CreateParams.Ticket ->
+            mapOf("strategy" to CreateParams.Ticket.STRATEGY, "ticket" to params.ticket)
+          is CreateParams.GoogleOneTap ->
+            mapOf("strategy" to CreateParams.GoogleOneTap.STRATEGY, "token" to params.token)
+          else -> params.toMap()
         }
       val paramMap = baseMap + ("locale" to Clerk.locale.value.orEmpty())
       return ClerkApi.signUp.createSignUp(paramMap)
     }
 
     /**
-     * Creates a new sign-up process and returns a `SignUp` object based on the provided strategy
-     * and optional parameters.
+     * Creates a new sign-up with raw parameters.
      *
-     * Creates a new sign-up instance using the specified strategy.
-     *
-     * This method initiates a new sign-up process by sending the appropriate parameters to Clerk's
-     * API. It deactivates any existing sign-up process and stores the sign-up lifecycle state in
-     * the `status` property.
-     *
-     * This is a raw json version of the create method that accepts a map of string parameters
-     * instead of typed parameters.
-     *
-     * @param params The parameters for creating the sign-up as a map of string key-value pairs.
+     * @param params The parameters for creating the sign-up as a map.
      * @return A [ClerkResult] containing either the created [SignUp] object or a
      *   [ClerkErrorResponse].
      */
@@ -492,13 +478,8 @@ data class SignUp(
     /**
      * Initiates authentication with a redirect-based flow (OAuth or Enterprise SSO).
      *
-     * This method handles the redirect authentication process by coordinating with the appropriate
-     * SSO service based on the provided parameters.
-     *
-     * @param params The authentication parameters containing strategy, redirect URL, and optional
-     *   user data.
-     * @return A [ClerkResult] containing either an [OAuthResult] with the authentication details or
-     *   a [ClerkErrorResponse] if the operation failed.
+     * @param params The authentication parameters.
+     * @return A [ClerkResult] containing either an [OAuthResult] or a [ClerkErrorResponse].
      */
     suspend fun authenticateWithRedirect(
       params: AuthenticateWithRedirectParams
@@ -544,17 +525,14 @@ val SignUp.firstFieldToCollect: String?
 val SignUp.firstFieldToVerify: String?
   get() = this.unverifiedFields.sortedByPriority(SignUp.fieldPriority).firstOrNull()
 
+// region Internal Extension Functions (for SDK internal use)
+
 /**
- * The [update] method is used to update the sign-up process with new information. This can be used
- * to add additional fields to the sign-up process, such as a phone number or an email address.
+ * Updates the sign-up with additional information.
  *
- * This method allows you to modify an existing sign-up by providing new or updated field values.
- * Any fields not included in the update parameters will remain unchanged.
- *
- * @param updateParams The parameters for updating the sign-up. This includes the fields to be
- *   updated.
- * @return A [ClerkResult] containing either the updated [SignUp] object or a [ClerkErrorResponse]
- *   if the update failed.
+ * @param updateParams The parameters for updating the sign-up.
+ * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
+ *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignUp.update(
   updateParams: SignUp.SignUpUpdateParams
@@ -563,25 +541,11 @@ suspend fun SignUp.update(
 }
 
 /**
- * The [prepareVerification] method is used to initiate the verification process for a field that
- * requires it.
+ * Prepares verification for the specified strategy.
  *
- * There are two fields that need to be verified:
- * - [SignUp.emailAddress]: The email address can be verified via an email code. This is a one-time
- *   code that is sent to the email already provided to the [SignUp] object. The
- *   [prepareVerification] sends this email.
- * - [SignUp.phoneNumber]: The phone number can be verified via a phone code. This is a one-time
- *   code that is sent via an SMS to the phone already provided to the [SignUp] object. The
- *   [prepareVerification] sends this SMS.
- *
- * After calling this method, use [attemptVerification] with the code received to complete the
- * verification.
- *
- * @param prepareVerification The parameters for preparing the verification. Specifies the field
- *   which requires verification.
- * @return A [ClerkResult] containing either the result of the verification preparation or a
- *   [ClerkErrorResponse]. A successful response indicates that the verification process has been
- *   initiated, and the [SignUp] object is returned.
+ * @param prepareVerification The verification strategy to prepare.
+ * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
+ *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
@@ -590,16 +554,37 @@ suspend fun SignUp.prepareVerification(
 }
 
 /**
- * Attempts to complete the in-flight verification process that corresponds to the given strategy.
- * In order to use this method, you should first initiate a verification process by calling
- * [SignUp.prepareVerification].
+ * Sends a verification code to the phone number associated with this sign-up.
  *
- * Depending on the strategy, the method parameters could differ.
+ * This is a convenience method that prepares the phone code verification strategy. The verification
+ * code will be sent via SMS to the phone number already provided to the [SignUp] object.
  *
- * @param params The parameters for the verification attempt. This includes the strategy and the
- *   verification code received via email or SMS.
- * @return A [ClerkResult] containing either the updated [SignUp] object reflecting the verification
- *   attempt's result, or a [ClerkErrorResponse] if the verification failed.
+ * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignUp.sendPhoneCode(): ClerkResult<SignUp, ClerkErrorResponse> {
+  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.PhoneCode())
+}
+
+/**
+ * Sends a verification code to the email address associated with this sign-up.
+ *
+ * This is a convenience method that prepares the email code verification strategy. The verification
+ * code will be sent to the email address already provided to the [SignUp] object.
+ *
+ * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignUp.sendEmailCode(): ClerkResult<SignUp, ClerkErrorResponse> {
+  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailCode())
+}
+
+/**
+ * Attempts to complete the verification process.
+ *
+ * @param params The verification attempt parameters.
+ * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
+ *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignUp.attemptVerification(
   params: SignUp.AttemptVerificationParams
@@ -610,6 +595,8 @@ suspend fun SignUp.attemptVerification(
     code = params.code,
   )
 }
+
+// endregion
 
 /**
  * Converts the [SignUp] object to an [OAuthResult] object.
