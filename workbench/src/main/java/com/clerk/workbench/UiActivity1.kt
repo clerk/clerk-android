@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,6 +31,7 @@ class UiActivity1 : ComponentActivity() {
       val scope = rememberCoroutineScope()
       WorkbenchTheme {
         val state by viewModel.uiState.collectAsStateWithLifecycle()
+        @Suppress("MagicNumber")
         Box(
           modifier = Modifier.fillMaxSize().background(color = Color(0xFFF9F9F9)),
           contentAlignment = Alignment.Center,
@@ -51,15 +51,6 @@ class UiActivity1 : ComponentActivity() {
         }
       }
     }
-  }
-
-  @Suppress("MagicNumber")
-  @Composable
-  private fun MainContent() {
-    Box(
-      modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background),
-      contentAlignment = Alignment.Center,
-    ) {}
   }
 }
 

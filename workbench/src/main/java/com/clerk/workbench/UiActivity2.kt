@@ -33,6 +33,7 @@ class UiActivity2 : ComponentActivity() {
     setContent {
       WorkbenchTheme {
         val user by Clerk.userFlow.collectAsStateWithLifecycle()
+        @Suppress("MagicNumber")
         Box(
           modifier = Modifier.fillMaxSize().background(color = Color(0xFFF9F9F9)),
           contentAlignment = Alignment.Center,
