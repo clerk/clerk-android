@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   alias(libs.plugins.android.application)
-  kotlin("android")
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.kotlin.plugin.serialization)
 }
@@ -28,11 +27,11 @@ android {
   }
 
   kotlin {
-    target { compilerOptions { jvmTarget.value(JvmTarget.JVM_17) } }
+    target { compilerOptions { jvmTarget.value(JvmTarget.JVM_21) } }
 
     compileOptions {
-      sourceCompatibility = JavaVersion.VERSION_17
-      targetCompatibility = JavaVersion.VERSION_17
+      sourceCompatibility = JavaVersion.VERSION_21
+      targetCompatibility = JavaVersion.VERSION_21
     }
 
     buildFeatures {
