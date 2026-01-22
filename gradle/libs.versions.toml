@@ -93,10 +93,10 @@ kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.7.1-0.6.x-compat"
 kotlinx-immutable = "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0"
 kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
 ksp-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
-ktor-client-core = "io.ktor:ktor-client-core:3.3.3"
-ktor-client-negototiation = "io.ktor:ktor-client-content-negotiation:3.3.3"
-ktor-client-okhttp = "io.ktor:ktor-client-okhttp:3.3.3"
-ktor-serialization-kotlinx-json = "io.ktor:ktor-serialization-kotlinx-json:3.3.3"
+ktor-client-core = "io.ktor:ktor-client-core:3.4.0"
+ktor-client-negototiation = "io.ktor:ktor-client-content-negotiation:3.4.0"
+ktor-client-okhttp = "io.ktor:ktor-client-okhttp:3.4.0"
+ktor-serialization-kotlinx-json = "io.ktor:ktor-serialization-kotlinx-json:3.4.0"
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 mockito = "org.mockito:mockito-core:5.21.0"
