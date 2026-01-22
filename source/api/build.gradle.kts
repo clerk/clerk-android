@@ -14,7 +14,7 @@ android {
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
-    buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.api.get()}\"")
+    buildConfigField("String", "SDK_VERSION", "\"${property("CLERK_API_VERSION")}\"")
   }
 
   testOptions { unitTests.isIncludeAndroidResources = true }
@@ -56,7 +56,7 @@ tasks
   }
 
 mavenPublishing {
-  coordinates("com.clerk", "clerk-android-api", libs.versions.clerk.api.get())
+  coordinates("com.clerk", "clerk-android-api", property("CLERK_API_VERSION") as String)
   publishToMavenCentral()
   signAllPublications()
   pom {
