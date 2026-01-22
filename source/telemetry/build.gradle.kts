@@ -7,7 +7,7 @@ plugins {
 }
 
 mavenPublishing {
-  coordinates("com.clerk", "clerk-android-telemetry", libs.versions.clerk.telemetry.get())
+  coordinates("com.clerk", "clerk-android-telemetry", property("CLERK_TELEMETRY_VERSION") as String)
   publishToMavenCentral()
   signAllPublications()
   pom {

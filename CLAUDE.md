@@ -125,7 +125,7 @@ clerk-android/
 
 **Key Components:**
 
-1. **`Clerk` (singleton object)** - Main SDK entry point at `com.clerk.sdk.Clerk`
+1. **`Clerk` (singleton object)** - Main SDK entry point at `com.clerk.api.Clerk`
    - Initialize: `Clerk.initialize(publishableKey, context)`
    - Reactive state: `Clerk.sessionFlow`, `Clerk.userFlow`, `Clerk.isInitialized`
    - Lazy initialization with error recovery
@@ -162,7 +162,7 @@ when (val result = signIn.attemptFirstFactor(...)) {
 - Jetpack Compose with Material Design 3
 - MVVM pattern with ViewModels per screen
 - CompositionLocal for dependency injection (`LocalAuthState`, `LocalTelemetryCollector`)
-- Custom navigation using NavBackStack (no NavController)
+- Custom navigation using NavBackStack (androidx.navigation3)
 - Paparazzi for snapshot testing
 
 **Key Components:**
@@ -245,8 +245,8 @@ AuthStartView → SignUp.create(fields)
 
 ### Adding New API Endpoints
 
-1. Define data models in `source/api/src/main/java/com/clerk/sdk/network/model/`
-2. Add Retrofit service interface in `source/api/src/main/java/com/clerk/sdk/network/api/`
+1. Define data models in `source/api/src/main/kotlin/com/clerk/api/network/model/`
+2. Add Retrofit service interface in `source/api/src/main/kotlin/com/clerk/api/network/api/`
 3. Add serialization tests in `source/api/src/test/.../network/`
 4. Expose through `Clerk` object or extension functions on domain models
 
