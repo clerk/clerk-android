@@ -1,7 +1,6 @@
 package com.clerk.api.network
 
 import android.content.Context
-import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.clerk.api.Clerk
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.DeviceAttestationApi
@@ -79,9 +78,10 @@ internal object ClerkApi {
     private set
 
   /** Initializes the API client with the given [baseUrl]. */
+  @Suppress("UnusedParameter")
   fun configure(baseUrl: String, context: Context) {
     configuredBaseUrl = baseUrl
-    val retrofit = buildRetrofit(baseUrl, context)
+    val retrofit = buildRetrofit(baseUrl)
     _client = retrofit.create(ClientApi::class.java)
     _environment = retrofit.create(EnvironmentApi::class.java)
     _session = retrofit.create(SessionApi::class.java)
@@ -93,7 +93,7 @@ internal object ClerkApi {
   }
 
   /** Builds and configures the Retrofit instance. */
-  private fun buildRetrofit(baseUrl: String, context: Context): Retrofit {
+  private fun buildRetrofit(baseUrl: String): Retrofit {
     val urlWithVersion = "$baseUrl/v1/"
     configuredUrlWithVersion = urlWithVersion
 
@@ -110,7 +110,6 @@ internal object ClerkApi {
             addInterceptor(
               HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
             )
-            addInterceptor(ChuckerInterceptor(context))
           }
         }
         .build()
