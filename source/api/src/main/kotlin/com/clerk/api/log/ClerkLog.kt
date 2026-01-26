@@ -12,6 +12,21 @@ import android.util.Log
  * This is an internal utility and should not be used outside the Clerk SDK.
  */
 object ClerkLog {
+  private inline fun safeLog(action: () -> Int): Int =
+    try {
+      action()
+    } catch (_: Throwable) {
+      0
+    }
+
+  private fun fallback(prefix: String, message: String): Int {
+    safeLog {
+      println("$prefix$message")
+      0
+    }
+    return 0
+  }
+
   /**
    * Logs an error message.
    *
@@ -21,7 +36,9 @@ object ClerkLog {
    * @param message The error message to log
    * @return The result of the underlying Log.e() call
    */
-  fun e(message: String) = Log.e("ClerkLog", "Clerk error: $message")
+  fun e(message: String) =
+    safeLog { Log.e("ClerkLog", "Clerk error: $message") }.takeIf { it != 0 }
+      ?: fallback("Clerk error: ", message)
 
   /**
    * Logs a warning message.
@@ -32,7 +49,9 @@ object ClerkLog {
    * @param message The warning message to log
    * @return The result of the underlying Log.w() call
    */
-  fun w(message: String) = Log.w("ClerkLog", "Clerk warning: $message")
+  fun w(message: String) =
+    safeLog { Log.w("ClerkLog", "Clerk warning: $message") }.takeIf { it != 0 }
+      ?: fallback("Clerk warning: ", message)
 
   /**
    * Logs an informational message.
@@ -42,7 +61,8 @@ object ClerkLog {
    * @param message The informational message to log
    * @return The result of the underlying Log.i() call
    */
-  fun i(message: String) = Log.i("ClerkLog", message)
+  fun i(message: String) =
+    safeLog { Log.i("ClerkLog", message) }.takeIf { it != 0 } ?: fallback("Clerk info: ", message)
 
   /**
    * Logs a debug message.
@@ -53,7 +73,8 @@ object ClerkLog {
    * @param message The debug message to log
    * @return The result of the underlying Log.d() call
    */
-  fun d(message: String) = Log.d("ClerkLog", message)
+  fun d(message: String) =
+    safeLog { Log.d("ClerkLog", message) }.takeIf { it != 0 } ?: fallback("Clerk debug: ", message)
 
   /**
    * Logs a verbose message.
@@ -64,5 +85,7 @@ object ClerkLog {
    * @param message The verbose message to log
    * @return The result of the underlying Log.v() call
    */
-  fun v(message: String) = Log.v("ClerkLog", message)
+  fun v(message: String) =
+    safeLog { Log.v("ClerkLog", message) }.takeIf { it != 0 }
+      ?: fallback("Clerk verbose: ", message)
 }
