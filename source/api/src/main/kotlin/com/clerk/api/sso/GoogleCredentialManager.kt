@@ -1,5 +1,6 @@
 package com.clerk.api.sso
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -19,10 +20,11 @@ internal interface GoogleCredentialManager {
   /**
    * Retrieves a Google credential for sign-in purposes.
    *
-   * @param context The context used to access the credential manager.
+   * @param activity The Activity context required by the Credential Manager API to show the
+   *   account picker UI.
    * @return A [GetCredentialResponse] containing the retrieved Google credential.
    */
-  suspend fun getSignInWithGoogleCredential(): GetCredentialResponse
+  suspend fun getSignInWithGoogleCredential(activity: Activity): GetCredentialResponse
 
   /** Take a [GoogleIdTokenCredential] and extract the ID token from it. */
   fun getIdTokenFromCredential(credentialData: Bundle): String
@@ -31,7 +33,7 @@ internal interface GoogleCredentialManager {
 }
 
 class GoogleCredentialManagerImpl : GoogleCredentialManager {
-  override suspend fun getSignInWithGoogleCredential(): GetCredentialResponse {
+  override suspend fun getSignInWithGoogleCredential(activity: Activity): GetCredentialResponse {
 
     val oneTapClientId =
       requireNotNull(Clerk.environment.displayConfig.googleOneTapClientId) {
@@ -48,11 +50,11 @@ class GoogleCredentialManagerImpl : GoogleCredentialManager {
 
     val request = GetCredentialRequest.Builder().addCredentialOption(googleIdOption).build()
 
-    val credentialManager = CredentialManager.create(Clerk.applicationContext!!.get()!!)
+    val credentialManager = CredentialManager.create(activity)
 
     return credentialManager.getCredential(
       request = request,
-      context = Clerk.applicationContext!!.get()!!,
+      context = activity,
     )
   }
 

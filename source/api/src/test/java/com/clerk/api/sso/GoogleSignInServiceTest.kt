@@ -1,5 +1,6 @@
 package com.clerk.api.sso
 
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import androidx.credentials.CustomCredential
@@ -33,6 +34,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class GoogleSignInServiceTest {
 
+  private lateinit var mockActivity: Activity
   private lateinit var mockContext: Context
   private lateinit var mockGoogleCredentialManager: GoogleCredentialManager
   private lateinit var mockGetCredentialResponse: GetCredentialResponse
@@ -46,6 +48,7 @@ class GoogleSignInServiceTest {
 
   @Before
   fun setup() {
+    mockActivity = mockk(relaxed = true)
     mockContext = mockk(relaxed = true)
     mockGoogleCredentialManager = mockk(relaxed = true)
     mockGetCredentialResponse = mockk(relaxed = true)
@@ -88,7 +91,7 @@ class GoogleSignInServiceTest {
       GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
     every { mockCustomCredential.data } returns mockBundle
 
-    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } returns
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential(mockActivity) } returns
       mockGetCredentialResponse
     every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
 
@@ -96,7 +99,7 @@ class GoogleSignInServiceTest {
       ClerkResult.success(mockSignIn)
 
     // When
-    val result = googleSignInService.signInWithGoogle()
+    val result = googleSignInService.signInWithGoogle(mockActivity)
 
     // Then
     assertTrue(result is ClerkResult.Success)
@@ -123,7 +126,7 @@ class GoogleSignInServiceTest {
       GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
     every { mockCustomCredential.data } returns mockBundle
 
-    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } returns
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential(mockActivity) } returns
       mockGetCredentialResponse
     every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
 
@@ -133,7 +136,7 @@ class GoogleSignInServiceTest {
       ClerkResult.success(mockSignUp)
 
     // When
-    val result = googleSignInService.signInWithGoogle()
+    val result = googleSignInService.signInWithGoogle(mockActivity)
 
     // Then
     assertTrue(result is ClerkResult.Success)
@@ -160,7 +163,7 @@ class GoogleSignInServiceTest {
       GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
     every { mockCustomCredential.data } returns mockBundle
 
-    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } returns
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential(mockActivity) } returns
       mockGetCredentialResponse
     every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
 
@@ -168,7 +171,7 @@ class GoogleSignInServiceTest {
       ClerkResult.apiFailure(errorResponse)
 
     // When
-    val result = googleSignInService.signInWithGoogle()
+    val result = googleSignInService.signInWithGoogle(mockActivity)
 
     // Then
     assertTrue(result is ClerkResult.Failure)
@@ -182,11 +185,11 @@ class GoogleSignInServiceTest {
     every { mockGetCredentialResponse.credential } returns mockCustomCredential
     every { mockCustomCredential.type } returns "unsupported_type"
 
-    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } returns
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential(mockActivity) } returns
       mockGetCredentialResponse
 
     // When
-    val result = googleSignInService.signInWithGoogle()
+    val result = googleSignInService.signInWithGoogle(mockActivity)
 
     // Then
     assertTrue(result is ClerkResult.Failure)
@@ -201,10 +204,10 @@ class GoogleSignInServiceTest {
     // Given
     val exception = GetCredentialUnknownException("Credential retrieval failed")
 
-    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } throws exception
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential(mockActivity) } throws exception
 
     // When
-    val result = googleSignInService.signInWithGoogle()
+    val result = googleSignInService.signInWithGoogle(mockActivity)
 
     // Then
     assertTrue(result is ClerkResult.Failure)
@@ -230,7 +233,7 @@ class GoogleSignInServiceTest {
       GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
     every { mockCustomCredential.data } returns mockBundle
 
-    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } returns
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential(mockActivity) } returns
       mockGetCredentialResponse
     every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
 
@@ -239,7 +242,7 @@ class GoogleSignInServiceTest {
     coEvery { SignUp.create(capture(createParamsSlot)) } returns ClerkResult.success(mockSignUp)
 
     // When
-    googleSignInService.signInWithGoogle()
+    googleSignInService.signInWithGoogle(mockActivity)
 
     // Then
     assertEquals(idToken, createParamsSlot.captured.token)

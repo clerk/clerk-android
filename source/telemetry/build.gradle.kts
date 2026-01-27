@@ -9,7 +9,7 @@ plugins {
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-telemetry", libs.versions.clerk.telemetry.get())
   publishToMavenCentral()
-  signAllPublications()
+  // signAllPublications() // Temporarily disabled for local development
   pom {
     name.set("Clerk Android Telemetry")
     description.set("Telemetry module for Clerk Android SDK")

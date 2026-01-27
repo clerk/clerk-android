@@ -40,7 +40,7 @@ android {
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-ui", libs.versions.clerk.ui.get())
   publishToMavenCentral()
-  signAllPublications()
+  // signAllPublications() // Temporarily disabled for local development
   pom {
     name.set("Clerk Android UI")
     description.set("UI components for Clerk Android SDK")

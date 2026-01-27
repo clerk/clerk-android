@@ -1,5 +1,6 @@
 package com.clerk.ui.userprofile.connectedaccount
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,6 +46,7 @@ private fun UserProfileAddConnectedAccountViewImpl(
   viewModel: AddConnectedAccountViewModel = viewModel(),
   onClosePressed: () -> Unit,
 ) {
+  val activity = LocalContext.current as Activity
   Column(modifier = Modifier.then(modifier)) {
     BottomSheetTopBar(
       title = stringResource(R.string.connect_account),
@@ -60,7 +63,7 @@ private fun UserProfileAddConnectedAccountViewImpl(
       )
       ClerkSocialRow(
         providers = unconnectedProviders,
-        onClick = { viewModel.connectExternalAccount(it) },
+        onClick = { viewModel.connectExternalAccount(it, activity) },
       )
     }
   }

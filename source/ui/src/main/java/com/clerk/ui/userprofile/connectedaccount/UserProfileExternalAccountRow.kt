@@ -1,6 +1,7 @@
 package com.clerk.ui.userprofile.connectedaccount
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +57,7 @@ internal fun UserProfileExternalAccountRow(
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val context = LocalContext.current
+  val activity = context as Activity
   LaunchedEffect(state) {
     if (state is AddConnectedAccountViewModel.State.Error) {
       onError(
@@ -96,7 +98,7 @@ internal fun UserProfileExternalAccountRow(
           onClick = {
             when (it) {
               ExternalAccountAction.Reconnect ->
-                viewModel.connectExternalAccount(externalAccount.oauthProviderType)
+                viewModel.connectExternalAccount(externalAccount.oauthProviderType, activity)
               ExternalAccountAction.Remove -> viewModel.removeConnectedAccount(externalAccount)
             }
           },

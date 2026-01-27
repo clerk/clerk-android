@@ -119,4 +119,5 @@ val ClerkResult.Failure<ClerkErrorResponse>.errorMessage: String
   get() =
     this.error?.errors?.firstOrNull()?.longMessage
       ?: this.error?.firstMessage()
+      ?: this.throwable?.message
       ?: "Error occurred with unknown message."

@@ -1,5 +1,6 @@
 package com.clerk.ui.userprofile.connectedaccount
 
+import android.app.Activity
 import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.reauthorize
@@ -34,6 +35,8 @@ class AddConnectedAccountViewModelTest {
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
+  private val mockActivity = mockk<Activity>()
+
   @Before
   fun setUp() {
     mockkObject(Clerk)
@@ -62,7 +65,7 @@ class AddConnectedAccountViewModelTest {
 
     val viewModel = AddConnectedAccountViewModel()
 
-    viewModel.connectExternalAccount(OAuthProvider.GITHUB)
+    viewModel.connectExternalAccount(OAuthProvider.GITHUB, mockActivity)
     advanceUntilIdle()
 
     assertEquals(AddConnectedAccountViewModel.State.Success, viewModel.state.value)
@@ -77,7 +80,7 @@ class AddConnectedAccountViewModelTest {
 
     val viewModel = AddConnectedAccountViewModel()
 
-    viewModel.connectExternalAccount(OAuthProvider.GITHUB)
+    viewModel.connectExternalAccount(OAuthProvider.GITHUB, mockActivity)
     advanceUntilIdle()
 
     assertEquals(AddConnectedAccountViewModel.State.Error("fail"), viewModel.state.value)
@@ -89,7 +92,7 @@ class AddConnectedAccountViewModelTest {
 
     val viewModel = AddConnectedAccountViewModel()
 
-    viewModel.connectExternalAccount(OAuthProvider.GITHUB)
+    viewModel.connectExternalAccount(OAuthProvider.GITHUB, mockActivity)
     advanceUntilIdle()
 
     assertEquals(
@@ -103,11 +106,11 @@ class AddConnectedAccountViewModelTest {
     val result = mockk<OAuthResult> { every { resultType } returns ResultType.SIGN_IN }
     every { Clerk.user } returns mockk()
     every { Clerk.isGoogleOneTapEnabled } returns true
-    coEvery { SignIn.authenticateWithGoogleOneTap() } returns ClerkResult.success(result)
+    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns ClerkResult.success(result)
 
     val viewModel = AddConnectedAccountViewModel()
 
-    viewModel.connectExternalAccount(OAuthProvider.GOOGLE)
+    viewModel.connectExternalAccount(OAuthProvider.GOOGLE, mockActivity)
     advanceUntilIdle()
 
     assertEquals(AddConnectedAccountViewModel.State.Success, viewModel.state.value)
@@ -118,11 +121,11 @@ class AddConnectedAccountViewModelTest {
     val result = mockk<OAuthResult> { every { resultType } returns ResultType.UNKNOWN }
     every { Clerk.user } returns mockk()
     every { Clerk.isGoogleOneTapEnabled } returns true
-    coEvery { SignIn.authenticateWithGoogleOneTap() } returns ClerkResult.success(result)
+    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns ClerkResult.success(result)
 
     val viewModel = AddConnectedAccountViewModel()
 
-    viewModel.connectExternalAccount(OAuthProvider.GOOGLE)
+    viewModel.connectExternalAccount(OAuthProvider.GOOGLE, mockActivity)
     advanceUntilIdle()
 
     assertEquals(
@@ -136,11 +139,11 @@ class AddConnectedAccountViewModelTest {
     val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "nope")))
     every { Clerk.user } returns mockk()
     every { Clerk.isGoogleOneTapEnabled } returns true
-    coEvery { SignIn.authenticateWithGoogleOneTap() } returns ClerkResult.Failure(error)
+    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns ClerkResult.Failure(error)
 
     val viewModel = AddConnectedAccountViewModel()
 
-    viewModel.connectExternalAccount(OAuthProvider.GOOGLE)
+    viewModel.connectExternalAccount(OAuthProvider.GOOGLE, mockActivity)
     advanceUntilIdle()
 
     assertEquals(AddConnectedAccountViewModel.State.Error("nope"), viewModel.state.value)
