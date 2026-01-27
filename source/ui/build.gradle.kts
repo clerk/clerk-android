@@ -1,3 +1,7 @@
+import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaToolchainService
+
 plugins {
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.android.library)
@@ -14,6 +18,7 @@ android {
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
+    consumerProguardFiles("consumer-rules.pro")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -34,6 +39,15 @@ android {
   buildFeatures { compose = true }
 
   testOptions { unitTests.isIncludeAndroidResources = true }
+}
+
+tasks.withType<Test>().configureEach {
+  javaLauncher.set(
+    project.extensions.getByType<JavaToolchainService>().launcherFor {
+      languageVersion.set(JavaLanguageVersion.of(21))
+    }
+  )
+  reports.html.required.set(false)
 }
 
 // Configure Maven publishing for this module
