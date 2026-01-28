@@ -34,6 +34,9 @@ data class Client(
   /** The ID of the last active Session on this client. */
   @SerialName("last_active_session_id") val lastActiveSessionId: String? = null,
 
+  /** The authentication strategy used for the last sign-in attempt, if available. */
+  @SerialName("last_authentication_strategy") val lastAuthenticationStrategy: String? = null,
+
   /** Timestamp of last update for the client. */
   @SerialName("updated_at") val updatedAt: Long? = null,
 ) {
