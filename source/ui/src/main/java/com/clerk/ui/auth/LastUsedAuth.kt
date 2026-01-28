@@ -153,7 +153,7 @@ private val IdentifierType.storageValue: String
       IdentifierType.Email -> "email"
       IdentifierType.Phone -> "phone"
       IdentifierType.Username -> "username"
-}
+    }
 
 @Suppress("ReturnCount")
 private fun shouldShowBadge(
