@@ -2,6 +2,7 @@ package com.clerk.ui.signin.code
 
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
@@ -71,8 +72,7 @@ class SignInAttemptHandlerTest {
   @Test
   fun attemptFirstFactorEmailCodeShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "123456"
-    val errorResponse = mockk<ClerkErrorResponse>()
-    every { errorResponse.errors } returns emptyList()
+    val errorResponse = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -126,8 +126,7 @@ class SignInAttemptHandlerTest {
   @Test
   fun attemptFirstFactorPhoneCodeAsFirstFactorShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "654321"
-    val errorResponse = mockk<ClerkErrorResponse>()
-    every { errorResponse.errors } returns emptyList()
+    val errorResponse = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -177,8 +176,7 @@ class SignInAttemptHandlerTest {
   @Test
   fun attemptFirstFactorPhoneCodeAsSecondFactorShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "789012"
-    val errorResponse = mockk<ClerkErrorResponse>()
-    every { errorResponse.errors } returns emptyList()
+    val errorResponse = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -226,8 +224,7 @@ class SignInAttemptHandlerTest {
   @Test
   fun attemptForTotpShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "345678"
-    val errorResponse = mockk<ClerkErrorResponse>()
-    every { errorResponse.errors } returns emptyList()
+    val errorResponse = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -276,8 +273,7 @@ class SignInAttemptHandlerTest {
   @Test
   fun attemptResetForEmailCodeShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "901234"
-    val errorResponse = mockk<ClerkErrorResponse>()
-    every { errorResponse.errors } returns emptyList()
+    val errorResponse = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false
@@ -328,8 +324,7 @@ class SignInAttemptHandlerTest {
   @Test
   fun attemptResetForPhoneCodeShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "567890"
-    val errorResponse = mockk<ClerkErrorResponse>()
-    every { errorResponse.errors } returns emptyList()
+    val errorResponse = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     val failureResult = ClerkResult.apiFailure(errorResponse)
     var successCallbackCalled = false
     var errorCallbackCalled = false

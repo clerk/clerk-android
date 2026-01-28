@@ -8,6 +8,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.session.Session.SessionStatus
 import com.clerk.api.session.SessionActivity
+import com.clerk.api.session.isThisDevice
 import com.clerk.api.user.User
 import com.clerk.api.user.allSessions
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -35,11 +36,13 @@ class AllDevicesViewModelTest {
     mockkObject(Clerk)
     every { Clerk.user } returns null
     every { Clerk.session } returns null
+    mockkStatic("com.clerk.api.session.SessionKt")
     mockkStatic("com.clerk.api.user.UserKt")
   }
 
   @AfterTest
   fun tearDown() {
+    unmockkStatic("com.clerk.api.session.SessionKt")
     unmockkStatic("com.clerk.api.user.UserKt")
     unmockkAll()
   }
@@ -53,6 +56,9 @@ class AllDevicesViewModelTest {
 
     every { Clerk.user } returns user
     every { Clerk.session } returns currentSession
+    every { currentSession.isThisDevice } returns true
+    every { otherRecent.isThisDevice } returns false
+    every { older.isThisDevice } returns false
     coEvery { user.allSessions() } returns
       ClerkResult.success(listOf(older, otherRecent, currentSession))
 

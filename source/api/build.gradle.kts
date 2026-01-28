@@ -15,6 +15,7 @@ android {
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
     buildConfigField("String", "SDK_VERSION", "\"${libs.versions.clerk.api.get()}\"")
+    consumerProguardFiles("consumer-rules.pro")
   }
 
   testOptions { unitTests.isIncludeAndroidResources = true }
@@ -98,7 +99,6 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime)
   implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.playServicesAuth)
-  implementation(libs.chucker.debug)
   implementation(libs.clerk.automap.annotations)
   implementation(libs.google.identity)
   implementation(libs.google.playIntegrity)
