@@ -1,6 +1,5 @@
 package com.clerk.ui.userprofile.connectedaccount
 
-import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
@@ -29,12 +28,12 @@ internal class AddConnectedAccountViewModel : ViewModel() {
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
 
-  fun connectExternalAccount(provider: OAuthProvider, activity: Activity) {
+  fun connectExternalAccount(provider: OAuthProvider) {
     _state.value = State.Loading
     guardUser(userDoesNotExist = { _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch {
         if (provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
-          handleGoogleOneTap(activity)
+          handleGoogleOneTap()
         } else {
 
           user
@@ -47,8 +46,8 @@ internal class AddConnectedAccountViewModel : ViewModel() {
     }
   }
 
-  private suspend fun handleGoogleOneTap(activity: Activity) {
-    SignIn.authenticateWithGoogleOneTap(activity)
+  private suspend fun handleGoogleOneTap() {
+    SignIn.authenticateWithGoogleOneTap()
       .onSuccess {
         withContext(Dispatchers.Main) {
           when (it.resultType) {

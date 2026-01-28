@@ -1,6 +1,5 @@
 package com.clerk.api.sso
 
-import android.app.Activity
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.credentials.exceptions.GetCredentialException
@@ -22,10 +21,10 @@ internal class GoogleSignInService(
   val googleCredentialManager: GoogleCredentialManager = GoogleCredentialManagerImpl()
 ) {
 
-  suspend fun signInWithGoogle(activity: Activity): ClerkResult<OAuthResult, ClerkErrorResponse> {
+  suspend fun signInWithGoogle(): ClerkResult<OAuthResult, ClerkErrorResponse> {
 
     return try {
-      val result = googleCredentialManager.getSignInWithGoogleCredential(activity)
+      val result = googleCredentialManager.getSignInWithGoogleCredential()
       handleSignInResult(result.credential)
     } catch (e: GetCredentialException) {
       ClerkLog.e("Error retrieving Google ID token: ${e.message}")

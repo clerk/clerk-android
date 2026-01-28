@@ -1,6 +1,5 @@
 package com.clerk.api.signin
 
-import android.app.Activity
 import com.clerk.api.Clerk
 import com.clerk.api.Clerk.signIn
 import com.clerk.api.Constants.Strategy.BACKUP_CODE
@@ -710,13 +709,11 @@ data class SignIn(
     /**
      * Authenticates the user with a token generated from Google identity services.
      *
-     * @param activity The Activity context required by the Credential Manager API to show the
-     *   account picker UI.
      * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
      *   failure.
      */
-    suspend fun authenticateWithGoogleOneTap(activity: Activity): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return GoogleSignInService().signInWithGoogle(activity)
+    suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      return GoogleSignInService().signInWithGoogle()
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.clerk.ui.auth
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,7 +59,6 @@ internal fun AuthStartViewImpl(
   val state by authStartViewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val generic = stringResource(R.string.something_went_wrong_please_try_again)
-  val activity = LocalContext.current as Activity
   var phoneActive by rememberSaveable {
     mutableStateOf(
       authViewHelper.shouldStartOnPhoneNumber(
@@ -167,7 +164,7 @@ internal fun AuthStartViewImpl(
 
         ClerkSocialRow(
           providers = authViewHelper.authenticatableSocialProviders.toImmutableList(),
-          onClick = { authStartViewModel.authenticateWithSocialProvider(it, activity) },
+          onClick = { authStartViewModel.authenticateWithSocialProvider(it) },
         )
       }
     }

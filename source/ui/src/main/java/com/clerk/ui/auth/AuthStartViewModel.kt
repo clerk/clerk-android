@@ -1,6 +1,5 @@
 package com.clerk.ui.auth
 
-import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
@@ -141,20 +140,19 @@ internal class AuthStartViewModel : ViewModel() {
    * provider.
    *
    * @param provider The [OAuthProvider] to authenticate with (e.g., Google, Facebook).
-   * @param activity The Activity context required for Google One Tap authentication.
    */
-  internal fun authenticateWithSocialProvider(provider: OAuthProvider, activity: Activity) {
+  internal fun authenticateWithSocialProvider(provider: OAuthProvider) {
     _state.value = AuthState.OAuthState.Loading
     if (provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
-      handleGoogleOneTap(activity)
+      handleGoogleOneTap()
     } else {
       authenticateWithOAuthProvider(provider)
     }
   }
 
-  private fun handleGoogleOneTap(activity: Activity) {
+  private fun handleGoogleOneTap() {
     viewModelScope.launch(Dispatchers.IO) {
-      SignIn.authenticateWithGoogleOneTap(activity)
+      SignIn.authenticateWithGoogleOneTap()
         .onSuccess {
           withContext(Dispatchers.Main) {
             _state.value =
