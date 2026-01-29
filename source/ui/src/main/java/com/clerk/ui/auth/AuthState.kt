@@ -29,6 +29,7 @@ private const val PASSWORD = "password"
 private const val USERNAME = "username"
 
 @Stable
+@Suppress("TooManyFunctions")
 internal class AuthState(
   val mode: AuthMode = AuthMode.SignInOrUp,
   val backStack: NavBackStack<NavKey>,
@@ -70,8 +71,8 @@ internal class AuthState(
   }
 
   /**
-   * Safely resets the back stack to the root entry (AuthStart).
-   * This prevents NavDisplay crashes during rapid auth state transitions.
+   * Safely resets the back stack to the root entry (AuthStart). This prevents NavDisplay crashes
+   * during rapid auth state transitions.
    */
   private fun resetToRoot() {
     if (backStack.size > 1) {

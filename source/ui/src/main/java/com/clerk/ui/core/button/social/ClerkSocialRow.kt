@@ -32,6 +32,8 @@ private const val MAX_BUTTONS_PER_ROW = 3
  * @param clerkTheme Optional [ClerkTheme] for theming.
  * @param onClick Lambda to be invoked when any button is clicked, passing the selected
  *   [OAuthProvider].
+ * @param allowSingleProviderFullWidth Whether a single provider should render as a full-width
+ *   button with text. Defaults to `true`.
  */
 @Composable
 fun ClerkSocialRow(
@@ -39,8 +41,9 @@ fun ClerkSocialRow(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onClick: (OAuthProvider) -> Unit = {},
+  allowSingleProviderFullWidth: Boolean = true,
 ) {
-  val isSingleProvider = providers.size == 1
+  val isSingleProvider = providers.size == 1 && allowSingleProviderFullWidth
 
   Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp8)) {
     val chunks = providers.chunked(MAX_BUTTONS_PER_ROW)

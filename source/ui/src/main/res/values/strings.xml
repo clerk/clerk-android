@@ -138,6 +138,7 @@
     <string name="rename">Rename</string>
     <string name="created">Created: %1$s</string>
     <string name="last_used">Last used: %1$s</string>
+    <string name="last_used_badge">Last used</string>
     <string name="add_a_passkey">Add a passkey</string>
     <string name="account">Account</string>
     <string name="delete_account">Delete account</string>
