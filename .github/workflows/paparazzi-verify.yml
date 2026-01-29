@@ -40,17 +40,6 @@ jobs:
             **/build/reports/paparazzi/**
             **/build/paparazzi/**
 
-      # Optional: leave a PR comment pointing people to the artifact
-      - name: Comment on PR with report hint
-        if: failure() && github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v5
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            ❌ Paparazzi found snapshot diffs.
-            - Download the **paparazzi-report** artifact from this workflow to see the HTML report and image diffs.
-            - If the changes are expected, re-record locally and commit the updated golden images.
-
       # Bonus: add a short summary to the run
       - name: Add run summary
         if: failure()
