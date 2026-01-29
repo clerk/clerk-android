@@ -103,7 +103,7 @@ internal object Types {
       }
       is WildcardType -> getRawType(type.upperBounds[0])
       else -> {
-        val className = type?.javaClass?.name?.toString()
+        val className = type?.javaClass?.name
         throw IllegalArgumentException(
           "Expected a Class, ParameterizedType, or GenericArrayType, but <$type> is of type $className"
         )

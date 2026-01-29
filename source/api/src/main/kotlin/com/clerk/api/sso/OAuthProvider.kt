@@ -304,7 +304,7 @@ private val logoUrlOverrides: MutableMap<OAuthProvider, String?> = mutableMapOf(
 val OAuthProvider.logoUrl: String?
   get() =
     // Test override takes precedence when present
-    logoUrlOverrides[this]?.let { it?.trim()?.takeIf { trimmed -> trimmed.isNotEmpty() } }
+    logoUrlOverrides[this]?.let { it.trim().takeIf { trimmed -> trimmed.isNotEmpty() } }
       ?: Clerk.socialProviders.values
         .find { it.strategy == this.providerData.strategy }
         ?.logoUrl
