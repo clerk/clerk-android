@@ -33,7 +33,8 @@ fun SignInFactorTwoView(
   ClerkThemeOverrideProvider(clerkTheme) {
     when (factor.strategy) {
       StrategyKeys.TOTP,
-      StrategyKeys.PHONE_CODE ->
+      StrategyKeys.PHONE_CODE,
+      StrategyKeys.EMAIL_CODE ->
         SignInFactorCodeView(
           factor = factor,
           isSecondFactor = true,

@@ -33,7 +33,7 @@ internal class SignInFactorCodeViewModel(
         viewModelScope.launch(Dispatchers.IO) {
           when (factor.strategy) {
             StrategyKeys.EMAIL_CODE -> {
-              prepareHandler.prepareForEmailCode(inProgressSignIn, factor) {
+              prepareHandler.prepareForEmailCode(inProgressSignIn, factor, isSecondFactor) {
                 _state.value = AuthenticationViewState.Error(it)
               }
             }
@@ -77,9 +77,10 @@ internal class SignInFactorCodeViewModel(
       viewModelScope.launch(Dispatchers.IO) {
         when (factor.strategy) {
           StrategyKeys.EMAIL_CODE ->
-            attemptHandler.attemptFirstFactorEmailCode(
+            attemptHandler.attemptEmailCode(
               inProgressSignIn = inProgressSignIn,
               code = code,
+              isSecondFactor = isSecondFactor,
               onSuccessCallback = onSuccessCallback,
               onErrorCallback = onErrorCallback,
             )
