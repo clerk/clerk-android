@@ -30,7 +30,7 @@ internal class AuthStartViewHelper {
         testSocialProviders!!
       } else {
         Clerk.socialProviders.values
-          .filter { it.authenticatable }
+          .filter { it.enabled && it.authenticatable }
           .map { OAuthProvider.fromStrategy(it.strategy) }
       }
     }
@@ -63,7 +63,7 @@ internal class AuthStartViewHelper {
       return socialProviders.any {
         // For testing, assume all test social providers are authenticatable
         if (testSocialProviders != null) true
-        else (it as? UserSettings.SocialConfig)?.authenticatable == true
+        else (it as? UserSettings.SocialConfig)?.let { config -> config.enabled && config.authenticatable } == true
       } && showIdentifierField
     }
 
