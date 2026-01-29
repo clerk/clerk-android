@@ -33,7 +33,7 @@ internal class DeviceAssertionInterceptor : Interceptor {
     }
 
     // Parse error response to check if it requires assertion
-    val originalBody = response.body
+    val originalBody = response.body ?: return@runBlocking response
 
     // Read the response body content and create a copy for later use
     val bodyString = originalBody.string()
