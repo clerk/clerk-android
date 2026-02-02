@@ -166,10 +166,7 @@ private fun shouldShowBadge(
     return storedIdentifierType.matches(strategies)
   }
 
-  val identifierStrategies = emailStrategies + phoneStrategies + usernameStrategies
-  if (
-    identifierStrategies.contains(lastAuth) && !canShowLastUsedBadge(enabledFirstFactorAttributes)
-  ) {
+  if (lastAuth == StrategyKeys.PASSWORD && !canShowLastUsedBadge(enabledFirstFactorAttributes)) {
     return false
   }
 
