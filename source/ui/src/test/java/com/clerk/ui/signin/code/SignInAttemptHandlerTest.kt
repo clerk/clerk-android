@@ -47,7 +47,7 @@ class SignInAttemptHandlerTest {
   }
 
   @Test
-  fun attemptFirstFactorEmailCodeShouldCallAttemptFirstFactorAndTriggerSuccessCallback() = runTest {
+  fun attemptEmailCodeAsFirstFactorShouldCallAttemptFirstFactorAndTriggerSuccessCallback() = runTest {
     val code = "123456"
     val successResult = ClerkResult.success(mockSignIn)
     var successCallbackCalled = false
@@ -57,9 +57,10 @@ class SignInAttemptHandlerTest {
       mockSignIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
     } returns successResult
 
-    handler.attemptFirstFactorEmailCode(
+    handler.attemptEmailCode(
       inProgressSignIn = mockSignIn,
       code = code,
+      isSecondFactor = false,
       onSuccessCallback = { successCallbackCalled = true },
       onErrorCallback = { errorCallbackCalled = true },
     )
@@ -70,7 +71,7 @@ class SignInAttemptHandlerTest {
   }
 
   @Test
-  fun attemptFirstFactorEmailCodeShouldTriggerErrorCallbackOnFailure() = runTest {
+  fun attemptEmailCodeAsFirstFactorShouldTriggerErrorCallbackOnFailure() = runTest {
     val code = "123456"
     val errorResponse = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     val failureResult = ClerkResult.apiFailure(errorResponse)
@@ -82,9 +83,10 @@ class SignInAttemptHandlerTest {
       mockSignIn.attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
     } returns failureResult
 
-    handler.attemptFirstFactorEmailCode(
+    handler.attemptEmailCode(
       inProgressSignIn = mockSignIn,
       code = code,
+      isSecondFactor = false,
       onSuccessCallback = { successCallbackCalled = true },
       onErrorCallback = {
         receivedError = errorResponse
@@ -96,6 +98,56 @@ class SignInAttemptHandlerTest {
     assert(!successCallbackCalled)
     assert(errorCallbackCalled)
     assert(receivedError == errorResponse)
+  }
+
+  @Test
+  fun attemptEmailCodeAsSecondFactorShouldCallAttemptSecondFactorAndTriggerSuccessCallback() =
+    runTest {
+      val code = "123456"
+      val successResult = ClerkResult.success(mockSignIn)
+      var successCallbackCalled = false
+      var errorCallbackCalled = false
+
+      coEvery {
+        mockSignIn.attemptSecondFactor(SignIn.AttemptSecondFactorParams.EmailCode(code = code))
+      } returns successResult
+
+      handler.attemptEmailCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        isSecondFactor = true,
+        onSuccessCallback = { successCallbackCalled = true },
+        onErrorCallback = { errorCallbackCalled = true },
+      )
+
+      coVerify { mockSignIn.attemptSecondFactor(any()) }
+      assert(successCallbackCalled)
+      assert(!errorCallbackCalled)
+    }
+
+  @Test
+  fun attemptEmailCodeAsSecondFactorShouldTriggerErrorCallbackOnFailure() = runTest {
+    val code = "123456"
+    val errorResponse = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
+    val failureResult = ClerkResult.apiFailure(errorResponse)
+    var successCallbackCalled = false
+    var errorCallbackCalled = false
+
+    coEvery {
+      mockSignIn.attemptSecondFactor(SignIn.AttemptSecondFactorParams.EmailCode(code = code))
+    } returns failureResult
+
+    handler.attemptEmailCode(
+      inProgressSignIn = mockSignIn,
+      code = code,
+      isSecondFactor = true,
+      onSuccessCallback = { successCallbackCalled = true },
+      onErrorCallback = { errorCallbackCalled = true },
+    )
+
+    coVerify { mockSignIn.attemptSecondFactor(any()) }
+    assert(!successCallbackCalled)
+    assert(errorCallbackCalled)
   }
 
   @Test

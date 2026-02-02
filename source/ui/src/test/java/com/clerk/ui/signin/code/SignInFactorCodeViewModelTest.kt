@@ -78,21 +78,22 @@ class SignInFactorCodeViewModelTest {
   }
 
   @Test
-  fun attemptWithEmailCodeStrategyShouldCallAttemptFirstFactorEmailCodeAndSetSuccessState() =
+  fun attemptWithEmailCodeStrategyShouldCallAttemptEmailCodeAndSetSuccessState() =
     runTest {
       val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
       val code = "123456"
 
       coEvery {
-        mockAttemptHandler.attemptFirstFactorEmailCode(
+        mockAttemptHandler.attemptEmailCode(
           inProgressSignIn = mockSignIn,
           code = code,
+          isSecondFactor = false,
           onSuccessCallback = any(),
           onErrorCallback = any(),
         )
       } coAnswers
         {
-          val onSuccess = args[2] as suspend (SignIn) -> Unit
+          val onSuccess = args[3] as suspend (SignIn) -> Unit
           onSuccess(mockSignIn)
         }
 
@@ -100,9 +101,10 @@ class SignInFactorCodeViewModelTest {
       testDispatcher.scheduler.advanceUntilIdle()
 
       coVerify {
-        mockAttemptHandler.attemptFirstFactorEmailCode(
+        mockAttemptHandler.attemptEmailCode(
           inProgressSignIn = mockSignIn,
           code = code,
+          isSecondFactor = false,
           onSuccessCallback = any(),
           onErrorCallback = any(),
         )
@@ -266,15 +268,16 @@ class SignInFactorCodeViewModelTest {
     val code = "123456"
 
     coEvery {
-      mockAttemptHandler.attemptFirstFactorEmailCode(
+      mockAttemptHandler.attemptEmailCode(
         inProgressSignIn = mockSignIn,
         code = code,
+        isSecondFactor = false,
         onSuccessCallback = any(),
         onErrorCallback = any(),
       )
     } coAnswers
       {
-        val onError = args[3] as suspend (String?) -> Unit
+        val onError = args[4] as suspend (String?) -> Unit
         onError("error")
       }
 

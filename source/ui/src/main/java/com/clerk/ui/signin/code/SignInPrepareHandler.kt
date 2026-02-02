@@ -85,6 +85,7 @@ internal class SignInPrepareHandler {
   internal suspend fun prepareForEmailCode(
     inProgressSignIn: SignIn,
     factor: Factor,
+    isSecondFactor: Boolean,
     onError: (String) -> Unit,
   ) {
     val emailAddressId = factor.emailAddressId
@@ -93,14 +94,21 @@ internal class SignInPrepareHandler {
       return
     }
 
-    inProgressSignIn
-      .prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailAddressId)
-      )
-      .onSuccess { ClerkLog.v("Successfully prepared for email code: $it") }
-      .onFailure {
-        onError(it.errorMessage)
-        ClerkLog.e("Error preparing for email code: ${it.errorMessage}")
-      }
+    if (isSecondFactor) {
+      inProgressSignIn
+        .prepareSecondFactor(emailAddressId = emailAddressId)
+        .onSuccess { ClerkLog.v("Successfully prepared second factor for email code") }
+        .onFailure { ClerkLog.e("Error preparing second factor for email code: $it") }
+    } else {
+      inProgressSignIn
+        .prepareFirstFactor(
+          SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailAddressId)
+        )
+        .onSuccess { ClerkLog.v("Successfully prepared for email code: $it") }
+        .onFailure {
+          onError(it.errorMessage)
+          ClerkLog.e("Error preparing for email code: ${it.errorMessage}")
+        }
+    }
   }
 }

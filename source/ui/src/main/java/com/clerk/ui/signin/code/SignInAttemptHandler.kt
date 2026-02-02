@@ -81,18 +81,29 @@ internal class SignInAttemptHandler {
     }
   }
 
-  internal suspend fun attemptFirstFactorEmailCode(
+  internal suspend fun attemptEmailCode(
     inProgressSignIn: SignIn,
     code: String,
+    isSecondFactor: Boolean,
     onSuccessCallback: suspend (SignIn) -> Unit,
     onErrorCallback: suspend (String?) -> Unit,
   ) {
-    inProgressSignIn
-      .attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
-      .onSuccess { onSuccessCallback(it) }
-      .onFailure {
-        ClerkLog.e("Error attempting email code: $it")
-        onErrorCallback(it.errorMessage)
-      }
+    if (isSecondFactor) {
+      inProgressSignIn
+        .attemptSecondFactor(SignIn.AttemptSecondFactorParams.EmailCode(code = code))
+        .onSuccess { onSuccessCallback(it) }
+        .onFailure {
+          ClerkLog.e("Error attempting email code as second factor: $it")
+          onErrorCallback(it.errorMessage)
+        }
+    } else {
+      inProgressSignIn
+        .attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
+        .onSuccess { onSuccessCallback(it) }
+        .onFailure {
+          ClerkLog.e("Error attempting email code: $it")
+          onErrorCallback(it.errorMessage)
+        }
+    }
   }
 }

@@ -48,7 +48,7 @@ class SignInPrepareHandlerTest {
   }
 
   @Test
-  fun prepareForEmailCodeShouldCallPrepareFirstFactorWithEmailCodeParams() = runTest {
+  fun prepareForEmailCodeAsFirstFactorShouldCallPrepareFirstFactorWithEmailCodeParams() = runTest {
     val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
     val successResult = ClerkResult.success(mockSignIn)
 
@@ -58,13 +58,39 @@ class SignInPrepareHandlerTest {
       )
     } returns successResult
 
-    handler.prepareForEmailCode(mockSignIn, factor, onError = {})
+    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = {})
 
     coVerify {
       mockSignIn.prepareFirstFactor(
         SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = "email_123")
       )
     }
+  }
+
+  @Test
+  fun prepareForEmailCodeAsSecondFactorShouldCallPrepareSecondFactor() = runTest {
+    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
+    val successResult = ClerkResult.success(mockSignIn)
+
+    coEvery { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") } returns successResult
+
+    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = true, onError = {})
+
+    coVerify { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") }
+  }
+
+  @Test
+  fun prepareForEmailCodeAsSecondFactorShouldHandleFailureGracefully() = runTest {
+    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
+    val errorResponse = mockk<ClerkErrorResponse>()
+    val failureResult = ClerkResult.apiFailure(errorResponse)
+
+    coEvery { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") } returns failureResult
+
+    // This should not throw an exception - the handler logs but doesn't propagate errors
+    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = true, onError = {})
+
+    coVerify { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") }
   }
 
   @Test
@@ -172,7 +198,7 @@ class SignInPrepareHandlerTest {
     val factor = Factor(strategy = "email_code", emailAddressId = null)
 
     // This should now handle null gracefully and not throw an exception
-    handler.prepareForEmailCode(mockSignIn, factor, onError = {})
+    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = {})
 
     // Verify that no API call was made since emailAddressId was null
     coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
@@ -196,7 +222,7 @@ class SignInPrepareHandlerTest {
     } returns failureResult
 
     var capturedMessage: String? = null
-    handler.prepareForEmailCode(mockSignIn, factor, onError = { capturedMessage = it })
+    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = { capturedMessage = it })
 
     assert(capturedMessage == "Long message")
   }
@@ -278,7 +304,7 @@ class SignInPrepareHandlerTest {
     val factor = Factor(strategy = "email_code", emailAddressId = null)
     var called = false
 
-    handler.prepareForEmailCode(mockSignIn, factor, onError = { called = true })
+    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = { called = true })
 
     coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
     assert(!called)
