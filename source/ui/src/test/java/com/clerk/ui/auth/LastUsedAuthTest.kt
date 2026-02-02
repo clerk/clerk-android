@@ -109,7 +109,7 @@ class LastUsedAuthTest {
   }
 
   @Test
-  fun fromReturnsNullWhenIdentifierStrategiesDisallowedByBadgeRules() {
+  fun fromReturnsPhoneWhenPhoneStrategyEvenIfBadgeRulesWouldDisallow() {
     val result =
       LastUsedAuth.from(
         lastAuthenticationStrategy = "phone_code",
@@ -118,7 +118,7 @@ class LastUsedAuthTest {
         storedIdentifierType = null,
       )
 
-    assertNull(result)
+    assertEquals(LastUsedAuth.Phone, result)
   }
 
   @Test
