@@ -80,7 +80,7 @@ core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
 firebase-appDistribution = "com.google.firebase:firebase-appdistribution:17.0.0"
 firebase-bom = "com.google.firebase:firebase-bom:34.8.0"
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.1.1"
-google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.22"
+google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.23"
 google-playIntegrity = "com.google.android.play:integrity:1.6.0"
 junit = "junit:junit:4.13.2"
 jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
