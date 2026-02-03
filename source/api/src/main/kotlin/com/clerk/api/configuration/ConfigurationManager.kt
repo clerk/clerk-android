@@ -237,7 +237,7 @@ internal class ConfigurationManager {
       scope.launch {
         while (isActive) {
           try {
-            val session = Clerk.session
+            val session = Clerk.activeSession
             if (session != null) {
               if (Clerk.debugMode) {
                 ClerkLog.d("Refreshing token for session: ${session.id}")
@@ -324,7 +324,7 @@ internal class ConfigurationManager {
             // Launch dependent operations concurrently
             launch {
               // Start token refresh as soon as client is available
-              if (Clerk.session != null) {
+              if (Clerk.activeSession != null) {
                 startTokenRefresh()
               }
             }

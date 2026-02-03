@@ -118,6 +118,14 @@ object Clerk {
   var telemetryEnabled: Boolean = true
 
   /**
+   * Treat pending sessions as signed-out when resolving the current session and user.
+   *
+   * Defaults to `true`. Set this via [ClerkConfigurationOptions] in the [initialize] method.
+   */
+  var treatPendingAsSignedOut: Boolean = true
+    private set
+
+  /**
    * The name of the application, as configured in the Clerk Dashboard.
    *
    * Used for display purposes in authentication UI and other contexts. Returns `null` if the SDK is
@@ -310,21 +318,57 @@ object Clerk {
   private val _session = MutableStateFlow<Session?>(null)
 
   /**
-   * Reactive state for the currently active user session.
+   * Reactive state for the currently signed-in user session.
    *
    * Observe this StateFlow to react to session changes such as sign-in, sign-out, or session
-   * refresh. Emits `null` when no session is active.
+   * refresh. Emits `null` when no signed-in session exists. By default, signed-in sessions include
+   * only active sessions. Set [treatPendingAsSignedOut] to `false` to include pending sessions.
    */
   val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
 
   /**
-   * The currently active user session.
+   * The currently signed-in user session.
    *
    * Represents an authenticated session and is guaranteed to be one of the sessions in
-   * [Client.sessions]. Returns `null` when no session is active or if the SDK is not initialized.
+   * [Client.sessions]. Returns `null` when no signed-in session exists or if the SDK is not
+   * initialized. By default, signed-in sessions include only active sessions. Set
+   * [treatPendingAsSignedOut] to `false` to include pending sessions.
    */
   val session: Session?
     get() = sessionFlow.value
+
+  /**
+   * All signed-in sessions for the current client.
+   *
+   * Returns an empty list if the SDK is not initialized.
+   */
+  val signedInSessions: List<Session>
+    get() =
+      if (clientInitialized) {
+        if (treatPendingAsSignedOut) client.signedInSessions()
+        else client.signedInSessions(treatPendingAsSignedOut = false)
+      } else emptyList()
+
+  /**
+   * The current signed-in session, if available.
+   *
+   * Returns `null` when no signed-in session exists or if the SDK is not initialized. By default,
+   * signed-in sessions include only active sessions. Set [treatPendingAsSignedOut] to `false` to
+   * include pending sessions.
+   */
+  val signedInSession: Session?
+    get() = sessionFlow.value
+
+  /**
+   * The current active session, if available.
+   *
+   * Returns `null` when no active session exists or if the SDK is not initialized.
+   */
+  val activeSession: Session?
+    get() =
+      if (clientInitialized) {
+        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
+      } else null
 
   /**
    * The active locale for the current session.
@@ -337,7 +381,9 @@ object Clerk {
   /**
    * Indicates whether a user is currently signed in.
    *
-   * @return `true` if there is an active session with a user, `false` otherwise.
+   * @return `true` if there is a signed-in session, `false` otherwise. By default, signed-in
+   *   sessions include only active sessions. Set [treatPendingAsSignedOut] to `false` to include
+   *   pending sessions.
    */
   val isSignedIn: Boolean
     get() = sessionFlow.value != null
@@ -358,9 +404,11 @@ object Clerk {
   val userFlow: StateFlow<User?> = _userFlow.asStateFlow()
 
   /**
-   * The current user for the active session.
+   * The current user for the signed-in session.
    *
-   * Returns `null` if no session is active or if the SDK is not initialized.
+   * Returns `null` if no signed-in session exists or if the SDK is not initialized. By default,
+   * signed-in sessions include only active sessions. Set [treatPendingAsSignedOut] to `false` to
+   * include pending sessions.
    */
   val user: User?
     get() = userFlow.value
@@ -474,6 +522,7 @@ object Clerk {
     this.applicationId = options?.deviceAttestationOptions?.applicationId
     this.customTheme = theme
     this.telemetryEnabled = options?.telemetryEnabled ?: true
+    this.treatPendingAsSignedOut = options?.treatPendingAsSignedOut ?: true
     configurationManager.configure(
       context = context,
       publishableKey = publishableKey,
@@ -547,7 +596,13 @@ object Clerk {
   internal fun updateSessionAndUserState() {
     val currentSession =
       if (::client.isInitialized) {
-        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
+        val signedInSessions =
+          if (treatPendingAsSignedOut) {
+            client.signedInSessions()
+          } else {
+            client.signedInSessions(treatPendingAsSignedOut = false)
+          }
+        signedInSessions.firstOrNull { it.id == client.lastActiveSessionId }
       } else null
     val currentUser = currentSession?.user
 
@@ -578,12 +633,15 @@ object Clerk {
  * @property proxyUrl Optional proxy URL for network requests Your Clerk app's proxy URL. Required
  *   for applications that run behind a reverse proxy. Must be a full URL (for example,
  *   https://proxy.example.com/__clerk).
+ * @property treatPendingAsSignedOut Treat pending sessions as signed-out when resolving the
+ *   current session and user. Defaults to `true`.
  */
 data class ClerkConfigurationOptions(
   val enableDebugMode: Boolean = false,
   val deviceAttestationOptions: DeviceAttestationOptions? = null,
   val proxyUrl: String? = null,
   val telemetryEnabled: Boolean = true,
+  val treatPendingAsSignedOut: Boolean = true,
 )
 
 /**

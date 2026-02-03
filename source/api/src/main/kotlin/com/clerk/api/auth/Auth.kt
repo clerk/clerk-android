@@ -114,6 +114,28 @@ class Auth internal constructor() {
 
   // endregion
 
+  // region Signed-in Session Access
+
+  /**
+   * All signed-in sessions for the current client.
+   *
+   * Returns an empty list if the SDK is not initialized.
+   */
+  val signedInSessions: List<Session>
+    get() = Clerk.signedInSessions
+
+  /**
+   * The current signed-in session, if available.
+   *
+   * Returns `null` when no signed-in session exists or if the SDK is not initialized. By default,
+   * signed-in sessions include only active sessions. Set [Clerk.treatPendingAsSignedOut] to
+   * `false` to include pending sessions.
+   */
+  val signedInSession: Session?
+    get() = Clerk.signedInSession
+
+  // endregion
+
   // region Sign In
 
   /**

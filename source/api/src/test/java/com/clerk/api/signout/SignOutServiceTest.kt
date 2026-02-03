@@ -95,6 +95,7 @@ class SignOutServiceTest {
     every { mockClient.lastActiveSessionId } returns activeSessionId
     every { mockClient.sessions } returns listOf(mockSession)
     every { mockClient.activeSessions() } returns listOf(mockSession)
+    every { mockClient.signedInSessions() } returns listOf(mockSession)
     every { mockClient.signIn } returns null
     every { mockClient.signUp } returns null
     every { mockClient.id } returns "test_client_id"
@@ -205,6 +206,7 @@ class SignOutServiceTest {
     every { emptyClient.lastActiveSessionId } returns null
     every { emptyClient.sessions } returns emptyList()
     every { emptyClient.activeSessions() } returns emptyList()
+    every { emptyClient.signedInSessions() } returns emptyList()
     every { emptyClient.signIn } returns null
     every { emptyClient.signUp } returns null
     every { emptyClient.id } returns null

@@ -45,6 +45,29 @@ data class Client(
   fun activeSessions(): List<Session> =
     sessions.filter { it.status == Session.SessionStatus.ACTIVE }
 
+  /**
+   * Signed-in sessions for this client.
+   *
+   * By default, signed-in sessions include only active sessions. Use
+   * [signedInSessions] with `treatPendingAsSignedOut = false` to include pending sessions.
+   */
+  fun signedInSessions(): List<Session> = signedInSessions(treatPendingAsSignedOut = true)
+
+  /**
+   * Signed-in sessions for this client.
+   *
+   * When [treatPendingAsSignedOut] is `true`, only active sessions are included.
+   * When `false`, both active and pending sessions are included.
+   */
+  fun signedInSessions(treatPendingAsSignedOut: Boolean): List<Session> =
+    if (treatPendingAsSignedOut) {
+      activeSessions()
+    } else {
+      sessions.filter {
+        it.status == Session.SessionStatus.ACTIVE || it.status == Session.SessionStatus.PENDING
+      }
+    }
+
   companion object {
     /** Fetches the current client object from the Clerk API. */
     suspend fun get(): ClerkResult<Client, ClerkErrorResponse> = ClerkApi.client.get()

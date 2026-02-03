@@ -62,6 +62,10 @@ data class Session(
   val tasks: List<SessionTask> = emptyList(),
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
+  /** The current task for this session, if any. */
+  val currentTask: SessionTask?
+    get() = tasks.firstOrNull()
+
   @Serializable
   enum class SessionStatus {
     @SerialName("abandoned") ABANDONED,
