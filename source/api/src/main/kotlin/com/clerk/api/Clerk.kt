@@ -318,13 +318,26 @@ object Clerk {
   val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
 
   /**
-   * The currently active user session.
+   * The current user session, regardless of status.
    *
-   * Represents an authenticated session and is guaranteed to be one of the sessions in
-   * [Client.sessions]. Returns `null` when no session is active or if the SDK is not initialized.
+   * Returns the session matching [Client.lastActiveSessionId] from all sessions, including pending
+   * sessions. Returns `null` when no session exists or if the SDK is not initialized.
+   *
+   * @see activeSession for a session only when status is ACTIVE.
    */
   val session: Session?
     get() = sessionFlow.value
+
+  /**
+   * The current session only if its status is ACTIVE.
+   *
+   * Returns `null` if no session exists, the SDK is not initialized, or if the session status is
+   * not ACTIVE (e.g., PENDING).
+   *
+   * @see session for the session regardless of status.
+   */
+  val activeSession: Session?
+    get() = sessionFlow.value?.takeIf { it.status == Session.SessionStatus.ACTIVE }
 
   /**
    * The active locale for the current session.
@@ -358,12 +371,26 @@ object Clerk {
   val userFlow: StateFlow<User?> = _userFlow.asStateFlow()
 
   /**
-   * The current user for the active session.
+   * The current user, regardless of session status.
    *
-   * Returns `null` if no session is active or if the SDK is not initialized.
+   * Returns the user from the current session even if the session status is PENDING. Returns `null`
+   * if no session exists or if the SDK is not initialized.
+   *
+   * @see activeUser for the user only when session status is ACTIVE.
    */
   val user: User?
     get() = userFlow.value
+
+  /**
+   * The current user only if the session status is ACTIVE.
+   *
+   * Returns `null` if no session exists, the SDK is not initialized, or if the session status is
+   * not ACTIVE (e.g., PENDING).
+   *
+   * @see user for the user regardless of session status.
+   */
+  val activeUser: User?
+    get() = activeSession?.user
 
   // endregion
 
@@ -545,14 +572,14 @@ object Clerk {
    * user.
    */
   internal fun updateSessionAndUserState() {
+    // Find session by ID from all sessions (not just active sessions)
     val currentSession =
       if (::client.isInitialized) {
-        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
+        client.sessions.firstOrNull { it.id == client.lastActiveSessionId }
       } else null
-    val currentUser = currentSession?.user
 
     _session.value = currentSession
-    _userFlow.value = currentUser
+    _userFlow.value = currentSession?.user
   }
 
   /**

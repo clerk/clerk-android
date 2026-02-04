@@ -23,9 +23,12 @@ sealed interface AuthEvent {
   data object SignedOut : AuthEvent
 
   /**
-   * Emitted when the active session changes.
+   * Emitted when the current session changes.
    *
-   * @property session The new active session, or null if no session is active.
+   * This event fires whenever [Clerk.session] changes, which is based on
+   * [Client.lastActiveSessionId]. The session may have any status (including PENDING).
+   *
+   * @property session The new current session, or null if no session exists.
    */
   data class SessionChanged(val session: Session?) : AuthEvent
 

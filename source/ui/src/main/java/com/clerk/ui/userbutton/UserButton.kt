@@ -42,67 +42,72 @@ import com.clerk.ui.userprofile.UserProfileView
  *
  * Drop this into a TopAppBar actions slot; on tap it will open the full user profile UI in a
  * full-screen dialog and close itself when done.
+ *
+ * @param clerkTheme Optional theme customization for the user profile UI.
+ * @param treatPendingAsSignedOut When `true` (default), the button will only appear when the
+ *   session status is ACTIVE. When `false`, the button will appear even if the session is PENDING.
  */
 @SuppressLint("LocalContextGetResourceValueCall", "ComposeModifierMissing")
 @Composable
-fun UserButton(clerkTheme: ClerkTheme? = null) {
+fun UserButton(clerkTheme: ClerkTheme? = null, treatPendingAsSignedOut: Boolean = true) {
   ClerkThemeOverrideProvider(clerkTheme) {
     TelemetryProvider {
-      val user by Clerk.userFlow.collectAsStateWithLifecycle()
-      val context = LocalContext.current
+      val sessionUser by Clerk.userFlow.collectAsStateWithLifecycle()
+      val user = if (treatPendingAsSignedOut) Clerk.activeUser else sessionUser
       val telemetry = LocalTelemetryCollector.current
-
       var showProfile by rememberSaveable { mutableStateOf(false) }
 
       LaunchedEffect(user?.id) {
-        if (user != null) {
-          telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
-        }
+        if (user != null) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
       }
+
       if (user != null) {
-        IconButton(onClick = { showProfile = true }) {
-          Box(
-            modifier =
-              Modifier.size(dp36).clip(CircleShape).semantics {
-                contentDescription = context.getString(R.string.open_user_profile)
-              },
-            contentAlignment = Alignment.Center,
-          ) {
-            val model =
-              ImageRequest.Builder(LocalContext.current)
-                .data(user?.imageUrl)
-                .crossfade(true)
-                .build()
-
-            AsyncImage(
-              modifier = Modifier.matchParentSize().clip(CircleShape),
-              model = model,
-              contentDescription = stringResource(R.string.user_avatar),
-              contentScale = ContentScale.Crop,
-              fallback = painterResource(id = R.drawable.ic_profile),
-              onError = { /* fall through to placeholder below */ },
-            )
-
-            if (user?.imageUrl?.isBlank() == true) {
-              Icon(
-                painter = painterResource(id = R.drawable.ic_profile),
-                contentDescription = null,
-                modifier = Modifier.matchParentSize(),
-              )
-            }
-          }
-        }
-
+        UserButtonContent(imageUrl = user.imageUrl, onClick = { showProfile = true })
         if (showProfile) {
-          Dialog(
-            onDismissRequest = { showProfile = false },
-            properties =
-              DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
-          ) {
-            UserProfileView(onDismiss = { showProfile = false })
-          }
+          UserProfileDialog(
+            treatPendingAsSignedOut = treatPendingAsSignedOut,
+            onDismiss = { showProfile = false },
+          )
         }
       }
     }
+  }
+}
+
+@SuppressLint("LocalContextGetResourceValueCall")
+@Composable
+private fun UserButtonContent(imageUrl: String?, onClick: () -> Unit) {
+  val context = LocalContext.current
+  IconButton(onClick = onClick) {
+    Box(
+      modifier =
+        Modifier.size(dp36).clip(CircleShape).semantics {
+          contentDescription = context.getString(R.string.open_user_profile)
+        },
+      contentAlignment = Alignment.Center,
+    ) {
+      val model = ImageRequest.Builder(LocalContext.current).data(imageUrl).crossfade(true).build()
+      AsyncImage(
+        modifier = Modifier.matchParentSize().clip(CircleShape),
+        model = model,
+        contentDescription = stringResource(R.string.user_avatar),
+        contentScale = ContentScale.Crop,
+        fallback = painterResource(id = R.drawable.ic_profile),
+        onError = { /* fall through to placeholder below */ },
+      )
+      if (imageUrl?.isBlank() == true) {
+        Icon(painterResource(id = R.drawable.ic_profile), null, Modifier.matchParentSize())
+      }
+    }
+  }
+}
+
+@Composable
+private fun UserProfileDialog(treatPendingAsSignedOut: Boolean, onDismiss: () -> Unit) {
+  Dialog(
+    onDismissRequest = onDismiss,
+    properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+  ) {
+    UserProfileView(treatPendingAsSignedOut = treatPendingAsSignedOut, onDismiss = onDismiss)
   }
 }
