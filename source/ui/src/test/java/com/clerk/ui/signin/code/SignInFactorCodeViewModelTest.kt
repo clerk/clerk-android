@@ -81,41 +81,40 @@ class SignInFactorCodeViewModelTest {
   }
 
   @Test
-  fun attemptWithEmailCodeStrategyShouldCallAttemptEmailCodeAndSetSuccessState() =
-    runTest {
-      val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
-      val code = "123456"
+  fun attemptWithEmailCodeStrategyShouldCallAttemptEmailCodeAndSetSuccessState() = runTest {
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val code = "123456"
 
-      coEvery {
-        mockAttemptHandler.attemptEmailCode(
-          inProgressSignIn = mockSignIn,
-          code = code,
-          isSecondFactor = false,
-          onSuccessCallback = any(),
-          onErrorCallback = any(),
-        )
-      } coAnswers
-        {
-          val onSuccess = args[3] as suspend (SignIn) -> Unit
-          onSuccess(mockSignIn)
-        }
-
-      viewModel.attempt(factor, isSecondFactor = false, code)
-      testDispatcher.scheduler.advanceUntilIdle()
-
-      coVerify {
-        mockAttemptHandler.attemptEmailCode(
-          inProgressSignIn = mockSignIn,
-          code = code,
-          isSecondFactor = false,
-          onSuccessCallback = any(),
-          onErrorCallback = any(),
-        )
+    coEvery {
+      mockAttemptHandler.attemptEmailCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        isSecondFactor = false,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
+    } coAnswers
+      {
+        val onSuccess = args[3] as suspend (SignIn) -> Unit
+        onSuccess(mockSignIn)
       }
-      viewModel.state.test {
-        assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
-      }
+
+    viewModel.attempt(factor, isSecondFactor = false, code)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify {
+      mockAttemptHandler.attemptEmailCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        isSecondFactor = false,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
     }
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
+  }
 
   @Test
   fun attemptWithPhoneCodeStrategyShouldCallAttemptFirstFactorPhoneCodeAndSetSuccessState() =
