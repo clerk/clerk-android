@@ -44,12 +44,12 @@ import com.clerk.ui.userprofile.UserProfileView
  * full-screen dialog and close itself when done.
  *
  * @param clerkTheme Optional theme customization for the user profile UI.
- * @param treatPendingAsSignedOut When `true` (default), the button will only appear when the
- *   session status is ACTIVE. When `false`, the button will appear even if the session is PENDING.
+ * @param treatPendingAsSignedOut When `true`, the button will only appear when the session status
+ *   is ACTIVE. When `false` (default), the button will appear even if the session is PENDING.
  */
 @SuppressLint("LocalContextGetResourceValueCall", "ComposeModifierMissing")
 @Composable
-fun UserButton(clerkTheme: ClerkTheme? = null, treatPendingAsSignedOut: Boolean = true) {
+fun UserButton(clerkTheme: ClerkTheme? = null, treatPendingAsSignedOut: Boolean = false) {
   ClerkThemeOverrideProvider(clerkTheme) {
     TelemetryProvider {
       val sessionUser by Clerk.userFlow.collectAsStateWithLifecycle()
@@ -64,10 +64,7 @@ fun UserButton(clerkTheme: ClerkTheme? = null, treatPendingAsSignedOut: Boolean 
       if (user != null) {
         UserButtonContent(imageUrl = user.imageUrl, onClick = { showProfile = true })
         if (showProfile) {
-          UserProfileDialog(
-            treatPendingAsSignedOut = treatPendingAsSignedOut,
-            onDismiss = { showProfile = false },
-          )
+          UserProfileDialog(onDismiss = { showProfile = false })
         }
       }
     }
@@ -103,11 +100,11 @@ private fun UserButtonContent(imageUrl: String?, onClick: () -> Unit) {
 }
 
 @Composable
-private fun UserProfileDialog(treatPendingAsSignedOut: Boolean, onDismiss: () -> Unit) {
+private fun UserProfileDialog(onDismiss: () -> Unit) {
   Dialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
   ) {
-    UserProfileView(treatPendingAsSignedOut = treatPendingAsSignedOut, onDismiss = onDismiss)
+    UserProfileView(onDismiss = onDismiss)
   }
 }

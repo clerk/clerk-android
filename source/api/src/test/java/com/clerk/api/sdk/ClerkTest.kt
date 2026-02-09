@@ -63,7 +63,6 @@ class ClerkTest {
 
     // Set up basic client mock properties
     every { mockClient.sessions } returns emptyList()
-    every { mockClient.activeSessions() } returns emptyList()
     every { mockClient.lastActiveSessionId } returns null
     every { mockClient.signIn } returns null
     every { mockClient.signUp } returns null
@@ -104,7 +103,6 @@ class ClerkTest {
         // uninitialized
         val uninitializedClient = mockk<Client>()
         every { uninitializedClient.sessions } returns emptyList()
-        every { uninitializedClient.activeSessions() } returns emptyList()
         every { uninitializedClient.lastActiveSessionId } returns null
         every { uninitializedClient.signIn } returns null
         every { uninitializedClient.signUp } returns null
@@ -164,7 +162,6 @@ class ClerkTest {
   private fun simulateUninitializedClient() {
     val uninitializedClient = mockk<Client>()
     every { uninitializedClient.sessions } returns emptyList()
-    every { uninitializedClient.activeSessions() } returns emptyList()
     every { uninitializedClient.lastActiveSessionId } returns null
     every { uninitializedClient.signIn } returns null
     every { uninitializedClient.signUp } returns null
@@ -203,7 +200,6 @@ class ClerkTest {
     // Given
     every { mockClient.lastActiveSessionId } returns null
     every { mockClient.sessions } returns listOf(mockSession)
-    every { mockClient.activeSessions() } returns listOf(mockSession)
     initializeClerkWithClient(mockClient)
 
     // When
@@ -221,7 +217,6 @@ class ClerkTest {
 
     every { mockClient.lastActiveSessionId } returns activeSessionId
     every { mockClient.sessions } returns listOf(mockSession)
-    every { mockClient.activeSessions() } returns listOf(mockSession)
     every { mockSession.id } returns differentSessionId
     initializeClerkWithClient(mockClient)
 
@@ -233,14 +228,14 @@ class ClerkTest {
   }
 
   @Test
-  fun `session returns matching session when client has active session`() = runTest {
+  fun `session returns matching session when client has session`() = runTest {
     // Given
     val activeSessionId = "active_session_id"
 
     every { mockClient.lastActiveSessionId } returns activeSessionId
     every { mockClient.sessions } returns listOf(mockSession)
-    every { mockClient.activeSessions() } returns listOf(mockSession)
     every { mockSession.id } returns activeSessionId
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
     initializeClerkWithClient(mockClient)
 
     // When
@@ -263,15 +258,15 @@ class ClerkTest {
   }
 
   @Test
-  fun `user returns user when active session exists`() = runTest {
+  fun `user returns user when session exists`() = runTest {
     // Given
     val activeSessionId = "active_session_id"
 
     every { mockClient.lastActiveSessionId } returns activeSessionId
     every { mockClient.sessions } returns listOf(mockSession)
-    every { mockClient.activeSessions() } returns listOf(mockSession)
     every { mockSession.id } returns activeSessionId
     every { mockSession.user } returns mockUser
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
     initializeClerkWithClient(mockClient)
 
     // When
@@ -300,8 +295,8 @@ class ClerkTest {
 
     every { mockClient.lastActiveSessionId } returns activeSessionId
     every { mockClient.sessions } returns listOf(mockSession)
-    every { mockClient.activeSessions() } returns listOf(mockSession)
     every { mockSession.id } returns activeSessionId
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
     initializeClerkWithClient(mockClient)
 
     // When
@@ -450,14 +445,14 @@ class ClerkTest {
 
   @Test
   fun `clearSessionAndUserState nulls both sessionFlow and userFlow`() = runTest {
-    // Given - setup initial state with active session and user
+    // Given - setup initial state with session and user
     val activeSessionId = "active_session_id"
 
     every { mockClient.lastActiveSessionId } returns activeSessionId
     every { mockClient.sessions } returns listOf(mockSession)
-    every { mockClient.activeSessions() } returns listOf(mockSession)
     every { mockSession.id } returns activeSessionId
     every { mockSession.user } returns mockUser
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
     initializeClerkWithClient(mockClient)
 
     // Verify initial state has session and user
@@ -485,8 +480,8 @@ class ClerkTest {
 
     every { mockClient.lastActiveSessionId } returns activeSessionId
     every { mockClient.sessions } returns listOf(mockSession)
-    every { mockClient.activeSessions() } returns listOf(mockSession)
     every { mockSession.id } returns activeSessionId
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
     initializeClerkWithClient(mockClient)
 
     // When
@@ -505,9 +500,9 @@ class ClerkTest {
 
     every { mockClient.lastActiveSessionId } returns activeSessionId
     every { mockClient.sessions } returns listOf(mockSession)
-    every { mockClient.activeSessions() } returns listOf(mockSession)
     every { mockSession.id } returns activeSessionId
     every { mockSession.user } returns mockUser
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
     initializeClerkWithClient(mockClient)
 
     // When
@@ -526,13 +521,13 @@ class ClerkTest {
     assertNull(Clerk.sessionFlow.value)
     assertNull(Clerk.userFlow.value)
 
-    // When - update client to have an active session
+    // When - update client to have a session
     val activeSessionId = "active_session_id"
     every { mockClient.lastActiveSessionId } returns activeSessionId
     every { mockClient.sessions } returns listOf(mockSession)
-    every { mockClient.activeSessions() } returns listOf(mockSession)
     every { mockSession.id } returns activeSessionId
     every { mockSession.user } returns mockUser
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
     Clerk.updateClient(mockClient)
 
     // Then - both flows should be updated
@@ -555,7 +550,6 @@ class ClerkTest {
     every { pendingSession.user } returns mockUser
     every { mockClient.lastActiveSessionId } returns sessionId
     every { mockClient.sessions } returns listOf(pendingSession)
-    every { mockClient.activeSessions() } returns emptyList() // No active sessions
     initializeClerkWithClient(mockClient)
 
     // When
@@ -563,6 +557,7 @@ class ClerkTest {
 
     // Then - session should be returned even though it's pending
     assertEquals(pendingSession, session)
+    assertEquals(Session.SessionStatus.PENDING, session?.status)
   }
 
   @Test
@@ -576,7 +571,6 @@ class ClerkTest {
     every { pendingSession.user } returns mockUser
     every { mockClient.lastActiveSessionId } returns sessionId
     every { mockClient.sessions } returns listOf(pendingSession)
-    every { mockClient.activeSessions() } returns emptyList()
     initializeClerkWithClient(mockClient)
 
     // When
@@ -584,6 +578,24 @@ class ClerkTest {
 
     // Then - user should be returned even though session is pending
     assertEquals(mockUser, user)
+  }
+
+  @Test
+  fun `isSignedIn returns true for pending session`() = runTest {
+    // Given - a session with PENDING status
+    val sessionId = "pending_session_id"
+
+    every { mockClient.lastActiveSessionId } returns sessionId
+    every { mockClient.sessions } returns listOf(mockSession)
+    every { mockSession.id } returns sessionId
+    every { mockSession.status } returns Session.SessionStatus.PENDING
+    initializeClerkWithClient(mockClient)
+
+    // When
+    val isSignedIn = Clerk.isSignedIn
+
+    // Then - user with pending session should be considered signed in
+    assertTrue(isSignedIn)
   }
 
   @Test
@@ -597,7 +609,6 @@ class ClerkTest {
     every { pendingSession.user } returns mockUser
     every { mockClient.lastActiveSessionId } returns sessionId
     every { mockClient.sessions } returns listOf(pendingSession)
-    every { mockClient.activeSessions() } returns emptyList()
     initializeClerkWithClient(mockClient)
 
     // When
@@ -618,7 +629,6 @@ class ClerkTest {
     every { activeSession.user } returns mockUser
     every { mockClient.lastActiveSessionId } returns sessionId
     every { mockClient.sessions } returns listOf(activeSession)
-    every { mockClient.activeSessions() } returns listOf(activeSession)
     initializeClerkWithClient(mockClient)
 
     // When
@@ -639,7 +649,6 @@ class ClerkTest {
     every { pendingSession.user } returns mockUser
     every { mockClient.lastActiveSessionId } returns sessionId
     every { mockClient.sessions } returns listOf(pendingSession)
-    every { mockClient.activeSessions() } returns emptyList()
     initializeClerkWithClient(mockClient)
 
     // When
@@ -660,7 +669,6 @@ class ClerkTest {
     every { activeSession.user } returns mockUser
     every { mockClient.lastActiveSessionId } returns sessionId
     every { mockClient.sessions } returns listOf(activeSession)
-    every { mockClient.activeSessions() } returns listOf(activeSession)
     initializeClerkWithClient(mockClient)
 
     // When

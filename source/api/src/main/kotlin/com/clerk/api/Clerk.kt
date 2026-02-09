@@ -310,10 +310,11 @@ object Clerk {
   private val _session = MutableStateFlow<Session?>(null)
 
   /**
-   * Reactive state for the currently active user session.
+   * Reactive state for the current user session.
    *
    * Observe this StateFlow to react to session changes such as sign-in, sign-out, or session
-   * refresh. Emits `null` when no session is active.
+   * refresh. Emits `null` when no session exists. Note that the session may have any status
+   * (active, pending, etc.) - use [Session.status] to check the current state.
    */
   val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
 
@@ -321,7 +322,12 @@ object Clerk {
    * The current user session, regardless of status.
    *
    * Returns the session matching [Client.lastActiveSessionId] from all sessions, including pending
-   * sessions. Returns `null` when no session exists or if the SDK is not initialized.
+   * sessions. This allows users with pending sessions to see their profile while completing
+   * required tasks. Returns `null` when no session exists or if the SDK is not initialized.
+   *
+   * Note: Sessions with status [Session.SessionStatus.PENDING] cannot issue session tokens.
+   * Attempting to call [Session.fetchToken] on a pending session will log a warning and return
+   * null.
    *
    * @see activeSession for a session only when status is ACTIVE.
    */
@@ -569,7 +575,8 @@ object Clerk {
    * Internal method to update session and user state flows.
    *
    * Should be called whenever the client state changes that might affect the current session or
-   * user.
+   * user. This method finds the session matching [Client.lastActiveSessionId] regardless of status,
+   * allowing users with pending sessions to maintain a "signed in" experience.
    */
   internal fun updateSessionAndUserState() {
     // Find session by ID from all sessions (not just active sessions)
@@ -577,6 +584,14 @@ object Clerk {
       if (::client.isInitialized) {
         client.sessions.firstOrNull { it.id == client.lastActiveSessionId }
       } else null
+
+    if (currentSession?.status == Session.SessionStatus.PENDING) {
+      ClerkLog.w(
+        "Session is in pending state. " +
+          "The user has tasks to complete before the session can be activated. " +
+          "Session tokens cannot be issued for pending sessions."
+      )
+    }
 
     _session.value = currentSession
     _userFlow.value = currentSession?.user
