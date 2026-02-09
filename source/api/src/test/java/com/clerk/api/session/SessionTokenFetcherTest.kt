@@ -50,6 +50,7 @@ class SessionTokenFetcherTest {
 
     // Mock session properties
     every { mockSession.id } returns "session_123"
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
 
     // Mock JWT manager to return our mock JWT
     every { mockJWTManager.createFromString(any()) } returns mockJWT

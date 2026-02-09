@@ -9,6 +9,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.runtime.EntryProviderScope
@@ -17,7 +18,9 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.user.User
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
@@ -38,6 +41,28 @@ import kotlinx.serialization.Serializable
 internal val LocalUserProfileState =
   staticCompositionLocalOf<UserProfileState> { error("No UserProfileState provided") }
 
+/**
+ * CompositionLocal for whether to treat pending sessions as signed out in user profile views.
+ *
+ * When `true` (default), views will use [Clerk.activeUser] which returns `null` for pending
+ * sessions. When `false`, views will use [Clerk.user] which returns the user regardless of session
+ * status.
+ */
+@SuppressLint("ComposeCompositionLocalUsage")
+val LocalTreatPendingAsSignedOut = compositionLocalOf { true }
+
+/**
+ * Returns the appropriate user based on [LocalTreatPendingAsSignedOut].
+ *
+ * When [LocalTreatPendingAsSignedOut] is `true`, returns [Clerk.activeUser]. When `false`, returns
+ * [Clerk.user].
+ */
+@Composable
+fun currentUser(): User? {
+  val treatPendingAsSignedOut = LocalTreatPendingAsSignedOut.current
+  return if (treatPendingAsSignedOut) Clerk.activeUser else Clerk.user
+}
+
 @Composable
 internal fun UserProfileStateProvider(
   backStack: NavBackStack<NavKey>,
@@ -49,42 +74,57 @@ internal fun UserProfileStateProvider(
   }
 }
 
+/**
+ * User profile view for managing account settings, security, and profile information.
+ *
+ * @param clerkTheme Optional theme customization for the user profile UI.
+ * @param treatPendingAsSignedOut When `true` (default), the view will use [Clerk.activeUser] which
+ *   returns `null` for pending sessions. When `false`, the view will use [Clerk.user] which returns
+ *   the user regardless of session status.
+ * @param onDismiss Callback when the user profile view is dismissed.
+ */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun UserProfileView(clerkTheme: ClerkTheme? = null, onDismiss: () -> Unit = {}) {
+fun UserProfileView(
+  clerkTheme: ClerkTheme? = null,
+  treatPendingAsSignedOut: Boolean = true,
+  onDismiss: () -> Unit = {},
+) {
   ClerkThemeOverrideProvider(clerkTheme) {
-    val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
-    UserProfileStateProvider(backStack) {
-      val telemetry = LocalTelemetryCollector.current
+    CompositionLocalProvider(LocalTreatPendingAsSignedOut provides treatPendingAsSignedOut) {
+      val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
+      UserProfileStateProvider(backStack) {
+        val telemetry = LocalTelemetryCollector.current
 
-      LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
+        LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
 
-      NavDisplay(
-        backStack = backStack,
-        onBack = {
-          if (backStack.size == 1) {
-            onDismiss()
-          } else {
-            backStack.removeLastOrNull()
-          }
-        },
-        transitionSpec = {
-          val spec = tween<IntOffset>(durationMillis = 300)
-          slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-            slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-        },
-        popTransitionSpec = {
-          val spec = tween<IntOffset>(durationMillis = 300)
-          slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-            slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-        },
-        predictivePopTransitionSpec = { distance ->
-          // Use the provided distance to align with the system back gesture
-          slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-            slideOutHorizontally(targetOffsetX = { distance })
-        },
-        entryProvider = entryProvider { UserProfileEntries(backStack, onDismiss) },
-      )
+        NavDisplay(
+          backStack = backStack,
+          onBack = {
+            if (backStack.size == 1) {
+              onDismiss()
+            } else {
+              backStack.removeLastOrNull()
+            }
+          },
+          transitionSpec = {
+            val spec = tween<IntOffset>(durationMillis = 300)
+            slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+              slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+          },
+          popTransitionSpec = {
+            val spec = tween<IntOffset>(durationMillis = 300)
+            slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+              slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+          },
+          predictivePopTransitionSpec = { distance ->
+            // Use the provided distance to align with the system back gesture
+            slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+              slideOutHorizontally(targetOffsetX = { distance })
+          },
+          entryProvider = entryProvider { UserProfileEntries(backStack, onDismiss) },
+        )
+      }
     }
   }
 }
