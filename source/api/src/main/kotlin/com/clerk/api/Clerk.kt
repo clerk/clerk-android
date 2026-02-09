@@ -310,18 +310,23 @@ object Clerk {
   private val _session = MutableStateFlow<Session?>(null)
 
   /**
-   * Reactive state for the currently active user session.
+   * Reactive state for the current user session.
    *
    * Observe this StateFlow to react to session changes such as sign-in, sign-out, or session
-   * refresh. Emits `null` when no session is active.
+   * refresh. Emits `null` when no session exists. Note that the session may have any status
+   * (active, pending, etc.) - use [Session.status] to check the current state.
    */
   val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
 
   /**
-   * The currently active user session.
+   * The current user session.
    *
-   * Represents an authenticated session and is guaranteed to be one of the sessions in
-   * [Client.sessions]. Returns `null` when no session is active or if the SDK is not initialized.
+   * Returns the session matching [Client.lastActiveSessionId] regardless of its status. This means
+   * a pending session will be returned, allowing users to see their profile while completing
+   * required tasks. Returns `null` when no session exists or if the SDK is not initialized.
+   *
+   * Note: Sessions with status [Session.SessionStatus.PENDING] cannot issue session tokens.
+   * Attempting to call [Session.fetchToken] on a pending session will log a warning and fail.
    */
   val session: Session?
     get() = sessionFlow.value
@@ -542,14 +547,23 @@ object Clerk {
    * Internal method to update session and user state flows.
    *
    * Should be called whenever the client state changes that might affect the current session or
-   * user.
+   * user. This method finds the session matching [Client.lastActiveSessionId] regardless of status,
+   * allowing users with pending sessions to maintain a "signed in" experience.
    */
   internal fun updateSessionAndUserState() {
     val currentSession =
       if (::client.isInitialized) {
-        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
+        client.sessions.firstOrNull { it.id == client.lastActiveSessionId }
       } else null
     val currentUser = currentSession?.user
+
+    if (currentSession?.status == Session.SessionStatus.PENDING) {
+      ClerkLog.w(
+        "Session is in pending state. " +
+          "The user has tasks to complete before the session can be activated. " +
+          "Session tokens cannot be issued for pending sessions."
+      )
+    }
 
     _session.value = currentSession
     _userFlow.value = currentUser
