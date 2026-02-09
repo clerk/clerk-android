@@ -44,12 +44,12 @@ internal val LocalUserProfileState =
 /**
  * CompositionLocal for whether to treat pending sessions as signed out in user profile views.
  *
- * When `true` (default), views will use [Clerk.activeUser] which returns `null` for pending
- * sessions. When `false`, views will use [Clerk.user] which returns the user regardless of session
+ * When `true`, views will use [Clerk.activeUser] which returns `null` for pending sessions. When
+ * `false` (default), views will use [Clerk.user] which returns the user regardless of session
  * status.
  */
 @SuppressLint("ComposeCompositionLocalUsage")
-val LocalTreatPendingAsSignedOut = compositionLocalOf { true }
+val LocalTreatPendingAsSignedOut = compositionLocalOf { false }
 
 /**
  * Returns the appropriate user based on [LocalTreatPendingAsSignedOut].
@@ -78,16 +78,16 @@ internal fun UserProfileStateProvider(
  * User profile view for managing account settings, security, and profile information.
  *
  * @param clerkTheme Optional theme customization for the user profile UI.
- * @param treatPendingAsSignedOut When `true` (default), the view will use [Clerk.activeUser] which
- *   returns `null` for pending sessions. When `false`, the view will use [Clerk.user] which returns
- *   the user regardless of session status.
+ * @param treatPendingAsSignedOut When `true`, the view will use [Clerk.activeUser] which returns
+ *   `null` for pending sessions. When `false` (default), the view will use [Clerk.user] which
+ *   returns the user regardless of session status.
  * @param onDismiss Callback when the user profile view is dismissed.
  */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun UserProfileView(
   clerkTheme: ClerkTheme? = null,
-  treatPendingAsSignedOut: Boolean = true,
+  treatPendingAsSignedOut: Boolean = false,
   onDismiss: () -> Unit = {},
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
