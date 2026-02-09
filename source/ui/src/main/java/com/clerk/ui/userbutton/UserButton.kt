@@ -64,10 +64,7 @@ fun UserButton(clerkTheme: ClerkTheme? = null, treatPendingAsSignedOut: Boolean 
       if (user != null) {
         UserButtonContent(imageUrl = user.imageUrl, onClick = { showProfile = true })
         if (showProfile) {
-          UserProfileDialog(
-            treatPendingAsSignedOut = treatPendingAsSignedOut,
-            onDismiss = { showProfile = false },
-          )
+          UserProfileDialog(onDismiss = { showProfile = false })
         }
       }
     }
@@ -103,11 +100,11 @@ private fun UserButtonContent(imageUrl: String?, onClick: () -> Unit) {
 }
 
 @Composable
-private fun UserProfileDialog(treatPendingAsSignedOut: Boolean, onDismiss: () -> Unit) {
+private fun UserProfileDialog(onDismiss: () -> Unit) {
   Dialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
   ) {
-    UserProfileView(treatPendingAsSignedOut = treatPendingAsSignedOut, onDismiss = onDismiss)
+    UserProfileView(onDismiss = onDismiss)
   }
 }
