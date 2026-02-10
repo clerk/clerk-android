@@ -5,3 +5,10 @@ enum class AuthMode {
   SignUp,
   SignInOrUp,
 }
+
+/**
+ * Whether this auth mode allows sign-in attempts to transfer into sign-up flows when the user
+ * doesn't have an account.
+ */
+val AuthMode.transferable: Boolean
+  get() = this != AuthMode.SignIn

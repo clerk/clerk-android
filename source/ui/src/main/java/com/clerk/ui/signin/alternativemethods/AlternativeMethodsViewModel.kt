@@ -18,10 +18,13 @@ internal class AlternativeMethodsViewModel : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun signInWithProvider(provider: OAuthProvider) {
+  fun signInWithProvider(provider: OAuthProvider, transferable: Boolean = true) {
     _state.value = AuthenticationViewState.Loading
     viewModelScope.launch {
-      SignIn.authenticateWithRedirect(SignIn.AuthenticateWithRedirectParams.OAuth(provider))
+      SignIn.authenticateWithRedirect(
+          SignIn.AuthenticateWithRedirectParams.OAuth(provider),
+          transferable = transferable,
+        )
         .onSuccess {
           _state.value =
             when (it.resultType) {

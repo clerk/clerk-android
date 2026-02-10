@@ -25,6 +25,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.PreviewAuthStateProvider
+import com.clerk.ui.auth.transferable
 import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
@@ -126,7 +127,10 @@ private fun SignInFactorOneForgotPasswordViewImpl(
     TextDivider(text = stringResource(R.string.or_sign_in_with_another_method))
     Spacers.Vertical.Spacer24()
     if (Clerk.socialProviders.isNotEmpty()) {
-      ClerkSocialRow(providers = socialProviders, onClick = { viewModel.signInWithProvider(it) })
+      ClerkSocialRow(
+        providers = socialProviders,
+        onClick = { viewModel.signInWithProvider(it, authState.mode.transferable) },
+      )
       Spacers.Vertical.Spacer24()
     }
     AlternativeFactorList(alternativeFactors, textIconHelper, context, onClickFactor)

@@ -656,21 +656,43 @@ data class SignIn(
     /**
      * Authenticates the user with a token generated from Google identity services.
      *
+     * @param transferable Whether this authentication flow allows transferring to a sign-up if the
+     *   user doesn't have an account. Defaults to `true`.
      * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
      *   failure.
      */
-    suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return GoogleSignInService().signInWithGoogle()
+    suspend fun authenticateWithGoogleOneTap(
+      transferable: Boolean = true
+    ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      return GoogleSignInService().signInWithGoogle(transferable)
     }
 
     /**
      * Initiates the sign-in process using an OAuth or Enterprise SSO redirect flow.
      *
      * @param params The parameters for the redirect-based authentication.
-     * @return A [ClerkResult] containing the result of the authentication flow.
+     * @param transferable Whether this authentication flow allows transferring to a sign-up if the
+     *   user doesn't have an account. Defaults to `true`.
+     * @return A [ClerkResult] containing the result of the authentication flow. The [OAuthResult]
+     *   could contain either a sign-in or sign-up result, depending on whether an account transfer
+     *   took place (i.e. if the user didn't have an account and a sign up was created instead).
+     * @see [AuthenticateWithRedirectParams]
+     * @see [OAuthProvider](https://clerk.com/docs/references/javascript/types/sso)
+     *
+     * ### Example usage:
+     * ```kotlin
+     * SignIn.authenticateWithRedirect(
+     *   AuthenticateWithRedirectParams.OAuth(provider = OAuthProvider.GOOGLE)
+     * ).onSuccess { result ->
+     *   // Handle the result
+     * }.onFailure { error ->
+     *   // Handle the error
+     * }
+     * ```
      */
     suspend fun authenticateWithRedirect(
-      params: AuthenticateWithRedirectParams
+      params: AuthenticateWithRedirectParams,
+      transferable: Boolean = true,
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return SSOService.authenticateWithRedirect(
         strategy = params.toMap()["provider"]!!,
@@ -678,6 +700,7 @@ data class SignIn(
         identifier = params.identifier,
         emailAddress = params.emailAddress,
         legalAccepted = params.legalAccepted,
+        transferable = transferable,
       )
     }
 

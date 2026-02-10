@@ -22,10 +22,13 @@ internal class ForgotPasswordViewModel : ViewModel() {
   private val _state = MutableStateFlow<ResetPasswordViewState>(ResetPasswordViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun signInWithProvider(provider: OAuthProvider) {
+  fun signInWithProvider(provider: OAuthProvider, transferable: Boolean = true) {
     _state.value = ResetPasswordViewState.Loading
     viewModelScope.launch(Dispatchers.IO) {
-      SignIn.authenticateWithRedirect(SignIn.AuthenticateWithRedirectParams.OAuth(provider))
+      SignIn.authenticateWithRedirect(
+          SignIn.AuthenticateWithRedirectParams.OAuth(provider),
+          transferable = transferable,
+        )
         .onSuccess {
           withContext(Dispatchers.Main) {
             if (it.resultType == ResultType.SIGN_IN) {
