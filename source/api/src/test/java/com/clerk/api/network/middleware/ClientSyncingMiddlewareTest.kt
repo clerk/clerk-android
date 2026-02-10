@@ -173,7 +173,7 @@ class ClientSyncingMiddlewareTest {
 
     // Then - verify no warning was logged (only debug log for client synced)
     verify(exactly = 0) {
-      Log.w("ClerkLog", match { it.contains("Sign-in completed but session is pending") })
+      Log.w("ClerkLog", match<String> { it.contains("Sign-in completed but session is pending") })
     }
   }
 
@@ -202,7 +202,7 @@ class ClientSyncingMiddlewareTest {
 
     // Then - verify no warning was logged
     verify(exactly = 0) {
-      Log.w("ClerkLog", match { it.contains("Sign-in completed but session is pending") })
+      Log.w("ClerkLog", match<String> { it.contains("Sign-in completed but session is pending") })
     }
   }
 
