@@ -42,7 +42,7 @@ class UiActivity1 : ComponentActivity() {
               ClerkButton(
                 modifier = Modifier.align(Alignment.Center),
                 text = "Sign Out",
-                onClick = { scope.launch { Clerk.signOut() } },
+                onClick = { scope.launch { Clerk.auth.signOut() } },
               )
             }
 

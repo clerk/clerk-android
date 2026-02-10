@@ -4,12 +4,13 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.VerificationType
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.attemptVerification
-import com.clerk.api.signup.prepareVerification
+import com.clerk.api.signup.sendCode
+import com.clerk.api.signup.verifyCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -20,13 +21,17 @@ class SignUpViewModel : ViewModel() {
 
   fun signUp(email: String, password: String) {
     viewModelScope.launch {
-      SignUp.create(SignUp.CreateParams.Standard(emailAddress = email, password = password))
+      Clerk.auth
+        .signUp {
+          this.email = email
+          this.password = password
+        }
         .onSuccess {
           if (it.status == SignUp.Status.COMPLETE) {
-            // Handle successful sign-up
+            _uiState.value = SignUpUiState.Success
           } else {
             _uiState.value = SignUpUiState.NeedsVerification
-            it.prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailCode())
+            it.sendCode { this.email = email }
           }
         }
         .onFailure {
@@ -37,10 +42,10 @@ class SignUpViewModel : ViewModel() {
   }
 
   fun verify(code: String) {
-    val inProgressSignUp = Clerk.signUp ?: return
+    val inProgressSignUp = Clerk.auth.currentSignUp ?: return
     viewModelScope.launch {
       inProgressSignUp
-        .attemptVerification(SignUp.AttemptVerificationParams.EmailCode(code))
+        .verifyCode(code, VerificationType.EMAIL)
         .onSuccess { _uiState.value = SignUpUiState.Success }
         .onFailure { Log.e("SignUpViewModel", "${it.errorMessage}", it.throwable) }
     }

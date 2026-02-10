@@ -19,7 +19,7 @@ class HomeViewModel : ViewModel() {
   val uiState = _uiState.asStateFlow()
 
   fun signOut() {
-    viewModelScope.launch(Dispatchers.IO) { Clerk.signOut() }
+    viewModelScope.launch(Dispatchers.IO) { Clerk.auth.signOut() }
   }
 
   fun createPasskey() {

@@ -224,7 +224,7 @@ internal object SSOService {
    */
   private suspend fun handleSignIn(nonce: String) {
     val signInResult =
-      requireNotNull(Clerk.signIn).get(rotatingTokenNonce = nonce).signInToOAuthResult()
+      requireNotNull(Clerk.auth.currentSignIn).get(rotatingTokenNonce = nonce).signInToOAuthResult()
     currentPendingAuth?.complete(signInResult)
 
     clearCurrentAuth()

@@ -3,12 +3,13 @@ package com.clerk.customflows.otp.signup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.auth.types.VerificationType
 import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.attemptVerification
-import com.clerk.api.signup.prepareVerification
+import com.clerk.api.signup.sendCode
+import com.clerk.api.signup.verifyCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -34,8 +35,9 @@ class SMSOTPSignUpViewModel : ViewModel() {
 
   fun submit(phoneNumber: String) {
     viewModelScope.launch {
-      SignUp.create(SignUp.CreateParams.Standard(phoneNumber = phoneNumber))
-        .flatMap { it.prepareVerification(SignUp.PrepareVerificationParams.Strategy.PhoneCode()) }
+      Clerk.auth
+        .signUp { phone = phoneNumber }
+        .flatMap { it.sendCode { phone = phoneNumber } }
         .onSuccess { _uiState.value = UiState.Verifying }
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling
@@ -45,10 +47,10 @@ class SMSOTPSignUpViewModel : ViewModel() {
   }
 
   fun verify(code: String) {
-    val inProgressSignUp = Clerk.signUp ?: return
+    val inProgressSignUp = Clerk.auth.currentSignUp ?: return
     viewModelScope.launch {
       inProgressSignUp
-        .attemptVerification(SignUp.AttemptVerificationParams.PhoneCode(code))
+        .verifyCode(code, VerificationType.PHONE)
         .onSuccess {
           if (it.status == SignUp.Status.COMPLETE) {
             _uiState.value = UiState.Verified

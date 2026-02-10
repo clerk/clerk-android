@@ -4,6 +4,7 @@ package com.clerk.ui.signin.code
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
+import com.clerk.api.auth.Auth
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
@@ -38,6 +39,7 @@ class SignInFactorCodeViewModelTest {
   private val mockAttemptHandler = mockk<SignInAttemptHandler>(relaxed = true)
   private val mockPrepareHandler = mockk<SignInPrepareHandler>(relaxed = true)
   private val mockSignIn = mockk<SignIn>(relaxed = true)
+  private val mockAuth = mockk<Auth>(relaxed = true)
   private val testDispatcher = StandardTestDispatcher()
 
   private lateinit var viewModel: SignInFactorCodeViewModel
@@ -46,7 +48,8 @@ class SignInFactorCodeViewModelTest {
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
     mockkObject(Clerk)
-    every { Clerk.signIn } returns mockSignIn
+    every { Clerk.auth } returns mockAuth
+    every { mockAuth.currentSignIn } returns mockSignIn
 
     viewModel =
       SignInFactorCodeViewModel(
@@ -68,7 +71,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun prepareShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
-    every { Clerk.signIn } returns null
+    every { mockAuth.currentSignIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
 
     viewModel.prepare(factor, isSecondFactor = false)
@@ -78,41 +81,40 @@ class SignInFactorCodeViewModelTest {
   }
 
   @Test
-  fun attemptWithEmailCodeStrategyShouldCallAttemptEmailCodeAndSetSuccessState() =
-    runTest {
-      val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
-      val code = "123456"
+  fun attemptWithEmailCodeStrategyShouldCallAttemptEmailCodeAndSetSuccessState() = runTest {
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val code = "123456"
 
-      coEvery {
-        mockAttemptHandler.attemptEmailCode(
-          inProgressSignIn = mockSignIn,
-          code = code,
-          isSecondFactor = false,
-          onSuccessCallback = any(),
-          onErrorCallback = any(),
-        )
-      } coAnswers
-        {
-          val onSuccess = args[3] as suspend (SignIn) -> Unit
-          onSuccess(mockSignIn)
-        }
-
-      viewModel.attempt(factor, isSecondFactor = false, code)
-      testDispatcher.scheduler.advanceUntilIdle()
-
-      coVerify {
-        mockAttemptHandler.attemptEmailCode(
-          inProgressSignIn = mockSignIn,
-          code = code,
-          isSecondFactor = false,
-          onSuccessCallback = any(),
-          onErrorCallback = any(),
-        )
+    coEvery {
+      mockAttemptHandler.attemptEmailCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        isSecondFactor = false,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
+    } coAnswers
+      {
+        val onSuccess = args[3] as suspend (SignIn) -> Unit
+        onSuccess(mockSignIn)
       }
-      viewModel.state.test {
-        assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
-      }
+
+    viewModel.attempt(factor, isSecondFactor = false, code)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify {
+      mockAttemptHandler.attemptEmailCode(
+        inProgressSignIn = mockSignIn,
+        code = code,
+        isSecondFactor = false,
+        onSuccessCallback = any(),
+        onErrorCallback = any(),
+      )
     }
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
+  }
 
   @Test
   fun attemptWithPhoneCodeStrategyShouldCallAttemptFirstFactorPhoneCodeAndSetSuccessState() =
@@ -294,7 +296,7 @@ class SignInFactorCodeViewModelTest {
 
   @Test
   fun attemptShouldThrowErrorWhenNoSignInIsInProgress() = runTest {
-    every { Clerk.signIn } returns null
+    every { mockAuth.currentSignIn } returns null
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
     val code = "123456"
 

@@ -49,6 +49,12 @@ internal fun UserProfileStateProvider(
   }
 }
 
+/**
+ * User profile view for managing account settings, security, and profile information.
+ *
+ * @param clerkTheme Optional theme customization for the user profile UI.
+ * @param onDismiss Callback when the user profile view is dismissed.
+ */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun UserProfileView(clerkTheme: ClerkTheme? = null, onDismiss: () -> Unit = {}) {

@@ -1,7 +1,6 @@
 package com.clerk.api.signin
 
 import com.clerk.api.Clerk
-import com.clerk.api.Clerk.signIn
 import com.clerk.api.Constants.Strategy.BACKUP_CODE
 import com.clerk.api.Constants.Strategy.EMAIL_CODE
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
@@ -395,34 +394,28 @@ data class SignIn(
     @AutoMap
     @Serializable
     data class EmailCode(
-      @SerialName("email_address_id")
-      val emailAddressId: String =
-        signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
+      @SerialName("email_address_id") val emailAddressId: String,
       override val strategy: String = EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class PhoneCode(
-      @SerialName("phone_number_id")
-      val phoneNumberId: String =
-        signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
+      @SerialName("phone_number_id") val phoneNumberId: String,
       override val strategy: String = PHONE_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class ResetPasswordEmailCode(
-      val emailAddressId: String =
-        signIn?.supportedFirstFactors!!.find { it.strategy == EMAIL_CODE }?.emailAddressId!!,
+      val emailAddressId: String,
       override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class ResetPasswordPhoneCode(
-      val phoneNumberId: String =
-        signIn?.supportedFirstFactors!!.find { it.strategy == PHONE_CODE }!!.phoneNumberId!!,
+      val phoneNumberId: String,
       override val strategy: String = RESET_PASSWORD_PHONE_CODE,
     ) : PrepareFirstFactorParams
 
@@ -625,47 +618,13 @@ data class SignIn(
 
   companion object {
     /**
-     * Starts the sign in process. The SignIn object holds the state of the current sign-in and
-     * provides helper methods to navigate and complete the sign-in process. It is used to manage
-     * the sign-in lifecycle, including the first and second factor verification, and the creation
-     * of a new session.
+     * Starts the sign in process.
      *
-     * ## The sign-in process follows these steps:
-     * 1. Initiate the sign-in process by collecting the user's authentication information and
-     *    passing the appropriate parameters to the [create] method.
-     * 2. Prepare the first factor verification by calling [SignIn.prepareFirstFactor]. Users
-     *    **must** complete a first factor verification. This can be something like providing a
-     *    password, an email link, a one-time code (OTP), a Web3 wallet address, or providing proof
-     *    of their identity through an external social account (SSO/OAuth).
-     * 3. Attempt to complete the first factor verification by calling [SignIn.attemptFirstFactor].
-     * 4. Optionally, if you have enabled multi-factor for your application, you will need to
-     *    prepare the second factor verification by calling [SignIn.prepareSecondFactor].
-     * 5. Attempt to complete the second factor verification by calling
-     *    [SignIn.attemptSecondFactor].
-     * 6. If verification is successful, set the newly created session as the active session by
-     *    passing the [SignIn.createdSessionId] to the `setActive()` method on the `Clerk` object.
-     *
-     * **Note:** If you want to sign in with OAuth or Enterprise SSO, use the
-     * [SignIn.authenticateWithRedirect] method instead. If you are using the
-     * [SignIn.authenticateWithRedirect] method, you do not need to call [SignIn.create] first. The
-     * [SignIn.authenticateWithRedirect] method will handle the creation of the SignIn object
-     * internally.
+     * **Note:** Prefer using `Clerk.auth.signIn` or other `Clerk.auth.*` methods for new code.
      *
      * @param params The strategy to authenticate with.
      * @return A [ClerkResult] containing the created [SignIn] object on success, or a
      *   [ClerkErrorResponse] on failure.
-     * @see [SignIn.CreateParams]
-     *
-     * ### Example usage:
-     * ```kotlin
-     * SignIn.create(SignIn.CreateParams.Strategy.EmailCode("user@example.com"))
-     *   .onSuccess { signIn ->
-     *     // Do something with the signIn object
-     *   }
-     *   .onFailure { error ->
-     *     // Handle the error
-     *   }
-     * ```
      */
     suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
@@ -684,23 +643,11 @@ data class SignIn(
     }
 
     /**
-     * Creates a new SignIn object with the provided parameters. This is the equivalent of calling
-     * `SignIn.create()` with JSON.
+     * Creates a new SignIn object with the provided parameters.
      *
      * @param params The raw parameters to create the SignIn object with.
      * @return A [ClerkResult] containing the created [SignIn] object on success, or a
      *   [ClerkErrorResponse] on failure.
-     *
-     * ### Example usage:
-     * ```kotlin
-     * SignIn.create(mapOf("identifier" to "user@example.com"))
-     *   .onSuccess { signIn ->
-     *     // Do something with the signIn object
-     *   }
-     *   .onFailure { error ->
-     *     // Handle the error
-     *   }
-     * ```
      */
     suspend fun create(params: Map<String, String>): ClerkResult<SignIn, ClerkErrorResponse> {
       return ClerkApi.signIn.createSignIn(params)
@@ -722,11 +669,6 @@ data class SignIn(
 
     /**
      * Initiates the sign-in process using an OAuth or Enterprise SSO redirect flow.
-     *
-     * This method is used for authentication strategies that require redirecting the user to an
-     * external authentication provider (e.g., Google, Facebook, or an Enterprise SSO provider). The
-     * user will be redirected to the specified [AuthenticateWithRedirectParams.redirectUrl] to
-     * complete authentication.
      *
      * @param params The parameters for the redirect-based authentication.
      * @param transferable Whether this authentication flow allows transferring to a sign-up if the
@@ -762,11 +704,7 @@ data class SignIn(
       )
     }
 
-    /**
-     * Authenticates using the Google Credential Manager. The allowed types are Passkeys, Passwords,
-     * and Google One Tap. You can control which credentials are used by passing the correct
-     * [SignIn.CredentialType]
-     */
+    /** Authenticates using the Google Credential Manager. */
     suspend fun authenticateWithGoogleCredential(
       credentialTypes: List<CredentialType>
     ): ClerkResult<SignIn, ClerkErrorResponse> {
@@ -777,32 +715,14 @@ data class SignIn(
   }
 }
 
+// region Internal Extension Functions (for SDK internal use)
+
 /**
- * Begins the first factor verification process. This is a required step in order to complete a sign
- * in, as users should be verified at least by one factor of authentication.
- *
- * Common scenarios are one-time code (OTP) or social account (SSO) verification. This is determined
- * by the accepted strategy parameter values. Each authentication identifier supports different
- * strategies.
- *
- * Returns a SignIn object. Check the [SignIn.firstFactorVerification] attribute for the status of
- * the first factor verification process.
+ * Begins the first factor verification process.
  *
  * @param params The parameters for preparing the first factor verification.
- * @return A [ClerkResult] containing the updated [SignIn] object with the prepared first factor
- *   verification on success, or a [ClerkErrorResponse] on failure.
- * @see [SignIn.PrepareFirstFactorParams]
- *
- * ### Example usage:
- * ```kotlin
- * signIn.prepareFirstFactor(strategy = PrepareFirstFactorParams.Strategy.EMAIL_CODE)
- *   .onSuccess { updatedSignIn ->
- *     // Handle the updated SignIn object
- *   }
- *   .onFailure { error ->
- *     // Handle the error
- *   }
- * ```
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignIn.prepareFirstFactor(
   params: SignIn.PrepareFirstFactorParams
@@ -811,15 +731,54 @@ suspend fun SignIn.prepareFirstFactor(
 }
 
 /**
+ * Sends a verification code to the user's phone number for first factor authentication.
+ *
+ * This is a convenience method that prepares the phone code verification strategy. The verification
+ * code will be sent via SMS to the phone number associated with the sign-in.
+ *
+ * @param phoneNumberId Optional ID of the phone number to send the code to. If not provided, the
+ *   phone number ID will be automatically retrieved from the supported first factors.
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignIn.sendPhoneCode(
+  phoneNumberId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> {
+  val phoneId =
+    phoneNumberId
+      ?: supportedFirstFactors?.find { it.strategy == PHONE_CODE }?.phoneNumberId
+      ?: error("No phone number found for phone_code strategy")
+  return prepareFirstFactor(SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneId))
+}
+
+/**
+ * Sends a verification code to the user's email address for first factor authentication.
+ *
+ * This is a convenience method that prepares the email code verification strategy. The verification
+ * code will be sent to the email address associated with the sign-in.
+ *
+ * @param emailAddressId Optional ID of the email address to send the code to. If not provided, the
+ *   email address ID will be automatically retrieved from the supported first factors.
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignIn.sendEmailCode(
+  emailAddressId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> {
+  val emailId =
+    emailAddressId
+      ?: supportedFirstFactors?.find { it.strategy == EMAIL_CODE }?.emailAddressId
+      ?: error("No email address found for email_code strategy")
+  return prepareFirstFactor(SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailId))
+}
+
+/**
  * Prepares the second factor verification for the sign-in process.
  *
- * This function is used to initiate the second factor verification process, which is required for
- * multi-factor authentication (MFA) during the sign-in process. It automatically selects a
- * supported strategy, prioritizing "phone_code" if available, otherwise "email_code".
- *
- * @return A [ClerkResult] containing the updated [SignIn] object with the prepared second factor
- *   verification on success, or a [ClerkErrorResponse] on failure.
- * @receiver The current [SignIn] object representing the sign-in session.
+ * @param phoneNumberId Optional phone number ID for phone_code strategy.
+ * @param emailAddressId Optional email address ID for email_code strategy.
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignIn.prepareSecondFactor(
   phoneNumberId: String? = null,
@@ -853,24 +812,69 @@ suspend fun SignIn.prepareSecondFactor(
 }
 
 /**
- * Attempts to complete the first factor verification process. This is a required step in order to
- * complete a sign in, as users should be verified at least by one factor of authentication.
+ * Sends a verification code to the user's phone number for MFA (second factor) authentication.
  *
- * Make sure that a SignIn object already exists before you call this method, either by first
- * calling [SignIn.create] or [SignIn.prepareFirstFactor]. The only strategy that does not require a
- * verification to have already been prepared before attempting to complete it is the password
- * strategy.
+ * This is a convenience method that prepares the phone code verification strategy for second factor
+ * authentication. The verification code will be sent via SMS to the phone number associated with
+ * the user's MFA settings.
  *
- * Depending on the strategy that was selected when the verification was prepared, the method
- * parameters will be different.
+ * @param phoneNumberId Optional ID of the phone number to send the code to. If not provided, the
+ *   phone number ID will be automatically retrieved from the supported second factors.
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignIn.sendMfaPhoneCode(
+  phoneNumberId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> {
+  val phoneId =
+    phoneNumberId
+      ?: supportedSecondFactors
+        ?.find { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE }
+        ?.phoneNumberId
+      ?: error("No phone number found for phone_code MFA strategy")
+  val params =
+    SignIn.PrepareSecondFactorParams(
+      strategy = SignIn.PrepareSecondFactorParams.PHONE_CODE,
+      phoneNumberId = phoneId,
+    )
+  return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+}
+
+/**
+ * Sends a verification code to the user's email address for MFA (second factor) authentication.
  *
- * Returns a SignIn object. Check the [SignIn.firstFactorVerification] attribute for the status of
- * the first factor verification process.
+ * This is a convenience method that prepares the email code verification strategy for second factor
+ * authentication. The verification code will be sent to the email address associated with the
+ * user's MFA settings.
+ *
+ * @param emailAddressId Optional ID of the email address to send the code to. If not provided, the
+ *   email address ID will be automatically retrieved from the supported second factors.
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignIn.sendMfaEmailCode(
+  emailAddressId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> {
+  val emailId =
+    emailAddressId
+      ?: supportedSecondFactors
+        ?.find { it.strategy == SignIn.PrepareSecondFactorParams.EMAIL_CODE }
+        ?.emailAddressId
+      ?: error("No email address found for email_code MFA strategy")
+  val params =
+    SignIn.PrepareSecondFactorParams(
+      strategy = SignIn.PrepareSecondFactorParams.EMAIL_CODE,
+      emailAddressId = emailId,
+    )
+  return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+}
+
+/**
+ * Attempts to complete the first factor verification process.
  *
  * @param params The parameters for the first factor verification.
- * @return A [ClerkResult] containing the updated [SignIn] object with the first factor verification
- *   result on success, or a [ClerkErrorResponse] on failure.
- * @see [SignIn.AttemptFirstFactorParams]
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignIn.attemptFirstFactor(
   params: SignIn.AttemptFirstFactorParams
@@ -879,19 +883,11 @@ suspend fun SignIn.attemptFirstFactor(
 }
 
 /**
- * Attempts to complete the second factor verification process. This is an optional step in order to
- * complete a sign in, as users should be verified at least by one factor of authentication.
- *
- * Make sure that a SignIn object already exists before you call this method, either by first
- * calling [SignIn.create] or [SignIn.prepareSecondFactor].
- *
- * Depending on the strategy that was selected when the verification was prepared, the method
- * parameters will be different.
+ * Attempts to complete the second factor verification process.
  *
  * @param params The parameters for the second factor verification.
- * @return A [ClerkResult] containing the updated [SignIn] object with the second factor
- *   verification result on success, or a [ClerkErrorResponse] on failure.
- * @see [SignIn.AttemptSecondFactorParams]
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
  */
 suspend fun SignIn.attemptSecondFactor(
   params: SignIn.AttemptSecondFactorParams
@@ -900,52 +896,7 @@ suspend fun SignIn.attemptSecondFactor(
 }
 
 /**
- * Resets the password for the current sign in attempt.
- *
- * This function is used when a user needs to reset their password during the sign-in process,
- * typically after receiving a password reset verification code.
- *
- * @param params An instance of [SignIn.ResetPasswordParams] containing the new password and session
- *   options.
- * @return A [ClerkResult] containing the updated SignIn object after the password reset on success,
- *   or a [ClerkErrorResponse] on failure.
- * @see SignIn.ResetPasswordParams
- */
-suspend fun SignIn.resetPassword(
-  params: SignIn.ResetPasswordParams
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi.signIn.resetPassword(
-    id = this.id,
-    password = params.password,
-    signOutOfOtherSessions = params.signOutOfOtherSessions,
-  )
-}
-
-/**
- * Resets the password for the current sign in attempt.
- *
- * This function is used when a user needs to reset their password during the sign-in process,
- * typically after receiving a password reset verification code.
- *
- * @param password The new password to set for the user.
- * @param signOutOfOtherSessions Whether to sign out of other sessions after resetting the password.
- *   Defaults to `false`.
- * @return A [ClerkResult] containing the updated [SignIn] object after the password reset on
- *   success, or a [ClerkErrorResponse] on failure.
- * @see [SignIn.ResetPasswordParams]
- */
-suspend fun SignIn.resetPassword(
-  password: String,
-  signOutOfOtherSessions: Boolean = false,
-): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi.signIn.resetPassword(id = this.id, password = password, signOutOfOtherSessions)
-}
-
-/**
  * Retrieves the current state of the SignIn object from the server.
- *
- * This function can be used to refresh the SignIn object and get the latest status and verification
- * information.
  *
  * @param rotatingTokenNonce Optional nonce for rotating token validation.
  * @return A [ClerkResult] containing the refreshed [SignIn] object on success, or a
@@ -956,3 +907,5 @@ suspend fun SignIn.get(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   return ClerkApi.signIn.fetchSignIn(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
+
+// endregion

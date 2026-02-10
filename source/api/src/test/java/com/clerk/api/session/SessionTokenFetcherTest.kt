@@ -50,6 +50,7 @@ class SessionTokenFetcherTest {
 
     // Mock session properties
     every { mockSession.id } returns "session_123"
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
 
     // Mock JWT manager to return our mock JWT
     every { mockJWTManager.createFromString(any()) } returns mockJWT
@@ -338,5 +339,38 @@ class SessionTokenFetcherTest {
     coVerify { mockClerkApiService.tokens("session_2") }
     coVerify { SessionTokensCache.setToken("session_1", mockTokenResource) }
     coVerify { SessionTokensCache.setToken("session_2", mockTokenResource) }
+  }
+
+  @Test
+  fun `getToken returns null for pending session`() = runTest {
+    // Given - a session with PENDING status
+    every { mockSession.status } returns Session.SessionStatus.PENDING
+
+    // When
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    // Then - should return null without making API call
+    assertNull(result)
+    coVerify(exactly = 0) { SessionTokensCache.getToken(any()) }
+    coVerify(exactly = 0) { mockClerkApiService.tokens(any()) }
+  }
+
+  @Test
+  fun `getToken proceeds normally for active session`() = runTest {
+    // Given - a session with ACTIVE status
+    val cacheKey = "session_123"
+
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
+    coEvery { SessionTokensCache.getToken(cacheKey) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.success(mockTokenResource)
+    coEvery { SessionTokensCache.setToken(cacheKey, mockTokenResource) } returns Unit
+
+    // When
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    // Then - should fetch token normally
+    assertEquals(mockTokenResource, result)
+    coVerify { mockClerkApiService.tokens("session_123") }
   }
 }

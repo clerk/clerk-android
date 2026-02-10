@@ -30,7 +30,8 @@ class MainViewModel : ViewModel() {
 
   fun signOut() {
     viewModelScope.launch {
-      Clerk.signOut()
+      Clerk.auth
+        .signOut()
         .onSuccess { _uiState.value = UiState.SignedOut }
         .onFailure {
           // See https://clerk.com/docs/custom-flows/error-handling

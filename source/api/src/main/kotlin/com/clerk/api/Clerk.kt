@@ -5,24 +5,20 @@ import com.clerk.api.Clerk.initialize
 import com.clerk.api.Clerk.isInitialized
 import com.clerk.api.Clerk.sessionFlow
 import com.clerk.api.Clerk.userFlow
+import com.clerk.api.auth.Auth
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.InstanceEnvironmentType
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.environment.enabledFirstFactorAttributes
-import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.isResetFactor
-import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signout.SignOutService
-import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
@@ -90,6 +86,10 @@ object Clerk {
    */
   lateinit var client: Client
     private set
+
+  /** Internal property to check if the client has been initialized. */
+  internal val clientInitialized: Boolean
+    get() = ::client.isInitialized
 
   /**
    * Reactive state indicating whether the Clerk SDK has completed initialization.
@@ -310,21 +310,40 @@ object Clerk {
   private val _session = MutableStateFlow<Session?>(null)
 
   /**
-   * Reactive state for the currently active user session.
+   * Reactive state for the current user session.
    *
    * Observe this StateFlow to react to session changes such as sign-in, sign-out, or session
-   * refresh. Emits `null` when no session is active.
+   * refresh. Emits `null` when no session exists. Note that the session may have any status
+   * (active, pending, etc.) - use [Session.status] to check the current state.
    */
   val sessionFlow: StateFlow<Session?> = _session.asStateFlow()
 
   /**
-   * The currently active user session.
+   * The current user session, regardless of status.
    *
-   * Represents an authenticated session and is guaranteed to be one of the sessions in
-   * [Client.sessions]. Returns `null` when no session is active or if the SDK is not initialized.
+   * Returns the session matching [Client.lastActiveSessionId] from all sessions, including pending
+   * sessions. This allows users with pending sessions to see their profile while completing
+   * required tasks. Returns `null` when no session exists or if the SDK is not initialized.
+   *
+   * Note: Sessions with status [Session.SessionStatus.PENDING] cannot issue session tokens.
+   * Attempting to call [Session.fetchToken] on a pending session will log a warning and return
+   * null.
+   *
+   * @see activeSession for a session only when status is ACTIVE.
    */
   val session: Session?
     get() = sessionFlow.value
+
+  /**
+   * The current session only if its status is ACTIVE.
+   *
+   * Returns `null` if no session exists, the SDK is not initialized, or if the session status is
+   * not ACTIVE (e.g., PENDING).
+   *
+   * @see session for the session regardless of status.
+   */
+  val activeSession: Session?
+    get() = sessionFlow.value?.takeIf { it.status == Session.SessionStatus.ACTIVE }
 
   /**
    * The active locale for the current session.
@@ -358,12 +377,26 @@ object Clerk {
   val userFlow: StateFlow<User?> = _userFlow.asStateFlow()
 
   /**
-   * The current user for the active session.
+   * The current user, regardless of session status.
    *
-   * Returns `null` if no session is active or if the SDK is not initialized.
+   * Returns the user from the current session even if the session status is PENDING. Returns `null`
+   * if no session exists or if the SDK is not initialized.
+   *
+   * @see activeUser for the user only when session status is ACTIVE.
    */
   val user: User?
     get() = userFlow.value
+
+  /**
+   * The current user only if the session status is ACTIVE.
+   *
+   * Returns `null` if no session exists, the SDK is not initialized, or if the session status is
+   * not ACTIVE (e.g., PENDING).
+   *
+   * @see user for the user regardless of session status.
+   */
+  val activeUser: User?
+    get() = activeSession?.user
 
   // endregion
 
@@ -398,45 +431,32 @@ object Clerk {
 
   // endregion
 
-  /**
-   * Sets the active session and optionally the active organization for that session.
-   *
-   * This is useful for applications that support multiple user sessions or organizations. Calling
-   * this method will attempt to update the active session on the Clerk backend.
-   *
-   * @param sessionId The ID of the session to be set as active.
-   * @param organizationId The ID of the organization to be set as active for the current session.
-   *   If `null`, the currently active organization (if any) is removed as active.
-   * @return A [ClerkResult] which is a [ClerkResult.Success] containing the updated [Session] on
-   *   success, or a [ClerkResult.Failure] containing a [ClerkErrorResponse] on failure.
-   */
-  suspend fun setActive(
-    sessionId: String,
-    organizationId: String? = null,
-  ): ClerkResult<Session, ClerkErrorResponse> {
-    return ClerkApi.client.setActive(sessionId, organizationId)
-  }
-
-  // region Sign In/Sign Up
+  // region Auth Namespace
 
   /**
-   * The current sign-in attempt, if one is in progress.
+   * The Auth namespace providing all authentication entry points.
    *
-   * This represents an ongoing authentication flow and provides access to verification steps and
-   * authentication state. Returns `null` when no sign-in is active or if the SDK is not
-   * initialized.
-   */
-  val signIn: SignIn?
-    get() = if (::client.isInitialized) client.signIn else null
-
-  /**
-   * The current sign-up attempt, if one is in progress.
+   * Use this property to access sign-in, sign-up, and session management methods with a DSL-style
+   * API.
    *
-   * This represents an ongoing user registration flow and provides access to verification steps and
-   * registration state. Returns `null` when no sign-up is active or if the SDK is not initialized.
+   * ### Example usage:
+   * ```kotlin
+   * // Sign in with email
+   * Clerk.auth.signIn { email = "user@email.com" }
+   *
+   * // Sign in with password
+   * Clerk.auth.signInWithPassword {
+   *     identifier = "user@email.com"
+   *     password = "secretpassword"
+   * }
+   *
+   * // Sign out
+   * Clerk.auth.signOut()
+   * ```
+   *
+   * @see Auth for all available authentication methods.
    */
-  val signUp: SignUp?
-    get() = if (::client.isInitialized) client.signUp else null
+  val auth: Auth = Auth()
 
   // endregion
 
@@ -493,17 +513,6 @@ object Clerk {
       options = options,
     )
   }
-
-  /**
-   * Signs out the currently authenticated user.
-   *
-   * This operation removes the active session from both the server and local storage, clearing all
-   * cached user data and authentication state. [sessionFlow] and [userFlow] will emit `null`.
-   *
-   * @return A [ClerkResult.Success] with `Unit` on successful sign-out, or a [ClerkResult.Failure]
-   *   containing a [ClerkErrorResponse] if an error occurs.
-   */
-  suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> = SignOutService.signOut()
 
   /**
    * Manually triggers a reinitialization attempt after a failed initialization.
@@ -566,17 +575,26 @@ object Clerk {
    * Internal method to update session and user state flows.
    *
    * Should be called whenever the client state changes that might affect the current session or
-   * user.
+   * user. This method finds the session matching [Client.lastActiveSessionId] regardless of status,
+   * allowing users with pending sessions to maintain a "signed in" experience.
    */
   internal fun updateSessionAndUserState() {
+    // Find session by ID from all sessions (not just active sessions)
     val currentSession =
       if (::client.isInitialized) {
-        client.activeSessions().firstOrNull { it.id == client.lastActiveSessionId }
+        client.sessions.firstOrNull { it.id == client.lastActiveSessionId }
       } else null
-    val currentUser = currentSession?.user
+
+    if (currentSession?.status == Session.SessionStatus.PENDING) {
+      ClerkLog.w(
+        "Session is in pending state. " +
+          "The user has tasks to complete before the session can be activated. " +
+          "Session tokens cannot be issued for pending sessions."
+      )
+    }
 
     _session.value = currentSession
-    _userFlow.value = currentUser
+    _userFlow.value = currentSession?.user
   }
 
   /**
