@@ -72,6 +72,7 @@ internal class AuthStartViewModel : ViewModel() {
           isPhoneNumberFieldActive = isPhoneNumberFieldActive,
           phoneNumber = phoneNumber,
           identifier = identifier,
+          transferable = authMode.transferable,
         )
       AuthMode.SignUp ->
         signUp(
@@ -80,7 +81,13 @@ internal class AuthStartViewModel : ViewModel() {
           phoneNumber = phoneNumber,
         )
       AuthMode.SignInOrUp -> {
-        signIn(isPhoneNumberFieldActive, phoneNumber, identifier, withSignUp = true)
+        signIn(
+          isPhoneNumberFieldActive,
+          phoneNumber,
+          identifier,
+          withSignUp = true,
+          transferable = authMode.transferable,
+        )
       }
     }
   }
@@ -90,13 +97,14 @@ internal class AuthStartViewModel : ViewModel() {
     phoneNumber: String,
     identifier: String,
     withSignUp: Boolean = false,
+    transferable: Boolean = true,
   ) {
     viewModelScope.launch(Dispatchers.IO) {
       _state.value = AuthState.Loading
       val resolvedIdentifier = if (isPhoneNumberFieldActive) phoneNumber else identifier
 
       SignIn.create(SignIn.CreateParams.Strategy.Identifier(identifier = resolvedIdentifier))
-        .onSuccess { signIn -> handleSignInSuccess(signIn) }
+        .onSuccess { signIn -> handleSignInSuccess(signIn, transferable) }
         .onFailure {
           if (withSignUp && it.error is ClerkErrorResponse) {
             val matchingCodes = listOf(FORM_IDENTIFIER_NOT_FOUND, INVITATION_ACCOUNT_NOT_EXISTS)
@@ -141,18 +149,21 @@ internal class AuthStartViewModel : ViewModel() {
    *
    * @param provider The [OAuthProvider] to authenticate with (e.g., Google, Facebook).
    */
-  internal fun authenticateWithSocialProvider(provider: OAuthProvider) {
+  internal fun authenticateWithSocialProvider(
+    provider: OAuthProvider,
+    transferable: Boolean = true,
+  ) {
     _state.value = AuthState.OAuthState.Loading
     if (provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
-      handleGoogleOneTap()
+      handleGoogleOneTap(transferable)
     } else {
-      authenticateWithOAuthProvider(provider)
+      authenticateWithOAuthProvider(provider, transferable)
     }
   }
 
-  private fun handleGoogleOneTap() {
+  private fun handleGoogleOneTap(transferable: Boolean) {
     viewModelScope.launch(Dispatchers.IO) {
-      SignIn.authenticateWithGoogleOneTap()
+      SignIn.authenticateWithGoogleOneTap(transferable)
         .onSuccess {
           withContext(Dispatchers.Main) {
             _state.value =
@@ -178,10 +189,11 @@ internal class AuthStartViewModel : ViewModel() {
     }
   }
 
-  private fun authenticateWithOAuthProvider(provider: OAuthProvider) {
+  private fun authenticateWithOAuthProvider(provider: OAuthProvider, transferable: Boolean) {
     viewModelScope.launch {
       SignIn.authenticateWithRedirect(
-          SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider)
+          SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider),
+          transferable = transferable,
         )
         .onSuccess {
           _state.value =
@@ -214,9 +226,9 @@ internal class AuthStartViewModel : ViewModel() {
     }
   }
 
-  private suspend fun handleSignInSuccess(signIn: SignIn) {
+  private suspend fun handleSignInSuccess(signIn: SignIn, transferable: Boolean = true) {
     when {
-      signIn.requiresEnterpriseSSO() -> handleEnterpriseSSO(signIn)
+      signIn.requiresEnterpriseSSO() -> handleEnterpriseSSO(signIn, transferable)
       else -> {
 
         _state.value =
@@ -225,12 +237,12 @@ internal class AuthStartViewModel : ViewModel() {
     }
   }
 
-  private suspend fun handleEnterpriseSSO(signIn: SignIn) {
+  private suspend fun handleEnterpriseSSO(signIn: SignIn, transferable: Boolean) {
     signIn
       .prepareFirstFactor(SignIn.PrepareFirstFactorParams.EnterpriseSSO())
       .onSuccess {
         it.firstFactorVerification?.externalVerificationRedirectUrl?.let { url ->
-          authenticateWithRedirect(url)
+          authenticateWithRedirect(url, transferable)
         }
       }
       .onFailure { throwable ->
@@ -238,11 +250,15 @@ internal class AuthStartViewModel : ViewModel() {
       }
   }
 
-  private suspend fun authenticateWithRedirect(externalVerificationRedirectUrl: String) {
+  private suspend fun authenticateWithRedirect(
+    externalVerificationRedirectUrl: String,
+    transferable: Boolean,
+  ) {
     SignIn.authenticateWithRedirect(
         SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
           redirectUrl = externalVerificationRedirectUrl
-        )
+        ),
+        transferable = transferable,
       )
       .onSuccess {
         withContext(Dispatchers.Main) {

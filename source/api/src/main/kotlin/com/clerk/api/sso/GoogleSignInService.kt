@@ -21,11 +21,13 @@ internal class GoogleSignInService(
   val googleCredentialManager: GoogleCredentialManager = GoogleCredentialManagerImpl()
 ) {
 
-  suspend fun signInWithGoogle(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+  suspend fun signInWithGoogle(
+    transferable: Boolean = true
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
 
     return try {
       val result = googleCredentialManager.getSignInWithGoogleCredential()
-      handleSignInResult(result.credential)
+      handleSignInResult(result.credential, transferable)
     } catch (e: GetCredentialException) {
       ClerkLog.e("Error retrieving Google ID token: ${e.message}")
       ClerkResult.unknownFailure(e)
@@ -33,7 +35,8 @@ internal class GoogleSignInService(
   }
 
   suspend fun handleSignInResult(
-    credential: Credential
+    credential: Credential,
+    transferable: Boolean = true,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     return if (
       credential is CustomCredential &&
@@ -49,12 +52,12 @@ internal class GoogleSignInService(
       when (authResult) {
         is ClerkResult.Success -> authResult.signInToOAuthResult()
         is ClerkResult.Failure -> {
-          // Check if we need to create a new account instead
-          if (authResult.error?.errors?.first()?.code == "external_account_not_found") {
-            // Account doesn't exist, so create it via sign up
+          if (
+            authResult.error?.errors?.firstOrNull()?.code == "external_account_not_found" &&
+              transferable
+          ) {
             SignUp.create(SignUp.CreateParams.GoogleOneTap(token = idToken)).signUpToOAuthResult()
           } else {
-            // Some other error occurred
             authResult.signInToOAuthResult()
           }
         }

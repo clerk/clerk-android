@@ -48,6 +48,13 @@ internal object SSOService {
     null
 
   /**
+   * Whether the current pending authentication flow allows transferring to a sign-up. When false, a
+   * redirect callback that would normally trigger a sign-up transfer instead completes with an
+   * error.
+   */
+  private var currentTransferable: Boolean = true
+
+  /**
    * Initiates an OAuth authentication flow with redirect to an external provider.
    *
    * This method handles redirect-based authentication flows by:
@@ -64,6 +71,8 @@ internal object SSOService {
    * @param identifier Optional identifier for the authentication request
    * @param emailAddress Optional email address for the authentication request
    * @param legalAccepted Optional flag indicating if legal terms have been accepted
+   * @param transferable Whether this authentication flow allows transferring to a sign-up if the
+   *   user doesn't have an account. Defaults to `true`.
    * @return A [ClerkResult] containing the [OAuthResult] on success, or [ClerkErrorResponse] on
    *   failure
    */
@@ -73,6 +82,7 @@ internal object SSOService {
     identifier: String? = null,
     emailAddress: String? = null,
     legalAccepted: Boolean? = null,
+    transferable: Boolean = true,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     // Clear any existing pending auth to prevent conflicts
     currentPendingAuth?.complete(
@@ -110,6 +120,7 @@ internal object SSOService {
           CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>()
 
         currentPendingAuth = completableDeferred
+        currentTransferable = transferable
 
         val intent =
           Intent(Clerk.applicationContext?.get(), SSOReceiverActivity::class.java).apply {
@@ -153,11 +164,16 @@ internal object SSOService {
 
       val nonce = uri.getQueryParameter("rotating_token_nonce")
 
-      // It's a sign up, so call for a transfer
-      if (nonce == null) {
+      if (nonce != null) {
+        handleSignIn(nonce)
+      } else if (currentTransferable) {
         handleSignUpTransfer()
       } else {
-        handleSignIn(nonce)
+        ClerkLog.d("Sign-up transfer blocked: transferable is false")
+        currentPendingAuth?.complete(
+          ClerkResult.unknownFailure(Exception("external_account_not_found"))
+        )
+        clearCurrentAuth()
       }
     } catch (e: Exception) {
       ClerkLog.e("Error completing authentication with redirect: ${e.message}")
@@ -238,6 +254,7 @@ internal object SSOService {
    */
   private fun clearCurrentAuth() {
     currentPendingAuth = null
+    currentTransferable = true
   }
 
   /**

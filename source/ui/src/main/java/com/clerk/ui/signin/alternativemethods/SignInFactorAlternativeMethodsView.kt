@@ -21,6 +21,7 @@ import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.PreviewAuthStateProvider
+import com.clerk.ui.auth.transferable
 import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
@@ -113,7 +114,10 @@ private fun SignInFactorAlternativeMethodsViewImpl(
     subtitle = stringResource(R.string.facing_issues_you_can_use_any_of_these_methods_to_sign_in),
   ) {
     if (providers.isNotEmpty()) {
-      ClerkSocialRow(providers = providers, onClick = { viewModel.signInWithProvider(it) })
+      ClerkSocialRow(
+        providers = providers,
+        onClick = { viewModel.signInWithProvider(it, authState.mode.transferable) },
+      )
       Spacers.Vertical.Spacer24()
       TextDivider(text = stringResource(R.string.or))
       Spacers.Vertical.Spacer24()

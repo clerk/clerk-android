@@ -209,7 +209,9 @@ internal fun AuthStartViewImpl(
               ClerkSocialButton(
                 provider = lastUsedSocialProvider,
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { authStartViewModel.authenticateWithSocialProvider(it) },
+                onClick = {
+                  authStartViewModel.authenticateWithSocialProvider(it, authState.mode.transferable)
+                },
                 forceIconOnly = false,
               )
             }
@@ -218,7 +220,9 @@ internal fun AuthStartViewImpl(
           if (socialProvidersMinusLastUsed.isNotEmpty()) {
             ClerkSocialRow(
               providers = socialProvidersMinusLastUsed.toImmutableList(),
-              onClick = { authStartViewModel.authenticateWithSocialProvider(it) },
+              onClick = {
+                authStartViewModel.authenticateWithSocialProvider(it, authState.mode.transferable)
+              },
             )
           }
         }

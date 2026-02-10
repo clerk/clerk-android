@@ -709,11 +709,15 @@ data class SignIn(
     /**
      * Authenticates the user with a token generated from Google identity services.
      *
+     * @param transferable Whether this authentication flow allows transferring to a sign-up if the
+     *   user doesn't have an account. Defaults to `true`.
      * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
      *   failure.
      */
-    suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-      return GoogleSignInService().signInWithGoogle()
+    suspend fun authenticateWithGoogleOneTap(
+      transferable: Boolean = true
+    ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      return GoogleSignInService().signInWithGoogle(transferable)
     }
 
     /**
@@ -725,6 +729,8 @@ data class SignIn(
      * complete authentication.
      *
      * @param params The parameters for the redirect-based authentication.
+     * @param transferable Whether this authentication flow allows transferring to a sign-up if the
+     *   user doesn't have an account. Defaults to `true`.
      * @return A [ClerkResult] containing the result of the authentication flow. The [OAuthResult]
      *   could contain either a sign-in or sign-up result, depending on whether an account transfer
      *   took place (i.e. if the user didn't have an account and a sign up was created instead).
@@ -743,7 +749,8 @@ data class SignIn(
      * ```
      */
     suspend fun authenticateWithRedirect(
-      params: AuthenticateWithRedirectParams
+      params: AuthenticateWithRedirectParams,
+      transferable: Boolean = true,
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
       return SSOService.authenticateWithRedirect(
         strategy = params.toMap()["provider"]!!,
@@ -751,6 +758,7 @@ data class SignIn(
         identifier = params.identifier,
         emailAddress = params.emailAddress,
         legalAccepted = params.legalAccepted,
+        transferable = transferable,
       )
     }
 
