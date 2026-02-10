@@ -3,6 +3,9 @@ package com.clerk.api.network.middleware.incoming
 import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.session.Session
+import com.clerk.api.signin.SignIn
+import com.clerk.api.signup.SignUp
 import java.io.IOException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -46,6 +49,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
               // Extract and set the client
               val client = json.decodeFromJsonElement<Client>(clientJson)
               ClerkLog.d("Client synced: ${client.id}")
+              logPendingSessionWarningIfNeeded(client)
               Clerk.updateClient(client)
             }
           }
@@ -64,5 +68,42 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     }
 
     return response
+  }
+
+  /**
+   * Logs a warning message when sign-in or sign-up is complete but the created session is pending.
+   *
+   * A pending session indicates that additional steps or verifications may be required before the
+   * session becomes fully active. This can happen when the user needs to complete additional tasks
+   * such as accepting legal terms or completing device verification.
+   *
+   * @param client The client object containing sign-in, sign-up, and session information.
+   */
+  private fun logPendingSessionWarningIfNeeded(client: Client) {
+    // Check if sign-in is complete but session is pending
+    val signIn = client.signIn
+    if (signIn?.status == SignIn.Status.COMPLETE && signIn.createdSessionId != null) {
+      val createdSession = client.sessions.find { it.id == signIn.createdSessionId }
+      if (createdSession?.status == Session.SessionStatus.PENDING) {
+        ClerkLog.w(
+          "Sign-in completed but session is pending. " +
+            "The session may require additional verification or tasks before it becomes active. " +
+            "Check the session's 'tasks' property for required actions."
+        )
+      }
+    }
+
+    // Check if sign-up is complete but session is pending
+    val signUp = client.signUp
+    if (signUp?.status == SignUp.Status.COMPLETE && signUp.createdSessionId != null) {
+      val createdSession = client.sessions.find { it.id == signUp.createdSessionId }
+      if (createdSession?.status == Session.SessionStatus.PENDING) {
+        ClerkLog.w(
+          "Sign-up completed but session is pending. " +
+            "The session may require additional verification or tasks before it becomes active. " +
+            "Check the session's 'tasks' property for required actions."
+        )
+      }
+    }
   }
 }
