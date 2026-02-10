@@ -3,6 +3,9 @@ package com.clerk.api.network.middleware.incoming
 import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.session.Session
+import com.clerk.api.signin.SignIn
+import com.clerk.api.signup.SignUp
 import java.io.IOException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -46,6 +49,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
               // Extract and set the client
               val client = json.decodeFromJsonElement<Client>(clientJson)
               ClerkLog.d("Client synced: ${client.id}")
+              logPendingSessionWarningIfNeeded(client)
               Clerk.updateClient(client)
             }
           }
@@ -64,5 +68,43 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     }
 
     return response
+  }
+
+  /**
+   * Logs a warning if a sign-in or sign-up is complete but the created session is pending.
+   *
+   * This can happen when additional verification or approval is required before the session becomes
+   * active.
+   *
+   * @param client The client containing the sign-in/sign-up and session data.
+   */
+  private fun logPendingSessionWarningIfNeeded(client: Client) {
+    if (isSignInCompleteWithPendingSession(client)) {
+      ClerkLog.w(
+        "Sign-in completed but the session is pending. " +
+          "The user may need to complete additional verification before gaining access."
+      )
+    }
+
+    if (isSignUpCompleteWithPendingSession(client)) {
+      ClerkLog.w(
+        "Sign-up completed but the session is pending. " +
+          "The user may need to complete additional verification before gaining access."
+      )
+    }
+  }
+
+  private fun isSignInCompleteWithPendingSession(client: Client): Boolean {
+    val signIn = client.signIn ?: return false
+    val sessionId = signIn.createdSessionId
+    val session = sessionId?.let { id -> client.sessions.find { it.id == id } }
+    return signIn.status == SignIn.Status.COMPLETE && session?.status == Session.SessionStatus.PENDING
+  }
+
+  private fun isSignUpCompleteWithPendingSession(client: Client): Boolean {
+    val signUp = client.signUp ?: return false
+    val sessionId = signUp.createdSessionId
+    val session = sessionId?.let { id -> client.sessions.find { it.id == id } }
+    return signUp.status == SignUp.Status.COMPLETE && session?.status == Session.SessionStatus.PENDING
   }
 }
