@@ -53,7 +53,8 @@ internal class GoogleSignInService(
         is ClerkResult.Success -> authResult.signInToOAuthResult()
         is ClerkResult.Failure -> {
           if (
-            authResult.error?.errors?.first()?.code == "external_account_not_found" && transferable
+            authResult.error?.errors?.firstOrNull()?.code == "external_account_not_found" &&
+              transferable
           ) {
             SignUp.create(SignUp.CreateParams.GoogleOneTap(token = idToken)).signUpToOAuthResult()
           } else {
