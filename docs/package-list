@@ -1,11 +1,27 @@
 $dokka.format:html-v1
 $dokka.linkExtension:html
-
+$dokka.location:com.clerk.api.emailaddress//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for EmailAddress.PrepareVerificationParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.emailaddress/[release]to-map.html
+$dokka.location:com.clerk.api.signin//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for SignIn.AttemptFirstFactorParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.signin/[release]to-map.html
+$dokka.location:com.clerk.api.signin//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for SignIn.AttemptSecondFactorParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.signin/[release]to-map.html
+$dokka.location:com.clerk.api.signin//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for SignIn.AuthenticateWithRedirectParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.signin/[release]to-map.html
+$dokka.location:com.clerk.api.signin//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for SignIn.CreateParams.Strategy#/PointingToDeclaration/Clerk Android API/com.clerk.api.signin/[release]to-map.html
+$dokka.location:com.clerk.api.signin//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for SignIn.PrepareFirstFactorParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.signin/[release]to-map.html
+$dokka.location:com.clerk.api.signin//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for SignIn.PrepareSecondFactorParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.signin/[release]to-map.html
+$dokka.location:com.clerk.api.signup//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for SignUp.AuthenticateWithRedirectParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.signup/[release]to-map.html
+$dokka.location:com.clerk.api.signup//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for SignUp.CreateParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.signup/[release]to-map.html
+$dokka.location:com.clerk.api.signup//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for SignUp.SignUpUpdateParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.signup/[release]to-map.html
+$dokka.location:com.clerk.api.user//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for User.CreateExternalAccountParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.user/[release]to-map.html
+$dokka.location:com.clerk.api.user//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for User.UpdateParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.user/[release]to-map.html
+$dokka.location:com.clerk.api.user//toMap/<ERROR CLASS> ERROR CLASS: Symbol not found for User.UpdatePasswordParams#/PointingToDeclaration/Clerk Android API/com.clerk.api.user/[release]to-map.html
 module:Clerk Android API
 com.clerk.api
+com.clerk.api.auth
+com.clerk.api.auth.builders
+com.clerk.api.auth.types
 com.clerk.api.emailaddress
+com.clerk.api.extensions
 com.clerk.api.externalaccount
-com.clerk.api.image
+com.clerk.api.log
 com.clerk.api.network
 com.clerk.api.network.api
 com.clerk.api.network.middleware.incoming
@@ -29,4 +45,29 @@ com.clerk.api.session
 com.clerk.api.signin
 com.clerk.api.signup
 com.clerk.api.sso
+com.clerk.api.ui
 com.clerk.api.user
+module:Clerk Android UI
+com.clerk.ui.auth
+com.clerk.ui.core.avatar
+com.clerk.ui.core.badge
+com.clerk.ui.core.button.social
+com.clerk.ui.core.button.standard
+com.clerk.ui.core.input
+com.clerk.ui.signin
+com.clerk.ui.signin.alternativemethods
+com.clerk.ui.signin.backupcode
+com.clerk.ui.signin.clienttrust
+com.clerk.ui.signin.code
+com.clerk.ui.signin.help
+com.clerk.ui.signin.passkey
+com.clerk.ui.signin.password.forgot
+com.clerk.ui.signin.password.reset
+com.clerk.ui.signin.password.set
+com.clerk.ui.signup.code
+com.clerk.ui.signup.collectfield
+com.clerk.ui.signup.completeprofile
+com.clerk.ui.userbutton
+com.clerk.ui.userprofile
+com.clerk.ui.userprofile.detail
+com.clerk.ui.userprofile.verify

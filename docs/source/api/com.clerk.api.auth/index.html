@@ -1,0 +1,420 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>com.clerk.api.auth</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../styles/multimodule.css" rel="Stylesheet"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    Clerk
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":source:api/main">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":source:api/main" data-filter=":source:api/main">
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Clerk
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="package" id="content" pageids="Clerk Android API::com.clerk.api.auth////PointingToDeclaration//686701518">
+  <div class="breadcrumbs"><a href="../index.html">Clerk Android API</a><span class="delimiter">/</span><span class="current">com.clerk.api.auth</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="FUNCTION,EXTENSION_FUNCTION">Functions</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="1345696412%2FClasslikes%2F686701518" anchor-label="Auth" id="1345696412%2FClasslikes%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-auth/index.html"><span><span>Auth</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1345696412%2FClasslikes%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-auth/index.html">Auth</a></div><div class="brief "><p class="paragraph">Main Auth class providing all authentication entry points.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1307353236%2FClasslikes%2F686701518" anchor-label="AuthEvent" id="-1307353236%2FClasslikes%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-auth-event/index.html"><span>Auth</span><wbr><span><span>Event</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1307353236%2FClasslikes%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-auth-event/index.html">AuthEvent</a></div><div class="brief "><p class="paragraph">Represents authentication events emitted by the Auth class.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="EXTENSION_FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="901587274%2FFunctions%2F686701518" anchor-label="signIn" id="901587274%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-in.html"><span>sign</span><wbr><span><span>In</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="901587274%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-in.html"><span class="token function">signIn</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">block<span class="token operator">: </span><a href="../com.clerk.api.auth.builders/-sign-in-identifier-builder/index.html">SignInIdentifierBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.signin/-sign-in/index.html">SignIn</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Starts sign-in with an identifier (email, phone, or username).</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1499863106%2FFunctions%2F686701518" anchor-label="signInWithAccountPortal" id="1499863106%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-in-with-account-portal.html"><span>sign</span><wbr><span>In</span><wbr><span>With</span><wbr><span>Account</span><wbr><span><span>Portal</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1499863106%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-in-with-account-portal.html"><span class="token function">signInWithAccountPortal</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.sso/-o-auth-result/index.html">OAuthResult</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs in via account portal.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-135751355%2FFunctions%2F686701518" anchor-label="signInWithEnterpriseSso" id="-135751355%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-in-with-enterprise-sso.html"><span>sign</span><wbr><span>In</span><wbr><span>With</span><wbr><span>Enterprise</span><wbr><span><span>Sso</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-135751355%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-in-with-enterprise-sso.html"><span class="token function">signInWithEnterpriseSso</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">block<span class="token operator">: </span><a href="../com.clerk.api.auth.builders/-enterprise-sso-builder/index.html">EnterpriseSsoBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.sso/-o-auth-result/index.html">OAuthResult</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs in with Enterprise SSO.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="566624781%2FFunctions%2F686701518" anchor-label="signInWithIdToken" id="566624781%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-in-with-id-token.html"><span>sign</span><wbr><span>In</span><wbr><span>With</span><wbr><span>Id</span><wbr><span><span>Token</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="566624781%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-in-with-id-token.html"><span class="token function">signInWithIdToken</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">block<span class="token operator">: </span><a href="../com.clerk.api.auth.builders/-sign-in-with-id-token-builder/index.html">SignInWithIdTokenBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.sso/-o-auth-result/index.html">OAuthResult</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs in with an ID token from an identity provider.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1534051315%2FFunctions%2F686701518" anchor-label="signInWithOAuth" id="1534051315%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-in-with-o-auth.html"><span>sign</span><wbr><span>In</span><wbr><span>With</span><wbr><span><span>OAuth</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1534051315%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-in-with-o-auth.html"><span class="token function">signInWithOAuth</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">provider<span class="token operator">: </span><a href="../com.clerk.api.sso/-o-auth-provider/index.html">OAuthProvider</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.sso/-o-auth-result/index.html">OAuthResult</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs in with OAuth provider.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-648808019%2FFunctions%2F686701518" anchor-label="signInWithOtp" id="-648808019%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-in-with-otp.html"><span>sign</span><wbr><span>In</span><wbr><span>With</span><wbr><span><span>Otp</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-648808019%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-in-with-otp.html"><span class="token function">signInWithOtp</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">block<span class="token operator">: </span><a href="../com.clerk.api.auth.builders/-sign-in-with-otp-builder/index.html">SignInWithOtpBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.signin/-sign-in/index.html">SignIn</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs in with OTP - automatically sends the verification code.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2057367945%2FFunctions%2F686701518" anchor-label="signInWithPasskey" id="-2057367945%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-in-with-passkey.html"><span>sign</span><wbr><span>In</span><wbr><span>With</span><wbr><span><span>Passkey</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2057367945%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-in-with-passkey.html"><span class="token function">signInWithPasskey</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.signin/-sign-in/index.html">SignIn</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs in with passkey.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1516023183%2FFunctions%2F686701518" anchor-label="signInWithPassword" id="-1516023183%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-in-with-password.html"><span>sign</span><wbr><span>In</span><wbr><span>With</span><wbr><span><span>Password</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1516023183%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-in-with-password.html"><span class="token function">signInWithPassword</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">block<span class="token operator">: </span><a href="../com.clerk.api.auth.builders/-sign-in-with-password-builder/index.html">SignInWithPasswordBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.signin/-sign-in/index.html">SignIn</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs in with password authentication.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="386624699%2FFunctions%2F686701518" anchor-label="signInWithTicket" id="386624699%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-in-with-ticket.html"><span>sign</span><wbr><span>In</span><wbr><span>With</span><wbr><span><span>Ticket</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="386624699%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-in-with-ticket.html"><span class="token function">signInWithTicket</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">ticket<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.signin/-sign-in/index.html">SignIn</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs in with a ticket.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="279272199%2FFunctions%2F686701518" anchor-label="signUp" id="279272199%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-up.html"><span>sign</span><wbr><span><span>Up</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="279272199%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-up.html"><span class="token function">signUp</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">block<span class="token operator">: </span><a href="../com.clerk.api.auth.builders/-sign-up-builder/index.html">SignUpBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.signup/-sign-up/index.html">SignUp</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Creates a new sign-up with the provided details.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2060907916%2FFunctions%2F686701518" anchor-label="signUpWithAccountPortal" id="2060907916%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-up-with-account-portal.html"><span>sign</span><wbr><span>Up</span><wbr><span>With</span><wbr><span>Account</span><wbr><span><span>Portal</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2060907916%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-up-with-account-portal.html"><span class="token function">signUpWithAccountPortal</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.sso/-o-auth-result/index.html">OAuthResult</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs up via account portal.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1300488945%2FFunctions%2F686701518" anchor-label="signUpWithEnterpriseSso" id="-1300488945%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-up-with-enterprise-sso.html"><span>sign</span><wbr><span>Up</span><wbr><span>With</span><wbr><span>Enterprise</span><wbr><span><span>Sso</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1300488945%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-up-with-enterprise-sso.html"><span class="token function">signUpWithEnterpriseSso</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">block<span class="token operator">: </span><a href="../com.clerk.api.auth.builders/-enterprise-sso-builder/index.html">EnterpriseSsoBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.sso/-o-auth-result/index.html">OAuthResult</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs up with Enterprise SSO.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1475451229%2FFunctions%2F686701518" anchor-label="signUpWithIdToken" id="1475451229%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-up-with-id-token.html"><span>sign</span><wbr><span>Up</span><wbr><span>With</span><wbr><span>Id</span><wbr><span><span>Token</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1475451229%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-up-with-id-token.html"><span class="token function">signUpWithIdToken</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">token<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">provider<span class="token operator">: </span><a href="../com.clerk.api.auth.types/-id-token-provider/index.html">IdTokenProvider</a><span class="token punctuation">, </span></span><span class="parameter ">block<span class="token operator">: </span><a href="../com.clerk.api.auth.builders/-sign-up-with-id-token-builder/index.html">SignUpWithIdTokenBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token operator"> = </span>{}</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.signup/-sign-up/index.html">SignUp</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs up with an ID token from an identity provider.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-859204759%2FFunctions%2F686701518" anchor-label="signUpWithOAuth" id="-859204759%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-up-with-o-auth.html"><span>sign</span><wbr><span>Up</span><wbr><span>With</span><wbr><span><span>OAuth</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-859204759%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-up-with-o-auth.html"><span class="token function">signUpWithOAuth</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">provider<span class="token operator">: </span><a href="../com.clerk.api.sso/-o-auth-provider/index.html">OAuthProvider</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.sso/-o-auth-result/index.html">OAuthResult</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs up with OAuth provider.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1882172037%2FFunctions%2F686701518" anchor-label="signUpWithTicket" id="1882172037%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sign-up-with-ticket.html"><span>sign</span><wbr><span>Up</span><wbr><span>With</span><wbr><span><span>Ticket</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1882172037%2FFunctions%2F686701518"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main" data-active="" data-toggle=":source:api/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="-auth/index.html">Auth</a><span class="token punctuation">.</span><a href="sign-up-with-ticket.html"><span class="token function">signUpWithTicket</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">ticket<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../com.clerk.api.signup/-sign-up/index.html">SignUp</a><span class="token punctuation">, </span><a href="../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Signs up with a ticket.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
