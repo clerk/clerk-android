@@ -54,7 +54,7 @@ jobs:
         cd -
     - uses: actions/upload-artifact@v6
       with:
-        name: "main"
+        name: docs-zip
         path: Docs.zip
   publish:
     needs: [docs]
@@ -68,20 +68,14 @@ jobs:
       with:
         ref: docs
         path: docs
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v7
       with:
+        name: docs-zip
         path: artifacts
     - name: Unzip and prepare docs
       run: |
-        mkdir unzipped-docs
-        unzipped_path="unzipped-docs/main"
-        mkdir -p "$unzipped_path"
-        unzip "artifacts/main/Docs.zip" -d "$unzipped_path"
-        echo "Extracted contents:"
-        ls -la "$unzipped_path"
-        echo "Copying to docs directory..."
-        mkdir -p docs/docs
-        rsync -a "$unzipped_path/" docs/docs/
+        ls -la artifacts/
+        unzip "artifacts/Docs.zip" -d docs/docs
     - name: Update git config
       working-directory: docs
       run: |
