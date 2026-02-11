@@ -24,6 +24,9 @@ The SDK enables user management with sign-up, sign-in, MFA, passkeys, OAuth/SSO,
 
 # Assemble without tests
 ./gradlew assemble
+
+# Verify Maven publishing metadata locally
+./gradlew :source:api:publishToMavenLocal
 ```
 
 ### Testing
@@ -57,7 +60,7 @@ The SDK enables user management with sign-up, sign-in, MFA, passkeys, OAuth/SSO,
 # Check code formatting
 ./gradlew spotlessCheck
 
-# Run detekt static analysis
+# Run detekt static analysis (config: config/detekt/detekt.yml)
 ./gradlew detekt
 
 # Run Android lint
@@ -112,6 +115,7 @@ clerk-android/
 │   ├── custom-flows/     # Advanced custom auth flows
 │   ├── linear-clone/     # OAuth/Passkey/Email flows with Compose navigation
 │   └── prebuilt-ui/      # Prebuilt UI component examples
+├── config/               # Repo-wide lint and static-analysis settings
 └── workbench/            # Internal development tools
 ```
 
@@ -235,13 +239,23 @@ AuthStartView → SignUp.create(fields)
 **Instrumentation Tests:**
 - `source/*/src/androidTest/` - Android-specific integration tests
 
+**Coverage & Regression:**
+- Target >=80% coverage on touched packages
+- Add regression tests whenever altering auth flows, attestation, or persistence logic
+
 ## Development Practices
 
 ### Code Style
 - **Kotlin code style:** Official Kotlin style guide
 - **Formatting:** ktfmt Google Style (enforced via Spotless)
-- **Linting:** Detekt with all rules enabled
+- **Linting:** Detekt with all rules enabled — avoid wildcard imports, prefer explicit visibility
+- **Naming:** Package names mirror feature scopes (e.g., `com.clerk.api.sso`, `com.clerk.ui.signup`). Class names should describe intent (`SessionTokenFetcher`, `AuthStartViewModel`).
 - Must pass `./gradlew spotlessCheck detekt` before committing
+
+### Commit & Pull Request Guidelines
+- Follow Conventional Commits style (`chore(deps): …`, `fix: …`). Scope optional but encouraged (`feature(scope): summary`). Write bodies describing rationale and mention affected modules.
+- Pull requests should state the problem, link GitHub issues, and attach emulator screenshots or Paparazzi diffs for UI tweaks. Mention migrations or new Gradle knobs explicitly.
+- Before requesting review, run `spotlessCheck`, `detekt`, `lint`, relevant `test` tasks, and at least one sample install so reviewers can focus on logic instead of build failures.
 
 ### Adding New API Endpoints
 
