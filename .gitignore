@@ -23,8 +23,8 @@ local.properties
 /source/api/build/
 /workbench/build/
 /source/ui/build/
-/.kotlin/sessions/
-/.kotlin/metadata/
+/.kotlin/
 /source/telemetry/build/
 /samples/prebuilt-ui/build/
 /docs/
+.keys.json
