@@ -75,7 +75,7 @@ jobs:
     - name: Unzip and prepare docs
       run: |
         ls -la artifacts/
-        unzip "artifacts/Docs.zip" -d docs/docs
+        unzip -o "artifacts/Docs.zip" -d docs/docs
     - name: Update git config
       working-directory: docs
       run: |
