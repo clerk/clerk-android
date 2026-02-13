@@ -13,6 +13,7 @@ import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.middleware.incoming.DeviceAssertionInterceptor
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
+import com.clerk.api.network.middleware.incoming.ForceUpdateStatusMiddleware
 import com.clerk.api.network.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.api.network.middleware.outgoing.VersioningUserAgentMiddleware
 import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
@@ -104,6 +105,7 @@ internal object ClerkApi {
           addInterceptor(VersioningUserAgentMiddleware())
           addInterceptor(DeviceTokenSavingMiddleware())
           addInterceptor(UrlAppendingMiddleware())
+          addInterceptor(ForceUpdateStatusMiddleware())
           addInterceptor(DeviceAssertionInterceptor())
 
           if (Clerk.debugMode) {

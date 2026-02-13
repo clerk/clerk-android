@@ -8,6 +8,10 @@ import com.clerk.api.Clerk.userFlow
 import com.clerk.api.auth.Auth
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
+import com.clerk.api.forceupdate.AppInfoProvider
+import com.clerk.api.forceupdate.ForceUpdateDialogController
+import com.clerk.api.forceupdate.ForceUpdateStatus
+import com.clerk.api.forceupdate.ForceUpdateStatusResolver
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.client.Client
@@ -27,6 +31,7 @@ import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Main entrypoint class for the Clerk SDK.
@@ -398,6 +403,16 @@ object Clerk {
   val activeUser: User?
     get() = activeSession?.user
 
+  /** Internal mutable state flow for force-update viability state. */
+  private val _forceUpdateStatus = MutableStateFlow(ForceUpdateStatus.SupportedDefault)
+
+  /**
+   * Reactive state describing whether the current app version is still supported.
+   *
+   * Apps can observe this flow to implement custom force-update handling.
+   */
+  val forceUpdateStatus: StateFlow<ForceUpdateStatus> = _forceUpdateStatus.asStateFlow()
+
   // endregion
 
   // region Authentication Features & Settings
@@ -507,6 +522,7 @@ object Clerk {
     this.applicationId = options?.deviceAttestationOptions?.applicationId
     this.customTheme = theme
     this.telemetryEnabled = options?.telemetryEnabled ?: true
+    ForceUpdateDialogController.start(context.applicationContext)
     configurationManager.configure(
       context = context,
       publishableKey = publishableKey,
@@ -552,6 +568,7 @@ object Clerk {
    */
   internal fun updateEnvironment(environment: Environment) {
     this.environment = environment
+    refreshForceUpdateStatus()
   }
 
   /**
@@ -605,6 +622,25 @@ object Clerk {
   internal fun clearSessionAndUserState() {
     _session.value = null
     _userFlow.value = null
+  }
+
+  internal fun refreshForceUpdateStatus() {
+    _forceUpdateStatus.value =
+      ForceUpdateStatusResolver.fromEnvironment(
+        environment = if (::environment.isInitialized) environment else null,
+        packageName = AppInfoProvider.packageName(),
+        currentVersion = AppInfoProvider.appVersion(),
+      )
+  }
+
+  internal fun updateForceUpdateStatusFromUnsupportedErrorMeta(meta: JsonObject?) {
+    val status =
+      ForceUpdateStatusResolver.fromUnsupportedVersionMeta(
+        meta = meta,
+        packageName = AppInfoProvider.packageName(),
+      ) ?: return
+
+    _forceUpdateStatus.value = status
   }
 
   // endregion

@@ -13,6 +13,7 @@ internal data class Environment(
   @SerialName("display_config") val displayConfig: DisplayConfig,
   @SerialName("user_settings") val userSettings: UserSettings,
   @SerialName("fraud_settings") val fraudSettings: FraudSettings,
+  @SerialName("force_update") val forceUpdate: ForceUpdate? = null,
 ) {
   val passkeyIsEnabled: Boolean
     get() = userSettings.attributes.any { (key, value) -> key == "passkey" && value.enabled }

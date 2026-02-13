@@ -23,6 +23,8 @@ data class Error(
   @SerialName("long_message") val longMessage: String? = null,
   /** A string code that represents the error, such as `username_exists_code`. */
   val code: String? = null,
+  /** Additional information about this specific error entry. */
+  val meta: JsonObject? = null,
   /** Additional information about the error. */
 )
 
