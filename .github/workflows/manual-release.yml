@@ -35,16 +35,22 @@ jobs:
         with:
           fetch-depth: 0 # Fetch all history for tags
 
-      - name: Get versions from libs.versions.toml
+      - name: Get versions from gradle.properties
         id: get_version
         run: |
-          CLERK_API_VERSION=$(grep '^clerk-api = ' gradle/libs.versions.toml | sed 's/clerk-api = "\(.*\)"/\1/')
-          CLERK_TELEMETRY_VERSION=$(grep '^clerk-telemetry = ' gradle/libs.versions.toml | sed 's/clerk-telemetry = "\(.*\)"/\1/')
-          CLERK_UI_VERSION=$(grep '^clerk-ui = ' gradle/libs.versions.toml | sed 's/clerk-ui = "\(.*\)"/\1/')
+          CLERK_API_VERSION=$(awk -F= '/^CLERK_API_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
+          CLERK_TELEMETRY_VERSION=$(awk -F= '/^CLERK_TELEMETRY_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
+          CLERK_UI_VERSION=$(awk -F= '/^CLERK_UI_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
+
+          if [ -z "$CLERK_API_VERSION" ] || [ -z "$CLERK_TELEMETRY_VERSION" ] || [ -z "$CLERK_UI_VERSION" ]; then
+            echo "Failed to read Clerk release versions from gradle.properties"
+            exit 1
+          fi
 
           # Use clerk-api version for the tag
           TAG_NAME="v$CLERK_API_VERSION"
 
+          echo "version=$CLERK_API_VERSION" >> $GITHUB_OUTPUT
           echo "clerk_api_version=$CLERK_API_VERSION" >> $GITHUB_OUTPUT
           echo "clerk_telemetry_version=$CLERK_TELEMETRY_VERSION" >> $GITHUB_OUTPUT
           echo "clerk_ui_version=$CLERK_UI_VERSION" >> $GITHUB_OUTPUT
