@@ -23,7 +23,6 @@ class ForceUpdateStatusResolverTest {
       )
 
     assertFalse(status.isSupported)
-    assertEquals(ForceUpdateStatus.Reason.BELOW_MINIMUM, status.reason)
     assertEquals("2.0.0", status.minimumVersion)
   }
 
@@ -34,10 +33,9 @@ class ForceUpdateStatusResolverTest {
         environment = environmentWithPolicy("2.0.0"),
         packageName = "com.example.app",
         currentVersion = "2.0.0-beta",
-      )
+    )
 
     assertTrue(status.isSupported)
-    assertEquals(ForceUpdateStatus.Reason.INVALID_CURRENT_VERSION, status.reason)
   }
 
   @Test
@@ -47,10 +45,9 @@ class ForceUpdateStatusResolverTest {
         environment = environmentWithPolicy("2.0.0"),
         packageName = "com.unknown.app",
         currentVersion = "1.0.0",
-      )
+    )
 
     assertTrue(status.isSupported)
-    assertEquals(ForceUpdateStatus.Reason.NO_POLICY, status.reason)
   }
 
   @Test
@@ -69,7 +66,6 @@ class ForceUpdateStatusResolverTest {
       )
 
     assertFalse(status?.isSupported ?: true)
-    assertEquals(ForceUpdateStatus.Reason.SERVER_REJECTED, status?.reason)
     assertEquals("2.0.0", status?.minimumVersion)
   }
 

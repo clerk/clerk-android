@@ -1,7 +1,6 @@
 package com.clerk.api.network.middleware.incoming
 
 import com.clerk.api.Clerk
-import com.clerk.api.forceupdate.ForceUpdateStatus
 import java.util.concurrent.TimeUnit
 import okhttp3.Call
 import okhttp3.Connection
@@ -56,7 +55,6 @@ class ForceUpdateStatusMiddlewareTest {
 
     assertEquals(426, output.code)
     assertFalse(Clerk.forceUpdateStatus.value.isSupported)
-    assertEquals(ForceUpdateStatus.Reason.SERVER_REJECTED, Clerk.forceUpdateStatus.value.reason)
     assertEquals("2.0.0", Clerk.forceUpdateStatus.value.minimumVersion)
   }
 }

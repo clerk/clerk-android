@@ -23,10 +23,8 @@ internal object ForceUpdateStatusResolver {
     if (policy == null) {
       return ForceUpdateStatus(
         isSupported = true,
-        currentVersion = normalizedCurrentVersion,
         minimumVersion = null,
         updateUrl = null,
-        reason = ForceUpdateStatus.Reason.NO_POLICY,
       )
     }
 
@@ -36,40 +34,32 @@ internal object ForceUpdateStatusResolver {
     if (minimumVersion == null) {
       return ForceUpdateStatus(
         isSupported = true,
-        currentVersion = normalizedCurrentVersion,
         minimumVersion = null,
         updateUrl = updateUrl,
-        reason = ForceUpdateStatus.Reason.NO_POLICY,
       )
     }
 
     if (normalizedCurrentVersion == null) {
       return ForceUpdateStatus(
         isSupported = true,
-        currentVersion = null,
         minimumVersion = minimumVersion,
         updateUrl = updateUrl,
-        reason = ForceUpdateStatus.Reason.MISSING_CURRENT_VERSION,
       )
     }
 
     if (!AppVersionComparator.isValid(normalizedCurrentVersion)) {
       return ForceUpdateStatus(
         isSupported = true,
-        currentVersion = normalizedCurrentVersion,
         minimumVersion = minimumVersion,
         updateUrl = updateUrl,
-        reason = ForceUpdateStatus.Reason.INVALID_CURRENT_VERSION,
       )
     }
 
     if (!AppVersionComparator.isValid(minimumVersion)) {
       return ForceUpdateStatus(
         isSupported = true,
-        currentVersion = normalizedCurrentVersion,
         minimumVersion = minimumVersion,
         updateUrl = updateUrl,
-        reason = ForceUpdateStatus.Reason.INVALID_MINIMUM_VERSION,
       )
     }
 
@@ -81,15 +71,8 @@ internal object ForceUpdateStatusResolver {
 
     return ForceUpdateStatus(
       isSupported = isSupported,
-      currentVersion = normalizedCurrentVersion,
       minimumVersion = minimumVersion,
       updateUrl = updateUrl,
-      reason =
-        if (isSupported) {
-          ForceUpdateStatus.Reason.SUPPORTED
-        } else {
-          ForceUpdateStatus.Reason.BELOW_MINIMUM
-        },
     )
   }
 
@@ -116,10 +99,8 @@ internal object ForceUpdateStatusResolver {
 
     return ForceUpdateStatus(
       isSupported = false,
-      currentVersion = meta["current_version"]?.jsonPrimitive?.contentOrNull,
       minimumVersion = meta["minimum_version"]?.jsonPrimitive?.contentOrNull,
       updateUrl = meta["update_url"]?.jsonPrimitive?.contentOrNull,
-      reason = ForceUpdateStatus.Reason.SERVER_REJECTED,
     )
   }
 }
