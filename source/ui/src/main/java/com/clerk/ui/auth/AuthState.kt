@@ -10,7 +10,8 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
 import com.clerk.api.session.Session
-import com.clerk.api.session.requiresForcedMfa
+import com.clerk.api.session.SessionTaskKey
+import com.clerk.api.session.parsedKey
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signin.startingSecondFactor
@@ -94,12 +95,12 @@ internal class AuthState(
   }
 
   internal fun setToStepForStatus(signIn: SignIn, onAuthComplete: () -> Unit) {
-    if (routeForcedMfaIfRequired(signIn)) {
-      return
-    }
-
     when (signIn.status) {
-      SignIn.Status.COMPLETE -> onAuthComplete()
+      SignIn.Status.COMPLETE ->
+        handlePostAuthCompletion(
+          taskKey = signIn.pendingSessionTaskKey(),
+          onAuthComplete = onAuthComplete,
+        )
       SignIn.Status.NEEDS_IDENTIFIER -> resetToRoot()
       SignIn.Status.NEEDS_FIRST_FACTOR -> routeToFirstFactorOrHelp(signIn)
       SignIn.Status.NEEDS_SECOND_FACTOR -> routeToSecondFactorOrHelp(signIn)
@@ -109,12 +110,19 @@ internal class AuthState(
     }
   }
 
-  private fun routeForcedMfaIfRequired(signIn: SignIn): Boolean {
-    if (!signIn.requiresForcedMfaStep()) {
-      return false
+  private fun handlePostAuthCompletion(
+    taskKey: SessionTaskKey?,
+    onAuthComplete: () -> Unit,
+  ) {
+    when (taskKey) {
+      SessionTaskKey.MFA_REQUIRED -> routeToSessionTaskMfa()
+      SessionTaskKey.UNKNOWN -> backStack.add(AuthDestination.SignInGetHelp)
+      null -> onAuthComplete()
     }
-    routeToSecondFactorOrHelp(signIn)
-    return true
+  }
+
+  private fun routeToSessionTaskMfa() {
+    backStack.add(AuthDestination.SessionTaskMfa)
   }
 
   private fun routeToFirstFactorOrHelp(signIn: SignIn) {
@@ -138,7 +146,10 @@ internal class AuthState(
       SignUp.Status.ABANDONED -> resetToRoot()
       SignUp.Status.MISSING_REQUIREMENTS -> handleMissingRequirements(signUp)
       SignUp.Status.COMPLETE -> {
-        onAuthComplete()
+        handlePostAuthCompletion(
+          taskKey = signUp.pendingSessionTaskKey(),
+          onAuthComplete = onAuthComplete,
+        )
         return
       }
       SignUp.Status.UNKNOWN -> return
@@ -190,10 +201,10 @@ internal class AuthState(
   }
 }
 
-internal fun SignIn.requiresForcedMfaStep(
+internal fun SignIn.pendingSessionTaskKey(
   session: Session? = this.correspondingSession()
-): Boolean {
-  return status == SignIn.Status.COMPLETE && session?.requiresForcedMfa == true
+): SessionTaskKey? {
+  return if (status == SignIn.Status.COMPLETE) session.pendingSessionTaskKey() else null
 }
 
 internal fun SignIn.correspondingSession(): Session? {
@@ -201,6 +212,29 @@ internal fun SignIn.correspondingSession(): Session? {
   val sessionFromId =
     createdSessionId?.let { sessionId -> sessions.firstOrNull { it.id == sessionId } }
   return sessionFromId ?: Clerk.session
+}
+
+internal fun SignUp.pendingSessionTaskKey(
+  session: Session? = this.correspondingSession()
+): SessionTaskKey? {
+  return if (status == SignUp.Status.COMPLETE) session.pendingSessionTaskKey() else null
+}
+
+internal fun SignUp.correspondingSession(): Session? {
+  val sessions = runCatching { Clerk.client.sessions }.getOrDefault(emptyList())
+  val sessionFromId =
+    createdSessionId?.let { sessionId -> sessions.firstOrNull { it.id == sessionId } }
+  return sessionFromId ?: Clerk.session
+}
+
+private fun Session?.pendingSessionTaskKey(): SessionTaskKey? {
+  if (this?.status != Session.SessionStatus.PENDING) {
+    return null
+  }
+  return when {
+    tasks.any { it.parsedKey == SessionTaskKey.MFA_REQUIRED } -> SessionTaskKey.MFA_REQUIRED
+    else -> SessionTaskKey.UNKNOWN
+  }
 }
 
 @Composable

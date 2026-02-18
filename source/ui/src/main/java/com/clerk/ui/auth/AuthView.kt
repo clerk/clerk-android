@@ -27,6 +27,7 @@ import com.clerk.ui.signin.clienttrust.SignInClientTrustView
 import com.clerk.ui.signin.help.SignInGetHelpView
 import com.clerk.ui.signin.password.forgot.SignInFactorOneForgotPasswordView
 import com.clerk.ui.signin.password.reset.SignInSetNewPasswordView
+import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
 import com.clerk.ui.signup.code.SignUpCodeField
 import com.clerk.ui.signup.code.SignUpCodeView
 import com.clerk.ui.signup.collectfield.CollectField
@@ -80,6 +81,9 @@ fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
             }
             entry<AuthDestination.SignInFactorTwo> { key ->
               SignInFactorTwoView(factor = key.factor, onAuthComplete = { /* AuthView will unmount naturally */ })
+            }
+            entry<AuthDestination.SessionTaskMfa> {
+              SessionTaskMfaView(onAuthComplete = { /* AuthView will unmount naturally */ })
             }
             entry<AuthDestination.SignInFactorTwoUseAnotherMethod> { key ->
               SignInFactorAlternativeMethodsView(
@@ -144,6 +148,8 @@ internal object AuthDestination {
   @Serializable data class SignInFactorOneUseAnotherMethod(val currentFactor: Factor) : NavKey
 
   @Serializable data class SignInFactorTwo(val factor: Factor) : NavKey
+
+  @Serializable data object SessionTaskMfa : NavKey
 
   @Serializable data class SignInFactorTwoUseAnotherMethod(val currentFactor: Factor) : NavKey
 
