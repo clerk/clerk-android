@@ -9,17 +9,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.session.requiresForcedMfa
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalTelemetryCollector
+import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
 import com.clerk.ui.signin.SignInFactorOneView
 import com.clerk.ui.signin.SignInFactorTwoView
 import com.clerk.ui.signin.alternativemethods.SignInFactorAlternativeMethodsView
@@ -27,7 +31,6 @@ import com.clerk.ui.signin.clienttrust.SignInClientTrustView
 import com.clerk.ui.signin.help.SignInGetHelpView
 import com.clerk.ui.signin.password.forgot.SignInFactorOneForgotPasswordView
 import com.clerk.ui.signin.password.reset.SignInSetNewPasswordView
-import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
 import com.clerk.ui.signup.code.SignUpCodeField
 import com.clerk.ui.signup.code.SignUpCodeView
 import com.clerk.ui.signup.collectfield.CollectField
@@ -42,7 +45,14 @@ fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
     AuthStateProvider(backStack = backStack) {
       val authState = LocalAuthState.current
+      val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
       TrackScreenLoaded(authState.mode.name)
+      LaunchedEffect(session?.requiresForcedMfa, backStack.lastOrNull()) {
+        val top = backStack.lastOrNull()
+        if (shouldRouteToSessionTaskMfa(session?.requiresForcedMfa == true, top)) {
+          backStack.add(AuthDestination.SessionTaskMfa)
+        }
+      }
       NavDisplay(
         modifier = modifier,
         backStack = backStack,
@@ -71,7 +81,10 @@ fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
               AuthStartView(onAuthComplete = { /* AuthView will unmount naturally */ })
             }
             entry<AuthDestination.SignInFactorOne> { key ->
-              SignInFactorOneView(factor = key.factor, onAuthComplete = { /* AuthView will unmount naturally */ })
+              SignInFactorOneView(
+                factor = key.factor,
+                onAuthComplete = { /* AuthView will unmount naturally */ },
+              )
             }
             entry<AuthDestination.SignInFactorOneUseAnotherMethod> { key ->
               SignInFactorAlternativeMethodsView(
@@ -80,7 +93,10 @@ fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
               )
             }
             entry<AuthDestination.SignInFactorTwo> { key ->
-              SignInFactorTwoView(factor = key.factor, onAuthComplete = { /* AuthView will unmount naturally */ })
+              SignInFactorTwoView(
+                factor = key.factor,
+                onAuthComplete = { /* AuthView will unmount naturally */ },
+              )
             }
             entry<AuthDestination.SessionTaskMfa> {
               SessionTaskMfaView(onAuthComplete = { /* AuthView will unmount naturally */ })
@@ -103,13 +119,22 @@ fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
             }
             entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
             entry<AuthDestination.SignInClientTrust> { key ->
-              SignInClientTrustView(factor = key.factor, onAuthComplete = { /* AuthView will unmount naturally */ })
+              SignInClientTrustView(
+                factor = key.factor,
+                onAuthComplete = { /* AuthView will unmount naturally */ },
+              )
             }
             entry<AuthDestination.SignUpCollectField> { key ->
-              SignUpCollectFieldView(field = key.field, onAuthComplete = { /* AuthView will unmount naturally */ })
+              SignUpCollectFieldView(
+                field = key.field,
+                onAuthComplete = { /* AuthView will unmount naturally */ },
+              )
             }
             entry<AuthDestination.SignUpCode> { key ->
-              SignUpCodeView(field = key.field, onAuthComplete = { /* AuthView will unmount naturally */ })
+              SignUpCodeView(
+                field = key.field,
+                onAuthComplete = { /* AuthView will unmount naturally */ },
+              )
             }
             entry<AuthDestination.SignUpCompleteProfile> {
               SignUpCompleteProfileView(onAuthComplete = { /* AuthView will unmount naturally */ })
@@ -118,6 +143,10 @@ fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
       )
     }
   }
+}
+
+internal fun shouldRouteToSessionTaskMfa(requiresForcedMfa: Boolean, top: NavKey?): Boolean {
+  return requiresForcedMfa && top != AuthDestination.SessionTaskMfa
 }
 
 @Composable
