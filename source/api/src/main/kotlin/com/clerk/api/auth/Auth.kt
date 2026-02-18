@@ -302,21 +302,6 @@ class Auth internal constructor() {
   }
 
   /**
-   * Signs in via account portal.
-   *
-   * Opens the Clerk-hosted account portal for authentication.
-   *
-   * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
-   *   failure.
-   */
-  suspend fun signInWithAccountPortal(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    // Account portal uses OAuth-like redirect flow
-    return SSOService.authenticateWithRedirect(
-      redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL
-    )
-  }
-
-  /**
    * Signs in with Enterprise SSO.
    *
    * @param block Builder block to configure the Enterprise SSO options.
@@ -461,20 +446,6 @@ class Auth internal constructor() {
     }
 
     return ClerkApi.signUp.createSignUp(params)
-  }
-
-  /**
-   * Signs up via account portal.
-   *
-   * Opens the Clerk-hosted account portal for sign-up.
-   *
-   * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
-   *   failure.
-   */
-  suspend fun signUpWithAccountPortal(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    return SSOService.authenticateWithRedirect(
-      redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL
-    )
   }
 
   /**
