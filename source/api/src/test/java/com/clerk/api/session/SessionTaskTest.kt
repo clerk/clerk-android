@@ -11,6 +11,8 @@ class SessionTaskTest {
   fun `parsedKey maps mfa required keys`() {
     assertEquals(SessionTaskKey.MFA_REQUIRED, SessionTask("mfa_required").parsedKey)
     assertEquals(SessionTaskKey.MFA_REQUIRED, SessionTask("mfa-required").parsedKey)
+    assertEquals(SessionTaskKey.MFA_REQUIRED, SessionTask("setup_mfa").parsedKey)
+    assertEquals(SessionTaskKey.MFA_REQUIRED, SessionTask("setup-mfa").parsedKey)
   }
 
   @Test

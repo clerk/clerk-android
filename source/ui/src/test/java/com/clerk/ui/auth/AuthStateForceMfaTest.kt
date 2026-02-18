@@ -15,7 +15,7 @@ class AuthStateForceMfaTest {
   fun `pendingSessionTaskKey returns MFA_REQUIRED when sign in completes with pending mfa task`() {
     val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.COMPLETE)
     val session =
-      session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("mfa_required")))
+      session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("setup-mfa")))
 
     assertEquals(SessionTaskKey.MFA_REQUIRED, signIn.pendingSessionTaskKey(session))
   }
@@ -54,7 +54,7 @@ class AuthStateForceMfaTest {
   fun `pendingSessionTaskKey returns MFA_REQUIRED when sign up completes with pending mfa task`() {
     val signUp = signUp(status = SignUp.Status.COMPLETE)
     val session =
-      session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("mfa_required")))
+      session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("setup_mfa")))
 
     assertEquals(SessionTaskKey.MFA_REQUIRED, signUp.pendingSessionTaskKey(session))
   }

@@ -83,6 +83,8 @@ enum class SessionTaskKey {
   companion object {
     fun fromRaw(rawValue: String): SessionTaskKey =
       when (rawValue.lowercase()) {
+        "setup_mfa",
+        "setup-mfa",
         "mfa_required",
         "mfa-required" -> MFA_REQUIRED
         else -> UNKNOWN
