@@ -231,7 +231,10 @@ private fun Session?.pendingSessionTaskKey(): SessionTaskKey? {
   if (this?.status != Session.SessionStatus.PENDING) {
     return null
   }
-  return tasks.firstOrNull()?.parsedKey ?: SessionTaskKey.UNKNOWN
+  return when {
+    tasks.any { it.parsedKey == SessionTaskKey.MFA_REQUIRED } -> SessionTaskKey.MFA_REQUIRED
+    else -> SessionTaskKey.UNKNOWN
+  }
 }
 
 @Composable
