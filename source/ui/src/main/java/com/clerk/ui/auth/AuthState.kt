@@ -8,6 +8,9 @@ import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
+import com.clerk.api.Clerk
+import com.clerk.api.session.Session
+import com.clerk.api.session.requiresForcedMfa
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signin.startingSecondFactor
@@ -91,30 +94,43 @@ internal class AuthState(
   }
 
   internal fun setToStepForStatus(signIn: SignIn, onAuthComplete: () -> Unit) {
-    when (signIn.status) {
-      SignIn.Status.COMPLETE -> {
-        onAuthComplete()
-        return
-      }
-      SignIn.Status.NEEDS_IDENTIFIER -> resetToRoot()
-      SignIn.Status.NEEDS_FIRST_FACTOR -> {
-        signIn.startingFirstFactor?.let {
-          backStack.add(AuthDestination.SignInFactorOne(factor = it))
-        } ?: backStack.add(AuthDestination.SignInGetHelp)
-      }
-      SignIn.Status.NEEDS_SECOND_FACTOR -> {
-        signIn.startingSecondFactor?.let {
-          backStack.add(AuthDestination.SignInFactorTwo(factor = it))
-        } ?: backStack.add(AuthDestination.SignInGetHelp)
-      }
-      SignIn.Status.NEEDS_NEW_PASSWORD -> backStack.add(AuthDestination.SignInSetNewPassword)
-      SignIn.Status.NEEDS_CLIENT_TRUST -> {
-        signIn.startingSecondFactor?.let {
-          backStack.add(AuthDestination.SignInClientTrust(factor = it))
-        } ?: backStack.add(AuthDestination.SignInGetHelp)
-      }
-      SignIn.Status.UNKNOWN -> return
+    if (routeForcedMfaIfRequired(signIn)) {
+      return
     }
+
+    when (signIn.status) {
+      SignIn.Status.COMPLETE -> onAuthComplete()
+      SignIn.Status.NEEDS_IDENTIFIER -> resetToRoot()
+      SignIn.Status.NEEDS_FIRST_FACTOR -> routeToFirstFactorOrHelp(signIn)
+      SignIn.Status.NEEDS_SECOND_FACTOR -> routeToSecondFactorOrHelp(signIn)
+      SignIn.Status.NEEDS_NEW_PASSWORD -> backStack.add(AuthDestination.SignInSetNewPassword)
+      SignIn.Status.NEEDS_CLIENT_TRUST -> routeToClientTrustOrHelp(signIn)
+      SignIn.Status.UNKNOWN -> Unit
+    }
+  }
+
+  private fun routeForcedMfaIfRequired(signIn: SignIn): Boolean {
+    if (!signIn.requiresForcedMfaStep()) {
+      return false
+    }
+    routeToSecondFactorOrHelp(signIn)
+    return true
+  }
+
+  private fun routeToFirstFactorOrHelp(signIn: SignIn) {
+    signIn.startingFirstFactor?.let { backStack.add(AuthDestination.SignInFactorOne(factor = it)) }
+      ?: backStack.add(AuthDestination.SignInGetHelp)
+  }
+
+  private fun routeToSecondFactorOrHelp(signIn: SignIn) {
+    signIn.startingSecondFactor?.let { backStack.add(AuthDestination.SignInFactorTwo(factor = it)) }
+      ?: backStack.add(AuthDestination.SignInGetHelp)
+  }
+
+  private fun routeToClientTrustOrHelp(signIn: SignIn) {
+    signIn.startingSecondFactor?.let {
+      backStack.add(AuthDestination.SignInClientTrust(factor = it))
+    } ?: backStack.add(AuthDestination.SignInGetHelp)
   }
 
   internal fun setToStepForStatus(signUp: SignUp, onAuthComplete: () -> Unit) {
@@ -172,6 +188,19 @@ internal class AuthState(
       }
     }
   }
+}
+
+internal fun SignIn.requiresForcedMfaStep(
+  session: Session? = this.correspondingSession()
+): Boolean {
+  return status == SignIn.Status.COMPLETE && session?.requiresForcedMfa == true
+}
+
+internal fun SignIn.correspondingSession(): Session? {
+  val sessions = runCatching { Clerk.client.sessions }.getOrDefault(emptyList())
+  val sessionFromId =
+    createdSessionId?.let { sessionId -> sessions.firstOrNull { it.id == sessionId } }
+  return sessionFromId ?: Clerk.session
 }
 
 @Composable
