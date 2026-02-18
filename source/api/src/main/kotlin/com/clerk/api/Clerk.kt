@@ -579,6 +579,8 @@ object Clerk {
    * allowing users with pending sessions to maintain a "signed in" experience.
    */
   internal fun updateSessionAndUserState() {
+    val previousSession = _session.value
+
     // Find session by ID from all sessions (not just active sessions)
     val currentSession =
       if (::client.isInitialized) {
@@ -595,6 +597,20 @@ object Clerk {
 
     _session.value = currentSession
     _userFlow.value = currentSession?.user
+
+    if (previousSession != currentSession) {
+      auth.send(com.clerk.api.auth.AuthEvent.SessionChanged(currentSession))
+
+      if (previousSession == null) {
+        currentSession?.user?.let {
+          auth.send(com.clerk.api.auth.AuthEvent.SignedIn(currentSession, it))
+        }
+      }
+
+      if (previousSession != null && currentSession == null) {
+        auth.send(com.clerk.api.auth.AuthEvent.SignedOut)
+      }
+    }
   }
 
   /**
@@ -603,8 +619,14 @@ object Clerk {
    * Should be called when signing out to immediately clear local session state.
    */
   internal fun clearSessionAndUserState() {
+    val previousSession = _session.value
     _session.value = null
     _userFlow.value = null
+
+    if (previousSession != null) {
+      auth.send(com.clerk.api.auth.AuthEvent.SessionChanged(null))
+      auth.send(com.clerk.api.auth.AuthEvent.SignedOut)
+    }
   }
 
   // endregion

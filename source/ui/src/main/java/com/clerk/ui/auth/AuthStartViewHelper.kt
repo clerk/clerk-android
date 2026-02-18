@@ -63,7 +63,10 @@ internal class AuthStartViewHelper {
       return socialProviders.any {
         // For testing, assume all test social providers are authenticatable
         if (testSocialProviders != null) true
-        else (it as? UserSettings.SocialConfig)?.let { config -> config.enabled && config.authenticatable } == true
+        else
+          (it as? UserSettings.SocialConfig)?.let { config ->
+            config.enabled && config.authenticatable
+          } == true
       } && showIdentifierField
     }
 
@@ -95,9 +98,11 @@ internal class AuthStartViewHelper {
     get() = testApplicationName ?: Clerk.applicationName
 
   fun shouldStartOnPhoneNumber(authStartPhoneNumber: String, authStartIdentifier: String): Boolean {
+    val identifierFieldIsEnabled = emailIsEnabled || usernameIsEnabled
+
     return when {
-      phoneNumberIsEnabled -> true
-      !(emailIsEnabled || usernameIsEnabled) -> true
+      !phoneNumberIsEnabled -> false
+      !identifierFieldIsEnabled -> true
       authStartPhoneNumber.isNotEmpty() && authStartIdentifier.isEmpty() -> true
       else -> false
     }
