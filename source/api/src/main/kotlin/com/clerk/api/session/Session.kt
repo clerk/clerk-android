@@ -57,8 +57,6 @@ data class Session(
   @SerialName("factor_verification_age") val factorVerificationAge: List<Int>? = null,
   @SerialName("created_at") val createdAt: Long,
   @SerialName("updated_at") val updatedAt: Long,
-
-  // New: tasks
   val tasks: List<SessionTask> = emptyList(),
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
@@ -77,6 +75,29 @@ data class Session(
 }
 
 @Serializable data class SessionTask(val key: String)
+
+enum class SessionTaskKey {
+  MFA_REQUIRED,
+  UNKNOWN;
+
+  companion object {
+    fun fromRaw(rawValue: String): SessionTaskKey =
+      when (rawValue.lowercase()) {
+        "mfa_required",
+        "mfa-required" -> MFA_REQUIRED
+        else -> UNKNOWN
+      }
+  }
+}
+
+val SessionTask.parsedKey: SessionTaskKey
+  get() = SessionTaskKey.fromRaw(key)
+
+val Session.hasMfaRequiredTask: Boolean
+  get() = tasks.any { it.parsedKey == SessionTaskKey.MFA_REQUIRED }
+
+val Session.requiresForcedMfa: Boolean
+  get() = status == Session.SessionStatus.PENDING && hasMfaRequiredTask
 
 /**
  * A `SessionActivity` object will provide information about the user's location, device and
