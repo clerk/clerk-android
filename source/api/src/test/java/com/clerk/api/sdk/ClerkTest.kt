@@ -2,6 +2,7 @@ package com.clerk.api.sdk
 
 import android.content.Context
 import com.clerk.api.Clerk
+import com.clerk.api.auth.AuthEvent
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
@@ -13,12 +14,17 @@ import com.clerk.api.user.User
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -472,6 +478,54 @@ class ClerkTest {
     assertNull(Clerk.user)
     assertFalse(Clerk.isSignedIn)
   }
+
+  @Test
+  fun `updateClient emits SessionChanged and SignedIn when session appears`() = runTest {
+    val activeSessionId = "active_session_id"
+    every { mockClient.lastActiveSessionId } returns activeSessionId
+    every { mockClient.sessions } returns listOf(mockSession)
+    every { mockSession.id } returns activeSessionId
+    every { mockSession.user } returns mockUser
+    every { mockSession.status } returns Session.SessionStatus.ACTIVE
+
+    val events = mutableListOf<AuthEvent>()
+    val eventJob =
+      launch(start = CoroutineStart.UNDISPATCHED) { Clerk.auth.events.take(2).toList(events) }
+
+    Clerk.updateClient(mockClient)
+
+    withTimeout(1_000) { eventJob.join() }
+
+    assertTrue(events[0] is AuthEvent.SessionChanged)
+    assertEquals(mockSession, (events[0] as AuthEvent.SessionChanged).session)
+    assertTrue(events[1] is AuthEvent.SignedIn)
+    assertEquals(mockSession, (events[1] as AuthEvent.SignedIn).session)
+    assertEquals(mockUser, (events[1] as AuthEvent.SignedIn).user)
+  }
+
+  @Test
+  fun `clearSessionAndUserState emits SessionChanged and SignedOut when session is cleared`() =
+    runTest {
+      val activeSessionId = "active_session_id"
+      every { mockClient.lastActiveSessionId } returns activeSessionId
+      every { mockClient.sessions } returns listOf(mockSession)
+      every { mockSession.id } returns activeSessionId
+      every { mockSession.user } returns mockUser
+      every { mockSession.status } returns Session.SessionStatus.ACTIVE
+      initializeClerkWithClient(mockClient)
+
+      val events = mutableListOf<AuthEvent>()
+      val eventJob =
+        launch(start = CoroutineStart.UNDISPATCHED) { Clerk.auth.events.take(2).toList(events) }
+
+      Clerk.clearSessionAndUserState()
+
+      withTimeout(1_000) { eventJob.join() }
+
+      assertTrue(events[0] is AuthEvent.SessionChanged)
+      assertNull((events[0] as AuthEvent.SessionChanged).session)
+      assertTrue(events[1] is AuthEvent.SignedOut)
+    }
 
   @Test
   fun `session property returns sessionFlow value`() = runTest {

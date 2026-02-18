@@ -1,4 +1,5 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -50,6 +51,12 @@ allprojects {
   configure<DetektExtension> {
     toolVersion = "1.23.8"
     allRules = true
+    buildUponDefaultConfig = true
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$rootDir/config/detekt/detekt-baseline.xml")
+  }
+  tasks.withType<Detekt>().configureEach {
+    jvmTarget = projectLibs.findVersion("jvmTarget").get().requiredVersion
   }
 
   val detektProjectBaseline by
