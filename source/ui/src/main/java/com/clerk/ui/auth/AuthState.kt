@@ -99,7 +99,6 @@ internal class AuthState(
       SignIn.Status.COMPLETE ->
         handlePostAuthCompletion(
           taskKey = signIn.pendingSessionTaskKey(),
-          signIn = signIn,
           onAuthComplete = onAuthComplete,
         )
       SignIn.Status.NEEDS_IDENTIFIER -> resetToRoot()
@@ -113,22 +112,17 @@ internal class AuthState(
 
   private fun handlePostAuthCompletion(
     taskKey: SessionTaskKey?,
-    signIn: SignIn? = null,
     onAuthComplete: () -> Unit,
   ) {
     when (taskKey) {
-      SessionTaskKey.MFA_REQUIRED -> routeToSessionTaskMfaOrHelp(signIn)
+      SessionTaskKey.MFA_REQUIRED -> routeToSessionTaskMfa()
       SessionTaskKey.UNKNOWN -> backStack.add(AuthDestination.SignInGetHelp)
       null -> onAuthComplete()
     }
   }
 
-  private fun routeToSessionTaskMfaOrHelp(signIn: SignIn?) {
-    val taskSignIn = signIn ?: Clerk.auth.currentSignIn
-    taskSignIn
-      ?.startingSecondFactor
-      ?.let { backStack.add(AuthDestination.SessionTaskMfa(factor = it)) }
-      ?: backStack.add(AuthDestination.SignInGetHelp)
+  private fun routeToSessionTaskMfa() {
+    backStack.add(AuthDestination.SessionTaskMfa)
   }
 
   private fun routeToFirstFactorOrHelp(signIn: SignIn) {

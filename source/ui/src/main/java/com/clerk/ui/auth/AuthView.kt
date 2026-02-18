@@ -82,8 +82,8 @@ fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
             entry<AuthDestination.SignInFactorTwo> { key ->
               SignInFactorTwoView(factor = key.factor, onAuthComplete = { /* AuthView will unmount naturally */ })
             }
-            entry<AuthDestination.SessionTaskMfa> { key ->
-              SessionTaskMfaView(factor = key.factor, onAuthComplete = { /* AuthView will unmount naturally */ })
+            entry<AuthDestination.SessionTaskMfa> {
+              SessionTaskMfaView(onAuthComplete = { /* AuthView will unmount naturally */ })
             }
             entry<AuthDestination.SignInFactorTwoUseAnotherMethod> { key ->
               SignInFactorAlternativeMethodsView(
@@ -149,7 +149,7 @@ internal object AuthDestination {
 
   @Serializable data class SignInFactorTwo(val factor: Factor) : NavKey
 
-  @Serializable data class SessionTaskMfa(val factor: Factor) : NavKey
+  @Serializable data object SessionTaskMfa : NavKey
 
   @Serializable data class SignInFactorTwoUseAnotherMethod(val currentFactor: Factor) : NavKey
 
