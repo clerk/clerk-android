@@ -28,6 +28,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.clerk.api.Clerk
+import com.clerk.api.session.requiresForcedMfa
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
@@ -45,15 +46,22 @@ import com.clerk.ui.userprofile.UserProfileView
  *
  * @param clerkTheme Optional theme customization for the user profile UI.
  * @param treatPendingAsSignedOut When `true`, the button will only appear when the session status
- *   is ACTIVE. When `false` (default), the button will appear even if the session is PENDING.
+ *   is ACTIVE. When `false` (default), the button may appear in pending sessions except when the
+ *   session requires forced MFA setup.
  */
 @SuppressLint("LocalContextGetResourceValueCall", "ComposeModifierMissing")
 @Composable
 fun UserButton(clerkTheme: ClerkTheme? = null, treatPendingAsSignedOut: Boolean = false) {
   ClerkThemeOverrideProvider(clerkTheme) {
     TelemetryProvider {
+      val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
       val sessionUser by Clerk.userFlow.collectAsStateWithLifecycle()
-      val user = if (treatPendingAsSignedOut) Clerk.activeUser else sessionUser
+      val user =
+        when {
+          session?.requiresForcedMfa == true -> null
+          treatPendingAsSignedOut -> Clerk.activeUser
+          else -> sessionUser
+        }
       val telemetry = LocalTelemetryCollector.current
       var showProfile by rememberSaveable { mutableStateOf(false) }
 

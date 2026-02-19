@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
+import com.clerk.api.session.requiresForcedMfa
 import com.clerk.prebuiltui.ui.theme.ClerkTheme
 import com.clerk.ui.auth.AuthView
 import com.clerk.ui.userbutton.UserButton
@@ -21,11 +22,12 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
+      val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
       val user by Clerk.userFlow.collectAsStateWithLifecycle()
       ClerkTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
           Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            if (user != null) {
+            if (user != null && session?.requiresForcedMfa != true) {
               UserButton()
             } else {
               AuthView()
