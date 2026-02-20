@@ -32,12 +32,14 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeViewModel = viewMod
         onCreatePasskey = viewModel::createPasskey,
       )
 
+      val failureString = stringResource(R.string.passkey_creation_failed)
+      val successString = stringResource(R.string.passkey_created_successfully)
       (state as HomeViewModel.UiState.SignedIn).passkeyResult?.let { result ->
         LaunchedEffect(key1 = result) {
           val message =
             when (result) {
-              PasskeyResult.Failure -> context.getString(R.string.passkey_creation_failed)
-              PasskeyResult.Success -> context.getString(R.string.passkey_created_successfully)
+              PasskeyResult.Failure -> failureString
+              PasskeyResult.Success -> successString
             }
           Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
