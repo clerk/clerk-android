@@ -79,6 +79,40 @@ if [[ ! -z ${kotlin_files_list} ]]; then
     fi
 fi
 
+# Run Slack Compose lint checks for staged Kotlin files
+if [[ ! -z ${kotlin_files_list} && -x "${REPO_ROOT_DIR}/gradlew" ]]; then
+    lint_report_path="${REPO_ROOT_DIR}/source/ui/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt"
+    "${REPO_ROOT_DIR}/gradlew" :source:ui:lintDebug &> /dev/null
+    lint_exit_code=$?
+
+    if [[ ! -f "${lint_report_path}" ]]; then
+        echo -e "${RED}Compose lint checks failed: lint report was not generated.${NC}" >&2
+        echo -e "Running lint command: './gradlew :source:ui:lintDebug'" >&2
+        "${REPO_ROOT_DIR}/gradlew" :source:ui:lintDebug >&2
+        exit 1
+    fi
+
+    slack_findings=""
+    while IFS= read -r file; do
+        [[ -z "${file}" ]] && continue
+        absolute_file_path="${REPO_ROOT_DIR}/${file}"
+        matches_for_file="$(grep -F "${absolute_file_path}:" "${lint_report_path}" | grep -F "from com.slack.lint.compose:compose-lints" || true)"
+        if [[ -n "${matches_for_file}" ]]; then
+            slack_findings+="${matches_for_file}"$'\n'
+        fi
+    done <<< "${kotlin_files_list}"
+
+    if [[ -n "${slack_findings}" ]]; then
+        echo -e "${RED}Slack Compose lint checks failed for staged files:${NC}" >&2
+        echo "${slack_findings}" >&2
+        exit 1
+    fi
+
+    if [[ ${lint_exit_code} != 0 ]]; then
+        echo "Warning: Android lint reported non-Slack issues; pre-commit enforces Slack Compose checks only." >&2
+    fi
+fi
+
 # Re-stage modified files section
 all_files="${kotlin_files_list}"
 for file in ${all_files}; do
