@@ -349,8 +349,7 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
         client
           .activeSessions()
           .firstOrNull { it.id == client.lastActiveSessionId && it.user?.id == this.id }
-          ?.user
-          ?: client.activeSessions().firstOrNull { it.user?.id == this.id }?.user
+          ?.user ?: client.activeSessions().firstOrNull { it.user?.id == this.id }?.user
 
       // If the active session user doesn't match this receiver (or is absent), fall back to any
       // session carrying this user's id (multi-session apps).
@@ -667,8 +666,35 @@ suspend fun User.getOrganizationMemberships(
   )
 }
 
+/**
+ * Returns phone numbers that can be safely enrolled as SMS second-factor methods.
+ *
+ * Clerk rejects converting the account's last first-factor identification into a second factor. To
+ * avoid surfacing that server error in UI flows, only return verified, non-reserved phone numbers
+ * that still leave at least one other first-factor identification (username, verified email, or
+ * another verified non-reserved phone).
+ */
 fun User.phoneNumbersAvailableForMfa(): List<PhoneNumber> {
-  return phoneNumbers.filter { !it.reservedForSecondFactor }
+  return phoneNumbers.filter { phone ->
+    phone.verification?.status == Verification.Status.VERIFIED &&
+      !phone.reservedForSecondFactor &&
+      hasAlternativeFirstFactorIdentification(excludingPhoneId = phone.id)
+  }
+}
+
+private fun User.hasAlternativeFirstFactorIdentification(excludingPhoneId: String): Boolean {
+  val hasUsername = !username.isNullOrBlank()
+  val hasVerifiedEmail =
+    emailAddresses.orEmpty().any { email ->
+      email.verification?.status == Verification.Status.VERIFIED
+    }
+  val hasAnotherVerifiedNonReservedPhone =
+    phoneNumbers.any { phone ->
+      phone.id != excludingPhoneId &&
+        !phone.reservedForSecondFactor &&
+        phone.verification?.status == Verification.Status.VERIFIED
+    }
+  return hasUsername || hasVerifiedEmail || hasAnotherVerifiedNonReservedPhone
 }
 
 fun User.phoneNumbersReservedForMfa(): List<PhoneNumber> {

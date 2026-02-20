@@ -3,6 +3,7 @@ package com.clerk.workbench
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.session.requiresForcedMfa
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -19,6 +20,7 @@ class MainViewModel : ViewModel() {
           when {
             !isInitialized -> UiState.Loading
             session == null -> UiState.SignedOut
+            session.requiresForcedMfa -> UiState.SignedOut
             else -> UiState.SignedIn
           }
       }

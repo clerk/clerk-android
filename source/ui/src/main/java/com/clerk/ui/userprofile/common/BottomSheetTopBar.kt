@@ -44,6 +44,7 @@ internal fun BottomSheetTopBar(title: String, onClosePressed: () -> Unit) {
         modifier = Modifier.size(dp24),
         painter = painterResource(R.drawable.ic_cross),
         contentDescription = stringResource(R.string.close),
+        tint = ClerkMaterialTheme.colors.foreground,
       )
     }
   }

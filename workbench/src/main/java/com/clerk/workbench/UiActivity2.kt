@@ -37,10 +37,10 @@ class UiActivity2 : ComponentActivity() {
           modifier = Modifier.fillMaxSize().background(color = Color(0xFFF9F9F9)),
           contentAlignment = Alignment.Center,
         ) {
-          if (user != null) {
-            UserButton()
-          } else {
+          if (user == null) {
             AuthView()
+          } else {
+            UserButton()
           }
         }
       }

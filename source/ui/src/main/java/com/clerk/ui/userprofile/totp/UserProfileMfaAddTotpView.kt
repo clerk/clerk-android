@@ -3,6 +3,7 @@ package com.clerk.ui.userprofile.totp
 import android.content.ClipData
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +29,7 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.spacers.Spacers
@@ -69,33 +71,34 @@ internal fun UserProfileMfaAddTotpViewImpl(
 
   val collectedState by viewModel.state.collectAsStateWithLifecycle()
   val state = previewState ?: collectedState
-  BottomSheetTopBar(
-    title = stringResource(R.string.add_authenticator_application),
-    onClosePressed = onDismiss,
-  )
-  if (state is UserProfileMfaTotpViewModel.State.Loading) {
-    Box(
-      modifier = Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.background),
-      contentAlignment = Alignment.Center,
-    ) {
-      CircularProgressIndicator(color = ClerkMaterialTheme.colors.foreground)
+  Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
+    BottomSheetTopBar(
+      title = stringResource(R.string.add_authenticator_application),
+      onClosePressed = onDismiss,
+    )
+    if (state is UserProfileMfaTotpViewModel.State.Loading) {
+      Box(
+        modifier = Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.background),
+        contentAlignment = Alignment.Center,
+      ) {
+        CircularProgressIndicator(color = ClerkMaterialTheme.colors.foreground)
+      }
+    } else {
+      UserProfileMfaAddTotpContent(state = state, onVerify = onVerify)
     }
-  } else {
-    UserProfileMfaAddTotpContent(modifier = modifier, state = state, onVerify = onVerify)
   }
 }
 
 @Composable
 private fun UserProfileMfaAddTotpContent(
   state: UserProfileMfaTotpViewModel.State,
-  modifier: Modifier = Modifier,
   onVerify: (Mode) -> Unit,
 ) {
   val clipboard = LocalClipboard.current
   val scope = rememberCoroutineScope()
   Column(
-    modifier =
-      Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24).then(modifier)
+    modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24),
+    verticalArrangement = Arrangement.spacedBy(dp24),
   ) {
     if (state is UserProfileMfaTotpViewModel.State.Success) {
       Text(
@@ -103,7 +106,7 @@ private fun UserProfileMfaAddTotpContent(
         style = ClerkMaterialTheme.typography.bodyMedium,
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
-      DisplayTextWithActionButton(
+      ValueSection(
         text = state.totpResource.secret!!,
         onClick = {
           scope.launch {
@@ -116,7 +119,7 @@ private fun UserProfileMfaAddTotpContent(
         style = ClerkMaterialTheme.typography.bodyMedium,
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
-      DisplayTextWithActionButton(
+      ValueSection(
         text = state.totpResource.uri!!,
         onClick = {
           scope.launch {
@@ -135,13 +138,10 @@ private fun UserProfileMfaAddTotpContent(
 }
 
 @Composable
-private fun DisplayTextWithActionButton(text: String, onClick: () -> Unit) {
-  Column {
-    Spacers.Vertical.Spacer24()
+private fun ValueSection(text: String, onClick: () -> Unit) {
+  Column(verticalArrangement = Arrangement.spacedBy(dp12)) {
     TextDisplayBox(text = text)
-    Spacers.Vertical.Spacer12()
     CopyToClipboardButton(onClick = onClick)
-    Spacers.Vertical.Spacer24()
   }
 }
 
@@ -182,6 +182,7 @@ private fun TextDisplayBox(text: String, modifier: Modifier = Modifier) {
       modifier = Modifier.align(Alignment.Center),
       text = text,
       style = ClerkMaterialTheme.typography.bodyMedium,
+      color = ClerkMaterialTheme.colors.foreground,
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )

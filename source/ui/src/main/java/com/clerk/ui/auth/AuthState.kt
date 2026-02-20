@@ -8,6 +8,10 @@ import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
+import com.clerk.api.Clerk
+import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTaskKey
+import com.clerk.api.session.parsedKey
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signin.startingSecondFactor
@@ -93,28 +97,52 @@ internal class AuthState(
   internal fun setToStepForStatus(signIn: SignIn, onAuthComplete: () -> Unit) {
     when (signIn.status) {
       SignIn.Status.COMPLETE -> {
-        onAuthComplete()
-        return
+        val session = signIn.correspondingSession()
+        handlePostAuthCompletion(
+          taskKey = signIn.pendingSessionTaskKey(session),
+          hasUnresolvedCreatedSession = signIn.createdSessionId != null && session == null,
+          onAuthComplete = onAuthComplete,
+        )
       }
       SignIn.Status.NEEDS_IDENTIFIER -> resetToRoot()
-      SignIn.Status.NEEDS_FIRST_FACTOR -> {
-        signIn.startingFirstFactor?.let {
-          backStack.add(AuthDestination.SignInFactorOne(factor = it))
-        } ?: backStack.add(AuthDestination.SignInGetHelp)
-      }
-      SignIn.Status.NEEDS_SECOND_FACTOR -> {
-        signIn.startingSecondFactor?.let {
-          backStack.add(AuthDestination.SignInFactorTwo(factor = it))
-        } ?: backStack.add(AuthDestination.SignInGetHelp)
-      }
+      SignIn.Status.NEEDS_FIRST_FACTOR -> routeToFirstFactorOrHelp(signIn)
+      SignIn.Status.NEEDS_SECOND_FACTOR -> routeToSecondFactorOrHelp(signIn)
       SignIn.Status.NEEDS_NEW_PASSWORD -> backStack.add(AuthDestination.SignInSetNewPassword)
-      SignIn.Status.NEEDS_CLIENT_TRUST -> {
-        signIn.startingSecondFactor?.let {
-          backStack.add(AuthDestination.SignInClientTrust(factor = it))
-        } ?: backStack.add(AuthDestination.SignInGetHelp)
-      }
-      SignIn.Status.UNKNOWN -> return
+      SignIn.Status.NEEDS_CLIENT_TRUST -> routeToClientTrustOrHelp(signIn)
+      SignIn.Status.UNKNOWN -> Unit
     }
+  }
+
+  private fun handlePostAuthCompletion(
+    taskKey: SessionTaskKey?,
+    hasUnresolvedCreatedSession: Boolean,
+    onAuthComplete: () -> Unit,
+  ) {
+    when (postAuthCompletionAction(taskKey, hasUnresolvedCreatedSession)) {
+      PostAuthCompletionAction.ROUTE_TO_MFA -> routeToSessionTaskMfa()
+      PostAuthCompletionAction.ROUTE_TO_HELP -> backStack.add(AuthDestination.SignInGetHelp)
+      PostAuthCompletionAction.COMPLETE_AUTH -> onAuthComplete()
+    }
+  }
+
+  private fun routeToSessionTaskMfa() {
+    backStack.add(AuthDestination.SessionTaskMfa)
+  }
+
+  private fun routeToFirstFactorOrHelp(signIn: SignIn) {
+    signIn.startingFirstFactor?.let { backStack.add(AuthDestination.SignInFactorOne(factor = it)) }
+      ?: backStack.add(AuthDestination.SignInGetHelp)
+  }
+
+  private fun routeToSecondFactorOrHelp(signIn: SignIn) {
+    signIn.startingSecondFactor?.let { backStack.add(AuthDestination.SignInFactorTwo(factor = it)) }
+      ?: backStack.add(AuthDestination.SignInGetHelp)
+  }
+
+  private fun routeToClientTrustOrHelp(signIn: SignIn) {
+    signIn.startingSecondFactor?.let {
+      backStack.add(AuthDestination.SignInClientTrust(factor = it))
+    } ?: backStack.add(AuthDestination.SignInGetHelp)
   }
 
   internal fun setToStepForStatus(signUp: SignUp, onAuthComplete: () -> Unit) {
@@ -122,7 +150,12 @@ internal class AuthState(
       SignUp.Status.ABANDONED -> resetToRoot()
       SignUp.Status.MISSING_REQUIREMENTS -> handleMissingRequirements(signUp)
       SignUp.Status.COMPLETE -> {
-        onAuthComplete()
+        val session = signUp.correspondingSession()
+        handlePostAuthCompletion(
+          taskKey = signUp.pendingSessionTaskKey(session),
+          hasUnresolvedCreatedSession = signUp.createdSessionId != null && session == null,
+          onAuthComplete = onAuthComplete,
+        )
         return
       }
       SignUp.Status.UNKNOWN -> return
@@ -171,6 +204,75 @@ internal class AuthState(
         else -> backStack.add(AuthDestination.SignUpCompleteProfile(signUp.missingFields.count()))
       }
     }
+  }
+}
+
+internal fun SignIn.pendingSessionTaskKey(
+  session: Session? = this.correspondingSession()
+): SessionTaskKey? {
+  return if (status == SignIn.Status.COMPLETE) session.pendingSessionTaskKey() else null
+}
+
+internal fun SignIn.correspondingSession(): Session? {
+  val sessions = runCatching { Clerk.client.sessions }.getOrDefault(emptyList())
+  return resolveCorrespondingSession(
+    createdSessionId = createdSessionId,
+    sessions = sessions,
+    fallbackSession = Clerk.session,
+  )
+}
+
+internal fun SignUp.pendingSessionTaskKey(
+  session: Session? = this.correspondingSession()
+): SessionTaskKey? {
+  return if (status == SignUp.Status.COMPLETE) session.pendingSessionTaskKey() else null
+}
+
+internal fun SignUp.correspondingSession(): Session? {
+  val sessions = runCatching { Clerk.client.sessions }.getOrDefault(emptyList())
+  return resolveCorrespondingSession(
+    createdSessionId = createdSessionId,
+    sessions = sessions,
+    fallbackSession = Clerk.session,
+  )
+}
+
+internal fun resolveCorrespondingSession(
+  createdSessionId: String?,
+  sessions: List<Session>,
+  fallbackSession: Session?,
+): Session? {
+  if (createdSessionId == null) {
+    return fallbackSession
+  }
+  return sessions.firstOrNull { it.id == createdSessionId }
+}
+
+internal fun postAuthCompletionAction(
+  taskKey: SessionTaskKey?,
+  hasUnresolvedCreatedSession: Boolean,
+): PostAuthCompletionAction {
+  return when {
+    taskKey == SessionTaskKey.MFA_REQUIRED -> PostAuthCompletionAction.ROUTE_TO_MFA
+    taskKey == SessionTaskKey.UNKNOWN -> PostAuthCompletionAction.ROUTE_TO_HELP
+    hasUnresolvedCreatedSession -> PostAuthCompletionAction.ROUTE_TO_MFA
+    else -> PostAuthCompletionAction.COMPLETE_AUTH
+  }
+}
+
+internal enum class PostAuthCompletionAction {
+  ROUTE_TO_MFA,
+  ROUTE_TO_HELP,
+  COMPLETE_AUTH,
+}
+
+private fun Session?.pendingSessionTaskKey(): SessionTaskKey? {
+  if (this?.status != Session.SessionStatus.PENDING) {
+    return null
+  }
+  return when {
+    tasks.any { it.parsedKey == SessionTaskKey.MFA_REQUIRED } -> SessionTaskKey.MFA_REQUIRED
+    else -> SessionTaskKey.UNKNOWN
   }
 }
 

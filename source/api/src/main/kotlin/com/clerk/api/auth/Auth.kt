@@ -331,22 +331,6 @@ class Auth internal constructor() {
   }
 
   /**
-   * Signs in via account portal.
-   *
-   * Opens the Clerk-hosted account portal for authentication.
-   *
-   * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
-   *   failure.
-   */
-  suspend fun signInWithAccountPortal(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    // Account portal uses OAuth-like redirect flow
-    val result =
-      SSOService.authenticateWithRedirect(redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL)
-    result.onFailure { emitAuthError(it) }
-    return result
-  }
-
-  /**
    * Signs in with Enterprise SSO.
    *
    * @param block Builder block to configure the Enterprise SSO options.
@@ -501,21 +485,6 @@ class Auth internal constructor() {
     }
 
     val result = ClerkApi.signUp.createSignUp(params)
-    result.onFailure { emitAuthError(it) }
-    return result
-  }
-
-  /**
-   * Signs up via account portal.
-   *
-   * Opens the Clerk-hosted account portal for sign-up.
-   *
-   * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
-   *   failure.
-   */
-  suspend fun signUpWithAccountPortal(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val result =
-      SSOService.authenticateWithRedirect(redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL)
     result.onFailure { emitAuthError(it) }
     return result
   }
