@@ -3,10 +3,12 @@ package com.clerk.ui.core.appbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
@@ -24,6 +26,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.OrganizationAvatar
+import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -37,6 +40,7 @@ internal fun ClerkTopAppBar(
   title: String? = null,
   backgroundColor: Color? = null, // sensible default
   clerkTheme: ClerkTheme? = null,
+  trailingContent: (@Composable () -> Unit)? = null,
 ) {
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val resolvedBackgroundColor = backgroundColor ?: ClerkMaterialTheme.colors.muted
@@ -54,33 +58,80 @@ internal fun ClerkTopAppBar(
             .padding(vertical = dp8),
         verticalAlignment = Alignment.CenterVertically,
       ) {
-        if (hasBackButton) {
-          IconButton(onClick = onBackPressed) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = stringResource(R.string.back),
-              tint = ClerkMaterialTheme.colors.foreground,
-            )
-          }
-        }
-
-        Spacer(Modifier.weight(1f))
-        title?.let {
-          Text(
-            text = it,
-            style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
-            color = ClerkMaterialTheme.colors.foreground,
+        if (trailingContent != null) {
+          TopBarWithTrailingContent(
+            hasBackButton = hasBackButton,
+            onBackPressed = onBackPressed,
+            title = title,
+            trailingContent = trailingContent,
           )
-        }
-        if (hasLogo) OrganizationAvatar(clerkTheme = clerkTheme)
-        Spacer(Modifier.weight(1f))
-
-        // keep layout symmetric
-        if (hasBackButton) {
-          IconButton(onClick = {}) {}
+        } else {
+          TopBarWithLogo(
+            hasBackButton = hasBackButton,
+            onBackPressed = onBackPressed,
+            title = title,
+            hasLogo = hasLogo,
+            clerkTheme = clerkTheme,
+          )
         }
       }
     }
+  }
+}
+
+@Composable
+private fun RowScope.TopBarWithTrailingContent(
+  hasBackButton: Boolean,
+  onBackPressed: () -> Unit,
+  title: String?,
+  trailingContent: @Composable () -> Unit,
+) {
+  Box(modifier = Modifier.size(dp48), contentAlignment = Alignment.Center) {
+    BackButton(hasBackButton = hasBackButton, onBackPressed = onBackPressed)
+  }
+  Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) { TopBarTitle(title) }
+  Box(modifier = Modifier.size(dp48), contentAlignment = Alignment.Center) { trailingContent() }
+}
+
+@Composable
+private fun RowScope.TopBarWithLogo(
+  hasBackButton: Boolean,
+  onBackPressed: () -> Unit,
+  title: String?,
+  hasLogo: Boolean,
+  clerkTheme: ClerkTheme?,
+) {
+  BackButton(hasBackButton = hasBackButton, onBackPressed = onBackPressed)
+  Spacer(Modifier.weight(1f))
+  TopBarTitle(title)
+  if (hasLogo) OrganizationAvatar(clerkTheme = clerkTheme)
+  Spacer(Modifier.weight(1f))
+  if (hasBackButton) {
+    IconButton(onClick = {}) {}
+  }
+}
+
+@Composable
+private fun BackButton(hasBackButton: Boolean, onBackPressed: () -> Unit) {
+  if (hasBackButton) {
+    IconButton(onClick = onBackPressed) {
+      Icon(
+        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+        contentDescription = stringResource(R.string.back),
+        tint = ClerkMaterialTheme.colors.foreground,
+      )
+    }
+  }
+}
+
+@Composable
+private fun TopBarTitle(title: String?) {
+  title?.let {
+    Text(
+      text = it,
+      style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
+      color = ClerkMaterialTheme.colors.foreground,
+    )
   }
 }
 

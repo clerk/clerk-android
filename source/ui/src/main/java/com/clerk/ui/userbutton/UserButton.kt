@@ -2,6 +2,7 @@ package com.clerk.ui.userbutton
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -32,6 +33,7 @@ import com.clerk.api.session.requiresForcedMfa
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
+import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.dimens.dp36
@@ -46,33 +48,68 @@ import com.clerk.ui.userprofile.UserProfileView
  *
  * @param clerkTheme Optional theme customization for the user profile UI.
  * @param treatPendingAsSignedOut When `true`, the button will only appear when the session status
- *   is ACTIVE. When `false` (default), the button may appear in pending sessions except when the
- *   session requires forced MFA setup.
+ *   is ACTIVE. When `false` (default), the button may appear in pending sessions.
+ * @param routeToAuthWhenForcedMfa When `true` (default), clicking the button while the current
+ *   session has unresolved MFA setup tasks routes to auth instead of opening profile.
+ * @param onRequiresForcedMfaClick Optional callback used when the current session has outstanding
+ *   MFA setup tasks. If not provided, the button will open [AuthView] in a full-screen dialog.
  */
 @SuppressLint("LocalContextGetResourceValueCall", "ComposeModifierMissing")
 @Composable
-fun UserButton(clerkTheme: ClerkTheme? = null, treatPendingAsSignedOut: Boolean = false) {
+fun UserButton(
+  clerkTheme: ClerkTheme? = null,
+  treatPendingAsSignedOut: Boolean = false,
+  routeToAuthWhenForcedMfa: Boolean = true,
+  onRequiresForcedMfaClick: (() -> Unit)? = null,
+) {
   ClerkThemeOverrideProvider(clerkTheme) {
     TelemetryProvider {
       val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
       val sessionUser by Clerk.userFlow.collectAsStateWithLifecycle()
-      val user =
-        when {
-          session?.requiresForcedMfa == true -> null
-          treatPendingAsSignedOut -> Clerk.activeUser
-          else -> sessionUser
-        }
+      val requiresForcedMfa = session?.requiresForcedMfa == true
+      val user = if (treatPendingAsSignedOut) Clerk.activeUser else sessionUser
       val telemetry = LocalTelemetryCollector.current
       var showProfile by rememberSaveable { mutableStateOf(false) }
+      var showAuth by rememberSaveable { mutableStateOf(false) }
 
       LaunchedEffect(user?.id) {
         if (user != null) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
       }
 
-      if (user != null) {
-        UserButtonContent(imageUrl = user.imageUrl, onClick = { showProfile = true })
+      LaunchedEffect(requiresForcedMfa, showAuth) {
+        if (!requiresForcedMfa && showAuth) {
+          showAuth = false
+        }
+      }
+
+      if (
+        shouldShowUserButton(
+          sessionUser != null,
+          Clerk.activeUser != null,
+          treatPendingAsSignedOut,
+        ) && user != null
+      ) {
+        UserButtonContent(
+          imageUrl = user.imageUrl,
+          onClick = {
+            when (
+              userButtonClickAction(
+                requiresForcedMfa = requiresForcedMfa,
+                routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
+              )
+            ) {
+              UserButtonClickAction.OPEN_PROFILE -> showProfile = true
+              UserButtonClickAction.ROUTE_TO_AUTH -> {
+                onRequiresForcedMfaClick?.invoke() ?: run { showAuth = true }
+              }
+            }
+          },
+        )
         if (showProfile) {
           UserProfileDialog(onDismiss = { showProfile = false })
+        }
+        if (showAuth) {
+          AuthDialog(onDismiss = { showAuth = false })
         }
       }
     }
@@ -115,4 +152,38 @@ private fun UserProfileDialog(onDismiss: () -> Unit) {
   ) {
     UserProfileView(onDismiss = onDismiss)
   }
+}
+
+@Composable
+private fun AuthDialog(onDismiss: () -> Unit) {
+  Dialog(
+    onDismissRequest = onDismiss,
+    properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+  ) {
+    AuthView(modifier = Modifier.fillMaxSize(), onAuthComplete = onDismiss)
+  }
+}
+
+internal enum class UserButtonClickAction {
+  OPEN_PROFILE,
+  ROUTE_TO_AUTH,
+}
+
+internal fun userButtonClickAction(
+  requiresForcedMfa: Boolean,
+  routeToAuthWhenForcedMfa: Boolean,
+): UserButtonClickAction {
+  return if (requiresForcedMfa && routeToAuthWhenForcedMfa) {
+    UserButtonClickAction.ROUTE_TO_AUTH
+  } else {
+    UserButtonClickAction.OPEN_PROFILE
+  }
+}
+
+internal fun shouldShowUserButton(
+  hasSessionUser: Boolean,
+  hasActiveUser: Boolean,
+  treatPendingAsSignedOut: Boolean,
+): Boolean {
+  return if (treatPendingAsSignedOut) hasActiveUser else hasSessionUser
 }

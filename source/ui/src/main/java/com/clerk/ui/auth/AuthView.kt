@@ -4,12 +4,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -40,110 +42,115 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.serialization.Serializable
 
 @Composable
-fun AuthView(modifier: Modifier = Modifier, clerkTheme: ClerkTheme? = null) {
+fun AuthView(
+  modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
+  onAuthComplete: () -> Unit = {},
+) {
   ClerkThemeOverrideProvider(clerkTheme) {
+    val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
     AuthStateProvider(backStack = backStack) {
-      val authState = LocalAuthState.current
-      val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
-      TrackScreenLoaded(authState.mode.name)
-      LaunchedEffect(session?.requiresForcedMfa, backStack.lastOrNull()) {
-        val top = backStack.lastOrNull()
-        if (shouldRouteToSessionTaskMfa(session?.requiresForcedMfa == true, top)) {
-          backStack.add(AuthDestination.SessionTaskMfa)
-        }
-      }
-      NavDisplay(
-        modifier = modifier,
+      ObserveForcedMfaRouting(backStack = backStack)
+      TrackScreenLoaded(LocalAuthState.current.mode.name)
+      AuthNavDisplay(
+        modifier = fullScreenModifier,
         backStack = backStack,
-        transitionSpec = {
-          val spec = tween<IntOffset>(durationMillis = 300)
-          slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-            slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-        },
-        popTransitionSpec = {
-          val spec = tween<IntOffset>(durationMillis = 300)
-          slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-            slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-        },
-        predictivePopTransitionSpec = { distance ->
-          slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-            slideOutHorizontally(targetOffsetX = { distance })
-        },
-        onBack = {
-          if (backStack.size > 1) {
-            backStack.removeLastOrNull()
-          }
-        },
-        entryProvider =
-          entryProvider {
-            entry<AuthDestination.AuthStart> {
-              AuthStartView(onAuthComplete = { /* AuthView will unmount naturally */ })
-            }
-            entry<AuthDestination.SignInFactorOne> { key ->
-              SignInFactorOneView(
-                factor = key.factor,
-                onAuthComplete = { /* AuthView will unmount naturally */ },
-              )
-            }
-            entry<AuthDestination.SignInFactorOneUseAnotherMethod> { key ->
-              SignInFactorAlternativeMethodsView(
-                currentFactor = key.currentFactor,
-                onAuthComplete = { /* AuthView will unmount naturally */ },
-              )
-            }
-            entry<AuthDestination.SignInFactorTwo> { key ->
-              SignInFactorTwoView(
-                factor = key.factor,
-                onAuthComplete = { /* AuthView will unmount naturally */ },
-              )
-            }
-            entry<AuthDestination.SessionTaskMfa> {
-              SessionTaskMfaView(onAuthComplete = { /* AuthView will unmount naturally */ })
-            }
-            entry<AuthDestination.SignInFactorTwoUseAnotherMethod> { key ->
-              SignInFactorAlternativeMethodsView(
-                currentFactor = key.currentFactor,
-                isSecondFactor = true,
-                onAuthComplete = { /* AuthView will unmount naturally */ },
-              )
-            }
-            entry<AuthDestination.SignInForgotPassword> {
-              SignInFactorOneForgotPasswordView(
-                onClickFactor = { backStack.removeLastOrNull() },
-                onAuthComplete = { /* AuthView will unmount naturally */ },
-              )
-            }
-            entry<AuthDestination.SignInSetNewPassword> {
-              SignInSetNewPasswordView(onAuthComplete = { /* AuthView will unmount naturally */ })
-            }
-            entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
-            entry<AuthDestination.SignInClientTrust> { key ->
-              SignInClientTrustView(
-                factor = key.factor,
-                onAuthComplete = { /* AuthView will unmount naturally */ },
-              )
-            }
-            entry<AuthDestination.SignUpCollectField> { key ->
-              SignUpCollectFieldView(
-                field = key.field,
-                onAuthComplete = { /* AuthView will unmount naturally */ },
-              )
-            }
-            entry<AuthDestination.SignUpCode> { key ->
-              SignUpCodeView(
-                field = key.field,
-                onAuthComplete = { /* AuthView will unmount naturally */ },
-              )
-            }
-            entry<AuthDestination.SignUpCompleteProfile> {
-              SignUpCompleteProfileView(onAuthComplete = { /* AuthView will unmount naturally */ })
-            }
-          },
+        onAuthComplete = onAuthComplete,
       )
     }
   }
 }
+
+@Composable
+private fun ObserveForcedMfaRouting(backStack: NavBackStack<NavKey>) {
+  val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
+  LaunchedEffect(session?.requiresForcedMfa, backStack.lastOrNull()) {
+    val top = backStack.lastOrNull()
+    if (shouldRouteToSessionTaskMfa(session?.requiresForcedMfa == true, top)) {
+      backStack.add(AuthDestination.SessionTaskMfa)
+    }
+  }
+}
+
+@Composable
+private fun AuthNavDisplay(
+  modifier: Modifier = Modifier,
+  backStack: NavBackStack<NavKey>,
+  onAuthComplete: () -> Unit,
+) {
+  NavDisplay(
+    modifier = modifier,
+    backStack = backStack,
+    transitionSpec = {
+      val spec = tween<IntOffset>(durationMillis = 300)
+      slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+        slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+    },
+    popTransitionSpec = {
+      val spec = tween<IntOffset>(durationMillis = 300)
+      slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+        slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+    },
+    predictivePopTransitionSpec = { distance ->
+      slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+        slideOutHorizontally(targetOffsetX = { distance })
+    },
+    onBack = {
+      if (backStack.size > 1) {
+        backStack.removeLastOrNull()
+      }
+    },
+    entryProvider = authEntryProvider(backStack = backStack, onAuthComplete = onAuthComplete),
+  )
+}
+
+private fun authEntryProvider(backStack: NavBackStack<NavKey>, onAuthComplete: () -> Unit) =
+  entryProvider {
+    entry<AuthDestination.AuthStart> { AuthStartView(onAuthComplete = onAuthComplete) }
+    entry<AuthDestination.SignInFactorOne> {
+      SignInFactorOneView(factor = it.factor, onAuthComplete = onAuthComplete)
+    }
+    entry<AuthDestination.SignInFactorOneUseAnotherMethod> {
+      SignInFactorAlternativeMethodsView(
+        currentFactor = it.currentFactor,
+        onAuthComplete = onAuthComplete,
+      )
+    }
+    entry<AuthDestination.SignInFactorTwo> {
+      SignInFactorTwoView(factor = it.factor, onAuthComplete = onAuthComplete)
+    }
+    entry<AuthDestination.SessionTaskMfa> { SessionTaskMfaView(onAuthComplete = onAuthComplete) }
+    entry<AuthDestination.SignInFactorTwoUseAnotherMethod> {
+      SignInFactorAlternativeMethodsView(
+        currentFactor = it.currentFactor,
+        isSecondFactor = true,
+        onAuthComplete = onAuthComplete,
+      )
+    }
+    entry<AuthDestination.SignInForgotPassword> {
+      SignInFactorOneForgotPasswordView(
+        onClickFactor = { backStack.removeLastOrNull() },
+        onAuthComplete = onAuthComplete,
+      )
+    }
+    entry<AuthDestination.SignInSetNewPassword> {
+      SignInSetNewPasswordView(onAuthComplete = onAuthComplete)
+    }
+    entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
+    entry<AuthDestination.SignInClientTrust> {
+      SignInClientTrustView(factor = it.factor, onAuthComplete = onAuthComplete)
+    }
+    entry<AuthDestination.SignUpCollectField> {
+      SignUpCollectFieldView(field = it.field, onAuthComplete = onAuthComplete)
+    }
+    entry<AuthDestination.SignUpCode> {
+      SignUpCodeView(field = it.field, onAuthComplete = onAuthComplete)
+    }
+    entry<AuthDestination.SignUpCompleteProfile> {
+      SignUpCompleteProfileView(onAuthComplete = onAuthComplete)
+    }
+  }
 
 internal fun shouldRouteToSessionTaskMfa(requiresForcedMfa: Boolean, top: NavKey?): Boolean {
   return requiresForcedMfa && top != AuthDestination.SessionTaskMfa
