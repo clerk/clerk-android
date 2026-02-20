@@ -141,8 +141,8 @@
     <string name="account">Λογαριασμός</string>
     <string name="delete_account">Διαγραφή λογαριασμού</string>
     <string name="security">Ασφάλεια</string>
-    <string name="update_profile">Ενημέρωση προφίλ</string>
-    <string name="profile">Προφίλ</string>
+    <string name="edit_profile">Επεξεργασία προφίλ</string>
+    <string name="manage_account">Διαχείριση λογαριασμού</string>
     <string name="log_out">Αποσύνδεση</string>
     <string name="take_a_photo">Λήψη φωτογραφίας</string>
     <string name="choose_photo">Επιλογή φωτογραφίας</string>

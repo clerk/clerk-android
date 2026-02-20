@@ -141,8 +141,8 @@
     <string name="account">アカウント</string>
     <string name="delete_account">アカウントを削除</string>
     <string name="security">セキュリティ</string>
-    <string name="update_profile">プロフィールを更新</string>
-    <string name="profile">プロフィール</string>
+    <string name="edit_profile">プロフィールを編集</string>
+    <string name="manage_account">アカウント管理</string>
     <string name="log_out">ログアウト</string>
     <string name="take_a_photo">写真を撮る</string>
     <string name="choose_photo">写真を選択</string>

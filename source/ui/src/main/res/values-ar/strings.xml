@@ -141,8 +141,8 @@
     <string name="account">الحساب</string>
     <string name="delete_account">حذف الحساب</string>
     <string name="security">الأمان</string>
-    <string name="update_profile">تحديث الملف الشخصي</string>
-    <string name="profile">الملف الشخصي</string>
+    <string name="edit_profile">تعديل الملف الشخصي</string>
+    <string name="manage_account">إدارة الحساب</string>
     <string name="log_out">تسجيل الخروج</string>
     <string name="take_a_photo">التقاط صورة</string>
     <string name="choose_photo">اختر صورة</string>

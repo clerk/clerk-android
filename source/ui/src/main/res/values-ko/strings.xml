@@ -141,8 +141,8 @@
     <string name="account">계정</string>
     <string name="delete_account">계정 삭제</string>
     <string name="security">보안</string>
-    <string name="update_profile">프로필 업데이트</string>
-    <string name="profile">프로필</string>
+    <string name="edit_profile">프로필 편집</string>
+    <string name="manage_account">계정 관리</string>
     <string name="log_out">로그아웃</string>
     <string name="take_a_photo">사진 찍기</string>
     <string name="choose_photo">사진 선택</string>

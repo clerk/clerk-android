@@ -141,8 +141,8 @@
     <string name="account">खाता</string>
     <string name="delete_account">खाता हटाएं</string>
     <string name="security">सुरक्षा</string>
-    <string name="update_profile">प्रोफ़ाइल अपडेट करें</string>
-    <string name="profile">प्रोफ़ाइल</string>
+    <string name="edit_profile">प्रोफ़ाइल संपादित करें</string>
+    <string name="manage_account">खाता प्रबंधित करें</string>
     <string name="log_out">लॉग आउट करें</string>
     <string name="take_a_photo">फोटो लें</string>
     <string name="choose_photo">फोटो चुनें</string>

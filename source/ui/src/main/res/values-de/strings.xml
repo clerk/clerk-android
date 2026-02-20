@@ -141,8 +141,8 @@
     <string name="account">Konto</string>
     <string name="delete_account">Konto löschen</string>
     <string name="security">Sicherheit</string>
-    <string name="update_profile">Profil aktualisieren</string>
-    <string name="profile">Profil</string>
+    <string name="edit_profile">Profil bearbeiten</string>
+    <string name="manage_account">Konto verwalten</string>
     <string name="log_out">Abmelden</string>
     <string name="take_a_photo">Foto aufnehmen</string>
     <string name="choose_photo">Foto auswählen</string>

@@ -143,8 +143,8 @@
     <string name="account">Account</string>
     <string name="delete_account">Delete account</string>
     <string name="security">Security</string>
-    <string name="update_profile">Update profile</string>
-    <string name="profile">Profile</string>
+    <string name="edit_profile">Edit profile</string>
+    <string name="manage_account">Manage account</string>
     <string name="log_out">Log out</string>
     <string name="take_a_photo">Take a photo</string>
     <string name="choose_photo">Choose photo</string>
