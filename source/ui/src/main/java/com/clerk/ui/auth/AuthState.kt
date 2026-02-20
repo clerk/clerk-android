@@ -96,11 +96,14 @@ internal class AuthState(
 
   internal fun setToStepForStatus(signIn: SignIn, onAuthComplete: () -> Unit) {
     when (signIn.status) {
-      SignIn.Status.COMPLETE ->
+      SignIn.Status.COMPLETE -> {
+        val session = signIn.correspondingSession()
         handlePostAuthCompletion(
-          taskKey = signIn.pendingSessionTaskKey(),
+          taskKey = signIn.pendingSessionTaskKey(session),
+          hasUnresolvedCreatedSession = signIn.createdSessionId != null && session == null,
           onAuthComplete = onAuthComplete,
         )
+      }
       SignIn.Status.NEEDS_IDENTIFIER -> resetToRoot()
       SignIn.Status.NEEDS_FIRST_FACTOR -> routeToFirstFactorOrHelp(signIn)
       SignIn.Status.NEEDS_SECOND_FACTOR -> routeToSecondFactorOrHelp(signIn)
@@ -112,12 +115,13 @@ internal class AuthState(
 
   private fun handlePostAuthCompletion(
     taskKey: SessionTaskKey?,
+    hasUnresolvedCreatedSession: Boolean,
     onAuthComplete: () -> Unit,
   ) {
-    when (taskKey) {
-      SessionTaskKey.MFA_REQUIRED -> routeToSessionTaskMfa()
-      SessionTaskKey.UNKNOWN -> backStack.add(AuthDestination.SignInGetHelp)
-      null -> onAuthComplete()
+    when (postAuthCompletionAction(taskKey, hasUnresolvedCreatedSession)) {
+      PostAuthCompletionAction.ROUTE_TO_MFA -> routeToSessionTaskMfa()
+      PostAuthCompletionAction.ROUTE_TO_HELP -> backStack.add(AuthDestination.SignInGetHelp)
+      PostAuthCompletionAction.COMPLETE_AUTH -> onAuthComplete()
     }
   }
 
@@ -146,8 +150,10 @@ internal class AuthState(
       SignUp.Status.ABANDONED -> resetToRoot()
       SignUp.Status.MISSING_REQUIREMENTS -> handleMissingRequirements(signUp)
       SignUp.Status.COMPLETE -> {
+        val session = signUp.correspondingSession()
         handlePostAuthCompletion(
-          taskKey = signUp.pendingSessionTaskKey(),
+          taskKey = signUp.pendingSessionTaskKey(session),
+          hasUnresolvedCreatedSession = signUp.createdSessionId != null && session == null,
           onAuthComplete = onAuthComplete,
         )
         return
@@ -209,9 +215,11 @@ internal fun SignIn.pendingSessionTaskKey(
 
 internal fun SignIn.correspondingSession(): Session? {
   val sessions = runCatching { Clerk.client.sessions }.getOrDefault(emptyList())
-  val sessionFromId =
-    createdSessionId?.let { sessionId -> sessions.firstOrNull { it.id == sessionId } }
-  return sessionFromId ?: Clerk.session
+  return resolveCorrespondingSession(
+    createdSessionId = createdSessionId,
+    sessions = sessions,
+    fallbackSession = Clerk.session,
+  )
 }
 
 internal fun SignUp.pendingSessionTaskKey(
@@ -222,9 +230,40 @@ internal fun SignUp.pendingSessionTaskKey(
 
 internal fun SignUp.correspondingSession(): Session? {
   val sessions = runCatching { Clerk.client.sessions }.getOrDefault(emptyList())
-  val sessionFromId =
-    createdSessionId?.let { sessionId -> sessions.firstOrNull { it.id == sessionId } }
-  return sessionFromId ?: Clerk.session
+  return resolveCorrespondingSession(
+    createdSessionId = createdSessionId,
+    sessions = sessions,
+    fallbackSession = Clerk.session,
+  )
+}
+
+internal fun resolveCorrespondingSession(
+  createdSessionId: String?,
+  sessions: List<Session>,
+  fallbackSession: Session?,
+): Session? {
+  if (createdSessionId == null) {
+    return fallbackSession
+  }
+  return sessions.firstOrNull { it.id == createdSessionId }
+}
+
+internal fun postAuthCompletionAction(
+  taskKey: SessionTaskKey?,
+  hasUnresolvedCreatedSession: Boolean,
+): PostAuthCompletionAction {
+  return when {
+    taskKey == SessionTaskKey.MFA_REQUIRED -> PostAuthCompletionAction.ROUTE_TO_MFA
+    taskKey == SessionTaskKey.UNKNOWN -> PostAuthCompletionAction.ROUTE_TO_HELP
+    hasUnresolvedCreatedSession -> PostAuthCompletionAction.ROUTE_TO_MFA
+    else -> PostAuthCompletionAction.COMPLETE_AUTH
+  }
+}
+
+internal enum class PostAuthCompletionAction {
+  ROUTE_TO_MFA,
+  ROUTE_TO_HELP,
+  COMPLETE_AUTH,
 }
 
 private fun Session?.pendingSessionTaskKey(): SessionTaskKey? {

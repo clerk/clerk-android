@@ -59,9 +59,44 @@ class AuthStateForceMfaTest {
     assertEquals(SessionTaskKey.MFA_REQUIRED, signUp.pendingSessionTaskKey(session))
   }
 
-  private fun session(status: Session.SessionStatus, tasks: List<SessionTask>): Session {
+  @Test
+  fun `postAuthCompletionAction routes to mfa when session is unresolved for created session id`() {
+    val action = postAuthCompletionAction(taskKey = null, hasUnresolvedCreatedSession = true)
+
+    assertEquals(PostAuthCompletionAction.ROUTE_TO_MFA, action)
+  }
+
+  @Test
+  fun `postAuthCompletionAction completes auth when no task and no unresolved created session`() {
+    val action = postAuthCompletionAction(taskKey = null, hasUnresolvedCreatedSession = false)
+
+    assertEquals(PostAuthCompletionAction.COMPLETE_AUTH, action)
+  }
+
+  @Test
+  fun `resolveCorrespondingSession does not fallback when created session id is present but missing`() {
+    val fallback =
+      session(id = "sess_fallback", status = Session.SessionStatus.ACTIVE, tasks = emptyList())
+    val sessions =
+      listOf(session(id = "sess_other", status = Session.SessionStatus.ACTIVE, tasks = emptyList()))
+
+    val resolved =
+      resolveCorrespondingSession(
+        createdSessionId = "sess_target",
+        sessions = sessions,
+        fallbackSession = fallback,
+      )
+
+    assertNull(resolved)
+  }
+
+  private fun session(
+    id: String = "sess_123",
+    status: Session.SessionStatus,
+    tasks: List<SessionTask>,
+  ): Session {
     return Session(
-      id = "sess_123",
+      id = id,
       status = status,
       expireAt = 0L,
       lastActiveAt = 0L,

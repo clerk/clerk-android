@@ -183,4 +183,6 @@
     <string name="terms_of_service">Terms of Service</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="and_connector">and</string>
+    <string name="set_up_two_step_verification">Set up two-step verification</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Choose which method you prefer to protect your account with an extra layer of security.</string>
 </resources>
