@@ -15,7 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.clerk.api.Clerk
+import com.clerk.api.session.requiresForcedMfa
 import com.clerk.ui.auth.AuthView
+import com.clerk.ui.userbutton.UserButton
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 
 class UiActivity2 : ComponentActivity() {
@@ -29,11 +33,17 @@ class UiActivity2 : ComponentActivity() {
     )
     setContent {
       WorkbenchTheme {
+        val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
+        val user by Clerk.userFlow.collectAsStateWithLifecycle()
         Box(
           modifier = Modifier.fillMaxSize().background(color = Color(0xFFF9F9F9)),
           contentAlignment = Alignment.Center,
         ) {
-          AuthView()
+          if (user != null && session?.requiresForcedMfa != true) {
+            UserButton()
+          } else {
+            AuthView()
+          }
         }
       }
     }

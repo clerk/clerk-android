@@ -31,7 +31,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.user.phoneNumbersAvailableForMfa
 import com.clerk.ui.R
@@ -66,7 +65,6 @@ internal fun UserProfileMfaAddSmsView(
 ) {
   val availablePhoneNumbers =
     remember(Clerk.user) { Clerk.user?.phoneNumbersAvailableForMfa() ?: emptyList() }
-      .filter { it.verification?.status == Verification.Status.VERIFIED }
       .sortedBy { it.createdAt }
 
   UserProfileMfaAddSmsViewImpl(
@@ -177,10 +175,12 @@ private fun UserProfileMfaAddSmsContent(
       EmptyState(onAddPhoneNumber = onAddPhoneNumber)
     } else {
       Column {
+        Spacers.Vertical.Spacer12()
         Text(
           modifier = Modifier.padding(horizontal = dp24),
           text = stringResource(R.string.select_an_existing_phone_number),
           style = ClerkMaterialTheme.typography.bodyMedium,
+          color = ClerkMaterialTheme.colors.mutedForeground,
         )
         Column(
           modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24)
