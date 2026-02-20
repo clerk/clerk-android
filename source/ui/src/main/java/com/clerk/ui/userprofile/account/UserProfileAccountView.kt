@@ -137,7 +137,7 @@ private fun AvatarHeaderView(
       Spacers.Vertical.Spacer8()
       ClerkButton(
         modifier = Modifier.defaultMinSize(minWidth = 120.dp),
-        text = stringResource(R.string.update_profile),
+        text = stringResource(R.string.edit_profile),
         onClick = onClickEdit,
         isEnabled = true,
         configuration =
@@ -163,7 +163,7 @@ private fun MainProfileActions(onClick: (UserProfileAction) -> Unit) {
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     UserProfileIconActionRow(
       iconResId = R.drawable.ic_user,
-      text = stringResource(R.string.profile),
+      text = stringResource(R.string.manage_account),
       onClick = { onClick(UserProfileAction.Profile) },
     )
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)

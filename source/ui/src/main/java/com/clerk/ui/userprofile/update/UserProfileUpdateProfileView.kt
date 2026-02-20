@@ -73,7 +73,7 @@ private fun UserProfileUpdateProfileViewImpl(
   ClerkMaterialTheme {
     ClerkThemedProfileScaffold(
       modifier = modifier,
-      title = stringResource(R.string.account),
+      title = stringResource(R.string.edit_profile),
       hasBackButton = true,
       horizontalPadding = dp0,
       onBackPressed = { userProfileState.navigateBack() },

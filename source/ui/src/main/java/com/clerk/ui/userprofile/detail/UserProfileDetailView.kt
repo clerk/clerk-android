@@ -76,7 +76,7 @@ private fun UserProfileDetailViewImpl(
       topBar = {
         ClerkTopAppBar(
           onBackPressed = { userProfileState.navigateBack() },
-          title = stringResource(R.string.profile),
+          title = stringResource(R.string.manage_account),
           hasLogo = false,
         )
       },

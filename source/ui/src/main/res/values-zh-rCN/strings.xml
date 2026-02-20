@@ -141,8 +141,8 @@
     <string name="account">账户</string>
     <string name="delete_account">删除账户</string>
     <string name="security">安全</string>
-    <string name="update_profile">更新个人资料</string>
-    <string name="profile">个人资料</string>
+    <string name="edit_profile">编辑个人资料</string>
+    <string name="manage_account">管理账户</string>
     <string name="log_out">退出登录</string>
     <string name="take_a_photo">拍照</string>
     <string name="choose_photo">选择照片</string>
