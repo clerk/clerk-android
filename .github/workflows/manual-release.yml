@@ -76,77 +76,12 @@ jobs:
           echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
           echo "Previous tag: $PREVIOUS_TAG"
 
-      - name: Generate release notes
-        id: generate_notes
-        run: |
-          CURRENT_TAG="${{ steps.get_version.outputs.tag_name }}"
-          PREVIOUS_TAG="${{ steps.get_previous_tag.outputs.previous_tag }}"
-          CLERK_API_VERSION="${{ steps.get_version.outputs.clerk_api_version }}"
-          CLERK_TELEMETRY_VERSION="${{ steps.get_version.outputs.clerk_telemetry_version }}"
-          CLERK_UI_VERSION="${{ steps.get_version.outputs.clerk_ui_version }}"
-
-          echo "Generating release notes from $PREVIOUS_TAG to $CURRENT_TAG"
-
-          # Get commit messages since last tag
-          if [ -n "$PREVIOUS_TAG" ]; then
-            COMMITS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)
-          else
-            COMMITS=$(git log --pretty=format:"- %s (%h)" HEAD)
-          fi
-
-          # Count changes
-          if [ -n "$PREVIOUS_TAG" ]; then
-            COMMIT_COUNT=$(git rev-list --count $PREVIOUS_TAG..HEAD)
-            FILES_CHANGED=$(git diff --name-only $PREVIOUS_TAG..HEAD | wc -l)
-          else
-            COMMIT_COUNT=$(git rev-list --count HEAD)
-            FILES_CHANGED=$(git ls-files | wc -l)
-          fi
-
-          # Build release notes directly
-          RELEASE_NOTES="## 📦 Module Versions
-
-          | Module | Version |
-          |--------|---------|
-          | clerk-android-api | $CLERK_API_VERSION |
-          | clerk-android-ui | $CLERK_UI_VERSION |
-
-          ## What's Changed
-
-          $COMMITS
-
-          ### 🚀 Installation
-
-          Add to your \`build.gradle\`:
-          \`\`\`gradle
-          implementation(\"com.clerk:clerk-android-api:$CLERK_API_VERSION\")
-          implementation(\"com.clerk:clerk-android-ui:$CLERK_UI_VERSION\")
-          \`\`\`
-
-          ### 👥 Contributors
-          $CONTRIBUTORS"
-
-          # Add changelog link if we have a previous tag
-          if [ -n "$PREVIOUS_TAG" ]; then
-            RELEASE_NOTES="$RELEASE_NOTES
-
-          **Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...$CURRENT_TAG"
-          fi
-
-          # Set output using heredoc
-          {
-            echo "RELEASE_NOTES<<EOF"
-            echo "$RELEASE_NOTES"
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.tag_name }}
           name: Release ${{ steps.get_version.outputs.tag_name }}
-          body: ${{ steps.generate_notes.outputs.RELEASE_NOTES }}
-          draft: false
+          generate_release_notes: true
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
