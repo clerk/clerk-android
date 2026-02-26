@@ -408,14 +408,14 @@ data class SignIn(
     @AutoMap
     @Serializable
     data class ResetPasswordEmailCode(
-      val emailAddressId: String,
+      @SerialName("email_address_id") val emailAddressId: String,
       override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
     ) : PrepareFirstFactorParams
 
     @AutoMap
     @Serializable
     data class ResetPasswordPhoneCode(
-      val phoneNumberId: String,
+      @SerialName("phone_number_id") val phoneNumberId: String,
       override val strategy: String = RESET_PASSWORD_PHONE_CODE,
     ) : PrepareFirstFactorParams
 
