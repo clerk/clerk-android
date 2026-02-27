@@ -70,7 +70,7 @@ compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeB
 compose-lints = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
 google-identity = "com.google.android.libraries.identity.googleid:googleid:1.2.0"
-google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.24"
+google-libphonenumber = "com.googlecode.libphonenumber:libphonenumber:9.0.25"
 google-playIntegrity = "com.google.android.play:integrity:1.6.0"
 junit = "junit:junit:4.13.2"
 jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
