@@ -1,6 +1,7 @@
 package com.clerk.api.sso
 
 import com.clerk.api.Clerk
+import java.net.URL
 
 /**
  * Internal configuration object for OAuth redirect URLs.
@@ -20,4 +21,21 @@ internal object RedirectConfiguration {
    * complete the authentication process.
    */
   val DEFAULT_REDIRECT_URL: String = "clerk://${Clerk.applicationId}.oauth"
+
+  internal fun emailLinkRedirectUrl(
+    applicationId: String,
+    proxyUrl: String? = Clerk.proxyUrl,
+  ): String {
+    val portSuffix = resolveNonDefaultHttpsPort(proxyUrl)
+    return "clerk://$applicationId.oauth$portSuffix"
+  }
+
+  private fun resolveNonDefaultHttpsPort(proxyUrl: String?): String {
+    val parsedPort =
+      proxyUrl?.takeUnless { it.isBlank() }?.let { runCatching { URL(it) }.getOrNull() }?.port
+    val nonDefaultPort = parsedPort?.takeIf { it > 0 && it != DEFAULT_HTTPS_PORT }
+    return nonDefaultPort?.let { ":$it" }.orEmpty()
+  }
+
+  private const val DEFAULT_HTTPS_PORT = 443
 }
