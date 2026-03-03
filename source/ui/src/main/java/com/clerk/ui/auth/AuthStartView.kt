@@ -174,6 +174,12 @@ internal fun AuthStartViewImpl(
                   authStartIdentifier = authState.authStartIdentifier,
                 )
               }
+              authState.lastSubmittedIdentifier =
+                if (phoneActive && authViewHelper.phoneNumberIsEnabled) {
+                  authState.authStartPhoneNumber
+                } else {
+                  authState.authStartIdentifier
+                }
               authStartViewModel.startAuth(
                 authMode = authState.mode,
                 isPhoneNumberFieldActive = phoneActive,
