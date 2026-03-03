@@ -52,7 +52,7 @@ jobs:
         cd main/docs
         zip -r ../../Docs.zip .
         cd -
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       with:
         name: docs-zip
         path: Docs.zip
@@ -68,7 +68,7 @@ jobs:
       with:
         ref: docs
         path: docs
-    - uses: actions/download-artifact@v7
+    - uses: actions/download-artifact@v8
       with:
         name: docs-zip
         path: artifacts
