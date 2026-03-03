@@ -42,4 +42,26 @@ class RedirectConfigurationTest {
 
     assertEquals("clerk://null.callback", RedirectConfiguration.DEFAULT_REDIRECT_URL)
   }
+
+  @Test
+  fun emailLinkRedirectUrl_usesProxyPortWhenConfigured() {
+    assertEquals(
+      "clerk://com.clerk.workbench.oauth:8443",
+      RedirectConfiguration.emailLinkRedirectUrl(
+        applicationId = "com.clerk.workbench",
+        proxyUrl = "https://rapid-earwig-10.clerk.accounts.lclclerk.com:8443",
+      ),
+    )
+  }
+
+  @Test
+  fun emailLinkRedirectUrl_omitsStandardHttpsPort() {
+    assertEquals(
+      "clerk://com.clerk.workbench.oauth",
+      RedirectConfiguration.emailLinkRedirectUrl(
+        applicationId = "com.clerk.workbench",
+        proxyUrl = "https://rapid-earwig-10.clerk.accounts.lclclerk.com:443",
+      ),
+    )
+  }
 }

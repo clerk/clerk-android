@@ -30,6 +30,11 @@ internal class SignInFactorCodeViewModel(
 
     guardSignIn(_state) { inProgressSignIn ->
       viewModelScope.launch(Dispatchers.IO) {
+        if (shouldRerouteForUnsupportedFactor(inProgressSignIn, factor, isSecondFactor)) {
+          _state.value = AuthenticationViewState.Success.SignIn(inProgressSignIn)
+          return@launch
+        }
+
         when (factor.strategy) {
           StrategyKeys.EMAIL_CODE -> {
             prepareHandler.prepareForEmailCode(inProgressSignIn, factor, isSecondFactor) {
@@ -128,5 +133,44 @@ internal class SignInFactorCodeViewModel(
 
   fun resetVerificationState() {
     _verificationUiState.value = VerificationUiState.Idle
+  }
+
+  private fun shouldRerouteForUnsupportedFactor(
+    signIn: SignIn,
+    factor: Factor,
+    isSecondFactor: Boolean,
+  ): Boolean {
+    val supportedFirstFactors = signIn.supportedFirstFactors.orEmpty()
+    val prefersEmailLinkOverEmailCode =
+      factor.strategy == StrategyKeys.EMAIL_CODE &&
+        signIn.firstFactorVerification?.strategy != StrategyKeys.EMAIL_CODE &&
+        signIn.shouldPreferEmailLink(
+          supportedFirstFactors = supportedFirstFactors,
+          fallbackFactor = factor,
+        )
+
+    return if (isSecondFactor) {
+      signIn.supportedSecondFactors?.none { it.strategy == factor.strategy } == true
+    } else {
+      supportedFirstFactors.none { it.strategy == factor.strategy } || prefersEmailLinkOverEmailCode
+    }
+  }
+
+  private fun SignIn.shouldPreferEmailLink(
+    supportedFirstFactors: List<Factor>,
+    fallbackFactor: Factor,
+  ): Boolean {
+    val hasEmailLink = supportedFirstFactors.any { it.strategy == StrategyKeys.EMAIL_LINK }
+    if (!hasEmailLink) return false
+
+    val isEmailIdentifier =
+      fallbackFactor.emailAddressId != null ||
+        fallbackFactor.safeIdentifier?.contains("@") == true ||
+        identifier?.contains("@") == true ||
+        supportedFirstFactors.any {
+          (it.strategy == StrategyKeys.EMAIL_LINK || it.strategy == StrategyKeys.EMAIL_CODE) &&
+            it.safeIdentifier?.contains("@") == true
+        }
+    return isEmailIdentifier
   }
 }

@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,15 +33,16 @@ class UiActivity2 : ComponentActivity() {
     )
     setContent {
       WorkbenchTheme {
+        val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
         val user by Clerk.userFlow.collectAsStateWithLifecycle()
         Box(
           modifier = Modifier.fillMaxSize().background(color = Color(0xFFF9F9F9)),
           contentAlignment = Alignment.Center,
         ) {
-          if (user == null) {
-            AuthView()
-          } else {
-            UserButton()
+          when {
+            !isInitialized -> CircularProgressIndicator()
+            user == null -> AuthView()
+            else -> UserButton()
           }
         }
       }

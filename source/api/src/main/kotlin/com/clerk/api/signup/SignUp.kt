@@ -5,6 +5,9 @@ package com.clerk.api.signup
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy as AuthStrategy
 import com.clerk.api.extensions.sortedByPriority
+import com.clerk.api.magiclink.NativeMagicLinkService
+import com.clerk.api.magiclink.PkceUtil
+import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
@@ -338,6 +341,23 @@ data class SignUp(
        */
       data class EmailCode(override val strategy: String = AuthStrategy.EMAIL_CODE) :
         PrepareVerificationParams.Strategy
+
+      /**
+       * Send an email with a verification link.
+       *
+       * @property redirectUrl Legacy callback URL field. When [redirectUri] is not provided this
+       *   value is used as the native callback URI.
+       * @property redirectUri Callback URI used for native email-link completion.
+       * @property codeChallenge PKCE code challenge for native email-link verification.
+       * @property codeChallengeMethod PKCE method. Native flows require `S256`.
+       */
+      data class EmailLink(
+        override val strategy: String = AuthStrategy.EMAIL_LINK,
+        @SerialName("redirect_url") val redirectUrl: String? = null,
+        @SerialName("redirect_uri") val redirectUri: String? = null,
+        @SerialName("code_challenge") val codeChallenge: String? = null,
+        @SerialName("code_challenge_method") val codeChallengeMethod: String = PKCE_METHOD_S256,
+      ) : PrepareVerificationParams.Strategy
     }
   }
 
@@ -550,7 +570,10 @@ suspend fun SignUp.update(
 suspend fun SignUp.prepareVerification(
   prepareVerification: SignUp.PrepareVerificationParams.Strategy
 ): ClerkResult<SignUp, ClerkErrorResponse> {
-  return ClerkApi.signUp.prepareSignUpVerification(this.id, prepareVerification.strategy)
+  if (prepareVerification is SignUp.PrepareVerificationParams.Strategy.EmailLink) {
+    return NativeMagicLinkService.prepareSignUpEmailLink(this.id, prepareVerification)
+  }
+  return ClerkApi.signUp.prepareSignUpVerification(this.id, fields = prepareVerification.toFields())
 }
 
 /**
@@ -577,6 +600,16 @@ suspend fun SignUp.sendPhoneCode(): ClerkResult<SignUp, ClerkErrorResponse> {
  */
 suspend fun SignUp.sendEmailCode(): ClerkResult<SignUp, ClerkErrorResponse> {
   return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailCode())
+}
+
+/**
+ * Sends a verification link to the email address associated with this sign-up.
+ *
+ * @return A [ClerkResult] containing the updated [SignUp] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignUp.sendEmailLink(): ClerkResult<SignUp, ClerkErrorResponse> {
+  return prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailLink())
 }
 
 /**
@@ -607,3 +640,59 @@ suspend fun SignUp.attemptVerification(
  * @return An [OAuthResult] containing this [SignUp] object.
  */
 internal fun SignUp.toOAuthResult() = OAuthResult(signUp = this)
+
+private const val EMAIL_ADDRESS = "email_address"
+
+val SignUp.emailVerificationStrategy: String
+  get() {
+    val activeStrategy = verifications[EMAIL_ADDRESS]?.strategy
+    if (!activeStrategy.isNullOrBlank()) return activeStrategy
+
+    val configuredStrategies =
+      runCatching {
+          Clerk.environment.userSettings.attributes[EMAIL_ADDRESS]?.verifications.orEmpty()
+        }
+        .getOrDefault(emptyList())
+
+    return when {
+      configuredStrategies.contains(AuthStrategy.EMAIL_LINK) -> AuthStrategy.EMAIL_LINK
+      configuredStrategies.contains(AuthStrategy.EMAIL_CODE) -> AuthStrategy.EMAIL_CODE
+      else -> AuthStrategy.EMAIL_CODE
+    }
+  }
+
+val SignUp.isEmailLinkVerificationSupported: Boolean
+  get() = emailVerificationStrategy == AuthStrategy.EMAIL_LINK
+
+private fun SignUp.PrepareVerificationParams.Strategy.toFields(): Map<String, String> {
+  val strategyFields = mutableMapOf(ApiParams.STRATEGY to strategy)
+
+  if (this is SignUp.PrepareVerificationParams.Strategy.EmailLink) {
+    val resolvedRedirectUri =
+      redirectUri
+        ?: redirectUrl
+        ?: runCatching {
+            val applicationId = Clerk.applicationId
+            if (applicationId.isNullOrBlank()) {
+              null
+            } else {
+              RedirectConfiguration.emailLinkRedirectUrl(
+                applicationId = applicationId,
+                proxyUrl = Clerk.proxyUrl,
+              )
+            }
+          }
+          .getOrNull()
+    if (!resolvedRedirectUri.isNullOrBlank()) {
+      strategyFields[ApiParams.REDIRECT_URI] = resolvedRedirectUri
+    }
+
+    strategyFields[ApiParams.CODE_CHALLENGE] = codeChallenge ?: PkceUtil.generatePair().challenge
+    strategyFields[ApiParams.CODE_CHALLENGE_METHOD] =
+      if (codeChallengeMethod == PKCE_METHOD_S256) codeChallengeMethod else PKCE_METHOD_S256
+  }
+
+  return strategyFields
+}
+
+private const val PKCE_METHOD_S256 = "S256"

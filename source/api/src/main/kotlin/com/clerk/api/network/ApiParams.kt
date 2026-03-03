@@ -24,6 +24,10 @@ internal object ApiParams {
   // Request parameters
   internal const val STRATEGY = "strategy"
   internal const val CODE = "code"
+  internal const val REDIRECT_URL = "redirect_url"
+  internal const val REDIRECT_URI = "redirect_uri"
+  internal const val CODE_CHALLENGE = "code_challenge"
+  internal const val CODE_CHALLENGE_METHOD = "code_challenge_method"
   internal const val CLERK_SESSION_ID = "_clerk_session_id"
 
   internal const val ROLE = "role"

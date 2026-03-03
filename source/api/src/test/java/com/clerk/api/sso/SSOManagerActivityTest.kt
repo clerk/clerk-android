@@ -49,6 +49,24 @@ class SSOManagerActivityTest {
   }
 
   @Test
+  fun callbackIntent_completesWithoutAuthorizationStarted() {
+    mockkObject(SSOService)
+    every { SSOService.hasPendingExternalAccountConnection() } returns false
+    coJustRun { SSOService.completeAuthenticateWithRedirect(any()) }
+
+    val app = ApplicationProvider.getApplicationContext<Application>()
+    val responseUri = Uri.parse("clerk://callback?rotating_token_nonce=abc")
+    val intent = SSOManagerActivity.createResponseHandlingIntent(app, responseUri)
+
+    val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
+    val activity = controller.create().resume().get()
+
+    coVerify(exactly = 1) { SSOService.completeAuthenticateWithRedirect(any()) }
+    val shadow = Shadows.shadowOf(activity)
+    assertEquals(Activity.RESULT_OK, shadow.resultCode)
+  }
+
+  @Test
   fun authorizationCanceled_setsResultCanceled_whenNoData() {
     val app = ApplicationProvider.getApplicationContext<Application>()
     val intent =

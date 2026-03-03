@@ -2,6 +2,7 @@ package com.clerk.api.network.serialization
 
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.environment.Environment
+import com.clerk.api.network.model.magiclink.NativeMagicLinkCompleteResponse
 import com.clerk.api.network.model.response.ClientPiggybackedResponse
 import com.clerk.api.network.model.token.TokenResource
 import java.lang.reflect.ParameterizedType
@@ -104,5 +105,9 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
 }
 
 internal fun getExcludedTypeNames(): List<String> {
-  return listOf(Environment::class.qualifiedName ?: "", TokenResource::class.qualifiedName ?: "")
+  return listOf(
+    Environment::class.qualifiedName ?: "",
+    TokenResource::class.qualifiedName ?: "",
+    NativeMagicLinkCompleteResponse::class.qualifiedName ?: "",
+  )
 }
