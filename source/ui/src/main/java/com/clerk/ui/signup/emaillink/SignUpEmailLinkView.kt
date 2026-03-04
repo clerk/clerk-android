@@ -1,12 +1,18 @@
 package com.clerk.ui.signup.emaillink
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,13 +21,18 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
-import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
+import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
+import com.clerk.ui.util.EmailAppLauncher
+import kotlinx.coroutines.launch
 
 @Composable
 fun SignUpEmailLinkView(
@@ -47,7 +58,9 @@ private fun SignUpEmailLinkViewImpl(
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
+  val context = LocalContext.current
   val snackbarHostState = remember { SnackbarHostState() }
+  val coroutineScope = rememberCoroutineScope()
   val state by viewModel.state.collectAsStateWithLifecycle()
 
   LaunchedEffect(Unit) { viewModel.sendLink() }
@@ -62,6 +75,7 @@ private fun SignUpEmailLinkViewImpl(
 
   ClerkThemedAuthScaffold(
     modifier = modifier,
+    onBackPressed = authState::navigateBack,
     title = stringResource(R.string.check_your_email),
     subtitle =
       Clerk.applicationName?.let { stringResource(R.string.to_continue_to, it) }
@@ -72,12 +86,35 @@ private fun SignUpEmailLinkViewImpl(
     snackbarHostState = snackbarHostState,
   ) {
     ClerkButton(
-      text = stringResource(R.string.resend),
-      onClick = viewModel::sendLink,
+      text = stringResource(R.string.open_email_app),
+      onClick = {
+        if (!EmailAppLauncher.open(context)) {
+          coroutineScope.launch {
+            snackbarHostState.showSnackbar(
+              message = context.getString(R.string.no_email_clients_installed_on_device),
+              duration = SnackbarDuration.Short,
+            )
+          }
+        }
+      },
       modifier = Modifier.fillMaxWidth(),
-      isLoading = state is AuthenticationViewState.Loading,
+      configuration =
+        ClerkButtonDefaults.configuration(
+          style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+          emphasis = ClerkButtonConfiguration.Emphasis.High,
+        ),
     )
     Spacers.Vertical.Spacer24()
+    Row(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = dp8),
+      horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+      ClerkTextButton(text = stringResource(R.string.resend), onClick = viewModel::sendLink)
+      ClerkTextButton(
+        text = stringResource(R.string.use_another_method),
+        onClick = authState::navigateBack,
+      )
+    }
   }
 }
 
