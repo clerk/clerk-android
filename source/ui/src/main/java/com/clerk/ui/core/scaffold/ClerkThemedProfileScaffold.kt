@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
+import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp18
@@ -40,6 +41,8 @@ internal fun ClerkThemedProfileScaffold(
   content: @Composable ColumnScope.() -> Unit,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
+  val shouldShowLogo =
+    shouldShowInstanceLogo(hasLogo = hasLogo, organizationLogoUrl = Clerk.organizationLogoUrl)
   LaunchedEffect(errorMessage) {
     if (errorMessage != null) snackbarHostState.showSnackbar(errorMessage)
   }
@@ -51,7 +54,7 @@ internal fun ClerkThemedProfileScaffold(
       topBar = {
         ClerkTopAppBar(
           backgroundColor = ClerkMaterialTheme.colors.background,
-          hasLogo = hasLogo,
+          hasLogo = shouldShowLogo,
           hasBackButton = hasBackButton,
           title = title,
           onBackPressed = onBackPressed,
