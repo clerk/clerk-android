@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -31,6 +32,7 @@ import coil3.request.crossfade
 import com.clerk.api.Clerk
 import com.clerk.api.session.requiresForcedMfa
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.user.User
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthView
@@ -66,14 +68,22 @@ fun UserButton(
     TelemetryProvider {
       val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
       val sessionUser by Clerk.userFlow.collectAsStateWithLifecycle()
+      val resolved =
+        resolveUserButtonState(
+          sessionExists = session != null || Clerk.session != null,
+          sessionUser = sessionUser,
+          activeUser = Clerk.activeUser ?: Clerk.user,
+          treatPendingAsSignedOut = treatPendingAsSignedOut,
+        )
       val requiresForcedMfa = session?.requiresForcedMfa == true
-      val user = if (treatPendingAsSignedOut) Clerk.activeUser else sessionUser
+      val user = resolved.user
+      val shouldShowButton = resolved.shouldShowButton
       val telemetry = LocalTelemetryCollector.current
       var showProfile by rememberSaveable { mutableStateOf(false) }
       var showAuth by rememberSaveable { mutableStateOf(false) }
 
-      LaunchedEffect(user?.id) {
-        if (user != null) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
+      LaunchedEffect(shouldShowButton, user?.id) {
+        if (shouldShowButton) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
       }
 
       LaunchedEffect(requiresForcedMfa, showAuth) {
@@ -82,27 +92,17 @@ fun UserButton(
         }
       }
 
-      if (
-        shouldShowUserButton(
-          sessionUser != null,
-          Clerk.activeUser != null,
-          treatPendingAsSignedOut,
-        ) && user != null
-      ) {
+      if (shouldShowButton) {
         UserButtonContent(
-          imageUrl = user.imageUrl,
+          imageUrl = user?.imageUrl,
           onClick = {
-            when (
-              userButtonClickAction(
-                requiresForcedMfa = requiresForcedMfa,
-                routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
-              )
-            ) {
-              UserButtonClickAction.OPEN_PROFILE -> showProfile = true
-              UserButtonClickAction.ROUTE_TO_AUTH -> {
-                onRequiresForcedMfaClick?.invoke() ?: run { showAuth = true }
-              }
-            }
+            handleUserButtonClick(
+              requiresForcedMfa = requiresForcedMfa,
+              routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
+              onRequiresForcedMfaClick = onRequiresForcedMfaClick,
+              onOpenProfile = { showProfile = true },
+              onOpenAuth = { showAuth = true },
+            )
           },
         )
         if (showProfile) {
@@ -116,10 +116,54 @@ fun UserButton(
   }
 }
 
+private data class ResolvedUserButtonState(val user: User?, val shouldShowButton: Boolean)
+
+private fun resolveUserButtonState(
+  sessionExists: Boolean,
+  sessionUser: User?,
+  activeUser: User?,
+  treatPendingAsSignedOut: Boolean,
+): ResolvedUserButtonState {
+  val user =
+    if (treatPendingAsSignedOut) {
+      activeUser
+    } else {
+      sessionUser ?: activeUser
+    }
+
+  val shouldShowButton =
+    shouldShowUserButton(
+      hasSession = sessionExists,
+      hasActiveUser = activeUser != null,
+      treatPendingAsSignedOut = treatPendingAsSignedOut,
+    )
+
+  return ResolvedUserButtonState(user = user, shouldShowButton = shouldShowButton)
+}
+
+private fun handleUserButtonClick(
+  requiresForcedMfa: Boolean,
+  routeToAuthWhenForcedMfa: Boolean,
+  onRequiresForcedMfaClick: (() -> Unit)?,
+  onOpenProfile: () -> Unit,
+  onOpenAuth: () -> Unit,
+) {
+  when (
+    userButtonClickAction(
+      requiresForcedMfa = requiresForcedMfa,
+      routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
+    )
+  ) {
+    UserButtonClickAction.OPEN_PROFILE -> onOpenProfile()
+    UserButtonClickAction.ROUTE_TO_AUTH -> onRequiresForcedMfaClick?.invoke() ?: onOpenAuth()
+  }
+}
+
 @SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 private fun UserButtonContent(imageUrl: String?, onClick: () -> Unit) {
   val context = LocalContext.current
+  val profilePainter = painterResource(id = R.drawable.ic_profile)
   IconButton(onClick = onClick) {
     Box(
       modifier =
@@ -128,17 +172,25 @@ private fun UserButtonContent(imageUrl: String?, onClick: () -> Unit) {
         },
       contentAlignment = Alignment.Center,
     ) {
-      val model = ImageRequest.Builder(LocalContext.current).data(imageUrl).crossfade(true).build()
-      AsyncImage(
-        modifier = Modifier.matchParentSize().clip(CircleShape),
-        model = model,
-        contentDescription = stringResource(R.string.user_avatar),
-        contentScale = ContentScale.Crop,
-        fallback = painterResource(id = R.drawable.ic_profile),
-        onError = { /* fall through to placeholder below */ },
-      )
-      if (imageUrl?.isBlank() == true) {
-        Icon(painterResource(id = R.drawable.ic_profile), null, Modifier.matchParentSize())
+      if (imageUrl.isNullOrBlank()) {
+        Icon(
+          painter = profilePainter,
+          contentDescription = stringResource(R.string.user_avatar),
+          modifier = Modifier.matchParentSize(),
+          tint = Color.Unspecified,
+        )
+      } else {
+        val model =
+          ImageRequest.Builder(LocalContext.current).data(imageUrl).crossfade(true).build()
+        AsyncImage(
+          modifier = Modifier.matchParentSize().clip(CircleShape),
+          model = model,
+          contentDescription = stringResource(R.string.user_avatar),
+          contentScale = ContentScale.Crop,
+          placeholder = profilePainter,
+          fallback = profilePainter,
+          error = profilePainter,
+        )
       }
     }
   }
@@ -181,9 +233,13 @@ internal fun userButtonClickAction(
 }
 
 internal fun shouldShowUserButton(
-  hasSessionUser: Boolean,
+  hasSession: Boolean,
   hasActiveUser: Boolean,
   treatPendingAsSignedOut: Boolean,
 ): Boolean {
-  return if (treatPendingAsSignedOut) hasActiveUser else hasSessionUser
+  return if (treatPendingAsSignedOut) {
+    hasActiveUser
+  } else {
+    hasSession
+  }
 }
