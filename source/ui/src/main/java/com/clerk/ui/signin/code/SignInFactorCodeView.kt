@@ -10,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -82,17 +83,18 @@ fun SignInFactorCodeView(
  *
  * @param factor The authentication factor to process
  * @param modifier Optional modifier for styling
- * @param viewModel The view model managing the sign-in state (injected via Compose)
  */
 @Composable
 private fun SignInFactorCodeViewImpl(
   factor: Factor,
   modifier: Modifier = Modifier,
-  viewModel: SignInFactorCodeViewModel = viewModel(),
   isSecondFactor: Boolean = false,
   isClientTrust: Boolean = false,
   onAuthComplete: () -> Unit,
 ) {
+  val signInId = Clerk.auth.currentSignIn?.id ?: "no-sign-in"
+  val viewModel: SignInFactorCodeViewModel =
+    viewModel(key = "sign-in-code-$signInId-$isSecondFactor")
   val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
   val verificationTextState by viewModel.verificationUiState.collectAsStateWithLifecycle()
@@ -104,12 +106,11 @@ private fun SignInFactorCodeViewImpl(
     authState = authState,
     state = state,
     snackbarHostState = snackbarHostState,
-    onAuthComplete = {
-      onAuthComplete()
+    onAuthComplete = onAuthComplete,
+    onReset = {
       viewModel.resetState()
       viewModel.resetVerificationState()
     },
-    onReset = { viewModel.resetState() },
   )
   ClerkThemedAuthScaffold(
     modifier = modifier,
@@ -128,6 +129,7 @@ private fun SignInFactorCodeViewImpl(
       onTextChange = {
         if (verificationTextState is VerificationUiState.Error) {
           viewModel.resetState()
+          viewModel.resetVerificationState()
         }
         if (it.length == 6) {
           viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = it)
