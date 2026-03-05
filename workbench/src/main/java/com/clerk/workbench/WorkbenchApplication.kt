@@ -12,7 +12,15 @@ class WorkbenchApplication : Application() {
 
     val publicKey = StorageHelper.loadValue(StorageKey.PUBLIC_KEY)
     publicKey?.let { key ->
-      Clerk.initialize(this, key, options = ClerkConfigurationOptions(enableDebugMode = true))
+      Clerk.initialize(
+        this,
+        key,
+        options =
+          ClerkConfigurationOptions(
+            enableDebugMode = true,
+            proxyUrl = "https://rapid-earwig-10.clerk.accounts.lclclerk.com:8443",
+          ),
+      )
     }
   }
 }
