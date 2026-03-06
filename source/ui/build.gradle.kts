@@ -108,6 +108,15 @@ dependencies {
   implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.navigation3.ui)
+
+  constraints {
+    implementation(libs.androidx.navigationevent.compose) {
+      version {
+        strictly(libs.versions.navigationevent.get())
+      }
+      because("navigationevent-compose-android 1.0.2 requires AGP 8.9.1; keep compatibility with AGP 8.8.2 consumers")
+    }
+  }
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.tooling)
   implementation(libs.androidx.ui.tooling.preview.android)
