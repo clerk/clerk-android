@@ -5,6 +5,7 @@ package com.clerk.ui.core.button.social
 import android.annotation.SuppressLint
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -31,12 +32,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.logoUrl
@@ -54,6 +54,8 @@ import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withDarkVariant
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
+
+private const val DISABLED_ICON_ALPHA = 0.5f
 
 /**
  * A composable button for social authentication with a specific [OAuthProvider].
@@ -267,13 +269,32 @@ private fun SocialButtonIcon(
   isEnabled: Boolean,
   contentDescription: String?,
 ) {
+  val iconAlpha = if (isEnabled) 1f else DISABLED_ICON_ALPHA
+  val isGoogleProvider = provider == OAuthProvider.GOOGLE
   val model = provider.logoUrl?.takeUnless { it.isBlank() }?.withDarkVariant(isSystemInDarkTheme())
+  val fallbackImagePainter = if (isGoogleProvider) painterResource(R.drawable.ic_google) else null
 
-  val fallbackImagePainter =
-    if (provider == OAuthProvider.GOOGLE) painterResource(R.drawable.ic_google) else null
+  val providerFallback: @Composable () -> Unit = {
+    if (isGoogleProvider) {
+      Image(
+        painter = requireNotNull(fallbackImagePainter),
+        contentDescription = contentDescription,
+        modifier = Modifier.size(dp24),
+        alpha = iconAlpha,
+      )
+    } else {
+      Text(
+        text = provider.providerName,
+        style = ClerkMaterialTheme.typography.labelSmall,
+        color = ClerkMaterialTheme.colors.mutedForeground.copy(alpha = iconAlpha),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+  }
 
   if (model == null) {
-    ProviderFallback(provider = provider, isEnabled = isEnabled, contentDescription = contentDescription)
+    providerFallback()
     return
   }
 
@@ -281,39 +302,18 @@ private fun SocialButtonIcon(
     model = model,
     contentDescription = contentDescription,
     modifier = Modifier.size(dp24),
-    alpha = if (isEnabled) 1f else 0.5f,
+    alpha = iconAlpha,
     loading = {
       fallbackImagePainter?.let { painter ->
-        AsyncImage(
-          model = painter,
+        Image(
+          painter = painter,
           contentDescription = contentDescription,
           modifier = Modifier.size(dp24),
-          alpha = if (isEnabled) 1f else 0.5f,
+          alpha = iconAlpha,
         )
       }
     },
-    error = { ProviderFallback(provider = provider, isEnabled = isEnabled, contentDescription = contentDescription) },
-  )
-}
-
-@Composable
-private fun ProviderFallback(provider: OAuthProvider, isEnabled: Boolean, contentDescription: String?) {
-  if (provider == OAuthProvider.GOOGLE) {
-    AsyncImage(
-      model = painterResource(R.drawable.ic_google),
-      contentDescription = contentDescription,
-      alpha = if (isEnabled) 1f else 0.5f,
-      modifier = Modifier.size(dp24),
-    )
-    return
-  }
-
-  Text(
-    text = provider.providerName,
-    style = ClerkMaterialTheme.typography.labelSmall,
-    color = ClerkMaterialTheme.colors.mutedForeground.copy(alpha = if (isEnabled) 1f else 0.5f),
-    maxLines = 1,
-    overflow = TextOverflow.Ellipsis,
+    error = { providerFallback() },
   )
 }
 
