@@ -23,7 +23,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthState
@@ -60,31 +59,25 @@ fun SignInSetNewPasswordView(
  * The internal implementation of the [SignInSetNewPasswordView].
  *
  * @param modifier The [Modifier] to be applied to the view.
+ * @param viewModel The [ResetPasswordViewModel] used to manage the state and actions of the view.
  */
 @Composable
 private fun SignInSetNewPasswordViewImpl(
   modifier: Modifier = Modifier,
+  viewModel: ResetPasswordViewModel = viewModel(),
   onAuthComplete: () -> Unit,
 ) {
-  val signInId = Clerk.auth.currentSignIn?.id ?: "no-sign-in"
-  val viewModel: ResetPasswordViewModel = viewModel(key = "reset-password-$signInId")
   val authState = LocalAuthState.current
   val snackbarHostState = remember { SnackbarHostState() }
+  var passwordsMatch by remember { mutableStateOf(true) }
   var signOutOtherDevices by remember { mutableStateOf(false) }
   val state by viewModel.state.collectAsStateWithLifecycle()
-  val passwordsMatch by
-    remember(authState.signInNewPassword, authState.signInConfirmNewPassword) {
-      derivedStateOf {
-        authState.signInNewPassword == authState.signInConfirmNewPassword ||
-          authState.signInConfirmNewPassword.isBlank()
-      }
-    }
 
   val isButtonEnabled by remember {
     derivedStateOf {
-      authState.signInNewPassword.isNotBlank() &&
-        authState.signInConfirmNewPassword.isNotBlank() &&
-        passwordsMatch
+      authState.signInNewPassword.isNotBlank() ||
+        authState.signInConfirmNewPassword.isNotBlank() ||
+        !passwordsMatch
     }
   }
 
@@ -112,6 +105,8 @@ private fun SignInSetNewPasswordViewImpl(
       onClick = {
         if (authState.signInNewPassword == authState.signInConfirmNewPassword) {
           viewModel.setNewPassword(authState.signInNewPassword, signOutOtherDevices)
+        } else {
+          passwordsMatch = false
         }
       },
       isLoading = state is AuthenticationViewState.Loading,
@@ -124,7 +119,6 @@ private fun SignInSetNewPasswordViewImpl(
 
 @Composable
 private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean) {
-  val showPasswordMismatchError = authState.signInConfirmNewPassword.isNotBlank() && !passwordsMatch
   ClerkTextField(
     value = authState.signInNewPassword,
     onValueChange = { authState.signInNewPassword = it },
@@ -139,8 +133,8 @@ private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean) {
     label = stringResource(R.string.confirm_password),
     visualTransformation = PasswordVisualTransformation(),
     inputContentType = ContentType.Password,
-    isError = showPasswordMismatchError,
-    supportingText = if (showPasswordMismatchError) "Passwords don't match" else null,
+    isError = !passwordsMatch,
+    supportingText = if (!passwordsMatch) "Passwords don't match" else null,
   )
 }
 

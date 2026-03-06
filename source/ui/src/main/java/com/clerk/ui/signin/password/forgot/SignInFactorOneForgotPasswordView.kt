@@ -77,6 +77,7 @@ fun SignInFactorOneForgotPasswordView(
  * @param alternativeFactors A list of alternative factors the user can use to sign in.
  * @param socialProviders A list of social providers available for sign-in.
  * @param modifier The [Modifier] to be applied to the view.
+ * @param viewModel The [ForgotPasswordViewModel] for handling the view's logic.
  * @param onClickFactor A callback to be invoked when the user selects an alternative factor.
  */
 @Composable
@@ -85,11 +86,10 @@ private fun SignInFactorOneForgotPasswordViewImpl(
   socialProviders: ImmutableList<OAuthProvider>,
   onClickFactor: (Factor) -> Unit,
   modifier: Modifier = Modifier,
+  viewModel: ForgotPasswordViewModel = viewModel(),
   textIconHelper: TextIconHelper = TextIconHelper(),
   onAuthComplete: () -> Unit,
 ) {
-  val signInId = Clerk.auth.currentSignIn?.id ?: "no-sign-in"
-  val viewModel: ForgotPasswordViewModel = viewModel(key = "forgot-password-$signInId")
   val authState = LocalAuthState.current
   val context = LocalContext.current
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -97,28 +97,17 @@ private fun SignInFactorOneForgotPasswordViewImpl(
 
   LaunchedEffect(state) {
     when (val s = state) {
-      is ResetPasswordViewState.Error -> {
+      is ResetPasswordViewState.Error ->
         snackbarHostState.showSnackbar(
           s.message ?: context.getString(R.string.something_went_wrong_please_try_again)
         )
-        viewModel.resetState()
-      }
-      ResetPasswordViewState.NotStarted -> {
-        authState.clearBackStack()
-        viewModel.resetState()
-      }
-      is ResetPasswordViewState.ResetFactor -> {
+      ResetPasswordViewState.NotStarted -> authState.clearBackStack()
+      is ResetPasswordViewState.ResetFactor ->
         authState.navigateTo(AuthDestination.SignInFactorOne(factor = s.factor))
-        viewModel.resetState()
-      }
-      is ResetPasswordViewState.Success.SignIn -> {
+      is ResetPasswordViewState.Success.SignIn ->
         authState.setToStepForStatus(s.signIn, onAuthComplete)
-        viewModel.resetState()
-      }
-      is ResetPasswordViewState.Success.SignUp -> {
+      is ResetPasswordViewState.Success.SignUp ->
         authState.setToStepForStatus(s.signUp, onAuthComplete)
-        viewModel.resetState()
-      }
       else -> {}
     }
   }

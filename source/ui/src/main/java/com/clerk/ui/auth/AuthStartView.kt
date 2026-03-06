@@ -143,7 +143,6 @@ internal fun AuthStartViewImpl(
     ClerkThemedAuthScaffold(
       modifier = modifier,
       hasBackButton = false,
-      showSignedInUserButton = false,
       title = authViewHelper.titleString(authState.mode),
       subtitle = authViewHelper.subtitleString(authState.mode),
       snackbarHostState = snackbarHostState,
