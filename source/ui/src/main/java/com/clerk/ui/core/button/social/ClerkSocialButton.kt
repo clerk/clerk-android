@@ -5,6 +5,7 @@ package com.clerk.ui.core.button.social
 import android.annotation.SuppressLint
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -26,19 +27,17 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.logoUrl
 import com.clerk.api.sso.providerName
@@ -55,6 +54,8 @@ import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withDarkVariant
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
+
+private const val DISABLED_ICON_ALPHA = 0.5f
 
 /**
  * A composable button for social authentication with a specific [OAuthProvider].
@@ -268,26 +269,51 @@ private fun SocialButtonIcon(
   isEnabled: Boolean,
   contentDescription: String?,
 ) {
-  val mutedForeground = ClerkMaterialTheme.colors.mutedForeground
-
+  val iconAlpha = if (isEnabled) 1f else DISABLED_ICON_ALPHA
+  val isGoogleProvider = provider == OAuthProvider.GOOGLE
   val model = provider.logoUrl?.takeUnless { it.isBlank() }?.withDarkVariant(isSystemInDarkTheme())
+  val fallbackImagePainter = if (isGoogleProvider) painterResource(R.drawable.ic_google) else null
 
-  val fallbackPainter =
-    if (provider == OAuthProvider.GOOGLE) painterResource(R.drawable.ic_google)
-    else painterResource(R.drawable.ic_globe)
+  val providerFallback: @Composable () -> Unit = {
+    if (isGoogleProvider) {
+      Image(
+        painter = requireNotNull(fallbackImagePainter),
+        contentDescription = contentDescription,
+        modifier = Modifier.size(dp24),
+        alpha = iconAlpha,
+      )
+    } else {
+      Text(
+        text = provider.providerName,
+        style = ClerkMaterialTheme.typography.labelSmall,
+        color = ClerkMaterialTheme.colors.mutedForeground.copy(alpha = iconAlpha),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+  }
 
-  var showingFallback by remember { mutableStateOf(model == null) }
+  if (model == null) {
+    providerFallback()
+    return
+  }
 
-  AsyncImage(
+  SubcomposeAsyncImage(
     model = model,
     contentDescription = contentDescription,
-    fallback = fallbackPainter,
-    error = fallbackPainter,
-    alpha = if (isEnabled) 1f else 0.5f,
     modifier = Modifier.size(dp24),
-    colorFilter =
-      if (showingFallback && provider != OAuthProvider.GOOGLE) ColorFilter.tint(mutedForeground)
-      else null,
+    alpha = iconAlpha,
+    loading = {
+      fallbackImagePainter?.let { painter ->
+        Image(
+          painter = painter,
+          contentDescription = contentDescription,
+          modifier = Modifier.size(dp24),
+          alpha = iconAlpha,
+        )
+      }
+    },
+    error = { providerFallback() },
   )
 }
 
