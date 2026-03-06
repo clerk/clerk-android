@@ -669,7 +669,9 @@ data class DeviceAttestationOptions(val applicationId: String, val cloudProjectN
  *   [UserSettings.SocialConfig].
  */
 fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthProvider> =
-  this.map { OAuthProvider.fromStrategy(it.value.strategy) }
+  this.values
+    .filter { it.enabled && it.authenticatable }
+    .map { OAuthProvider.fromStrategy(it.strategy) }
 
 fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
   supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
