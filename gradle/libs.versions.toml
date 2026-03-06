@@ -17,7 +17,6 @@ material3 = "1.4.0"
 materialKolor = "4.1.1"
 mavenPublish = "0.36.0"
 navigation3 = "1.0.1"
-navigationevent = "1.0.1"
 navigationCompose = "2.9.7"
 okhttp = "5.3.2"
 retrofit = "3.0.0"
@@ -57,7 +56,6 @@ androidx-lifecycle-viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.
 androidx-lifecycle-viewmodel-compose = "androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0"
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
-androidx-navigationevent-compose = { module = "androidx.navigationevent:navigationevent-compose-android", version.ref = "navigationevent" }
 androidx-playServicesAuth = "androidx.credentials:credentials-play-services-auth:1.5.0"
 androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
