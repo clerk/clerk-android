@@ -26,19 +26,18 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.logoUrl
 import com.clerk.api.sso.providerName
@@ -268,26 +267,53 @@ private fun SocialButtonIcon(
   isEnabled: Boolean,
   contentDescription: String?,
 ) {
-  val mutedForeground = ClerkMaterialTheme.colors.mutedForeground
-
   val model = provider.logoUrl?.takeUnless { it.isBlank() }?.withDarkVariant(isSystemInDarkTheme())
 
-  val fallbackPainter =
-    if (provider == OAuthProvider.GOOGLE) painterResource(R.drawable.ic_google)
-    else painterResource(R.drawable.ic_globe)
+  val fallbackImagePainter =
+    if (provider == OAuthProvider.GOOGLE) painterResource(R.drawable.ic_google) else null
 
-  var showingFallback by remember { mutableStateOf(model == null) }
+  if (model == null) {
+    ProviderFallback(provider = provider, isEnabled = isEnabled, contentDescription = contentDescription)
+    return
+  }
 
-  AsyncImage(
+  SubcomposeAsyncImage(
     model = model,
     contentDescription = contentDescription,
-    fallback = fallbackPainter,
-    error = fallbackPainter,
-    alpha = if (isEnabled) 1f else 0.5f,
     modifier = Modifier.size(dp24),
-    colorFilter =
-      if (showingFallback && provider != OAuthProvider.GOOGLE) ColorFilter.tint(mutedForeground)
-      else null,
+    alpha = if (isEnabled) 1f else 0.5f,
+    loading = {
+      fallbackImagePainter?.let { painter ->
+        AsyncImage(
+          model = painter,
+          contentDescription = contentDescription,
+          modifier = Modifier.size(dp24),
+          alpha = if (isEnabled) 1f else 0.5f,
+        )
+      }
+    },
+    error = { ProviderFallback(provider = provider, isEnabled = isEnabled, contentDescription = contentDescription) },
+  )
+}
+
+@Composable
+private fun ProviderFallback(provider: OAuthProvider, isEnabled: Boolean, contentDescription: String?) {
+  if (provider == OAuthProvider.GOOGLE) {
+    AsyncImage(
+      model = painterResource(R.drawable.ic_google),
+      contentDescription = contentDescription,
+      alpha = if (isEnabled) 1f else 0.5f,
+      modifier = Modifier.size(dp24),
+    )
+    return
+  }
+
+  Text(
+    text = provider.providerName,
+    style = ClerkMaterialTheme.typography.labelSmall,
+    color = ClerkMaterialTheme.colors.mutedForeground.copy(alpha = if (isEnabled) 1f else 0.5f),
+    maxLines = 1,
+    overflow = TextOverflow.Ellipsis,
   )
 }
 
