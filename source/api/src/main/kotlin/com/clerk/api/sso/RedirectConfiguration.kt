@@ -12,6 +12,10 @@ import com.clerk.api.Clerk
  * This is an internal utility and should not be used outside the Clerk SDK.
  */
 internal object RedirectConfiguration {
+  private const val SCHEME = "clerk"
+  private const val DEFAULT_HOST_SUFFIX = "callback"
+  private const val LEGACY_HOST_SUFFIX = "oauth"
+
   /**
    * The default redirect URL used for OAuth authentication flows.
    *
@@ -19,5 +23,19 @@ internal object RedirectConfiguration {
    * providers. The custom scheme "clerk://" allows the application to handle the OAuth callback and
    * complete the authentication process.
    */
-  val DEFAULT_REDIRECT_URL: String = "clerk://${Clerk.applicationId}.oauth"
+  val DEFAULT_REDIRECT_URL: String
+    get() = buildRedirectUrl(DEFAULT_HOST_SUFFIX)
+
+  /**
+   * The legacy redirect URL used by previous SDK versions.
+   *
+   * The manifest still registers this host so in-flight or stale OAuth redirects from older app
+   * versions continue to resolve after upgrading.
+   */
+  val LEGACY_REDIRECT_URL: String
+    get() = buildRedirectUrl(LEGACY_HOST_SUFFIX)
+
+  private fun buildRedirectUrl(hostSuffix: String): String {
+    return "$SCHEME://${Clerk.applicationId}.$hostSuffix"
+  }
 }
