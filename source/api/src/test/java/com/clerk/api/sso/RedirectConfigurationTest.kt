@@ -35,4 +35,11 @@ class RedirectConfigurationTest {
     Clerk.applicationId = "com.example.second"
     assertEquals("clerk://com.example.second.callback", RedirectConfiguration.DEFAULT_REDIRECT_URL)
   }
+
+  @Test
+  fun defaultRedirectUrl_doesNotThrowWhenApplicationIdIsUnset() {
+    Clerk.applicationId = null
+
+    assertEquals("clerk://null.callback", RedirectConfiguration.DEFAULT_REDIRECT_URL)
+  }
 }

@@ -36,11 +36,6 @@ internal object RedirectConfiguration {
     get() = buildRedirectUrl(LEGACY_HOST_SUFFIX)
 
   private fun buildRedirectUrl(hostSuffix: String): String {
-    val applicationId =
-      requireNotNull(Clerk.applicationId) {
-        "Clerk.applicationId must be set before building Clerk redirect URLs."
-      }
-
-    return "$SCHEME://$applicationId.$hostSuffix"
+    return "$SCHEME://${Clerk.applicationId}.$hostSuffix"
   }
 }
