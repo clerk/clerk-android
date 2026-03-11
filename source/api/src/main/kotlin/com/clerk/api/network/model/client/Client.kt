@@ -48,5 +48,9 @@ data class Client(
   companion object {
     /** Fetches the current client object from the Clerk API. */
     suspend fun get(): ClerkResult<Client, ClerkErrorResponse> = ClerkApi.client.get()
+
+    /** Fetches the current client without sending the current in-memory client id header. */
+    suspend fun getSkippingClientId(): ClerkResult<Client, ClerkErrorResponse> =
+      ClerkApi.client.getSkippingClientId()
   }
 }

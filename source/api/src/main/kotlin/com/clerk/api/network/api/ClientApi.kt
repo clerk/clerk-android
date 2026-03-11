@@ -1,6 +1,8 @@
 package com.clerk.api.network.api
 
 import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.middleware.outgoing.INTERNAL_HEADER_SKIP_CLIENT_ID
+import com.clerk.api.network.middleware.outgoing.INTERNAL_HEADER_TRUE
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -8,6 +10,7 @@ import com.clerk.api.session.Session
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -32,6 +35,11 @@ internal interface ClientApi {
    *   failure
    */
   @GET(ApiPaths.Client.BASE) suspend fun get(): ClerkResult<Client, ClerkErrorResponse>
+
+  @GET(ApiPaths.Client.BASE)
+  suspend fun getSkippingClientId(
+    @Header(INTERNAL_HEADER_SKIP_CLIENT_ID) skipClientId: String = INTERNAL_HEADER_TRUE
+  ): ClerkResult<Client, ClerkErrorResponse>
 
   /**
    * Sets a session as active for this client.
