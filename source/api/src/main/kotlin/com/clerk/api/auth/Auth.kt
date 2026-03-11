@@ -17,6 +17,7 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.magiclink.NativeMagicLinkError
 import com.clerk.api.magiclink.NativeMagicLinkManager
 import com.clerk.api.magiclink.NativeMagicLinkService
+import com.clerk.api.magiclink.canHandleNativeMagicLink
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -228,36 +229,9 @@ class Auth internal constructor() {
 
     val identifier = builder.email ?: builder.phone!!
     val isEmailFlow = builder.email != null
-    val nativeEmailLinkResult =
-      if (isEmailFlow) {
-        signInWithNativeEmailLink(identifier)
-      } else {
-        null
-      }
-    val result = nativeEmailLinkResult ?: createAndPrepareOtpSignIn(identifier, isEmailFlow)
+    val result = createAndPrepareOtpSignIn(identifier, isEmailFlow)
     result.onFailure { emitAuthError(it) }
     return result
-  }
-
-  private suspend fun signInWithNativeEmailLink(
-    identifier: String
-  ): ClerkResult<SignIn, ClerkErrorResponse> {
-    return when (val nativeResult = nativeMagicLink.startEmailLinkSignIn(identifier)) {
-      is ClerkResult.Success -> ClerkResult.success(nativeResult.value)
-      is ClerkResult.Failure ->
-        ClerkResult.apiFailure(
-          ClerkErrorResponse(
-            errors =
-              listOf(
-                Error(
-                  message = "is invalid",
-                  longMessage = "Native email-link sign-in failed",
-                  code = nativeResult.error?.reasonCode,
-                )
-              )
-          )
-        )
-    }
   }
 
   private suspend fun createAndPrepareOtpSignIn(
@@ -740,19 +714,21 @@ class Auth internal constructor() {
    * ### Example usage:
    * ```kotlin
    * // In your Activity's onCreate or onNewIntent
-   * clerk.auth.handle(intent.data)
+   * lifecycleScope.launch {
+   *   clerk.auth.handle(intent.data)
+   * }
    * ```
    */
-  fun handle(uri: Uri?): Boolean {
+  suspend fun handle(uri: Uri?): Boolean {
     val callbackUri = uri ?: return false
-    val handledByMagicLink = NativeMagicLinkService.canHandle(callbackUri)
+    val handledByMagicLink = canHandleNativeMagicLink(callbackUri)
     if (handledByMagicLink) {
-      kotlinx.coroutines.runBlocking { NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri) }
+      NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri)
     }
 
     val isClerkCallback = callbackUri.scheme?.startsWith("clerk") == true
     if (!handledByMagicLink && isClerkCallback) {
-      kotlinx.coroutines.runBlocking { SSOService.completeAuthenticateWithRedirect(callbackUri) }
+      SSOService.completeAuthenticateWithRedirect(callbackUri)
     }
 
     return handledByMagicLink || isClerkCallback
