@@ -9,6 +9,9 @@ import com.clerk.api.storage.StorageKey
 import okhttp3.Interceptor
 import okhttp3.Response
 
+internal const val INTERNAL_HEADER_SKIP_CLIENT_ID = "X-Clerk-SDK-Skip-Client-Id"
+internal const val INTERNAL_HEADER_TRUE = "1"
+
 /**
  * HeaderMiddleware is an OkHttp interceptor that adds custom clerk specific headers to outgoing
  * requests.
@@ -18,9 +21,11 @@ import okhttp3.Response
 internal class VersioningUserAgentMiddleware : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
+    val skipClientId = request.header(INTERNAL_HEADER_SKIP_CLIENT_ID) == INTERNAL_HEADER_TRUE
     val newRequestBuilder =
       request
         .newBuilder()
+        .removeHeader(INTERNAL_HEADER_SKIP_CLIENT_ID)
         .addHeader(OutgoingHeaders.CLERK_API_VERSION.header, Constants.Http.CURRENT_API_VERSION)
         .addHeader(OutgoingHeaders.X_ANDROID_SDK_VERSION.header, Constants.Http.CURRENT_SDK_VERSION)
         .addHeader(OutgoingHeaders.X_MOBILE.header, Constants.Http.IS_MOBILE_HEADER_VALUE)
@@ -29,7 +34,7 @@ internal class VersioningUserAgentMiddleware : Interceptor {
           DeviceIdGenerator.getOrGenerateDeviceId(),
         )
 
-    if (Clerk.isInitialized.value) {
+    if (Clerk.isInitialized.value && !skipClientId) {
       Clerk.client.id?.let {
         newRequestBuilder.addHeader(OutgoingHeaders.X_CLERK_CLIENT_ID.header, it)
       }

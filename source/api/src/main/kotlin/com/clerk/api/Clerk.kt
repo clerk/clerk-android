@@ -15,8 +15,10 @@ import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.InstanceEnvironmentType
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.environment.enabledFirstFactorAttributes
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.isResetFactor
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
@@ -538,6 +540,20 @@ object Clerk {
    *   initialized.
    */
   fun reinitialize(): Boolean = configurationManager.reinitialize()
+
+  /**
+   * Updates the stored device token and refreshes the native Clerk state.
+   *
+   * This is the supported way to swap the native device token after [initialize] has already run.
+   * The new token is persisted before forcing a fresh client/environment fetch, and that refresh
+   * intentionally omits the current in-memory client id header so a stale anonymous client cannot
+   * conflict with the newly supplied token.
+   *
+   * @param deviceToken The non-blank Clerk device token to persist and use for the refresh.
+   * @return A [ClerkResult] indicating whether the token sync and refresh succeeded.
+   */
+  suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> =
+    configurationManager.updateDeviceToken(deviceToken)
 
   // endregion
 

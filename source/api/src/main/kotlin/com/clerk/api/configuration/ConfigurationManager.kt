@@ -19,12 +19,14 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.FraudSettings
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.fold
 import com.clerk.api.network.serialization.successOrElse
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.fetchToken
 import com.clerk.api.storage.StorageHelper
+import com.clerk.api.storage.StorageKey
 import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
@@ -39,6 +41,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 
 /**
@@ -61,6 +65,7 @@ internal class ConfigurationManager {
    * essential for handling concurrent client and environment requests independently.
    */
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+  private val refreshMutex = Mutex()
 
   /** Weak reference to application context to prevent memory leaks. */
   internal var context: WeakReference<Context>? = null
@@ -121,6 +126,11 @@ internal class ConfigurationManager {
 
   /** Internal job reference for ongoing initialization operations. */
   private var initializationJob: Job? = null
+
+  private enum class RefreshMode {
+    INITIALIZATION,
+    DEVICE_TOKEN_UPDATE,
+  }
 
   /** Ensures storage is initialized when needed. */
   private fun ensureStorageInitialized() {
@@ -258,6 +268,28 @@ internal class ConfigurationManager {
       }
   }
 
+  suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> {
+    if (deviceToken.isBlank()) {
+      return ClerkResult.unknownFailure(IllegalArgumentException("Device token must not be blank"))
+    }
+
+    if (!hasConfigured) {
+      return ClerkResult.unknownFailure(
+        IllegalStateException("Clerk must be initialized before updating the device token")
+      )
+    }
+
+    ensureStorageInitialized()
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, deviceToken)
+
+    return refreshClientAndEnvironment(
+      options = storedOptions,
+      retryCount = 0,
+      mode = RefreshMode.DEVICE_TOKEN_UPDATE,
+      skipClientId = true,
+    )
+  }
+
   /**
    * Refreshes client and environment data by making concurrent API requests.
    *
@@ -276,17 +308,37 @@ internal class ConfigurationManager {
    * @param retryCount Current retry attempt number (0 for initial attempt).
    */
   private fun refreshClientAndEnvironment(options: ClerkConfigurationOptions?, retryCount: Int) {
+    scope.launch {
+      refreshClientAndEnvironment(
+        options = options,
+        retryCount = retryCount,
+        mode = RefreshMode.INITIALIZATION,
+      )
+    }
+  }
+
+  private suspend fun refreshClientAndEnvironment(
+    options: ClerkConfigurationOptions?,
+    retryCount: Int,
+    mode: RefreshMode,
+    skipClientId: Boolean = false,
+  ): ClerkResult<Unit, ClerkErrorResponse> {
     if (!hasConfigured) {
       ClerkLog.w("Attempted to refresh before configuration. Skipping.")
-      return
+      return ClerkResult.unknownFailure(
+        IllegalStateException("Clerk must be initialized before refreshing")
+      )
     }
 
     // Check if context is still available
     val context = context?.get()
     if (context == null) {
       ClerkLog.w("Application context no longer available. Cannot refresh client and environment.")
-      _initializationError.value = IllegalStateException("Application context no longer available")
-      return
+      val error = IllegalStateException("Application context no longer available")
+      if (mode == RefreshMode.INITIALIZATION) {
+        _initializationError.value = error
+      }
+      return ClerkResult.unknownFailure(error)
     }
 
     if (Clerk.debugMode) {
@@ -294,16 +346,22 @@ internal class ConfigurationManager {
     }
 
     // Clear error state on new attempt
-    if (retryCount == 0) {
+    if (retryCount == 0 && mode == RefreshMode.INITIALIZATION) {
       _initializationError.value = null
     }
 
-    scope.launch {
+    return refreshMutex.withLock {
       try {
         // Add timeout to prevent hanging
         withTimeout((API_TIMEOUT_SECONDS * TIMEOUT_MULTIPLIER)) {
           // Launch concurrent requests for better performance
-          val clientDeferred = async { Client.get() }
+          val clientDeferred = async {
+            if (skipClientId) {
+              Client.getSkippingClientId()
+            } else {
+              Client.get()
+            }
+          }
           val environmentDeferred = async { Environment.get() }
 
           // Process results as they become available
@@ -343,23 +401,56 @@ internal class ConfigurationManager {
             if (Clerk.debugMode) {
               ClerkLog.d("Client and environment refresh completed successfully")
             }
+
+            ClerkResult.success(Unit)
           } else {
             val errorMessage =
               "Failed to refresh client and environment -" +
                 " client: ${clientResult.javaClass.simpleName}," +
                 " environment: ${environmentResult.javaClass.simpleName}"
             ClerkLog.e(errorMessage)
-            handleInitializationFailure(
-              error = IllegalStateException(errorMessage),
-              options = options,
-              retryCount = retryCount,
-            )
+            val failure =
+              selectRefreshFailure(
+                clientResult = clientResult,
+                environmentResult = environmentResult,
+                fallbackMessage = errorMessage,
+              )
+
+            if (mode == RefreshMode.INITIALIZATION) {
+              handleInitializationFailure(
+                error = failure.throwable ?: IllegalStateException(errorMessage),
+                options = options,
+                retryCount = retryCount,
+              )
+            }
+
+            failure
           }
         }
       } catch (e: Exception) {
         ClerkLog.e("Exception during client and environment refresh: ${e.message}")
-        handleInitializationFailure(error = e, options = options, retryCount = retryCount)
+        if (mode == RefreshMode.INITIALIZATION) {
+          handleInitializationFailure(error = e, options = options, retryCount = retryCount)
+        }
+        ClerkResult.unknownFailure(e)
       }
+    }
+  }
+
+  private fun selectRefreshFailure(
+    clientResult: ClerkResult<Client, ClerkErrorResponse>,
+    environmentResult: ClerkResult<Environment, ClerkErrorResponse>,
+    fallbackMessage: String,
+  ): ClerkResult.Failure<ClerkErrorResponse> {
+    return when {
+      clientResult is ClerkResult.Failure -> clientResult
+      environmentResult is ClerkResult.Failure -> environmentResult
+      else ->
+        ClerkResult.Failure(
+          error = null,
+          throwable = IllegalStateException(fallbackMessage),
+          errorType = ClerkResult.Failure.ErrorType.UNKNOWN,
+        )
     }
   }
 
