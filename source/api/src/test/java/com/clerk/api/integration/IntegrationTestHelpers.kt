@@ -60,3 +60,8 @@ suspend fun initializeClerkAndWait(publishableKey: String, timeoutMs: Long = INI
 }
 
 fun generateTestEmail(): String = "test+clerk_test_${UUID.randomUUID()}@example.com"
+
+fun generateTestPhone(): String {
+  val suffix = (UUID.randomUUID().leastSignificantBits and 0x7FFF).toInt() % 100
+  return "+120155501%02d".format(suffix)
+}

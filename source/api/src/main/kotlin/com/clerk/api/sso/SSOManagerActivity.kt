@@ -11,6 +11,8 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.magiclink.NativeMagicLinkService
+import com.clerk.api.magiclink.canHandleNativeMagicLink
 import kotlinx.coroutines.launch
 
 /**
@@ -42,6 +44,17 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
   override fun onResume() {
     super.onResume()
+    val callbackUri = intent.data?.takeIf(::isCallbackUri)
+    if (callbackUri != null) {
+      if (!completionStarted) {
+        completionStarted = true
+        authorizationStarted = true
+        intent = Intent(intent).apply { data = null }
+        authorizationComplete(callbackUri)
+      }
+      return
+    }
+
     // on first run, launch the intent to start the OAuth/SSO flow in the browser
     if (!authorizationStarted) {
       try {
@@ -109,6 +122,11 @@ internal class SSOManagerActivity : AppCompatActivity() {
       try {
         // Mark the Activity result as success so callers don't observe RESULT_CANCELED
         setResult(RESULT_OK, Intent())
+        if (canHandleNativeMagicLink(uri)) {
+          ClerkLog.d("authorizationComplete called with native magic link redirect: $uri")
+          NativeMagicLinkService.handleMagicLinkDeepLink(uri)
+          return@launch
+        }
         if (SSOService.hasPendingExternalAccountConnection()) {
           ClerkLog.d("authorizationComplete called with external connection")
           SSOService.completeExternalConnection()
@@ -121,6 +139,12 @@ internal class SSOManagerActivity : AppCompatActivity() {
         finish()
       }
     }
+  }
+
+  private fun isCallbackUri(uri: Uri): Boolean {
+    return uri.scheme?.startsWith("clerk") == true ||
+      canHandleNativeMagicLink(uri) ||
+      uri.getQueryParameter("rotating_token_nonce") != null
   }
 
   /** Handles authentication cancellation by the user. */

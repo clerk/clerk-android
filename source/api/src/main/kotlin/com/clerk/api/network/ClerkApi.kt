@@ -5,6 +5,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.DeviceAttestationApi
 import com.clerk.api.network.api.EnvironmentApi
+import com.clerk.api.network.api.MagicLinkApi
 import com.clerk.api.network.api.OrganizationApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
@@ -70,6 +71,10 @@ internal object ClerkApi {
   val organization: OrganizationApi
     get() = _organization ?: error("ClerkApi is not configured.")
 
+  private var _magicLink: MagicLinkApi? = null
+  val magicLink: MagicLinkApi
+    get() = _magicLink ?: error("ClerkApi is not configured.")
+
   // Exposed for internal testing/verification
   internal var configuredBaseUrl: String? = null
     private set
@@ -90,6 +95,7 @@ internal object ClerkApi {
     _user = retrofit.create(UserApi::class.java)
     _deviceAttestation = retrofit.create(DeviceAttestationApi::class.java)
     _organization = retrofit.create(OrganizationApi::class.java)
+    _magicLink = retrofit.create(MagicLinkApi::class.java)
   }
 
   /** Builds and configures the Retrofit instance. */

@@ -29,18 +29,13 @@ import org.robolectric.RobolectricTestRunner
  */
 @RunWith(RobolectricTestRunner::class)
 class AuthIntegrationTests {
-
-  companion object {
-    /** Fictional phone number in the 555-01xx range — accepted by Clerk test instances. */
-    private const val TEST_PHONE = "+12015550100"
-  }
-
   @Test
   fun `sign up and sign in with email codes`(): Unit = runBlocking {
     val pk = requirePublishableKey()
     initializeClerkAndWait(pk)
 
     val testEmail = generateTestEmail()
+    val testPhone = generateTestPhone()
     var didCreateSignUp = false
 
     try {
@@ -50,7 +45,7 @@ class AuthIntegrationTests {
           "signUp",
           Clerk.auth.signUp {
             email = testEmail
-            phone = TEST_PHONE
+            phone = testPhone
             password = TEST_PASSWORD
             firstName = "Integration"
             lastName = "Test"
@@ -70,7 +65,7 @@ class AuthIntegrationTests {
       var latestSignUp = afterEmailVerify
       if ("phone_number" in latestSignUp.unverifiedFields) {
         val afterPhoneSend =
-          assertSuccess("sendPhoneCode", latestSignUp.sendCode { phone = TEST_PHONE })
+          assertSuccess("sendPhoneCode", latestSignUp.sendCode { phone = testPhone })
         latestSignUp =
           assertSuccess(
             "verifyPhoneCode",

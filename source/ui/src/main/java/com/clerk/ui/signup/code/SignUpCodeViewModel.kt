@@ -3,11 +3,13 @@ package com.clerk.ui.signup.code
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.Constants
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.attemptVerification
+import com.clerk.api.signup.emailVerificationStrategy
 import com.clerk.api.signup.prepareVerification
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.VerificationUiState
@@ -25,6 +27,13 @@ internal class SignUpCodeViewModel : ViewModel() {
 
   fun prepare(field: SignUpCodeField) {
     val signUp = Clerk.client.signUp ?: return
+    if (
+      field is SignUpCodeField.Email &&
+        signUp.emailVerificationStrategy == Constants.Strategy.EMAIL_LINK
+    ) {
+      _state.value = AuthenticationViewState.Success.SignUp(signUp)
+      return
+    }
     viewModelScope.launch {
       val signUp =
         when (field) {

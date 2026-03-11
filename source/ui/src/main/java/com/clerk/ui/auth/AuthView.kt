@@ -38,6 +38,7 @@ import com.clerk.ui.signup.code.SignUpCodeView
 import com.clerk.ui.signup.collectfield.CollectField
 import com.clerk.ui.signup.collectfield.SignUpCollectFieldView
 import com.clerk.ui.signup.completeprofile.SignUpCompleteProfileView
+import com.clerk.ui.signup.emaillink.SignUpEmailLinkView
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.serialization.Serializable
 
@@ -147,6 +148,9 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, onAuthComplete: (
     entry<AuthDestination.SignUpCode> {
       SignUpCodeView(field = it.field, onAuthComplete = onAuthComplete)
     }
+    entry<AuthDestination.SignUpEmailLink> {
+      SignUpEmailLinkView(emailAddress = it.emailAddress, onAuthComplete = onAuthComplete)
+    }
     entry<AuthDestination.SignUpCompleteProfile> {
       SignUpCompleteProfileView(onAuthComplete = onAuthComplete)
     }
@@ -200,6 +204,8 @@ internal object AuthDestination {
   @Serializable data class SignUpCollectField(val field: CollectField) : NavKey
 
   @Serializable data class SignUpCode(val field: SignUpCodeField) : NavKey
+
+  @Serializable data class SignUpEmailLink(val emailAddress: String) : NavKey
 
   @Serializable data class SignUpCompleteProfile(val progress: Int) : NavKey
 }
