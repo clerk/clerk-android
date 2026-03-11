@@ -15,8 +15,15 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.RedirectConfiguration
+import com.clerk.api.storage.StorageHelper
+import com.clerk.api.storage.StorageKey
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+private const val PENDING_FLOW_TTL_MS = 10 * 60 * 1000L
 
 public interface NativeMagicLinkManager {
   public var attestationProvider: NativeMagicLinkAttestationProvider?
@@ -33,7 +40,8 @@ public interface NativeMagicLinkManager {
 
 internal object NativeMagicLinkService : NativeMagicLinkManager {
   private val mutex = Mutex()
-  private val pendingFlowStore: PendingNativeMagicLinkStore = InMemoryPendingNativeMagicLinkStore()
+  private val pendingFlowStore: PendingNativeMagicLinkStore =
+    PersistentPendingNativeMagicLinkStore()
 
   override var attestationProvider: NativeMagicLinkAttestationProvider? = null
 
@@ -104,14 +112,9 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
             prepareResult.toNativeMagicLinkError(NativeMagicLinkReason.PREPARE_FAILED)
           )
         is ClerkResult.Success -> {
-          mutex.withLock {
-            pendingFlowStore.save(
-              PendingNativeMagicLinkFlow(
-                codeVerifier = pkcePair.verifier,
-                expiresAtEpochMs = currentTimeMillis() + PENDING_FLOW_TTL_MS,
-              )
-            )
-          }
+          persistPendingFlow(
+            createPendingFlow(pkcePair.verifier, PendingNativeMagicLinkState.SIGN_IN)
+          )
           ClerkResult.success(prepareResult.value)
         }
       }
@@ -161,14 +164,9 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
     return when (val prepareResult = ClerkApi.signUp.prepareSignUpVerification(signUpId, fields)) {
       is ClerkResult.Failure -> prepareResult
       is ClerkResult.Success -> {
-        mutex.withLock {
-          pendingFlowStore.save(
-            PendingNativeMagicLinkFlow(
-              codeVerifier = pkcePair.verifier,
-              expiresAtEpochMs = currentTimeMillis() + PENDING_FLOW_TTL_MS,
-            )
-          )
-        }
+        persistPendingFlow(
+          createPendingFlow(pkcePair.verifier, PendingNativeMagicLinkState.SIGN_UP)
+        )
         prepareResult
       }
     }
@@ -219,16 +217,13 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
     }
   }
 
-  internal fun canHandle(uri: Uri?): Boolean {
-    return uri?.let {
-      queryOrFragmentParam(it, "flow_id") != null ||
-        queryOrFragmentParam(it, "approval_token") != null
-    } ?: false
-  }
-
   internal fun resetForTests() {
     pendingFlowStore.clear()
     attestationProvider = null
+  }
+
+  private suspend fun persistPendingFlow(flow: PendingNativeMagicLinkFlow) {
+    mutex.withLock { pendingFlowStore.save(flow) }
   }
 
   private suspend fun refreshClientState() {
@@ -258,18 +253,26 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
       }
     }
   }
-
-  private const val PENDING_FLOW_TTL_MS = 10 * 60 * 1000L
 }
 
 public fun interface NativeMagicLinkAttestationProvider {
   suspend fun attestation(): String?
 }
 
+@Serializable
 internal data class PendingNativeMagicLinkFlow(
   val codeVerifier: String,
+  val state: PendingNativeMagicLinkState,
+  val createdAtEpochMs: Long,
   val expiresAtEpochMs: Long,
+  val flowId: String? = null,
 )
+
+@Serializable
+internal enum class PendingNativeMagicLinkState {
+  SIGN_IN,
+  SIGN_UP,
+}
 
 internal interface PendingNativeMagicLinkStore {
   fun save(flow: PendingNativeMagicLinkFlow)
@@ -279,21 +282,49 @@ internal interface PendingNativeMagicLinkStore {
   fun clear()
 }
 
-internal class InMemoryPendingNativeMagicLinkStore : PendingNativeMagicLinkStore {
-  @Volatile private var flow: PendingNativeMagicLinkFlow? = null
-
+internal class PersistentPendingNativeMagicLinkStore(
+  private val json: Json = Json { ignoreUnknownKeys = true }
+) : PendingNativeMagicLinkStore {
   override fun save(flow: PendingNativeMagicLinkFlow) {
-    this.flow = flow
+    StorageHelper.saveValue(StorageKey.PENDING_NATIVE_MAGIC_LINK_FLOW, json.encodeToString(flow))
   }
 
-  override fun load(): PendingNativeMagicLinkFlow? = flow
+  override fun load(): PendingNativeMagicLinkFlow? {
+    val encoded = StorageHelper.loadValue(StorageKey.PENDING_NATIVE_MAGIC_LINK_FLOW) ?: return null
+    return runCatching { json.decodeFromString<PendingNativeMagicLinkFlow>(encoded) }
+      .getOrElse { error ->
+        ClerkLog.w("event=native_magic_link_pending_flow_decode_failure message=${error.message}")
+        clear()
+        null
+      }
+  }
 
   override fun clear() {
-    flow = null
+    StorageHelper.deleteValue(StorageKey.PENDING_NATIVE_MAGIC_LINK_FLOW)
   }
 }
 
 internal data class ParsedMagicLinkDeepLink(val flowId: String, val approvalToken: String)
+
+private fun createPendingFlow(
+  codeVerifier: String,
+  state: PendingNativeMagicLinkState,
+): PendingNativeMagicLinkFlow {
+  val createdAtEpochMs = currentTimeMillis()
+  return PendingNativeMagicLinkFlow(
+    codeVerifier = codeVerifier,
+    state = state,
+    createdAtEpochMs = createdAtEpochMs,
+    expiresAtEpochMs = createdAtEpochMs + PENDING_FLOW_TTL_MS,
+  )
+}
+
+internal fun canHandleNativeMagicLink(uri: Uri?): Boolean {
+  return uri?.let {
+    queryOrFragmentParam(it, "flow_id") != null ||
+      queryOrFragmentParam(it, "approval_token") != null
+  } ?: false
+}
 
 internal fun parseMagicLinkCallback(
   uri: Uri

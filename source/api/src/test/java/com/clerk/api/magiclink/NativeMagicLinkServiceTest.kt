@@ -17,6 +17,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
+import com.clerk.api.storage.StorageHelper
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -34,6 +35,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class NativeMagicLinkServiceTest {
@@ -45,6 +47,9 @@ class NativeMagicLinkServiceTest {
 
   @Before
   fun setup() {
+    StorageHelper.initialize(RuntimeEnvironment.getApplication())
+    StorageHelper.reset(RuntimeEnvironment.getApplication())
+
     signInApi = mockk(relaxed = true)
     signUpApi = mockk(relaxed = true)
     magicLinkApi = mockk(relaxed = true)
@@ -70,6 +75,7 @@ class NativeMagicLinkServiceTest {
   @After
   fun tearDown() {
     NativeMagicLinkService.resetForTests()
+    StorageHelper.reset(RuntimeEnvironment.getApplication())
     unmockkAll()
   }
 

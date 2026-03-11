@@ -59,7 +59,7 @@ internal object StorageHelper {
       )
       return
     }
-    prefs.edit { remove(key.name) }
+    prefs.edit(commit = true) { remove(key.name) }
   }
 
   /**
@@ -86,4 +86,5 @@ internal object StorageHelper {
 internal enum class StorageKey {
   DEVICE_TOKEN,
   DEVICE_ID,
+  PENDING_NATIVE_MAGIC_LINK_FLOW,
 }

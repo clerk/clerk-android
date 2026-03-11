@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.magiclink.NativeMagicLinkService
+import com.clerk.api.magiclink.canHandleNativeMagicLink
 import kotlinx.coroutines.launch
 
 /**
@@ -121,7 +122,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
       try {
         // Mark the Activity result as success so callers don't observe RESULT_CANCELED
         setResult(RESULT_OK, Intent())
-        if (NativeMagicLinkService.canHandle(uri)) {
+        if (canHandleNativeMagicLink(uri)) {
           ClerkLog.d("authorizationComplete called with native magic link redirect: $uri")
           NativeMagicLinkService.handleMagicLinkDeepLink(uri)
           return@launch
@@ -142,7 +143,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
   private fun isCallbackUri(uri: Uri): Boolean {
     return uri.scheme?.startsWith("clerk") == true ||
-      NativeMagicLinkService.canHandle(uri) ||
+      canHandleNativeMagicLink(uri) ||
       uri.getQueryParameter("rotating_token_nonce") != null
   }
 
