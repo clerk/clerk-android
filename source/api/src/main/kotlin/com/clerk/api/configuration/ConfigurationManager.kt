@@ -132,6 +132,11 @@ internal class ConfigurationManager {
     DEVICE_TOKEN_UPDATE,
   }
 
+  private data class RefreshPreconditions(
+    val context: Context? = null,
+    val failure: ClerkResult<Unit, ClerkErrorResponse>? = null,
+  )
+
   /** Ensures storage is initialized when needed. */
   private fun ensureStorageInitialized() {
     if (!storageInitialized) {
@@ -269,15 +274,8 @@ internal class ConfigurationManager {
   }
 
   suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> {
-    if (deviceToken.isBlank()) {
-      return ClerkResult.unknownFailure(IllegalArgumentException("Device token must not be blank"))
-    }
-
-    if (!hasConfigured) {
-      return ClerkResult.unknownFailure(
-        IllegalStateException("Clerk must be initialized before updating the device token")
-      )
-    }
+    val validationError = validateDeviceTokenUpdate(deviceToken)
+    if (validationError != null) return validationError
 
     ensureStorageInitialized()
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, deviceToken)
@@ -317,29 +315,28 @@ internal class ConfigurationManager {
     }
   }
 
+  private fun validateDeviceTokenUpdate(
+    deviceToken: String
+  ): ClerkResult<Unit, ClerkErrorResponse>? {
+    return when {
+      deviceToken.isBlank() ->
+        ClerkResult.unknownFailure(IllegalArgumentException("Device token must not be blank"))
+      !hasConfigured ->
+        ClerkResult.unknownFailure(
+          IllegalStateException("Clerk must be initialized before updating the device token")
+        )
+      else -> null
+    }
+  }
+
   private suspend fun refreshClientAndEnvironment(
     options: ClerkConfigurationOptions?,
     retryCount: Int,
     mode: RefreshMode,
     skipClientId: Boolean = false,
   ): ClerkResult<Unit, ClerkErrorResponse> {
-    if (!hasConfigured) {
-      ClerkLog.w("Attempted to refresh before configuration. Skipping.")
-      return ClerkResult.unknownFailure(
-        IllegalStateException("Clerk must be initialized before refreshing")
-      )
-    }
-
-    // Check if context is still available
-    val context = context?.get()
-    if (context == null) {
-      ClerkLog.w("Application context no longer available. Cannot refresh client and environment.")
-      val error = IllegalStateException("Application context no longer available")
-      if (mode == RefreshMode.INITIALIZATION) {
-        _initializationError.value = error
-      }
-      return ClerkResult.unknownFailure(error)
-    }
+    val preconditions = validateRefreshPreconditions(mode)
+    if (preconditions.failure != null) return preconditions.failure
 
     if (Clerk.debugMode) {
       ClerkLog.d("Starting client and environment refresh (attempt ${retryCount + 1})")
@@ -352,81 +349,13 @@ internal class ConfigurationManager {
 
     return refreshMutex.withLock {
       try {
-        // Add timeout to prevent hanging
-        withTimeout((API_TIMEOUT_SECONDS * TIMEOUT_MULTIPLIER)) {
-          // Launch concurrent requests for better performance
-          val clientDeferred = async {
-            if (skipClientId) {
-              Client.getSkippingClientId()
-            } else {
-              Client.get()
-            }
-          }
-          val environmentDeferred = async { Environment.get() }
-
-          // Process results as they become available
-          val clientResult = clientDeferred.await()
-          val environmentResult = environmentDeferred.await()
-
-          // Handle results independently
-          handleClientResult(clientResult)
-          handleEnvironmentResult(environmentResult)
-
-          // Update Clerk state if both operations succeeded
-          if (clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success) {
-            // Update state immediately
-            updateClerkState(clientResult.value, environmentResult.value)
-            _isInitialized.value = true
-            _initializationError.value = null
-
-            // Launch dependent operations concurrently
-            launch {
-              // Start token refresh as soon as client is available
-              if (Clerk.session != null) {
-                startTokenRefresh()
-              }
-            }
-
-            // Launch device attestation independently - don't block anything
-            launch {
-              launchDeviceAttestationInBackground(
-                applicationContext = context.applicationContext,
-                cloudProjectNumber = options?.deviceAttestationOptions?.cloudProjectNumber,
-                applicationId = options?.deviceAttestationOptions?.applicationId,
-                clientId = clientResult.value.id!!,
-                environment = environmentResult.value,
-              )
-            }
-
-            if (Clerk.debugMode) {
-              ClerkLog.d("Client and environment refresh completed successfully")
-            }
-
-            ClerkResult.success(Unit)
-          } else {
-            val errorMessage =
-              "Failed to refresh client and environment -" +
-                " client: ${clientResult.javaClass.simpleName}," +
-                " environment: ${environmentResult.javaClass.simpleName}"
-            ClerkLog.e(errorMessage)
-            val failure =
-              selectRefreshFailure(
-                clientResult = clientResult,
-                environmentResult = environmentResult,
-                fallbackMessage = errorMessage,
-              )
-
-            if (mode == RefreshMode.INITIALIZATION) {
-              handleInitializationFailure(
-                error = failure.throwable ?: IllegalStateException(errorMessage),
-                options = options,
-                retryCount = retryCount,
-              )
-            }
-
-            failure
-          }
-        }
+        executeRefresh(
+          applicationContext = preconditions.context!!.applicationContext,
+          options = options,
+          retryCount = retryCount,
+          mode = mode,
+          skipClientId = skipClientId,
+        )
       } catch (e: Exception) {
         ClerkLog.e("Exception during client and environment refresh: ${e.message}")
         if (mode == RefreshMode.INITIALIZATION) {
@@ -435,6 +364,160 @@ internal class ConfigurationManager {
         ClerkResult.unknownFailure(e)
       }
     }
+  }
+
+  private fun validateRefreshPreconditions(mode: RefreshMode): RefreshPreconditions {
+    val preconditions =
+      when {
+        !hasConfigured -> {
+          ClerkLog.w("Attempted to refresh before configuration. Skipping.")
+          RefreshPreconditions(
+            failure =
+              ClerkResult.unknownFailure(
+                IllegalStateException("Clerk must be initialized before refreshing")
+              )
+          )
+        }
+        else -> {
+          val availableContext = context?.get()
+          if (availableContext == null) {
+            ClerkLog.w(
+              "Application context no longer available. Cannot refresh client and environment."
+            )
+            val error = IllegalStateException("Application context no longer available")
+            if (mode == RefreshMode.INITIALIZATION) {
+              _initializationError.value = error
+            }
+            RefreshPreconditions(failure = ClerkResult.unknownFailure(error))
+          } else {
+            RefreshPreconditions(context = availableContext)
+          }
+        }
+      }
+
+    return preconditions
+  }
+
+  private suspend fun executeRefresh(
+    applicationContext: Context,
+    options: ClerkConfigurationOptions?,
+    retryCount: Int,
+    mode: RefreshMode,
+    skipClientId: Boolean,
+  ): ClerkResult<Unit, ClerkErrorResponse> {
+    return withTimeout((API_TIMEOUT_SECONDS * TIMEOUT_MULTIPLIER)) {
+      val (clientResult, environmentResult) = fetchRefreshData(skipClientId)
+
+      handleClientResult(clientResult)
+      handleEnvironmentResult(environmentResult)
+
+      when {
+        clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success ->
+          handleSuccessfulRefresh(
+            applicationContext = applicationContext,
+            options = options,
+            client = clientResult.value,
+            environment = environmentResult.value,
+          )
+        else ->
+          handleRefreshFailure(
+            clientResult = clientResult,
+            environmentResult = environmentResult,
+            options = options,
+            retryCount = retryCount,
+            mode = mode,
+          )
+      }
+    }
+  }
+
+  private suspend fun fetchRefreshData(
+    skipClientId: Boolean
+  ): Pair<ClerkResult<Client, ClerkErrorResponse>, ClerkResult<Environment, ClerkErrorResponse>> =
+    coroutineScope {
+      val clientDeferred = async {
+        if (skipClientId) Client.getSkippingClientId() else Client.get()
+      }
+      val environmentDeferred = async { Environment.get() }
+      clientDeferred.await() to environmentDeferred.await()
+    }
+
+  private fun handleSuccessfulRefresh(
+    applicationContext: Context,
+    options: ClerkConfigurationOptions?,
+    client: Client,
+    environment: Environment,
+  ): ClerkResult<Unit, ClerkErrorResponse> {
+    updateClerkState(client, environment)
+    _isInitialized.value = true
+    _initializationError.value = null
+
+    launchPostRefreshTasks(
+      applicationContext = applicationContext,
+      options = options,
+      client = client,
+      environment = environment,
+    )
+
+    if (Clerk.debugMode) {
+      ClerkLog.d("Client and environment refresh completed successfully")
+    }
+
+    return ClerkResult.success(Unit)
+  }
+
+  private fun launchPostRefreshTasks(
+    applicationContext: Context,
+    options: ClerkConfigurationOptions?,
+    client: Client,
+    environment: Environment,
+  ) {
+    scope.launch {
+      if (Clerk.session != null) {
+        startTokenRefresh()
+      }
+    }
+
+    scope.launch {
+      launchDeviceAttestationInBackground(
+        applicationContext = applicationContext,
+        cloudProjectNumber = options?.deviceAttestationOptions?.cloudProjectNumber,
+        applicationId = options?.deviceAttestationOptions?.applicationId,
+        clientId = client.id!!,
+        environment = environment,
+      )
+    }
+  }
+
+  private fun handleRefreshFailure(
+    clientResult: ClerkResult<Client, ClerkErrorResponse>,
+    environmentResult: ClerkResult<Environment, ClerkErrorResponse>,
+    options: ClerkConfigurationOptions?,
+    retryCount: Int,
+    mode: RefreshMode,
+  ): ClerkResult.Failure<ClerkErrorResponse> {
+    val errorMessage =
+      "Failed to refresh client and environment -" +
+        " client: ${clientResult.javaClass.simpleName}," +
+        " environment: ${environmentResult.javaClass.simpleName}"
+    ClerkLog.e(errorMessage)
+
+    val failure =
+      selectRefreshFailure(
+        clientResult = clientResult,
+        environmentResult = environmentResult,
+        fallbackMessage = errorMessage,
+      )
+
+    if (mode == RefreshMode.INITIALIZATION) {
+      handleInitializationFailure(
+        error = failure.throwable ?: IllegalStateException(errorMessage),
+        options = options,
+        retryCount = retryCount,
+      )
+    }
+
+    return failure
   }
 
   private fun selectRefreshFailure(
