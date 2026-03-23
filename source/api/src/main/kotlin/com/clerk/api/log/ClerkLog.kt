@@ -1,6 +1,7 @@
 package com.clerk.api.log
 
 import android.util.Log
+import com.clerk.api.Clerk
 
 /**
  * Internal logging utility for the Clerk SDK.
@@ -12,12 +13,6 @@ import android.util.Log
  * This is an internal utility and should not be used outside the Clerk SDK.
  */
 object ClerkLog {
-  @Volatile private var debugLoggingEnabled: Boolean = false
-
-  internal fun setDebugLoggingEnabled(enabled: Boolean) {
-    debugLoggingEnabled = enabled
-  }
-
   private inline fun safeLog(action: () -> Int): Int =
     try {
       action()
@@ -80,7 +75,7 @@ object ClerkLog {
    * @return The result of the underlying Log.d() call
    */
   fun d(message: String) =
-    if (debugLoggingEnabled) {
+    if (Clerk.debugMode) {
       safeLog { Log.d("ClerkLog", message) }.takeIf { it != 0 } ?: fallback("Clerk debug: ", message)
     } else {
       0
@@ -96,7 +91,7 @@ object ClerkLog {
    * @return The result of the underlying Log.v() call
    */
   fun v(message: String) =
-    if (debugLoggingEnabled) {
+    if (Clerk.debugMode) {
       safeLog { Log.v("ClerkLog", message) }.takeIf { it != 0 }
         ?: fallback("Clerk verbose: ", message)
     } else {
