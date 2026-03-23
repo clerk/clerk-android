@@ -1,7 +1,6 @@
 package com.clerk.api.log
 
 import android.util.Log
-import com.clerk.api.Clerk
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
@@ -16,13 +15,13 @@ import org.robolectric.RobolectricTestRunner
 class ClerkLogTest {
   @After
   fun tearDown() {
-    Clerk.debugMode = false
+    ClerkLog.setDebugLoggingEnabled(false)
     unmockkAll()
   }
 
   @Test
   fun `debug logs are suppressed when debug mode is disabled`() {
-    Clerk.debugMode = false
+    ClerkLog.setDebugLoggingEnabled(false)
     mockkStatic(Log::class)
     every { Log.d(any(), any()) } returns 1
 
@@ -34,7 +33,7 @@ class ClerkLogTest {
 
   @Test
   fun `debug logs are emitted when debug mode is enabled`() {
-    Clerk.debugMode = true
+    ClerkLog.setDebugLoggingEnabled(true)
     mockkStatic(Log::class)
     every { Log.d(any(), any()) } returns 1
 
@@ -46,7 +45,7 @@ class ClerkLogTest {
 
   @Test
   fun `verbose logs are suppressed when debug mode is disabled`() {
-    Clerk.debugMode = false
+    ClerkLog.setDebugLoggingEnabled(false)
     mockkStatic(Log::class)
     every { Log.v(any(), any()) } returns 1
 
@@ -54,5 +53,17 @@ class ClerkLogTest {
 
     assertEquals(0, result)
     verify(exactly = 0) { Log.v(any(), any()) }
+  }
+
+  @Test
+  fun `verbose logs are emitted when debug mode is enabled`() {
+    ClerkLog.setDebugLoggingEnabled(true)
+    mockkStatic(Log::class)
+    every { Log.v(any(), any()) } returns 1
+
+    val result = ClerkLog.v("verbose message")
+
+    assertEquals(1, result)
+    verify(exactly = 1) { Log.v("ClerkLog", "verbose message") }
   }
 }

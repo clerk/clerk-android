@@ -504,6 +504,7 @@ object Clerk {
     theme: ClerkTheme? = null,
   ) {
     this.debugMode = options?.enableDebugMode == true
+    ClerkLog.setDebugLoggingEnabled(this.debugMode)
     this.proxyUrl = options?.proxyUrl
     this.applicationContext = WeakReference(context)
     this.applicationId = options?.deviceAttestationOptions?.applicationId
