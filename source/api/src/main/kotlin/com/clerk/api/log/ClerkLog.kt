@@ -1,6 +1,7 @@
 package com.clerk.api.log
 
 import android.util.Log
+import com.clerk.api.Clerk
 
 /**
  * Internal logging utility for the Clerk SDK.
@@ -74,7 +75,11 @@ object ClerkLog {
    * @return The result of the underlying Log.d() call
    */
   fun d(message: String) =
-    safeLog { Log.d("ClerkLog", message) }.takeIf { it != 0 } ?: fallback("Clerk debug: ", message)
+    if (Clerk.debugMode) {
+      safeLog { Log.d("ClerkLog", message) }.takeIf { it != 0 } ?: fallback("Clerk debug: ", message)
+    } else {
+      0
+    }
 
   /**
    * Logs a verbose message.
@@ -86,6 +91,10 @@ object ClerkLog {
    * @return The result of the underlying Log.v() call
    */
   fun v(message: String) =
-    safeLog { Log.v("ClerkLog", message) }.takeIf { it != 0 }
-      ?: fallback("Clerk verbose: ", message)
+    if (Clerk.debugMode) {
+      safeLog { Log.v("ClerkLog", message) }.takeIf { it != 0 }
+        ?: fallback("Clerk verbose: ", message)
+    } else {
+      0
+    }
 }
