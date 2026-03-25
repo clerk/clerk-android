@@ -106,7 +106,6 @@ class VersioningUserAgentMiddlewareTest {
   private fun resetClerkState() {
     val configurationManager = configurationManager()
     cancelJobField(configurationManager, "refreshJob")
-    cancelJobField(configurationManager, "attestationJob")
     cancelJobField(configurationManager, "initializationJob")
     setField(configurationManager, "context", null)
     setField(configurationManager, "hasConfigured", false)

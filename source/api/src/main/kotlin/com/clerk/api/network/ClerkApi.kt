@@ -11,7 +11,6 @@ import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.api.SignUpApi
 import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
-import com.clerk.api.network.middleware.incoming.DeviceAssertionInterceptor
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
 import com.clerk.api.network.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.api.network.middleware.outgoing.VersioningUserAgentMiddleware
@@ -104,7 +103,6 @@ internal object ClerkApi {
           addInterceptor(VersioningUserAgentMiddleware())
           addInterceptor(DeviceTokenSavingMiddleware())
           addInterceptor(UrlAppendingMiddleware())
-          addInterceptor(DeviceAssertionInterceptor())
 
           if (Clerk.debugMode) {
             addInterceptor(

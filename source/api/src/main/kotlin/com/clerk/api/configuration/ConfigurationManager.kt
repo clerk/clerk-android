@@ -6,11 +6,9 @@ import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.Constants.Config.API_TIMEOUT_SECONDS
 import com.clerk.api.Constants.Config.BACKOFF_BASE_DELAY_SECONDS
 import com.clerk.api.Constants.Config.EXPONENTIAL_BACKOFF_SHIFT
-import com.clerk.api.Constants.Config.MAX_ATTESTATION_RETRIES
 import com.clerk.api.Constants.Config.MAX_INITIALIZATION_RETRIES
 import com.clerk.api.Constants.Config.REFRESH_TOKEN_INTERVAL
 import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
-import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
 import com.clerk.api.locale.LocaleProvider
@@ -18,11 +16,9 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
-import com.clerk.api.network.model.environment.FraudSettings
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.fold
-import com.clerk.api.network.serialization.successOrElse
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.fetchToken
 import com.clerk.api.storage.StorageHelper
@@ -54,7 +50,6 @@ import kotlinx.coroutines.withTimeout
  * - Concurrent client and environment data fetching
  * - Application lifecycle monitoring for state refresh
  * - Context memory leak prevention through weak references
- * - Background device attestation to optimize startup performance
  */
 internal class ConfigurationManager {
 
@@ -87,9 +82,6 @@ internal class ConfigurationManager {
    */
   val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
 
-  /** Internal mutable state flow for device attestation status. */
-  private val _isDeviceAttested = MutableStateFlow(false)
-
   /** Internal mutable state flow for initialization errors. */
   private val _initializationError = MutableStateFlow<Throwable?>(null)
 
@@ -120,9 +112,6 @@ internal class ConfigurationManager {
    * Used to cancel ongoing refresh operations if needed.
    */
   private var refreshJob: Job? = null
-
-  /** Internal job reference for ongoing device attestation operations. */
-  private var attestationJob: Job? = null
 
   /** Internal job reference for ongoing initialization operations. */
   private var initializationJob: Job? = null
@@ -158,12 +147,12 @@ internal class ConfigurationManager {
    * 4. Initiates background client and environment data refresh (async)
    * 5. Sets up application lifecycle monitoring (async)
    *
-   * Storage initialization, device ID generation, and device attestation are moved to background to
-   * optimize startup time and avoid blocking the main thread.
+   * Storage initialization and device ID generation are moved to background to optimize startup
+   * time and avoid blocking the main thread.
    *
    * @param context The application context used for storage and API configuration.
    * @param publishableKey The publishable key from Clerk Dashboard for API authentication.
-   * @param options Additional configuration options, such as device attestation settings.
+   * @param options Additional configuration options.
    * @throws IllegalStateException if called multiple times.
    * @throws IllegalArgumentException if publishableKey format is invalid.
    */
@@ -296,7 +285,6 @@ internal class ConfigurationManager {
    * - Handles errors gracefully with detailed logging
    * - Updates Clerk state when both requests succeed
    * - Sets initialization status based on operation success
-   * - Launches device attestation independently to avoid blocking
    * - Starts token refresh as soon as client data is available
    * - Retries with exponential backoff on failure (up to MAX_INITIALIZATION_RETRIES)
    *
@@ -350,7 +338,6 @@ internal class ConfigurationManager {
     return refreshMutex.withLock {
       try {
         executeRefresh(
-          applicationContext = preconditions.context!!.applicationContext,
           options = options,
           retryCount = retryCount,
           mode = mode,
@@ -399,7 +386,6 @@ internal class ConfigurationManager {
   }
 
   private suspend fun executeRefresh(
-    applicationContext: Context,
     options: ClerkConfigurationOptions?,
     retryCount: Int,
     mode: RefreshMode,
@@ -414,8 +400,6 @@ internal class ConfigurationManager {
       when {
         clientResult is ClerkResult.Success && environmentResult is ClerkResult.Success ->
           handleSuccessfulRefresh(
-            applicationContext = applicationContext,
-            options = options,
             client = clientResult.value,
             environment = environmentResult.value,
           )
@@ -443,8 +427,6 @@ internal class ConfigurationManager {
     }
 
   private fun handleSuccessfulRefresh(
-    applicationContext: Context,
-    options: ClerkConfigurationOptions?,
     client: Client,
     environment: Environment,
   ): ClerkResult<Unit, ClerkErrorResponse> {
@@ -452,12 +434,7 @@ internal class ConfigurationManager {
     _isInitialized.value = true
     _initializationError.value = null
 
-    launchPostRefreshTasks(
-      applicationContext = applicationContext,
-      options = options,
-      client = client,
-      environment = environment,
-    )
+    launchPostRefreshTasks()
 
     if (Clerk.debugMode) {
       ClerkLog.d("Client and environment refresh completed successfully")
@@ -466,26 +443,11 @@ internal class ConfigurationManager {
     return ClerkResult.success(Unit)
   }
 
-  private fun launchPostRefreshTasks(
-    applicationContext: Context,
-    options: ClerkConfigurationOptions?,
-    client: Client,
-    environment: Environment,
-  ) {
+  private fun launchPostRefreshTasks() {
     scope.launch {
       if (Clerk.session != null) {
         startTokenRefresh()
       }
-    }
-
-    scope.launch {
-      launchDeviceAttestationInBackground(
-        applicationContext = applicationContext,
-        cloudProjectNumber = options?.deviceAttestationOptions?.cloudProjectNumber,
-        applicationId = options?.deviceAttestationOptions?.applicationId,
-        clientId = client.id!!,
-        environment = environment,
-      )
     }
   }
 
@@ -634,114 +596,6 @@ internal class ConfigurationManager {
     }
   }
 
-  /**
-   * Launches device attestation in the background to avoid blocking initialization. This allows the
-   * SDK to become ready for use while attestation completes separately.
-   *
-   * This method returns immediately and doesn't block the caller.
-   */
-  private fun launchDeviceAttestationInBackground(
-    applicationId: String?,
-    clientId: String,
-    environment: Environment,
-    cloudProjectNumber: Long?,
-    applicationContext: Context,
-  ) {
-    // Cancel any ongoing attestation
-    attestationJob?.cancel()
-
-    attestationJob =
-      scope.launch {
-        try {
-          ClerkLog.d("Starting background device attestation")
-
-          // Run attestation in a separate async block for better isolation
-          val attestationResult = async {
-            attestDeviceIfNeeded(
-              applicationContext = applicationContext,
-              cloudProjectNumber = cloudProjectNumber,
-              applicationId = applicationId,
-              clientId = clientId,
-              environment = environment,
-            )
-          }
-
-          attestationResult.await()
-          _isDeviceAttested.value = true
-          ClerkLog.d("Background device attestation completed successfully")
-        } catch (e: Exception) {
-          ClerkLog.w("Background device attestation failed: ${e.message}")
-          _isDeviceAttested.value = false
-
-          // Launch retry in a separate coroutine to avoid blocking
-          launch {
-            retryDeviceAttestation(
-              applicationContext,
-              cloudProjectNumber,
-              applicationId,
-              clientId,
-              environment,
-            )
-          }
-        }
-      }
-  }
-
-  /**
-   * Retries device attestation after a delay if the initial attempt fails. Uses exponential backoff
-   * and runs entirely in background.
-   */
-  private suspend fun retryDeviceAttestation(
-    applicationContext: Context,
-    cloudProjectNumber: Long?,
-    applicationId: String?,
-    clientId: String,
-    environment: Environment,
-    retryCount: Int = 0,
-  ) {
-    if (retryCount >= MAX_ATTESTATION_RETRIES) {
-      ClerkLog.w("Max device attestation retries reached")
-      return
-    }
-
-    try {
-      // Exponential backoff: 5s, 10s, 20s
-      val delaySeconds = BACKOFF_BASE_DELAY_SECONDS * (EXPONENTIAL_BACKOFF_SHIFT shl retryCount)
-      ClerkLog.d("Retrying device attestation in ${delaySeconds}s (attempt ${retryCount + 1})")
-
-      delay(delaySeconds.seconds)
-
-      // Run retry in async for better isolation
-      coroutineScope {
-        val retryResult = async {
-          attestDeviceIfNeeded(
-            applicationContext = applicationContext,
-            cloudProjectNumber = cloudProjectNumber,
-            applicationId = applicationId,
-            clientId = clientId,
-            environment = environment,
-          )
-        }
-
-        retryResult.await()
-      }
-
-      _isDeviceAttested.value = true
-      ClerkLog.d("Device attestation retry successful")
-    } catch (e: Exception) {
-      ClerkLog.w("Device attestation retry ${retryCount + 1} failed: ${e.message}")
-
-      // Recursively retry with incremented count
-      retryDeviceAttestation(
-        applicationContext,
-        cloudProjectNumber,
-        applicationId,
-        clientId,
-        environment,
-        retryCount + 1,
-      )
-    }
-  }
 
   /**
    * Handles the client API result with appropriate logging.
@@ -779,33 +633,6 @@ internal class ConfigurationManager {
         logApiError("Environment", failure.errorType, failure.error.toString())
       },
     )
-  }
-
-  private suspend fun attestDeviceIfNeeded(
-    applicationId: String?,
-    clientId: String,
-    environment: Environment,
-    cloudProjectNumber: Long?,
-    applicationContext: Context,
-  ) {
-    val deviceAttestationMode = environment.fraudSettings.native.deviceAttestationMode
-    if (
-      (deviceAttestationMode == FraudSettings.DeviceAttestationMode.ONBOARDING) ||
-        deviceAttestationMode == FraudSettings.DeviceAttestationMode.ENFORCED
-    ) {
-      DeviceAttestationHelper.prepareIntegrityTokenProvider(
-        applicationContext,
-        cloudProjectNumber = cloudProjectNumber,
-      )
-      val token =
-        DeviceAttestationHelper.attestDevice(clientId).successOrElse {
-          error("Device attestation failed: $it")
-        }
-
-      DeviceAttestationHelper.performAssertion(token, applicationId).successOrElse {
-        error("Device attestation failed: $it")
-      }
-    }
   }
 
   /** Logs API errors with appropriate detail based on error type. */
