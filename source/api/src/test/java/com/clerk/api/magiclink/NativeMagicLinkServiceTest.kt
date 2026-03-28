@@ -106,7 +106,7 @@ class NativeMagicLinkServiceTest {
     assertTrue(startResult is ClerkResult.Success)
 
     val callbackUri =
-      Uri.parse("clerk://com.clerk.test.oauth?flow_id=flow_123&approval_token=approval_123")
+      Uri.parse("clerk://com.clerk.test.oauth?flow_id=sign_in_123&approval_token=approval_123")
     val completeResult = NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri)
     assertTrue(completeResult is ClerkResult.Success)
     assertEquals(SignIn.Status.COMPLETE, (completeResult as ClerkResult.Success).value.status)
@@ -126,7 +126,7 @@ class NativeMagicLinkServiceTest {
     coVerify(exactly = 1) {
       magicLinkApi.complete(
         match {
-          it["flow_id"] == "flow_123" &&
+          it["flow_id"] == "sign_in_123" &&
             it["approval_token"] == "approval_123" &&
             it["code_verifier"]?.isNotBlank() == true
         }
@@ -162,7 +162,7 @@ class NativeMagicLinkServiceTest {
     assertTrue(prepareResult is ClerkResult.Success)
 
     val callbackUri =
-      Uri.parse("clerk://com.clerk.test.oauth?flow_id=sua_123&approval_token=approval_123")
+      Uri.parse("clerk://com.clerk.test.oauth?flow_id=sign_up_123&approval_token=approval_123")
     val completeResult = NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri)
     assertTrue(completeResult is ClerkResult.Success)
 
@@ -180,13 +180,61 @@ class NativeMagicLinkServiceTest {
     coVerify(exactly = 1) {
       magicLinkApi.complete(
         match {
-          it["flow_id"] == "sua_123" &&
+          it["flow_id"] == "sign_up_123" &&
             it["approval_token"] == "approval_123" &&
             it["code_verifier"]?.isNotBlank() == true
         }
       )
     }
     coVerify(exactly = 1) { auth.setActive("sess_456", null) }
+  }
+
+  @Test
+  fun `complete rejects callback for different pending flow id`() = runTest {
+    val initialSignIn =
+      SignIn(
+        id = "sign_in_123",
+        supportedFirstFactors =
+          listOf(Factor(strategy = "email_link", emailAddressId = "email_123")),
+      )
+
+    coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(initialSignIn)
+    coEvery { signInApi.prepareSignInFirstFactor(any(), any()) } returns
+      ClerkResult.success(initialSignIn)
+
+    val startResult = NativeMagicLinkService.startEmailLinkSignIn("user@example.com")
+    assertTrue(startResult is ClerkResult.Success)
+
+    val completeResult = NativeMagicLinkService.complete("sign_in_other", "approval_123")
+
+    assertTrue(completeResult is ClerkResult.Failure)
+    assertEquals(
+      NativeMagicLinkReason.FLOW_ID_MISMATCH.code,
+      (completeResult as ClerkResult.Failure).error?.reasonCode,
+    )
+    coVerify(exactly = 0) { magicLinkApi.complete(any()) }
+  }
+
+  @Test
+  fun `complete keeps pending flow when callback flow id does not match`() = runTest {
+    val initialSignIn =
+      SignIn(
+        id = "sign_in_123",
+        supportedFirstFactors =
+          listOf(Factor(strategy = "email_link", emailAddressId = "email_123")),
+      )
+
+    coEvery { signInApi.createSignIn(any()) } returns ClerkResult.success(initialSignIn)
+    coEvery { signInApi.prepareSignInFirstFactor(any(), any()) } returns
+      ClerkResult.success(initialSignIn)
+
+    NativeMagicLinkService.startEmailLinkSignIn("user@example.com")
+
+    NativeMagicLinkService.complete("sign_in_other", "approval_123")
+
+    val persisted = PersistentPendingNativeMagicLinkStore().load()
+    assertEquals("sign_in_123", persisted?.flowId)
+    assertTrue(persisted?.codeVerifier?.isNotBlank() == true)
   }
 
   @Test
@@ -226,7 +274,7 @@ class NativeMagicLinkServiceTest {
     assertTrue(startResult is ClerkResult.Success)
 
     val callbackUri =
-      Uri.parse("clerk://com.clerk.test.oauth?flow_id=flow_123&approval_token=approval_123")
+      Uri.parse("clerk://com.clerk.test.oauth?flow_id=sign_in_123&approval_token=approval_123")
     val completeResult = NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri)
 
     assertTrue(completeResult is ClerkResult.Failure)

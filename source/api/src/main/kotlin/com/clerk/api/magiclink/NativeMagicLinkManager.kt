@@ -113,7 +113,11 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
           )
         is ClerkResult.Success -> {
           persistPendingFlow(
-            createPendingFlow(pkcePair.verifier, PendingNativeMagicLinkState.SIGN_IN)
+            createPendingFlow(
+              codeVerifier = pkcePair.verifier,
+              state = PendingNativeMagicLinkState.SIGN_IN,
+              flowId = signIn.id,
+            )
           )
           ClerkResult.success(prepareResult.value)
         }
@@ -165,7 +169,11 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
       is ClerkResult.Failure -> prepareResult
       is ClerkResult.Success -> {
         persistPendingFlow(
-          createPendingFlow(pkcePair.verifier, PendingNativeMagicLinkState.SIGN_UP)
+          createPendingFlow(
+            codeVerifier = pkcePair.verifier,
+            state = PendingNativeMagicLinkState.SIGN_UP,
+            flowId = signUpId,
+          )
         )
         prepareResult
       }
@@ -191,14 +199,16 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
     flowId: String,
     approvalToken: String,
   ): ClerkResult<SignIn, NativeMagicLinkError> {
-    val pending =
+    val pendingState =
       mutex.withLock {
         val flow = pendingFlowStore.load()
         if (flow != null && flow.expiresAtEpochMs <= currentTimeMillis()) {
           pendingFlowStore.clear()
-          null
+          PendingFlowLookup.None
+        } else if (flow != null && flow.flowId != null && flow.flowId != flowId) {
+          PendingFlowLookup.Mismatched(flow.flowId)
         } else {
-          flow
+          flow?.let(PendingFlowLookup::Found) ?: PendingFlowLookup.None
         }
       }
 
@@ -210,10 +220,20 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
         activateCreatedSession = { signIn -> activateCreatedSession(signIn) },
         refreshClientState = { refreshClientState() },
       )
-    return if (pending == null) {
-      nativeMagicLinkFailure(NativeMagicLinkReason.NO_PENDING_FLOW)
-    } else {
-      completionRunner.complete(flowId = flowId, approvalToken = approvalToken, pending = pending)
+    return when (pendingState) {
+      PendingFlowLookup.None -> nativeMagicLinkFailure(NativeMagicLinkReason.NO_PENDING_FLOW)
+      is PendingFlowLookup.Mismatched -> {
+        ClerkLog.w(
+          "event=native_magic_link_flow_id_mismatch expected=${pendingState.expectedFlowId} actual=$flowId"
+        )
+        nativeMagicLinkFailure(NativeMagicLinkReason.FLOW_ID_MISMATCH)
+      }
+      is PendingFlowLookup.Found ->
+        completionRunner.complete(
+          flowId = flowId,
+          approvalToken = approvalToken,
+          pending = pendingState.flow,
+        )
     }
   }
 
@@ -306,9 +326,18 @@ internal class PersistentPendingNativeMagicLinkStore(
 
 internal data class ParsedMagicLinkDeepLink(val flowId: String, val approvalToken: String)
 
+private sealed interface PendingFlowLookup {
+  data object None : PendingFlowLookup
+
+  data class Found(val flow: PendingNativeMagicLinkFlow) : PendingFlowLookup
+
+  data class Mismatched(val expectedFlowId: String?) : PendingFlowLookup
+}
+
 private fun createPendingFlow(
   codeVerifier: String,
   state: PendingNativeMagicLinkState,
+  flowId: String,
 ): PendingNativeMagicLinkFlow {
   val createdAtEpochMs = currentTimeMillis()
   return PendingNativeMagicLinkFlow(
@@ -316,6 +345,7 @@ private fun createPendingFlow(
     state = state,
     createdAtEpochMs = createdAtEpochMs,
     expiresAtEpochMs = createdAtEpochMs + PENDING_FLOW_TTL_MS,
+    flowId = flowId,
   )
 }
 
@@ -411,6 +441,7 @@ internal enum class NativeMagicLinkReason(val code: String) {
   NATIVE_API_DISABLED_FOR_INSTANCE("native_api_disabled_for_instance"),
   NATIVE_API_DISABLED("native_api_disabled"),
   NO_PENDING_FLOW("no_pending_flow"),
+  FLOW_ID_MISMATCH("native_magic_link_flow_id_mismatch"),
   SESSION_ACTIVATION_FAILED("native_magic_link_session_activation_failed"),
   START_FAILED("native_magic_link_start_failed"),
   PREPARE_FAILED("native_magic_link_prepare_failed"),
