@@ -82,15 +82,28 @@ class SignInPrepareHandlerTest {
   @Test
   fun prepareForEmailCodeAsSecondFactorShouldHandleFailureGracefully() = runTest {
     val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
-    val errorResponse = mockk<ClerkErrorResponse>()
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            ClerkApiError(message = "Short", longMessage = "Email second factor failed", code = "x")
+          ),
+        clerkTraceId = null,
+      )
     val failureResult = ClerkResult.apiFailure(errorResponse)
+    var capturedMessage: String? = null
 
     coEvery { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") } returns failureResult
 
-    // This should not throw an exception - the handler logs but doesn't propagate errors
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = true, onError = {})
+    handler.prepareForEmailCode(
+      mockSignIn,
+      factor,
+      isSecondFactor = true,
+      onError = { capturedMessage = it },
+    )
 
     coVerify { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") }
+    assert(capturedMessage == "Email second factor failed")
   }
 
   @Test
@@ -128,15 +141,28 @@ class SignInPrepareHandlerTest {
   @Test
   fun prepareForPhoneCodeAsSecondFactorShouldHandleFailureGracefully() = runTest {
     val factor = Factor(strategy = "phone_code", phoneNumberId = "phone_789")
-    val errorResponse = mockk<ClerkErrorResponse>()
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            ClerkApiError(message = "Short", longMessage = "Phone second factor failed", code = "x")
+          ),
+        clerkTraceId = null,
+      )
     val failureResult = ClerkResult.apiFailure(errorResponse)
+    var capturedMessage: String? = null
 
     coEvery { mockSignIn.prepareSecondFactor("phone_789") } returns failureResult
 
-    // This should not throw an exception - the handler logs but doesn't propagate errors
-    handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = true, onError = {})
+    handler.prepareForPhoneCode(
+      mockSignIn,
+      factor,
+      isSecondFactor = true,
+      onError = { capturedMessage = it },
+    )
 
     coVerify { mockSignIn.prepareSecondFactor("phone_789") }
+    assert(capturedMessage == "Phone second factor failed")
   }
 
   @Test

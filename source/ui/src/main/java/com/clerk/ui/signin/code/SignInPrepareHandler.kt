@@ -109,7 +109,10 @@ internal class SignInPrepareHandler {
       inProgressSignIn
         .prepareSecondFactor(phoneNumberId)
         .onSuccess { ClerkLog.v("Successfully prepared second factor for phone code") }
-        .onFailure { ClerkLog.e("Error preparing second factor for phone code: $it") }
+        .onFailure {
+          onError(it.errorMessage)
+          ClerkLog.e("Error preparing second factor for phone code: $it")
+        }
     }
   }
 
@@ -155,7 +158,10 @@ internal class SignInPrepareHandler {
       inProgressSignIn
         .prepareSecondFactor(emailAddressId = emailAddressId)
         .onSuccess { ClerkLog.v("Successfully prepared second factor for email code") }
-        .onFailure { ClerkLog.e("Error preparing second factor for email code: $it") }
+        .onFailure {
+          onError(it.errorMessage)
+          ClerkLog.e("Error preparing second factor for email code: $it")
+        }
     }
   }
 
