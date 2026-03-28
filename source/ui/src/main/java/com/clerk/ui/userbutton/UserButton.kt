@@ -30,6 +30,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.clerk.api.Clerk
+import com.clerk.api.session.Session
 import com.clerk.api.session.requiresForcedMfa
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
@@ -68,14 +69,18 @@ fun UserButton(
     TelemetryProvider {
       val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
       val sessionUser by Clerk.userFlow.collectAsStateWithLifecycle()
+      val effectiveSession = session ?: Clerk.session
       val resolved =
         resolveUserButtonState(
-          sessionExists = session != null || Clerk.session != null,
-          sessionUser = sessionUser,
-          activeUser = Clerk.activeUser ?: Clerk.user,
+          sessionExists = effectiveSession != null,
+          sessionUser = sessionUser ?: effectiveSession?.user,
+          activeUser =
+            effectiveSession?.takeIf { it.status == Session.SessionStatus.ACTIVE }?.user
+              ?: Clerk.activeUser
+              ?: Clerk.user,
           treatPendingAsSignedOut = treatPendingAsSignedOut,
         )
-      val requiresForcedMfa = session?.requiresForcedMfa == true
+      val requiresForcedMfa = effectiveSession?.requiresForcedMfa == true
       val user = resolved.user
       val shouldShowButton = resolved.shouldShowButton
       val telemetry = LocalTelemetryCollector.current

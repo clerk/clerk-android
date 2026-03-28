@@ -60,11 +60,7 @@ class UserButtonBehaviorTest {
   @Test
   fun `shouldShowUserButton hides when only session user exists and pending is treated as signed out`() {
     assertFalse(
-      shouldShowUserButton(
-        hasSession = false,
-        hasActiveUser = false,
-        treatPendingAsSignedOut = true,
-      )
+      shouldShowUserButton(hasSession = true, hasActiveUser = false, treatPendingAsSignedOut = true)
     )
   }
 }
