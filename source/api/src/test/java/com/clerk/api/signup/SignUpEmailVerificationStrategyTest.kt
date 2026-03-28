@@ -29,17 +29,20 @@ class SignUpEmailVerificationStrategyTest {
   private val mockSignUpApi = mockk<SignUpApi>(relaxed = true)
   private val environment = mockk<Environment>(relaxed = true)
   private val userSettings = mockk<UserSettings>(relaxed = true)
+  private var previousEnvironment: Environment? = null
 
   @Before
   fun setUp() {
     mockkObject(ClerkApi)
     every { ClerkApi.signUp } returns mockSignUpApi
     every { environment.userSettings } returns userSettings
+    previousEnvironment = runCatching { Clerk.environment }.getOrNull()
     Clerk.environment = environment
   }
 
   @After
   fun tearDown() {
+    previousEnvironment?.let { Clerk.environment = it }
     unmockkAll()
   }
 
