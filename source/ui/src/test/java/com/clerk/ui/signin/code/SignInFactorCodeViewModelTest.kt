@@ -430,4 +430,24 @@ class SignInFactorCodeViewModelTest {
 
     coVerify(exactly = 0) { mockPrepareHandler.prepareForEmailCode(any(), any(), any(), any()) }
   }
+
+  @Test
+  fun prepareShouldRerouteWhenMatchingStrategyHasDifferentIdentifier() = runTest {
+    every { mockSignIn.identifier } returns null
+    every { mockSignIn.supportedFirstFactors } returns
+      listOf(Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_456"))
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
+
+      viewModel.prepare(factor, isSecondFactor = false)
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
+
+    coVerify(exactly = 0) { mockPrepareHandler.prepareForEmailCode(any(), any(), any(), any()) }
+  }
 }

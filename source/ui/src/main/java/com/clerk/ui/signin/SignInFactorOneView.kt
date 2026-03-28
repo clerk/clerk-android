@@ -66,8 +66,8 @@ internal fun resolveFirstFactor(fallback: Factor): Factor {
   return if (!hasSignInContext) {
     fallback
   } else {
-    preparedFactor
-      ?: emailLinkFactor
+    emailLinkFactor
+      ?: preparedFactor
       ?: if (fallbackIsSupported) fallback else currentSignIn.startingFirstFactor ?: fallback
   }
 }

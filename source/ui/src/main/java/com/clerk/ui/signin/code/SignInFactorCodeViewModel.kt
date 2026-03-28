@@ -150,9 +150,9 @@ internal class SignInFactorCodeViewModel(
         )
 
     return if (isSecondFactor) {
-      signIn.supportedSecondFactors?.none { it.strategy == factor.strategy } == true
+      signIn.supportedSecondFactors?.none { it.matches(factor) } == true
     } else {
-      supportedFirstFactors.none { it.strategy == factor.strategy } || prefersEmailLinkOverEmailCode
+      supportedFirstFactors.none { it.matches(factor) } || prefersEmailLinkOverEmailCode
     }
   }
 
@@ -172,5 +172,19 @@ internal class SignInFactorCodeViewModel(
             it.safeIdentifier?.contains("@") == true
         }
     return isEmailIdentifier
+  }
+
+  private fun Factor.matches(other: Factor): Boolean {
+    if (strategy != other.strategy) return false
+
+    return when {
+      emailAddressId != null || other.emailAddressId != null ->
+        emailAddressId == other.emailAddressId
+      phoneNumberId != null || other.phoneNumberId != null -> phoneNumberId == other.phoneNumberId
+      web3WalletId != null || other.web3WalletId != null -> web3WalletId == other.web3WalletId
+      safeIdentifier != null || other.safeIdentifier != null ->
+        safeIdentifier == other.safeIdentifier
+      else -> true
+    }
   }
 }

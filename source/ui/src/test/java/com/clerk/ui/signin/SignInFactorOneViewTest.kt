@@ -63,4 +63,28 @@ class SignInFactorOneViewTest {
 
     assertEquals(fallback, resolved)
   }
+
+  @Test
+  fun resolveFirstFactorShouldPreferEmailLinkOverPreparedEmailCodeForEmailIdentifier() {
+    every { mockAuth.currentSignIn } returns
+      SignIn(
+        id = "sign_in_123",
+        identifier = "sam@clerk.dev",
+        supportedFirstFactors =
+          listOf(
+            Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
+            Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
+          ),
+        firstFactorVerification =
+          com.clerk.api.network.model.verification.Verification(
+            status = com.clerk.api.network.model.verification.Verification.Status.UNVERIFIED,
+            strategy = StrategyKeys.EMAIL_CODE,
+          ),
+      )
+
+    val resolved =
+      resolveFirstFactor(Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"))
+
+    assertEquals(StrategyKeys.EMAIL_LINK, resolved.strategy)
+  }
 }
