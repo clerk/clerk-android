@@ -8,7 +8,6 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
-import com.clerk.api.network.model.environment.FraudSettings
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -147,7 +146,6 @@ class ClerkDeviceTokenUpdateTest {
   private fun resetClerkState() {
     val configurationManager = configurationManager()
     cancelJobField(configurationManager, "refreshJob")
-    cancelJobField(configurationManager, "attestationJob")
     cancelJobField(configurationManager, "initializationJob")
     setField(configurationManager, "context", null)
     setField(configurationManager, "hasConfigured", false)
@@ -211,7 +209,6 @@ class ClerkDeviceTokenUpdateTest {
           actions = UserSettings.Actions(),
           passkeySettings = null,
         ),
-      fraudSettings = FraudSettings(native = FraudSettings.Native()),
     )
   }
 }

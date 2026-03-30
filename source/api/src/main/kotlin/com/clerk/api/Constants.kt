@@ -37,7 +37,6 @@ object Constants {
     const val API_TIMEOUT_SECONDS = 30L
     const val TIMEOUT_MULTIPLIER = 1000
     const val BACKOFF_BASE_DELAY_SECONDS = 5L
-    const val MAX_ATTESTATION_RETRIES = 3
     const val MAX_INITIALIZATION_RETRIES = 3
     const val EXPONENTIAL_BACKOFF_SHIFT = 1
     const val DEFAULT_EXPIRATION_BUFFER = 1000L
