@@ -1,10 +1,12 @@
 package com.clerk.api
 
 import android.content.Context
+import com.clerk.api.Clerk.activeSession
+import com.clerk.api.Clerk.activeUser
 import com.clerk.api.Clerk.initialize
 import com.clerk.api.Clerk.isInitialized
-import com.clerk.api.Clerk.sessionFlow
-import com.clerk.api.Clerk.userFlow
+import com.clerk.api.Clerk.session
+import com.clerk.api.Clerk.user
 import com.clerk.api.auth.Auth
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
