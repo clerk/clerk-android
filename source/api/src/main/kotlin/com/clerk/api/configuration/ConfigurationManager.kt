@@ -121,11 +121,6 @@ internal class ConfigurationManager {
     DEVICE_TOKEN_UPDATE,
   }
 
-  private data class RefreshPreconditions(
-    val context: Context? = null,
-    val failure: ClerkResult<Unit, ClerkErrorResponse>? = null,
-  )
-
   /** Ensures storage is initialized when needed. */
   private fun ensureStorageInitialized() {
     if (!storageInitialized) {
@@ -293,6 +288,7 @@ internal class ConfigurationManager {
    * @param options Configuration options for the SDK.
    * @param retryCount Current retry attempt number (0 for initial attempt).
    */
+  // Launches in a new coroutine so retries triggered inside the mutex do not deadlock.
   private fun refreshClientAndEnvironment(options: ClerkConfigurationOptions?, retryCount: Int) {
     scope.launch {
       refreshClientAndEnvironment(
@@ -323,8 +319,8 @@ internal class ConfigurationManager {
     mode: RefreshMode,
     skipClientId: Boolean = false,
   ): ClerkResult<Unit, ClerkErrorResponse> {
-    val preconditions = validateRefreshPreconditions(mode)
-    if (preconditions.failure != null) return preconditions.failure
+    val failure = validateRefreshPreconditions(mode)
+    if (failure != null) return failure
 
     if (Clerk.debugMode) {
       ClerkLog.d("Starting client and environment refresh (attempt ${retryCount + 1})")
@@ -353,37 +349,28 @@ internal class ConfigurationManager {
     }
   }
 
-  private fun validateRefreshPreconditions(mode: RefreshMode): RefreshPreconditions {
-    val preconditions =
-      when {
-        !hasConfigured -> {
-          ClerkLog.w("Attempted to refresh before configuration. Skipping.")
-          RefreshPreconditions(
-            failure =
-              ClerkResult.unknownFailure(
-                IllegalStateException("Clerk must be initialized before refreshing")
-              )
-          )
-        }
-        else -> {
-          val availableContext = context?.get()
-          if (availableContext == null) {
-            ClerkLog.w(
-              "Application context no longer available. Cannot refresh client and environment."
-            )
-            val error = IllegalStateException("Application context no longer available")
-            if (mode == RefreshMode.INITIALIZATION) {
-              _initializationError.value = error
-            }
-            RefreshPreconditions(failure = ClerkResult.unknownFailure(error))
-          } else {
-            RefreshPreconditions(context = availableContext)
-          }
-        }
+  private fun validateRefreshPreconditions(
+    mode: RefreshMode
+  ): ClerkResult<Unit, ClerkErrorResponse>? =
+    when {
+      !hasConfigured -> {
+        ClerkLog.w("Attempted to refresh before configuration. Skipping.")
+        ClerkResult.unknownFailure(
+          IllegalStateException("Clerk must be initialized before refreshing")
+        )
       }
-
-    return preconditions
-  }
+      context?.get() == null -> {
+        ClerkLog.w(
+          "Application context no longer available. Cannot refresh client and environment."
+        )
+        val error = IllegalStateException("Application context no longer available")
+        if (mode == RefreshMode.INITIALIZATION) {
+          _initializationError.value = error
+        }
+        ClerkResult.unknownFailure(error)
+      }
+      else -> null
+    }
 
   private suspend fun executeRefresh(
     options: ClerkConfigurationOptions?,
@@ -595,7 +582,6 @@ internal class ConfigurationManager {
       }
     }
   }
-
 
   /**
    * Handles the client API result with appropriate logging.

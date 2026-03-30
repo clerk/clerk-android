@@ -506,7 +506,6 @@ object Clerk {
     this.debugMode = options?.enableDebugMode == true
     this.proxyUrl = options?.proxyUrl
     this.applicationContext = WeakReference(context)
-    this.applicationId = options?.deviceAttestationOptions?.applicationId
     this.customTheme = theme
     this.telemetryEnabled = options?.telemetryEnabled ?: true
     configurationManager.configure(
@@ -653,26 +652,15 @@ object Clerk {
  *
  * @property enableDebugMode If `true`, enables verbose logging for SDK operations and API calls.
  *   Defaults to `false`.
- * @property deviceAttestationOptions Configuration for Android Play Integrity device attestation.
- *   Used to enhance security. Defaults to `null` (device attestation disabled).
  * @property proxyUrl Optional proxy URL for network requests Your Clerk app's proxy URL. Required
  *   for applications that run behind a reverse proxy. Must be a full URL (for example,
  *   https://proxy.example.com/__clerk).
  */
 data class ClerkConfigurationOptions(
   val enableDebugMode: Boolean = false,
-  val deviceAttestationOptions: DeviceAttestationOptions? = null,
   val proxyUrl: String? = null,
   val telemetryEnabled: Boolean = true,
 )
-
-/**
- * Configuration options for Android Play Integrity device attestation.
- *
- * @property applicationId The application ID (package name) of your app (e.g., `com.example.app`).
- * @property cloudProjectNumber Your Google Cloud Project number, required for Play Integrity API.
- */
-data class DeviceAttestationOptions(val applicationId: String, val cloudProjectNumber: Long)
 
 /**
  * Extension function to convert a map of social provider configurations into a list of
