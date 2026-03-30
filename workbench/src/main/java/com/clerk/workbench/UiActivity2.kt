@@ -38,7 +38,7 @@ class UiActivity2 : ComponentActivity() {
           contentAlignment = Alignment.Center,
         ) {
           if (user == null) {
-            AuthView()
+            AuthView(persistIdentifiers = false)
           } else {
             UserButton()
           }
