@@ -30,6 +30,10 @@ internal fun AuthStateEffects(
         authState.setToStepForStatus(state.signUp, onAuthComplete)
         onReset()
       }
+      is AuthenticationViewState.Success.SessionTaskComplete -> {
+        authState.handleSessionTaskCompletion(state.session, onAuthComplete)
+        onReset()
+      }
       else -> Unit
     }
   }

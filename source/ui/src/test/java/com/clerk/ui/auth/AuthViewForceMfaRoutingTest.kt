@@ -1,6 +1,7 @@
 package com.clerk.ui.auth
 
 import androidx.navigation3.runtime.NavKey
+import com.clerk.api.session.SessionTaskKey
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -27,6 +28,28 @@ class AuthViewForceMfaRoutingTest {
   fun `does not route when session does not require forced mfa`() {
     val shouldRoute =
       shouldRouteToSessionTaskMfa(requiresForcedMfa = false, top = object : NavKey {})
+
+    assertFalse(shouldRoute)
+  }
+
+  @Test
+  fun `routes to reset password session task when task is pending`() {
+    val shouldRoute =
+      shouldRouteToPendingSessionTask(
+        taskKey = SessionTaskKey.RESET_PASSWORD,
+        top = AuthDestination.AuthStart,
+      )
+
+    assertTrue(shouldRoute)
+  }
+
+  @Test
+  fun `does not reroute when already on reset password session task destination`() {
+    val shouldRoute =
+      shouldRouteToPendingSessionTask(
+        taskKey = SessionTaskKey.RESET_PASSWORD,
+        top = AuthDestination.SessionTaskResetPassword,
+      )
 
     assertFalse(shouldRoute)
   }

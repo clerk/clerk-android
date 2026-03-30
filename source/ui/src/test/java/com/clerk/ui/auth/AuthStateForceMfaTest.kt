@@ -21,6 +21,15 @@ class AuthStateForceMfaTest {
   }
 
   @Test
+  fun `pendingSessionTaskKey returns RESET_PASSWORD when sign in completes with pending reset task`() {
+    val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.COMPLETE)
+    val session =
+      session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("reset-password")))
+
+    assertEquals(SessionTaskKey.RESET_PASSWORD, signIn.pendingSessionTaskKey(session))
+  }
+
+  @Test
   fun `pendingSessionTaskKey returns null when sign in is not complete`() {
     val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.NEEDS_SECOND_FACTOR)
     val session =
@@ -64,6 +73,17 @@ class AuthStateForceMfaTest {
     val action = postAuthCompletionAction(taskKey = null, hasUnresolvedCreatedSession = true)
 
     assertEquals(PostAuthCompletionAction.ROUTE_TO_MFA, action)
+  }
+
+  @Test
+  fun `postAuthCompletionAction routes to reset password when session requires password reset`() {
+    val action =
+      postAuthCompletionAction(
+        taskKey = SessionTaskKey.RESET_PASSWORD,
+        hasUnresolvedCreatedSession = false,
+      )
+
+    assertEquals(PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD, action)
   }
 
   @Test

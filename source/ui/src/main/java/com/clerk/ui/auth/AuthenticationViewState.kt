@@ -1,6 +1,7 @@
 package com.clerk.ui.auth
 
 import com.clerk.api.Clerk
+import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.ui.signin.code.VerificationState
@@ -27,6 +28,8 @@ internal sealed interface AuthenticationViewState {
     data class SignIn(val signIn: ClerkSignIn) : Success
 
     data class SignUp(val signUp: ClerkSignUp) : Success
+
+    data class SessionTaskComplete(val session: Session?) : Success
   }
 
   data class Error(val message: String?) : AuthenticationViewState

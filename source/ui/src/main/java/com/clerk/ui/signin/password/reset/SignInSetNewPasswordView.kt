@@ -23,7 +23,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthState
@@ -52,7 +51,26 @@ fun SignInSetNewPasswordView(
   onAuthComplete: () -> Unit,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
-    SignInSetNewPasswordViewImpl(modifier = modifier, onAuthComplete = onAuthComplete)
+    SignInSetNewPasswordViewImpl(
+      modifier = modifier,
+      mode = ResetPasswordMode.SIGN_IN,
+      onAuthComplete = onAuthComplete,
+    )
+  }
+}
+
+@Composable
+internal fun SessionTaskResetPasswordView(
+  modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
+  onAuthComplete: () -> Unit,
+) {
+  ClerkThemeOverrideProvider(clerkTheme) {
+    SignInSetNewPasswordViewImpl(
+      modifier = modifier,
+      mode = ResetPasswordMode.SESSION_TASK,
+      onAuthComplete = onAuthComplete,
+    )
   }
 }
 
@@ -64,10 +82,10 @@ fun SignInSetNewPasswordView(
 @Composable
 private fun SignInSetNewPasswordViewImpl(
   modifier: Modifier = Modifier,
+  mode: ResetPasswordMode,
   onAuthComplete: () -> Unit,
 ) {
-  val signInId = Clerk.auth.currentSignIn?.id ?: "no-sign-in"
-  val viewModel: ResetPasswordViewModel = viewModel(key = "reset-password-$signInId")
+  val viewModel: ResetPasswordViewModel = viewModel(key = mode.viewModelKey())
   val authState = LocalAuthState.current
   val snackbarHostState = remember { SnackbarHostState() }
   var signOutOtherDevices by remember { mutableStateOf(false) }
@@ -80,14 +98,6 @@ private fun SignInSetNewPasswordViewImpl(
       }
     }
 
-  val isButtonEnabled by remember {
-    derivedStateOf {
-      authState.signInNewPassword.isNotBlank() &&
-        authState.signInConfirmNewPassword.isNotBlank() &&
-        passwordsMatch
-    }
-  }
-
   AuthStateEffects(
     state = state,
     authState = authState,
@@ -96,12 +106,28 @@ private fun SignInSetNewPasswordViewImpl(
   ) {
     viewModel.resetState()
   }
+  val isButtonEnabled =
+    authState.signInNewPassword.isNotBlank() &&
+      authState.signInConfirmNewPassword.isNotBlank() &&
+      passwordsMatch
+  val onResetPassword = {
+    if (passwordsMatch) {
+      when (mode) {
+        ResetPasswordMode.SIGN_IN ->
+          viewModel.setNewPassword(authState.signInNewPassword, signOutOtherDevices)
+        ResetPasswordMode.SESSION_TASK ->
+          viewModel.completeSessionTask(authState.signInNewPassword, signOutOtherDevices)
+      }
+    }
+  }
 
   ClerkThemedAuthScaffold(
     modifier = modifier,
     onBackPressed = authState::navigateBack,
     hasLogo = false,
     title = stringResource(R.string.set_new_password),
+    subtitle = mode.subtitle(),
+    hasBackButton = mode == ResetPasswordMode.SIGN_IN,
     snackbarHostState = snackbarHostState,
   ) {
     PasswordInputs(authState, passwordsMatch)
@@ -109,16 +135,21 @@ private fun SignInSetNewPasswordViewImpl(
     SignOutOfOtherDevicesRow(signOutOtherDevices, onCheckChange = { signOutOtherDevices = it })
     Spacers.Vertical.Spacer24()
     ClerkButton(
-      onClick = {
-        if (authState.signInNewPassword == authState.signInConfirmNewPassword) {
-          viewModel.setNewPassword(authState.signInNewPassword, signOutOtherDevices)
-        }
-      },
+      onClick = onResetPassword,
       isLoading = state is AuthenticationViewState.Loading,
       text = stringResource(R.string.reset_password),
       modifier = Modifier.fillMaxWidth(),
       isEnabled = isButtonEnabled,
     )
+  }
+}
+
+@Composable
+private fun ResetPasswordMode.subtitle(): String? {
+  return if (this == ResetPasswordMode.SESSION_TASK) {
+    stringResource(R.string.account_requires_new_password_before_continue)
+  } else {
+    null
   }
 }
 

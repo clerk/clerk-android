@@ -19,7 +19,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.session.requiresForcedMfa
+import com.clerk.api.session.SessionTaskKey
+import com.clerk.api.session.pendingTaskKey
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
@@ -33,6 +34,7 @@ import com.clerk.ui.signin.alternativemethods.SignInFactorAlternativeMethodsView
 import com.clerk.ui.signin.clienttrust.SignInClientTrustView
 import com.clerk.ui.signin.help.SignInGetHelpView
 import com.clerk.ui.signin.password.forgot.SignInFactorOneForgotPasswordView
+import com.clerk.ui.signin.password.reset.SessionTaskResetPasswordView
 import com.clerk.ui.signin.password.reset.SignInSetNewPasswordView
 import com.clerk.ui.signup.code.SignUpCodeField
 import com.clerk.ui.signup.code.SignUpCodeView
@@ -69,7 +71,7 @@ fun AuthView(
         )
       }
     AuthStateProvider(backStack = backStack, identifierConfig = identifierConfig) {
-      ObserveForcedMfaRouting(backStack = backStack)
+      ObservePendingSessionTaskRouting(backStack = backStack)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
       AuthNavDisplay(
         modifier = fullScreenModifier,
@@ -81,12 +83,15 @@ fun AuthView(
 }
 
 @Composable
-private fun ObserveForcedMfaRouting(backStack: NavBackStack<NavKey>) {
+private fun ObservePendingSessionTaskRouting(backStack: NavBackStack<NavKey>) {
   val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
-  LaunchedEffect(session?.requiresForcedMfa, backStack.lastOrNull()) {
+  val pendingTaskKey = session?.pendingTaskKey
+  LaunchedEffect(pendingTaskKey, backStack.lastOrNull()) {
     val top = backStack.lastOrNull()
-    if (shouldRouteToSessionTaskMfa(session?.requiresForcedMfa == true, top)) {
-      backStack.add(AuthDestination.SessionTaskMfa)
+    pendingSessionTaskDestination(pendingTaskKey)?.let { destination ->
+      if (shouldRouteToPendingSessionTask(pendingTaskKey, top)) {
+        backStack.add(destination)
+      }
     }
   }
 }
@@ -139,6 +144,9 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, onAuthComplete: (
       SignInFactorTwoView(factor = it.factor, onAuthComplete = onAuthComplete)
     }
     entry<AuthDestination.SessionTaskMfa> { SessionTaskMfaView(onAuthComplete = onAuthComplete) }
+    entry<AuthDestination.SessionTaskResetPassword> {
+      SessionTaskResetPasswordView(onAuthComplete = onAuthComplete)
+    }
     entry<AuthDestination.SignInFactorTwoUseAnotherMethod> {
       SignInFactorAlternativeMethodsView(
         currentFactor = it.currentFactor,
@@ -174,6 +182,19 @@ internal fun shouldRouteToSessionTaskMfa(requiresForcedMfa: Boolean, top: NavKey
   return requiresForcedMfa && top != AuthDestination.SessionTaskMfa
 }
 
+internal fun pendingSessionTaskDestination(taskKey: SessionTaskKey?): NavKey? {
+  return when (taskKey) {
+    SessionTaskKey.MFA_REQUIRED -> AuthDestination.SessionTaskMfa
+    SessionTaskKey.RESET_PASSWORD -> AuthDestination.SessionTaskResetPassword
+    SessionTaskKey.UNKNOWN -> AuthDestination.SignInGetHelp
+    null -> null
+  }
+}
+
+internal fun shouldRouteToPendingSessionTask(taskKey: SessionTaskKey?, top: NavKey?): Boolean {
+  return pendingSessionTaskDestination(taskKey)?.let { it != top } == true
+}
+
 @Composable
 private fun TrackScreenLoaded(mode: String) {
   val telemetryCollector = LocalTelemetryCollector.current
@@ -204,6 +225,8 @@ internal object AuthDestination {
   @Serializable data class SignInFactorTwo(val factor: Factor) : NavKey
 
   @Serializable data object SessionTaskMfa : NavKey
+
+  @Serializable data object SessionTaskResetPassword : NavKey
 
   @Serializable data class SignInFactorTwoUseAnotherMethod(val currentFactor: Factor) : NavKey
 
