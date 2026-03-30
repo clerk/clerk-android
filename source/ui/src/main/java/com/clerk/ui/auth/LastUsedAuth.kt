@@ -1,8 +1,7 @@
 package com.clerk.ui.auth
 
-import android.content.Context
+import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.clerk.api.Constants
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.ui.core.common.StrategyKeys
 
@@ -106,22 +105,14 @@ internal enum class IdentifierType {
 internal object LastUsedIdentifierStorage {
   private const val identifierStorageKey = "clerk_last_used_identifier_type"
 
-  fun store(context: Context, identifierType: IdentifierType) {
-    val prefs =
-      context.applicationContext.getSharedPreferences(
-        Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
-        Context.MODE_PRIVATE,
-      )
-    prefs.edit(commit = true) { putString(identifierStorageKey, identifierType.storageValue) }
+  fun store(sharedPreferences: SharedPreferences, identifierType: IdentifierType) {
+    sharedPreferences.edit(commit = true) {
+      putString(identifierStorageKey, identifierType.storageValue)
+    }
   }
 
-  fun retrieve(context: Context): IdentifierType? {
-    val prefs =
-      context.applicationContext.getSharedPreferences(
-        Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
-        Context.MODE_PRIVATE,
-      )
-    return when (prefs.getString(identifierStorageKey, null)) {
+  fun retrieve(sharedPreferences: SharedPreferences): IdentifierType? {
+    return when (sharedPreferences.getString(identifierStorageKey, null)) {
       "email" -> IdentifierType.Email
       "phone" -> IdentifierType.Phone
       "username" -> IdentifierType.Username
@@ -129,13 +120,8 @@ internal object LastUsedIdentifierStorage {
     }
   }
 
-  fun clear(context: Context) {
-    val prefs =
-      context.applicationContext.getSharedPreferences(
-        Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
-        Context.MODE_PRIVATE,
-      )
-    prefs.edit(commit = true) { remove(identifierStorageKey) }
+  fun clear(sharedPreferences: SharedPreferences) {
+    sharedPreferences.edit(commit = true) { remove(identifierStorageKey) }
   }
 }
 

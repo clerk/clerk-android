@@ -1,7 +1,6 @@
 package com.clerk.ui.auth
 
 import android.annotation.SuppressLint
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,19 +60,19 @@ internal fun AuthStartViewImpl(
   clerkTheme: ClerkTheme? = null,
   authStartViewModel: AuthStartViewModel = viewModel(),
 ) {
-  val context = LocalContext.current
   val authState = LocalAuthState.current
   val state by authStartViewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val generic = stringResource(R.string.something_went_wrong_please_try_again)
-  var phoneActive by rememberSaveable {
-    mutableStateOf(
-      authViewHelper.shouldStartOnPhoneNumber(
-        authState.authStartPhoneNumber,
-        authState.authStartIdentifier,
+  var phoneActive by
+    rememberSaveable(authState.identifierConfigVersion) {
+      mutableStateOf(
+        authViewHelper.shouldStartOnPhoneNumber(
+          authState.authStartPhoneNumber,
+          authState.authStartIdentifier,
+        )
       )
-    )
-  }
+    }
   val isContinueEnabled by
     remember(authState.authStartIdentifier, authState.authStartPhoneNumber, phoneActive) {
       derivedStateOf {
@@ -89,19 +87,12 @@ internal fun AuthStartViewImpl(
   val lastAuthenticationStrategy =
     runCatching { Clerk.client.lastAuthenticationStrategy }.getOrNull()
   val lastUsedAuth =
-    remember(
-      lastAuthenticationStrategy,
-      socialProviders,
-      Clerk.enabledFirstFactorAttributes,
-      context,
-    ) {
-      LastUsedAuth.from(
-        lastAuthenticationStrategy = lastAuthenticationStrategy,
-        enabledFirstFactorAttributes = Clerk.enabledFirstFactorAttributes,
-        authenticatableSocialProviders = socialProviders,
-        storedIdentifierType = LastUsedIdentifierStorage.retrieve(context),
-      )
-    }
+    LastUsedAuth.from(
+      lastAuthenticationStrategy = lastAuthenticationStrategy,
+      enabledFirstFactorAttributes = Clerk.enabledFirstFactorAttributes,
+      authenticatableSocialProviders = socialProviders,
+      storedIdentifierType = authState.storedIdentifierType,
+    )
   val lastUsedSocialProvider = lastUsedAuth?.socialProvider
   val socialProvidersMinusLastUsed =
     if (lastUsedSocialProvider == null) {
@@ -178,7 +169,7 @@ internal fun AuthStartViewImpl(
             onClick = {
               if (authState.mode != AuthMode.SignUp) {
                 storeIdentifierType(
-                  context = context,
+                  authState = authState,
                   authViewHelper = authViewHelper,
                   phoneNumberFieldIsActive = phoneActive,
                   authStartIdentifier = authState.authStartIdentifier,
@@ -267,7 +258,7 @@ private fun AuthInputField(
 }
 
 private fun storeIdentifierType(
-  context: Context,
+  authState: AuthState,
   authViewHelper: AuthStartViewHelper,
   phoneNumberFieldIsActive: Boolean,
   authStartIdentifier: String,
@@ -281,7 +272,7 @@ private fun storeIdentifierType(
       IdentifierType.Username
     }
 
-  LastUsedIdentifierStorage.store(context, identifierType)
+  authState.storeLastUsedIdentifierType(identifierType)
 }
 
 private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")

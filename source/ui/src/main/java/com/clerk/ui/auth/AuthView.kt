@@ -7,6 +7,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
@@ -41,16 +42,33 @@ import com.clerk.ui.signup.completeprofile.SignUpCompleteProfileView
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.serialization.Serializable
 
+/**
+ * Prebuilt Clerk authentication flow.
+ *
+ * @param initialIdentifier Optional initial value for the identifier field. Phone-like values are
+ *   routed to the phone number field automatically.
+ * @param persistIdentifiers When `false`, stored auth-start identifiers are cleared and future
+ *   edits are kept in memory only for the lifetime of the current view.
+ */
 @Composable
 fun AuthView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
+  initialIdentifier: String? = null,
+  persistIdentifiers: Boolean = true,
   onAuthComplete: () -> Unit = {},
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
-    AuthStateProvider(backStack = backStack) {
+    val identifierConfig =
+      remember(initialIdentifier, persistIdentifiers) {
+        AuthIdentifierConfig(
+          initialIdentifier = initialIdentifier,
+          persistIdentifiers = persistIdentifiers,
+        )
+      }
+    AuthStateProvider(backStack = backStack, identifierConfig = identifierConfig) {
       ObserveForcedMfaRouting(backStack = backStack)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
       AuthNavDisplay(
