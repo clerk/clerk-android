@@ -1,5 +1,7 @@
 package com.clerk.ui.auth
 
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -9,6 +11,7 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
+import com.clerk.api.Constants
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.parsedKey
@@ -23,6 +26,9 @@ import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.navigation.pop
 import com.clerk.ui.signup.code.SignUpCodeField
 import com.clerk.ui.signup.collectfield.CollectField
+import com.google.i18n.phonenumbers.NumberParseException
+import com.google.i18n.phonenumbers.PhoneNumberUtil
+import java.util.Locale
 
 private const val EMAIL_ADDRESS = "email_address"
 
@@ -37,11 +43,37 @@ private const val USERNAME = "username"
 internal class AuthState(
   val mode: AuthMode = AuthMode.SignInOrUp,
   val backStack: NavBackStack<NavKey>,
+  private val sharedPreferences: SharedPreferences,
+  identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
 ) : NavigableState<AuthDestination> {
 
+  private var appliedIdentifierConfig: AuthIdentifierConfig? = null
+
+  var persistIdentifiers by mutableStateOf(identifierConfig.persistIdentifiers)
+    private set
+
+  var identifierConfigVersion by mutableStateOf(0)
+    private set
+
+  private var authStartIdentifierState by
+    mutableStateOf(sharedPreferences.getString(AUTH_START_IDENTIFIER_STORAGE_KEY, null).orEmpty())
+  private var authStartPhoneNumberState by
+    mutableStateOf(sharedPreferences.getString(AUTH_START_PHONE_NUMBER_STORAGE_KEY, null).orEmpty())
+
   // Auth start fields
-  var authStartIdentifier by mutableStateOf("")
-  var authStartPhoneNumber by mutableStateOf("")
+  var authStartIdentifier: String
+    get() = authStartIdentifierState
+    set(value) {
+      authStartIdentifierState = value
+      persistStoredValue(AUTH_START_IDENTIFIER_STORAGE_KEY, value)
+    }
+
+  var authStartPhoneNumber: String
+    get() = authStartPhoneNumberState
+    set(value) {
+      authStartPhoneNumberState = value
+      persistStoredValue(AUTH_START_PHONE_NUMBER_STORAGE_KEY, value)
+    }
 
   // Sign In
   var signInPassword by mutableStateOf("")
@@ -204,6 +236,100 @@ internal class AuthState(
         else -> backStack.add(AuthDestination.SignUpCompleteProfile(signUp.missingFields.count()))
       }
     }
+  }
+
+  init {
+    applyIdentifierConfig(identifierConfig)
+  }
+
+  fun applyIdentifierConfig(config: AuthIdentifierConfig) {
+    if (config == appliedIdentifierConfig) return
+
+    appliedIdentifierConfig = config
+    persistIdentifiers = config.persistIdentifiers
+    identifierConfigVersion++
+
+    if (!config.persistIdentifiers) {
+      clearStoredIdentifiers()
+      LastUsedIdentifierStorage.clear(sharedPreferences)
+    }
+
+    val initialIdentifier = config.initialIdentifier
+    when {
+      initialIdentifier != null && initialIdentifier.looksLikePhoneNumber() -> {
+        updateAuthStartPhoneNumber(initialIdentifier)
+        updateAuthStartIdentifier("")
+      }
+      initialIdentifier != null -> {
+        updateAuthStartIdentifier(initialIdentifier)
+        updateAuthStartPhoneNumber("")
+      }
+      !config.persistIdentifiers -> {
+        updateAuthStartIdentifier("")
+        updateAuthStartPhoneNumber("")
+      }
+    }
+  }
+
+  fun storeLastUsedIdentifierType(identifierType: IdentifierType) {
+    if (!persistIdentifiers) return
+    LastUsedIdentifierStorage.store(sharedPreferences, identifierType)
+  }
+
+  val storedIdentifierType: IdentifierType?
+    get() = LastUsedIdentifierStorage.retrieve(sharedPreferences)
+
+  private fun updateAuthStartIdentifier(value: String) {
+    authStartIdentifierState = value
+    persistStoredValue(AUTH_START_IDENTIFIER_STORAGE_KEY, value)
+  }
+
+  private fun updateAuthStartPhoneNumber(value: String) {
+    authStartPhoneNumberState = value
+    persistStoredValue(AUTH_START_PHONE_NUMBER_STORAGE_KEY, value)
+  }
+
+  private fun persistStoredValue(key: String, value: String) {
+    if (!persistIdentifiers) return
+    sharedPreferences.edit().putString(key, value).commit()
+  }
+
+  private fun clearStoredIdentifiers() {
+    sharedPreferences
+      .edit()
+      .remove(AUTH_START_IDENTIFIER_STORAGE_KEY)
+      .remove(AUTH_START_PHONE_NUMBER_STORAGE_KEY)
+      .commit()
+  }
+}
+
+internal data class AuthIdentifierConfig(
+  val initialIdentifier: String? = null,
+  val persistIdentifiers: Boolean = true,
+)
+
+internal fun authSharedPreferences(context: Context): SharedPreferences {
+  return context.applicationContext.getSharedPreferences(
+    Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
+    Context.MODE_PRIVATE,
+  )
+}
+
+internal const val AUTH_START_IDENTIFIER_STORAGE_KEY = "authStartIdentifier"
+
+internal const val AUTH_START_PHONE_NUMBER_STORAGE_KEY = "authStartPhoneNumber"
+
+private fun String.looksLikePhoneNumber(): Boolean {
+  val input = trim()
+  if (input.isEmpty()) return false
+
+  return try {
+    val defaultRegion = Locale.getDefault().country.takeIf { it.isNotBlank() } ?: "US"
+    val phoneNumberUtil = PhoneNumberUtil.getInstance()
+    val parsed = phoneNumberUtil.parse(input, defaultRegion)
+    phoneNumberUtil.isPossibleNumber(parsed)
+  } catch (_: NumberParseException) {
+    false
   }
 }
 

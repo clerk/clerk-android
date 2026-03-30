@@ -165,23 +165,23 @@ class LastUsedAuthTest {
       )
     val key = identifierStorageKey()
 
-    assertNull(LastUsedIdentifierStorage.retrieve(context))
+    assertNull(LastUsedIdentifierStorage.retrieve(prefs))
 
-    LastUsedIdentifierStorage.store(context, IdentifierType.Email)
+    LastUsedIdentifierStorage.store(prefs, IdentifierType.Email)
     assertEquals("email", prefs.getString(key, null))
-    assertEquals(IdentifierType.Email, LastUsedIdentifierStorage.retrieve(context))
+    assertEquals(IdentifierType.Email, LastUsedIdentifierStorage.retrieve(prefs))
 
-    LastUsedIdentifierStorage.store(context, IdentifierType.Phone)
+    LastUsedIdentifierStorage.store(prefs, IdentifierType.Phone)
     assertEquals("phone", prefs.getString(key, null))
-    assertEquals(IdentifierType.Phone, LastUsedIdentifierStorage.retrieve(context))
+    assertEquals(IdentifierType.Phone, LastUsedIdentifierStorage.retrieve(prefs))
 
-    LastUsedIdentifierStorage.store(context, IdentifierType.Username)
+    LastUsedIdentifierStorage.store(prefs, IdentifierType.Username)
     assertEquals("username", prefs.getString(key, null))
-    assertEquals(IdentifierType.Username, LastUsedIdentifierStorage.retrieve(context))
+    assertEquals(IdentifierType.Username, LastUsedIdentifierStorage.retrieve(prefs))
 
-    LastUsedIdentifierStorage.clear(context)
+    LastUsedIdentifierStorage.clear(prefs)
     assertFalse(prefs.contains(key))
-    assertNull(LastUsedIdentifierStorage.retrieve(context))
+    assertNull(LastUsedIdentifierStorage.retrieve(prefs))
   }
 
   private fun identifierStorageKey(): String {
