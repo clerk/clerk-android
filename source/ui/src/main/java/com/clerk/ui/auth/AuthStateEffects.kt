@@ -23,11 +23,15 @@ internal fun AuthStateEffects(
       }
       AuthenticationViewState.NotStarted -> authState.clearBackStack()
       is AuthenticationViewState.Success.SignIn -> {
-        authState.setToStepForStatus(state.signIn, onAuthComplete)
+        authState.setToStepForStatus(state.signIn, onAuthComplete = onAuthComplete)
         onReset()
       }
       is AuthenticationViewState.Success.SignUp -> {
-        authState.setToStepForStatus(state.signUp, onAuthComplete)
+        authState.setToStepForStatus(state.signUp, onAuthComplete = onAuthComplete)
+        onReset()
+      }
+      is AuthenticationViewState.Success.SessionTaskComplete -> {
+        authState.handleSessionTaskCompletion(state.session, onAuthComplete)
         onReset()
       }
       else -> Unit

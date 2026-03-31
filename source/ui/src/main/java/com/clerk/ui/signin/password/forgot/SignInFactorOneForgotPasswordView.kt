@@ -112,11 +112,11 @@ private fun SignInFactorOneForgotPasswordViewImpl(
         viewModel.resetState()
       }
       is ResetPasswordViewState.Success.SignIn -> {
-        authState.setToStepForStatus(s.signIn, onAuthComplete)
+        authState.setToStepForStatus(s.signIn, onAuthComplete = onAuthComplete)
         viewModel.resetState()
       }
       is ResetPasswordViewState.Success.SignUp -> {
-        authState.setToStepForStatus(s.signUp, onAuthComplete)
+        authState.setToStepForStatus(s.signUp, onAuthComplete = onAuthComplete)
         viewModel.resetState()
       }
       else -> {}

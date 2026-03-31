@@ -112,7 +112,6 @@ internal fun AuthStartViewImpl(
         authStartViewModel.resetState()
       }
       is AuthStartViewModel.AuthState.OAuthState.SignInSuccess -> {
-
         authState.setToStepForStatus(s.signIn, onAuthComplete = onAuthComplete)
       }
       is AuthStartViewModel.AuthState.OAuthState.SignUpSuccess -> {

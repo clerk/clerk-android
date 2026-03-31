@@ -57,6 +57,7 @@ data class Session(
   @SerialName("factor_verification_age") val factorVerificationAge: List<Int>? = null,
   @SerialName("created_at") val createdAt: Long,
   @SerialName("updated_at") val updatedAt: Long,
+  @SerialName("current_task") val currentTask: SessionTask? = null,
   val tasks: List<SessionTask> = emptyList(),
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
@@ -78,6 +79,7 @@ data class Session(
 
 enum class SessionTaskKey {
   MFA_REQUIRED,
+  RESET_PASSWORD,
   UNKNOWN;
 
   companion object {
@@ -87,6 +89,8 @@ enum class SessionTaskKey {
         "setup-mfa",
         "mfa_required",
         "mfa-required" -> MFA_REQUIRED
+        "reset_password",
+        "reset-password" -> RESET_PASSWORD
         else -> UNKNOWN
       }
   }
@@ -95,11 +99,21 @@ enum class SessionTaskKey {
 val SessionTask.parsedKey: SessionTaskKey
   get() = SessionTaskKey.fromRaw(key)
 
+val Session.pendingTaskKey: SessionTaskKey?
+  get() =
+    if (status == Session.SessionStatus.PENDING) {
+      currentTask?.parsedKey ?: tasks.firstOrNull()?.parsedKey
+    } else {
+      null
+    }
+
 val Session.hasMfaRequiredTask: Boolean
-  get() = tasks.any { it.parsedKey == SessionTaskKey.MFA_REQUIRED }
+  get() =
+    currentTask?.parsedKey == SessionTaskKey.MFA_REQUIRED ||
+      tasks.any { it.parsedKey == SessionTaskKey.MFA_REQUIRED }
 
 val Session.requiresForcedMfa: Boolean
-  get() = status == Session.SessionStatus.PENDING && hasMfaRequiredTask
+  get() = pendingTaskKey == SessionTaskKey.MFA_REQUIRED
 
 /**
  * A `SessionActivity` object will provide information about the user's location, device and

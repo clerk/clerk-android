@@ -16,6 +16,12 @@ class SessionTaskTest {
   }
 
   @Test
+  fun `parsedKey maps reset password keys`() {
+    assertEquals(SessionTaskKey.RESET_PASSWORD, SessionTask("reset_password").parsedKey)
+    assertEquals(SessionTaskKey.RESET_PASSWORD, SessionTask("reset-password").parsedKey)
+  }
+
+  @Test
   fun `requiresForcedMfa is true for pending session with mfa task`() {
     val session =
       session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("mfa_required")))
@@ -45,7 +51,36 @@ class SessionTaskTest {
     assertFalse(session.hasMfaRequiredTask)
   }
 
-  private fun session(status: Session.SessionStatus, tasks: List<SessionTask>): Session {
+  @Test
+  fun `pendingTaskKey preserves current pending task order`() {
+    val session =
+      session(
+        status = Session.SessionStatus.PENDING,
+        tasks = listOf(SessionTask("reset-password"), SessionTask("setup-mfa")),
+      )
+
+    assertEquals(SessionTaskKey.RESET_PASSWORD, session.pendingTaskKey)
+    assertFalse(session.requiresForcedMfa)
+  }
+
+  @Test
+  fun `pendingTaskKey prefers current task when present`() {
+    val session =
+      session(
+        status = Session.SessionStatus.PENDING,
+        currentTask = SessionTask("reset-password"),
+        tasks = listOf(SessionTask("setup-mfa")),
+      )
+
+    assertEquals(SessionTaskKey.RESET_PASSWORD, session.pendingTaskKey)
+    assertFalse(session.requiresForcedMfa)
+  }
+
+  private fun session(
+    status: Session.SessionStatus,
+    tasks: List<SessionTask>,
+    currentTask: SessionTask? = null,
+  ): Session {
     return Session(
       id = "sess_123",
       status = status,
@@ -53,6 +88,7 @@ class SessionTaskTest {
       lastActiveAt = 0L,
       createdAt = 0L,
       updatedAt = 0L,
+      currentTask = currentTask,
       tasks = tasks,
     )
   }

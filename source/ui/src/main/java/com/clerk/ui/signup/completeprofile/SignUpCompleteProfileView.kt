@@ -72,13 +72,13 @@ private fun SignUpCompleteProfileImpl(
   viewModel: CompleteProfileViewModel = viewModel(),
 ) {
   val authState = LocalAuthState.current
-  val firstEnabled = Clerk.isFirstNameEnabled || firstNameEnabled
-  val lastEnabled = Clerk.isLastNameEnabled || lastNameEnabled
+  val signUp = Clerk.auth.currentSignUp
+  val firstEnabled = firstNameEnabled || signUp?.supportsField(FIRST_NAME_FIELD) == true
+  val lastEnabled = lastNameEnabled || signUp?.supportsField(LAST_NAME_FIELD) == true
 
   // Check if legal_accepted is in missing fields
   val legalConsentRequired =
-    legalConsentMissing ||
-      (Clerk.auth.currentSignUp?.missingFields?.contains(LEGAL_ACCEPTED_FIELD) == true)
+    legalConsentMissing || (signUp?.missingFields?.contains(LEGAL_ACCEPTED_FIELD) == true)
   val termsUrl = Clerk.termsUrl
   val privacyPolicyUrl = Clerk.privacyPolicyUrl
   val hasLegalUrls = termsUrl != null || privacyPolicyUrl != null
@@ -159,8 +159,8 @@ private fun SignUpCompleteProfileImpl(
         isLoading = state is AuthenticationViewState.Loading,
         onClick = {
           viewModel.updateSignUp(
-            firstName = authState.signUpFirstName,
-            lastName = authState.signUpLastName,
+            firstName = authState.signUpFirstName.takeIf { firstEnabled },
+            lastName = authState.signUpLastName.takeIf { lastEnabled },
             legalAccepted = if (showLegalConsent) authState.signUpLegalAccepted else null,
           )
         },
