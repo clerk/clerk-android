@@ -104,40 +104,18 @@ internal fun AuthStartViewImpl(
   LaunchedEffect(state) {
     when (val s = state) {
       is AuthStartViewModel.AuthState.Success.SignInSuccess -> {
-        val signIn = s.signIn!!
-        val resolvedSession = signIn.resolvePostAuthSession()
-        authState.setToStepForStatus(
-          signIn = signIn,
-          session = resolvedSession,
-          onAuthComplete = onAuthComplete,
-        )
+        authState.setToStepForStatus(s.signIn!!, onAuthComplete = onAuthComplete)
         authStartViewModel.resetState()
       }
       is AuthStartViewModel.AuthState.Success.SignUpSuccess -> {
-        val signUp = s.signUp!!
-        val resolvedSession = signUp.resolvePostAuthSession()
-        authState.setToStepForStatus(
-          signUp = signUp,
-          session = resolvedSession,
-          onAuthComplete = onAuthComplete,
-        )
+        authState.setToStepForStatus(s.signUp!!, onAuthComplete = onAuthComplete)
         authStartViewModel.resetState()
       }
       is AuthStartViewModel.AuthState.OAuthState.SignInSuccess -> {
-        val resolvedSession = s.signIn.resolvePostAuthSession()
-        authState.setToStepForStatus(
-          signIn = s.signIn,
-          session = resolvedSession,
-          onAuthComplete = onAuthComplete,
-        )
+        authState.setToStepForStatus(s.signIn, onAuthComplete = onAuthComplete)
       }
       is AuthStartViewModel.AuthState.OAuthState.SignUpSuccess -> {
-        val resolvedSession = s.signUp.resolvePostAuthSession()
-        authState.setToStepForStatus(
-          signUp = s.signUp,
-          session = resolvedSession,
-          onAuthComplete = onAuthComplete,
-        )
+        authState.setToStepForStatus(s.signUp, onAuthComplete = onAuthComplete)
       }
       is AuthStartViewModel.AuthState.Error -> {
         snackbarHostState.showSnackbar(s.message ?: generic)

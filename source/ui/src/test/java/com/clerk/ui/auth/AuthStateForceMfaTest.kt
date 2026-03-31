@@ -107,7 +107,7 @@ class AuthStateForceMfaTest {
         fallbackSession = fallback,
       )
 
-    assertNull(resolved)
+    assertEquals(fallback, resolved)
   }
 
   private fun session(

@@ -43,10 +43,11 @@ internal fun resolveCorrespondingSession(
   sessions: List<Session>,
   fallbackSession: Session?,
 ): Session? {
-  if (createdSessionId == null) {
-    return fallbackSession
+  return if (createdSessionId == null) {
+    fallbackSession
+  } else {
+    sessions.firstOrNull { it.id == createdSessionId } ?: fallbackSession
   }
-  return sessions.firstOrNull { it.id == createdSessionId }
 }
 
 internal fun postAuthCompletionAction(
