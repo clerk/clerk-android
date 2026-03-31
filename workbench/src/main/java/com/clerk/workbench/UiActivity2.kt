@@ -31,7 +31,7 @@ class UiActivity2 : ComponentActivity() {
       statusBarStyle =
         SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
     )
-      setContent {
+    setContent {
       WorkbenchTheme {
         val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
         val user by Clerk.userFlow.collectAsStateWithLifecycle()
