@@ -121,7 +121,12 @@ private fun SignUpCollectFieldViewImpl(
       if (collectFieldHelper.fieldIsOptional(collectField)) {
         ClerkTextButton(
           text = stringResource(R.string.skip),
-          onClick = { authState.setToStepForStatus(Clerk.auth.currentSignUp!!, onAuthComplete) },
+          onClick = {
+            authState.setToStepForStatus(
+              signUp = Clerk.auth.currentSignUp!!,
+              onAuthComplete = onAuthComplete,
+            )
+          },
         )
       }
     }

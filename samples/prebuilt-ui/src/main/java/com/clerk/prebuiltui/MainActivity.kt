@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.api.session.requiresForcedMfa
+import com.clerk.api.session.pendingTaskKey
 import com.clerk.prebuiltui.ui.theme.ClerkTheme
 import com.clerk.ui.auth.AuthView
 import com.clerk.ui.userbutton.UserButton
@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
       ClerkTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
           Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            if (user != null && session?.requiresForcedMfa != true) {
+            if (user != null && session?.pendingTaskKey == null) {
               UserButton()
             } else {
               AuthView()

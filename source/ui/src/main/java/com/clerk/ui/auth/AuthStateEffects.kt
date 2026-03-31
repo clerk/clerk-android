@@ -23,11 +23,13 @@ internal fun AuthStateEffects(
       }
       AuthenticationViewState.NotStarted -> authState.clearBackStack()
       is AuthenticationViewState.Success.SignIn -> {
-        authState.setToStepForStatus(state.signIn, onAuthComplete)
+        val resolvedSession = state.signIn.resolvePostAuthSession()
+        authState.setToStepForStatus(state.signIn, resolvedSession, onAuthComplete)
         onReset()
       }
       is AuthenticationViewState.Success.SignUp -> {
-        authState.setToStepForStatus(state.signUp, onAuthComplete)
+        val resolvedSession = state.signUp.resolvePostAuthSession()
+        authState.setToStepForStatus(state.signUp, resolvedSession, onAuthComplete)
         onReset()
       }
       is AuthenticationViewState.Success.SessionTaskComplete -> {

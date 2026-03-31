@@ -11,7 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.api.session.requiresForcedMfa
+import com.clerk.api.session.pendingTaskKey
 import com.clerk.ui.userbutton.UserButton
 
 @Composable
@@ -23,7 +23,7 @@ fun UserProfileTopBar() {
       TopAppBar(
         title = { Text("Home screen") },
         actions = {
-          if (user != null && session?.requiresForcedMfa != true) {
+          if (user != null && session?.pendingTaskKey == null) {
             UserButton()
           }
         },

@@ -57,6 +57,7 @@ data class Session(
   @SerialName("factor_verification_age") val factorVerificationAge: List<Int>? = null,
   @SerialName("created_at") val createdAt: Long,
   @SerialName("updated_at") val updatedAt: Long,
+  @SerialName("current_task") val currentTask: SessionTask? = null,
   val tasks: List<SessionTask> = emptyList(),
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
@@ -99,10 +100,17 @@ val SessionTask.parsedKey: SessionTaskKey
   get() = SessionTaskKey.fromRaw(key)
 
 val Session.pendingTaskKey: SessionTaskKey?
-  get() = if (status == Session.SessionStatus.PENDING) tasks.firstOrNull()?.parsedKey else null
+  get() =
+    if (status == Session.SessionStatus.PENDING) {
+      currentTask?.parsedKey ?: tasks.firstOrNull()?.parsedKey
+    } else {
+      null
+    }
 
 val Session.hasMfaRequiredTask: Boolean
-  get() = tasks.any { it.parsedKey == SessionTaskKey.MFA_REQUIRED }
+  get() =
+    currentTask?.parsedKey == SessionTaskKey.MFA_REQUIRED ||
+      tasks.any { it.parsedKey == SessionTaskKey.MFA_REQUIRED }
 
 val Session.requiresForcedMfa: Boolean
   get() = pendingTaskKey == SessionTaskKey.MFA_REQUIRED

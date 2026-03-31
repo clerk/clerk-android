@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Constants
+import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.startingFirstFactor
@@ -123,10 +124,13 @@ internal class AuthState(
     }
   }
 
-  internal fun setToStepForStatus(signIn: SignIn, onAuthComplete: () -> Unit) {
+  internal fun setToStepForStatus(
+    signIn: SignIn,
+    session: Session? = signIn.correspondingSession(),
+    onAuthComplete: () -> Unit,
+  ) {
     when (signIn.status) {
       SignIn.Status.COMPLETE -> {
-        val session = signIn.correspondingSession()
         handlePostAuthCompletion(
           taskKey = signIn.pendingSessionTaskKey(session),
           hasUnresolvedCreatedSession = signIn.createdSessionId != null && session == null,
@@ -185,12 +189,15 @@ internal class AuthState(
     } ?: backStack.add(AuthDestination.SignInGetHelp)
   }
 
-  internal fun setToStepForStatus(signUp: SignUp, onAuthComplete: () -> Unit) {
+  internal fun setToStepForStatus(
+    signUp: SignUp,
+    session: Session? = signUp.correspondingSession(),
+    onAuthComplete: () -> Unit,
+  ) {
     when (signUp.status) {
       SignUp.Status.ABANDONED -> resetToRoot()
       SignUp.Status.MISSING_REQUIREMENTS -> handleMissingRequirements(signUp)
       SignUp.Status.COMPLETE -> {
-        val session = signUp.correspondingSession()
         handlePostAuthCompletion(
           taskKey = signUp.pendingSessionTaskKey(session),
           hasUnresolvedCreatedSession = signUp.createdSessionId != null && session == null,

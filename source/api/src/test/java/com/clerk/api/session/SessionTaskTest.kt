@@ -63,7 +63,24 @@ class SessionTaskTest {
     assertFalse(session.requiresForcedMfa)
   }
 
-  private fun session(status: Session.SessionStatus, tasks: List<SessionTask>): Session {
+  @Test
+  fun `pendingTaskKey prefers current task when present`() {
+    val session =
+      session(
+        status = Session.SessionStatus.PENDING,
+        currentTask = SessionTask("reset-password"),
+        tasks = listOf(SessionTask("setup-mfa")),
+      )
+
+    assertEquals(SessionTaskKey.RESET_PASSWORD, session.pendingTaskKey)
+    assertFalse(session.requiresForcedMfa)
+  }
+
+  private fun session(
+    status: Session.SessionStatus,
+    tasks: List<SessionTask>,
+    currentTask: SessionTask? = null,
+  ): Session {
     return Session(
       id = "sess_123",
       status = status,
@@ -71,6 +88,7 @@ class SessionTaskTest {
       lastActiveAt = 0L,
       createdAt = 0L,
       updatedAt = 0L,
+      currentTask = currentTask,
       tasks = tasks,
     )
   }

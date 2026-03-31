@@ -25,6 +25,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.PreviewAuthStateProvider
+import com.clerk.ui.auth.resolvePostAuthSession
 import com.clerk.ui.auth.transferable
 import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -111,14 +112,10 @@ private fun SignInFactorOneForgotPasswordViewImpl(
         authState.navigateTo(AuthDestination.SignInFactorOne(factor = s.factor))
         viewModel.resetState()
       }
-      is ResetPasswordViewState.Success.SignIn -> {
-        authState.setToStepForStatus(s.signIn, onAuthComplete)
-        viewModel.resetState()
-      }
-      is ResetPasswordViewState.Success.SignUp -> {
-        authState.setToStepForStatus(s.signUp, onAuthComplete)
-        viewModel.resetState()
-      }
+      is ResetPasswordViewState.Success.SignIn ->
+        handleResetPasswordSignInSuccess(authState, s.signIn, onAuthComplete, viewModel::resetState)
+      is ResetPasswordViewState.Success.SignUp ->
+        handleResetPasswordSignUpSuccess(authState, s.signUp, onAuthComplete, viewModel::resetState)
       else -> {}
     }
   }
@@ -146,6 +143,28 @@ private fun SignInFactorOneForgotPasswordViewImpl(
     }
     AlternativeFactorList(alternativeFactors, textIconHelper, context, onClickFactor)
   }
+}
+
+private suspend fun handleResetPasswordSignInSuccess(
+  authState: com.clerk.ui.auth.AuthState,
+  signIn: com.clerk.api.signin.SignIn,
+  onAuthComplete: () -> Unit,
+  onReset: () -> Unit,
+) {
+  val resolvedSession = signIn.resolvePostAuthSession()
+  authState.setToStepForStatus(signIn, resolvedSession, onAuthComplete)
+  onReset()
+}
+
+private suspend fun handleResetPasswordSignUpSuccess(
+  authState: com.clerk.ui.auth.AuthState,
+  signUp: com.clerk.api.signup.SignUp,
+  onAuthComplete: () -> Unit,
+  onReset: () -> Unit,
+) {
+  val resolvedSession = signUp.resolvePostAuthSession()
+  authState.setToStepForStatus(signUp, resolvedSession, onAuthComplete)
+  onReset()
 }
 
 @Composable
