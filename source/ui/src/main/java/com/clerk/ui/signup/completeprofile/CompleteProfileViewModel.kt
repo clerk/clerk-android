@@ -16,23 +16,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+internal const val FIRST_NAME_FIELD = "first_name"
+
+internal const val LAST_NAME_FIELD = "last_name"
+
 internal class CompleteProfileViewModel : ViewModel() {
 
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun updateSignUp(firstName: String, lastName: String, legalAccepted: Boolean? = null) =
+  fun updateSignUp(firstName: String?, lastName: String?, legalAccepted: Boolean? = null) =
     guardSignUp(_state) { signUp ->
       _state.value = AuthenticationViewState.Loading
       viewModelScope.launch(Dispatchers.IO) {
         signUp
-          .update(
-            SignUp.SignUpUpdateParams.Standard(
-              firstName = firstName,
-              lastName = lastName,
-              legalAccepted = legalAccepted,
-            )
-          )
+          .update(signUp.completeProfileUpdateParams(firstName, lastName, legalAccepted))
           .onSuccess {
             withContext(Dispatchers.Main) {
               _state.value = AuthenticationViewState.Success.SignUp(it)
@@ -50,4 +48,20 @@ internal class CompleteProfileViewModel : ViewModel() {
   fun resetState() {
     _state.value = AuthenticationViewState.Idle
   }
+}
+
+internal fun SignUp.completeProfileUpdateParams(
+  firstName: String?,
+  lastName: String?,
+  legalAccepted: Boolean?,
+): SignUp.SignUpUpdateParams.Standard {
+  return SignUp.SignUpUpdateParams.Standard(
+    firstName = firstName.takeIf { supportsField(FIRST_NAME_FIELD) && !it.isNullOrBlank() },
+    lastName = lastName.takeIf { supportsField(LAST_NAME_FIELD) && !it.isNullOrBlank() },
+    legalAccepted = legalAccepted,
+  )
+}
+
+internal fun SignUp.supportsField(field: String): Boolean {
+  return requiredFields.contains(field) || optionalFields.contains(field)
 }
