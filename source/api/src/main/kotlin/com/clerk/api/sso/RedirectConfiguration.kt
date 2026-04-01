@@ -42,7 +42,7 @@ internal object RedirectConfiguration {
     proxyUrl: String? = Clerk.proxyUrl,
   ): String {
     val portSuffix = resolveNonDefaultHttpsPort(proxyUrl)
-    return "$SCHEME://$applicationId.$LEGACY_HOST_SUFFIX$portSuffix"
+    return "$SCHEME://$applicationId.$DEFAULT_HOST_SUFFIX$portSuffix"
   }
 
   private fun buildRedirectUrl(hostSuffix: String): String {

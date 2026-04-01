@@ -11,6 +11,7 @@ class WorkbenchApplication : Application() {
     StorageHelper.initialize(this)
 
     val publicKey = StorageHelper.loadValue(StorageKey.PUBLIC_KEY)
+    val proxyUrl = StorageHelper.loadValue(StorageKey.PROXY_URL)
     publicKey?.let { key ->
       Clerk.initialize(
         this,
@@ -18,7 +19,7 @@ class WorkbenchApplication : Application() {
         options =
           ClerkConfigurationOptions(
             enableDebugMode = true,
-            proxyUrl = "https://rapid-earwig-10.clerk.accounts.lclclerk.com:8443",
+            proxyUrl = proxyUrl?.takeIf(String::isNotBlank),
           ),
       )
     }

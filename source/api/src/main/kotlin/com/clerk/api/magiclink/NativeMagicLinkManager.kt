@@ -17,6 +17,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
+import java.net.URL
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
@@ -489,18 +490,64 @@ internal fun ClerkResult.Failure<ClerkErrorResponse>.toNativeMagicLinkError(
 
 internal object NativeMagicLinkLogger {
   fun start() {
-    ClerkLog.i("event=native_magic_link_start")
+    ClerkLog.i("event=native_magic_link_start context={${runtimeContext()}}")
   }
 
   fun deepLinkReceived(uri: Uri) {
-    ClerkLog.i("event=native_magic_link_deeplink_received uri_shape={${SafeUriLog.describe(uri)}}")
+    ClerkLog.i(
+      "event=native_magic_link_deeplink_received uri_shape={${SafeUriLog.describe(uri)}} context={${runtimeContext()}}"
+    )
   }
 
   fun completeSuccess() {
-    ClerkLog.i("event=native_magic_link_complete_success")
+    ClerkLog.i("event=native_magic_link_complete_success context={${runtimeContext()}}")
   }
 
   fun completeFailure(reasonCode: String) {
-    ClerkLog.w("event=native_magic_link_complete_failure reason_code=$reasonCode")
+    ClerkLog.w(
+      "event=native_magic_link_complete_failure reason_code=$reasonCode context={${runtimeContext()}}"
+    )
+  }
+
+  private fun runtimeContext(): String {
+    val baseUrl = runCatching { Clerk.baseUrl }.getOrNull()
+    val proxyUrl = Clerk.proxyUrl
+    val redirectUri =
+      Clerk.applicationId?.let {
+        RedirectConfiguration.emailLinkRedirectUrl(applicationId = it, proxyUrl = proxyUrl)
+      }
+
+    return buildString {
+      append("app_id=")
+      append(Clerk.applicationId ?: "-")
+      append(", base=")
+      append(describeUrl(baseUrl))
+      append(", proxy=")
+      append(describeUrl(proxyUrl))
+      append(", redirect=")
+      append(redirectUri ?: "-")
+    }
+  }
+
+  private fun describeUrl(value: String?): String {
+    return if (value.isNullOrBlank()) {
+      "-"
+    } else {
+      val parsed = runCatching { URL(value) }.getOrNull()
+      if (parsed == null) {
+        value
+      } else {
+        val port = parsed.port.takeIf { it > 0 } ?: parsed.defaultPort
+        buildString {
+          append(parsed.protocol)
+          append("://")
+          append(parsed.host)
+          if (port > 0) {
+            append(":")
+            append(port)
+          }
+        }
+      }
+    }
   }
 }
