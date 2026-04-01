@@ -221,11 +221,15 @@ internal class AuthState(
   }
 
   private fun handleMissingRequirements(signUp: SignUp) {
+    val firstFieldToCollect = signUp.firstFieldToCollect
+    if (firstFieldToCollect != null) {
+      handleFieldCollection(signUp)
+      return
+    }
+
     val firstFieldToVerify = signUp.firstFieldToVerify
     if (firstFieldToVerify != null) {
       handleFieldVerification(signUp, firstFieldToVerify)
-    } else {
-      handleFieldCollection(signUp)
     }
   }
 
