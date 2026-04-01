@@ -1,11 +1,5 @@
 package com.clerk.ui.userprofile.custom
 
-internal sealed interface UserProfileListRow {
-  data class BuiltIn(val row: UserProfileRow) : UserProfileListRow
-
-  data class Custom(val customRow: UserProfileCustomRow) : UserProfileListRow
-}
-
 internal val UserProfileRow.section: UserProfileSection
   get() =
     when (this) {
@@ -24,6 +18,16 @@ internal val UserProfileCustomRowPlacement.section: UserProfileSection
     }
 
 /**
+ * Returns the effective list of custom rows to render. Custom rows are only shown when a
+ * [hasDestination] is `true`; otherwise an empty list is returned to prevent navigation to
+ * unregistered destinations.
+ */
+internal fun effectiveCustomRows(
+  customRows: List<UserProfileCustomRow>,
+  hasDestination: Boolean,
+): List<UserProfileCustomRow> = if (hasDestination) customRows else emptyList()
+
+/**
  * Merges [customRows] into [builtInRows] for the given [section], respecting each custom row's
  * [UserProfileCustomRowPlacement].
  *
@@ -35,16 +39,6 @@ internal val UserProfileCustomRowPlacement.section: UserProfileSection
  *
  * Ordering within each placement group preserves the original list order from [customRows].
  */
-/**
- * Returns the effective list of custom rows to render. Custom rows are only shown when a
- * [hasDestination] is `true`; otherwise an empty list is returned to prevent navigation to
- * unregistered destinations.
- */
-internal fun effectiveCustomRows(
-  customRows: List<UserProfileCustomRow>,
-  hasDestination: Boolean,
-): List<UserProfileCustomRow> = if (hasDestination) customRows else emptyList()
-
 internal fun buildRenderedRows(
   builtInRows: List<UserProfileRow>,
   section: UserProfileSection,
