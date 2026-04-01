@@ -46,7 +46,7 @@ class RedirectConfigurationTest {
   @Test
   fun emailLinkRedirectUrl_usesProxyPortWhenConfigured() {
     assertEquals(
-      "clerk://com.clerk.workbench.oauth:8443",
+      "clerk://com.clerk.workbench.callback:8443",
       RedirectConfiguration.emailLinkRedirectUrl(
         applicationId = "com.clerk.workbench",
         proxyUrl = "https://rapid-earwig-10.clerk.accounts.lclclerk.com:8443",
@@ -57,7 +57,7 @@ class RedirectConfigurationTest {
   @Test
   fun emailLinkRedirectUrl_omitsStandardHttpsPort() {
     assertEquals(
-      "clerk://com.clerk.workbench.oauth",
+      "clerk://com.clerk.workbench.callback",
       RedirectConfiguration.emailLinkRedirectUrl(
         applicationId = "com.clerk.workbench",
         proxyUrl = "https://rapid-earwig-10.clerk.accounts.lclclerk.com:443",
