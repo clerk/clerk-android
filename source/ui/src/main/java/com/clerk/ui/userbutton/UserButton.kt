@@ -52,12 +52,12 @@ import com.clerk.ui.userprofile.custom.UserProfileCustomRow
  *   is ACTIVE. When `false` (default), the button may appear in pending sessions.
  * @param routeToAuthWhenForcedMfa When `true` (default), clicking the button while the current
  *   session has unresolved MFA setup tasks routes to auth instead of opening profile.
- * @param onRequiresForcedMfaClick Optional callback used when the current session has outstanding
- *   MFA setup tasks. If not provided, the button will open [AuthView] in a full-screen dialog.
  * @param customRows Custom rows to display on the profile account screen.
  * @param customDestination Composable that renders the destination for a given route key. The
  *   route key matches [UserProfileCustomRow.routeKey] of the tapped row. Custom destinations
  *   survive activity recreation (e.g. rotation).
+ * @param onRequiresForcedMfaClick Optional callback used when the current session has outstanding
+ *   MFA setup tasks. If not provided, the button will open [AuthView] in a full-screen dialog.
  */
 @SuppressLint("LocalContextGetResourceValueCall", "ComposeModifierMissing")
 @Composable
@@ -65,9 +65,9 @@ fun UserButton(
   clerkTheme: ClerkTheme? = null,
   treatPendingAsSignedOut: Boolean = false,
   routeToAuthWhenForcedMfa: Boolean = true,
-  onRequiresForcedMfaClick: (() -> Unit)? = null,
   customRows: List<UserProfileCustomRow> = emptyList(),
   customDestination: (@Composable (routeKey: String) -> Unit)? = null,
+  onRequiresForcedMfaClick: (() -> Unit)? = null,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     TelemetryProvider {
