@@ -178,7 +178,9 @@ private fun EntryProviderScope<NavKey>.UserProfileEntries(
                 backStack.removeLastOrNull()
               }
             },
-            navigateBackAction = { backStack.removeLastOrNull() },
+            navigateBackAction = {
+              if (backStack.size > 1) backStack.removeLastOrNull()
+            },
           )
         }
       CompositionLocalProvider(LocalUserProfileCustomNavigator provides navigator) {
