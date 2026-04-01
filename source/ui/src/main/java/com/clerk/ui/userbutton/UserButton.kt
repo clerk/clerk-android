@@ -56,8 +56,8 @@ import com.clerk.ui.userprofile.custom.UserProfileCustomRow
  *   MFA setup tasks. If not provided, the button will open [AuthView] in a full-screen dialog.
  * @param customRows Custom rows to display on the profile account screen.
  * @param customDestination Composable that renders the destination for a given route key. The
- *   [routeKey] parameter matches the [UserProfileCustomRow.routeKey] of the tapped row. Custom
- *   destinations survive activity recreation (e.g. rotation).
+ *   route key matches [UserProfileCustomRow.routeKey] of the tapped row. Custom destinations
+ *   survive activity recreation (e.g. rotation).
  */
 @SuppressLint("LocalContextGetResourceValueCall", "ComposeModifierMissing")
 @Composable

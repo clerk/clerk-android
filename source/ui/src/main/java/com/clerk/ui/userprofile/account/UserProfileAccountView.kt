@@ -41,8 +41,8 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun UserProfileAccountView(
   onClick: (UserProfileAction) -> Unit,
   onBackPressed: () -> Unit,
-  modifier: Modifier = Modifier,
   onClickEdit: () -> Unit,
+  modifier: Modifier = Modifier,
   customRows: ImmutableList<UserProfileCustomRow> = persistentListOf(),
   onCustomRowClick: (routeKey: String) -> Unit = {},
 ) {
@@ -66,10 +66,10 @@ private fun UserProfileAccountViewImpl(
   username: String?,
   onClick: (UserProfileAction) -> Unit,
   onBackPressed: () -> Unit,
+  onEditAvatarClick: () -> Unit,
   modifier: Modifier = Modifier,
   imageUrl: String? = null,
   viewModel: UserProfileAccountViewModel = viewModel(),
-  onEditAvatarClick: () -> Unit,
   customRows: ImmutableList<UserProfileCustomRow> = persistentListOf(),
   onCustomRowClick: (routeKey: String) -> Unit = {},
 ) {

@@ -67,7 +67,7 @@ internal fun UserProfileStateProvider(
  * @param clerkTheme Optional theme customization for the user profile UI.
  * @param customRows Custom rows to display on the profile account screen.
  * @param customDestination Composable that renders the destination for a given route key. The
- *   [routeKey] parameter matches the [UserProfileCustomRow.routeKey] of the tapped row.
+ *   route key matches [UserProfileCustomRow.routeKey] of the tapped row.
  * @param onDismiss Callback when the user profile view is dismissed.
  */
 @OptIn(ExperimentalAnimationApi::class)
