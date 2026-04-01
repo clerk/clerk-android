@@ -66,7 +66,7 @@ fun UserButton(
   treatPendingAsSignedOut: Boolean = false,
   routeToAuthWhenForcedMfa: Boolean = true,
   customRows: List<UserProfileCustomRow> = emptyList(),
-  customDestination: (@Composable (routeKey: String) -> Unit)? = null,
+  customDestination: (@Composable (String) -> Unit)? = null,
   onRequiresForcedMfaClick: (() -> Unit)? = null,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
@@ -159,7 +159,7 @@ private fun UserButtonContent(imageUrl: String?, onClick: () -> Unit) {
 private fun UserProfileDialog(
   onDismiss: () -> Unit,
   customRows: List<UserProfileCustomRow> = emptyList(),
-  customDestination: (@Composable (routeKey: String) -> Unit)? = null,
+  customDestination: (@Composable (String) -> Unit)? = null,
 ) {
   Dialog(
     onDismissRequest = onDismiss,

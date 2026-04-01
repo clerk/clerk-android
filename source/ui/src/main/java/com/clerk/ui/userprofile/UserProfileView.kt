@@ -75,7 +75,7 @@ internal fun UserProfileStateProvider(
 fun UserProfileView(
   clerkTheme: ClerkTheme? = null,
   customRows: List<UserProfileCustomRow> = emptyList(),
-  customDestination: (@Composable (routeKey: String) -> Unit)? = null,
+  customDestination: (@Composable (String) -> Unit)? = null,
   onDismiss: () -> Unit = {},
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
@@ -123,7 +123,7 @@ private fun EntryProviderScope<NavKey>.UserProfileEntries(
   backStack: NavBackStack<NavKey>,
   onDismiss: () -> Unit,
   customRows: List<UserProfileCustomRow>,
-  customDestination: (@Composable (routeKey: String) -> Unit)?,
+  customDestination: (@Composable (String) -> Unit)?,
 ) {
   entry<UserProfileDestination.UserProfileAccount> {
     UserProfileAccountView(
