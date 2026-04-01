@@ -9,6 +9,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.runtime.EntryProviderScope
@@ -24,6 +25,12 @@ import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
+import com.clerk.ui.userprofile.custom.CustomRouteNavKey
+import com.clerk.ui.userprofile.custom.LocalUserProfileCustomNavigator
+import com.clerk.ui.userprofile.custom.UserProfileCustomNavigator
+import com.clerk.ui.userprofile.custom.UserProfileCustomRow
+import com.clerk.ui.userprofile.custom.effectiveCustomRows
+import kotlinx.collections.immutable.toImmutableList
 import com.clerk.ui.userprofile.detail.UserProfileDetailView
 import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.Origin
@@ -52,12 +59,25 @@ internal fun UserProfileStateProvider(
 /**
  * User profile view for managing account settings, security, and profile information.
  *
+ * Custom rows are inserted into the account screen based on their
+ * [UserProfileCustomRowPlacement][com.clerk.ui.userprofile.custom.UserProfileCustomRowPlacement].
+ * When tapped, the matching [customDestination] composable is rendered. Custom destinations
+ * participate in the navigation back stack and survive activity recreation (e.g. rotation).
+ *
  * @param clerkTheme Optional theme customization for the user profile UI.
+ * @param customRows Custom rows to display on the profile account screen.
+ * @param customDestination Composable that renders the destination for a given route key. The
+ *   [routeKey] parameter matches the [UserProfileCustomRow.routeKey] of the tapped row.
  * @param onDismiss Callback when the user profile view is dismissed.
  */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun UserProfileView(clerkTheme: ClerkTheme? = null, onDismiss: () -> Unit = {}) {
+fun UserProfileView(
+  clerkTheme: ClerkTheme? = null,
+  customRows: List<UserProfileCustomRow> = emptyList(),
+  customDestination: (@Composable (routeKey: String) -> Unit)? = null,
+  onDismiss: () -> Unit = {},
+) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
     UserProfileStateProvider(backStack) {
@@ -89,7 +109,10 @@ fun UserProfileView(clerkTheme: ClerkTheme? = null, onDismiss: () -> Unit = {}) 
           slideInHorizontally(initialOffsetX = { -distance }) togetherWith
             slideOutHorizontally(targetOffsetX = { distance })
         },
-        entryProvider = entryProvider { UserProfileEntries(backStack, onDismiss) },
+        entryProvider =
+          entryProvider {
+            UserProfileEntries(backStack, onDismiss, customRows, customDestination)
+          },
       )
     }
   }
@@ -99,6 +122,8 @@ fun UserProfileView(clerkTheme: ClerkTheme? = null, onDismiss: () -> Unit = {}) 
 private fun EntryProviderScope<NavKey>.UserProfileEntries(
   backStack: NavBackStack<NavKey>,
   onDismiss: () -> Unit,
+  customRows: List<UserProfileCustomRow>,
+  customDestination: (@Composable (routeKey: String) -> Unit)?,
 ) {
   entry<UserProfileDestination.UserProfileAccount> {
     UserProfileAccountView(
@@ -117,6 +142,15 @@ private fun EntryProviderScope<NavKey>.UserProfileEntries(
         }
       },
       onClickEdit = { backStack.add(UserProfileDestination.UserProfileUpdate) },
+      customRows =
+        effectiveCustomRows(customRows, hasDestination = customDestination != null)
+          .toImmutableList(),
+      onCustomRowClick =
+        if (customDestination != null) {
+          { routeKey -> backStack.add(CustomRouteNavKey(routeKey)) }
+        } else {
+          {}
+        },
     )
   }
   entry<UserProfileDestination.UserProfileSecurity> { UserProfileSecurityView() }
@@ -130,6 +164,30 @@ private fun EntryProviderScope<NavKey>.UserProfileEntries(
   entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
 
   entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
+
+  // Always register the entry so that a restored CustomRouteNavKey does not crash the graph.
+  // If no destination is provided, pop back to the profile root.
+  entry<CustomRouteNavKey> { key ->
+    if (customDestination != null) {
+      val navigator =
+        remember(backStack) {
+          UserProfileCustomNavigator(
+            pushAction = { routeKey -> backStack.add(CustomRouteNavKey(routeKey)) },
+            popToRootAction = {
+              while (backStack.size > 1) {
+                backStack.removeLastOrNull()
+              }
+            },
+            navigateBackAction = { backStack.removeLastOrNull() },
+          )
+        }
+      CompositionLocalProvider(LocalUserProfileCustomNavigator provides navigator) {
+        customDestination(key.routeKey)
+      }
+    } else {
+      LaunchedEffect(Unit) { backStack.removeLastOrNull() }
+    }
+  }
 }
 
 internal object UserProfileDestination {
