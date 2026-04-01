@@ -3,6 +3,7 @@ package com.clerk.ui.auth
 import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.clerk.api.Clerk
@@ -79,6 +80,14 @@ internal class AuthStartViewHelper {
       } else {
         KeyboardType.Text
       }
+    }
+  }
+
+  fun identifierContentType(): ContentType {
+    return when {
+      emailIsEnabled && usernameIsEnabled -> ContentType.EmailAddress + ContentType.Username
+      emailIsEnabled -> ContentType.EmailAddress
+      else -> ContentType.Username
     }
   }
 

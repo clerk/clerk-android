@@ -251,7 +251,7 @@ private fun AuthInputField(
   } else {
     LastUsedAuthBadgeOverlay(isVisible = showEmailUsernameBadge) {
       ClerkTextField(
-        inputContentType = ContentType.EmailAddress,
+        inputContentType = authViewHelper.identifierContentType(),
         value = authStartIdentifier,
         onValueChange = onIdentifierChange,
         label = authViewHelper.emailOrUsernamePlaceholder(),
