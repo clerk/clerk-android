@@ -39,6 +39,7 @@ import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.UserProfileView
+import com.clerk.ui.userprofile.custom.UserProfileCustomRow
 
 /**
  * Self-contained avatar button + user profile flow.
@@ -51,6 +52,10 @@ import com.clerk.ui.userprofile.UserProfileView
  *   is ACTIVE. When `false` (default), the button may appear in pending sessions.
  * @param routeToAuthWhenForcedMfa When `true` (default), clicking the button while the current
  *   session has unresolved MFA setup tasks routes to auth instead of opening profile.
+ * @param customRows Custom rows to display on the profile account screen.
+ * @param customDestination Composable that renders the destination for a given route key. The
+ *   route key matches [UserProfileCustomRow.routeKey] of the tapped row. Custom destinations
+ *   survive activity recreation (e.g. rotation).
  * @param onRequiresForcedMfaClick Optional callback used when the current session has outstanding
  *   MFA setup tasks. If not provided, the button will open [AuthView] in a full-screen dialog.
  */
@@ -60,6 +65,8 @@ fun UserButton(
   clerkTheme: ClerkTheme? = null,
   treatPendingAsSignedOut: Boolean = false,
   routeToAuthWhenForcedMfa: Boolean = true,
+  customRows: List<UserProfileCustomRow> = emptyList(),
+  customDestination: (@Composable (String) -> Unit)? = null,
   onRequiresForcedMfaClick: (() -> Unit)? = null,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
@@ -106,7 +113,11 @@ fun UserButton(
           },
         )
         if (showProfile) {
-          UserProfileDialog(onDismiss = { showProfile = false })
+          UserProfileDialog(
+            onDismiss = { showProfile = false },
+            customRows = customRows,
+            customDestination = customDestination,
+          )
         }
         if (showAuth) {
           AuthDialog(onDismiss = { showAuth = false })
@@ -145,12 +156,20 @@ private fun UserButtonContent(imageUrl: String?, onClick: () -> Unit) {
 }
 
 @Composable
-private fun UserProfileDialog(onDismiss: () -> Unit) {
+private fun UserProfileDialog(
+  onDismiss: () -> Unit,
+  customRows: List<UserProfileCustomRow> = emptyList(),
+  customDestination: (@Composable (String) -> Unit)? = null,
+) {
   Dialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
   ) {
-    UserProfileView(onDismiss = onDismiss)
+    UserProfileView(
+      onDismiss = onDismiss,
+      customRows = customRows,
+      customDestination = customDestination,
+    )
   }
 }
 
