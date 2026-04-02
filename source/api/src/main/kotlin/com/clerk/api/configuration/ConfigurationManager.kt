@@ -21,6 +21,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.fold
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.fetchToken
+import com.clerk.api.sso.SSOService
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import java.lang.ref.WeakReference
@@ -52,6 +53,11 @@ import kotlinx.coroutines.withTimeout
  * - Context memory leak prevention through weak references
  */
 internal class ConfigurationManager {
+  private companion object {
+    const val LIFECYCLE_REFRESH_DEFER_STEP_MS = 100L
+    const val LIFECYCLE_REFRESH_MAX_DEFER_MS = 5_000L
+  }
+
 
   /**
    * Coroutine scope with SupervisorJob for parallel API requests.
@@ -202,6 +208,7 @@ internal class ConfigurationManager {
           AppLifecycleListener.configure {
             if (hasConfigured) {
               scope.launch {
+                deferForegroundRefreshDuringPendingSso()
                 refreshClientAndEnvironment(options, retryCount = 0)
                 startTokenRefresh()
               }
@@ -311,6 +318,21 @@ internal class ConfigurationManager {
         )
       else -> null
     }
+  }
+
+  private suspend fun deferForegroundRefreshDuringPendingSso() {
+    var waitedMs = 0L
+    while (hasPendingSsoFlow() && waitedMs < LIFECYCLE_REFRESH_MAX_DEFER_MS) {
+      if (waitedMs == 0L) {
+        ClerkLog.d("Deferring lifecycle refresh while SSO completion is in progress")
+      }
+      delay(LIFECYCLE_REFRESH_DEFER_STEP_MS)
+      waitedMs += LIFECYCLE_REFRESH_DEFER_STEP_MS
+    }
+  }
+
+  internal fun hasPendingSsoFlow(): Boolean {
+    return SSOService.hasPendingAuthentication() || SSOService.hasPendingExternalAccountConnection()
   }
 
   private suspend fun refreshClientAndEnvironment(
