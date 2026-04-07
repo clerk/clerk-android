@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.isPrimary
 import com.clerk.api.network.model.verification.Verification
@@ -58,26 +59,32 @@ internal fun UserProfileEmailRow(
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      EmailWithBadge(emailAddress.isPrimary, emailAddress)
+      val canRemove = !Clerk.isEmailImmutable
+      val isPrimary = emailAddress.isPrimary
+      val isVerified = emailAddress.verification?.status == Verification.Status.VERIFIED
+      val shouldShowMenu = canRemove || !isPrimary || !isVerified
+
+      EmailWithBadge(isPrimary, emailAddress)
       Spacer(modifier = Modifier.weight(1f))
-      if (!isPreview) {
+      if (!isPreview && shouldShowMenu) {
         ItemMoreMenu(
           dropDownItems =
             persistentListOf(
               DropDownItem(
                 id = EmailAction.SetAsPrimary,
                 text = stringResource(R.string.set_as_primary),
-                isHidden = emailAddress.isPrimary,
+                isHidden = isPrimary || !isVerified,
               ),
               DropDownItem(
                 id = EmailAction.Verify,
                 text = stringResource(R.string.verify),
-                isHidden = emailAddress.verification?.status == Verification.Status.VERIFIED,
+                isHidden = isVerified,
               ),
               DropDownItem(
                 id = EmailAction.Remove,
                 text = stringResource(R.string.remove_email),
                 danger = true,
+                isHidden = !canRemove,
               ),
             ),
           onClick = {

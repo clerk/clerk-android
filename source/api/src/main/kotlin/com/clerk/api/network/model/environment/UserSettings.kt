@@ -58,6 +58,9 @@ data class UserSettings(
     /** Whether this attribute is required during sign-up */
     val required: Boolean,
 
+    /** Whether users are prevented from changing this attribute after sign-up */
+    val immutable: Boolean? = null,
+
     /** Whether this attribute can be used for first-factor authentication */
     @SerialName("used_for_first_factor") val usedForFirstFactor: Boolean,
 

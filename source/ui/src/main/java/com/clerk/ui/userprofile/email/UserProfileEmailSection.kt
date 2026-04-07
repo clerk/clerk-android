@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.ui.R
@@ -44,10 +45,12 @@ internal fun UserProfileEmailSection(
       )
       Spacers.Vertical.Spacer16()
       emailAddresses.forEach { UserProfileEmailRow(emailAddress = it, onError = onError, onVerify) }
-      UserProfileButtonRow(
-        text = stringResource(R.string.add_email_address),
-        onClick = onAddEmailClick,
-      )
+      if (!Clerk.isEmailImmutable) {
+        UserProfileButtonRow(
+          text = stringResource(R.string.add_email_address),
+          onClick = onAddEmailClick,
+        )
+      }
     }
   }
 }

@@ -215,6 +215,21 @@ object Clerk {
   val passkeyIsEnabled: Boolean
     get() = if (::environment.isInitialized) environment.passkeyIsEnabled else false
 
+  val isEmailEnabled: Boolean
+    get() = if (::environment.isInitialized) environment.emailIsEnabled else false
+
+  val isPhoneNumberEnabled: Boolean
+    get() = if (::environment.isInitialized) environment.phoneNumberIsEnabled else false
+
+  val isEmailImmutable: Boolean
+    get() = if (::environment.isInitialized) environment.emailIsImmutable else false
+
+  val isPhoneNumberImmutable: Boolean
+    get() = if (::environment.isInitialized) environment.phoneNumberIsImmutable else false
+
+  val isUsernameImmutable: Boolean
+    get() = if (::environment.isInitialized) environment.usernameIsImmutable else false
+
   val deleteSelfIsEnabled: Boolean
     get() = if (::environment.isInitialized) environment.userSettings.actions.deleteSelf else false
 

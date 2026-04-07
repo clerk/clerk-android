@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.Clerk
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.phonenumber.isPrimary
@@ -65,21 +66,32 @@ internal fun UserProfilePhoneRow(
           .then(modifier),
       verticalAlignment = Alignment.CenterVertically,
     ) {
+      val canRemove = !Clerk.isPhoneNumberImmutable
+      val isPrimary = phoneNumber.isPrimary
+      val isVerified = phoneNumber.verification?.status == Verification.Status.VERIFIED
+      val shouldShowMenu = canRemove || !isPrimary || !isVerified
+
       PhoneWithBadge(phoneNumber)
       Spacer(modifier = Modifier.weight(1f))
-      if (!isPreview) {
+      if (!isPreview && shouldShowMenu) {
         ItemMoreMenu(
           dropDownItems =
             persistentListOf(
               DropDownItem(
                 id = PhoneAction.SetAsPrimary,
                 text = stringResource(R.string.set_as_primary),
+                isHidden = isPrimary || !isVerified,
               ),
-              DropDownItem(id = PhoneAction.Verify, text = stringResource(R.string.verify)),
+              DropDownItem(
+                id = PhoneAction.Verify,
+                text = stringResource(R.string.verify),
+                isHidden = isVerified,
+              ),
               DropDownItem(
                 id = PhoneAction.Remove,
                 text = stringResource(R.string.remove_phone_number),
                 danger = true,
+                isHidden = !canRemove,
               ),
             ),
           onClick = {

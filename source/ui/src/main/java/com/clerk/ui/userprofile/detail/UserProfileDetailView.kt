@@ -130,23 +130,30 @@ private fun ProfileContent(
         .padding(innerPadding)
         .verticalScroll(scrollState)
   ) {
+    val showEmailSection = Clerk.isEmailEnabled && !(Clerk.isEmailImmutable && emailAddresses.isEmpty())
+    val showPhoneSection = Clerk.isPhoneNumberEnabled && !(Clerk.isPhoneNumberImmutable && phoneNumbers.isEmpty())
+
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-    Spacers.Vertical.Spacer32()
-    UserProfileEmailSection(
-      emailAddresses = emailAddresses,
-      onError = onError,
-      onAddEmailClick = { onShowBottomSheet(BottomSheetMode.EmailAddress) },
-      onVerify = { onShowBottomSheet(BottomSheetMode.VerifyEmailAddress(it)) },
-    )
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-    Spacers.Vertical.Spacer16()
-    UserProfilePhoneSection(
-      phoneNumbers = phoneNumbers,
-      onError = onError,
-      onAddPhoneNumberClick = { onShowBottomSheet(BottomSheetMode.PhoneNumber) },
-      onVerify = { onShowBottomSheet(BottomSheetMode.VerifyPhoneNumber(it)) },
-    )
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    if (showEmailSection) {
+      Spacers.Vertical.Spacer32()
+      UserProfileEmailSection(
+        emailAddresses = emailAddresses,
+        onError = onError,
+        onAddEmailClick = { onShowBottomSheet(BottomSheetMode.EmailAddress) },
+        onVerify = { onShowBottomSheet(BottomSheetMode.VerifyEmailAddress(it)) },
+      )
+      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
+    if (showPhoneSection) {
+      Spacers.Vertical.Spacer16()
+      UserProfilePhoneSection(
+        phoneNumbers = phoneNumbers,
+        onError = onError,
+        onAddPhoneNumberClick = { onShowBottomSheet(BottomSheetMode.PhoneNumber) },
+        onVerify = { onShowBottomSheet(BottomSheetMode.VerifyPhoneNumber(it)) },
+      )
+      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
     Spacers.Vertical.Spacer16()
     UserProfileExternalAccountSection(
       externalAccounts,

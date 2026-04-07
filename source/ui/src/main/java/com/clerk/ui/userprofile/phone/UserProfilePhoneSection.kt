@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.Clerk
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
@@ -42,10 +43,12 @@ internal fun UserProfilePhoneSection(
         UserProfilePhoneRow(phoneNumber = it, onError = onError, onVerify = onVerify)
       }
 
-      UserProfileButtonRow(
-        text = stringResource(R.string.add_phone_number),
-        onClick = onAddPhoneNumberClick,
-      )
+      if (!Clerk.isPhoneNumberImmutable) {
+        UserProfileButtonRow(
+          text = stringResource(R.string.add_phone_number),
+          onClick = onAddPhoneNumberClick,
+        )
+      }
     }
   }
 }
