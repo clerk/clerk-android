@@ -1,5 +1,4 @@
 [versions]
-adsMobileSdk = "0.21.0-beta01"
 activityKtx = "1.13.0"
 agp = "8.13.2"
 appcompat = "1.7.1"
@@ -40,7 +39,6 @@ compileSdk = "36"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
-ads-mobile-sdk = { group = "com.google.android.libraries.ads.mobile.sdk", name = "ads-mobile-sdk", version.ref = "adsMobileSdk" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"
 androidx-browser = "androidx.browser:browser:1.10.0"
