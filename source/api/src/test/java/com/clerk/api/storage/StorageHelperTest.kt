@@ -2,12 +2,16 @@ package com.clerk.api.storage
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Base64
+import androidx.core.content.edit
+import com.clerk.api.Constants.Storage.CLERK_PREFERENCES_FILE_NAME
 import com.clerk.api.Constants.Test.CONCURRENCY_TEST_THREAD_COUNT
 import io.mockk.unmockkAll
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -19,35 +23,40 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class StorageHelperTest {
+  private companion object {
+    const val ENCRYPTED_VALUE_PREFIX = "clerk:v1:"
+  }
 
   private lateinit var context: Context
 
   @Before
   fun setup() {
     context = RuntimeEnvironment.getApplication()
-    // Clear any existing SharedPreferences data
-    clearSharedPreferences()
+    StorageHelper.storageCipherFactoryOverride = { TestStorageCipher() }
+    StorageHelper.reset()
+    preferences().edit { clear() }
   }
 
   @After
   fun tearDown() {
     unmockkAll()
-    // Clear SharedPreferences after each test
-    clearSharedPreferences()
+    StorageHelper.reset()
+    StorageHelper.storageCipherFactoryOverride = null
+    preferences().edit { clear() }
   }
 
-  /**
-   * Clears SharedPreferences data. For tests that require uninitialized state, prefer
-   * [StorageHelper.reset] with no context.
-   */
-  private fun clearSharedPreferences() {
-    try {
-      val field = StorageHelper::class.java.getDeclaredField("secureStorage")
-      field.isAccessible = true
-      val prefs = field.get(StorageHelper) as? SharedPreferences
-      prefs?.edit()?.clear()?.commit()
-      field.isAccessible = false
-    } catch (_: Exception) {}
+  private fun preferences(): SharedPreferences {
+    return context.getSharedPreferences(CLERK_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
+  }
+
+  private class TestStorageCipher : StorageCipher {
+    override fun encrypt(plaintext: String): String {
+      return Base64.encodeToString(plaintext.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+    }
+
+    override fun decrypt(ciphertext: String): String {
+      return String(Base64.decode(ciphertext, Base64.NO_WRAP), Charsets.UTF_8)
+    }
   }
 
   @Test
@@ -115,6 +124,21 @@ class StorageHelperTest {
   }
 
   @Test
+  fun `saveValue stores encrypted value in SharedPreferences`() {
+    StorageHelper.initialize(context)
+
+    StorageHelper.saveValue(StorageKey.DEVICE_ID, "plain-device-id")
+
+    val storedValue = preferences().getString(StorageKey.DEVICE_ID.name, null)
+    assertNotNull("Encrypted value should be written to SharedPreferences", storedValue)
+    assertTrue(
+      "Stored value should be envelope-prefixed",
+      storedValue!!.startsWith(ENCRYPTED_VALUE_PREFIX),
+    )
+    assertTrue("Stored value should not equal plaintext", storedValue != "plain-device-id")
+  }
+
+  @Test
   fun `saveValue with empty string when no existing value does not write to SharedPreferences`() {
     // Given
     StorageHelper.initialize(context)
@@ -125,6 +149,49 @@ class StorageHelperTest {
 
     // Then - Value should remain null
     assertNull("Empty string should not be saved", StorageHelper.loadValue(testKey))
+  }
+
+  @Test
+  fun `loadValue migrates legacy plaintext values to encrypted storage`() {
+    preferences().edit(commit = true) { putString(StorageKey.DEVICE_TOKEN.name, "legacy-token") }
+    StorageHelper.initialize(context)
+
+    val loadedValue = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)
+    val storedValue = preferences().getString(StorageKey.DEVICE_TOKEN.name, null)
+
+    assertEquals("legacy-token", loadedValue)
+    assertNotNull("Migrated value should still be stored", storedValue)
+    assertTrue(
+      "Legacy plaintext value should be rewritten in encrypted form",
+      storedValue!!.startsWith(ENCRYPTED_VALUE_PREFIX),
+    )
+    assertTrue("Migrated value should no longer be plaintext", storedValue != "legacy-token")
+  }
+
+  @Test
+  fun `loadValue deletes malformed encrypted values and returns null`() {
+    StorageHelper.reset()
+    StorageHelper.storageCipherFactoryOverride = {
+      object : StorageCipher {
+        override fun encrypt(plaintext: String): String = plaintext
+
+        override fun decrypt(ciphertext: String): String {
+          error("malformed ciphertext")
+        }
+      }
+    }
+    preferences().edit(commit = true) {
+      putString(StorageKey.DEVICE_ID.name, "${ENCRYPTED_VALUE_PREFIX}opaque")
+    }
+    StorageHelper.initialize(context)
+
+    val loadedValue = StorageHelper.loadValue(StorageKey.DEVICE_ID)
+
+    assertNull("Malformed encrypted value should not be returned", loadedValue)
+    assertFalse(
+      "Malformed encrypted value should be removed from SharedPreferences",
+      preferences().contains(StorageKey.DEVICE_ID.name),
+    )
   }
 
   @Test
