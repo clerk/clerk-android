@@ -36,6 +36,21 @@ internal data class Environment(
   val lastNameIsEnabled: Boolean
     get() = userSettings.attributes.any { (key, value) -> key == "last_name" && value.enabled }
 
+  val emailIsEnabled: Boolean
+    get() = userSettings.attributes["email_address"]?.enabled == true
+
+  val phoneNumberIsEnabled: Boolean
+    get() = userSettings.attributes["phone_number"]?.enabled == true
+
+  val emailIsImmutable: Boolean
+    get() = userSettings.attributes["email_address"]?.immutable == true
+
+  val phoneNumberIsImmutable: Boolean
+    get() = userSettings.attributes["phone_number"]?.immutable == true
+
+  val usernameIsImmutable: Boolean
+    get() = userSettings.attributes["username"]?.immutable == true
+
   val mfaPhoneCodeIsEnabled: Boolean
     get() =
       userSettings.attributes.any { (key, value) ->

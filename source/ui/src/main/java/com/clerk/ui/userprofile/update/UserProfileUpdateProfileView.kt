@@ -142,7 +142,9 @@ private fun ProfileFields(isLoading: Boolean, viewModel: UpdateProfileViewModel)
     modifier = Modifier.fillMaxWidth().padding(horizontal = dp18),
     verticalArrangement = Arrangement.spacedBy(dp24),
   ) {
-    if (Clerk.isUserNameEnabled) {
+    val usernameIsEditable = Clerk.isUserNameEnabled && !Clerk.isUsernameImmutable
+
+    if (usernameIsEditable) {
       ClerkTextField(
         value = username.orEmpty(),
         onValueChange = { username = it },
@@ -164,14 +166,18 @@ private fun ProfileFields(isLoading: Boolean, viewModel: UpdateProfileViewModel)
         label = stringResource(R.string.last_name),
       )
     }
-    if (Clerk.isFirstNameEnabled || Clerk.isLastNameEnabled || Clerk.isUserNameEnabled) {
+    if (Clerk.isFirstNameEnabled || Clerk.isLastNameEnabled || usernameIsEditable) {
       ClerkButton(
         isEnabled = true,
         isLoading = isLoading,
         modifier = Modifier.fillMaxWidth(),
         text = stringResource(R.string.save),
         onClick = {
-          viewModel.save(firstName = firstName, lastName = lastName, username = username)
+          viewModel.save(
+            firstName = firstName,
+            lastName = lastName,
+            username = if (usernameIsEditable) username else null,
+          )
         },
       )
     }

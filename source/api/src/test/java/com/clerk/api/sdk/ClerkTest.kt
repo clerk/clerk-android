@@ -88,6 +88,11 @@ class ClerkTest {
     every { mockEnvironment.usernameIsEnabled } returns true
     every { mockEnvironment.firstNameIsEnabled } returns true
     every { mockEnvironment.lastNameIsEnabled } returns true
+    every { mockEnvironment.emailIsEnabled } returns true
+    every { mockEnvironment.phoneNumberIsEnabled } returns true
+    every { mockEnvironment.emailIsImmutable } returns false
+    every { mockEnvironment.phoneNumberIsImmutable } returns false
+    every { mockEnvironment.usernameIsImmutable } returns false
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -139,6 +144,11 @@ class ClerkTest {
         every { uninitializedEnvironment.usernameIsEnabled } returns false
         every { uninitializedEnvironment.firstNameIsEnabled } returns false
         every { uninitializedEnvironment.lastNameIsEnabled } returns false
+        every { uninitializedEnvironment.emailIsEnabled } returns false
+        every { uninitializedEnvironment.phoneNumberIsEnabled } returns false
+        every { uninitializedEnvironment.emailIsImmutable } returns false
+        every { uninitializedEnvironment.phoneNumberIsImmutable } returns false
+        every { uninitializedEnvironment.usernameIsImmutable } returns false
         environmentField.set(Clerk, uninitializedEnvironment)
       } catch (_: Exception) {
         // Environment not initialized, that's fine
@@ -186,6 +196,11 @@ class ClerkTest {
     every { uninitializedDisplayConfig.applicationName } returns ""
     every { uninitializedUserSettings.social } returns emptyMap()
     every { uninitializedEnvironment.passkeyIsEnabled } returns false
+    every { uninitializedEnvironment.emailIsEnabled } returns false
+    every { uninitializedEnvironment.phoneNumberIsEnabled } returns false
+    every { uninitializedEnvironment.emailIsImmutable } returns false
+    every { uninitializedEnvironment.phoneNumberIsImmutable } returns false
+    every { uninitializedEnvironment.usernameIsImmutable } returns false
     Clerk.environment = uninitializedEnvironment
   }
 
@@ -438,6 +453,33 @@ class ClerkTest {
 
     // Then
     assertEquals(expectedProviders, providers)
+  }
+
+  @Test
+  fun `identifier flags return false when environment is not initialized`() = runTest {
+    simulateUninitializedEnvironment()
+
+    assertFalse(Clerk.isEmailEnabled)
+    assertFalse(Clerk.isPhoneNumberEnabled)
+    assertFalse(Clerk.isEmailImmutable)
+    assertFalse(Clerk.isPhoneNumberImmutable)
+    assertFalse(Clerk.isUsernameImmutable)
+  }
+
+  @Test
+  fun `identifier flags return environment values when initialized`() = runTest {
+    every { mockEnvironment.emailIsEnabled } returns true
+    every { mockEnvironment.phoneNumberIsEnabled } returns false
+    every { mockEnvironment.emailIsImmutable } returns true
+    every { mockEnvironment.phoneNumberIsImmutable } returns false
+    every { mockEnvironment.usernameIsImmutable } returns true
+    initializeClerkWithEnvironment()
+
+    assertTrue(Clerk.isEmailEnabled)
+    assertFalse(Clerk.isPhoneNumberEnabled)
+    assertTrue(Clerk.isEmailImmutable)
+    assertFalse(Clerk.isPhoneNumberImmutable)
+    assertTrue(Clerk.isUsernameImmutable)
   }
 
   @Test
