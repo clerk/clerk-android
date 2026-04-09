@@ -3,6 +3,7 @@ package com.clerk.api.signout
 import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.delete
@@ -48,6 +49,12 @@ internal object SignOutService {
       // Always clear local credentials regardless of server response
       StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
       Clerk.clearSessionAndUserState()
+
+      // Best-effort refresh of the in-memory client while skipping current client id.
+      // This clears stale in-progress sign-in/sign-up state that can otherwise persist after
+      // sign-out when the host remounts AuthView within the same process/activity lifecycle.
+      runCatching { Client.getSkippingClientId() }
+        .onFailure { ClerkLog.w("Client refresh after sign-out failed: ${it.message}") }
     }
 
     return if (serverError != null) {
