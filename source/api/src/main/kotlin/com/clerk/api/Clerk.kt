@@ -571,6 +571,14 @@ object Clerk {
   suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> =
     configurationManager.updateDeviceToken(deviceToken)
 
+  /**
+   * Returns the current device token from encrypted storage, or null if unavailable.
+   *
+   * This is used by the Expo bridge to sync the native client token with the JS SDK.
+   */
+  fun getDeviceToken(): String? =
+    com.clerk.api.storage.StorageHelper.loadValue(com.clerk.api.storage.StorageKey.DEVICE_TOKEN)
+
   // endregion
 
   // region Internal Methods
