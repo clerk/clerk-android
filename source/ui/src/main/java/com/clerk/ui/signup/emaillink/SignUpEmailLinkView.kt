@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -15,6 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
@@ -58,12 +62,11 @@ private fun SignUpEmailLinkViewImpl(
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
-  val context = LocalContext.current
   val snackbarHostState = remember { SnackbarHostState() }
-  val coroutineScope = rememberCoroutineScope()
   val state by viewModel.state.collectAsStateWithLifecycle()
 
   LaunchedEffect(Unit) { viewModel.sendLink() }
+  ObserveSignUpEmailLinkHostResume(onHostResumed = viewModel::onHostResumed)
 
   AuthStateEffects(
     authState = authState,
@@ -85,25 +88,7 @@ private fun SignUpEmailLinkViewImpl(
     hasLogo = false,
     snackbarHostState = snackbarHostState,
   ) {
-    ClerkButton(
-      text = stringResource(R.string.open_email_app),
-      onClick = {
-        if (!EmailAppLauncher.open(context)) {
-          coroutineScope.launch {
-            snackbarHostState.showSnackbar(
-              message = context.getString(R.string.no_email_clients_installed_on_device),
-              duration = SnackbarDuration.Short,
-            )
-          }
-        }
-      },
-      modifier = Modifier.fillMaxWidth(),
-      configuration =
-        ClerkButtonDefaults.configuration(
-          style = ClerkButtonConfiguration.ButtonStyle.Secondary,
-          emphasis = ClerkButtonConfiguration.Emphasis.High,
-        ),
-    )
+    OpenEmailAppButton(snackbarHostState = snackbarHostState)
     Spacers.Vertical.Spacer24()
     Row(
       modifier = Modifier.fillMaxWidth().padding(horizontal = dp8),
@@ -116,6 +101,47 @@ private fun SignUpEmailLinkViewImpl(
       )
     }
   }
+}
+
+@Composable
+private fun ObserveSignUpEmailLinkHostResume(onHostResumed: () -> Unit) {
+  val lifecycleOwner = LocalLifecycleOwner.current
+
+  DisposableEffect(lifecycleOwner, onHostResumed) {
+    val observer = LifecycleEventObserver { _, event ->
+      if (event == Lifecycle.Event.ON_RESUME) {
+        onHostResumed()
+      }
+    }
+    lifecycleOwner.lifecycle.addObserver(observer)
+    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+  }
+}
+
+@Composable
+private fun OpenEmailAppButton(snackbarHostState: SnackbarHostState) {
+  val context = LocalContext.current
+  val coroutineScope = rememberCoroutineScope()
+
+  ClerkButton(
+    text = stringResource(R.string.open_email_app),
+    onClick = {
+      if (!EmailAppLauncher.open(context)) {
+        coroutineScope.launch {
+          snackbarHostState.showSnackbar(
+            message = context.getString(R.string.no_email_clients_installed_on_device),
+            duration = SnackbarDuration.Short,
+          )
+        }
+      }
+    },
+    modifier = Modifier.fillMaxWidth(),
+    configuration =
+      ClerkButtonDefaults.configuration(
+        style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+        emphasis = ClerkButtonConfiguration.Emphasis.High,
+      ),
+  )
 }
 
 @PreviewLightDark

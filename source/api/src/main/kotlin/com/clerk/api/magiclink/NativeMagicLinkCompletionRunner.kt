@@ -62,9 +62,7 @@ internal class NativeMagicLinkCompletionRunner(
           is ClerkResult.Failure -> {
             clearPendingFlow()
             val mapped =
-              ticketSignInResult.toNativeMagicLinkError(
-                NativeMagicLinkReason.TICKET_SIGN_IN_FAILED
-              )
+              ticketSignInResult.toNativeMagicLinkError(NativeMagicLinkReason.TICKET_SIGN_IN_FAILED)
             NativeMagicLinkLogger.completeFailure(mapped.reasonCode)
             ClerkResult.apiFailure(mapped)
           }
@@ -82,9 +80,7 @@ internal class NativeMagicLinkCompletionRunner(
           is ClerkResult.Failure -> {
             clearPendingFlow()
             val mapped =
-              ticketSignUpResult.toNativeMagicLinkError(
-                NativeMagicLinkReason.TICKET_SIGN_UP_FAILED
-              )
+              ticketSignUpResult.toNativeMagicLinkError(NativeMagicLinkReason.TICKET_SIGN_UP_FAILED)
             NativeMagicLinkLogger.completeFailure(mapped.reasonCode)
             ClerkResult.apiFailure(mapped)
           }
@@ -103,6 +99,12 @@ internal class NativeMagicLinkCompletionRunner(
   private suspend fun completeAfterTicketSignIn(
     signIn: SignIn
   ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
+    if (signIn.createdSessionId == null) {
+      clearPendingFlow()
+      NativeMagicLinkLogger.completeSuccess()
+      return ClerkResult.success(NativeMagicLinkAuthResult.SignIn(signIn))
+    }
+
     NativeMagicLinkLogger.sessionActivationStarted(
       state = PendingNativeMagicLinkState.SIGN_IN,
       createdSessionId = signIn.createdSessionId,
@@ -125,6 +127,12 @@ internal class NativeMagicLinkCompletionRunner(
   private suspend fun completeAfterTicketSignUp(
     signUp: SignUp
   ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
+    if (signUp.createdSessionId == null) {
+      clearPendingFlow()
+      NativeMagicLinkLogger.completeSuccess()
+      return ClerkResult.success(NativeMagicLinkAuthResult.SignUp(signUp))
+    }
+
     NativeMagicLinkLogger.sessionActivationStarted(
       state = PendingNativeMagicLinkState.SIGN_UP,
       createdSessionId = signUp.createdSessionId,

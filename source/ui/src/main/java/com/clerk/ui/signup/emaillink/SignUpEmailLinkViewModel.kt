@@ -1,5 +1,6 @@
 package com.clerk.ui.signup.emaillink
 
+import kotlinx.coroutines.CoroutineDispatcher
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
@@ -16,14 +17,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-internal class SignUpEmailLinkViewModel : ViewModel() {
+internal class SignUpEmailLinkViewModel(
+  private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
   init {
+    syncCurrentSignUpState()
     viewModelScope.launch {
       Clerk.auth.events.collectLatest { event ->
         when (event) {
+          is AuthEvent.SignUpStarted -> {
+            if (event.signUp.status == SignUp.Status.MISSING_REQUIREMENTS) {
+              _state.value = AuthenticationViewState.Success.SignUp(event.signUp)
+            }
+          }
           is AuthEvent.SignUpCompleted -> {
             _state.value = AuthenticationViewState.Success.SignUp(event.signUp)
           }
@@ -36,6 +45,10 @@ internal class SignUpEmailLinkViewModel : ViewModel() {
     }
   }
 
+  internal fun onHostResumed() {
+    syncCurrentSignUpState()
+  }
+
   fun sendLink() {
     _state.value = AuthenticationViewState.Loading
 
@@ -45,7 +58,7 @@ internal class SignUpEmailLinkViewModel : ViewModel() {
       return
     }
 
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch(ioDispatcher) {
       signUp
         .prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailLink())
         .onSuccess { _state.value = AuthenticationViewState.Idle }
@@ -59,6 +72,17 @@ internal class SignUpEmailLinkViewModel : ViewModel() {
         _state.value !is AuthenticationViewState.Success.SignIn
     ) {
       _state.value = AuthenticationViewState.Idle
+    }
+  }
+
+  private fun syncCurrentSignUpState() {
+    val currentSignUp = Clerk.auth.currentSignUp ?: return
+    when (currentSignUp.status) {
+      SignUp.Status.MISSING_REQUIREMENTS,
+      SignUp.Status.COMPLETE -> {
+        _state.value = AuthenticationViewState.Success.SignUp(currentSignUp)
+      }
+      else -> Unit
     }
   }
 }

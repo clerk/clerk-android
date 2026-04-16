@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package com.clerk.ui.auth
 
 import androidx.compose.animation.core.tween
@@ -6,11 +8,15 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -21,6 +27,8 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
+import com.clerk.api.signin.SignIn
+import com.clerk.api.signup.SignUp
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
@@ -73,6 +81,7 @@ fun AuthView(
       }
     AuthStateProvider(backStack = backStack, identifierConfig = identifierConfig) {
       ObservePendingSessionTaskRouting(backStack = backStack)
+      ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
       AuthNavDisplay(
         modifier = fullScreenModifier,
@@ -80,6 +89,37 @@ fun AuthView(
         onAuthComplete = onAuthComplete,
       )
     }
+  }
+}
+
+@Composable
+private fun ObserveInProgressAuthRouting(
+  backStack: NavBackStack<NavKey>,
+  onAuthComplete: () -> Unit,
+) {
+  val authState = LocalAuthState.current
+  val lifecycleOwner = LocalLifecycleOwner.current
+
+  fun routeIfNeeded() {
+    resumeInProgressAuthAttempt(
+      authState = authState,
+      top = backStack.lastOrNull(),
+      signIn = Clerk.auth.currentSignIn,
+      signUp = Clerk.auth.currentSignUp,
+      onAuthComplete = onAuthComplete,
+    )
+  }
+
+  LaunchedEffect(backStack.lastOrNull()) { routeIfNeeded() }
+
+  DisposableEffect(lifecycleOwner, authState, backStack) {
+    val observer = LifecycleEventObserver { _, event ->
+      if (event == Lifecycle.Event.ON_RESUME) {
+        routeIfNeeded()
+      }
+    }
+    lifecycleOwner.lifecycle.addObserver(observer)
+    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
   }
 }
 
@@ -197,6 +237,21 @@ internal fun pendingSessionTaskDestination(taskKey: SessionTaskKey?): NavKey? {
 
 internal fun shouldRouteToPendingSessionTask(taskKey: SessionTaskKey?, top: NavKey?): Boolean {
   return pendingSessionTaskDestination(taskKey)?.let { it != top } == true
+}
+
+internal fun resumeInProgressAuthAttempt(
+  authState: AuthState,
+  top: NavKey?,
+  signIn: SignIn?,
+  signUp: SignUp?,
+  onAuthComplete: () -> Unit,
+) {
+  if (top != null && top != AuthDestination.AuthStart) return
+
+  when {
+    signIn != null -> authState.setToStepForStatus(signIn, onAuthComplete = onAuthComplete)
+    signUp != null -> authState.setToStepForStatus(signUp, onAuthComplete = onAuthComplete)
+  }
 }
 
 @Composable
