@@ -1,11 +1,13 @@
 package com.clerk.api.sso
 
-import android.content.Context
 import android.os.Bundle
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialUnknownException
+import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
+import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
@@ -33,7 +35,6 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class GoogleSignInServiceTest {
 
-  private lateinit var mockContext: Context
   private lateinit var mockGoogleCredentialManager: GoogleCredentialManager
   private lateinit var mockGetCredentialResponse: GetCredentialResponse
   private lateinit var mockCustomCredential: CustomCredential
@@ -46,7 +47,6 @@ class GoogleSignInServiceTest {
 
   @Before
   fun setup() {
-    mockContext = mockk(relaxed = true)
     mockGoogleCredentialManager = mockk(relaxed = true)
     mockGetCredentialResponse = mockk(relaxed = true)
     mockCustomCredential = mockk(relaxed = true)
@@ -210,6 +210,30 @@ class GoogleSignInServiceTest {
     assertTrue(result is ClerkResult.Failure)
     val failure = result as ClerkResult.Failure
     assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+  }
+
+  @Test
+  fun `signInWithGoogle classifies missing Google account`() = runTest {
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } throws
+      NoCredentialException("No credentials available")
+
+    val result = googleSignInService.signInWithGoogle()
+
+    assertTrue(result is ClerkResult.Failure)
+    val failure = result as ClerkResult.Failure
+    assertTrue(failure.throwable is CredentialFlowException.NoGoogleAccount)
+  }
+
+  @Test
+  fun `signInWithGoogle classifies user cancellation`() = runTest {
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } throws
+      GetCredentialCancellationException()
+
+    val result = googleSignInService.signInWithGoogle()
+
+    assertTrue(result is ClerkResult.Failure)
+    val failure = result as ClerkResult.Failure
+    assertTrue(failure.throwable is CredentialFlowException.UserCancelled)
   }
 
   @Test

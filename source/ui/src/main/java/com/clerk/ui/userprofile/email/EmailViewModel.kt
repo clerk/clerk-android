@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.email
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.emailaddress.delete
 import com.clerk.api.network.serialization.errorMessage
@@ -15,12 +16,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+private const val EMAIL_IMMUTABLE_MESSAGE =
+  "Email addresses cannot be changed for this application."
+
 internal class EmailViewModel : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
 
   fun setAsPrimary(emailAddress: EmailAddress) {
+    if (Clerk.isEmailImmutable) {
+      _state.value = State.Failure(EMAIL_IMMUTABLE_MESSAGE)
+      return
+    }
     _state.value = State.Loading
     guardUser(userDoesNotExist = {}) { user ->
       viewModelScope.launch(Dispatchers.IO) {
@@ -33,6 +41,10 @@ internal class EmailViewModel : ViewModel() {
   }
 
   fun remove(emailAddress: EmailAddress) {
+    if (Clerk.isEmailImmutable) {
+      _state.value = State.Failure(EMAIL_IMMUTABLE_MESSAGE)
+      return
+    }
     _state.value = State.Loading
     viewModelScope.launch(Dispatchers.IO) {
       emailAddress

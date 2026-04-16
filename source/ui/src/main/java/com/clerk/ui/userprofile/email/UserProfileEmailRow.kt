@@ -60,9 +60,10 @@ internal fun UserProfileEmailRow(
       verticalAlignment = Alignment.CenterVertically,
     ) {
       val canRemove = !Clerk.isEmailImmutable
+      val canSetAsPrimary = !Clerk.isEmailImmutable
       val isPrimary = emailAddress.isPrimary
       val isVerified = emailAddress.verification?.status == Verification.Status.VERIFIED
-      val shouldShowMenu = canRemove || !isPrimary || !isVerified
+      val shouldShowMenu = canRemove || (canSetAsPrimary && !isPrimary && isVerified) || !isVerified
 
       EmailWithBadge(isPrimary, emailAddress)
       Spacer(modifier = Modifier.weight(1f))
@@ -73,7 +74,7 @@ internal fun UserProfileEmailRow(
               DropDownItem(
                 id = EmailAction.SetAsPrimary,
                 text = stringResource(R.string.set_as_primary),
-                isHidden = isPrimary || !isVerified,
+                isHidden = !canSetAsPrimary || isPrimary || !isVerified,
               ),
               DropDownItem(
                 id = EmailAction.Verify,

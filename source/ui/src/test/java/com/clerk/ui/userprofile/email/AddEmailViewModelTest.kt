@@ -92,4 +92,19 @@ class AddEmailViewModelTest {
       assertEquals(AddEmailViewModel.State.Error("No current user found"), awaitItem())
     }
   }
+
+  @Test
+  fun addEmail_whenEmailIsImmutable_emitsErrorWithoutCallingApi() = runTest {
+    every { Clerk.isEmailImmutable } returns true
+
+    val viewModel = AddEmailViewModel()
+    viewModel.state.test {
+      assertEquals(AddEmailViewModel.State.Idle, awaitItem())
+      viewModel.addEmail("user@example.com")
+      assertEquals(
+        AddEmailViewModel.State.Error("Email addresses cannot be changed for this application."),
+        awaitItem(),
+      )
+    }
+  }
 }

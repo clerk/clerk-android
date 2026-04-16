@@ -102,4 +102,46 @@ class UserProfilePasskeyViewModelTest {
       assertEquals(UserProfilePasskeyViewModel.State.Error("User does not exist"), awaitItem())
     }
   }
+
+  @Test
+  fun createPasskey_cancellation_resetsToIdle() = runTest {
+    val user = mockk<User>()
+    every { Clerk.user } returns user
+    coEvery { user.createPasskey() } returns
+      ClerkResult.unknownFailure(credentialFlowThrowable("UserCancelled"))
+
+    val viewModel = UserProfilePasskeyViewModel()
+    viewModel.state.test {
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
+      viewModel.createPasskey()
+      advanceUntilIdle()
+      expectNoEvents()
+    }
+  }
+
+  @Test
+  fun createPasskey_missingActivity_surfacesRetryMessage() = runTest {
+    val user = mockk<User>()
+    every { Clerk.user } returns user
+    coEvery { user.createPasskey() } returns
+      ClerkResult.unknownFailure(credentialFlowThrowable("MissingActivity"))
+
+    val viewModel = UserProfilePasskeyViewModel()
+    viewModel.state.test {
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
+      viewModel.createPasskey()
+      assertEquals(
+        UserProfilePasskeyViewModel.State.Error(
+          "Authentication requires an active screen. Try again from the app."
+        ),
+        awaitItem(),
+      )
+    }
+  }
+
+  private fun credentialFlowThrowable(simpleName: String): Throwable =
+    Class.forName("com.clerk.api.credentials.CredentialFlowException\$$simpleName")
+      .getDeclaredConstructor()
+      .apply { isAccessible = true }
+      .newInstance() as Throwable
 }

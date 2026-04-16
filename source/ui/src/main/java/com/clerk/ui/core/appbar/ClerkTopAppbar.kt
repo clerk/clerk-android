@@ -25,7 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.core.avatar.OrganizationAvatar
+import com.clerk.ui.core.avatar.OrganizationLogo
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
@@ -104,7 +104,7 @@ private fun RowScope.TopBarWithLogo(
   BackButton(hasBackButton = hasBackButton, onBackPressed = onBackPressed)
   Spacer(Modifier.weight(1f))
   TopBarTitle(title)
-  if (hasLogo) OrganizationAvatar(clerkTheme = clerkTheme)
+  if (hasLogo) OrganizationLogo(clerkTheme = clerkTheme)
   Spacer(Modifier.weight(1f))
   if (hasBackButton) {
     IconButton(onClick = {}) {}

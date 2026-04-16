@@ -2,6 +2,8 @@ package com.clerk.ui.userprofile.security.passkey
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.credentials.resolvedCredentialFlowMessage
+import com.clerk.api.credentials.shouldSuppressCredentialFlowError
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
@@ -36,8 +38,13 @@ internal class UserProfilePasskeyViewModel : ViewModel() {
           .createPasskey()
           .onSuccess { _state.value = State.Success }
           .onFailure {
-            ClerkLog.e("Failed to create passkey: ${it.errorMessage}")
-            _state.value = State.Error(it.errorMessage)
+            ClerkLog.e("Failed to create passkey: ${it.resolvedCredentialFlowMessage}")
+            _state.value =
+              if (it.shouldSuppressCredentialFlowError) {
+                State.Idle
+              } else {
+                State.Error(it.resolvedCredentialFlowMessage)
+              }
           }
       }
     }

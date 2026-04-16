@@ -1,13 +1,15 @@
 package com.clerk.api.passkeys
 
-import android.content.Context
+import android.app.Activity
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
+import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -22,7 +24,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
-import java.lang.ref.WeakReference
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -36,7 +37,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class PasskeyAuthenticationServiceTest {
 
-  private lateinit var mockContext: Context
+  private lateinit var mockActivity: Activity
   private lateinit var mockCredentialManager: PasskeyCredentialManager
   private lateinit var mockGetCredentialResponse: GetCredentialResponse
   private lateinit var mockSignIn: SignIn
@@ -47,7 +48,7 @@ class PasskeyAuthenticationServiceTest {
 
   @Before
   fun setup() {
-    mockContext = mockk(relaxed = true)
+    mockActivity = mockk(relaxed = true)
     mockCredentialManager = mockk(relaxed = true)
     mockGetCredentialResponse = mockk(relaxed = true)
     mockSignIn = mockk(relaxed = true)
@@ -58,7 +59,7 @@ class PasskeyAuthenticationServiceTest {
 
     // Mock Clerk application context
     mockkObject(Clerk)
-    every { Clerk.applicationContext } returns WeakReference(mockContext)
+    every { Clerk.credentialActivity() } returns mockActivity
     every { Clerk.baseUrl } returns "https://test.clerk.com"
 
     // Mock ClerkApi and its nested objects
@@ -101,7 +102,7 @@ class PasskeyAuthenticationServiceTest {
     assertTrue(result is ClerkResult.Success)
     assertEquals(mockSignIn, (result as ClerkResult.Success).value)
     coVerify { ClerkApi.signIn.createSignIn(mapOf("strategy" to "passkey")) }
-    coVerify { mockCredentialManager.getCredential(mockContext, any()) }
+    coVerify { mockCredentialManager.getCredential(mockActivity, any()) }
     coVerify { mockSignIn.attemptFirstFactor(any()) }
   }
 
@@ -173,7 +174,43 @@ class PasskeyAuthenticationServiceTest {
 
     // Then
     assertTrue(result is ClerkResult.Failure)
-    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, (result as ClerkResult.Failure).errorType)
+    val failure = result as ClerkResult.Failure
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+    assertTrue(failure.throwable is CredentialFlowException.NoSavedCredential)
+  }
+
+  @Test
+  fun `signInWithPasskey handles cancellation without generic failure`() = runTest {
+    val nonce = """{"challenge":"test-challenge"}"""
+
+    every { mockSignIn.firstFactorVerification } returns mockVerification
+    every { mockVerification.nonce } returns nonce
+
+    coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockCredentialManager.getCredential(any(), any()) } throws
+      GetCredentialCancellationException()
+
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        listOf(SignIn.CredentialType.PASSKEY)
+      )
+
+    assertTrue(result is ClerkResult.Failure)
+    assertTrue((result as ClerkResult.Failure).throwable is CredentialFlowException.UserCancelled)
+  }
+
+  @Test
+  fun `signInWithPasskey fails when no activity is available`() = runTest {
+    every { Clerk.credentialActivity() } returns null
+
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        listOf(SignIn.CredentialType.PASSKEY)
+      )
+
+    assertTrue(result is ClerkResult.Failure)
+    assertTrue((result as ClerkResult.Failure).throwable is CredentialFlowException.MissingActivity)
+    coVerify(exactly = 0) { mockCredentialManager.getCredential(any(), any()) }
   }
 
   @Test

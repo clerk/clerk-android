@@ -3,6 +3,8 @@ package com.clerk.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.credentials.resolvedCredentialFlowMessage
+import com.clerk.api.credentials.shouldSuppressCredentialFlowError
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.errorMessage
@@ -183,7 +185,12 @@ internal class AuthStartViewModel : ViewModel() {
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            _state.value = AuthState.OAuthState.Error(it.errorMessage)
+            _state.value =
+              if (it.shouldSuppressCredentialFlowError) {
+                AuthState.Idle
+              } else {
+                AuthState.OAuthState.Error(it.resolvedCredentialFlowMessage)
+              }
           }
         }
     }
