@@ -49,11 +49,7 @@ class SignUpEmailLinkViewModelTest {
 
   @Test
   fun `sign up started event advances email link flow to next sign up step`() = runTest {
-    val pendingSignUp =
-      signUp(
-        id = "sua_pending",
-        unverifiedFields = listOf("phone_number"),
-      )
+    val pendingSignUp = signUp(id = "sua_pending", unverifiedFields = listOf("phone_number"))
 
     val viewModel = SignUpEmailLinkViewModel(ioDispatcher = testDispatcher)
     advanceUntilIdle()
@@ -66,11 +62,7 @@ class SignUpEmailLinkViewModelTest {
 
   @Test
   fun `resume sync advances email link flow from current sign up`() = runTest {
-    val pendingSignUp =
-      signUp(
-        id = "sua_resume",
-        unverifiedFields = listOf("phone_number"),
-      )
+    val pendingSignUp = signUp(id = "sua_resume", unverifiedFields = listOf("phone_number"))
     every { auth.currentSignUp } returns pendingSignUp
 
     val viewModel = SignUpEmailLinkViewModel(ioDispatcher = testDispatcher)
