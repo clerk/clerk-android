@@ -2,7 +2,6 @@ package com.clerk.ui.userprofile.security.passkey
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
-import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -109,7 +108,7 @@ class UserProfilePasskeyViewModelTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
     coEvery { user.createPasskey() } returns
-      ClerkResult.unknownFailure(CredentialFlowException.UserCancelled())
+      ClerkResult.unknownFailure(credentialFlowThrowable("UserCancelled"))
 
     val viewModel = UserProfilePasskeyViewModel()
     viewModel.state.test {
@@ -125,7 +124,7 @@ class UserProfilePasskeyViewModelTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
     coEvery { user.createPasskey() } returns
-      ClerkResult.unknownFailure(CredentialFlowException.MissingActivity())
+      ClerkResult.unknownFailure(credentialFlowThrowable("MissingActivity"))
 
     val viewModel = UserProfilePasskeyViewModel()
     viewModel.state.test {
@@ -139,4 +138,10 @@ class UserProfilePasskeyViewModelTest {
       )
     }
   }
+
+  private fun credentialFlowThrowable(simpleName: String): Throwable =
+    Class.forName("com.clerk.api.credentials.CredentialFlowException\$$simpleName")
+      .getDeclaredConstructor()
+      .apply { isAccessible = true }
+      .newInstance() as Throwable
 }

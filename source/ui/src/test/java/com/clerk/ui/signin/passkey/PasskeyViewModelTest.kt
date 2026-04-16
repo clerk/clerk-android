@@ -1,7 +1,6 @@
 package com.clerk.ui.signin.passkey
 
 import app.cash.turbine.test
-import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
@@ -35,7 +34,7 @@ class PasskeyViewModelTest {
   @Test
   fun authenticate_cancellation_resets_to_idle() = runTest {
     coEvery { SignIn.authenticateWithGoogleCredential(any()) } returns
-      ClerkResult.unknownFailure(CredentialFlowException.UserCancelled())
+      ClerkResult.unknownFailure(credentialFlowThrowable("UserCancelled"))
 
     val viewModel = PasskeyViewModel()
     viewModel.state.test {
@@ -49,7 +48,7 @@ class PasskeyViewModelTest {
   @Test
   fun authenticate_missing_activity_surfaces_retry_message() = runTest {
     coEvery { SignIn.authenticateWithGoogleCredential(any()) } returns
-      ClerkResult.unknownFailure(CredentialFlowException.MissingActivity())
+      ClerkResult.unknownFailure(credentialFlowThrowable("MissingActivity"))
 
     val viewModel = PasskeyViewModel()
     viewModel.state.test {
@@ -78,4 +77,10 @@ class PasskeyViewModelTest {
       assertEquals(AuthenticationViewState.Success.SignIn(signIn), awaitItem())
     }
   }
+
+  private fun credentialFlowThrowable(simpleName: String): Throwable =
+    Class.forName("com.clerk.api.credentials.CredentialFlowException\$$simpleName")
+      .getDeclaredConstructor()
+      .apply { isAccessible = true }
+      .newInstance() as Throwable
 }
