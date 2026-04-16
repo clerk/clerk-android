@@ -86,16 +86,16 @@ internal fun classifyCreateCredentialFailure(
   return ClerkResult.unknownFailure(classified)
 }
 
-internal val ClerkResult.Failure<ClerkErrorResponse>.credentialFlowUiMessage: String?
+private val ClerkResult.Failure<ClerkErrorResponse>.credentialFlowUiMessage: String?
   get() =
     (throwable as? CredentialFlowException)?.userMessage
       ?: error?.errors?.firstOrNull()?.longMessage
       ?: error?.errors?.firstOrNull()?.message
 
-internal val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressCredentialFlowError: Boolean
+val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressCredentialFlowError: Boolean
   get() = (throwable as? CredentialFlowException)?.suppressUserFacingError == true
 
-internal val ClerkResult.Failure<ClerkErrorResponse>.resolvedCredentialFlowMessage: String
+val ClerkResult.Failure<ClerkErrorResponse>.resolvedCredentialFlowMessage: String
   get() = credentialFlowUiMessage ?: errorMessage
 
 private fun Throwable.isActivityContextFailure(): Boolean {
