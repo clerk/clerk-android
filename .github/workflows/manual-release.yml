@@ -20,6 +20,15 @@ on:
         required: false
         type: boolean
         default: true
+      skip_expo_compat:
+        description: "Skip the @clerk/expo compat gate (emergency override only)"
+        required: false
+        type: boolean
+        default: false
+      skip_reason:
+        description: "Reason for skipping compat gate (required when skip=true)"
+        required: false
+        type: string
 
 jobs:
   create-release:
@@ -86,14 +95,42 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  log-skip:
+    name: "Log gate skip (emergency override)"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.skip_expo_compat == true
+    steps:
+      - name: Fail if skip invoked without a reason
+        if: ${{ !inputs.skip_reason }}
+        run: |
+          echo "::error::skip_expo_compat=true requires skip_reason to be provided"
+          exit 1
+      - name: Record skip to the job summary
+        run: |
+          {
+            echo "## ⚠️ Expo compat gate skipped"
+            echo ""
+            echo "- Actor: @${{ github.triggering_actor }}"
+            echo "- Reason: ${{ inputs.skip_reason }}"
+            echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   expo-compat:
     name: "@clerk/expo compat (Maestro)"
     runs-on: ubuntu-latest
     needs: create-release
-    if: always() && (github.event_name == 'release' || needs.create-release.result == 'success')
+    timeout-minutes: 45
+    if: |
+      always()
+      && (github.event_name == 'release' || needs.create-release.result == 'success')
+      && !(github.event_name == 'workflow_dispatch' && inputs.skip_expo_compat == true)
     # Release gate: verifies the SDK version about to be published does not
     # break @clerk/expo. If any Maestro flow fails, the publish step below
     # will not run.
+    #
+    # Emergency override: maintainers can skip this gate by setting
+    # skip_expo_compat=true AND providing skip_reason on workflow_dispatch.
+    # The skip is recorded permanently in the Actions run log.
     env:
       SDK_SNAPSHOT_SUFFIX: "-expo-compat-${{ github.run_id }}"
       JAVASCRIPT_REPO_REF: "main"
@@ -213,8 +250,18 @@ jobs:
 
   publish:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    needs: [create-release, expo-compat]
-    if: always() && (github.event_name == 'release' || needs.create-release.result == 'success') && needs.expo-compat.result == 'success'
+    needs: [create-release, expo-compat, log-skip]
+    # Publish when:
+    #   - create-release succeeded (or we got a release event), AND
+    #   - expo-compat succeeded, OR the gate was explicitly skipped via
+    #     workflow_dispatch with skip_expo_compat=true and a reason.
+    if: |
+      always()
+      && (github.event_name == 'release' || needs.create-release.result == 'success')
+      && (
+        needs.expo-compat.result == 'success'
+        || (github.event_name == 'workflow_dispatch' && inputs.skip_expo_compat == true && needs.log-skip.result == 'success')
+      )
 
     steps:
       - name: Checkout code
