@@ -31,8 +31,8 @@ kotlinTest = "2.3.10"
 paparazziPlugin = "2.0.0-alpha04"
 
 # Build Versions -- Do not delete
-jdk = "17"
-jvmTarget = "17"
+jdk = "21"
+jvmTarget = "21"
 kotlin = "2.3.10"
 minSdk = "24"
 compileSdk = "36"

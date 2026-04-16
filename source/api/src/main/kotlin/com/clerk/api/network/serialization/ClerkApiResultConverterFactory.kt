@@ -108,6 +108,5 @@ internal fun getExcludedTypeNames(): List<String> {
   return listOf(
     Environment::class.qualifiedName ?: "",
     TokenResource::class.qualifiedName ?: "",
-    NativeMagicLinkCompleteResponse::class.qualifiedName ?: "",
   )
 }

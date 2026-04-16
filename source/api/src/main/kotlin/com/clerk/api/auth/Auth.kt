@@ -15,6 +15,7 @@ import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.magiclink.NativeMagicLinkError
+import com.clerk.api.magiclink.NativeMagicLinkAuthResult
 import com.clerk.api.magiclink.NativeMagicLinkManager
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.magiclink.canHandleNativeMagicLink
@@ -433,8 +434,13 @@ class Auth internal constructor() {
     return nativeMagicLink.startEmailLinkSignIn(email)
   }
 
-  /** Handles a native magic-link deep-link callback and completes sign-in using a ticket. */
-  suspend fun handleMagicLinkDeepLink(uri: Uri): ClerkResult<SignIn, NativeMagicLinkError> {
+  /**
+   * Handles a native magic-link deep-link callback and completes sign-in or sign-up using a
+   * ticket.
+   */
+  suspend fun handleMagicLinkDeepLink(
+    uri: Uri
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
     return nativeMagicLink.handleMagicLinkDeepLink(uri)
   }
 
@@ -442,7 +448,7 @@ class Auth internal constructor() {
   suspend fun completeMagicLink(
     flowId: String,
     approvalToken: String,
-  ): ClerkResult<SignIn, NativeMagicLinkError> {
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
     return nativeMagicLink.complete(flowId, approvalToken)
   }
 

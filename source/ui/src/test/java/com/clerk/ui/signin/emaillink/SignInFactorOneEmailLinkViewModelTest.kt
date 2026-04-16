@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -40,6 +41,7 @@ class SignInFactorOneEmailLinkViewModelTest {
     mockkObject(Clerk)
     every { Clerk.auth } returns auth
     every { auth.events } returns events
+    every { auth.currentSignIn } returns null
   }
 
   @After
@@ -59,13 +61,68 @@ class SignInFactorOneEmailLinkViewModelTest {
         )
       )
 
-    val viewModel = SignInFactorOneEmailLinkViewModel()
+    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
     viewModel.sendLink()
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     assertEquals(
       AuthenticationViewState.Error("Too many requests, retry later"),
       viewModel.state.value,
     )
+  }
+
+  @Test
+  fun `mfa sign in started event advances email link flow to second factor`() = runTest {
+    val mfaSignIn =
+      SignIn(
+        id = "sia_mfa",
+        status = SignIn.Status.NEEDS_SECOND_FACTOR,
+        identifier = "sam@clerk.dev",
+      )
+
+    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
+
+    events.tryEmit(AuthEvent.SignInStarted(mfaSignIn))
+    advanceUntilIdle()
+
+    assertEquals(AuthenticationViewState.Success.SignIn(mfaSignIn), viewModel.state.value)
+  }
+
+  @Test
+  fun `resume sync advances email link flow to second factor from current sign in`() = runTest {
+    val mfaSignIn =
+      SignIn(
+        id = "sia_mfa_resume",
+        status = SignIn.Status.NEEDS_SECOND_FACTOR,
+        identifier = "sam@clerk.dev",
+      )
+    every { auth.currentSignIn } returns mfaSignIn
+
+    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
+
+    viewModel.onHostResumed()
+
+    assertEquals(AuthenticationViewState.Success.SignIn(mfaSignIn), viewModel.state.value)
+  }
+
+  @Test
+  fun `first factor sign in started event does not advance email link flow`() = runTest {
+    val firstFactorSignIn =
+      SignIn(
+        id = "sia_first_factor",
+        status = SignIn.Status.NEEDS_FIRST_FACTOR,
+        identifier = "sam@clerk.dev",
+      )
+
+    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+    advanceUntilIdle()
+
+    events.tryEmit(AuthEvent.SignInStarted(firstFactorSignIn))
+    advanceUntilIdle()
+
+    assertEquals(AuthenticationViewState.Idle, viewModel.state.value)
   }
 }

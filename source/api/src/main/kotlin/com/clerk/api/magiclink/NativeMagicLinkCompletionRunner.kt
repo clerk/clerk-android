@@ -6,18 +6,19 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.magiclink.NativeMagicLinkCompleteRequest
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
+import com.clerk.api.signup.SignUp
 
 internal class NativeMagicLinkCompletionRunner(
   private val attestationProvider: NativeMagicLinkAttestationProvider?,
   private val clearPendingFlow: suspend () -> Unit,
-  private val activateCreatedSession: suspend (SignIn) -> ClerkResult<Unit, NativeMagicLinkError>,
+  private val activateCreatedSession: suspend (String?) -> ClerkResult<Unit, NativeMagicLinkError>,
   private val refreshClientState: suspend () -> Unit,
 ) {
   suspend fun complete(
     flowId: String,
     approvalToken: String,
     pending: PendingNativeMagicLinkFlow,
-  ): ClerkResult<SignIn, NativeMagicLinkError> {
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
     val completeRequest =
       NativeMagicLinkCompleteRequest(
         flowId = flowId,
@@ -26,9 +27,17 @@ internal class NativeMagicLinkCompletionRunner(
         attestation = attestationProvider?.attestation(),
       )
 
+    NativeMagicLinkLogger.completeApiStarted(
+      state = pending.state,
+      hasAttestation = completeRequest.attestation != null,
+    )
+
     return when (val completeResult = ClerkApi.magicLink.complete(completeRequest.toFields())) {
       is ClerkResult.Failure -> handleCompleteApiFailure(completeResult)
-      is ClerkResult.Success -> completeFromTicket(completeResult.value.ticket)
+      is ClerkResult.Success -> {
+        NativeMagicLinkLogger.ticketReceived(pending.state)
+        completeFromTicket(completeResult.value.ticket, pending.state)
+      }
     }
   }
 
@@ -44,24 +53,61 @@ internal class NativeMagicLinkCompletionRunner(
   }
 
   private suspend fun completeFromTicket(
-    ticket: String
-  ): ClerkResult<SignIn, NativeMagicLinkError> {
-    return when (val ticketSignInResult = Clerk.auth.signInWithTicket(ticket)) {
-      is ClerkResult.Failure -> {
-        clearPendingFlow()
-        val mapped =
-          ticketSignInResult.toNativeMagicLinkError(NativeMagicLinkReason.TICKET_SIGN_IN_FAILED)
-        NativeMagicLinkLogger.completeFailure(mapped.reasonCode)
-        ClerkResult.apiFailure(mapped)
+    ticket: String,
+    state: PendingNativeMagicLinkState,
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
+    return when (state) {
+      PendingNativeMagicLinkState.SIGN_IN -> {
+        when (val ticketSignInResult = Clerk.auth.signInWithTicket(ticket)) {
+          is ClerkResult.Failure -> {
+            clearPendingFlow()
+            val mapped =
+              ticketSignInResult.toNativeMagicLinkError(
+                NativeMagicLinkReason.TICKET_SIGN_IN_FAILED
+              )
+            NativeMagicLinkLogger.completeFailure(mapped.reasonCode)
+            ClerkResult.apiFailure(mapped)
+          }
+          is ClerkResult.Success -> {
+            NativeMagicLinkLogger.ticketExchangeSuccess(
+              state = state,
+              createdSessionId = ticketSignInResult.value.createdSessionId,
+            )
+            completeAfterTicketSignIn(ticketSignInResult.value)
+          }
+        }
       }
-      is ClerkResult.Success -> completeAfterTicketSignIn(ticketSignInResult.value)
+      PendingNativeMagicLinkState.SIGN_UP -> {
+        when (val ticketSignUpResult = Clerk.auth.signUpWithTicket(ticket)) {
+          is ClerkResult.Failure -> {
+            clearPendingFlow()
+            val mapped =
+              ticketSignUpResult.toNativeMagicLinkError(
+                NativeMagicLinkReason.TICKET_SIGN_UP_FAILED
+              )
+            NativeMagicLinkLogger.completeFailure(mapped.reasonCode)
+            ClerkResult.apiFailure(mapped)
+          }
+          is ClerkResult.Success -> {
+            NativeMagicLinkLogger.ticketExchangeSuccess(
+              state = state,
+              createdSessionId = ticketSignUpResult.value.createdSessionId,
+            )
+            completeAfterTicketSignUp(ticketSignUpResult.value)
+          }
+        }
+      }
     }
   }
 
   private suspend fun completeAfterTicketSignIn(
     signIn: SignIn
-  ): ClerkResult<SignIn, NativeMagicLinkError> {
-    val activationResult = activateCreatedSession(signIn)
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
+    NativeMagicLinkLogger.sessionActivationStarted(
+      state = PendingNativeMagicLinkState.SIGN_IN,
+      createdSessionId = signIn.createdSessionId,
+    )
+    val activationResult = activateCreatedSession(signIn.createdSessionId)
     return if (activationResult is ClerkResult.Failure) {
       clearPendingFlow()
       val reasonCode =
@@ -72,7 +118,29 @@ internal class NativeMagicLinkCompletionRunner(
       clearPendingFlow()
       refreshClientState()
       NativeMagicLinkLogger.completeSuccess()
-      ClerkResult.success(signIn)
+      ClerkResult.success(NativeMagicLinkAuthResult.SignIn(signIn))
+    }
+  }
+
+  private suspend fun completeAfterTicketSignUp(
+    signUp: SignUp
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
+    NativeMagicLinkLogger.sessionActivationStarted(
+      state = PendingNativeMagicLinkState.SIGN_UP,
+      createdSessionId = signUp.createdSessionId,
+    )
+    val activationResult = activateCreatedSession(signUp.createdSessionId)
+    return if (activationResult is ClerkResult.Failure) {
+      clearPendingFlow()
+      val reasonCode =
+        activationResult.error?.reasonCode ?: NativeMagicLinkReason.SESSION_ACTIVATION_FAILED.code
+      NativeMagicLinkLogger.completeFailure(reasonCode)
+      ClerkResult.apiFailure(activationResult.error)
+    } else {
+      clearPendingFlow()
+      refreshClientState()
+      NativeMagicLinkLogger.completeSuccess()
+      ClerkResult.success(NativeMagicLinkAuthResult.SignUp(signUp))
     }
   }
 }

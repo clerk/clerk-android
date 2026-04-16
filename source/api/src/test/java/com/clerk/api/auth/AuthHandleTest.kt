@@ -1,6 +1,7 @@
 package com.clerk.api.auth
 
 import android.net.Uri
+import com.clerk.api.magiclink.NativeMagicLinkAuthResult
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.magiclink.canHandleNativeMagicLink
 import com.clerk.api.network.serialization.ClerkResult
@@ -43,7 +44,7 @@ class AuthHandleTest {
 
     every { canHandleNativeMagicLink(callbackUri) } returns true
     coEvery { NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri) } returns
-      ClerkResult.success(mockk<SignIn>(relaxed = true))
+      ClerkResult.success(NativeMagicLinkAuthResult.SignIn(mockk<SignIn>(relaxed = true)))
 
     val handled = auth.handle(callbackUri)
 

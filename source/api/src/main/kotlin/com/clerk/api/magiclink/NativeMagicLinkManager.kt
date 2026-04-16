@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package com.clerk.api.magiclink
 
 import android.net.Uri
@@ -31,12 +33,22 @@ public interface NativeMagicLinkManager {
 
   public suspend fun startEmailLinkSignIn(email: String): ClerkResult<SignIn, NativeMagicLinkError>
 
-  public suspend fun handleMagicLinkDeepLink(uri: Uri): ClerkResult<SignIn, NativeMagicLinkError>
+  public suspend fun handleMagicLinkDeepLink(
+    uri: Uri
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError>
 
   public suspend fun complete(
     flowId: String,
     approvalToken: String,
-  ): ClerkResult<SignIn, NativeMagicLinkError>
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError>
+}
+
+public sealed interface NativeMagicLinkAuthResult {
+  public data class SignIn(public val signIn: com.clerk.api.signin.SignIn) :
+    NativeMagicLinkAuthResult
+
+  public data class SignUp(public val signUp: com.clerk.api.signup.SignUp) :
+    NativeMagicLinkAuthResult
 }
 
 internal object NativeMagicLinkService : NativeMagicLinkManager {
@@ -113,6 +125,10 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
             prepareResult.toNativeMagicLinkError(NativeMagicLinkReason.PREPARE_FAILED)
           )
         is ClerkResult.Success -> {
+          NativeMagicLinkLogger.prepareSuccess(
+            state = PendingNativeMagicLinkState.SIGN_IN,
+            flowId = signIn.id,
+          )
           persistPendingFlow(
             createPendingFlow(
               codeVerifier = pkcePair.verifier,
@@ -169,6 +185,10 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
     return when (val prepareResult = ClerkApi.signUp.prepareSignUpVerification(signUpId, fields)) {
       is ClerkResult.Failure -> prepareResult
       is ClerkResult.Success -> {
+        NativeMagicLinkLogger.prepareSuccess(
+          state = PendingNativeMagicLinkState.SIGN_UP,
+          flowId = signUpId,
+        )
         persistPendingFlow(
           createPendingFlow(
             codeVerifier = pkcePair.verifier,
@@ -183,7 +203,7 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
 
   override suspend fun handleMagicLinkDeepLink(
     uri: Uri
-  ): ClerkResult<SignIn, NativeMagicLinkError> {
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
     NativeMagicLinkLogger.deepLinkReceived(uri)
     val parsed = parseMagicLinkCallback(uri)
     return when (parsed) {
@@ -199,42 +219,18 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
   override suspend fun complete(
     flowId: String,
     approvalToken: String,
-  ): ClerkResult<SignIn, NativeMagicLinkError> {
-    val pendingState =
-      mutex.withLock {
-        val flow = pendingFlowStore.load()
-        if (flow != null && flow.expiresAtEpochMs <= currentTimeMillis()) {
-          pendingFlowStore.clear()
-          PendingFlowLookup.None
-        } else if (flow != null && flow.flowId != null && flow.flowId != flowId) {
-          PendingFlowLookup.Mismatched(flow.flowId)
-        } else {
-          flow?.let(PendingFlowLookup::Found) ?: PendingFlowLookup.None
-        }
-      }
-
-    val clearPendingFlow: suspend () -> Unit = { mutex.withLock { pendingFlowStore.clear() } }
-    val completionRunner =
-      NativeMagicLinkCompletionRunner(
-        attestationProvider = attestationProvider,
-        clearPendingFlow = clearPendingFlow,
-        activateCreatedSession = { signIn -> activateCreatedSession(signIn) },
-        refreshClientState = { refreshClientState() },
-      )
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
+    val pendingState = lookupPendingFlow(flowId)
+    logCompletionRequested(flowId, pendingState)
     return when (pendingState) {
       PendingFlowLookup.None -> nativeMagicLinkFailure(NativeMagicLinkReason.NO_PENDING_FLOW)
       is PendingFlowLookup.Mismatched -> {
-        ClerkLog.w(
-          "event=native_magic_link_flow_id_mismatch expected=${pendingState.expectedFlowId} actual=$flowId"
-        )
+        logFlowIdMismatch(pendingState.expectedFlowId, flowId)
         nativeMagicLinkFailure(NativeMagicLinkReason.FLOW_ID_MISMATCH)
       }
       is PendingFlowLookup.Found ->
-        completionRunner.complete(
-          flowId = flowId,
-          approvalToken = approvalToken,
-          pending = pendingState.flow,
-        )
+        createCompletionRunner()
+          .complete(flowId = flowId, approvalToken = approvalToken, pending = pendingState.flow)
     }
   }
 
@@ -244,7 +240,43 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
   }
 
   private suspend fun persistPendingFlow(flow: PendingNativeMagicLinkFlow) {
+    NativeMagicLinkLogger.pendingFlowSaved(flow)
     mutex.withLock { pendingFlowStore.save(flow) }
+  }
+
+  private suspend fun lookupPendingFlow(flowId: String): PendingFlowLookup {
+    return mutex.withLock {
+      val flow = pendingFlowStore.load()
+      when {
+        flow == null -> PendingFlowLookup.None
+        flow.expiresAtEpochMs <= currentTimeMillis() -> {
+          pendingFlowStore.clear()
+          PendingFlowLookup.None
+        }
+        flow.flowId != null && flow.flowId != flowId -> PendingFlowLookup.Mismatched(flow.flowId)
+        else -> PendingFlowLookup.Found(flow)
+      }
+    }
+  }
+
+  private fun logCompletionRequested(flowId: String, pendingState: PendingFlowLookup) {
+    val details = pendingState.toCompletionRequestLogDetails()
+    NativeMagicLinkLogger.completeRequested(
+      flowId = flowId,
+      pendingLookupOutcome = details.pendingLookupOutcome,
+      pendingState = details.pendingState,
+      expectedFlowId = details.expectedFlowId,
+    )
+  }
+
+  private fun createCompletionRunner(): NativeMagicLinkCompletionRunner {
+    val clearPendingFlow: suspend () -> Unit = { mutex.withLock { pendingFlowStore.clear() } }
+    return NativeMagicLinkCompletionRunner(
+      attestationProvider = attestationProvider,
+      clearPendingFlow = clearPendingFlow,
+      activateCreatedSession = { createdSessionId -> activateCreatedSession(createdSessionId) },
+      refreshClientState = { refreshClientState() },
+    )
   }
 
   private suspend fun refreshClientState() {
@@ -255,9 +287,9 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
   }
 
   private suspend fun activateCreatedSession(
-    signIn: SignIn
+    createdSessionId: String?
   ): ClerkResult<Unit, NativeMagicLinkError> {
-    val createdSessionId = signIn.createdSessionId ?: return ClerkResult.success(Unit)
+    createdSessionId ?: return ClerkResult.success(Unit)
     return when (val activationResult = Clerk.auth.setActive(createdSessionId)) {
       is ClerkResult.Success -> ClerkResult.success(Unit)
       is ClerkResult.Failure -> {
@@ -334,6 +366,12 @@ private sealed interface PendingFlowLookup {
 
   data class Mismatched(val expectedFlowId: String?) : PendingFlowLookup
 }
+
+private data class CompletionRequestLogDetails(
+  val pendingLookupOutcome: String,
+  val pendingState: String,
+  val expectedFlowId: String,
+)
 
 private fun createPendingFlow(
   codeVerifier: String,
@@ -448,6 +486,7 @@ internal enum class NativeMagicLinkReason(val code: String) {
   PREPARE_FAILED("native_magic_link_prepare_failed"),
   COMPLETE_FAILED("native_magic_link_complete_failed"),
   TICKET_SIGN_IN_FAILED("native_magic_link_ticket_sign_in_failed"),
+  TICKET_SIGN_UP_FAILED("native_magic_link_ticket_sign_up_failed"),
 }
 
 internal val TERMINAL_REASON_CODES =
@@ -488,64 +527,178 @@ internal fun ClerkResult.Failure<ClerkErrorResponse>.toNativeMagicLinkError(
   )
 }
 
+private fun PendingFlowLookup.toCompletionRequestLogDetails(): CompletionRequestLogDetails {
+  return when (this) {
+    PendingFlowLookup.None ->
+      CompletionRequestLogDetails(
+        pendingLookupOutcome = "none",
+        pendingState = "-",
+        expectedFlowId = "-",
+      )
+    is PendingFlowLookup.Found ->
+      CompletionRequestLogDetails(
+        pendingLookupOutcome = "found",
+        pendingState = flow.state.logName(),
+        expectedFlowId = flow.flowId ?: "-",
+      )
+    is PendingFlowLookup.Mismatched ->
+      CompletionRequestLogDetails(
+        pendingLookupOutcome = "mismatched",
+        pendingState = "-",
+        expectedFlowId = expectedFlowId ?: "-",
+      )
+  }
+}
+
 internal object NativeMagicLinkLogger {
   fun start() {
-    ClerkLog.i("event=native_magic_link_start context={${runtimeContext()}}")
+    nativeMagicLinkInfo("native_magic_link_start")
+  }
+
+  fun prepareSuccess(state: PendingNativeMagicLinkState, flowId: String) {
+    nativeMagicLinkInfo(
+      event = "native_magic_link_prepare_success",
+      "state" to state.logName(),
+      "flow_id" to flowId,
+    )
   }
 
   fun deepLinkReceived(uri: Uri) {
-    ClerkLog.i(
-      "event=native_magic_link_deeplink_received uri_shape={${SafeUriLog.describe(uri)}} context={${runtimeContext()}}"
+    nativeMagicLinkInfo(
+      event = "native_magic_link_deeplink_received",
+      "uri_shape" to "{${SafeUriLog.describe(uri)}}",
+    )
+  }
+
+  fun pendingFlowSaved(flow: PendingNativeMagicLinkFlow) {
+    nativeMagicLinkInfo(
+      event = "native_magic_link_pending_flow_saved",
+      "state" to flow.state.logName(),
+      "flow_id" to (flow.flowId ?: "-"),
+      "expires_in_ms" to (flow.expiresAtEpochMs - currentTimeMillis()).toString(),
+    )
+  }
+
+  fun completeRequested(
+    flowId: String,
+    pendingLookupOutcome: String,
+    pendingState: String,
+    expectedFlowId: String,
+  ) {
+    nativeMagicLinkInfo(
+      event = "native_magic_link_complete_requested",
+      "flow_id" to flowId,
+      "pending_lookup" to pendingLookupOutcome,
+      "pending_state" to pendingState,
+      "expected_flow_id" to expectedFlowId,
+    )
+  }
+
+  fun completeApiStarted(state: PendingNativeMagicLinkState, hasAttestation: Boolean) {
+    nativeMagicLinkInfo(
+      event = "native_magic_link_complete_api_started",
+      "state" to state.logName(),
+      "has_attestation" to hasAttestation.toString(),
+    )
+  }
+
+  fun ticketReceived(state: PendingNativeMagicLinkState) {
+    nativeMagicLinkInfo(event = "native_magic_link_ticket_received", "state" to state.logName())
+  }
+
+  fun ticketExchangeSuccess(state: PendingNativeMagicLinkState, createdSessionId: String?) {
+    nativeMagicLinkInfo(
+      event = "native_magic_link_ticket_exchange_success",
+      "state" to state.logName(),
+      "has_created_session" to (createdSessionId != null).toString(),
+    )
+  }
+
+  fun sessionActivationStarted(state: PendingNativeMagicLinkState, createdSessionId: String?) {
+    nativeMagicLinkInfo(
+      event = "native_magic_link_session_activation_started",
+      "state" to state.logName(),
+      "has_created_session" to (createdSessionId != null).toString(),
     )
   }
 
   fun completeSuccess() {
-    ClerkLog.i("event=native_magic_link_complete_success context={${runtimeContext()}}")
+    nativeMagicLinkInfo("native_magic_link_complete_success")
   }
 
   fun completeFailure(reasonCode: String) {
-    ClerkLog.w(
-      "event=native_magic_link_complete_failure reason_code=$reasonCode context={${runtimeContext()}}"
-    )
+    nativeMagicLinkWarn(event = "native_magic_link_complete_failure", "reason_code" to reasonCode)
   }
+}
 
-  private fun runtimeContext(): String {
-    val baseUrl = runCatching { Clerk.baseUrl }.getOrNull()
-    val proxyUrl = Clerk.proxyUrl
-    val redirectUri =
-      Clerk.applicationId?.let {
-        RedirectConfiguration.emailLinkRedirectUrl(applicationId = it, proxyUrl = proxyUrl)
-      }
+private fun PendingNativeMagicLinkState.logName(): String = name.lowercase()
 
-    return buildString {
-      append("app_id=")
-      append(Clerk.applicationId ?: "-")
-      append(", base=")
-      append(describeUrl(baseUrl))
-      append(", proxy=")
-      append(describeUrl(proxyUrl))
-      append(", redirect=")
-      append(redirectUri ?: "-")
+private fun logFlowIdMismatch(expectedFlowId: String?, actualFlowId: String) {
+  ClerkLog.w(
+    "event=native_magic_link_flow_id_mismatch expected=$expectedFlowId actual=$actualFlowId"
+  )
+}
+
+private fun nativeMagicLinkInfo(event: String, vararg fields: Pair<String, String>) {
+  ClerkLog.i(nativeMagicLinkLogMessage(event, *fields))
+}
+
+private fun nativeMagicLinkWarn(event: String, vararg fields: Pair<String, String>) {
+  ClerkLog.w(nativeMagicLinkLogMessage(event, *fields))
+}
+
+private fun nativeMagicLinkLogMessage(event: String, vararg fields: Pair<String, String>): String {
+  return buildString {
+    append("event=")
+    append(event)
+    fields.forEach { (key, value) ->
+      append(" ")
+      append(key)
+      append("=")
+      append(value)
     }
+    append(" context={")
+    append(nativeMagicLinkRuntimeContext())
+    append("}")
   }
+}
 
-  private fun describeUrl(value: String?): String {
-    return if (value.isNullOrBlank()) {
-      "-"
+private fun nativeMagicLinkRuntimeContext(): String {
+  val baseUrl = runCatching { Clerk.baseUrl }.getOrNull()
+  val proxyUrl = Clerk.proxyUrl
+  val redirectUri =
+    Clerk.applicationId?.let {
+      RedirectConfiguration.emailLinkRedirectUrl(applicationId = it, proxyUrl = proxyUrl)
+    }
+
+  return buildString {
+    append("app_id=")
+    append(Clerk.applicationId ?: "-")
+    append(", base=")
+    append(describeUrlForNativeMagicLink(baseUrl))
+    append(", proxy=")
+    append(describeUrlForNativeMagicLink(proxyUrl))
+    append(", redirect=")
+    append(redirectUri ?: "-")
+  }
+}
+
+private fun describeUrlForNativeMagicLink(value: String?): String {
+  return if (value.isNullOrBlank()) {
+    "-"
+  } else {
+    val parsed = runCatching { URL(value) }.getOrNull()
+    if (parsed == null) {
+      value
     } else {
-      val parsed = runCatching { URL(value) }.getOrNull()
-      if (parsed == null) {
-        value
-      } else {
-        val port = parsed.port.takeIf { it > 0 } ?: parsed.defaultPort
-        buildString {
-          append(parsed.protocol)
-          append("://")
-          append(parsed.host)
-          if (port > 0) {
-            append(":")
-            append(port)
-          }
+      val port = parsed.port.takeIf { it > 0 } ?: parsed.defaultPort
+      buildString {
+        append(parsed.protocol)
+        append("://")
+        append(parsed.host)
+        if (port > 0) {
+          append(":")
+          append(port)
         }
       }
     }

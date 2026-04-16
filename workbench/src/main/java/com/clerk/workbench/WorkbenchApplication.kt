@@ -19,7 +19,7 @@ class WorkbenchApplication : Application() {
         options =
           ClerkConfigurationOptions(
             enableDebugMode = true,
-            proxyUrl = proxyUrl?.takeIf(String::isNotBlank),
+            proxyUrl = "https://big-jennet-10.clerk.accounts.lclclerk.com:8443",
           ),
       )
     }

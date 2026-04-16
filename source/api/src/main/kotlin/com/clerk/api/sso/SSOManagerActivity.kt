@@ -131,10 +131,12 @@ internal class SSOManagerActivity : AppCompatActivity() {
           ClerkLog.d("authorizationComplete called with native magic link redirect: $uri")
           when (NativeMagicLinkService.handleMagicLinkDeepLink(uri)) {
             is com.clerk.api.network.serialization.ClerkResult.Success -> {
+              ClerkLog.i("event=native_magic_link_activity_completion_success")
               pendingCallbackUri = null
               setResult(RESULT_OK, Intent())
             }
             is com.clerk.api.network.serialization.ClerkResult.Failure -> {
+              ClerkLog.w("event=native_magic_link_activity_completion_failure")
               setResult(RESULT_CANCELED, Intent())
             }
           }
