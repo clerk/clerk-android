@@ -1,5 +1,7 @@
 package com.clerk.api
 
+import android.app.Activity
+import android.app.Application
 import android.content.Context
 import com.clerk.api.Clerk.activeSession
 import com.clerk.api.Clerk.activeUser
@@ -76,6 +78,43 @@ object Clerk {
 
   /** Application context used for setting up deep links and SSO Receivers */
   internal var applicationContext: WeakReference<Context>? = null
+
+  /** The current foreground activity used for Credential Manager operations. */
+  internal var currentActivity: WeakReference<Activity>? = null
+
+  private var trackedApplication: Application? = null
+
+  private val activityLifecycleCallbacks =
+    object : Application.ActivityLifecycleCallbacks {
+      override fun onActivityCreated(activity: Activity, savedInstanceState: android.os.Bundle?) {
+        currentActivity = WeakReference(activity)
+      }
+
+      override fun onActivityStarted(activity: Activity) {
+        currentActivity = WeakReference(activity)
+      }
+
+      override fun onActivityResumed(activity: Activity) {
+        currentActivity = WeakReference(activity)
+      }
+
+      override fun onActivityPaused(activity: Activity) = Unit
+
+      override fun onActivityStopped(activity: Activity) {
+        if (currentActivity?.get() == activity && !activity.isChangingConfigurations) {
+          currentActivity = null
+        }
+      }
+
+      override fun onActivitySaveInstanceState(activity: Activity, outState: android.os.Bundle) =
+        Unit
+
+      override fun onActivityDestroyed(activity: Activity) {
+        if (currentActivity?.get() == activity) {
+          currentActivity = null
+        }
+      }
+    }
 
   internal var applicationId: String? = null
 
@@ -520,9 +559,16 @@ object Clerk {
     options: ClerkConfigurationOptions? = null,
     theme: ClerkTheme? = null,
   ) {
+    val appContext = context.applicationContext
     this.debugMode = options?.enableDebugMode == true
     this.proxyUrl = options?.proxyUrl
-    this.applicationContext = WeakReference(context)
+    this.applicationContext = WeakReference(appContext)
+    val application = appContext as? Application
+    if (application != null && trackedApplication !== application) {
+      trackedApplication?.unregisterActivityLifecycleCallbacks(activityLifecycleCallbacks)
+      application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
+      trackedApplication = application
+    }
     this.customTheme = theme
     this.telemetryEnabled = options?.telemetryEnabled ?: true
     configurationManager.configure(
@@ -593,6 +639,8 @@ object Clerk {
   internal fun updateEnvironment(environment: Environment) {
     this.environment = environment
   }
+
+  internal fun credentialActivity(): Activity? = currentActivity?.get()
 
   /**
    * Internal method to update the client and trigger state updates.

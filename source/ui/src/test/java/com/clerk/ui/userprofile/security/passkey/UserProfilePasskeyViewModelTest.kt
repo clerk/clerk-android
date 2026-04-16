@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.security.passkey
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
+import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -100,6 +101,42 @@ class UserProfilePasskeyViewModelTest {
       awaitItem() // initial Idle
       viewModel.createPasskey()
       assertEquals(UserProfilePasskeyViewModel.State.Error("User does not exist"), awaitItem())
+    }
+  }
+
+  @Test
+  fun createPasskey_cancellation_resetsToIdle() = runTest {
+    val user = mockk<User>()
+    every { Clerk.user } returns user
+    coEvery { user.createPasskey() } returns
+      ClerkResult.unknownFailure(CredentialFlowException.UserCancelled())
+
+    val viewModel = UserProfilePasskeyViewModel()
+    viewModel.state.test {
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
+      viewModel.createPasskey()
+      advanceUntilIdle()
+      expectNoEvents()
+    }
+  }
+
+  @Test
+  fun createPasskey_missingActivity_surfacesRetryMessage() = runTest {
+    val user = mockk<User>()
+    every { Clerk.user } returns user
+    coEvery { user.createPasskey() } returns
+      ClerkResult.unknownFailure(CredentialFlowException.MissingActivity())
+
+    val viewModel = UserProfilePasskeyViewModel()
+    viewModel.state.test {
+      assertEquals(UserProfilePasskeyViewModel.State.Idle, awaitItem())
+      viewModel.createPasskey()
+      assertEquals(
+        UserProfilePasskeyViewModel.State.Error(
+          "Authentication requires an active screen. Try again from the app."
+        ),
+        awaitItem(),
+      )
     }
   }
 }

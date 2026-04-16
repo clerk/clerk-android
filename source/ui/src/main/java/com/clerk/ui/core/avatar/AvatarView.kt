@@ -5,8 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -211,6 +214,50 @@ internal fun OrganizationAvatar(
       modifier = modifier,
       avatarType = AvatarType.ORGANIZATION,
     )
+  }
+}
+
+@Composable
+internal fun OrganizationLogo(
+  modifier: Modifier = Modifier,
+  maxWidth: Dp = dp96,
+  height: Dp = dp24,
+  clerkTheme: ClerkTheme? = null,
+) {
+  val url = Clerk.organizationLogoUrl
+  ClerkMaterialTheme(clerkTheme = clerkTheme) {
+    if (url.isNullOrBlank()) {
+      Icon(
+        modifier = Modifier.size(height).then(modifier),
+        painter = painterResource(R.drawable.ic_organization),
+        contentDescription = stringResource(R.string.logo),
+        tint = ClerkMaterialTheme.colors.foreground,
+      )
+    } else {
+      Box(
+        modifier =
+          Modifier.defaultMinSize(minWidth = height)
+            .height(height)
+            .widthIn(max = maxWidth)
+            .then(modifier),
+        contentAlignment = Alignment.Center,
+      ) {
+        SubcomposeAsyncImage(
+          model = url,
+          contentDescription = stringResource(R.string.logo),
+          modifier = Modifier.fillMaxSize(),
+          contentScale = ContentScale.Fit,
+          loading = { CircularProgressIndicator(modifier = Modifier.size(height / 2)) },
+          error = {
+            Icon(
+              painter = painterResource(R.drawable.ic_organization),
+              contentDescription = null,
+              tint = ClerkMaterialTheme.colors.foreground,
+            )
+          },
+        )
+      }
+    }
   }
 }
 

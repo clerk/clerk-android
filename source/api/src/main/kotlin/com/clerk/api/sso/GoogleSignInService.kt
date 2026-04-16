@@ -3,6 +3,8 @@ package com.clerk.api.sso
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.credentials.exceptions.GetCredentialException
+import com.clerk.api.credentials.CredentialFlowException
+import com.clerk.api.credentials.classifyGetCredentialFailure
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -30,6 +32,9 @@ internal class GoogleSignInService(
       handleSignInResult(result.credential, transferable)
     } catch (e: GetCredentialException) {
       ClerkLog.e("Error retrieving Google ID token: ${e.message}")
+      classifyGetCredentialFailure(e, credentialTypes = listOf(SignIn.CredentialType.GOOGLE))
+    } catch (e: CredentialFlowException) {
+      ClerkLog.e("Google sign-in cannot start: ${e.message}")
       ClerkResult.unknownFailure(e)
     }
   }
