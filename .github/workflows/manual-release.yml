@@ -20,6 +20,15 @@ on:
         required: false
         type: boolean
         default: true
+      skip_expo_compat:
+        description: "Skip the @clerk/expo compat gate (emergency override only)"
+        required: false
+        type: boolean
+        default: false
+      skip_reason:
+        description: "Reason for skipping compat gate (required when skip=true)"
+        required: false
+        type: string
 
 jobs:
   create-release:
@@ -86,10 +95,173 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  log-skip:
+    name: "Log gate skip (emergency override)"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.skip_expo_compat == true
+    steps:
+      - name: Fail if skip invoked without a reason
+        if: ${{ !inputs.skip_reason }}
+        run: |
+          echo "::error::skip_expo_compat=true requires skip_reason to be provided"
+          exit 1
+      - name: Record skip to the job summary
+        run: |
+          {
+            echo "## ⚠️ Expo compat gate skipped"
+            echo ""
+            echo "- Actor: @${{ github.triggering_actor }}"
+            echo "- Reason: ${{ inputs.skip_reason }}"
+            echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  expo-compat:
+    name: "@clerk/expo compat (Maestro)"
+    runs-on: ubuntu-latest
+    needs: create-release
+    timeout-minutes: 45
+    if: |
+      always()
+      && (github.event_name == 'release' || needs.create-release.result == 'success')
+      && !(github.event_name == 'workflow_dispatch' && inputs.skip_expo_compat == true)
+    # Release gate: verifies the SDK version about to be published does not
+    # break @clerk/expo. If any Maestro flow fails, the publish step below
+    # will not run.
+    #
+    # Emergency override: maintainers can skip this gate by setting
+    # skip_expo_compat=true AND providing skip_reason on workflow_dispatch.
+    # The skip is recorded permanently in the Actions run log.
+    env:
+      SDK_SNAPSHOT_SUFFIX: "-expo-compat-${{ github.run_id }}"
+      JAVASCRIPT_REPO_REF: "main"
+      QUICKSTART_REPO_REF: "main"
+    steps:
+      - name: Checkout clerk-android
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: "zulu"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Compute snapshot versions
+        id: versions
+        run: |
+          API_VERSION="$(awk -F= '/^CLERK_API_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')${SDK_SNAPSHOT_SUFFIX}"
+          UI_VERSION="$(awk -F= '/^CLERK_UI_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')${SDK_SNAPSHOT_SUFFIX}"
+          TELEMETRY_VERSION="$(awk -F= '/^CLERK_TELEMETRY_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')${SDK_SNAPSHOT_SUFFIX}"
+          echo "api=$API_VERSION" >> "$GITHUB_OUTPUT"
+          echo "ui=$UI_VERSION" >> "$GITHUB_OUTPUT"
+          echo "telemetry=$TELEMETRY_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Patch gradle.properties with snapshot suffix
+        run: |
+          sed -i "s/^CLERK_API_VERSION=.*/CLERK_API_VERSION=${{ steps.versions.outputs.api }}/" gradle.properties
+          sed -i "s/^CLERK_UI_VERSION=.*/CLERK_UI_VERSION=${{ steps.versions.outputs.ui }}/" gradle.properties
+          sed -i "s/^CLERK_TELEMETRY_VERSION=.*/CLERK_TELEMETRY_VERSION=${{ steps.versions.outputs.telemetry }}/" gradle.properties
+
+      - name: Publish clerk-android snapshot to mavenLocal
+        run: ./gradlew :source:api:publishToMavenLocal :source:ui:publishToMavenLocal :source:telemetry:publishToMavenLocal -x signMavenPublication
+
+      - name: Checkout @clerk/javascript
+        uses: actions/checkout@v4
+        with:
+          repository: clerk/javascript
+          ref: ${{ env.JAVASCRIPT_REPO_REF }}
+          path: javascript
+
+      - name: Checkout clerk-expo-quickstart
+        uses: actions/checkout@v4
+        with:
+          repository: clerk/clerk-expo-quickstart
+          ref: ${{ env.QUICKSTART_REPO_REF }}
+          path: clerk-expo-quickstart
+
+      - name: Patch @clerk/expo android build.gradle to use snapshot
+        working-directory: javascript
+        run: |
+          # Pin @clerk/expo to the snapshot versions we just published
+          sed -i "s/clerkAndroidApiVersion = \".*\"/clerkAndroidApiVersion = \"${{ steps.versions.outputs.api }}\"/" packages/expo/android/build.gradle
+          sed -i "s/clerkAndroidUiVersion = \".*\"/clerkAndroidUiVersion = \"${{ steps.versions.outputs.ui }}\"/" packages/expo/android/build.gradle
+
+          # Add mavenLocal() to the repositories closure so gradle can resolve the snapshot
+          # Expo autolinks via the root project's repositories; we add mavenLocal to that list.
+          if ! grep -q "mavenLocal()" packages/expo/android/build.gradle; then
+            sed -i '/^repositories\s*{/a \  mavenLocal()' packages/expo/android/build.gradle || true
+          fi
+
+          echo "=== Patched @clerk/expo build.gradle ==="
+          grep -A 2 -B 2 "clerkAndroid\|mavenLocal" packages/expo/android/build.gradle | head -20
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: javascript/pnpm-lock.yaml
+
+      - name: Install @clerk/javascript deps
+        working-directory: javascript
+        run: pnpm install --frozen-lockfile
+
+      - name: Build @clerk/expo
+        working-directory: javascript
+        run: pnpm turbo build --filter=@clerk/expo...
+
+      - name: Install quickstart deps
+        working-directory: clerk-expo-quickstart/NativeComponentQuickstart
+        run: pnpm install
+
+      - name: Install Maestro CLI
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Run Android e2e
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          CLERK_TEST_EMAIL: ${{ secrets.CLERK_TEST_EMAIL }}
+          CLERK_TEST_PASSWORD: ${{ secrets.CLERK_TEST_PASSWORD }}
+          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          script: |
+            cd clerk-expo-quickstart/NativeComponentQuickstart
+            npx expo prebuild --clean
+            npx expo run:android --variant release --no-bundler
+            cd ../../javascript/integration-mobile
+            maestro test --exclude-tags iosOnly,manual,skip flows/
+
+      - name: Upload Maestro artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-android-compat
+          path: ~/.maestro/tests
+
   publish:
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    needs: create-release
-    if: always() && (github.event_name == 'release' || needs.create-release.result == 'success')
+    needs: [create-release, expo-compat, log-skip]
+    # Publish when:
+    #   - create-release succeeded (or we got a release event), AND
+    #   - expo-compat succeeded, OR the gate was explicitly skipped via
+    #     workflow_dispatch with skip_expo_compat=true and a reason.
+    if: |
+      always()
+      && (github.event_name == 'release' || needs.create-release.result == 'success')
+      && (
+        needs.expo-compat.result == 'success'
+        || (github.event_name == 'workflow_dispatch' && inputs.skip_expo_compat == true && needs.log-skip.result == 'success')
+      )
 
     steps:
       - name: Checkout code
