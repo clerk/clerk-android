@@ -1,9 +1,12 @@
 package com.clerk.api.session
 
+import com.clerk.api.Clerk
 import com.clerk.api.Constants
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.successOrElse
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Deferred
@@ -24,6 +27,19 @@ import kotlinx.coroutines.coroutineScope
  * @param jwtManager The JWT manager used for token parsing and validation
  */
 internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManagerImpl()) {
+  private companion object {
+    val sessionInvalidationErrorCodes =
+      setOf(
+        "session_revoked",
+        "session_expired",
+        "session_ended",
+        "session_removed",
+        "session_replaced",
+        "session_not_found",
+        "session_invalid",
+      )
+  }
+
   /** Map of cache keys to deferred token fetch tasks for request deduplication */
   private val tokenTasks = ConcurrentHashMap<String, Deferred<TokenResource?>>()
 
@@ -128,13 +144,36 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         }
 
       val result =
-        tokensRequest.successOrElse { throw IllegalStateException("Failed to fetch token") }
+        tokensRequest.successOrElse { failure ->
+          handleSessionInvalidationOnFailure(session, failure)
+          throw IllegalStateException("Failed to fetch token")
+        }
 
       SessionTokensCache.setToken(cacheKey, result)
       result
     } catch (e: Exception) {
       ClerkLog.e("Failed to fetch token: ${e.message}")
       null
+    }
+  }
+
+  private fun handleSessionInvalidationOnFailure(
+    session: Session,
+    failure: ClerkResult.Failure<ClerkErrorResponse>,
+  ) {
+    val shouldClearSessionState =
+      failure.error?.errors
+        .orEmpty()
+        .mapNotNull { it.code?.lowercase() }
+        .any { it in sessionInvalidationErrorCodes }
+
+    if (!shouldClearSessionState) return
+
+    if (Clerk.session?.id == session.id) {
+      ClerkLog.w(
+        "Session ${session.id} can no longer issue tokens. Clearing local session and user state."
+      )
+      Clerk.clearSessionAndUserState()
     }
   }
 
