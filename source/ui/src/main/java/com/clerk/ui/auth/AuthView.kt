@@ -7,8 +7,10 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -18,6 +20,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
+import com.clerk.api.updateActivityContext
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
@@ -61,6 +64,7 @@ fun AuthView(
   onAuthComplete: () -> Unit = {},
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
+    PublishCredentialActivity()
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
     val identifierConfig =
@@ -83,6 +87,12 @@ fun AuthView(
 }
 
 @Composable
+private fun PublishCredentialActivity() {
+  val context = LocalContext.current
+  SideEffect { updateActivityContext(context) }
+}
+
+@Composable
 private fun ObservePendingSessionTaskRouting(backStack: NavBackStack<NavKey>) {
   val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
   val pendingTaskKey = session?.pendingTaskKey
@@ -98,8 +108,8 @@ private fun ObservePendingSessionTaskRouting(backStack: NavBackStack<NavKey>) {
 
 @Composable
 private fun AuthNavDisplay(
-  modifier: Modifier = Modifier,
   backStack: NavBackStack<NavKey>,
+  modifier: Modifier = Modifier,
   onAuthComplete: () -> Unit,
 ) {
   NavDisplay(

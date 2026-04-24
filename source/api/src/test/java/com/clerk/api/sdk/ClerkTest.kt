@@ -1,7 +1,11 @@
 package com.clerk.api.sdk
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
+import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
+import com.clerk.api.updateActivityContext
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.DisplayConfig
@@ -33,6 +37,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -105,6 +110,9 @@ class ClerkTest {
 
   private fun resetClerkState() {
     try {
+      Clerk.currentActivity = null
+      Clerk.applicationContext = null
+
       // Reset lateinit properties using reflection
       val clerkClass = Clerk::class.java
 
@@ -772,6 +780,27 @@ class ClerkTest {
 
     // Then - activeUser should be returned
     assertEquals(mockUser, activeUser)
+  }
+
+  @Test
+  fun `updateActivityContext stores activity from wrapped context`() {
+    val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+    val wrappedContext = ContextWrapper(ContextWrapper(activity))
+
+    updateActivityContext(wrappedContext)
+
+    assertEquals(activity, Clerk.credentialActivity())
+  }
+
+  @Test
+  fun `updateActivityContext ignores contexts without an activity`() {
+    val applicationContext = ApplicationProvider.getApplicationContext<Context>()
+    val existingActivity = Robolectric.buildActivity(Activity::class.java).setup().get()
+    Clerk.currentActivity = java.lang.ref.WeakReference(existingActivity)
+
+    updateActivityContext(applicationContext)
+
+    assertEquals(existingActivity, Clerk.credentialActivity())
   }
 
   // endregion

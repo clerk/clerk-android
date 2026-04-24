@@ -3,6 +3,8 @@ package com.clerk.api
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.ContextWrapper
+import androidx.annotation.RestrictTo
 import com.clerk.api.Clerk.activeSession
 import com.clerk.api.Clerk.activeUser
 import com.clerk.api.Clerk.initialize
@@ -718,6 +720,23 @@ object Clerk {
   }
 
   // endregion
+}
+
+/**
+ * Updates Clerk's current activity reference from a UI context when the SDK was initialized after
+ * the host activity had already reached the resumed state.
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+fun updateActivityContext(context: Context) {
+  context.findActivity()?.let { Clerk.currentActivity = WeakReference(it) }
+}
+
+private fun Context.findActivity(): Activity? {
+  return when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+  }
 }
 
 /**
