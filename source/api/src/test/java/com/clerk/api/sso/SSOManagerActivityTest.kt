@@ -4,12 +4,15 @@ import android.app.Activity
 import android.app.Application
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
+import com.clerk.api.magiclink.NativeMagicLinkService
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockkObject
+import io.mockk.unmockkAll
 import kotlinx.coroutines.CompletableDeferred
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -20,6 +23,11 @@ import org.robolectric.Shadows
 
 @RunWith(RobolectricTestRunner::class)
 class SSOManagerActivityTest {
+
+  @After
+  fun tearDown() {
+    unmockkAll()
+  }
 
   @Before
   fun setup() {
@@ -44,6 +52,24 @@ class SSOManagerActivityTest {
     val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
     val activity = controller.create().resume().get()
 
+    val shadow = Shadows.shadowOf(activity)
+    assertEquals(Activity.RESULT_OK, shadow.resultCode)
+  }
+
+  @Test
+  fun callbackIntent_completesWithoutAuthorizationStarted() {
+    mockkObject(SSOService)
+    every { SSOService.hasPendingExternalAccountConnection() } returns false
+    coJustRun { SSOService.completeAuthenticateWithRedirect(any()) }
+
+    val app = ApplicationProvider.getApplicationContext<Application>()
+    val responseUri = Uri.parse("clerk://callback?rotating_token_nonce=abc")
+    val intent = SSOManagerActivity.createResponseHandlingIntent(app, responseUri)
+
+    val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
+    val activity = controller.create().resume().get()
+
+    coVerify(exactly = 1) { SSOService.completeAuthenticateWithRedirect(any()) }
     val shadow = Shadows.shadowOf(activity)
     assertEquals(Activity.RESULT_OK, shadow.resultCode)
   }
@@ -104,8 +130,7 @@ class SSOManagerActivityTest {
       val activity = controller.create().resume().get()
 
       val shadow = Shadows.shadowOf(activity)
-      // Result is set to OK before the service call
-      assertEquals(Activity.RESULT_OK, shadow.resultCode)
+      assertEquals(Activity.RESULT_CANCELED, shadow.resultCode)
     } finally {
       Thread.setDefaultUncaughtExceptionHandler(originalHandler)
     }
@@ -164,5 +189,30 @@ class SSOManagerActivityTest {
 
     // Release the gate so activity can finish
     gate.complete(Unit)
+  }
+
+  @Test
+  fun nativeMagicLinkFailure_setsResultCanceled() {
+    mockkObject(NativeMagicLinkService)
+    coEvery { NativeMagicLinkService.handleMagicLinkDeepLink(any()) } returns
+      com.clerk.api.network.serialization.ClerkResult.apiFailure(
+        com.clerk.api.magiclink.NativeMagicLinkError(
+          reasonCode = "native_magic_link_complete_failed"
+        )
+      )
+
+    val app = ApplicationProvider.getApplicationContext<Application>()
+    val responseUri =
+      Uri.parse("clerk://com.clerk.test.oauth?flow_id=flow_123&approval_token=approval_123")
+    val intent =
+      SSOManagerActivity.createResponseHandlingIntent(app, responseUri).apply {
+        putExtra(com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED, true)
+      }
+
+    val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
+    val activity = controller.create().resume().get()
+
+    val shadow = Shadows.shadowOf(activity)
+    assertEquals(Activity.RESULT_CANCELED, shadow.resultCode)
   }
 }

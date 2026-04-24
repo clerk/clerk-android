@@ -9,6 +9,7 @@ object Constants {
   object Strategy {
     const val PHONE_CODE = "phone_code"
     const val EMAIL_CODE = "email_code"
+    const val EMAIL_LINK = "email_link"
     const val TOTP = "totp"
     const val BACKUP_CODE = "backup_code"
     const val PASSWORD = "password"

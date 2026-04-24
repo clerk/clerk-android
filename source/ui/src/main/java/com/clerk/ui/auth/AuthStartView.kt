@@ -174,6 +174,12 @@ internal fun AuthStartViewImpl(
                   authStartIdentifier = authState.authStartIdentifier,
                 )
               }
+              authState.lastSubmittedIdentifier =
+                if (phoneActive && authViewHelper.phoneNumberIsEnabled) {
+                  authState.authStartPhoneNumber
+                } else {
+                  authState.authStartIdentifier
+                }
               authStartViewModel.startAuth(
                 authMode = authState.mode,
                 isPhoneNumberFieldActive = phoneActive,
@@ -245,7 +251,7 @@ private fun AuthInputField(
   } else {
     LastUsedAuthBadgeOverlay(isVisible = showEmailUsernameBadge) {
       ClerkTextField(
-        inputContentType = ContentType.EmailAddress,
+        inputContentType = authViewHelper.identifierContentType(),
         value = authStartIdentifier,
         onValueChange = onIdentifierChange,
         label = authViewHelper.emailOrUsernamePlaceholder(),

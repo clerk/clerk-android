@@ -82,15 +82,28 @@ class SignInPrepareHandlerTest {
   @Test
   fun prepareForEmailCodeAsSecondFactorShouldHandleFailureGracefully() = runTest {
     val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
-    val errorResponse = mockk<ClerkErrorResponse>()
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            ClerkApiError(message = "Short", longMessage = "Email second factor failed", code = "x")
+          ),
+        clerkTraceId = null,
+      )
     val failureResult = ClerkResult.apiFailure(errorResponse)
+    var capturedMessage: String? = null
 
     coEvery { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") } returns failureResult
 
-    // This should not throw an exception - the handler logs but doesn't propagate errors
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = true, onError = {})
+    handler.prepareForEmailCode(
+      mockSignIn,
+      factor,
+      isSecondFactor = true,
+      onError = { capturedMessage = it },
+    )
 
     coVerify { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") }
+    assert(capturedMessage == "Email second factor failed")
   }
 
   @Test
@@ -128,15 +141,28 @@ class SignInPrepareHandlerTest {
   @Test
   fun prepareForPhoneCodeAsSecondFactorShouldHandleFailureGracefully() = runTest {
     val factor = Factor(strategy = "phone_code", phoneNumberId = "phone_789")
-    val errorResponse = mockk<ClerkErrorResponse>()
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            ClerkApiError(message = "Short", longMessage = "Phone second factor failed", code = "x")
+          ),
+        clerkTraceId = null,
+      )
     val failureResult = ClerkResult.apiFailure(errorResponse)
+    var capturedMessage: String? = null
 
     coEvery { mockSignIn.prepareSecondFactor("phone_789") } returns failureResult
 
-    // This should not throw an exception - the handler logs but doesn't propagate errors
-    handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = true, onError = {})
+    handler.prepareForPhoneCode(
+      mockSignIn,
+      factor,
+      isSecondFactor = true,
+      onError = { capturedMessage = it },
+    )
 
     coVerify { mockSignIn.prepareSecondFactor("phone_789") }
+    assert(capturedMessage == "Phone second factor failed")
   }
 
   @Test
@@ -222,7 +248,12 @@ class SignInPrepareHandlerTest {
     } returns failureResult
 
     var capturedMessage: String? = null
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = { capturedMessage = it })
+    handler.prepareForEmailCode(
+      mockSignIn,
+      factor,
+      isSecondFactor = false,
+      onError = { capturedMessage = it },
+    )
 
     assert(capturedMessage == "Long message")
   }
@@ -304,7 +335,12 @@ class SignInPrepareHandlerTest {
     val factor = Factor(strategy = "email_code", emailAddressId = null)
     var called = false
 
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = { called = true })
+    handler.prepareForEmailCode(
+      mockSignIn,
+      factor,
+      isSecondFactor = false,
+      onError = { called = true },
+    )
 
     coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
     assert(!called)
@@ -324,5 +360,39 @@ class SignInPrepareHandlerTest {
 
     coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
     assert(!called)
+  }
+
+  @Test
+  fun prepareForEmailCodeShouldSkipApiCallWhenFirstFactorIsNotSupported() = runTest {
+    every { mockSignIn.supportedFirstFactors } returns listOf(Factor(strategy = "ticket"))
+    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
+    var capturedMessage: String? = null
+
+    handler.prepareForEmailCode(
+      inProgressSignIn = mockSignIn,
+      factor = factor,
+      isSecondFactor = false,
+      onError = { capturedMessage = it },
+    )
+
+    coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
+    assert(capturedMessage == "Selected sign-in method is no longer available.")
+  }
+
+  @Test
+  fun prepareForEmailCodeShouldSkipApiCallWhenSecondFactorIsNotSupported() = runTest {
+    every { mockSignIn.supportedSecondFactors } returns listOf(Factor(strategy = "totp"))
+    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
+    var capturedMessage: String? = null
+
+    handler.prepareForEmailCode(
+      inProgressSignIn = mockSignIn,
+      factor = factor,
+      isSecondFactor = true,
+      onError = { capturedMessage = it },
+    )
+
+    coVerify(exactly = 0) { mockSignIn.prepareSecondFactor(emailAddressId = any()) }
+    assert(capturedMessage == "Selected sign-in method is no longer available.")
   }
 }
