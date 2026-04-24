@@ -146,7 +146,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       val result =
         tokensRequest.successOrElse { failure ->
           handleSessionInvalidationOnFailure(session, failure)
-          throw IllegalStateException("Failed to fetch token")
+          error("Failed to fetch token")
         }
 
       SessionTokensCache.setToken(cacheKey, result)
@@ -162,7 +162,8 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     failure: ClerkResult.Failure<ClerkErrorResponse>,
   ) {
     val shouldClearSessionState =
-      failure.error?.errors
+      failure.error
+        ?.errors
         .orEmpty()
         .mapNotNull { it.code?.lowercase() }
         .any { it in sessionInvalidationErrorCodes }
