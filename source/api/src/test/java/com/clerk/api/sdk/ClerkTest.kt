@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
-import com.clerk.api.updateActivityContext
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.DisplayConfig
@@ -14,6 +13,7 @@ import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
+import com.clerk.api.updateActivityContext
 import com.clerk.api.user.User
 import io.mockk.every
 import io.mockk.mockk

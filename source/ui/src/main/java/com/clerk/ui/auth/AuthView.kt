@@ -20,11 +20,11 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
-import com.clerk.api.updateActivityContext
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.updateActivityContext
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
 import com.clerk.ui.core.composition.AuthStateProvider
