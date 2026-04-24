@@ -1,6 +1,7 @@
 package com.clerk.api.session
 
 import com.auth0.android.jwt.JWT
+import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -14,6 +15,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
+import io.mockk.verify
 import java.util.Date
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -58,6 +60,11 @@ class SessionTokenFetcherTest {
     // Mock ClerkApi
     mockkObject(ClerkApi)
     every { ClerkApi.session } returns mockClerkApiService
+
+    // Mock Clerk state access
+    mockkObject(Clerk)
+    every { Clerk.session } returns mockSession
+    every { Clerk.clearSessionAndUserState() } returns Unit
 
     // Mock SessionTokensCache
     mockkObject(SessionTokensCache)
@@ -195,6 +202,25 @@ class SessionTokenFetcherTest {
     assertNull(result)
     coVerify { mockClerkApiService.tokens("session_123") }
     coVerify(exactly = 0) { SessionTokensCache.setToken(any(), any()) }
+    verify(exactly = 0) { Clerk.clearSessionAndUserState() }
+  }
+
+  @Test
+  fun `getToken clears local session state when token endpoint returns unauthorized`() = runTest {
+    // Given
+    val error = Error(code = "session_revoked", message = "Session revoked")
+    val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "trace_unauth")
+
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.httpFailure(code = 401, error = errorResponse)
+
+    // When
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    // Then
+    assertNull(result)
+    verify(exactly = 1) { Clerk.clearSessionAndUserState() }
   }
 
   @Test
