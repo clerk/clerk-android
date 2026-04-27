@@ -448,6 +448,26 @@ class Auth internal constructor() {
   }
 
   /**
+   * Signs up with Google One Tap.
+   *
+   * This native Google flow may resolve to either a sign-up or a sign-in, depending on whether the
+   * selected Google account already exists in Clerk.
+   *
+   * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
+   *   failure.
+   *
+   * ### Example usage:
+   * ```kotlin
+   * val result = clerk.auth.signUpWithGoogleOneTap()
+   * ```
+   */
+  suspend fun signUpWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    val result = SignIn.authenticateWithGoogleOneTap()
+    result.onFailure { emitAuthError(it) }
+    return result
+  }
+
+  /**
    * Signs up with an ID token from an identity provider.
    *
    * @param token The ID token from the identity provider.
