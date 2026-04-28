@@ -98,8 +98,8 @@ private fun ObservePendingSessionTaskRouting(backStack: NavBackStack<NavKey>) {
 
 @Composable
 private fun AuthNavDisplay(
-  modifier: Modifier = Modifier,
   backStack: NavBackStack<NavKey>,
+  modifier: Modifier = Modifier,
   onAuthComplete: () -> Unit,
 ) {
   NavDisplay(

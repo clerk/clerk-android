@@ -343,7 +343,12 @@ private fun OtpBoxRow(
  * @param isError Whether an error occurred.
  */
 @Composable
-private fun OtpBox(modifier: Modifier, char: String, isCurrentBox: Boolean, isError: Boolean) {
+private fun OtpBox(
+  char: String,
+  isCurrentBox: Boolean,
+  isError: Boolean,
+  modifier: Modifier = Modifier,
+) {
   val boxShape = ClerkMaterialTheme.shape
   val borderColor =
     when {

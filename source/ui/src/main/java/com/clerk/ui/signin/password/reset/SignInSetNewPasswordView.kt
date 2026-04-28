@@ -81,11 +81,11 @@ internal fun SessionTaskResetPasswordView(
  */
 @Composable
 private fun SignInSetNewPasswordViewImpl(
-  modifier: Modifier = Modifier,
   mode: ResetPasswordMode,
+  modifier: Modifier = Modifier,
+  viewModel: ResetPasswordViewModel = viewModel(key = mode.viewModelKey()),
   onAuthComplete: () -> Unit,
 ) {
-  val viewModel: ResetPasswordViewModel = viewModel(key = mode.viewModelKey())
   val authState = LocalAuthState.current
   val snackbarHostState = remember { SnackbarHostState() }
   var signOutOtherDevices by remember { mutableStateOf(false) }
