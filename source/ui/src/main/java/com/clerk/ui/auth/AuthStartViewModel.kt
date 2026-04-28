@@ -11,6 +11,7 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
+import com.clerk.api.signin.authenticateWithPreparedRedirect
 import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
@@ -247,26 +248,15 @@ internal class AuthStartViewModel : ViewModel() {
   private suspend fun handleEnterpriseSSO(signIn: SignIn, transferable: Boolean) {
     signIn
       .prepareFirstFactor(SignIn.PrepareFirstFactorParams.EnterpriseSSO())
-      .onSuccess {
-        it.firstFactorVerification?.externalVerificationRedirectUrl?.let { url ->
-          authenticateWithRedirect(url, transferable)
-        }
-      }
+      .onSuccess { authenticateWithPreparedRedirect(it, transferable) }
       .onFailure { throwable ->
         _state.value = withContext(Dispatchers.Main) { AuthState.Error(throwable.errorMessage) }
       }
   }
 
-  private suspend fun authenticateWithRedirect(
-    externalVerificationRedirectUrl: String,
-    transferable: Boolean,
-  ) {
-    SignIn.authenticateWithRedirect(
-        SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
-          redirectUrl = externalVerificationRedirectUrl
-        ),
-        transferable = transferable,
-      )
+  private suspend fun authenticateWithPreparedRedirect(signIn: SignIn, transferable: Boolean) {
+    signIn
+      .authenticateWithPreparedRedirect(transferable = transferable)
       .onSuccess {
         withContext(Dispatchers.Main) {
           val successType =
@@ -281,6 +271,9 @@ internal class AuthStartViewModel : ViewModel() {
 
           _state.value = successType
         }
+      }
+      .onFailure { failure ->
+        withContext(Dispatchers.Main) { _state.value = AuthState.Error(failure.errorMessage) }
       }
   }
 

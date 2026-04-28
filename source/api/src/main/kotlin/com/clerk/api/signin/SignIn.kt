@@ -694,8 +694,13 @@ data class SignIn(
       params: AuthenticateWithRedirectParams,
       transferable: Boolean = true,
     ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      val strategy =
+        when (params) {
+          is AuthenticateWithRedirectParams.EnterpriseSSO -> params.strategy
+          is AuthenticateWithRedirectParams.OAuth -> params.provider.providerData.strategy
+        }
       return SSOService.authenticateWithRedirect(
-        strategy = params.toMap()["provider"]!!,
+        strategy = strategy,
         redirectUrl = params.redirectUrl,
         identifier = params.identifier,
         emailAddress = params.emailAddress,

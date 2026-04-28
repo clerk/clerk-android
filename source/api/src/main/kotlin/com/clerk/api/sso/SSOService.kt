@@ -38,6 +38,7 @@ import kotlinx.coroutines.CompletableDeferred
  * For external account connections to existing users, see [ExternalAccountService]. For Google One
  * Tap authentication, see [com.clerk.sso.GoogleSignInService].
  */
+@Suppress("TooManyFunctions")
 internal object SSOService {
   /**
    * Tracks the current pending OAuth authentication flow. This deferred completes when the
@@ -116,23 +117,42 @@ internal object SSOService {
             "External URL cannot be null"
           }
 
-        val completableDeferred =
-          CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>()
-
-        currentPendingAuth = completableDeferred
-        currentTransferable = transferable
-
-        val intent =
-          Intent(Clerk.applicationContext?.get(), SSOReceiverActivity::class.java).apply {
-            data = externalUrl.toUri()
-            addFlags(FLAG_ACTIVITY_NEW_TASK)
-          }
-        Clerk.applicationContext?.get()?.startActivity(intent)
-
-        // This will suspend until completeAuthenticateWithRedirect is called
-        completableDeferred.await()
+        authenticateWithPreparedRedirect(externalUrl, transferable)
       }
     }
+  }
+
+  /**
+   * Continues an already prepared redirect flow.
+   *
+   * Some flows, like Enterprise SSO after `prepareFirstFactor`, already have an external provider
+   * URL from the current sign-in attempt. In those cases we should launch that URL and wait for the
+   * callback without creating a new sign-in redirect attempt.
+   */
+  suspend fun authenticateWithPreparedRedirect(
+    externalVerificationRedirectUrl: String,
+    transferable: Boolean = true,
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    currentPendingAuth?.complete(
+      ClerkResult.unknownFailure(
+        Exception("New authentication started, cancelling previous attempt")
+      )
+    )
+    clearCurrentAuth()
+
+    val completableDeferred = CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>()
+
+    currentPendingAuth = completableDeferred
+    currentTransferable = transferable
+
+    val intent =
+      Intent(Clerk.applicationContext?.get(), SSOReceiverActivity::class.java).apply {
+        data = externalVerificationRedirectUrl.toUri()
+        addFlags(FLAG_ACTIVITY_NEW_TASK)
+      }
+    Clerk.applicationContext?.get()?.startActivity(intent)
+
+    return completableDeferred.await()
   }
 
   /**
