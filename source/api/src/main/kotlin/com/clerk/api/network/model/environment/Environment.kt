@@ -12,6 +12,8 @@ internal data class Environment(
   @SerialName("auth_config") val authConfig: AuthConfig,
   @SerialName("display_config") val displayConfig: DisplayConfig,
   @SerialName("user_settings") val userSettings: UserSettings,
+  @SerialName("organization_settings")
+  val organizationSettings: OrganizationSettings = OrganizationSettings(),
 ) {
   val passkeyIsEnabled: Boolean
     get() = userSettings.attributes.any { (key, value) -> key == "passkey" && value.enabled }

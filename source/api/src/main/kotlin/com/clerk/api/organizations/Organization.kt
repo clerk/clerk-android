@@ -61,8 +61,11 @@ data class Organization(
      * @return A [ClerkResult] containing the created [Organization] on success, or a
      *   [ClerkErrorResponse] on failure.
      */
-    suspend fun create(name: String): ClerkResult<Organization, ClerkErrorResponse> {
-      return ClerkApi.organization.createOrganization(name = name)
+    suspend fun create(
+      name: String,
+      slug: String? = null,
+    ): ClerkResult<Organization, ClerkErrorResponse> {
+      return ClerkApi.organization.createOrganization(name = name, slug = slug)
     }
 
     /**

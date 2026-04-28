@@ -80,6 +80,7 @@ data class Session(
 enum class SessionTaskKey {
   MFA_REQUIRED,
   RESET_PASSWORD,
+  CHOOSE_ORGANIZATION,
   UNKNOWN;
 
   companion object {
@@ -91,6 +92,8 @@ enum class SessionTaskKey {
         "mfa-required" -> MFA_REQUIRED
         "reset_password",
         "reset-password" -> RESET_PASSWORD
+        "choose_organization",
+        "choose-organization" -> CHOOSE_ORGANIZATION
         else -> UNKNOWN
       }
   }

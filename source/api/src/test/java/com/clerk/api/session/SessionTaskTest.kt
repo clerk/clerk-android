@@ -22,6 +22,12 @@ class SessionTaskTest {
   }
 
   @Test
+  fun `parsedKey maps choose organization keys`() {
+    assertEquals(SessionTaskKey.CHOOSE_ORGANIZATION, SessionTask("choose_organization").parsedKey)
+    assertEquals(SessionTaskKey.CHOOSE_ORGANIZATION, SessionTask("choose-organization").parsedKey)
+  }
+
+  @Test
   fun `requiresForcedMfa is true for pending session with mfa task`() {
     val session =
       session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("mfa_required")))
@@ -49,6 +55,7 @@ class SessionTaskTest {
 
     assertFalse(session.requiresForcedMfa)
     assertFalse(session.hasMfaRequiredTask)
+    assertEquals(SessionTaskKey.CHOOSE_ORGANIZATION, session.pendingTaskKey)
   }
 
   @Test
