@@ -9,9 +9,9 @@ import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.successOrElse
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 
 /**
  * Internal service for fetching and managing session tokens.
@@ -81,30 +81,24 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       "Fetching token for session ${session.id} with options: $options and cache key: $cacheKey"
     )
 
-    // Fast path: check if task already exists
-    tokenTasks[cacheKey]?.let {
-      return it.await()
-    }
+    return tokenTasks[cacheKey]?.await()
+      ?: run {
+        val deferred = CompletableDeferred<TokenResource?>()
+        val existingTask = tokenTasks.putIfAbsent(cacheKey, deferred)
 
-    // Create new task
-    return coroutineScope {
-      val deferred = async { fetchToken(session, options) }
-
-      // Atomic put-if-absent operation
-      val existingTask = tokenTasks.putIfAbsent(cacheKey, deferred)
-      if (existingTask != null) {
-        // Another coroutine beat us to it, cancel our task and use theirs
-        deferred.cancel()
-        return@coroutineScope existingTask.await()
+        existingTask?.await()
+          ?: try {
+            fetchToken(session, options).also { deferred.complete(it) }
+          } catch (e: CancellationException) {
+            deferred.cancel(e)
+            throw e
+          } catch (t: Throwable) {
+            deferred.completeExceptionally(t)
+            throw t
+          } finally {
+            tokenTasks.remove(cacheKey, deferred)
+          }
       }
-
-      // We're the first, execute our task
-      try {
-        deferred.await()
-      } finally {
-        tokenTasks.remove(cacheKey)
-      }
-    }
   }
 
   /**
@@ -151,6 +145,8 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
 
       SessionTokensCache.setToken(cacheKey, result)
       result
+    } catch (e: CancellationException) {
+      throw e
     } catch (e: Exception) {
       ClerkLog.e("Failed to fetch token: ${e.message}")
       null
