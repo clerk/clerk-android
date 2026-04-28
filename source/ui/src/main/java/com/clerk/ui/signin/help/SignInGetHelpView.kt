@@ -35,10 +35,12 @@ fun SignInGetHelpView(modifier: Modifier = Modifier) {
     onBackPressed = { authState.navigateBack() },
   ) {
     val context = LocalContext.current
+    val supportEmail = stringResource(R.string.support_clerk_com)
+    val noEmailClientsMessage = stringResource(R.string.no_email_clients_installed_on_device)
     val emailIntent =
       Intent(Intent.ACTION_SENDTO).apply {
         data = "mailto:".toUri()
-        putExtra(Intent.EXTRA_EMAIL, arrayOf(stringResource(R.string.support_clerk_com)))
+        putExtra(Intent.EXTRA_EMAIL, arrayOf(supportEmail))
       }
 
     ClerkButton(
@@ -51,7 +53,7 @@ fun SignInGetHelpView(modifier: Modifier = Modifier) {
           ClerkLog.e("No email clients installed on device.")
           scope.launch {
             snackbarHostState.showSnackbar(
-              message = context.getString(R.string.no_email_clients_installed_on_device),
+              message = noEmailClientsMessage,
               duration = SnackbarDuration.Short,
             )
           }

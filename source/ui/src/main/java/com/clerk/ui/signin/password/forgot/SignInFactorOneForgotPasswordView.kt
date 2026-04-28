@@ -86,21 +86,20 @@ private fun SignInFactorOneForgotPasswordViewImpl(
   onClickFactor: (Factor) -> Unit,
   modifier: Modifier = Modifier,
   textIconHelper: TextIconHelper = TextIconHelper(),
+  viewModel: ForgotPasswordViewModel =
+    viewModel(key = "forgot-password-${Clerk.auth.currentSignIn?.id ?: "no-sign-in"}"),
   onAuthComplete: () -> Unit,
 ) {
-  val signInId = Clerk.auth.currentSignIn?.id ?: "no-sign-in"
-  val viewModel: ForgotPasswordViewModel = viewModel(key = "forgot-password-$signInId")
   val authState = LocalAuthState.current
   val context = LocalContext.current
+  val defaultErrorMessage = stringResource(R.string.something_went_wrong_please_try_again)
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
 
-  LaunchedEffect(state) {
+  LaunchedEffect(state, defaultErrorMessage) {
     when (val s = state) {
       is ResetPasswordViewState.Error -> {
-        snackbarHostState.showSnackbar(
-          s.message ?: context.getString(R.string.something_went_wrong_please_try_again)
-        )
+        snackbarHostState.showSnackbar(s.message ?: defaultErrorMessage)
         viewModel.resetState()
       }
       ResetPasswordViewState.NotStarted -> {

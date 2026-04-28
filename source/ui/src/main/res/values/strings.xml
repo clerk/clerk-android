@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="country">Country</string>
     <string name="enter_your_phone_number">Enter your phone number</string>
     <string name="incorrect_verification_code">Incorrect verification code</string>
@@ -34,7 +34,7 @@
     <string name="reset_password">Reset password</string>
     <string name="confirm_password">Confirm password</string>
     <string name="new_password">New password</string>
-    <string name="account_requires_new_password_before_continue">Your account requires a new password before you can continue</string>
+    <string name="account_requires_new_password_before_continue" tools:ignore="MissingTranslation">Your account requires a new password before you can continue</string>
     <string name="sign_out_of_all_other_devices">Sign out of all other devices</string>
     <string name="back">Back</string>
     <string name="enter_a_backup_code">Enter a backup code</string>
@@ -87,7 +87,7 @@
     <string name="last_name">Last name</string>
     <string name="facing_issues_you_can_use_any_of_these_methods_to_sign_in">Facing issues? You can use any of these methods to sign in.</string>
     <string name="two_step_verification">Two-step verification</string>
-    <string name="signing_in_from_new_device">You\'re signing in from a new device. We\'re asking for verification to keep your account secure.</string>
+    <string name="signing_in_from_new_device" tools:ignore="MissingTranslation">You\'re signing in from a new device. We\'re asking for verification to keep your account secure.</string>
     <string name="when_signing_in_you_will_need_to_enter_a_verification_code">When signing in, you will need to enter a verification code sent to this phone number as an additional step.\n\nSave these backup codes and store them somewhere safe. If you lose access to your authentication device, you can use backup codes to sign in.</string>
     <string name="two_step_verification_is_now_enabled">Two-step verification is now enabled. When signing in, you will need to enter a verification code from this authenticator app as an additional step.\n\nSave these backup codes and store them somewhere safe. If you lose access to your authentication device, you can use backup codes to sign in.</string>
     <string name="backup_codes_are_now_enabled">Backup codes are now enabled. You can use one of these to sign in to your account, if you lose access to your authentication device. Each code can only be used once.</string>
@@ -139,7 +139,7 @@
     <string name="rename">Rename</string>
     <string name="created">Created: %1$s</string>
     <string name="last_used">Last used: %1$s</string>
-    <string name="last_used_badge">Last used</string>
+    <string name="last_used_badge" tools:ignore="MissingTranslation">Last used</string>
     <string name="add_a_passkey">Add a passkey</string>
     <string name="account">Account</string>
     <string name="delete_account">Delete account</string>
@@ -184,6 +184,6 @@
     <string name="terms_of_service">Terms of Service</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="and_connector">and</string>
-    <string name="set_up_two_step_verification">Set up two-step verification</string>
-    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security">Choose which method you prefer to protect your account with an extra layer of security.</string>
+    <string name="set_up_two_step_verification" tools:ignore="MissingTranslation">Set up two-step verification</string>
+    <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security" tools:ignore="MissingTranslation">Choose which method you prefer to protect your account with an extra layer of security.</string>
 </resources>

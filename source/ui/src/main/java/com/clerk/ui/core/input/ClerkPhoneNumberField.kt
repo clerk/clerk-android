@@ -1,5 +1,6 @@
 package com.clerk.ui.core.input
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -104,6 +105,7 @@ private const val DROPDOWN_HEIGHT_DIVISOR = 3
  * @param onValueChange Callback when the complete phone number changes
  */
 @Composable
+@SuppressLint("ComposeParameterOrder")
 fun ClerkPhoneNumberField(
   value: String,
   modifier: Modifier = Modifier,

@@ -90,11 +90,10 @@ private fun SignInFactorCodeViewImpl(
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
   isClientTrust: Boolean = false,
+  viewModel: SignInFactorCodeViewModel =
+    viewModel(key = signInFactorCodeViewModelKey(isSecondFactor)),
   onAuthComplete: () -> Unit,
 ) {
-  val signInId = Clerk.auth.currentSignIn?.id ?: "no-sign-in"
-  val viewModel: SignInFactorCodeViewModel =
-    viewModel(key = "sign-in-code-$signInId-$isSecondFactor")
   val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
   val verificationTextState by viewModel.verificationUiState.collectAsStateWithLifecycle()
@@ -124,20 +123,11 @@ private fun SignInFactorCodeViewImpl(
     if (isClientTrust) {
       ClientTrustWarningMessage()
     }
-    ClerkCodeInputField(
-      verificationState = verificationTextState.verificationState(),
-      onTextChange = {
-        if (verificationTextState is VerificationUiState.Error) {
-          viewModel.resetState()
-          viewModel.resetVerificationState()
-        }
-        if (it.length == 6) {
-          viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = it)
-        }
-      },
-      showResend =
-        SignInFactorCodeUiHelper.showResend(factor, verificationTextState.verificationState()),
-      onClickResend = { viewModel.prepare(factor, isSecondFactor = isSecondFactor) },
+    SignInCodeInput(
+      factor = factor,
+      verificationTextState = verificationTextState,
+      isSecondFactor = isSecondFactor,
+      viewModel = viewModel,
     )
     Spacers.Vertical.Spacer24()
     if (SignInFactorCodeUiHelper.showUseAnotherMethod(factor)) {
@@ -157,6 +147,33 @@ private fun SignInFactorCodeViewImpl(
       )
     }
   }
+}
+
+private fun signInFactorCodeViewModelKey(isSecondFactor: Boolean): String =
+  "sign-in-code-${Clerk.auth.currentSignIn?.id ?: "no-sign-in"}-$isSecondFactor"
+
+@Composable
+private fun SignInCodeInput(
+  factor: Factor,
+  verificationTextState: VerificationUiState,
+  isSecondFactor: Boolean,
+  viewModel: SignInFactorCodeViewModel,
+) {
+  ClerkCodeInputField(
+    verificationState = verificationTextState.verificationState(),
+    onTextChange = {
+      if (verificationTextState is VerificationUiState.Error) {
+        viewModel.resetState()
+        viewModel.resetVerificationState()
+      }
+      if (it.length == 6) {
+        viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = it)
+      }
+    },
+    showResend =
+      SignInFactorCodeUiHelper.showResend(factor, verificationTextState.verificationState()),
+    onClickResend = { viewModel.prepare(factor, isSecondFactor = isSecondFactor) },
+  )
 }
 
 /**

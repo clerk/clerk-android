@@ -224,22 +224,42 @@ class SessionTokenFetcherTest {
   }
 
   @Test
-  fun `getToken does not clear local session state for non-session unauthorized errors`() = runTest {
-    // Given
-    val error = Error(code = "not_authorized", message = "Unauthorized")
-    val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "trace_unauth")
+  fun `getToken clears local session state when token endpoint returns authentication invalid`() =
+    runTest {
+      // Given
+      val error = Error(code = "authentication_invalid", message = "Invalid authentication")
+      val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "trace_unauth")
 
-    coEvery { SessionTokensCache.getToken(any()) } returns null
-    coEvery { mockClerkApiService.tokens("session_123") } returns
-      ClerkResult.httpFailure(code = 401, error = errorResponse)
+      coEvery { SessionTokensCache.getToken(any()) } returns null
+      coEvery { mockClerkApiService.tokens("session_123") } returns
+        ClerkResult.httpFailure(code = 401, error = errorResponse)
 
-    // When
-    val result = sessionTokenFetcher.getToken(mockSession)
+      // When
+      val result = sessionTokenFetcher.getToken(mockSession)
 
-    // Then
-    assertNull(result)
-    verify(exactly = 0) { Clerk.clearSessionAndUserState() }
-  }
+      // Then
+      assertNull(result)
+      verify(exactly = 1) { Clerk.clearSessionAndUserState() }
+    }
+
+  @Test
+  fun `getToken does not clear local session state for non-session unauthorized errors`() =
+    runTest {
+      // Given
+      val error = Error(code = "not_authorized", message = "Unauthorized")
+      val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "trace_unauth")
+
+      coEvery { SessionTokensCache.getToken(any()) } returns null
+      coEvery { mockClerkApiService.tokens("session_123") } returns
+        ClerkResult.httpFailure(code = 401, error = errorResponse)
+
+      // When
+      val result = sessionTokenFetcher.getToken(mockSession)
+
+      // Then
+      assertNull(result)
+      verify(exactly = 0) { Clerk.clearSessionAndUserState() }
+    }
 
   @Test
   fun `getToken uses custom expiration buffer`() = runTest {
