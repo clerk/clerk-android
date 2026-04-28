@@ -154,6 +154,7 @@ internal class AuthState(
     when (postAuthCompletionAction(taskKey, hasUnresolvedCreatedSession)) {
       PostAuthCompletionAction.ROUTE_TO_MFA -> routeToSessionTaskMfa()
       PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD -> routeToSessionTaskResetPassword()
+      PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION -> routeToChooseOrganization()
       PostAuthCompletionAction.ROUTE_TO_HELP -> backStack.add(AuthDestination.SignInGetHelp)
       PostAuthCompletionAction.COMPLETE_AUTH -> onAuthComplete()
     }
@@ -165,6 +166,10 @@ internal class AuthState(
 
   private fun routeToSessionTaskResetPassword() {
     routeToSessionTask(AuthDestination.SessionTaskResetPassword)
+  }
+
+  private fun routeToChooseOrganization() {
+    routeToSessionTask(AuthDestination.SessionTaskChooseOrganization)
   }
 
   private fun routeToSessionTask(destination: NavKey) {

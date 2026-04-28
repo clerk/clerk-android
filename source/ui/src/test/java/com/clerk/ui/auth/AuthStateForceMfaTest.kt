@@ -39,7 +39,7 @@ class AuthStateForceMfaTest {
   }
 
   @Test
-  fun `pendingSessionTaskKey returns UNKNOWN when session has unsupported task`() {
+  fun `pendingSessionTaskKey returns CHOOSE_ORGANIZATION when session has choose organization task`() {
     val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.COMPLETE)
     val session =
       session(
@@ -47,7 +47,7 @@ class AuthStateForceMfaTest {
         tasks = listOf(SessionTask("choose-organization")),
       )
 
-    assertEquals(SessionTaskKey.UNKNOWN, signIn.pendingSessionTaskKey(session))
+    assertEquals(SessionTaskKey.CHOOSE_ORGANIZATION, signIn.pendingSessionTaskKey(session))
   }
 
   @Test
@@ -84,6 +84,17 @@ class AuthStateForceMfaTest {
       )
 
     assertEquals(PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD, action)
+  }
+
+  @Test
+  fun `postAuthCompletionAction routes to choose organization when session requires it`() {
+    val action =
+      postAuthCompletionAction(
+        taskKey = SessionTaskKey.CHOOSE_ORGANIZATION,
+        hasUnresolvedCreatedSession = false,
+      )
+
+    assertEquals(PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION, action)
   }
 
   @Test
