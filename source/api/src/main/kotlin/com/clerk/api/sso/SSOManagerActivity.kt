@@ -11,6 +11,8 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.magiclink.NativeMagicLinkService
+import com.clerk.api.magiclink.canHandleNativeMagicLink
 import kotlinx.coroutines.launch
 
 /**
@@ -30,6 +32,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
   private var authorizationStarted = false
   private var completionStarted = false
   private lateinit var desiredUri: Uri
+  private var pendingCallbackUri: Uri? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -42,6 +45,18 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
   override fun onResume() {
     super.onResume()
+    val callbackUri = pendingCallbackUri ?: intent.data?.takeIf(::isCallbackUri)
+    if (callbackUri != null) {
+      if (!completionStarted) {
+        completionStarted = true
+        authorizationStarted = true
+        pendingCallbackUri = callbackUri
+        intent = Intent(intent).apply { data = null }
+        authorizationComplete(callbackUri)
+      }
+      return
+    }
+
     // on first run, launch the intent to start the OAuth/SSO flow in the browser
     if (!authorizationStarted) {
       try {
@@ -63,7 +78,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
     intent.data?.let {
       if (!completionStarted) {
         completionStarted = true
-        // Clear the intent's data to avoid re-triggering completion on subsequent resumes
+        pendingCallbackUri = it
         intent = Intent(intent).apply { data = null }
         authorizationComplete(it)
       }
@@ -84,6 +99,10 @@ internal class SSOManagerActivity : AppCompatActivity() {
     super.onSaveInstanceState(outState)
     outState.putBoolean(KEY_AUTHORIZATION_STARTED, authorizationStarted)
     outState.putBoolean(KEY_COMPLETION_STARTED, completionStarted)
+    outState.putString(KEY_PENDING_CALLBACK_URI, pendingCallbackUri?.toString())
+    if (::desiredUri.isInitialized) {
+      outState.putString(URI_KEY, desiredUri.toString())
+    }
   }
 
   /**
@@ -97,6 +116,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
     authorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false)
     completionStarted = state.getBoolean(KEY_COMPLETION_STARTED, false)
     state.getString(URI_KEY)?.let { desiredUri = it.toUri() }
+    pendingCallbackUri = state.getString(KEY_PENDING_CALLBACK_URI)?.toUri()
   }
 
   /**
@@ -107,8 +127,21 @@ internal class SSOManagerActivity : AppCompatActivity() {
   private fun authorizationComplete(uri: Uri) {
     lifecycleScope.launch {
       try {
-        // Mark the Activity result as success so callers don't observe RESULT_CANCELED
-        setResult(RESULT_OK, Intent())
+        if (canHandleNativeMagicLink(uri)) {
+          ClerkLog.d("authorizationComplete called with native magic link redirect: $uri")
+          when (NativeMagicLinkService.handleMagicLinkDeepLink(uri)) {
+            is com.clerk.api.network.serialization.ClerkResult.Success -> {
+              ClerkLog.i("event=native_magic_link_activity_completion_success")
+              pendingCallbackUri = null
+              setResult(RESULT_OK, Intent())
+            }
+            is com.clerk.api.network.serialization.ClerkResult.Failure -> {
+              ClerkLog.w("event=native_magic_link_activity_completion_failure")
+              setResult(RESULT_CANCELED, Intent())
+            }
+          }
+          return@launch
+        }
         if (SSOService.hasPendingExternalAccountConnection()) {
           ClerkLog.d("authorizationComplete called with external connection")
           SSOService.completeExternalConnection()
@@ -116,11 +149,21 @@ internal class SSOManagerActivity : AppCompatActivity() {
           ClerkLog.d("authorizationComplete called with redirect: $uri")
           SSOService.completeAuthenticateWithRedirect(uri)
         }
+        pendingCallbackUri = null
+        setResult(RESULT_OK, Intent())
+      } catch (t: Throwable) {
+        ClerkLog.e("authorizationComplete failed: ${t.message}")
+        setResult(RESULT_CANCELED, Intent())
       } finally {
-        // Finish only after the completion call returns so coroutines aren't cancelled early
         finish()
       }
     }
+  }
+
+  private fun isCallbackUri(uri: Uri): Boolean {
+    return uri.scheme?.startsWith("clerk") == true ||
+      canHandleNativeMagicLink(uri) ||
+      uri.getQueryParameter("rotating_token_nonce") != null
   }
 
   /** Handles authentication cancellation by the user. */
@@ -168,5 +211,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
     internal const val URI_KEY = "uri"
     internal const val KEY_COMPLETION_STARTED = "completion_started"
+    internal const val KEY_PENDING_CALLBACK_URI = "pending_callback_uri"
   }
 }

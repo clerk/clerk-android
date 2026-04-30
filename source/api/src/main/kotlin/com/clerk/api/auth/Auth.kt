@@ -14,8 +14,14 @@ import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.magiclink.NativeMagicLinkAuthResult
+import com.clerk.api.magiclink.NativeMagicLinkError
+import com.clerk.api.magiclink.NativeMagicLinkManager
+import com.clerk.api.magiclink.NativeMagicLinkService
+import com.clerk.api.magiclink.canHandleNativeMagicLink
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
@@ -126,6 +132,10 @@ class Auth internal constructor() {
   val currentSignUp: SignUp?
     get() = if (Clerk.clientInitialized) Clerk.client.signUp else null
 
+  /** Native magic-link manager for PKCE-bound email link flows. */
+  val nativeMagicLink: NativeMagicLinkManager
+    get() = NativeMagicLinkService
+
   // endregion
 
   // region Sign In
@@ -219,40 +229,71 @@ class Auth internal constructor() {
     builder.validate()
 
     val identifier = builder.email ?: builder.phone!!
-    val strategy = if (builder.email != null) EMAIL_CODE else PHONE_CODE
-
-    val params =
-      mapOf(
-        "identifier" to identifier,
-        "strategy" to strategy,
-        "locale" to Clerk.locale.value.orEmpty(),
-      )
-
-    val result =
-      when (val createResult = ClerkApi.signIn.createSignIn(params)) {
-        is ClerkResult.Failure -> createResult
-        is ClerkResult.Success -> {
-          val signIn = createResult.value
-          // Prepare first factor to send the code
-          val prepareParams =
-            if (builder.email != null) {
-              SignIn.PrepareFirstFactorParams.EmailCode(
-                emailAddressId =
-                  signIn.supportedFirstFactors?.find { it.strategy == EMAIL_CODE }?.emailAddressId
-                    ?: ""
-              )
-            } else {
-              SignIn.PrepareFirstFactorParams.PhoneCode(
-                phoneNumberId =
-                  signIn.supportedFirstFactors?.find { it.strategy == PHONE_CODE }?.phoneNumberId
-                    ?: ""
-              )
-            }
-          ClerkApi.signIn.prepareSignInFirstFactor(signIn.id, prepareParams.toMap())
-        }
-      }
+    val isEmailFlow = builder.email != null
+    val result = createAndPrepareOtpSignIn(identifier, isEmailFlow)
     result.onFailure { emitAuthError(it) }
     return result
+  }
+
+  private suspend fun createAndPrepareOtpSignIn(
+    identifier: String,
+    isEmailFlow: Boolean,
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    val params = mapOf("identifier" to identifier, "locale" to Clerk.locale.value.orEmpty())
+    return when (val createResult = ClerkApi.signIn.createSignIn(params)) {
+      is ClerkResult.Failure -> createResult
+      is ClerkResult.Success -> prepareOtpFirstFactor(createResult.value, isEmailFlow)
+    }
+  }
+
+  private suspend fun prepareOtpFirstFactor(
+    signIn: SignIn,
+    isEmailFlow: Boolean,
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    return if (isEmailFlow) {
+      val emailAddressId =
+        signIn.supportedFirstFactors
+          ?.find { it.strategy == EMAIL_CODE && it.emailAddressId != null }
+          ?.emailAddressId
+      if (emailAddressId == null) {
+        unsupportedFirstFactorError(EMAIL_CODE)
+      } else {
+        ClerkApi.signIn.prepareSignInFirstFactor(
+          signIn.id,
+          SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = emailAddressId).toMap(),
+        )
+      }
+    } else {
+      val phoneNumberId =
+        signIn.supportedFirstFactors
+          ?.find { it.strategy == PHONE_CODE && it.phoneNumberId != null }
+          ?.phoneNumberId
+      if (phoneNumberId == null) {
+        unsupportedFirstFactorError(PHONE_CODE)
+      } else {
+        ClerkApi.signIn.prepareSignInFirstFactor(
+          signIn.id,
+          SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = phoneNumberId).toMap(),
+        )
+      }
+    }
+  }
+
+  private fun unsupportedFirstFactorError(
+    strategy: String
+  ): ClerkResult.Failure<ClerkErrorResponse> {
+    return ClerkResult.apiFailure(
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            Error(
+              message = "is invalid",
+              longMessage = "$strategy is not supported for this sign-in attempt",
+              code = "first_factor_strategy_not_supported",
+            )
+          )
+      )
+    )
   }
 
   /**
@@ -381,6 +422,33 @@ class Auth internal constructor() {
     val result = ClerkApi.signIn.createSignIn(params)
     result.onFailure { emitAuthError(it) }
     return result
+  }
+
+  /**
+   * Starts a native email-link sign-in flow secured by PKCE.
+   *
+   * The flow sends only a code challenge to Clerk and expects completion through a deep-link
+   * callback carrying `flow_id` and `approval_token`.
+   */
+  suspend fun startEmailLinkSignIn(email: String): ClerkResult<SignIn, NativeMagicLinkError> {
+    return nativeMagicLink.startEmailLinkSignIn(email)
+  }
+
+  /**
+   * Handles a native magic-link deep-link callback and completes sign-in or sign-up using a ticket.
+   */
+  suspend fun handleMagicLinkDeepLink(
+    uri: Uri
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
+    return nativeMagicLink.handleMagicLinkDeepLink(uri)
+  }
+
+  /** Completes a pending native magic-link flow using callback values from the deep link. */
+  suspend fun completeMagicLink(
+    flowId: String,
+    approvalToken: String,
+  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
+    return nativeMagicLink.complete(flowId, approvalToken)
   }
 
   // endregion
@@ -660,10 +728,10 @@ class Auth internal constructor() {
   // region Deep Link Handling
 
   /**
-   * Handles OAuth/SSO deep link callbacks.
+   * Handles OAuth/SSO and native magic-link deep link callbacks.
    *
-   * Call this method from your Activity when receiving a deep link callback from an OAuth or SSO
-   * provider.
+   * Call this method from your Activity when receiving a deep link callback from Clerk
+   * authentication flows.
    *
    * @param uri The deep link URI received from the callback.
    * @return true if the URI was handled, false otherwise.
@@ -671,19 +739,24 @@ class Auth internal constructor() {
    * ### Example usage:
    * ```kotlin
    * // In your Activity's onCreate or onNewIntent
-   * clerk.auth.handle(intent.data)
+   * lifecycleScope.launch {
+   *   clerk.auth.handle(intent.data)
+   * }
    * ```
    */
-  fun handle(uri: Uri?): Boolean {
-    // Check if this is a Clerk OAuth callback
-    val isClerkCallback = uri?.scheme?.startsWith("clerk") == true
-
-    if (isClerkCallback) {
-      // Let the SSO service handle the callback
-      kotlinx.coroutines.runBlocking { SSOService.completeAuthenticateWithRedirect(uri) }
+  suspend fun handle(uri: Uri?): Boolean {
+    val callbackUri = uri ?: return false
+    val handledByMagicLink = canHandleNativeMagicLink(callbackUri)
+    if (handledByMagicLink) {
+      NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri)
     }
 
-    return isClerkCallback
+    val isClerkCallback = callbackUri.scheme?.startsWith("clerk") == true
+    if (!handledByMagicLink && isClerkCallback) {
+      SSOService.completeAuthenticateWithRedirect(callbackUri)
+    }
+
+    return handledByMagicLink || isClerkCallback
   }
 
   // endregion

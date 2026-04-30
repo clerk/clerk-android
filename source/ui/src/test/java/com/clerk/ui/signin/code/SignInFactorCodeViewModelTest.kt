@@ -6,6 +6,7 @@ import app.cash.turbine.test
 import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.core.common.StrategyKeys
@@ -50,6 +51,18 @@ class SignInFactorCodeViewModelTest {
     mockkObject(Clerk)
     every { Clerk.auth } returns mockAuth
     every { mockAuth.currentSignIn } returns mockSignIn
+    every { mockSignIn.identifier } returns "user@example.com"
+    every { mockSignIn.supportedFirstFactors } returns
+      listOf(
+        Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
+        Factor(strategy = StrategyKeys.PHONE_CODE, phoneNumberId = "phone_456"),
+      )
+    every { mockSignIn.supportedSecondFactors } returns
+      listOf(
+        Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
+        Factor(strategy = StrategyKeys.PHONE_CODE, phoneNumberId = "phone_456"),
+        Factor(strategy = StrategyKeys.TOTP),
+      )
 
     viewModel =
       SignInFactorCodeViewModel(
@@ -331,5 +344,110 @@ class SignInFactorCodeViewModelTest {
 
       assertEquals(AuthenticationViewState.Loading, awaitItem())
     }
+  }
+
+  @Test
+  fun prepareShouldRerouteToFirstFactorWhenEmailLinkIsAvailableForEmailIdentifier() = runTest {
+    every { mockSignIn.identifier } returns "sam@clerk.dev"
+    every { mockSignIn.supportedFirstFactors } returns
+      listOf(
+        Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
+        Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
+      )
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
+
+      viewModel.prepare(factor, isSecondFactor = false)
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
+
+    coVerify(exactly = 0) { mockPrepareHandler.prepareForEmailCode(any(), any(), any(), any()) }
+  }
+
+  @Test
+  fun prepareShouldRerouteToFirstFactorWhenIdentifierIsMissingButEmailFactorExists() = runTest {
+    every { mockSignIn.identifier } returns null
+    every { mockSignIn.supportedFirstFactors } returns
+      listOf(
+        Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
+        Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
+      )
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
+
+      viewModel.prepare(factor, isSecondFactor = false)
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
+
+    coVerify(exactly = 0) { mockPrepareHandler.prepareForEmailCode(any(), any(), any(), any()) }
+  }
+
+  @Test
+  fun prepareShouldNotRerouteWhenEmailCodeIsAlreadyPrepared() = runTest {
+    every { mockSignIn.identifier } returns "sam@clerk.dev"
+    every { mockSignIn.firstFactorVerification } returns
+      Verification(status = Verification.Status.UNVERIFIED, strategy = StrategyKeys.EMAIL_CODE)
+    every { mockSignIn.supportedFirstFactors } returns
+      listOf(
+        Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
+        Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
+      )
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+
+    viewModel.prepare(factor, isSecondFactor = false)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) {
+      mockPrepareHandler.prepareForEmailCode(mockSignIn, factor, false, any())
+    }
+  }
+
+  @Test
+  fun prepareShouldRerouteWhenRequestedFactorIsNoLongerSupported() = runTest {
+    every { mockSignIn.identifier } returns null
+    every { mockSignIn.supportedFirstFactors } returns listOf(Factor(strategy = "ticket"))
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
+
+      viewModel.prepare(factor, isSecondFactor = false)
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
+
+    coVerify(exactly = 0) { mockPrepareHandler.prepareForEmailCode(any(), any(), any(), any()) }
+  }
+
+  @Test
+  fun prepareShouldRerouteWhenMatchingStrategyHasDifferentIdentifier() = runTest {
+    every { mockSignIn.identifier } returns null
+    every { mockSignIn.supportedFirstFactors } returns
+      listOf(Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_456"))
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
+
+      viewModel.prepare(factor, isSecondFactor = false)
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
+
+    coVerify(exactly = 0) { mockPrepareHandler.prepareForEmailCode(any(), any(), any(), any()) }
   }
 }

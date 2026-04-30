@@ -1,6 +1,8 @@
 package com.clerk.ui.auth
 
+import androidx.compose.ui.autofill.ContentType
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -54,5 +56,32 @@ class AuthStartViewHelperTest {
       )
 
     assertFalse(result)
+  }
+
+  @Test
+  fun identifierContentTypeReturnsEmailAddressWhenOnlyEmailIsEnabled() {
+    val helper = AuthStartViewHelper()
+    helper.setTestValues(enabledFirstFactorAttributes = listOf("email_address"))
+
+    assertEquals(ContentType.EmailAddress, helper.identifierContentType())
+  }
+
+  @Test
+  fun identifierContentTypeReturnsUsernameWhenOnlyUsernameIsEnabled() {
+    val helper = AuthStartViewHelper()
+    helper.setTestValues(enabledFirstFactorAttributes = listOf("username"))
+
+    assertEquals(ContentType.Username, helper.identifierContentType())
+  }
+
+  @Test
+  fun identifierContentTypeReturnsEmailAndUsernameWhenBothAreEnabled() {
+    val helper = AuthStartViewHelper()
+    helper.setTestValues(enabledFirstFactorAttributes = listOf("email_address", "username"))
+
+    val contentType = helper.identifierContentType()
+
+    assertFalse(contentType == ContentType.EmailAddress)
+    assertFalse(contentType == ContentType.Username)
   }
 }
