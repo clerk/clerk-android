@@ -3,6 +3,7 @@ package com.clerk.api.organizations
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.user.currentSessionId
 import java.time.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -40,7 +41,7 @@ data class UserOrganizationInvitation(
 
 suspend fun UserOrganizationInvitation.accept():
   ClerkResult<UserOrganizationInvitation, ClerkErrorResponse> {
-  return ClerkApi.user.acceptUserOrganizationInvitation(id)
+  return ClerkApi.user.acceptUserOrganizationInvitation(id, sessionId = currentSessionId())
 }
 
 private object InstantSerializer : KSerializer<Instant> {

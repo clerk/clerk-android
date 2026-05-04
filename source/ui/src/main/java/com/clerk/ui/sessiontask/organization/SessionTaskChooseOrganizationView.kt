@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.Clerk
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
@@ -68,9 +69,11 @@ internal fun SessionTaskChooseOrganizationView(
   viewModel: SessionTaskChooseOrganizationViewModel = viewModel(),
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
+  val clerkUser by Clerk.userFlow.collectAsStateWithLifecycle()
+  val clerkSession by Clerk.sessionFlow.collectAsStateWithLifecycle()
   val authState = LocalAuthState.current
 
-  LaunchedEffect(Unit) { viewModel.load() }
+  LaunchedEffect(clerkUser?.id, clerkSession?.id) { viewModel.load() }
   LaunchedEffect(state.completedSession) {
     state.completedSession?.let {
       authState.handleSessionTaskCompletion(it, onAuthComplete)

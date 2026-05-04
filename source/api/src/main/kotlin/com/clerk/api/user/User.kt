@@ -22,6 +22,8 @@ import com.clerk.api.passkeys.Passkey
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTaskKey
+import com.clerk.api.session.pendingTaskKey
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
@@ -274,7 +276,7 @@ data class User(
         limit = limit,
         offset = offset,
         status = status,
-        sessionId = Clerk.session?.id,
+        sessionId = currentSessionId(),
       )
     }
 
@@ -304,7 +306,7 @@ data class User(
         limit = limit,
         offset = offset,
         status = status?.let(::listOf),
-        sessionId = Clerk.session?.id,
+        sessionId = currentSessionId(),
       )
     }
 
@@ -328,7 +330,7 @@ data class User(
         limit = limit,
         offset = offset,
         status = statuses.takeIf { it.isNotEmpty() },
-        sessionId = Clerk.session?.id,
+        sessionId = currentSessionId(),
       )
     }
   }
@@ -687,7 +689,7 @@ suspend fun User.getOrganizationMemberships(
   return ClerkApi.user.getOrganizationMemberships(
     limit = limit,
     offset = offset,
-    sessionId = Clerk.session?.id,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -700,7 +702,7 @@ suspend fun User.getOrganizationInvitations(
     limit = limit,
     offset = offset,
     status = status,
-    sessionId = Clerk.session?.id,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -713,13 +715,30 @@ suspend fun User.getOrganizationSuggestions(
     limit = limit,
     offset = offset,
     status = statuses.takeIf { it.isNotEmpty() },
-    sessionId = Clerk.session?.id,
+    sessionId = currentSessionId(),
   )
 }
 
 suspend fun User.getOrganizationCreationDefaults():
   ClerkResult<OrganizationCreationDefaults, ClerkErrorResponse> {
-  return ClerkApi.user.getOrganizationCreationDefaults(sessionId = Clerk.session?.id)
+  return ClerkApi.user.getOrganizationCreationDefaults(sessionId = currentSessionId())
+}
+
+internal fun currentSessionId(): String? {
+  val clientSessionId =
+    runCatching {
+        val client = Clerk.client
+        val pendingChooseOrganizationSession =
+          client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
+        val lastActiveSession =
+          client.lastActiveSessionId?.let { lastActiveSessionId ->
+            client.sessions.firstOrNull { it.id == lastActiveSessionId }
+          }
+        pendingChooseOrganizationSession?.id ?: lastActiveSession?.id
+      }
+      .getOrNull()
+
+  return clientSessionId ?: Clerk.session?.id
 }
 
 /**

@@ -65,6 +65,7 @@ interface OrganizationApi {
   suspend fun createOrganization(
     @Field("name") name: String,
     @Field("slug") slug: String? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<Organization, ClerkErrorResponse>
 
   /**

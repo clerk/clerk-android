@@ -16,6 +16,8 @@ import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.UserOrganizationInvitation
 import com.clerk.api.organizations.accept
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTaskKey
+import com.clerk.api.session.pendingTaskKey
 import com.clerk.api.user.User
 import com.clerk.api.user.getOrganizationCreationDefaults
 import com.clerk.api.user.getOrganizationInvitations
@@ -38,15 +40,9 @@ internal class SessionTaskChooseOrganizationViewModel : ViewModel() {
   fun load() {
     if (_state.value.initialLoadAttempted) return
 
-    val user = Clerk.user
+    val user = currentTaskUser()
     if (user == null) {
-      _state.value =
-        _state.value.copy(
-          isLoading = false,
-          initialLoadAttempted = true,
-          hasLoadedInitialResources = true,
-          canCreateOrganization = false,
-        )
+      _state.value = _state.value.copy(isLoading = true, errorMessage = null)
       return
     }
 
@@ -91,7 +87,7 @@ internal class SessionTaskChooseOrganizationViewModel : ViewModel() {
   }
 
   fun loadMoreMemberships() {
-    val user = Clerk.user ?: return
+    val user = currentTaskUser() ?: return
     val current = _state.value
     if (!current.membershipsHasNextPage || current.isLoadingMoreMemberships) return
 
@@ -123,7 +119,7 @@ internal class SessionTaskChooseOrganizationViewModel : ViewModel() {
   }
 
   fun loadMoreInvitations() {
-    val user = Clerk.user ?: return
+    val user = currentTaskUser() ?: return
     val current = _state.value
     if (!current.invitationsHasNextPage || current.isLoadingMoreInvitations) return
 
@@ -159,7 +155,7 @@ internal class SessionTaskChooseOrganizationViewModel : ViewModel() {
   }
 
   fun loadMoreSuggestions() {
-    val user = Clerk.user ?: return
+    val user = currentTaskUser() ?: return
     val current = _state.value
     if (!current.suggestionsHasNextPage || current.isLoadingMoreSuggestions) return
 
@@ -195,7 +191,7 @@ internal class SessionTaskChooseOrganizationViewModel : ViewModel() {
   }
 
   fun selectOrganization(organizationId: String) {
-    val session = Clerk.session
+    val session = currentTaskSession()
     if (session == null) {
       _state.value = _state.value.copy(errorMessage = "Session does not exist")
       return
@@ -283,6 +279,25 @@ internal class SessionTaskChooseOrganizationViewModel : ViewModel() {
 
   fun clearError() {
     _state.value = _state.value.copy(errorMessage = null)
+  }
+
+  private fun currentTaskUser(): User? = currentTaskSession()?.user ?: Clerk.user
+
+  private fun currentTaskSession(): Session? {
+    val clientSession =
+      runCatching {
+          val client = Clerk.client
+          val pendingChooseOrganizationSession =
+            client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
+          val lastActiveSession =
+            client.lastActiveSessionId?.let { lastActiveSessionId ->
+              client.sessions.firstOrNull { it.id == lastActiveSessionId }
+            }
+          pendingChooseOrganizationSession ?: lastActiveSession
+        }
+        .getOrNull()
+
+    return clientSession ?: Clerk.session
   }
 
   private suspend fun loadInitialResources(user: User): InitialLoadResult = coroutineScope {

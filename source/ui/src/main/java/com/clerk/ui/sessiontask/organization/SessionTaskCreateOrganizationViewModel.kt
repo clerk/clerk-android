@@ -10,6 +10,8 @@ import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.updateLogo
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTaskKey
+import com.clerk.api.session.pendingTaskKey
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,8 +25,8 @@ internal class SessionTaskCreateOrganizationViewModel : ViewModel() {
   val state = _state.asStateFlow()
 
   fun createOrganization(name: String, slug: String?, logoFile: File?) {
-    val session = Clerk.session
-    if (session == null) {
+    val sessionId = currentTaskSessionId()
+    if (sessionId == null) {
       _state.value = _state.value.copy(errorMessage = "Session does not exist")
       return
     }
@@ -35,7 +37,7 @@ internal class SessionTaskCreateOrganizationViewModel : ViewModel() {
       Organization.create(name = name, slug = slug)
         .onSuccess { organization ->
           uploadLogoIfNeeded(organization = organization, logoFile = logoFile)
-          setActiveOrganization(session = session, organizationId = organization.id)
+          setActiveOrganization(sessionId = sessionId, organizationId = organization.id)
         }
         .onFailure { failure ->
           withContext(Dispatchers.Main) {
@@ -53,6 +55,23 @@ internal class SessionTaskCreateOrganizationViewModel : ViewModel() {
     _state.value = _state.value.copy(errorMessage = null)
   }
 
+  private fun currentTaskSessionId(): String? {
+    val clientSession =
+      runCatching {
+          val client = Clerk.client
+          val pendingChooseOrganizationSession =
+            client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
+          val lastActiveSession =
+            client.lastActiveSessionId?.let { lastActiveSessionId ->
+              client.sessions.firstOrNull { it.id == lastActiveSessionId }
+            }
+          pendingChooseOrganizationSession ?: lastActiveSession
+        }
+        .getOrNull()
+
+    return clientSession?.id ?: Clerk.session?.id
+  }
+
   private suspend fun uploadLogoIfNeeded(organization: Organization, logoFile: File?) {
     if (logoFile == null) return
 
@@ -61,9 +80,9 @@ internal class SessionTaskCreateOrganizationViewModel : ViewModel() {
     }
   }
 
-  private suspend fun setActiveOrganization(session: Session, organizationId: String) {
+  private suspend fun setActiveOrganization(sessionId: String, organizationId: String) {
     Clerk.auth
-      .setActive(sessionId = session.id, organizationId = organizationId)
+      .setActive(sessionId = sessionId, organizationId = organizationId)
       .onSuccess {
         withContext(Dispatchers.Main) {
           _state.value = _state.value.copy(isLoading = false, completedSession = it)
