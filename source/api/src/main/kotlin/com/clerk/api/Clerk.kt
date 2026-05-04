@@ -280,6 +280,14 @@ object Clerk {
         false
       }
 
+  val organizationSelectionIsForced: Boolean
+    get() =
+      if (::environment.isInitialized) {
+        environment.organizationSettings.forceOrganizationSelection
+      } else {
+        false
+      }
+
   val organizationSlugIsEnabled: Boolean
     get() =
       if (::environment.isInitialized) !environment.organizationSettings.slug.disabled else true

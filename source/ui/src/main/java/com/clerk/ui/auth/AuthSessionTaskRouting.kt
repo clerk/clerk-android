@@ -53,6 +53,7 @@ internal fun resolveCorrespondingSession(
 internal fun postAuthCompletionAction(
   taskKey: SessionTaskKey?,
   hasUnresolvedCreatedSession: Boolean,
+  shouldChooseOrganizationForCreatedSession: Boolean,
 ): PostAuthCompletionAction {
   return when {
     taskKey == SessionTaskKey.MFA_REQUIRED -> PostAuthCompletionAction.ROUTE_TO_MFA
@@ -61,6 +62,8 @@ internal fun postAuthCompletionAction(
       PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION
     taskKey == SessionTaskKey.UNKNOWN -> PostAuthCompletionAction.ROUTE_TO_HELP
     hasUnresolvedCreatedSession -> PostAuthCompletionAction.ROUTE_TO_MFA
+    shouldChooseOrganizationForCreatedSession ->
+      PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION
     else -> PostAuthCompletionAction.COMPLETE_AUTH
   }
 }
