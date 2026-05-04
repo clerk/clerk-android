@@ -103,12 +103,7 @@ val SessionTask.parsedKey: SessionTaskKey
   get() = SessionTaskKey.fromRaw(key)
 
 val Session.pendingTaskKey: SessionTaskKey?
-  get() =
-    if (status == Session.SessionStatus.PENDING) {
-      currentTask?.parsedKey ?: tasks.firstOrNull()?.parsedKey
-    } else {
-      null
-    }
+  get() = currentTask?.parsedKey ?: tasks.firstOrNull()?.parsedKey
 
 val Session.hasMfaRequiredTask: Boolean
   get() =

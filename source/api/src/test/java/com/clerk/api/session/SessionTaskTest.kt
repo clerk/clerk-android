@@ -37,12 +37,23 @@ class SessionTaskTest {
   }
 
   @Test
-  fun `requiresForcedMfa is false for active session with mfa task`() {
+  fun `requiresForcedMfa is true for active session with mfa task`() {
     val session =
       session(status = Session.SessionStatus.ACTIVE, tasks = listOf(SessionTask("mfa_required")))
 
-    assertFalse(session.requiresForcedMfa)
+    assertTrue(session.requiresForcedMfa)
     assertTrue(session.hasMfaRequiredTask)
+  }
+
+  @Test
+  fun `pendingTaskKey returns choose organization for active session with choose organization task`() {
+    val session =
+      session(
+        status = Session.SessionStatus.ACTIVE,
+        tasks = listOf(SessionTask("choose-organization")),
+      )
+
+    assertEquals(SessionTaskKey.CHOOSE_ORGANIZATION, session.pendingTaskKey)
   }
 
   @Test
