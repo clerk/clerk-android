@@ -48,6 +48,29 @@ class AuthStateSessionTaskRoutingTest {
     assertFalse(authCompleted)
   }
 
+  @Test
+  fun `complete sign in routes to choose organization session task before auth completion`() {
+    val authState = createAuthState()
+    val signIn =
+      SignIn(id = "sign_in_123", status = SignIn.Status.COMPLETE, createdSessionId = "sess_123")
+    val session =
+      Session(
+        id = "sess_123",
+        status = Session.SessionStatus.PENDING,
+        expireAt = 0L,
+        lastActiveAt = 0L,
+        createdAt = 0L,
+        updatedAt = 0L,
+        currentTask = SessionTask("choose-organization"),
+      )
+    var authCompleted = false
+
+    authState.setToStepForStatus(signIn, session) { authCompleted = true }
+
+    assertEquals(AuthDestination.SessionTaskChooseOrganization, authState.backStack.last())
+    assertFalse(authCompleted)
+  }
+
   private fun createAuthState(): AuthState {
     return AuthState(
       backStack = NavBackStack(AuthDestination.AuthStart),

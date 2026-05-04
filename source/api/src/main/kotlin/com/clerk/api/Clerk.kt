@@ -272,6 +272,26 @@ object Clerk {
   val deleteSelfIsEnabled: Boolean
     get() = if (::environment.isInitialized) environment.userSettings.actions.deleteSelf else false
 
+  val organizationCreationDefaultsIsEnabled: Boolean
+    get() =
+      if (::environment.isInitialized) {
+        environment.organizationSettings.organizationCreationDefaults.enabled
+      } else {
+        false
+      }
+
+  val organizationSelectionIsForced: Boolean
+    get() =
+      if (::environment.isInitialized) {
+        environment.organizationSettings.forceOrganizationSelection
+      } else {
+        false
+      }
+
+  val organizationSlugIsEnabled: Boolean
+    get() =
+      if (::environment.isInitialized) !environment.organizationSettings.slug.disabled else true
+
   /**
    * The image URL for the application logo used in authentication UI components.
    *

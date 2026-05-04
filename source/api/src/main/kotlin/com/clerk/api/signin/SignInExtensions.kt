@@ -16,6 +16,8 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.FactorComparators
 import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.sso.OAuthResult
+import com.clerk.api.sso.SSOService
 
 // region Factor Selection Extensions
 
@@ -145,6 +147,32 @@ private val SignIn.factorWhenOtpIsPreferred: Factor?
 // endregion
 
 // region Auth Namespace Extension Functions
+
+/**
+ * Continues a prepared redirect verification.
+ *
+ * Use this after a sign-in has prepared a first factor that returned an
+ * `externalVerificationRedirectUrl`, such as Enterprise SSO.
+ *
+ * @param transferable Whether this authentication flow allows transferring to a sign-up if the user
+ *   doesn't have an account. Defaults to `true`.
+ * @return A [ClerkResult] containing the redirect authentication result on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignIn.authenticateWithPreparedRedirect(
+  transferable: Boolean = true
+): ClerkResult<OAuthResult, ClerkErrorResponse> {
+  val externalVerificationRedirectUrl =
+    firstFactorVerification?.externalVerificationRedirectUrl
+      ?: return ClerkResult.unknownFailure(
+        IllegalStateException("External verification redirect URL is missing")
+      )
+
+  return SSOService.authenticateWithPreparedRedirect(
+    externalVerificationRedirectUrl = externalVerificationRedirectUrl,
+    transferable = transferable,
+  )
+}
 
 /**
  * Sends a verification code to the specified email or phone.

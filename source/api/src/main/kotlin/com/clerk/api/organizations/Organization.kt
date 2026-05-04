@@ -7,6 +7,7 @@ import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.user.currentSessionId
 import java.io.File
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -61,8 +62,15 @@ data class Organization(
      * @return A [ClerkResult] containing the created [Organization] on success, or a
      *   [ClerkErrorResponse] on failure.
      */
-    suspend fun create(name: String): ClerkResult<Organization, ClerkErrorResponse> {
-      return ClerkApi.organization.createOrganization(name = name)
+    suspend fun create(
+      name: String,
+      slug: String? = null,
+    ): ClerkResult<Organization, ClerkErrorResponse> {
+      return ClerkApi.organization.createOrganization(
+        name = name,
+        slug = slug,
+        sessionId = currentSessionId(),
+      )
     }
 
     /**

@@ -19,6 +19,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
 import com.clerk.api.ui.ClerkTheme
@@ -28,6 +29,8 @@ import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
+import com.clerk.ui.sessiontask.organization.SessionTaskChooseOrganizationView
+import com.clerk.ui.sessiontask.organization.SessionTaskCreateOrganizationView
 import com.clerk.ui.signin.SignInFactorOneView
 import com.clerk.ui.signin.SignInFactorTwoView
 import com.clerk.ui.signin.alternativemethods.SignInFactorAlternativeMethodsView
@@ -86,11 +89,16 @@ fun AuthView(
 private fun ObservePendingSessionTaskRouting(backStack: NavBackStack<NavKey>) {
   val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
   val pendingTaskKey = session?.pendingTaskKey
-  LaunchedEffect(pendingTaskKey, backStack.lastOrNull()) {
+  LaunchedEffect(session?.id, pendingTaskKey, backStack.lastOrNull()) {
     val top = backStack.lastOrNull()
-    pendingSessionTaskDestination(pendingTaskKey)?.let { destination ->
-      if (shouldRouteToPendingSessionTask(pendingTaskKey, top)) {
-        backStack.add(destination)
+    when {
+      session == null && top.isSessionTaskDestination() -> {
+        while (backStack.size > 1) {
+          backStack.removeLastOrNull()
+        }
+      }
+      shouldRouteToPendingSessionTask(pendingTaskKey, top) -> {
+        pendingSessionTaskDestination(pendingTaskKey)?.let { backStack.add(it) }
       }
     }
   }
@@ -128,6 +136,7 @@ private fun AuthNavDisplay(
   )
 }
 
+@Suppress("LongMethod")
 private fun authEntryProvider(backStack: NavBackStack<NavKey>, onAuthComplete: () -> Unit) =
   entryProvider {
     entry<AuthDestination.AuthStart> { AuthStartView(onAuthComplete = onAuthComplete) }
@@ -146,6 +155,22 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, onAuthComplete: (
     entry<AuthDestination.SessionTaskMfa> { SessionTaskMfaView(onAuthComplete = onAuthComplete) }
     entry<AuthDestination.SessionTaskResetPassword> {
       SessionTaskResetPasswordView(onAuthComplete = onAuthComplete)
+    }
+    entry<AuthDestination.SessionTaskChooseOrganization> {
+      val authState = LocalAuthState.current
+      SessionTaskChooseOrganizationView(
+        onAuthComplete = onAuthComplete,
+        onCreateOrganization = {
+          authState.navigateTo(AuthDestination.SessionTaskCreateOrganization(it))
+        },
+      )
+    }
+    entry<AuthDestination.SessionTaskCreateOrganization> {
+      SessionTaskCreateOrganizationView(
+        creationDefaults = it.creationDefaults,
+        showBackButton = true,
+        onAuthComplete = onAuthComplete,
+      )
     }
     entry<AuthDestination.SignInFactorTwoUseAnotherMethod> {
       SignInFactorAlternativeMethodsView(
@@ -186,13 +211,29 @@ internal fun pendingSessionTaskDestination(taskKey: SessionTaskKey?): NavKey? {
   return when (taskKey) {
     SessionTaskKey.MFA_REQUIRED -> AuthDestination.SessionTaskMfa
     SessionTaskKey.RESET_PASSWORD -> AuthDestination.SessionTaskResetPassword
+    SessionTaskKey.CHOOSE_ORGANIZATION -> AuthDestination.SessionTaskChooseOrganization
     SessionTaskKey.UNKNOWN -> AuthDestination.SignInGetHelp
     null -> null
   }
 }
 
 internal fun shouldRouteToPendingSessionTask(taskKey: SessionTaskKey?, top: NavKey?): Boolean {
-  return pendingSessionTaskDestination(taskKey)?.let { it != top } == true
+  val destination = pendingSessionTaskDestination(taskKey)
+  return taskKey != null &&
+    destination != null &&
+    !top.satisfiesPendingSessionTask(taskKey = taskKey, destination = destination)
+}
+
+private fun NavKey?.satisfiesPendingSessionTask(
+  taskKey: SessionTaskKey,
+  destination: NavKey,
+): Boolean {
+  return when (taskKey) {
+    SessionTaskKey.CHOOSE_ORGANIZATION ->
+      this == AuthDestination.SessionTaskChooseOrganization ||
+        this is AuthDestination.SessionTaskCreateOrganization
+    else -> this == destination
+  }
 }
 
 @Composable
@@ -227,6 +268,13 @@ internal object AuthDestination {
   @Serializable data object SessionTaskMfa : NavKey
 
   @Serializable data object SessionTaskResetPassword : NavKey
+
+  @Serializable data object SessionTaskChooseOrganization : NavKey
+
+  @Serializable
+  data class SessionTaskCreateOrganization(
+    val creationDefaults: OrganizationCreationDefaults? = null
+  ) : NavKey
 
   @Serializable data class SignInFactorTwoUseAnotherMethod(val currentFactor: Factor) : NavKey
 

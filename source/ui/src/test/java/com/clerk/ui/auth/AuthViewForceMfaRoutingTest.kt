@@ -44,6 +44,17 @@ class AuthViewForceMfaRoutingTest {
   }
 
   @Test
+  fun `routes to choose organization session task when task is pending`() {
+    val shouldRoute =
+      shouldRouteToPendingSessionTask(
+        taskKey = SessionTaskKey.CHOOSE_ORGANIZATION,
+        top = AuthDestination.AuthStart,
+      )
+
+    assertTrue(shouldRoute)
+  }
+
+  @Test
   fun `does not reroute when already on reset password session task destination`() {
     val shouldRoute =
       shouldRouteToPendingSessionTask(
@@ -52,5 +63,26 @@ class AuthViewForceMfaRoutingTest {
       )
 
     assertFalse(shouldRoute)
+  }
+
+  @Test
+  fun `does not reroute from create organization while choose organization task is pending`() {
+    val shouldRoute =
+      shouldRouteToPendingSessionTask(
+        taskKey = SessionTaskKey.CHOOSE_ORGANIZATION,
+        top = AuthDestination.SessionTaskCreateOrganization(),
+      )
+
+    assertFalse(shouldRoute)
+  }
+
+  @Test
+  fun `create organization is a session task destination`() {
+    assertTrue(AuthDestination.SessionTaskCreateOrganization().isSessionTaskDestination())
+  }
+
+  @Test
+  fun `regular auth route is not a session task destination`() {
+    assertFalse(AuthDestination.SignInGetHelp.isSessionTaskDestination())
   }
 }

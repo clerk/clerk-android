@@ -14,6 +14,7 @@ import com.clerk.api.network.model.image.ImageResource
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
 import com.clerk.api.organizations.UserOrganizationInvitation
@@ -21,6 +22,8 @@ import com.clerk.api.passkeys.Passkey
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.phonenumber.PhoneNumber
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTaskKey
+import com.clerk.api.session.pendingTaskKey
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
@@ -273,7 +276,7 @@ data class User(
         limit = limit,
         offset = offset,
         status = status,
-        sessionId = Clerk.session?.id,
+        sessionId = currentSessionId(),
       )
     }
 
@@ -302,8 +305,32 @@ data class User(
       return ClerkApi.user.getOrganizationSuggestions(
         limit = limit,
         offset = offset,
-        status = status,
-        sessionId = Clerk.session?.id,
+        status = status?.let(::listOf),
+        sessionId = currentSessionId(),
+      )
+    }
+
+    /**
+     * Retrieves organization suggestions for the current user using one or more status filters.
+     *
+     * @param limit The maximum number of organization suggestions to retrieve per request. Default
+     *   is 20.
+     * @param offset The number of organization suggestions to skip before starting to return
+     *   results. Used for pagination. Default is 0.
+     * @param statuses Optional filters to retrieve suggestions by status.
+     * @return A [ClerkResult] containing a [ClerkPaginatedResponse] of [OrganizationSuggestion]
+     *   objects on success, or a [ClerkErrorResponse] on failure
+     */
+    suspend fun getOrganizationSuggestions(
+      limit: Int = 20,
+      offset: Int = 0,
+      statuses: List<String>,
+    ): ClerkResult<ClerkPaginatedResponse<OrganizationSuggestion>, ClerkErrorResponse> {
+      return ClerkApi.user.getOrganizationSuggestions(
+        limit = limit,
+        offset = offset,
+        status = statuses.takeIf { it.isNotEmpty() },
+        sessionId = currentSessionId(),
       )
     }
   }
@@ -662,8 +689,56 @@ suspend fun User.getOrganizationMemberships(
   return ClerkApi.user.getOrganizationMemberships(
     limit = limit,
     offset = offset,
-    sessionId = Clerk.session?.id,
+    sessionId = currentSessionId(),
   )
+}
+
+suspend fun User.getOrganizationInvitations(
+  limit: Int = 20,
+  offset: Int = 0,
+  status: String? = null,
+): ClerkResult<ClerkPaginatedResponse<UserOrganizationInvitation>, ClerkErrorResponse> {
+  return ClerkApi.user.getOrganizationInvitations(
+    limit = limit,
+    offset = offset,
+    status = status,
+    sessionId = currentSessionId(),
+  )
+}
+
+suspend fun User.getOrganizationSuggestions(
+  limit: Int = 20,
+  offset: Int = 0,
+  statuses: List<String> = emptyList(),
+): ClerkResult<ClerkPaginatedResponse<OrganizationSuggestion>, ClerkErrorResponse> {
+  return ClerkApi.user.getOrganizationSuggestions(
+    limit = limit,
+    offset = offset,
+    status = statuses.takeIf { it.isNotEmpty() },
+    sessionId = currentSessionId(),
+  )
+}
+
+suspend fun User.getOrganizationCreationDefaults():
+  ClerkResult<OrganizationCreationDefaults, ClerkErrorResponse> {
+  return ClerkApi.user.getOrganizationCreationDefaults(sessionId = currentSessionId())
+}
+
+internal fun currentSessionId(): String? {
+  val clientSessionId =
+    runCatching {
+        val client = Clerk.client
+        val pendingChooseOrganizationSession =
+          client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
+        val lastActiveSession =
+          client.lastActiveSessionId?.let { lastActiveSessionId ->
+            client.sessions.firstOrNull { it.id == lastActiveSessionId }
+          }
+        pendingChooseOrganizationSession?.id ?: lastActiveSession?.id
+      }
+      .getOrNull()
+
+  return clientSessionId ?: Clerk.session?.id
 }
 
 /**
