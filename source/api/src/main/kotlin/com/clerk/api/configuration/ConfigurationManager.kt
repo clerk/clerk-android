@@ -31,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -251,6 +252,7 @@ internal class ConfigurationManager {
   @Synchronized
   fun reset() {
     configurationVersion += 1
+    scope.coroutineContext.cancelChildren()
     initializationJob?.cancel()
     refreshJob?.cancel()
     initializationJob = null
@@ -382,17 +384,19 @@ internal class ConfigurationManager {
     val failure = validateRefreshPreconditions(mode, attempt.expectedConfigurationVersion)
     if (failure != null) return failure
 
-    if (Clerk.debugMode) {
-      ClerkLog.d("Starting client and environment refresh (attempt ${attempt.retryCount + 1})")
-    }
-
-    // Clear error state on new attempt
-    if (attempt.retryCount == 0 && mode == RefreshMode.INITIALIZATION) {
-      _initializationError.value = null
-    }
-
     return refreshMutex.withLock {
+      val lockedFailure = validateRefreshPreconditions(mode, attempt.expectedConfigurationVersion)
+      if (lockedFailure != null) return@withLock lockedFailure
+
       try {
+        if (Clerk.debugMode) {
+          ClerkLog.d("Starting client and environment refresh (attempt ${attempt.retryCount + 1})")
+        }
+
+        if (attempt.retryCount == 0 && mode == RefreshMode.INITIALIZATION) {
+          _initializationError.value = null
+        }
+
         executeRefresh(attempt = attempt, mode = mode, skipClientId = skipClientId)
       } catch (e: Exception) {
         ClerkLog.e("Exception during client and environment refresh: ${e.message}")
