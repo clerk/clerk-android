@@ -3,6 +3,7 @@ package com.clerk.api
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.ContextWrapper
 import com.clerk.api.Clerk.activeSession
 import com.clerk.api.Clerk.activeUser
 import com.clerk.api.Clerk.initialize
@@ -589,6 +590,15 @@ object Clerk {
       application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
       trackedApplication = application
     }
+    // Seed currentActivity from the passed context if it (or a wrapper around
+    // it) is an Activity. Without this, callers that initialize() after the
+    // host Activity has already passed onResume — e.g. React Native bridges,
+    // late-init flows behind a permission gate, or any framework that boots
+    // Clerk after activity creation — would see currentActivity stay null
+    // until the next OS-driven resume cycle, breaking the first Credential
+    // Manager call (Google sign-in, passkeys). Callers without an Activity
+    // context can use [attachActivity] instead.
+    context.findActivityOrNull()?.let { currentActivity = WeakReference(it) }
     this.customTheme = theme
     this.telemetryEnabled = options?.telemetryEnabled ?: true
     configurationManager.configure(
@@ -596,6 +606,47 @@ object Clerk {
       publishableKey = publishableKey,
       options = options,
     )
+  }
+
+  /**
+   * Provides the current foreground [Activity] to Clerk explicitly.
+   *
+   * Useful for framework integrations — e.g. React Native bridges, plug-in
+   * SDKs, or any host that calls [initialize] with a non-Activity [Context]
+   * after the host Activity has already passed [Activity.onResume]. In that
+   * case the [Application.ActivityLifecycleCallbacks] registered by
+   * [initialize] miss the initial resume, leaving Clerk's tracked activity
+   * null — which makes the first Credential Manager call (Google sign-in,
+   * passkeys) fail with a `MissingActivity` error until the user backgrounds
+   * and foregrounds the app.
+   *
+   * Calling this with the current Activity immediately after [initialize]
+   * eliminates that gap. Subsequent activity changes are still observed via
+   * the registered lifecycle callbacks; this method only seeds the initial
+   * value.
+   *
+   * @param activity The current foreground Activity. Held as a [WeakReference]
+   *   so it can still be garbage-collected when destroyed.
+   */
+  fun attachActivity(activity: Activity) {
+    currentActivity = WeakReference(activity)
+  }
+
+  /**
+   * Walks a [Context]/[ContextWrapper] chain looking for an [Activity].
+   *
+   * Returns the first Activity found, or null if the chain bottoms out at the
+   * Application context (or any other non-Activity context). Used by
+   * [initialize] so callers that pass an Activity (or a wrapper around one)
+   * automatically seed [currentActivity].
+   */
+  private fun Context.findActivityOrNull(): Activity? {
+    var ctx: Context? = this
+    while (ctx is ContextWrapper) {
+      if (ctx is Activity) return ctx
+      ctx = ctx.baseContext
+    }
+    return null
   }
 
   /**
