@@ -6,23 +6,35 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
+import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
+import com.clerk.ui.userprofile.account.UserProfileAccountSwitcherSheet
 import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.custom.CustomRouteNavKey
@@ -30,7 +42,6 @@ import com.clerk.ui.userprofile.custom.LocalUserProfileCustomNavigator
 import com.clerk.ui.userprofile.custom.UserProfileCustomNavigator
 import com.clerk.ui.userprofile.custom.UserProfileCustomRow
 import com.clerk.ui.userprofile.custom.effectiveCustomRows
-import kotlinx.collections.immutable.toImmutableList
 import com.clerk.ui.userprofile.detail.UserProfileDetailView
 import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.Origin
@@ -39,6 +50,7 @@ import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRename
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
 import com.clerk.ui.userprofile.verify.Mode
 import com.clerk.ui.userprofile.verify.UserProfileVerifyView
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
 
 @SuppressLint("ComposeCompositionLocalUsage")
@@ -66,11 +78,13 @@ internal fun UserProfileStateProvider(
  *
  * @param clerkTheme Optional theme customization for the user profile UI.
  * @param customRows Custom rows to display on the profile account screen.
- * @param customDestination Composable that renders the destination for a given route key. The
- *   route key matches [UserProfileCustomRow.routeKey] of the tapped row.
+ * @param customDestination Composable that renders the destination for a given route key. The route
+ *   key matches [UserProfileCustomRow.routeKey] of the tapped row.
  * @param onDismiss Callback when the user profile view is dismissed.
  */
 @OptIn(ExperimentalAnimationApi::class)
+@SuppressLint("ComposeUnstableReceiver")
+@Suppress("LongMethod")
 @Composable
 fun UserProfileView(
   clerkTheme: ClerkTheme? = null,
@@ -80,10 +94,18 @@ fun UserProfileView(
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
+    val user by Clerk.userFlow.collectAsStateWithLifecycle()
+    var showAccountSwitcher by rememberSaveable { mutableStateOf(false) }
+    var showAuth by rememberSaveable { mutableStateOf(false) }
     UserProfileStateProvider(backStack) {
       val telemetry = LocalTelemetryCollector.current
 
       LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
+      LaunchedEffect(user?.id) {
+        if (user == null) {
+          onDismiss()
+        }
+      }
 
       NavDisplay(
         backStack = backStack,
@@ -111,19 +133,39 @@ fun UserProfileView(
         },
         entryProvider =
           entryProvider {
-            UserProfileEntries(backStack, onDismiss, customRows, customDestination)
+            userProfileEntries(
+              backStack = backStack,
+              onDismiss = onDismiss,
+              customRows = customRows,
+              customDestination = customDestination,
+              onSwitchAccount = { showAccountSwitcher = true },
+              onAddAccount = { showAuth = true },
+            )
           },
       )
+
+      if (showAccountSwitcher) {
+        UserProfileAccountSwitcherSheet(
+          onDismissRequest = { showAccountSwitcher = false },
+          onAddAccount = { showAuth = true },
+        )
+      }
+
+      if (showAuth) {
+        AuthDialog(onDismiss = { showAuth = false })
+      }
     }
   }
 }
 
-@Composable
-private fun EntryProviderScope<NavKey>.UserProfileEntries(
+@Suppress("LongMethod", "LongParameterList")
+private fun EntryProviderScope<NavKey>.userProfileEntries(
   backStack: NavBackStack<NavKey>,
   onDismiss: () -> Unit,
   customRows: List<UserProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
+  onSwitchAccount: () -> Unit,
+  onAddAccount: () -> Unit,
 ) {
   entry<UserProfileDestination.UserProfileAccount> {
     UserProfileAccountView(
@@ -132,6 +174,12 @@ private fun EntryProviderScope<NavKey>.UserProfileEntries(
           UserProfileAction.Profile -> backStack.add(UserProfileDestination.UserProfileDetail)
 
           UserProfileAction.Security -> backStack.add(UserProfileDestination.UserProfileSecurity)
+
+          UserProfileAction.SwitchAccount -> onSwitchAccount()
+
+          UserProfileAction.AddAccount -> onAddAccount()
+
+          UserProfileAction.SignOut -> Unit
         }
       },
       onBackPressed = {
@@ -178,9 +226,7 @@ private fun EntryProviderScope<NavKey>.UserProfileEntries(
                 backStack.removeLastOrNull()
               }
             },
-            navigateBackAction = {
-              if (backStack.size > 1) backStack.removeLastOrNull()
-            },
+            navigateBackAction = { if (backStack.size > 1) backStack.removeLastOrNull() },
           )
         }
       CompositionLocalProvider(LocalUserProfileCustomNavigator provides navigator) {
@@ -189,6 +235,16 @@ private fun EntryProviderScope<NavKey>.UserProfileEntries(
     } else {
       LaunchedEffect(Unit) { backStack.removeLastOrNull() }
     }
+  }
+}
+
+@Composable
+private fun AuthDialog(onDismiss: () -> Unit) {
+  Dialog(
+    onDismissRequest = onDismiss,
+    properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+  ) {
+    AuthView(modifier = Modifier.fillMaxSize(), onAuthComplete = onDismiss)
   }
 }
 

@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * Provides access to authentication state, user information, and core functionality for managing
  * user sessions and sign-in flows.
  */
+@Suppress("TooManyFunctions")
 object Clerk {
 
   // region Configuration & Initialization
@@ -381,9 +382,29 @@ object Clerk {
   val mfaAuthenticatorAppIsEnabled: Boolean
     get() = if (::environment.isInitialized) environment.mfaAuthenticatorAppIsEnabled else false
 
+  /**
+   * Indicates whether this Clerk instance allows multiple sessions on the same client.
+   *
+   * When enabled, a client can hold sessions for multiple accounts and switch the active session by
+   * updating [Client.lastActiveSessionId].
+   */
+  val multiSessionModeIsEnabled: Boolean
+    get() = if (::environment.isInitialized) !environment.authConfig.singleSessionMode else false
+
   // endregion
 
   // region Session Management
+
+  /** Internal mutable state flow for all sessions on the current client. */
+  private val _sessions = MutableStateFlow<List<Session>>(emptyList())
+
+  /**
+   * Reactive state for all sessions available on the current client.
+   *
+   * In multi-session mode this may contain sessions for multiple user accounts. The current session
+   * is still determined by [Client.lastActiveSessionId] and exposed through [sessionFlow].
+   */
+  val sessionsFlow: StateFlow<List<Session>> = _sessions.asStateFlow()
 
   /** Internal mutable state flow for session changes. */
   private val _session = MutableStateFlow<Session?>(null)
@@ -611,22 +632,19 @@ object Clerk {
   /**
    * Provides the current foreground [Activity] to Clerk explicitly.
    *
-   * Useful for framework integrations — e.g. React Native bridges, plug-in
-   * SDKs, or any host that calls [initialize] with a non-Activity [Context]
-   * after the host Activity has already passed [Activity.onResume]. In that
-   * case the [Application.ActivityLifecycleCallbacks] registered by
-   * [initialize] miss the initial resume, leaving Clerk's tracked activity
-   * null — which makes the first Credential Manager call (Google sign-in,
-   * passkeys) fail with a `MissingActivity` error until the user backgrounds
-   * and foregrounds the app.
+   * Useful for framework integrations — e.g. React Native bridges, plug-in SDKs, or any host that
+   * calls [initialize] with a non-Activity [Context] after the host Activity has already passed
+   * [Activity.onResume]. In that case the [Application.ActivityLifecycleCallbacks] registered by
+   * [initialize] miss the initial resume, leaving Clerk's tracked activity null — which makes the
+   * first Credential Manager call (Google sign-in, passkeys) fail with a `MissingActivity` error
+   * until the user backgrounds and foregrounds the app.
    *
-   * Calling this with the current Activity immediately after [initialize]
-   * eliminates that gap. Subsequent activity changes are still observed via
-   * the registered lifecycle callbacks; this method only seeds the initial
-   * value.
+   * Calling this with the current Activity immediately after [initialize] eliminates that gap.
+   * Subsequent activity changes are still observed via the registered lifecycle callbacks; this
+   * method only seeds the initial value.
    *
-   * @param activity The current foreground Activity. Held as a [WeakReference]
-   *   so it can still be garbage-collected when destroyed.
+   * @param activity The current foreground Activity. Held as a [WeakReference] so it can still be
+   *   garbage-collected when destroyed.
    */
   fun attachActivity(activity: Activity) {
     currentActivity = WeakReference(activity)
@@ -635,10 +653,9 @@ object Clerk {
   /**
    * Walks a [Context]/[ContextWrapper] chain looking for an [Activity].
    *
-   * Returns the first Activity found, or null if the chain bottoms out at the
-   * Application context (or any other non-Activity context). Used by
-   * [initialize] so callers that pass an Activity (or a wrapper around one)
-   * automatically seed [currentActivity].
+   * Returns the first Activity found, or null if the chain bottoms out at the Application context
+   * (or any other non-Activity context). Used by [initialize] so callers that pass an Activity (or
+   * a wrapper around one) automatically seed [currentActivity].
    */
   private fun Context.findActivityOrNull(): Activity? {
     var ctx: Context? = this
@@ -741,10 +758,8 @@ object Clerk {
     val previousSession = _session.value
 
     // Find session by ID from all sessions (not just active sessions)
-    val currentSession =
-      if (::client.isInitialized) {
-        client.sessions.firstOrNull { it.id == client.lastActiveSessionId }
-      } else null
+    val currentSessions = if (::client.isInitialized) client.sessions else emptyList()
+    val currentSession = currentSessions.firstOrNull { it.id == client.lastActiveSessionId }
 
     if (currentSession?.status == Session.SessionStatus.PENDING) {
       ClerkLog.w(
@@ -754,6 +769,7 @@ object Clerk {
       )
     }
 
+    _sessions.value = currentSessions
     _session.value = currentSession
     _userFlow.value = currentSession?.user
 
@@ -779,6 +795,7 @@ object Clerk {
    */
   internal fun clearSessionAndUserState() {
     val previousSession = _session.value
+    _sessions.value = emptyList()
     _session.value = null
     _userFlow.value = null
 

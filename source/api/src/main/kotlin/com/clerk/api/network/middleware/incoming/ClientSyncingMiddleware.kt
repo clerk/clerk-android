@@ -41,7 +41,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
 
     // Only process JSON responses
     val body = response.body
-    if (response.isSuccessful && body != null && body.contentType()?.subtype == "json") {
+    if (response.isSuccessful && body.contentType()?.subtype == "json") {
       val responseBody = body.string()
       responseBody.let {
         try {
@@ -49,11 +49,18 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
           val jsonElement = json.parseToJsonElement(it)
           if (jsonElement is JsonObject && jsonElement.containsKey("client")) {
             val clientJson = jsonElement["client"]
-            if (clientJson != null && clientJson !is JsonNull) {
-              // Extract and set the client
-              val client = json.decodeFromJsonElement<Client>(clientJson)
-              ClerkLog.d("Client synced: ${client.id}")
-              Clerk.updateClient(client)
+            when (clientJson) {
+              is JsonNull -> {
+                ClerkLog.d("Client sync cleared by explicit null client")
+                Clerk.updateClient(Client())
+              }
+              null -> Unit
+              else -> {
+                // Extract and set the client
+                val client = json.decodeFromJsonElement<Client>(clientJson)
+                ClerkLog.d("Client synced: ${client.id}")
+                Clerk.updateClient(client)
+              }
             }
           }
 

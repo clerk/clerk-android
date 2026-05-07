@@ -4,6 +4,7 @@ import android.content.Context
 import com.clerk.api.Clerk
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
@@ -76,6 +77,7 @@ class ClerkTest {
     every { mockClient.updatedAt } returns null
 
     // Set up environment mock with display config and user settings
+    every { mockEnvironment.authConfig } returns AuthConfig(singleSessionMode = false)
     every { mockEnvironment.displayConfig } returns mockDisplayConfig
     every { mockEnvironment.userSettings } returns mockUserSettings
     every { mockDisplayConfig.logoImageUrl } returns "https://example.com/logo.png"
@@ -132,6 +134,7 @@ class ClerkTest {
         val uninitializedEnvironment = mockk<Environment>()
         val uninitializedDisplayConfig = mockk<DisplayConfig>()
         val uninitializedUserSettings = mockk<UserSettings>()
+        every { uninitializedEnvironment.authConfig } returns AuthConfig(singleSessionMode = true)
         every { uninitializedEnvironment.displayConfig } returns uninitializedDisplayConfig
         every { uninitializedEnvironment.userSettings } returns uninitializedUserSettings
         every { uninitializedDisplayConfig.logoImageUrl } returns ""
@@ -190,6 +193,7 @@ class ClerkTest {
     val uninitializedEnvironment = mockk<Environment>(relaxed = true)
     val uninitializedDisplayConfig = mockk<DisplayConfig>(relaxed = true)
     val uninitializedUserSettings = mockk<UserSettings>(relaxed = true)
+    every { uninitializedEnvironment.authConfig } returns AuthConfig(singleSessionMode = true)
     every { uninitializedEnvironment.displayConfig } returns uninitializedDisplayConfig
     every { uninitializedEnvironment.userSettings } returns uninitializedUserSettings
     every { uninitializedDisplayConfig.logoImageUrl } returns ""
@@ -264,6 +268,37 @@ class ClerkTest {
 
     // Then
     assertEquals(mockSession, session)
+  }
+
+  @Test
+  fun `sessionsFlow exposes all sessions from current client`() = runTest {
+    // Given
+    val firstSession = mockk<Session>(relaxed = true)
+    val secondSession = mockk<Session>(relaxed = true)
+    every { firstSession.id } returns "session_1"
+    every { secondSession.id } returns "session_2"
+    every { mockClient.sessions } returns listOf(firstSession, secondSession)
+    every { mockClient.lastActiveSessionId } returns "session_1"
+    initializeClerkWithClient(mockClient)
+
+    // Then
+    assertEquals(listOf(firstSession, secondSession), Clerk.sessionsFlow.value)
+  }
+
+  @Test
+  fun `multiSessionModeIsEnabled mirrors inverse of single session environment flag`() = runTest {
+    // Given
+    every { mockEnvironment.authConfig } returns AuthConfig(singleSessionMode = false)
+    initializeClerkWithEnvironment()
+
+    // Then
+    assertTrue(Clerk.multiSessionModeIsEnabled)
+
+    // When
+    every { mockEnvironment.authConfig } returns AuthConfig(singleSessionMode = true)
+
+    // Then
+    assertFalse(Clerk.multiSessionModeIsEnabled)
   }
 
   @Test

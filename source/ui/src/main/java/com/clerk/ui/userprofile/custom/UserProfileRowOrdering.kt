@@ -5,6 +5,8 @@ internal val UserProfileRow.section: UserProfileSection
     when (this) {
       UserProfileRow.ManageAccount,
       UserProfileRow.Security -> UserProfileSection.Profile
+      UserProfileRow.SwitchAccount,
+      UserProfileRow.AddAccount,
       UserProfileRow.SignOut -> UserProfileSection.Account
     }
 

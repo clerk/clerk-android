@@ -253,7 +253,7 @@ private fun AuthSignedInAccountSheet(
       HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
       SignOutActionRow {
         scope.launch {
-          Clerk.auth.signOut()
+          Clerk.auth.signOut(sessionId = Clerk.session?.id)
           sheetState.hide()
           onDismissRequest()
         }

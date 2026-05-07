@@ -5,10 +5,7 @@ import kotlin.test.assertEquals
 
 class UserProfileRowOrderingTest {
 
-  private fun customRow(
-    routeKey: String,
-    placement: UserProfileCustomRowPlacement,
-  ) =
+  private fun customRow(routeKey: String, placement: UserProfileCustomRowPlacement) =
     UserProfileCustomRow(
       routeKey = routeKey,
       title = routeKey,
@@ -36,7 +33,8 @@ class UserProfileRowOrderingTest {
 
   @Test
   fun `sectionStart rows appear before all built-in rows`() {
-    val custom = customRow("start", UserProfileCustomRowPlacement.SectionStart(UserProfileSection.Profile))
+    val custom =
+      customRow("start", UserProfileCustomRowPlacement.SectionStart(UserProfileSection.Profile))
     val rows =
       buildRenderedRows(
         builtInRows = listOf(UserProfileRow.ManageAccount, UserProfileRow.Security),
@@ -50,7 +48,8 @@ class UserProfileRowOrderingTest {
 
   @Test
   fun `sectionEnd rows appear after all built-in rows`() {
-    val custom = customRow("end", UserProfileCustomRowPlacement.SectionEnd(UserProfileSection.Profile))
+    val custom =
+      customRow("end", UserProfileCustomRowPlacement.SectionEnd(UserProfileSection.Profile))
     val rows =
       buildRenderedRows(
         builtInRows = listOf(UserProfileRow.ManageAccount, UserProfileRow.Security),
@@ -64,7 +63,8 @@ class UserProfileRowOrderingTest {
 
   @Test
   fun `before placement inserts custom row before the anchor`() {
-    val custom = customRow("beforeSec", UserProfileCustomRowPlacement.Before(UserProfileRow.Security))
+    val custom =
+      customRow("beforeSec", UserProfileCustomRowPlacement.Before(UserProfileRow.Security))
     val rows =
       buildRenderedRows(
         builtInRows = listOf(UserProfileRow.ManageAccount, UserProfileRow.Security),
@@ -84,7 +84,8 @@ class UserProfileRowOrderingTest {
 
   @Test
   fun `after placement inserts custom row after the anchor`() {
-    val custom = customRow("afterManage", UserProfileCustomRowPlacement.After(UserProfileRow.ManageAccount))
+    val custom =
+      customRow("afterManage", UserProfileCustomRowPlacement.After(UserProfileRow.ManageAccount))
     val rows =
       buildRenderedRows(
         builtInRows = listOf(UserProfileRow.ManageAccount, UserProfileRow.Security),
@@ -148,9 +149,12 @@ class UserProfileRowOrderingTest {
 
   @Test
   fun `mixed placements produce correct ordering`() {
-    val start = customRow("start", UserProfileCustomRowPlacement.SectionStart(UserProfileSection.Profile))
-    val beforeSec = customRow("beforeSec", UserProfileCustomRowPlacement.Before(UserProfileRow.Security))
-    val afterSec = customRow("afterSec", UserProfileCustomRowPlacement.After(UserProfileRow.Security))
+    val start =
+      customRow("start", UserProfileCustomRowPlacement.SectionStart(UserProfileSection.Profile))
+    val beforeSec =
+      customRow("beforeSec", UserProfileCustomRowPlacement.Before(UserProfileRow.Security))
+    val afterSec =
+      customRow("afterSec", UserProfileCustomRowPlacement.After(UserProfileRow.Security))
     val end = customRow("end", UserProfileCustomRowPlacement.SectionEnd(UserProfileSection.Profile))
     val rows =
       buildRenderedRows(
@@ -188,6 +192,32 @@ class UserProfileRowOrderingTest {
     assertEquals(
       listOf(
         UserProfileListRow.Custom(beforeSignOut),
+        UserProfileListRow.BuiltIn(UserProfileRow.SignOut),
+      ),
+      rows,
+    )
+  }
+
+  @Test
+  fun `account section supports switch and add account anchors`() {
+    val afterSwitch =
+      customRow("afterSwitch", UserProfileCustomRowPlacement.After(UserProfileRow.SwitchAccount))
+    val beforeAdd =
+      customRow("beforeAdd", UserProfileCustomRowPlacement.Before(UserProfileRow.AddAccount))
+    val rows =
+      buildRenderedRows(
+        builtInRows =
+          listOf(UserProfileRow.SwitchAccount, UserProfileRow.AddAccount, UserProfileRow.SignOut),
+        section = UserProfileSection.Account,
+        customRows = listOf(afterSwitch, beforeAdd),
+      )
+
+    assertEquals(
+      listOf(
+        UserProfileListRow.BuiltIn(UserProfileRow.SwitchAccount),
+        UserProfileListRow.Custom(afterSwitch),
+        UserProfileListRow.Custom(beforeAdd),
+        UserProfileListRow.BuiltIn(UserProfileRow.AddAccount),
         UserProfileListRow.BuiltIn(UserProfileRow.SignOut),
       ),
       rows,

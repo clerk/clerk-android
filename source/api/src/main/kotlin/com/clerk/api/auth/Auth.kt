@@ -15,6 +15,7 @@ import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
@@ -125,6 +126,15 @@ class Auth internal constructor() {
    */
   val currentSignUp: SignUp?
     get() = if (Clerk.clientInitialized) Clerk.client.signUp else null
+
+  /**
+   * The sessions currently known on this client.
+   *
+   * In multi-session mode this can include sessions for multiple accounts. The current session is
+   * the one whose ID matches [Client.lastActiveSessionId].
+   */
+  val sessions: List<Session>
+    get() = if (Clerk.clientInitialized) Clerk.client.sessions else emptyList()
 
   // endregion
 
@@ -563,22 +573,27 @@ class Auth internal constructor() {
   // region Session Management
 
   /**
-   * Signs out the current session or a specific session.
+   * Signs out all sessions or removes a specific session from the current client.
    *
-   * @param sessionId Optional session ID to sign out. If null, signs out the current session.
+   * @param sessionId Optional session ID to sign out. If null, signs out all sessions on this
+   *   client.
    * @return A [ClerkResult] with Unit on success, or a [ClerkErrorResponse] on failure.
    *
    * ### Example usage:
    * ```kotlin
-   * clerk.auth.signOut()
+   * clerk.auth.signOut() // sign out all accounts
+   * clerk.auth.signOut(sessionId = Clerk.session?.id) // sign out the current account only
    * ```
    */
   suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
     val result =
       if (sessionId != null) {
-        // Sign out a specific session
         when (val result = ClerkApi.session.removeSession(sessionId)) {
-          is ClerkResult.Success -> ClerkResult.success(Unit)
+          is ClerkResult.Success -> {
+            removeSessionLocally(sessionId)
+            refreshClientAfterSessionMutation()
+            ClerkResult.success(Unit)
+          }
           is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
         }
       } else {
@@ -586,6 +601,32 @@ class Auth internal constructor() {
       }
     result.onFailure { emitAuthError(it) }
     return result
+  }
+
+  private fun removeSessionLocally(sessionId: String) {
+    if (!Clerk.clientInitialized) return
+
+    val client = Clerk.client
+    val remainingSessions = client.sessions.filterNot { it.id == sessionId }
+    val lastActiveSessionId =
+      if (client.lastActiveSessionId == sessionId) {
+        remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
+          ?: remainingSessions.firstOrNull()?.id
+      } else {
+        client.lastActiveSessionId
+      }
+
+    Clerk.updateClient(
+      client.copy(sessions = remainingSessions, lastActiveSessionId = lastActiveSessionId)
+    )
+  }
+
+  private suspend fun refreshClientAfterSessionMutation() {
+    when (val clientResult = Client.get()) {
+      is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
+      is ClerkResult.Failure ->
+        ClerkLog.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
+    }
   }
 
   /**
@@ -606,8 +647,21 @@ class Auth internal constructor() {
     organizationId: String? = null,
   ): ClerkResult<Session, ClerkErrorResponse> {
     val result = ClerkApi.client.setActive(sessionId, organizationId)
-    result.onFailure { emitAuthError(it) }
+    when (result) {
+      is ClerkResult.Success -> {
+        setActiveSessionLocally(sessionId)
+        refreshClientAfterSessionMutation()
+      }
+      is ClerkResult.Failure -> emitAuthError(result)
+    }
     return result
+  }
+
+  private fun setActiveSessionLocally(sessionId: String) {
+    if (!Clerk.clientInitialized) return
+    if (Clerk.client.sessions.none { it.id == sessionId }) return
+
+    Clerk.updateClient(Clerk.client.copy(lastActiveSessionId = sessionId))
   }
 
   /**
