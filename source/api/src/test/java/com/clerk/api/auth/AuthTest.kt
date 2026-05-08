@@ -9,7 +9,6 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
-import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthResult
 import io.mockk.coEvery
@@ -45,22 +44,22 @@ class AuthTest {
   }
 
   @Test
-  fun `signUpWithGoogleOneTap delegates to transferable Google One Tap flow`() = runTest {
-    mockkObject(SignIn.Companion)
+  fun `signUpWithGoogleOneTap delegates to Google sign-up flow`() = runTest {
+    mockkObject(SignUp.Companion)
     val signUp = mockk<SignUp>(relaxed = true)
     val oauthResult = OAuthResult(signUp = signUp)
-    coEvery { SignIn.authenticateWithGoogleOneTap(true) } returns ClerkResult.success(oauthResult)
+    coEvery { SignUp.authenticateWithGoogleOneTap() } returns ClerkResult.success(oauthResult)
 
     val result = Auth().signUpWithGoogleOneTap()
 
     assertTrue(result is ClerkResult.Success)
     assertSame(oauthResult, (result as ClerkResult.Success).value)
-    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    coVerify(exactly = 1) { SignUp.authenticateWithGoogleOneTap() }
   }
 
   @Test
   fun `signUpWithGoogleOneTap emits auth error event on failure`() = runTest {
-    mockkObject(SignIn.Companion)
+    mockkObject(SignUp.Companion)
     val error =
       ClerkErrorResponse(
         errors =
@@ -73,7 +72,7 @@ class AuthTest {
           ),
         clerkTraceId = "trace_123",
       )
-    coEvery { SignIn.authenticateWithGoogleOneTap(true) } returns ClerkResult.apiFailure(error)
+    coEvery { SignUp.authenticateWithGoogleOneTap() } returns ClerkResult.apiFailure(error)
 
     val auth = Auth()
     val events = mutableListOf<AuthEvent>()
@@ -91,7 +90,7 @@ class AuthTest {
       "Account already exists. Use sign in instead.",
       (events.single() as AuthEvent.Error).message,
     )
-    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    coVerify(exactly = 1) { SignUp.authenticateWithGoogleOneTap() }
   }
 
   @Test

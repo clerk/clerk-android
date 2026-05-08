@@ -244,7 +244,11 @@ private fun AuthDialog(onDismiss: () -> Unit) {
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
   ) {
-    AuthView(modifier = Modifier.fillMaxSize(), onAuthComplete = onDismiss)
+    AuthView(
+      modifier = Modifier.fillMaxSize(),
+      preferGoogleOneTap = false,
+      onAuthComplete = onDismiss,
+    )
   }
 }
 

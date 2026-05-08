@@ -9,6 +9,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
@@ -473,6 +474,17 @@ data class SignUp(
      */
     suspend fun create(params: Map<String, String>): ClerkResult<SignUp, ClerkErrorResponse> {
       return ClerkApi.signUp.createSignUp(params)
+    }
+
+    /**
+     * Authenticates the user with a Google ID token from native Google One Tap, starting from a
+     * sign-up flow and transferring to sign-in when the external account already exists.
+     *
+     * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
+     *   failure.
+     */
+    suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      return GoogleSignInService().signUpWithGoogle()
     }
 
     /**

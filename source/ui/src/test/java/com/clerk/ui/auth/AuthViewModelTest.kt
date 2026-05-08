@@ -1,6 +1,7 @@
 package com.clerk.ui.auth
 
 import app.cash.turbine.test
+import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
@@ -8,6 +9,7 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.ResultType
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -294,5 +296,48 @@ class AuthViewModelTest {
     val testProviders = listOf(google, facebook)
     assertTrue("Should contain Google", testProviders.contains(OAuthProvider.GOOGLE))
     assertTrue("Should contain Facebook", testProviders.contains(OAuthProvider.FACEBOOK))
+  }
+
+  @Test
+  fun googleSocialAuthUsesBrowserRedirectWhenOneTapIsNotPreferred() = runTest {
+    mockkObject(SignIn.Companion)
+    val mockSignIn = mockk<SignIn>(relaxed = true)
+
+    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns
+      ClerkResult.success(OAuthResult(signIn = mockSignIn))
+    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+      ClerkResult.success(OAuthResult(signIn = mockSignIn))
+
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GOOGLE,
+      transferable = true,
+      preferGoogleOneTap = false,
+    )
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 0) { SignIn.authenticateWithGoogleOneTap(any()) }
+    coVerify(exactly = 1) { SignIn.authenticateWithRedirect(any(), true) }
+  }
+
+  @Test
+  fun googleSocialAuthUsesOneTapWhenPreferredAndEnabled() = runTest {
+    mockkObject(Clerk)
+    every { Clerk.isGoogleOneTapEnabled } returns true
+    mockkObject(SignIn.Companion)
+    val mockSignIn = mockk<SignIn>(relaxed = true)
+
+    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns
+      ClerkResult.success(OAuthResult(signIn = mockSignIn))
+    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+      ClerkResult.success(OAuthResult(signIn = mockSignIn))
+
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GOOGLE,
+      transferable = true,
+      preferGoogleOneTap = true,
+    )
+
+    coVerify(timeout = 1_000, exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
   }
 }
