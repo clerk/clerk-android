@@ -101,8 +101,8 @@ fun UserProfileView(
       val telemetry = LocalTelemetryCollector.current
 
       LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
-      LaunchedEffect(user?.id) {
-        if (user == null) {
+      LaunchedEffect(user?.id, showAuth) {
+        if (user == null && !showAuth) {
           onDismiss()
         }
       }

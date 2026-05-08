@@ -54,7 +54,6 @@ internal fun UserProfileAccountView(
     imageUrl = Clerk.user?.imageUrl,
     userFullName = Clerk.user?.fullName(),
     username = Clerk.user?.username,
-    multiSessionModeIsEnabled = Clerk.multiSessionModeIsEnabled,
     sessionCount = sessions.size,
     onClick = onClick,
     onBackPressed = onBackPressed,
@@ -69,7 +68,6 @@ internal fun UserProfileAccountView(
 private fun UserProfileAccountViewImpl(
   userFullName: String?,
   username: String?,
-  multiSessionModeIsEnabled: Boolean,
   sessionCount: Int,
   onClick: (UserProfileAction) -> Unit,
   onBackPressed: () -> Unit,
@@ -111,7 +109,6 @@ private fun UserProfileAccountViewImpl(
       },
       bottomContent = {
         AccountSectionRows(
-          multiSessionModeIsEnabled = multiSessionModeIsEnabled,
           sessionCount = sessionCount,
           onClick = handleAccountClick,
           customRows = customRows,
@@ -235,24 +232,14 @@ private fun ProfileSectionRows(
 
 @Composable
 private fun AccountSectionRows(
-  multiSessionModeIsEnabled: Boolean,
   sessionCount: Int,
   onClick: (UserProfileAction) -> Unit,
   customRows: ImmutableList<UserProfileCustomRow>,
   onCustomRowClick: (routeKey: String) -> Unit,
 ) {
-  val builtInRows = buildList {
-    if (multiSessionModeIsEnabled) {
-      if (sessionCount > 1) {
-        add(UserProfileRow.SwitchAccount)
-      }
-      add(UserProfileRow.AddAccount)
-    }
-    add(UserProfileRow.SignOut)
-  }
   val rows =
     buildRenderedRows(
-      builtInRows = builtInRows,
+      builtInRows = accountBuiltInRows(sessionCount = sessionCount),
       section = UserProfileSection.Account,
       customRows = customRows,
     )
@@ -303,6 +290,14 @@ internal enum class UserProfileAction {
   SignOut,
 }
 
+internal fun accountBuiltInRows(sessionCount: Int): List<UserProfileRow> = buildList {
+  if (sessionCount > 1) {
+    add(UserProfileRow.SwitchAccount)
+  }
+  add(UserProfileRow.AddAccount)
+  add(UserProfileRow.SignOut)
+}
+
 @PreviewLightDark
 @Composable
 private fun Preview() {
@@ -310,7 +305,6 @@ private fun Preview() {
     UserProfileAccountViewImpl(
       userFullName = "Cameron Walker",
       username = "cameronw",
-      multiSessionModeIsEnabled = true,
       sessionCount = 2,
       onClick = {},
       onBackPressed = {},
