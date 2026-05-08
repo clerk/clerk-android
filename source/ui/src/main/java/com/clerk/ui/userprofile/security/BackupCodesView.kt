@@ -128,11 +128,7 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
       modifier = Modifier.weight(1f),
       text = stringResource(R.string.download),
       onClick = {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-          saveToDownloadsMediaStore(context, fileName, codes)
-        } else {
-          saveFileLauncher.launch(fileName)
-        }
+        saveLinesToFileCompat(context, fileName, codes) { saveFileLauncher.launch(fileName) }
       },
       configuration = ClerkButtonConfiguration(ClerkButtonConfiguration.ButtonStyle.Secondary),
     )
@@ -151,43 +147,48 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
   }
 }
 
-private fun saveToDownloadsMediaStore(
+private fun saveLinesToFileCompat(
   context: Context,
   fileName: String,
   lines: List<String>,
+  safFallback: () -> Unit,
 ) {
-  try {
-    val resolver = context.contentResolver
-    val values =
-      ContentValues().apply {
-        put(MediaStore.Downloads.DISPLAY_NAME, fileName)
-        put(MediaStore.Downloads.MIME_TYPE, "text/plain")
-        put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-        put(MediaStore.Downloads.IS_PENDING, 1)
+  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    try {
+      val resolver = context.contentResolver
+      val values =
+        ContentValues().apply {
+          put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+          put(MediaStore.Downloads.MIME_TYPE, "text/plain")
+          put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+          put(MediaStore.Downloads.IS_PENDING, 1)
+        }
+
+      val fileUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return
+      resolver.openOutputStream(fileUri)?.use { output ->
+        output.write(lines.joinToString("\n").toByteArray())
       }
 
-    val fileUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return
-    resolver.openOutputStream(fileUri)?.use { output ->
-      output.write(lines.joinToString("\n").toByteArray())
+      values.clear()
+      values.put(MediaStore.Downloads.IS_PENDING, 0)
+      resolver.update(fileUri, values, null, null)
+
+      Toast.makeText(
+          context,
+          context.getString(R.string.saved_to_downloads, fileName),
+          Toast.LENGTH_SHORT,
+        )
+        .show()
+    } catch (e: Exception) {
+      Toast.makeText(
+          context,
+          context.getString(R.string.failed_to_save_file, e.message),
+          Toast.LENGTH_LONG,
+        )
+        .show()
     }
-
-    values.clear()
-    values.put(MediaStore.Downloads.IS_PENDING, 0)
-    resolver.update(fileUri, values, null, null)
-
-    Toast.makeText(
-        context,
-        context.getString(R.string.saved_to_downloads, fileName),
-        Toast.LENGTH_SHORT,
-      )
-      .show()
-  } catch (e: Exception) {
-    Toast.makeText(
-        context,
-        context.getString(R.string.failed_to_save_file, e.message),
-        Toast.LENGTH_LONG,
-      )
-      .show()
+  } else {
+    safFallback()
   }
 }
 
