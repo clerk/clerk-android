@@ -18,8 +18,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
@@ -99,6 +97,10 @@ fun UserProfileView(
     var showAuth by rememberSaveable { mutableStateOf(false) }
     UserProfileStateProvider(backStack) {
       val telemetry = LocalTelemetryCollector.current
+      val showAddAccountAuth = {
+        showAccountSwitcher = false
+        showAuth = true
+      }
 
       LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
       LaunchedEffect(user?.id, showAuth) {
@@ -107,52 +109,56 @@ fun UserProfileView(
         }
       }
 
-      NavDisplay(
-        backStack = backStack,
-        onBack = {
-          if (backStack.size == 1) {
-            onDismiss()
-          } else {
-            backStack.removeLastOrNull()
-          }
-        },
-        transitionSpec = {
-          val spec = tween<IntOffset>(durationMillis = 300)
-          slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-            slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-        },
-        popTransitionSpec = {
-          val spec = tween<IntOffset>(durationMillis = 300)
-          slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-            slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-        },
-        predictivePopTransitionSpec = { distance ->
-          // Use the provided distance to align with the system back gesture
-          slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-            slideOutHorizontally(targetOffsetX = { distance })
-        },
-        entryProvider =
-          entryProvider {
-            userProfileEntries(
-              backStack = backStack,
-              onDismiss = onDismiss,
-              customRows = customRows,
-              customDestination = customDestination,
-              onSwitchAccount = { showAccountSwitcher = true },
-              onAddAccount = { showAuth = true },
-            )
-          },
-      )
-
-      if (showAccountSwitcher) {
-        UserProfileAccountSwitcherSheet(
-          onDismissRequest = { showAccountSwitcher = false },
-          onAddAccount = { showAuth = true },
-        )
-      }
-
       if (showAuth) {
-        AuthDialog(onDismiss = { showAuth = false })
+        AuthView(
+          modifier = Modifier.fillMaxSize(),
+          preferGoogleOneTap = false,
+          onAuthComplete = { showAuth = false },
+        )
+      } else {
+        NavDisplay(
+          backStack = backStack,
+          onBack = {
+            if (backStack.size == 1) {
+              onDismiss()
+            } else {
+              backStack.removeLastOrNull()
+            }
+          },
+          transitionSpec = {
+            val spec = tween<IntOffset>(durationMillis = 300)
+            slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+              slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+          },
+          popTransitionSpec = {
+            val spec = tween<IntOffset>(durationMillis = 300)
+            slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+              slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+          },
+          predictivePopTransitionSpec = { distance ->
+            // Use the provided distance to align with the system back gesture
+            slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+              slideOutHorizontally(targetOffsetX = { distance })
+          },
+          entryProvider =
+            entryProvider {
+              userProfileEntries(
+                backStack = backStack,
+                onDismiss = onDismiss,
+                customRows = customRows,
+                customDestination = customDestination,
+                onSwitchAccount = { showAccountSwitcher = true },
+                onAddAccount = showAddAccountAuth,
+              )
+            },
+        )
+
+        if (showAccountSwitcher) {
+          UserProfileAccountSwitcherSheet(
+            onDismissRequest = { showAccountSwitcher = false },
+            onAddAccount = showAddAccountAuth,
+          )
+        }
       }
     }
   }
@@ -235,20 +241,6 @@ private fun EntryProviderScope<NavKey>.userProfileEntries(
     } else {
       LaunchedEffect(Unit) { backStack.removeLastOrNull() }
     }
-  }
-}
-
-@Composable
-private fun AuthDialog(onDismiss: () -> Unit) {
-  Dialog(
-    onDismissRequest = onDismiss,
-    properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
-  ) {
-    AuthView(
-      modifier = Modifier.fillMaxSize(),
-      preferGoogleOneTap = false,
-      onAuthComplete = onDismiss,
-    )
   }
 }
 
