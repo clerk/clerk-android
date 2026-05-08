@@ -1,6 +1,11 @@
 package com.clerk.ui.userprofile.security
 
 import android.content.ClipData
+import android.content.ContentValues
+import android.content.Context
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -122,7 +127,13 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
     ClerkButton(
       modifier = Modifier.weight(1f),
       text = stringResource(R.string.download),
-      onClick = { saveFileLauncher.launch(fileName) },
+      onClick = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+          saveToDownloadsMediaStore(context, fileName, codes)
+        } else {
+          saveFileLauncher.launch(fileName)
+        }
+      },
       configuration = ClerkButtonConfiguration(ClerkButtonConfiguration.ButtonStyle.Secondary),
     )
     ClerkButton(
@@ -137,6 +148,46 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
       },
       configuration = ClerkButtonConfiguration(ClerkButtonConfiguration.ButtonStyle.Secondary),
     )
+  }
+}
+
+private fun saveToDownloadsMediaStore(
+  context: Context,
+  fileName: String,
+  lines: List<String>,
+) {
+  try {
+    val resolver = context.contentResolver
+    val values =
+      ContentValues().apply {
+        put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+        put(MediaStore.Downloads.MIME_TYPE, "text/plain")
+        put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        put(MediaStore.Downloads.IS_PENDING, 1)
+      }
+
+    val fileUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return
+    resolver.openOutputStream(fileUri)?.use { output ->
+      output.write(lines.joinToString("\n").toByteArray())
+    }
+
+    values.clear()
+    values.put(MediaStore.Downloads.IS_PENDING, 0)
+    resolver.update(fileUri, values, null, null)
+
+    Toast.makeText(
+        context,
+        context.getString(R.string.saved_to_downloads, fileName),
+        Toast.LENGTH_SHORT,
+      )
+      .show()
+  } catch (e: Exception) {
+    Toast.makeText(
+        context,
+        context.getString(R.string.failed_to_save_file, e.message),
+        Toast.LENGTH_LONG,
+      )
+      .show()
   }
 }
 
