@@ -1,14 +1,9 @@
 package com.clerk.ui.userprofile.security
 
 import android.content.ClipData
-import android.content.ContentValues
-import android.content.Context
-import android.media.MediaScannerConnection
-import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,7 +26,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
@@ -40,7 +34,6 @@ import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
-import java.io.File
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
@@ -94,6 +87,33 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
   val context = LocalContext.current
   val clipboard = LocalClipboard.current
   val scope = rememberCoroutineScope()
+  val fileName = "backup_codes.txt"
+
+  val saveFileLauncher =
+    rememberLauncherForActivityResult(
+      contract = ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+      if (uri == null) return@rememberLauncherForActivityResult
+      try {
+        context.contentResolver.openOutputStream(uri)?.use { output ->
+          output.write(codes.joinToString("\n").toByteArray())
+        }
+        Toast.makeText(
+            context,
+            context.getString(R.string.saved_to_downloads, fileName),
+            Toast.LENGTH_SHORT,
+          )
+          .show()
+      } catch (e: Exception) {
+        Toast.makeText(
+            context,
+            context.getString(R.string.failed_to_save_file, e.message),
+            Toast.LENGTH_LONG,
+          )
+          .show()
+      }
+    }
+
   Row(
     modifier = Modifier.fillMaxWidth(),
     horizontalArrangement = Arrangement.spacedBy(dp24, Alignment.CenterHorizontally),
@@ -102,7 +122,7 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
     ClerkButton(
       modifier = Modifier.weight(1f),
       text = stringResource(R.string.download),
-      onClick = { saveLinesToFileCompat(context, fileName = "backup_codes.txt", lines = codes) },
+      onClick = { saveFileLauncher.launch(fileName) },
       configuration = ClerkButtonConfiguration(ClerkButtonConfiguration.ButtonStyle.Secondary),
     )
     ClerkButton(
@@ -117,61 +137,6 @@ private fun ActionButtonRow(codes: ImmutableList<String>) {
       },
       configuration = ClerkButtonConfiguration(ClerkButtonConfiguration.ButtonStyle.Secondary),
     )
-  }
-}
-
-private fun saveLinesToFileCompat(
-  context: Context,
-  fileName: String,
-  lines: List<String>,
-  mimeType: String = "text/plain",
-) {
-  try {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      // Android 10+
-      val resolver = context.contentResolver
-      val values =
-        ContentValues().apply {
-          put(MediaStore.Downloads.DISPLAY_NAME, fileName)
-          put(MediaStore.Downloads.MIME_TYPE, mimeType)
-          put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-          put(MediaStore.Downloads.IS_PENDING, 1)
-        }
-
-      val fileUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return
-      resolver.openOutputStream(fileUri)?.use { output ->
-        output.write(lines.joinToString("\n").toByteArray())
-      }
-
-      values.clear()
-      values.put(MediaStore.Downloads.IS_PENDING, 0)
-      resolver.update(fileUri, values, null, null)
-      fileUri
-    } else {
-      // Pre-Android 10
-      val downloadsDir =
-        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-      if (!downloadsDir.exists()) downloadsDir.mkdirs()
-      val file = File(downloadsDir, fileName)
-      file.writeText(lines.joinToString("\n"))
-      MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), arrayOf(mimeType), null)
-      Uri.fromFile(file)
-    }
-
-    Toast.makeText(
-        context,
-        context.getString(R.string.saved_to_downloads, fileName),
-        Toast.LENGTH_SHORT,
-      )
-      .show()
-  } catch (e: Exception) {
-    ClerkLog.e("Failed to save file: ${e.message}")
-    Toast.makeText(
-        context,
-        context.getString(R.string.failed_to_save_file, e.message),
-        Toast.LENGTH_LONG,
-      )
-      .show()
   }
 }
 
