@@ -48,6 +48,7 @@ internal fun UserProfileAccountView(
   onCustomRowClick: (routeKey: String) -> Unit = {},
 ) {
   val sessions = Clerk.sessionsFlow.collectAsStateWithLifecycle().value
+  val multiSessionModeIsEnabled = Clerk.multiSessionModeIsEnabled
 
   UserProfileAccountViewImpl(
     modifier = modifier,
@@ -55,6 +56,7 @@ internal fun UserProfileAccountView(
     userFullName = Clerk.user?.fullName(),
     username = Clerk.user?.username,
     sessionCount = sessions.size,
+    multiSessionModeIsEnabled = multiSessionModeIsEnabled,
     onClick = onClick,
     onBackPressed = onBackPressed,
     onEditAvatarClick = onClickEdit,
@@ -69,6 +71,7 @@ private fun UserProfileAccountViewImpl(
   userFullName: String?,
   username: String?,
   sessionCount: Int,
+  multiSessionModeIsEnabled: Boolean,
   onClick: (UserProfileAction) -> Unit,
   onBackPressed: () -> Unit,
   onEditAvatarClick: () -> Unit,
@@ -110,6 +113,7 @@ private fun UserProfileAccountViewImpl(
       bottomContent = {
         AccountSectionRows(
           sessionCount = sessionCount,
+          multiSessionModeIsEnabled = multiSessionModeIsEnabled,
           onClick = handleAccountClick,
           customRows = customRows,
           onCustomRowClick = onCustomRowClick,
@@ -233,13 +237,18 @@ private fun ProfileSectionRows(
 @Composable
 private fun AccountSectionRows(
   sessionCount: Int,
+  multiSessionModeIsEnabled: Boolean,
   onClick: (UserProfileAction) -> Unit,
   customRows: ImmutableList<UserProfileCustomRow>,
   onCustomRowClick: (routeKey: String) -> Unit,
 ) {
   val rows =
     buildRenderedRows(
-      builtInRows = accountBuiltInRows(sessionCount = sessionCount),
+      builtInRows =
+        accountBuiltInRows(
+          sessionCount = sessionCount,
+          multiSessionModeIsEnabled = multiSessionModeIsEnabled,
+        ),
       section = UserProfileSection.Account,
       customRows = customRows,
     )
@@ -290,11 +299,19 @@ internal enum class UserProfileAction {
   SignOut,
 }
 
-internal fun accountBuiltInRows(sessionCount: Int): List<UserProfileRow> = buildList {
-  if (sessionCount > 1) {
-    add(UserProfileRow.SwitchAccount)
+internal fun accountBuiltInRows(sessionCount: Int): List<UserProfileRow> =
+  accountBuiltInRows(sessionCount = sessionCount, multiSessionModeIsEnabled = true)
+
+internal fun accountBuiltInRows(
+  sessionCount: Int,
+  multiSessionModeIsEnabled: Boolean,
+): List<UserProfileRow> = buildList {
+  if (multiSessionModeIsEnabled) {
+    if (sessionCount > 1) {
+      add(UserProfileRow.SwitchAccount)
+    }
+    add(UserProfileRow.AddAccount)
   }
-  add(UserProfileRow.AddAccount)
   add(UserProfileRow.SignOut)
 }
 
@@ -306,6 +323,7 @@ private fun Preview() {
       userFullName = "Cameron Walker",
       username = "cameronw",
       sessionCount = 2,
+      multiSessionModeIsEnabled = true,
       onClick = {},
       onBackPressed = {},
       onEditAvatarClick = {},

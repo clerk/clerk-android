@@ -21,4 +21,12 @@ class UserProfileAccountViewTest {
       accountBuiltInRows(sessionCount = 2),
     )
   }
+
+  @Test
+  fun accountBuiltInRows_hidesMultiSessionRowsWhenDisabled() {
+    assertEquals(
+      listOf(UserProfileRow.SignOut),
+      accountBuiltInRows(sessionCount = 2, multiSessionModeIsEnabled = false),
+    )
+  }
 }
