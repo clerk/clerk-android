@@ -31,6 +31,7 @@ import coil3.request.crossfade
 import com.clerk.api.Clerk
 import com.clerk.api.session.requiresForcedMfa
 import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.user.User
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthView
@@ -53,9 +54,9 @@ import com.clerk.ui.userprofile.custom.UserProfileCustomRow
  * @param routeToAuthWhenForcedMfa When `true` (default), clicking the button while the current
  *   session has unresolved MFA setup tasks routes to auth instead of opening profile.
  * @param customRows Custom rows to display on the profile account screen.
- * @param customDestination Composable that renders the destination for a given route key. The
- *   route key matches [UserProfileCustomRow.routeKey] of the tapped row. Custom destinations
- *   survive activity recreation (e.g. rotation).
+ * @param customDestination Composable that renders the destination for a given route key. The route
+ *   key matches [UserProfileCustomRow.routeKey] of the tapped row. Custom destinations survive
+ *   activity recreation (e.g. rotation).
  * @param onRequiresForcedMfaClick Optional callback used when the current session has outstanding
  *   MFA setup tasks. If not provided, the button will open [AuthView] in a full-screen dialog.
  */
@@ -75,54 +76,52 @@ fun UserButton(
       val sessionUser by Clerk.userFlow.collectAsStateWithLifecycle()
       val requiresForcedMfa = session?.requiresForcedMfa == true
       val user = if (treatPendingAsSignedOut) Clerk.activeUser else sessionUser
-      val telemetry = LocalTelemetryCollector.current
       var showProfile by rememberSaveable { mutableStateOf(false) }
       var showAuth by rememberSaveable { mutableStateOf(false) }
+      var preferGoogleOneTapForAuth by rememberSaveable { mutableStateOf(true) }
+      val shouldRenderButton =
+        shouldShowUserButton(sessionUser != null, Clerk.activeUser != null, treatPendingAsSignedOut)
 
-      LaunchedEffect(user?.id) {
-        if (user != null) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
-      }
+      TrackUserButtonLoaded(user = user)
+      DismissAuthWhenMfaResolved(
+        requiresForcedMfa = requiresForcedMfa,
+        showAuth = showAuth,
+        onDismissAuth = { showAuth = false },
+      )
 
-      LaunchedEffect(requiresForcedMfa, showAuth) {
-        if (!requiresForcedMfa && showAuth) {
-          showAuth = false
-        }
-      }
-
-      if (
-        shouldShowUserButton(
-          sessionUser != null,
-          Clerk.activeUser != null,
-          treatPendingAsSignedOut,
-        ) && user != null
-      ) {
+      if (shouldRenderButton && user != null) {
         UserButtonContent(
           imageUrl = user.imageUrl,
           onClick = {
-            when (
-              userButtonClickAction(
-                requiresForcedMfa = requiresForcedMfa,
-                routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
-              )
-            ) {
+            when (userButtonClickAction(requiresForcedMfa, routeToAuthWhenForcedMfa)) {
               UserButtonClickAction.OPEN_PROFILE -> showProfile = true
               UserButtonClickAction.ROUTE_TO_AUTH -> {
-                onRequiresForcedMfaClick?.invoke() ?: run { showAuth = true }
+                onRequiresForcedMfaClick?.invoke()
+                  ?: run {
+                    preferGoogleOneTapForAuth = true
+                    showAuth = true
+                  }
               }
             }
           },
         )
-        if (showProfile) {
-          UserProfileDialog(
-            onDismiss = { showProfile = false },
-            customRows = customRows,
-            customDestination = customDestination,
-          )
-        }
-        if (showAuth) {
-          AuthDialog(onDismiss = { showAuth = false })
-        }
       }
+      UserProfileDialogHost(
+        showProfile = showProfile,
+        customRows = customRows,
+        customDestination = customDestination,
+        onDismissProfile = { showProfile = false },
+        onAddAccount = {
+          showProfile = false
+          preferGoogleOneTapForAuth = false
+          showAuth = true
+        },
+      )
+      AuthDialogHost(
+        showAuth = showAuth,
+        preferGoogleOneTapForAuth = preferGoogleOneTapForAuth,
+        onDismissAuth = { showAuth = false },
+      )
     }
   }
 }
@@ -156,8 +155,59 @@ private fun UserButtonContent(imageUrl: String?, onClick: () -> Unit) {
 }
 
 @Composable
+private fun TrackUserButtonLoaded(user: User?) {
+  val telemetry = LocalTelemetryCollector.current
+  LaunchedEffect(user?.id) {
+    if (user != null) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
+  }
+}
+
+@Composable
+private fun DismissAuthWhenMfaResolved(
+  requiresForcedMfa: Boolean,
+  showAuth: Boolean,
+  onDismissAuth: () -> Unit,
+) {
+  LaunchedEffect(requiresForcedMfa, showAuth) {
+    if (!requiresForcedMfa && showAuth) {
+      onDismissAuth()
+    }
+  }
+}
+
+@Composable
+private fun UserProfileDialogHost(
+  showProfile: Boolean,
+  customRows: List<UserProfileCustomRow>,
+  customDestination: (@Composable (String) -> Unit)?,
+  onDismissProfile: () -> Unit,
+  onAddAccount: () -> Unit,
+) {
+  if (showProfile) {
+    UserProfileDialog(
+      onDismiss = onDismissProfile,
+      onAddAccount = onAddAccount,
+      customRows = customRows,
+      customDestination = customDestination,
+    )
+  }
+}
+
+@Composable
+private fun AuthDialogHost(
+  showAuth: Boolean,
+  preferGoogleOneTapForAuth: Boolean,
+  onDismissAuth: () -> Unit,
+) {
+  if (showAuth) {
+    AuthDialog(preferGoogleOneTap = preferGoogleOneTapForAuth, onDismiss = onDismissAuth)
+  }
+}
+
+@Composable
 private fun UserProfileDialog(
   onDismiss: () -> Unit,
+  onAddAccount: () -> Unit,
   customRows: List<UserProfileCustomRow> = emptyList(),
   customDestination: (@Composable (String) -> Unit)? = null,
 ) {
@@ -167,6 +217,7 @@ private fun UserProfileDialog(
   ) {
     UserProfileView(
       onDismiss = onDismiss,
+      onAddAccount = onAddAccount,
       customRows = customRows,
       customDestination = customDestination,
     )
@@ -174,12 +225,16 @@ private fun UserProfileDialog(
 }
 
 @Composable
-private fun AuthDialog(onDismiss: () -> Unit) {
+private fun AuthDialog(preferGoogleOneTap: Boolean, onDismiss: () -> Unit) {
   Dialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
   ) {
-    AuthView(modifier = Modifier.fillMaxSize(), onAuthComplete = onDismiss)
+    AuthView(
+      modifier = Modifier.fillMaxSize(),
+      preferGoogleOneTap = preferGoogleOneTap,
+      onAuthComplete = onDismiss,
+    )
   }
 }
 

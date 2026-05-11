@@ -78,6 +78,7 @@ internal fun UserProfileStateProvider(
  * @param customRows Custom rows to display on the profile account screen.
  * @param customDestination Composable that renders the destination for a given route key. The route
  *   key matches [UserProfileCustomRow.routeKey] of the tapped row.
+ * @param onAddAccount Optional callback for hosting the add-account auth flow outside the profile.
  * @param onDismiss Callback when the user profile view is dismissed.
  */
 @OptIn(ExperimentalAnimationApi::class)
@@ -88,6 +89,7 @@ fun UserProfileView(
   clerkTheme: ClerkTheme? = null,
   customRows: List<UserProfileCustomRow> = emptyList(),
   customDestination: (@Composable (String) -> Unit)? = null,
+  onAddAccount: (() -> Unit)? = null,
   onDismiss: () -> Unit = {},
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
@@ -99,7 +101,7 @@ fun UserProfileView(
       val telemetry = LocalTelemetryCollector.current
       val showAddAccountAuth = {
         showAccountSwitcher = false
-        showAuth = true
+        onAddAccount?.invoke() ?: run { showAuth = true }
       }
 
       LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
