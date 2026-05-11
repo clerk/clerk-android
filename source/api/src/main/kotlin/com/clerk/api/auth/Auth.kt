@@ -621,11 +621,42 @@ class Auth internal constructor() {
     )
   }
 
-  private suspend fun refreshClientAfterSessionMutation() {
+  private suspend fun refreshClientAfterSessionMutation(
+    activeSessionFallbackId: String? = null,
+    fallbackClient: Client? = null,
+  ) {
     when (val clientResult = Client.get()) {
-      is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
+      is ClerkResult.Success ->
+        Clerk.updateClient(
+          clientResult.value.withActiveSessionFallback(
+            activeSessionFallbackId = activeSessionFallbackId,
+            fallbackClient = fallbackClient,
+          )
+        )
       is ClerkResult.Failure ->
         ClerkLog.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
+    }
+  }
+
+  private fun Client.withActiveSessionFallback(
+    activeSessionFallbackId: String?,
+    fallbackClient: Client?,
+  ): Client {
+    val fallbackSessions = fallbackClient?.sessions.orEmpty()
+    val canUseFallback =
+      activeSessionFallbackId != null &&
+        sessions.none { it.id == activeSessionFallbackId } &&
+        fallbackSessions.any { it.id == activeSessionFallbackId }
+
+    return if (!canUseFallback) {
+      this
+    } else {
+      val fallbackSessionId = requireNotNull(activeSessionFallbackId)
+      val missingFallbackSessions =
+        fallbackSessions.filterNot { fallbackSession ->
+          sessions.any { it.id == fallbackSession.id }
+        }
+      copy(sessions = sessions + missingFallbackSessions, lastActiveSessionId = fallbackSessionId)
     }
   }
 
@@ -646,23 +677,59 @@ class Auth internal constructor() {
     sessionId: String,
     organizationId: String? = null,
   ): ClerkResult<Session, ClerkErrorResponse> {
+    val previousClient = if (Clerk.clientInitialized) Clerk.client else null
     val result = ClerkApi.client.setActive(sessionId, organizationId)
     when (result) {
       is ClerkResult.Success -> {
-        setActiveSessionLocally(sessionId)
-        refreshClientAfterSessionMutation()
+        setActiveSessionLocally(
+          sessionId,
+          activeSession = result.value,
+          sourceClient = previousClient,
+        )
+        refreshClientAfterSessionMutation(
+          activeSessionFallbackId = sessionId,
+          fallbackClient = if (Clerk.clientInitialized) Clerk.client else previousClient,
+        )
       }
       is ClerkResult.Failure -> emitAuthError(result)
     }
     return result
   }
 
-  private fun setActiveSessionLocally(sessionId: String) {
-    if (!Clerk.clientInitialized) return
-    if (Clerk.client.sessions.none { it.id == sessionId }) return
+  private fun setActiveSessionLocally(
+    sessionId: String,
+    activeSession: Session? = null,
+    sourceClient: Client? = null,
+  ) {
+    val client = sourceClient ?: if (Clerk.clientInitialized) Clerk.client else return
+    val sessions = client.sessions.withUpdatedSession(activeSession)
+    if (sessions.none { it.id == sessionId }) return
 
-    Clerk.updateClient(Clerk.client.copy(lastActiveSessionId = sessionId))
+    Clerk.updateClient(client.copy(sessions = sessions, lastActiveSessionId = sessionId))
   }
+
+  private fun List<Session>.withUpdatedSession(activeSession: Session?): List<Session> {
+    if (activeSession == null) return this
+
+    var replacedSession = false
+    val updatedSessions = map { existingSession ->
+      if (existingSession.id == activeSession.id) {
+        replacedSession = true
+        activeSession.withPreservedUserData(existingSession)
+      } else {
+        existingSession
+      }
+    }
+
+    return if (replacedSession) updatedSessions else updatedSessions + activeSession
+  }
+
+  private fun Session.withPreservedUserData(existingSession: Session): Session =
+    copy(
+      user = user ?: existingSession.user,
+      publicUserData = publicUserData ?: existingSession.publicUserData,
+      lastActiveToken = lastActiveToken ?: existingSession.lastActiveToken,
+    )
 
   /**
    * Gets a token for the current session.

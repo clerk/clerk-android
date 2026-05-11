@@ -13,6 +13,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.SSOService
+import com.clerk.api.user.User
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -194,6 +195,66 @@ class AuthTest {
     assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
     assertEquals(secondSession, Clerk.sessionFlow.value)
     coVerify(exactly = 1) { clientApi.setActive(secondSession.id, null) }
+  }
+
+  @Test
+  fun `setActive restores active session when response client sync clears local sessions`() =
+    runTest {
+      val firstSession = testSession("sess_1")
+      val secondUser = mockk<User>(relaxed = true)
+      val secondSession = testSession("sess_2").copy(user = secondUser)
+      val dehydratedSecondSession = testSession("sess_2")
+      val clientApi = mockk<ClientApi>()
+      mockkObject(ClerkApi)
+      every { ClerkApi.client } returns clientApi
+      coEvery { clientApi.setActive(secondSession.id, null) } coAnswers
+        {
+          Clerk.updateClient(Client(id = "client_123"))
+          ClerkResult.success(dehydratedSecondSession)
+        }
+      coEvery { clientApi.get() } returns
+        ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
+      Clerk.updateClient(
+        Client(
+          id = "client_123",
+          sessions = listOf(firstSession, secondSession),
+          lastActiveSessionId = firstSession.id,
+        )
+      )
+
+      val result = Auth().setActive(sessionId = secondSession.id)
+
+      assertTrue(result is ClerkResult.Success)
+      assertEquals(listOf(firstSession, secondSession), Clerk.client.sessions)
+      assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
+      assertEquals(secondSession, Clerk.sessionFlow.value)
+      assertEquals(secondUser, Clerk.userFlow.value)
+    }
+
+  @Test
+  fun `setActive keeps active session when follow-up client refresh omits it`() = runTest {
+    val firstSession = testSession("sess_1")
+    val secondSession = testSession("sess_2")
+    val clientApi = mockk<ClientApi>()
+    mockkObject(ClerkApi)
+    every { ClerkApi.client } returns clientApi
+    coEvery { clientApi.setActive(secondSession.id, null) } returns
+      ClerkResult.success(secondSession)
+    coEvery { clientApi.get() } returns ClerkResult.success(Client(id = "client_123"))
+    Clerk.updateClient(
+      Client(
+        id = "client_123",
+        sessions = listOf(firstSession, secondSession),
+        lastActiveSessionId = firstSession.id,
+      )
+    )
+
+    val result = Auth().setActive(sessionId = secondSession.id)
+
+    assertTrue(result is ClerkResult.Success)
+    assertEquals(listOf(firstSession, secondSession), Clerk.client.sessions)
+    assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
+    assertEquals(secondSession, Clerk.sessionFlow.value)
   }
 
   private fun testSession(id: String): Session =
