@@ -31,7 +31,6 @@ import coil3.request.crossfade
 import com.clerk.api.Clerk
 import com.clerk.api.session.requiresForcedMfa
 import com.clerk.api.ui.ClerkTheme
-import com.clerk.api.user.User
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthView
@@ -76,17 +75,19 @@ fun UserButton(
       val sessionUser by Clerk.userFlow.collectAsStateWithLifecycle()
       val requiresForcedMfa = session?.requiresForcedMfa == true
       val user = if (treatPendingAsSignedOut) Clerk.activeUser else sessionUser
+      val telemetry = LocalTelemetryCollector.current
       var showProfile by rememberSaveable { mutableStateOf(false) }
-      var showAuth by rememberSaveable { mutableStateOf(false) }
-      var preferGoogleOneTapForAuth by rememberSaveable { mutableStateOf(true) }
+      var authMode by rememberSaveable { mutableStateOf<UserButtonAuthMode?>(null) }
       val shouldRenderButton =
         shouldShowUserButton(sessionUser != null, Clerk.activeUser != null, treatPendingAsSignedOut)
 
-      TrackUserButtonLoaded(user = user)
+      LaunchedEffect(user?.id) {
+        if (user != null) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
+      }
       DismissAuthWhenMfaResolved(
         requiresForcedMfa = requiresForcedMfa,
-        showAuth = showAuth,
-        onDismissAuth = { showAuth = false },
+        authMode = authMode,
+        onDismissAuth = { authMode = null },
       )
 
       if (shouldRenderButton && user != null) {
@@ -97,10 +98,7 @@ fun UserButton(
               UserButtonClickAction.OPEN_PROFILE -> showProfile = true
               UserButtonClickAction.ROUTE_TO_AUTH -> {
                 onRequiresForcedMfaClick?.invoke()
-                  ?: run {
-                    preferGoogleOneTapForAuth = true
-                    showAuth = true
-                  }
+                  ?: run { authMode = UserButtonAuthMode.ForcedMfa }
               }
             }
           },
@@ -113,15 +111,10 @@ fun UserButton(
         onDismissProfile = { showProfile = false },
         onAddAccount = {
           showProfile = false
-          preferGoogleOneTapForAuth = false
-          showAuth = true
+          authMode = UserButtonAuthMode.AddAccount
         },
       )
-      AuthDialogHost(
-        showAuth = showAuth,
-        preferGoogleOneTapForAuth = preferGoogleOneTapForAuth,
-        onDismissAuth = { showAuth = false },
-      )
+      AuthDialogHost(authMode = authMode, onDismissAuth = { authMode = null })
     }
   }
 }
@@ -155,21 +148,13 @@ private fun UserButtonContent(imageUrl: String?, onClick: () -> Unit) {
 }
 
 @Composable
-private fun TrackUserButtonLoaded(user: User?) {
-  val telemetry = LocalTelemetryCollector.current
-  LaunchedEffect(user?.id) {
-    if (user != null) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
-  }
-}
-
-@Composable
 private fun DismissAuthWhenMfaResolved(
   requiresForcedMfa: Boolean,
-  showAuth: Boolean,
+  authMode: UserButtonAuthMode?,
   onDismissAuth: () -> Unit,
 ) {
-  LaunchedEffect(requiresForcedMfa, showAuth) {
-    if (!requiresForcedMfa && showAuth) {
+  LaunchedEffect(requiresForcedMfa, authMode) {
+    if (shouldDismissAuthWhenMfaResolved(authMode, requiresForcedMfa)) {
       onDismissAuth()
     }
   }
@@ -194,13 +179,9 @@ private fun UserProfileDialogHost(
 }
 
 @Composable
-private fun AuthDialogHost(
-  showAuth: Boolean,
-  preferGoogleOneTapForAuth: Boolean,
-  onDismissAuth: () -> Unit,
-) {
-  if (showAuth) {
-    AuthDialog(preferGoogleOneTap = preferGoogleOneTapForAuth, onDismiss = onDismissAuth)
+private fun AuthDialogHost(authMode: UserButtonAuthMode?, onDismissAuth: () -> Unit) {
+  if (authMode != null) {
+    AuthDialog(preferGoogleOneTap = authMode.preferGoogleOneTap, onDismiss = onDismissAuth)
   }
 }
 
@@ -241,6 +222,18 @@ private fun AuthDialog(preferGoogleOneTap: Boolean, onDismiss: () -> Unit) {
 internal enum class UserButtonClickAction {
   OPEN_PROFILE,
   ROUTE_TO_AUTH,
+}
+
+internal enum class UserButtonAuthMode(val preferGoogleOneTap: Boolean) {
+  AddAccount(preferGoogleOneTap = false),
+  ForcedMfa(preferGoogleOneTap = true),
+}
+
+internal fun shouldDismissAuthWhenMfaResolved(
+  authMode: UserButtonAuthMode?,
+  requiresForcedMfa: Boolean,
+): Boolean {
+  return authMode == UserButtonAuthMode.ForcedMfa && !requiresForcedMfa
 }
 
 internal fun userButtonClickAction(
