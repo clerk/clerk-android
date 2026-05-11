@@ -136,6 +136,50 @@ class ClientSyncingMiddlewareTest {
     assertEquals(emptyList<Session>(), Clerk.sessionsFlow.value)
   }
 
+  @Test
+  fun `intercept does not clear Clerk client when null client piggyback accompanies response`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val session = testSession("sess_123")
+    val client =
+      Client(id = "client_123", sessions = listOf(session), lastActiveSessionId = session.id)
+    Clerk.updateClient(client)
+
+    val request = Request.Builder().url("https://api.clerk.com/v1/client").build()
+
+    val responseBody =
+      """
+      {
+        "response": {
+          "object": "client",
+          "id": "client_123",
+          "sessions": [],
+          "last_active_session_id": null
+        },
+        "client": null
+      }
+      """
+        .trimIndent()
+        .toResponseBody("application/json".toMediaType())
+
+    val response =
+      Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .body(responseBody)
+        .build()
+
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns request
+    every { chain.proceed(request) } returns response
+
+    middleware.intercept(chain)
+
+    assertEquals(client, Clerk.client)
+    assertEquals(listOf(session), Clerk.sessionsFlow.value)
+  }
+
   private fun testSession(id: String): Session =
     Session(
       id = id,

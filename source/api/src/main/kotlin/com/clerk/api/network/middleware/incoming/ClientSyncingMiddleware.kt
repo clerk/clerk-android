@@ -51,8 +51,12 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             val clientJson = jsonElement["client"]
             when (clientJson) {
               is JsonNull -> {
-                ClerkLog.d("Client sync cleared by explicit null client")
-                Clerk.updateClient(Client())
+                if (jsonElement.containsKey("response")) {
+                  ClerkLog.d("Client sync skipped null piggyback client")
+                } else {
+                  ClerkLog.d("Client sync cleared by explicit null client")
+                  Clerk.updateClient(Client())
+                }
               }
               null -> Unit
               else -> {
