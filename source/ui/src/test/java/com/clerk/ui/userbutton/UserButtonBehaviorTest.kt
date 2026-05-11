@@ -76,8 +76,8 @@ class UserButtonBehaviorTest {
   }
 
   @Test
-  fun `add account auth starts browser social OAuth as sign up`() {
-    assertTrue(UserButtonAuthMode.AddAccount.startSocialOAuthAsSignUp)
+  fun `add account auth uses sign in first social OAuth`() {
+    assertFalse(UserButtonAuthMode.AddAccount.startSocialOAuthAsSignUp)
     assertFalse(UserButtonAuthMode.ForcedMfa.startSocialOAuthAsSignUp)
   }
 }

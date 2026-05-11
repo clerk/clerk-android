@@ -237,7 +237,7 @@ internal enum class UserButtonAuthMode(
   val preferGoogleOneTap: Boolean,
   val startSocialOAuthAsSignUp: Boolean,
 ) {
-  AddAccount(preferGoogleOneTap = false, startSocialOAuthAsSignUp = true),
+  AddAccount(preferGoogleOneTap = false, startSocialOAuthAsSignUp = false),
   ForcedMfa(preferGoogleOneTap = true, startSocialOAuthAsSignUp = false),
 }
 

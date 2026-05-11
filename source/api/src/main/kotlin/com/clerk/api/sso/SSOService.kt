@@ -5,14 +5,16 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
+import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.get
+import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.get
 import com.clerk.api.user.User.CreateExternalAccountParams
@@ -96,33 +98,66 @@ internal object SSOService {
       )
     )
     clearCurrentAuth()
+    val resolvedStrategy =
+      strategy
+        ?: return ClerkResult.unknownFailure(
+          Exception("Strategy cannot be null for redirect authentication")
+        )
 
     val initialResult =
-      ClerkApi.signIn.authenticateWithRedirect(
-        strategy = strategy,
-        redirectUrl = redirectUrl,
-        identifier = identifier,
-        emailAddress = emailAddress,
-        legalAccepted = legalAccepted,
+      SignIn.create(
+        buildMap {
+          put("strategy", resolvedStrategy)
+          put("redirect_url", redirectUrl)
+          put("locale", Clerk.locale.value.orEmpty())
+          identifier?.let { put("identifier", it) }
+          emailAddress?.let { put("email_address", it) }
+          legalAccepted?.let { put("legal_accepted", it.toString()) }
+        }
       )
 
     return when (initialResult) {
       is ClerkResult.Failure -> {
         val message = initialResult.errorMessage
         ClerkLog.e("Failed to authenticate with redirect: $message")
-        ClerkResult.apiFailure(initialResult.error)
+        initialResult.signInToOAuthResult()
       }
       is ClerkResult.Success -> {
-        ClerkLog.d("Successfully authenticated with redirect: $initialResult")
-        val externalUrl =
-          requireNotNull(
-            initialResult.value.firstFactorVerification?.externalVerificationRedirectUrl
-          ) {
-            "External URL cannot be null"
+        ClerkLog.d("Successfully created sign-in for redirect: $initialResult")
+        when (
+          val prepareResult =
+            initialResult.value.prepareFirstFactor(
+              firstFactorParams(strategy = resolvedStrategy, redirectUrl = redirectUrl)
+            )
+        ) {
+          is ClerkResult.Failure -> {
+            val message = prepareResult.errorMessage
+            ClerkLog.e("Failed to prepare redirect first factor: $message")
+            prepareResult.signInToOAuthResult()
           }
+          is ClerkResult.Success -> {
+            val externalUrl =
+              requireNotNull(
+                prepareResult.value.firstFactorVerification?.externalVerificationRedirectUrl
+              ) {
+                "External URL cannot be null"
+              }
 
-        authenticateWithPreparedRedirect(externalUrl, transferable)
+            authenticateWithPreparedRedirect(externalUrl, transferable)
+          }
+        }
       }
+    }
+  }
+
+  private fun firstFactorParams(
+    strategy: String,
+    redirectUrl: String,
+  ): SignIn.PrepareFirstFactorParams {
+    return if (strategy == ENTERPRISE_SSO) {
+      SignIn.PrepareFirstFactorParams.EnterpriseSSO(redirectUrl = redirectUrl)
+    } else {
+      SignIn.PrepareFirstFactorParams.OAuth(strategy = strategy, redirectUrl = redirectUrl)
     }
   }
 
