@@ -308,6 +308,28 @@ class ClerkTest {
     }
 
   @Test
+  fun `updateClient preserves previous active session when refreshed client references missing active id`() =
+    runTest {
+      // Given
+      val activeSessionId = "session_1"
+      every { mockSession.id } returns activeSessionId
+      every { mockSession.status } returns Session.SessionStatus.ACTIVE
+      every { mockSession.user } returns mockUser
+      initializeClerkWithClient(
+        Client(sessions = listOf(mockSession), lastActiveSessionId = activeSessionId)
+      )
+
+      // When - set-active refreshes can briefly include an active id that is not hydrated in the
+      // sessions list.
+      Clerk.updateClient(Client(sessions = listOf(mockSession), lastActiveSessionId = "session_2"))
+
+      // Then
+      assertEquals(activeSessionId, Clerk.client.lastActiveSessionId)
+      assertEquals(mockSession, Clerk.sessionFlow.value)
+      assertEquals(mockUser, Clerk.userFlow.value)
+    }
+
+  @Test
   fun `updateClient activates sole session when refreshed client omits active id`() = runTest {
     // Given
     val activeSessionId = "session_1"

@@ -760,12 +760,14 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
+    val currentActiveSessionId =
+      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
     val resolvedActiveSessionId =
-      lastActiveSessionId
+      currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
           sessions.any { it.id == previousSessionId }
         }
-        ?: sessions.singleOrNull()?.id
+        ?: if (lastActiveSessionId == null) sessions.singleOrNull()?.id else null
     return if (resolvedActiveSessionId == lastActiveSessionId || resolvedActiveSessionId == null) {
       this
     } else {
