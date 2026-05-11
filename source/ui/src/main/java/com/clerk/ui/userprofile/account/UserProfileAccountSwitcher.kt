@@ -52,108 +52,110 @@ internal fun UserProfileAccountSwitcherSheet(
   onAddAccount: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  val sessions by Clerk.sessionsFlow.collectAsStateWithLifecycle()
-  val currentSession by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  val scope = rememberCoroutineScope()
-  var loadingActionId by rememberSaveable { mutableStateOf<String?>(null) }
-  var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
-  val sortedSessions =
-    sessions.sortedWith(
-      compareByDescending<Session> { it.id == currentSession?.id }
-        .thenByDescending { it.lastActiveAt }
-    )
-
-  ModalBottomSheet(
-    modifier = modifier,
-    onDismissRequest = onDismissRequest,
-    sheetState = sheetState,
-    containerColor = ClerkMaterialTheme.colors.background,
-    contentColor = ClerkMaterialTheme.colors.foreground,
-  ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-      Text(
-        modifier = Modifier.padding(horizontal = dp24, vertical = dp16),
-        text = stringResource(R.string.switch_account),
-        style = ClerkMaterialTheme.typography.titleMedium.withMediumWeight(),
-        color = ClerkMaterialTheme.colors.foreground,
+  ClerkMaterialTheme {
+    val sessions by Clerk.sessionsFlow.collectAsStateWithLifecycle()
+    val currentSession by Clerk.sessionFlow.collectAsStateWithLifecycle()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    var loadingActionId by rememberSaveable { mutableStateOf<String?>(null) }
+    var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    val sortedSessions =
+      sessions.sortedWith(
+        compareByDescending<Session> { it.id == currentSession?.id }
+          .thenByDescending { it.lastActiveAt }
       )
-      HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
 
-      sortedSessions.forEach { session ->
-        val user = session.user
-        if (user != null) {
-          AccountSessionRow(
-            session = session,
-            user = user,
-            isCurrent = session.id == currentSession?.id,
-            isLoading = loadingActionId == session.id,
-            onClick = {
-              if (session.id == currentSession?.id || loadingActionId != null)
-                return@AccountSessionRow
-              loadingActionId = session.id
-              errorMessage = null
-              scope.launch {
-                when (val result = Clerk.auth.setActive(sessionId = session.id)) {
-                  is ClerkResult.Success -> {
-                    loadingActionId = null
-                    sheetState.hide()
-                    onDismissRequest()
-                  }
-                  is ClerkResult.Failure -> {
-                    loadingActionId = null
-                    errorMessage = result.errorMessage
+    ModalBottomSheet(
+      modifier = modifier,
+      onDismissRequest = onDismissRequest,
+      sheetState = sheetState,
+      containerColor = ClerkMaterialTheme.colors.background,
+      contentColor = ClerkMaterialTheme.colors.foreground,
+    ) {
+      Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+          modifier = Modifier.padding(horizontal = dp24, vertical = dp16),
+          text = stringResource(R.string.switch_account),
+          style = ClerkMaterialTheme.typography.titleMedium.withMediumWeight(),
+          color = ClerkMaterialTheme.colors.foreground,
+        )
+        HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
+
+        sortedSessions.forEach { session ->
+          val user = session.user
+          if (user != null) {
+            AccountSessionRow(
+              session = session,
+              user = user,
+              isCurrent = session.id == currentSession?.id,
+              isLoading = loadingActionId == session.id,
+              onClick = {
+                if (session.id == currentSession?.id || loadingActionId != null)
+                  return@AccountSessionRow
+                loadingActionId = session.id
+                errorMessage = null
+                scope.launch {
+                  when (val result = Clerk.auth.setActive(sessionId = session.id)) {
+                    is ClerkResult.Success -> {
+                      loadingActionId = null
+                      sheetState.hide()
+                      onDismissRequest()
+                    }
+                    is ClerkResult.Failure -> {
+                      loadingActionId = null
+                      errorMessage = result.errorMessage
+                    }
                   }
                 }
-              }
-            },
-          )
-          HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
+              },
+            )
+            HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
+          }
         }
-      }
 
-      AccountActionRow(
-        iconResId = R.drawable.ic_plus,
-        text = stringResource(R.string.add_account),
-        enabled = loadingActionId == null,
-        onClick = {
-          onDismissRequest()
-          onAddAccount()
-        },
-      )
-      HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
-      AccountActionRow(
-        iconResId = R.drawable.ic_sign,
-        text = stringResource(R.string.sign_out_of_all_accounts),
-        enabled = loadingActionId == null,
-        isLoading = loadingActionId == SIGN_OUT_ALL_ACTION_ID,
-        onClick = {
-          if (loadingActionId != null) return@AccountActionRow
-          loadingActionId = SIGN_OUT_ALL_ACTION_ID
-          errorMessage = null
-          scope.launch {
-            when (val result = Clerk.auth.signOut()) {
-              is ClerkResult.Success -> {
-                loadingActionId = null
-                sheetState.hide()
-                onDismissRequest()
-              }
-              is ClerkResult.Failure -> {
-                loadingActionId = null
-                errorMessage = result.errorMessage
+        AccountActionRow(
+          iconResId = R.drawable.ic_plus,
+          text = stringResource(R.string.add_account),
+          enabled = loadingActionId == null,
+          onClick = {
+            onDismissRequest()
+            onAddAccount()
+          },
+        )
+        HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
+        AccountActionRow(
+          iconResId = R.drawable.ic_sign,
+          text = stringResource(R.string.sign_out_of_all_accounts),
+          enabled = loadingActionId == null,
+          isLoading = loadingActionId == SIGN_OUT_ALL_ACTION_ID,
+          onClick = {
+            if (loadingActionId != null) return@AccountActionRow
+            loadingActionId = SIGN_OUT_ALL_ACTION_ID
+            errorMessage = null
+            scope.launch {
+              when (val result = Clerk.auth.signOut()) {
+                is ClerkResult.Success -> {
+                  loadingActionId = null
+                  sheetState.hide()
+                  onDismissRequest()
+                }
+                is ClerkResult.Failure -> {
+                  loadingActionId = null
+                  errorMessage = result.errorMessage
+                }
               }
             }
-          }
-        },
-      )
-
-      errorMessage?.let {
-        Text(
-          modifier = Modifier.padding(horizontal = dp24, vertical = dp12),
-          text = it,
-          style = ClerkMaterialTheme.typography.bodyMedium,
-          color = ClerkMaterialTheme.colors.danger,
+          },
         )
+
+        errorMessage?.let {
+          Text(
+            modifier = Modifier.padding(horizontal = dp24, vertical = dp12),
+            text = it,
+            style = ClerkMaterialTheme.typography.bodyMedium,
+            color = ClerkMaterialTheme.colors.danger,
+          )
+        }
       }
     }
   }
