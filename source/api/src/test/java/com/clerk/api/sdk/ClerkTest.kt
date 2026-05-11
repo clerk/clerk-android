@@ -107,9 +107,6 @@ class ClerkTest {
 
   private fun resetClerkState() {
     try {
-      // Reset lateinit properties using reflection
-      val clerkClass = Clerk::class.java
-
       // Reset client if it's initialized
       try {
         // We can't unset a lateinit property, but we can set it to a mock that behaves as
@@ -128,8 +125,6 @@ class ClerkTest {
 
       // Reset environment if it's initialized
       try {
-        val environmentField = clerkClass.getDeclaredField("environment")
-        environmentField.isAccessible = true
         // We can't unset a lateinit property, so we set it to a mock that behaves as uninitialized
         val uninitializedEnvironment = mockk<Environment>()
         val uninitializedDisplayConfig = mockk<DisplayConfig>()
@@ -152,7 +147,7 @@ class ClerkTest {
         every { uninitializedEnvironment.emailIsImmutable } returns false
         every { uninitializedEnvironment.phoneNumberIsImmutable } returns false
         every { uninitializedEnvironment.usernameIsImmutable } returns false
-        environmentField.set(Clerk, uninitializedEnvironment)
+        Clerk.updateEnvironment(uninitializedEnvironment)
       } catch (_: Exception) {
         // Environment not initialized, that's fine
       }
@@ -171,11 +166,11 @@ class ClerkTest {
 
   private fun initializeClerkWithClient(client: Client) {
     Clerk.updateClient(client)
-    Clerk.environment = mockEnvironment
+    Clerk.updateEnvironment(mockEnvironment)
   }
 
   private fun initializeClerkWithEnvironment() {
-    Clerk.environment = mockEnvironment
+    Clerk.updateEnvironment(mockEnvironment)
   }
 
   private fun simulateUninitializedClient() {
@@ -205,7 +200,7 @@ class ClerkTest {
     every { uninitializedEnvironment.emailIsImmutable } returns false
     every { uninitializedEnvironment.phoneNumberIsImmutable } returns false
     every { uninitializedEnvironment.usernameIsImmutable } returns false
-    Clerk.environment = uninitializedEnvironment
+    Clerk.updateEnvironment(uninitializedEnvironment)
   }
 
   @Test
@@ -338,12 +333,15 @@ class ClerkTest {
 
     // Then
     assertTrue(Clerk.multiSessionModeIsEnabled)
+    assertTrue(Clerk.multiSessionModeIsEnabledFlow.value)
 
     // When
     every { mockEnvironment.authConfig } returns AuthConfig(singleSessionMode = true)
+    Clerk.updateEnvironment(mockEnvironment)
 
     // Then
     assertFalse(Clerk.multiSessionModeIsEnabled)
+    assertFalse(Clerk.multiSessionModeIsEnabledFlow.value)
   }
 
   @Test

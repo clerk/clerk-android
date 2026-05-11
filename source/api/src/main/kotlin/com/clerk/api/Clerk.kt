@@ -120,6 +120,17 @@ object Clerk {
 
   internal var applicationId: String? = null
 
+  private val _multiSessionModeIsEnabled = MutableStateFlow(false)
+
+  /**
+   * Reactive state indicating whether this Clerk instance allows multiple sessions on the same
+   * client.
+   *
+   * When enabled, a client can hold sessions for multiple accounts and switch the active session by
+   * updating [Client.lastActiveSessionId].
+   */
+  val multiSessionModeIsEnabledFlow: StateFlow<Boolean> = _multiSessionModeIsEnabled.asStateFlow()
+
   /** Internal environment configuration containing display settings and authentication options. */
   internal lateinit var environment: Environment
 
@@ -726,6 +737,7 @@ object Clerk {
    */
   internal fun updateEnvironment(environment: Environment) {
     this.environment = environment
+    _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
   }
 
   internal fun credentialActivity(): Activity? = currentActivity?.get()

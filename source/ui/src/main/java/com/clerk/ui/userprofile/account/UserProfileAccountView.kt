@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -48,7 +49,7 @@ internal fun UserProfileAccountView(
   onCustomRowClick: (routeKey: String) -> Unit = {},
 ) {
   val sessions = Clerk.sessionsFlow.collectAsStateWithLifecycle().value
-  val multiSessionModeIsEnabled = Clerk.multiSessionModeIsEnabled
+  val multiSessionModeIsEnabled by Clerk.multiSessionModeIsEnabledFlow.collectAsStateWithLifecycle()
 
   UserProfileAccountViewImpl(
     modifier = modifier,
