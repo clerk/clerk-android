@@ -56,6 +56,8 @@ import kotlinx.serialization.Serializable
  *   edits are kept in memory only for the lifetime of the current view.
  * @param preferGoogleOneTap When `true`, Google social auth uses native Google One Tap if
  *   configured. When `false`, Google social auth always uses browser OAuth.
+ * @param startSocialOAuthAsSignUp When `true`, browser OAuth social auth starts from a sign-up
+ *   attempt and transfers back to sign-in if the selected account already exists.
  */
 @Composable
 fun AuthView(
@@ -64,6 +66,7 @@ fun AuthView(
   initialIdentifier: String? = null,
   persistIdentifiers: Boolean = true,
   preferGoogleOneTap: Boolean = true,
+  startSocialOAuthAsSignUp: Boolean = false,
   onAuthComplete: () -> Unit = {},
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
@@ -83,6 +86,7 @@ fun AuthView(
         modifier = fullScreenModifier,
         backStack = backStack,
         preferGoogleOneTap = preferGoogleOneTap,
+        startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
         onAuthComplete = onAuthComplete,
       )
     }
@@ -113,6 +117,7 @@ private fun AuthNavDisplay(
   backStack: NavBackStack<NavKey>,
   modifier: Modifier = Modifier,
   preferGoogleOneTap: Boolean,
+  startSocialOAuthAsSignUp: Boolean,
   onAuthComplete: () -> Unit,
 ) {
   NavDisplay(
@@ -141,6 +146,7 @@ private fun AuthNavDisplay(
       authEntryProvider(
         backStack = backStack,
         preferGoogleOneTap = preferGoogleOneTap,
+        startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
         onAuthComplete = onAuthComplete,
       ),
   )
@@ -150,10 +156,15 @@ private fun AuthNavDisplay(
 private fun authEntryProvider(
   backStack: NavBackStack<NavKey>,
   preferGoogleOneTap: Boolean,
+  startSocialOAuthAsSignUp: Boolean,
   onAuthComplete: () -> Unit,
 ) = entryProvider {
   entry<AuthDestination.AuthStart> {
-    AuthStartView(preferGoogleOneTap = preferGoogleOneTap, onAuthComplete = onAuthComplete)
+    AuthStartView(
+      preferGoogleOneTap = preferGoogleOneTap,
+      startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+      onAuthComplete = onAuthComplete,
+    )
   }
   entry<AuthDestination.SignInFactorOne> {
     SignInFactorOneView(factor = it.factor, onAuthComplete = onAuthComplete)

@@ -181,7 +181,11 @@ private fun UserProfileDialogHost(
 @Composable
 private fun AuthDialogHost(authMode: UserButtonAuthMode?, onDismissAuth: () -> Unit) {
   if (authMode != null) {
-    AuthDialog(preferGoogleOneTap = authMode.preferGoogleOneTap, onDismiss = onDismissAuth)
+    AuthDialog(
+      preferGoogleOneTap = authMode.preferGoogleOneTap,
+      startSocialOAuthAsSignUp = authMode.startSocialOAuthAsSignUp,
+      onDismiss = onDismissAuth,
+    )
   }
 }
 
@@ -206,7 +210,11 @@ private fun UserProfileDialog(
 }
 
 @Composable
-private fun AuthDialog(preferGoogleOneTap: Boolean, onDismiss: () -> Unit) {
+private fun AuthDialog(
+  preferGoogleOneTap: Boolean,
+  startSocialOAuthAsSignUp: Boolean,
+  onDismiss: () -> Unit,
+) {
   Dialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
@@ -214,6 +222,7 @@ private fun AuthDialog(preferGoogleOneTap: Boolean, onDismiss: () -> Unit) {
     AuthView(
       modifier = Modifier.fillMaxSize(),
       preferGoogleOneTap = preferGoogleOneTap,
+      startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
       onAuthComplete = onDismiss,
     )
   }
@@ -224,9 +233,12 @@ internal enum class UserButtonClickAction {
   ROUTE_TO_AUTH,
 }
 
-internal enum class UserButtonAuthMode(val preferGoogleOneTap: Boolean) {
-  AddAccount(preferGoogleOneTap = false),
-  ForcedMfa(preferGoogleOneTap = true),
+internal enum class UserButtonAuthMode(
+  val preferGoogleOneTap: Boolean,
+  val startSocialOAuthAsSignUp: Boolean,
+) {
+  AddAccount(preferGoogleOneTap = false, startSocialOAuthAsSignUp = true),
+  ForcedMfa(preferGoogleOneTap = true, startSocialOAuthAsSignUp = false),
 }
 
 internal fun shouldDismissAuthWhenMfaResolved(

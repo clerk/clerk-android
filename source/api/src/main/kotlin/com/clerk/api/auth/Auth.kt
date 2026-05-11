@@ -449,7 +449,7 @@ class Auth internal constructor() {
     provider: OAuthProvider
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val result =
-      SSOService.authenticateWithRedirect(
+      SSOService.authenticateSignUpWithRedirect(
         strategy = provider.providerData.strategy,
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       )

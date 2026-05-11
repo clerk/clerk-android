@@ -320,6 +320,29 @@ class AuthViewModelTest {
   }
 
   @Test
+  fun socialOAuthCanStartWithSignUp() = runTest {
+    mockkObject(SignIn.Companion)
+    mockkObject(SignUp.Companion)
+    val mockSignUp = mockk<SignUp>(relaxed = true)
+
+    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+      ClerkResult.success(OAuthResult(signIn = mockk(relaxed = true)))
+    coEvery { SignUp.authenticateWithRedirect(any()) } returns
+      ClerkResult.success(OAuthResult(signUp = mockSignUp))
+
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GOOGLE,
+      transferable = true,
+      preferGoogleOneTap = false,
+      startOAuthWithSignUp = true,
+    )
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) { SignUp.authenticateWithRedirect(any()) }
+    coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
+  }
+
+  @Test
   fun googleSocialAuthUsesOneTapWhenPreferredAndEnabled() = runTest {
     mockkObject(Clerk)
     every { Clerk.isGoogleOneTapEnabled } returns true

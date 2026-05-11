@@ -74,4 +74,10 @@ class UserButtonBehaviorTest {
   fun `add account auth uses browser OAuth`() {
     assertFalse(UserButtonAuthMode.AddAccount.preferGoogleOneTap)
   }
+
+  @Test
+  fun `add account auth starts browser social OAuth as sign up`() {
+    assertTrue(UserButtonAuthMode.AddAccount.startSocialOAuthAsSignUp)
+    assertFalse(UserButtonAuthMode.ForcedMfa.startSocialOAuthAsSignUp)
+  }
 }

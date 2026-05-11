@@ -10,7 +10,9 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.signup.SignUp
+import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
+import com.clerk.api.sso.SSOService
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -55,6 +57,36 @@ class AuthTest {
     assertTrue(result is ClerkResult.Success)
     assertSame(oauthResult, (result as ClerkResult.Success).value)
     coVerify(exactly = 1) { SignUp.authenticateWithGoogleOneTap() }
+  }
+
+  @Test
+  fun `signUpWithOAuth delegates to sign-up redirect flow`() = runTest {
+    mockkObject(SSOService)
+    val signUp = mockk<SignUp>(relaxed = true)
+    val oauthResult = OAuthResult(signUp = signUp)
+    coEvery {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "oauth_google",
+        redirectUrl = any(),
+        identifier = null,
+        emailAddress = null,
+        legalAccepted = null,
+      )
+    } returns ClerkResult.success(oauthResult)
+
+    val result = Auth().signUpWithOAuth(OAuthProvider.GOOGLE)
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(oauthResult, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "oauth_google",
+        redirectUrl = any(),
+        identifier = null,
+        emailAddress = null,
+        legalAccepted = null,
+      )
+    }
   }
 
   @Test

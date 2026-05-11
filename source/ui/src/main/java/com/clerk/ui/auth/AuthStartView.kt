@@ -47,11 +47,13 @@ fun AuthStartView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
+  startSocialOAuthAsSignUp: Boolean = false,
   onAuthComplete: () -> Unit,
 ) {
   AuthStartViewImpl(
     modifier = modifier,
     preferGoogleOneTap = preferGoogleOneTap,
+    startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
     onAuthComplete = onAuthComplete,
     clerkTheme = clerkTheme,
   )
@@ -65,6 +67,7 @@ internal fun AuthStartViewImpl(
   authViewHelper: AuthStartViewHelper = AuthStartViewHelper(),
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
+  startSocialOAuthAsSignUp: Boolean = false,
   authStartViewModel: AuthStartViewModel = viewModel(),
 ) {
   val authState = LocalAuthState.current
@@ -212,6 +215,7 @@ internal fun AuthStartViewImpl(
                     provider = it,
                     transferable = authState.mode.transferable,
                     preferGoogleOneTap = preferGoogleOneTap,
+                    startOAuthWithSignUp = startSocialOAuthAsSignUp,
                   )
                 },
                 forceIconOnly = false,
@@ -227,6 +231,7 @@ internal fun AuthStartViewImpl(
                   provider = it,
                   transferable = authState.mode.transferable,
                   preferGoogleOneTap = preferGoogleOneTap,
+                  startOAuthWithSignUp = startSocialOAuthAsSignUp,
                 )
               },
             )
