@@ -76,7 +76,7 @@ kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", versio
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0"
 kotlinx-coroutines-test = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0"
-kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.7.1-0.6.x-compat"
+kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.8.0-0.6.x-compat"
 kotlinx-immutable = "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0"
 kotlinx-serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0"
 ksp-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
