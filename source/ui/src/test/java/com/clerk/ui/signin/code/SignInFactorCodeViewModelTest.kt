@@ -210,8 +210,15 @@ class SignInFactorCodeViewModelTest {
         onSuccess(mockSignIn)
       }
 
-    viewModel.attempt(factor, isSecondFactor = false, code)
-    testDispatcher.scheduler.advanceUntilIdle()
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
+
+      viewModel.attempt(factor, isSecondFactor = false, code)
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
 
     coVerify {
       mockAttemptHandler.attemptResetForPhoneCode(
@@ -220,9 +227,6 @@ class SignInFactorCodeViewModelTest {
         onSuccessCallback = any(),
         onErrorCallback = any(),
       )
-    }
-    viewModel.state.test {
-      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
     }
   }
 

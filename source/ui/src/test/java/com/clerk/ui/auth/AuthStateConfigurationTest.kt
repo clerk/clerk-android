@@ -1,27 +1,20 @@
 package com.clerk.ui.auth
 
-import android.content.Context
 import android.content.SharedPreferences
 import androidx.navigation3.runtime.NavBackStack
-import androidx.test.core.app.ApplicationProvider
-import com.clerk.api.Constants
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class AuthStateConfigurationTest {
 
-  private lateinit var context: Context
+  private lateinit var prefs: SharedPreferences
 
   @Before
   fun setUp() {
-    context = ApplicationProvider.getApplicationContext()
-    authPreferences().edit().clear().commit()
+    prefs = InMemorySharedPreferences()
   }
 
   @Test
@@ -151,10 +144,5 @@ class AuthStateConfigurationTest {
     )
   }
 
-  private fun authPreferences(): SharedPreferences {
-    return context.getSharedPreferences(
-      Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
-      Context.MODE_PRIVATE,
-    )
-  }
+  private fun authPreferences(): SharedPreferences = prefs
 }
