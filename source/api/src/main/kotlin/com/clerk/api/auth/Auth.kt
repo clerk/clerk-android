@@ -642,21 +642,30 @@ class Auth internal constructor() {
     activeSessionFallbackId: String?,
     fallbackClient: Client?,
   ): Client {
-    val fallbackSessions = fallbackClient?.sessions.orEmpty()
-    val canUseFallback =
-      activeSessionFallbackId != null &&
-        sessions.none { it.id == activeSessionFallbackId } &&
-        fallbackSessions.any { it.id == activeSessionFallbackId }
+    if (activeSessionFallbackId == null) return this
 
-    return if (!canUseFallback) {
-      this
-    } else {
-      val fallbackSessionId = requireNotNull(activeSessionFallbackId)
-      val missingFallbackSessions =
-        fallbackSessions.filterNot { fallbackSession ->
-          sessions.any { it.id == fallbackSession.id }
-        }
-      copy(sessions = sessions + missingFallbackSessions, lastActiveSessionId = fallbackSessionId)
+    val fallbackSessions = fallbackClient?.sessions.orEmpty()
+    val targetInFetchedSessions = sessions.any { it.id == activeSessionFallbackId }
+    val targetInFallbackSessions = fallbackSessions.any { it.id == activeSessionFallbackId }
+
+    return when {
+      // Fetched client is missing the target session entirely (e.g. cleared sessions list);
+      // splice it back in from the fallback and force it active.
+      !targetInFetchedSessions && targetInFallbackSessions -> {
+        val missingFallbackSessions =
+          fallbackSessions.filterNot { fallbackSession ->
+            sessions.any { it.id == fallbackSession.id }
+          }
+        copy(
+          sessions = sessions + missingFallbackSessions,
+          lastActiveSessionId = activeSessionFallbackId,
+        )
+      }
+      // Fetched client has the target session but `lastActiveSessionId` is stale
+      // (read-after-write lag); force the just-activated session back to active.
+      targetInFetchedSessions && lastActiveSessionId != activeSessionFallbackId ->
+        copy(lastActiveSessionId = activeSessionFallbackId)
+      else -> this
     }
   }
 

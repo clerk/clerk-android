@@ -257,6 +257,42 @@ class AuthTest {
     assertEquals(secondSession, Clerk.sessionFlow.value)
   }
 
+  @Test
+  fun `setActive keeps active session when follow-up refresh returns stale lastActiveSessionId`() =
+    runTest {
+      val firstSession = testSession("sess_1")
+      val secondSession = testSession("sess_2")
+      val clientApi = mockk<ClientApi>()
+      mockkObject(ClerkApi)
+      every { ClerkApi.client } returns clientApi
+      coEvery { clientApi.setActive(secondSession.id, null) } returns
+        ClerkResult.success(secondSession)
+      // Read replica returns a fully-hydrated client but with the previous
+      // lastActiveSessionId — read-after-write lag.
+      coEvery { clientApi.get() } returns
+        ClerkResult.success(
+          Client(
+            id = "client_123",
+            sessions = listOf(firstSession, secondSession),
+            lastActiveSessionId = firstSession.id,
+          )
+        )
+      Clerk.updateClient(
+        Client(
+          id = "client_123",
+          sessions = listOf(firstSession, secondSession),
+          lastActiveSessionId = firstSession.id,
+        )
+      )
+
+      val result = Auth().setActive(sessionId = secondSession.id)
+
+      assertTrue(result is ClerkResult.Success)
+      assertEquals(listOf(firstSession, secondSession), Clerk.client.sessions)
+      assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
+      assertEquals(secondSession, Clerk.sessionFlow.value)
+    }
+
   private fun testSession(id: String): Session =
     Session(
       id = id,
