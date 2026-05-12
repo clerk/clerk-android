@@ -146,21 +146,26 @@ internal class AuthStartViewModel : ViewModel() {
   /**
    * Initiates authentication using a specified social (OAuth) provider.
    *
-   * If Google One Tap is enabled and the provider is Google, it attempts Google One Tap
-   * authentication. Otherwise, it proceeds with the standard OAuth redirect flow for the given
-   * provider.
+   * If [preferGoogleOneTap] is true, Google One Tap is enabled, and the provider is Google, it
+   * attempts Google One Tap authentication. Otherwise, it proceeds with the standard OAuth redirect
+   * flow for the given provider.
    *
    * @param provider The [OAuthProvider] to authenticate with (e.g., Google, Facebook).
+   * @param transferable Whether the flow can transfer between sign-in and sign-up.
+   * @param preferGoogleOneTap Whether Google should prefer native One Tap over browser OAuth.
+   * @param startOAuthWithSignUp Whether browser OAuth should create a sign-up attempt first.
    */
   internal fun authenticateWithSocialProvider(
     provider: OAuthProvider,
     transferable: Boolean = true,
+    preferGoogleOneTap: Boolean = true,
+    startOAuthWithSignUp: Boolean = false,
   ) {
     _state.value = AuthState.OAuthState.Loading
-    if (provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
+    if (preferGoogleOneTap && provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
       handleGoogleOneTap(transferable)
     } else {
-      authenticateWithOAuthProvider(provider, transferable)
+      authenticateWithOAuthProvider(provider, transferable, startOAuthWithSignUp)
     }
   }
 
@@ -197,12 +202,25 @@ internal class AuthStartViewModel : ViewModel() {
     }
   }
 
-  private fun authenticateWithOAuthProvider(provider: OAuthProvider, transferable: Boolean) {
+  private fun authenticateWithOAuthProvider(
+    provider: OAuthProvider,
+    transferable: Boolean,
+    startOAuthWithSignUp: Boolean,
+  ) {
     viewModelScope.launch {
-      SignIn.authenticateWithRedirect(
-          SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider),
-          transferable = transferable,
-        )
+      val result =
+        if (startOAuthWithSignUp) {
+          SignUp.authenticateWithRedirect(
+            SignUp.AuthenticateWithRedirectParams.OAuth(provider = provider)
+          )
+        } else {
+          SignIn.authenticateWithRedirect(
+            SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider),
+            transferable = transferable,
+          )
+        }
+
+      result
         .onSuccess {
           _state.value =
             when (it.resultType) {

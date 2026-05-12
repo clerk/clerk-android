@@ -8,9 +8,11 @@ import com.clerk.api.signup.SignUp
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
+import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 internal interface SignUpApi {
   /** @see [SignUp.create] */
@@ -18,6 +20,12 @@ internal interface SignUpApi {
   @POST(ApiPaths.Client.SignUp.BASE)
   suspend fun createSignUp(
     @FieldMap fields: Map<String, String>
+  ): ClerkResult<SignUp, ClerkErrorResponse>
+
+  @GET(ApiPaths.Client.SignUp.WITH_ID)
+  suspend fun fetchSignUp(
+    @Path(ApiParams.ID) id: String,
+    @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
   /** @see [com.clerk.api.signup.update] */

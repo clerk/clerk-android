@@ -25,9 +25,7 @@ internal fun WorkbenchAuthGate(
 
   LaunchedEffect(isInitialized, user?.id, session?.id, pendingTaskKey) {
     if (!isInitialized) return@LaunchedEffect
-    if (user == null || pendingTaskKey != null) {
-      isAuthFlowActive = true
-    }
+    isAuthFlowActive = user == null || pendingTaskKey != null
   }
 
   when {

@@ -53,9 +53,9 @@ import com.clerk.ui.userprofile.custom.UserProfileCustomRow
  * @param routeToAuthWhenForcedMfa When `true` (default), clicking the button while the current
  *   session has unresolved MFA setup tasks routes to auth instead of opening profile.
  * @param customRows Custom rows to display on the profile account screen.
- * @param customDestination Composable that renders the destination for a given route key. The
- *   route key matches [UserProfileCustomRow.routeKey] of the tapped row. Custom destinations
- *   survive activity recreation (e.g. rotation).
+ * @param customDestination Composable that renders the destination for a given route key. The route
+ *   key matches [UserProfileCustomRow.routeKey] of the tapped row. Custom destinations survive
+ *   activity recreation (e.g. rotation).
  * @param onRequiresForcedMfaClick Optional callback used when the current session has outstanding
  *   MFA setup tasks. If not provided, the button will open [AuthView] in a full-screen dialog.
  */
@@ -77,52 +77,44 @@ fun UserButton(
       val user = if (treatPendingAsSignedOut) Clerk.activeUser else sessionUser
       val telemetry = LocalTelemetryCollector.current
       var showProfile by rememberSaveable { mutableStateOf(false) }
-      var showAuth by rememberSaveable { mutableStateOf(false) }
+      var authMode by rememberSaveable { mutableStateOf<UserButtonAuthMode?>(null) }
+      val shouldRenderButton =
+        shouldShowUserButton(sessionUser != null, Clerk.activeUser != null, treatPendingAsSignedOut)
 
       LaunchedEffect(user?.id) {
         if (user != null) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
       }
+      DismissAuthWhenMfaResolved(
+        requiresForcedMfa = requiresForcedMfa,
+        authMode = authMode,
+        onDismissAuth = { authMode = null },
+      )
 
-      LaunchedEffect(requiresForcedMfa, showAuth) {
-        if (!requiresForcedMfa && showAuth) {
-          showAuth = false
-        }
-      }
-
-      if (
-        shouldShowUserButton(
-          sessionUser != null,
-          Clerk.activeUser != null,
-          treatPendingAsSignedOut,
-        ) && user != null
-      ) {
+      if (shouldRenderButton && user != null) {
         UserButtonContent(
           imageUrl = user.imageUrl,
           onClick = {
-            when (
-              userButtonClickAction(
-                requiresForcedMfa = requiresForcedMfa,
-                routeToAuthWhenForcedMfa = routeToAuthWhenForcedMfa,
-              )
-            ) {
+            when (userButtonClickAction(requiresForcedMfa, routeToAuthWhenForcedMfa)) {
               UserButtonClickAction.OPEN_PROFILE -> showProfile = true
               UserButtonClickAction.ROUTE_TO_AUTH -> {
-                onRequiresForcedMfaClick?.invoke() ?: run { showAuth = true }
+                onRequiresForcedMfaClick?.invoke()
+                  ?: run { authMode = UserButtonAuthMode.ForcedMfa }
               }
             }
           },
         )
-        if (showProfile) {
-          UserProfileDialog(
-            onDismiss = { showProfile = false },
-            customRows = customRows,
-            customDestination = customDestination,
-          )
-        }
-        if (showAuth) {
-          AuthDialog(onDismiss = { showAuth = false })
-        }
       }
+      UserProfileDialogHost(
+        showProfile = showProfile,
+        customRows = customRows,
+        customDestination = customDestination,
+        onDismissProfile = { showProfile = false },
+        onAddAccount = {
+          showProfile = false
+          authMode = UserButtonAuthMode.AddAccount
+        },
+      )
+      AuthDialogHost(authMode = authMode, onDismissAuth = { authMode = null })
     }
   }
 }
@@ -156,8 +148,51 @@ private fun UserButtonContent(imageUrl: String?, onClick: () -> Unit) {
 }
 
 @Composable
+private fun DismissAuthWhenMfaResolved(
+  requiresForcedMfa: Boolean,
+  authMode: UserButtonAuthMode?,
+  onDismissAuth: () -> Unit,
+) {
+  LaunchedEffect(requiresForcedMfa, authMode) {
+    if (shouldDismissAuthWhenMfaResolved(authMode, requiresForcedMfa)) {
+      onDismissAuth()
+    }
+  }
+}
+
+@Composable
+private fun UserProfileDialogHost(
+  showProfile: Boolean,
+  customRows: List<UserProfileCustomRow>,
+  customDestination: (@Composable (String) -> Unit)?,
+  onDismissProfile: () -> Unit,
+  onAddAccount: () -> Unit,
+) {
+  if (showProfile) {
+    UserProfileDialog(
+      onDismiss = onDismissProfile,
+      onAddAccount = onAddAccount,
+      customRows = customRows,
+      customDestination = customDestination,
+    )
+  }
+}
+
+@Composable
+private fun AuthDialogHost(authMode: UserButtonAuthMode?, onDismissAuth: () -> Unit) {
+  if (authMode != null) {
+    AuthDialog(
+      preferGoogleOneTap = authMode.preferGoogleOneTap,
+      startSocialOAuthAsSignUp = authMode.startSocialOAuthAsSignUp,
+      onDismiss = onDismissAuth,
+    )
+  }
+}
+
+@Composable
 private fun UserProfileDialog(
   onDismiss: () -> Unit,
+  onAddAccount: () -> Unit,
   customRows: List<UserProfileCustomRow> = emptyList(),
   customDestination: (@Composable (String) -> Unit)? = null,
 ) {
@@ -167,6 +202,7 @@ private fun UserProfileDialog(
   ) {
     UserProfileView(
       onDismiss = onDismiss,
+      onAddAccount = onAddAccount,
       customRows = customRows,
       customDestination = customDestination,
     )
@@ -174,18 +210,42 @@ private fun UserProfileDialog(
 }
 
 @Composable
-private fun AuthDialog(onDismiss: () -> Unit) {
+private fun AuthDialog(
+  preferGoogleOneTap: Boolean,
+  startSocialOAuthAsSignUp: Boolean,
+  onDismiss: () -> Unit,
+) {
   Dialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
   ) {
-    AuthView(modifier = Modifier.fillMaxSize(), onAuthComplete = onDismiss)
+    AuthView(
+      modifier = Modifier.fillMaxSize(),
+      preferGoogleOneTap = preferGoogleOneTap,
+      startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+      onAuthComplete = onDismiss,
+    )
   }
 }
 
 internal enum class UserButtonClickAction {
   OPEN_PROFILE,
   ROUTE_TO_AUTH,
+}
+
+internal enum class UserButtonAuthMode(
+  val preferGoogleOneTap: Boolean,
+  val startSocialOAuthAsSignUp: Boolean,
+) {
+  AddAccount(preferGoogleOneTap = false, startSocialOAuthAsSignUp = false),
+  ForcedMfa(preferGoogleOneTap = true, startSocialOAuthAsSignUp = false),
+}
+
+internal fun shouldDismissAuthWhenMfaResolved(
+  authMode: UserButtonAuthMode?,
+  requiresForcedMfa: Boolean,
+): Boolean {
+  return authMode == UserButtonAuthMode.ForcedMfa && !requiresForcedMfa
 }
 
 internal fun userButtonClickAction(

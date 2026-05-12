@@ -7,11 +7,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.user.fullName
@@ -46,12 +48,16 @@ internal fun UserProfileAccountView(
   customRows: ImmutableList<UserProfileCustomRow> = persistentListOf(),
   onCustomRowClick: (routeKey: String) -> Unit = {},
 ) {
+  val sessions = Clerk.sessionsFlow.collectAsStateWithLifecycle().value
+  val multiSessionModeIsEnabled by Clerk.multiSessionModeIsEnabledFlow.collectAsStateWithLifecycle()
 
   UserProfileAccountViewImpl(
     modifier = modifier,
     imageUrl = Clerk.user?.imageUrl,
     userFullName = Clerk.user?.fullName(),
     username = Clerk.user?.username,
+    sessionCount = sessions.size,
+    multiSessionModeIsEnabled = multiSessionModeIsEnabled,
     onClick = onClick,
     onBackPressed = onBackPressed,
     onEditAvatarClick = onClickEdit,
@@ -61,9 +67,12 @@ internal fun UserProfileAccountView(
 }
 
 @Composable
+@Suppress("LongParameterList")
 private fun UserProfileAccountViewImpl(
   userFullName: String?,
   username: String?,
+  sessionCount: Int,
+  multiSessionModeIsEnabled: Boolean,
   onClick: (UserProfileAction) -> Unit,
   onBackPressed: () -> Unit,
   onEditAvatarClick: () -> Unit,
@@ -73,6 +82,13 @@ private fun UserProfileAccountViewImpl(
   customRows: ImmutableList<UserProfileCustomRow> = persistentListOf(),
   onCustomRowClick: (routeKey: String) -> Unit = {},
 ) {
+  val handleAccountClick: (UserProfileAction) -> Unit = { action ->
+    if (action == UserProfileAction.SignOut) {
+      viewModel.signOut()
+    }
+    onClick(action)
+  }
+
   ClerkMaterialTheme {
     ClerkThemedProfileScaffold(
       modifier = modifier,
@@ -97,7 +113,9 @@ private fun UserProfileAccountViewImpl(
       },
       bottomContent = {
         AccountSectionRows(
-          viewModel = viewModel,
+          sessionCount = sessionCount,
+          multiSessionModeIsEnabled = multiSessionModeIsEnabled,
+          onClick = handleAccountClick,
           customRows = customRows,
           onCustomRowClick = onCustomRowClick,
         )
@@ -202,6 +220,8 @@ private fun ProfileSectionRows(
                 text = stringResource(R.string.security),
                 onClick = { onClick(UserProfileAction.Security) },
               )
+            UserProfileRow.SwitchAccount,
+            UserProfileRow.AddAccount,
             UserProfileRow.SignOut -> {} // Handled in account section
           }
         is UserProfileListRow.Custom ->
@@ -217,13 +237,19 @@ private fun ProfileSectionRows(
 
 @Composable
 private fun AccountSectionRows(
-  viewModel: UserProfileAccountViewModel,
+  sessionCount: Int,
+  multiSessionModeIsEnabled: Boolean,
+  onClick: (UserProfileAction) -> Unit,
   customRows: ImmutableList<UserProfileCustomRow>,
   onCustomRowClick: (routeKey: String) -> Unit,
 ) {
   val rows =
     buildRenderedRows(
-      builtInRows = listOf(UserProfileRow.SignOut),
+      builtInRows =
+        accountBuiltInRows(
+          sessionCount = sessionCount,
+          multiSessionModeIsEnabled = multiSessionModeIsEnabled,
+        ),
       section = UserProfileSection.Account,
       customRows = customRows,
     )
@@ -231,12 +257,31 @@ private fun AccountSectionRows(
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     when (row) {
       is UserProfileListRow.BuiltIn ->
-        UserProfileIconActionRow(
-          backgroundColor = ClerkMaterialTheme.colors.background,
-          iconResId = R.drawable.ic_sign,
-          text = stringResource(R.string.log_out),
-          onClick = { viewModel.signOut() },
-        )
+        when (row.row) {
+          UserProfileRow.SwitchAccount ->
+            UserProfileIconActionRow(
+              backgroundColor = ClerkMaterialTheme.colors.background,
+              iconResId = R.drawable.ic_switch,
+              text = stringResource(R.string.switch_account),
+              onClick = { onClick(UserProfileAction.SwitchAccount) },
+            )
+          UserProfileRow.AddAccount ->
+            UserProfileIconActionRow(
+              backgroundColor = ClerkMaterialTheme.colors.background,
+              iconResId = R.drawable.ic_plus,
+              text = stringResource(R.string.add_account),
+              onClick = { onClick(UserProfileAction.AddAccount) },
+            )
+          UserProfileRow.SignOut ->
+            UserProfileIconActionRow(
+              backgroundColor = ClerkMaterialTheme.colors.background,
+              iconResId = R.drawable.ic_sign,
+              text = stringResource(R.string.sign_out),
+              onClick = { onClick(UserProfileAction.SignOut) },
+            )
+          UserProfileRow.ManageAccount,
+          UserProfileRow.Security -> Unit
+        }
       is UserProfileListRow.Custom ->
         CustomRowView(
           customRow = row.customRow,
@@ -250,6 +295,25 @@ private fun AccountSectionRows(
 internal enum class UserProfileAction {
   Profile,
   Security,
+  SwitchAccount,
+  AddAccount,
+  SignOut,
+}
+
+internal fun accountBuiltInRows(sessionCount: Int): List<UserProfileRow> =
+  accountBuiltInRows(sessionCount = sessionCount, multiSessionModeIsEnabled = true)
+
+internal fun accountBuiltInRows(
+  sessionCount: Int,
+  multiSessionModeIsEnabled: Boolean,
+): List<UserProfileRow> = buildList {
+  if (multiSessionModeIsEnabled) {
+    if (sessionCount > 1) {
+      add(UserProfileRow.SwitchAccount)
+    }
+    add(UserProfileRow.AddAccount)
+  }
+  add(UserProfileRow.SignOut)
 }
 
 @PreviewLightDark
@@ -259,6 +323,8 @@ private fun Preview() {
     UserProfileAccountViewImpl(
       userFullName = "Cameron Walker",
       username = "cameronw",
+      sessionCount = 2,
+      multiSessionModeIsEnabled = true,
       onClick = {},
       onBackPressed = {},
       onEditAvatarClick = {},

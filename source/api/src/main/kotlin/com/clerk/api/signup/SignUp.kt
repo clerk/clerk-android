@@ -9,6 +9,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
@@ -285,7 +286,8 @@ data class SignUp(
     @Serializable
     data class OAuth(
       @MapProperty("providerData?.strategy") @SerialName("strategy") val provider: OAuthProvider,
-      @SerialName("redirect_url") override val redirectUrl: String,
+      @SerialName("redirect_url")
+      override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       override val identifier: String? = null,
       @SerialName("email_address") override val emailAddress: String? = null,
       @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
@@ -476,6 +478,17 @@ data class SignUp(
     }
 
     /**
+     * Authenticates the user with a Google ID token from native Google One Tap, starting from a
+     * sign-up flow and transferring to sign-in when the external account already exists.
+     *
+     * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
+     *   failure.
+     */
+    suspend fun authenticateWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+      return GoogleSignInService().signUpWithGoogle()
+    }
+
+    /**
      * Initiates authentication with a redirect-based flow (OAuth or Enterprise SSO).
      *
      * @param params The authentication parameters.
@@ -489,7 +502,7 @@ data class SignUp(
           is AuthenticateWithRedirectParams.EnterpriseSSO -> params.strategy
           is AuthenticateWithRedirectParams.OAuth -> params.provider.providerData.strategy
         }
-      return SSOService.authenticateWithRedirect(
+      return SSOService.authenticateSignUpWithRedirect(
         strategy = strategy,
         redirectUrl = params.redirectUrl,
         identifier = params.identifier,
@@ -538,6 +551,19 @@ suspend fun SignUp.update(
   updateParams: SignUp.SignUpUpdateParams
 ): ClerkResult<SignUp, ClerkErrorResponse> {
   return ClerkApi.signUp.updateSignUp(this.id, updateParams.toMap())
+}
+
+/**
+ * Retrieves the current state of the SignUp object from the server.
+ *
+ * @param rotatingTokenNonce Optional nonce for rotating token validation.
+ * @return A [ClerkResult] containing the refreshed [SignUp] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignUp.get(
+  rotatingTokenNonce: String? = null
+): ClerkResult<SignUp, ClerkErrorResponse> {
+  return ClerkApi.signUp.fetchSignUp(id = this.id, rotatingTokenNonce = rotatingTokenNonce)
 }
 
 /**

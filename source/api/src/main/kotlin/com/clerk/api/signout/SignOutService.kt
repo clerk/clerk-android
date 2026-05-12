@@ -6,41 +6,38 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.session.delete
+import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 
 /**
- * Service responsible for signing out users by removing their active session.
+ * Service responsible for signing out users by removing every session on the current client.
  *
- * The SignOutService handles the complete sign-out process, including removing the session from the
- * Clerk API and cleaning up local session state. It performs network operations asynchronously and
- * provides proper error handling.
+ * The SignOutService handles the complete all-account sign-out process, including deleting client
+ * sessions from the Clerk API and cleaning up local client state. Single-session sign-out is
+ * handled by [com.clerk.api.auth.Auth.signOut] when a session ID is provided.
  */
 internal object SignOutService {
 
   /**
-   * Signs out the currently authenticated user by removing their active session.
+   * Signs out all accounts by deleting every session on the current client.
    *
-   * This method will attempt to remove the session from the Clerk API if a session ID exists,
-   * otherwise it will delete the local session. Local credentials are always cleared regardless of
-   * whether the server-side sign-out succeeds, ensuring users are never stuck in a logged-in state
-   * after attempting to sign out.
+   * Local credentials are always cleared regardless of whether the server-side sign-out succeeds,
+   * ensuring users are never stuck in a logged-in state after attempting to sign out.
    *
-   * @return A [com.clerk.network.serialization.ClerkResult] indicating the success or failure of
-   *   the sign-out operation. Returns
-   *   [com.clerk.network.serialization.ClerkResult.Companion.success] with [Unit] on successful
-   *   sign-out, or [com.clerk.network.serialization.ClerkResult.Companion.unknownFailure] with
-   *   error details on failure. Note: local credentials are cleared in both cases.
+   * @return A [ClerkResult] indicating the success or failure of the sign-out operation. Returns
+   *   [ClerkResult.Companion.success] with [Unit] on successful sign-out, or
+   *   [ClerkResult.Companion.unknownFailure] with error details on failure. Note: local credentials
+   *   are cleared in both cases.
    */
   suspend fun signOut(): ClerkResult<Unit, ClerkErrorResponse> {
     var serverError: Exception? = null
 
     try {
-      if (Clerk.session?.id != null) {
-        Clerk.session?.id?.let { sessionId -> ClerkApi.session.removeSession(sessionId) }
-      } else {
-        Clerk.session?.delete()
+      when (val result = ClerkApi.session.deleteSessions()) {
+        is ClerkResult.Success -> Clerk.updateClient(result.value)
+        is ClerkResult.Failure ->
+          serverError = result.throwable as? Exception ?: Exception(result.errorMessage)
       }
     } catch (e: Exception) {
       ClerkLog.w("Server sign-out failed: ${e.message}")
@@ -48,12 +45,18 @@ internal object SignOutService {
     } finally {
       // Always clear local credentials regardless of server response
       StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
-      Clerk.clearSessionAndUserState()
+      Clerk.updateClient(Client())
 
       // Best-effort refresh of the in-memory client while skipping current client id.
       // This clears stale in-progress sign-in/sign-up state that can otherwise persist after
       // sign-out when the host remounts AuthView within the same process/activity lifecycle.
-      runCatching { Client.getSkippingClientId() }
+      runCatching {
+          when (val clientResult = Client.getSkippingClientId()) {
+            is ClerkResult.Success -> Clerk.updateClient(clientResult.value)
+            is ClerkResult.Failure ->
+              ClerkLog.w("Client refresh after sign-out failed: ${clientResult.errorMessage}")
+          }
+        }
         .onFailure { ClerkLog.w("Client refresh after sign-out failed: ${it.message}") }
     }
 

@@ -46,9 +46,17 @@ import kotlinx.collections.immutable.toImmutableList
 fun AuthStartView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
+  preferGoogleOneTap: Boolean = true,
+  startSocialOAuthAsSignUp: Boolean = false,
   onAuthComplete: () -> Unit,
 ) {
-  AuthStartViewImpl(modifier = modifier, onAuthComplete = onAuthComplete, clerkTheme = clerkTheme)
+  AuthStartViewImpl(
+    modifier = modifier,
+    preferGoogleOneTap = preferGoogleOneTap,
+    startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+    onAuthComplete = onAuthComplete,
+    clerkTheme = clerkTheme,
+  )
 }
 
 @Composable
@@ -58,6 +66,8 @@ internal fun AuthStartViewImpl(
   modifier: Modifier = Modifier,
   authViewHelper: AuthStartViewHelper = AuthStartViewHelper(),
   clerkTheme: ClerkTheme? = null,
+  preferGoogleOneTap: Boolean = true,
+  startSocialOAuthAsSignUp: Boolean = false,
   authStartViewModel: AuthStartViewModel = viewModel(),
 ) {
   val authState = LocalAuthState.current
@@ -201,7 +211,12 @@ internal fun AuthStartViewImpl(
                 provider = lastUsedSocialProvider,
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                  authStartViewModel.authenticateWithSocialProvider(it, authState.mode.transferable)
+                  authStartViewModel.authenticateWithSocialProvider(
+                    provider = it,
+                    transferable = authState.mode.transferable,
+                    preferGoogleOneTap = preferGoogleOneTap,
+                    startOAuthWithSignUp = startSocialOAuthAsSignUp,
+                  )
                 },
                 forceIconOnly = false,
               )
@@ -212,7 +227,12 @@ internal fun AuthStartViewImpl(
             ClerkSocialRow(
               providers = socialProvidersMinusLastUsed.toImmutableList(),
               onClick = {
-                authStartViewModel.authenticateWithSocialProvider(it, authState.mode.transferable)
+                authStartViewModel.authenticateWithSocialProvider(
+                  provider = it,
+                  transferable = authState.mode.transferable,
+                  preferGoogleOneTap = preferGoogleOneTap,
+                  startOAuthWithSignUp = startSocialOAuthAsSignUp,
+                )
               },
             )
           }

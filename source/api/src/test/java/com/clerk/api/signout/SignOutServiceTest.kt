@@ -118,8 +118,8 @@ class SignOutServiceTest {
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
     // Mock successful server sign-out
-    coEvery { mockSessionApi.removeSession(any()) } returns ClerkResult.success(mockSession)
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(mockClient)
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
     // Verify device token exists before sign-out
     assertTrue(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != null)
@@ -142,8 +142,8 @@ class SignOutServiceTest {
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
     // Mock server sign-out failure (network error)
-    coEvery { mockSessionApi.removeSession(any()) } throws Exception("Network error")
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(mockClient)
+    coEvery { mockSessionApi.deleteSessions() } throws Exception("Network error")
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
     // Verify device token exists before sign-out
     assertTrue(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN) != null)
@@ -168,8 +168,8 @@ class SignOutServiceTest {
     setupActiveSession()
 
     // Mock successful server sign-out
-    coEvery { mockSessionApi.removeSession(any()) } returns ClerkResult.success(mockSession)
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(mockClient)
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
     // Verify session exists before sign-out
     assertTrue("Session should exist before sign-out", Clerk.session != null)
@@ -191,8 +191,8 @@ class SignOutServiceTest {
     setupActiveSession()
 
     // Mock server sign-out failure
-    coEvery { mockSessionApi.removeSession(any()) } throws Exception("Server error")
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(mockClient)
+    coEvery { mockSessionApi.deleteSessions() } throws Exception("Server error")
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
     // Verify session exists before sign-out
     assertTrue("Session should exist before sign-out", Clerk.session != null)
@@ -221,7 +221,8 @@ class SignOutServiceTest {
     Clerk.updateClient(emptyClient)
     Clerk.environment = mockEnvironment
 
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(emptyClient)
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
     // When
     val result = SignOutService.signOut()
@@ -238,8 +239,8 @@ class SignOutServiceTest {
     StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "test_device_token")
 
     // Mock successful server sign-out
-    coEvery { mockSessionApi.removeSession(any()) } returns ClerkResult.success(mockSession)
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(mockClient)
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
     // When
     SignOutService.signOut()
@@ -255,8 +256,8 @@ class SignOutServiceTest {
   @Test
   fun `signOut refreshes client after local sign-out cleanup`() = runTest {
     setupActiveSession()
-    coEvery { mockSessionApi.removeSession(any()) } returns ClerkResult.success(mockSession)
-    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(mockClient)
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
 
     val result = SignOutService.signOut()
 
@@ -267,7 +268,7 @@ class SignOutServiceTest {
   @Test
   fun `signOut tolerates client refresh failure`() = runTest {
     setupActiveSession()
-    coEvery { mockSessionApi.removeSession(any()) } returns ClerkResult.success(mockSession)
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
     coEvery { mockClientApi.getSkippingClientId(any()) } throws Exception("Refresh failed")
 
     val result = SignOutService.signOut()

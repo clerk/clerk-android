@@ -20,7 +20,8 @@ internal class UserProfileAccountViewModel : ViewModel() {
   val deleteAccountStateFlow = _deleteAccountStateFlow.asStateFlow()
 
   fun signOut() {
-    viewModelScope.launch { Clerk.auth.signOut() }
+    val sessionId = Clerk.session?.id ?: return
+    viewModelScope.launch { Clerk.auth.signOut(sessionId = sessionId) }
   }
 
   fun deleteAccount() {
