@@ -47,4 +47,20 @@ class UserProfileAccountViewModelTest {
 
     coVerify { Clerk.auth.signOut(sessionId = "sess_123") }
   }
+
+  @Test
+  fun signOut_doesNothingWhenCurrentSessionIsNull() = runTest {
+    every { Clerk.session } returns null
+    coEvery { Clerk.auth.signOut(sessionId = any()) } returns ClerkResult.success(Unit)
+    coEvery { Clerk.auth.signOut(sessionId = null) } returns ClerkResult.success(Unit)
+
+    val viewModel = UserProfileAccountViewModel()
+
+    viewModel.signOut()
+    advanceUntilIdle()
+
+    // Must not collapse to signOut(null) / signOut() — that would sign out every account.
+    coVerify(exactly = 0) { Clerk.auth.signOut(sessionId = any()) }
+    coVerify(exactly = 0) { Clerk.auth.signOut(sessionId = null) }
+  }
 }
