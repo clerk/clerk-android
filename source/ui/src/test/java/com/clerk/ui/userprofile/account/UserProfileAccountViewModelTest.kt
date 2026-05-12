@@ -2,8 +2,11 @@ package com.clerk.ui.userprofile.account
 
 import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.session.Session
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlin.test.AfterTest
@@ -31,14 +34,33 @@ class UserProfileAccountViewModelTest {
   }
 
   @Test
-  fun signOut_invokesClerkSignOut() = runTest {
-    coEvery { Clerk.auth.signOut() } returns ClerkResult.success(Unit)
+  fun signOut_invokesClerkSignOutForCurrentSession() = runTest {
+    val session = mockk<Session>()
+    every { session.id } returns "sess_123"
+    every { Clerk.session } returns session
+    coEvery { Clerk.auth.signOut(sessionId = "sess_123") } returns ClerkResult.success(Unit)
 
     val viewModel = UserProfileAccountViewModel()
 
     viewModel.signOut()
     advanceUntilIdle()
 
-    coVerify { Clerk.auth.signOut() }
+    coVerify { Clerk.auth.signOut(sessionId = "sess_123") }
+  }
+
+  @Test
+  fun signOut_doesNothingWhenCurrentSessionIsNull() = runTest {
+    every { Clerk.session } returns null
+    coEvery { Clerk.auth.signOut(sessionId = any()) } returns ClerkResult.success(Unit)
+    coEvery { Clerk.auth.signOut(sessionId = null) } returns ClerkResult.success(Unit)
+
+    val viewModel = UserProfileAccountViewModel()
+
+    viewModel.signOut()
+    advanceUntilIdle()
+
+    // Must not collapse to signOut(null) / signOut() — that would sign out every account.
+    coVerify(exactly = 0) { Clerk.auth.signOut(sessionId = any()) }
+    coVerify(exactly = 0) { Clerk.auth.signOut(sessionId = null) }
   }
 }

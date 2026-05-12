@@ -5,16 +5,18 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
+import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.get
+import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signup.SignUp
-import com.clerk.api.sso.SSOService.authenticateWithRedirect
+import com.clerk.api.signup.get
 import com.clerk.api.user.User.CreateExternalAccountParams
 import kotlinx.coroutines.CompletableDeferred
 
@@ -55,6 +57,10 @@ internal object SSOService {
    */
   private var currentTransferable: Boolean = true
 
+  private var currentRedirectFlow: RedirectFlow = RedirectFlow.SIGN_IN
+
+  private var currentSignUp: SignUp? = null
+
   /**
    * Initiates an OAuth authentication flow with redirect to an external provider.
    *
@@ -92,32 +98,116 @@ internal object SSOService {
       )
     )
     clearCurrentAuth()
+    val resolvedStrategy =
+      strategy
+        ?: return ClerkResult.unknownFailure(
+          Exception("Strategy cannot be null for redirect authentication")
+        )
 
     val initialResult =
-      ClerkApi.signIn.authenticateWithRedirect(
-        strategy = strategy,
-        redirectUrl = redirectUrl,
-        identifier = identifier,
-        emailAddress = emailAddress,
-        legalAccepted = legalAccepted,
+      SignIn.create(
+        buildMap {
+          put("strategy", resolvedStrategy)
+          put("redirect_url", redirectUrl)
+          put("locale", Clerk.locale.value.orEmpty())
+          identifier?.let { put("identifier", it) }
+          emailAddress?.let { put("email_address", it) }
+          legalAccepted?.let { put("legal_accepted", it.toString()) }
+        }
       )
 
     return when (initialResult) {
       is ClerkResult.Failure -> {
         val message = initialResult.errorMessage
         ClerkLog.e("Failed to authenticate with redirect: $message")
-        ClerkResult.apiFailure(initialResult.error)
+        initialResult.signInToOAuthResult()
       }
       is ClerkResult.Success -> {
-        ClerkLog.d("Successfully authenticated with redirect: $initialResult")
+        ClerkLog.d("Successfully created sign-in for redirect: $initialResult")
+        when (
+          val prepareResult =
+            initialResult.value.prepareFirstFactor(
+              firstFactorParams(strategy = resolvedStrategy, redirectUrl = redirectUrl)
+            )
+        ) {
+          is ClerkResult.Failure -> {
+            val message = prepareResult.errorMessage
+            ClerkLog.e("Failed to prepare redirect first factor: $message")
+            prepareResult.signInToOAuthResult()
+          }
+          is ClerkResult.Success -> {
+            val externalUrl =
+              requireNotNull(
+                prepareResult.value.firstFactorVerification?.externalVerificationRedirectUrl
+              ) {
+                "External URL cannot be null"
+              }
+
+            authenticateWithPreparedRedirect(externalUrl, transferable)
+          }
+        }
+      }
+    }
+  }
+
+  private fun firstFactorParams(
+    strategy: String,
+    redirectUrl: String,
+  ): SignIn.PrepareFirstFactorParams {
+    return if (strategy == ENTERPRISE_SSO) {
+      SignIn.PrepareFirstFactorParams.EnterpriseSSO(redirectUrl = redirectUrl)
+    } else {
+      SignIn.PrepareFirstFactorParams.OAuth(strategy = strategy, redirectUrl = redirectUrl)
+    }
+  }
+
+  suspend fun authenticateSignUpWithRedirect(
+    strategy: String? = null,
+    redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+    identifier: String? = null,
+    emailAddress: String? = null,
+    legalAccepted: Boolean? = null,
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    currentPendingAuth?.complete(
+      ClerkResult.unknownFailure(
+        Exception("New authentication started, cancelling previous attempt")
+      )
+    )
+    clearCurrentAuth()
+
+    val initialResult =
+      SignUp.create(
+        buildMap {
+          strategy?.let { put("strategy", it) }
+          put("redirect_url", redirectUrl)
+          put("locale", Clerk.locale.value.orEmpty())
+          identifier?.let { put("identifier", it) }
+          emailAddress?.let { put("email_address", it) }
+          legalAccepted?.let { put("legal_accepted", it.toString()) }
+        }
+      )
+
+    return when (initialResult) {
+      is ClerkResult.Failure -> {
+        val message = initialResult.errorMessage
+        ClerkLog.e("Failed to authenticate sign-up with redirect: $message")
+        initialResult.signUpToOAuthResult()
+      }
+      is ClerkResult.Success -> {
+        val signUp = initialResult.value
         val externalUrl =
           requireNotNull(
-            initialResult.value.firstFactorVerification?.externalVerificationRedirectUrl
+            signUp.verifications["external_account"]?.externalVerificationRedirectUrl
           ) {
             "External URL cannot be null"
           }
 
-        authenticateWithPreparedRedirect(externalUrl, transferable)
+        authenticateWithPreparedRedirect(
+          externalVerificationRedirectUrl = externalUrl,
+          transferable = true,
+          redirectFlow = RedirectFlow.SIGN_UP,
+          signUp = signUp,
+        )
       }
     }
   }
@@ -132,6 +222,8 @@ internal object SSOService {
   suspend fun authenticateWithPreparedRedirect(
     externalVerificationRedirectUrl: String,
     transferable: Boolean = true,
+    redirectFlow: RedirectFlow = RedirectFlow.SIGN_IN,
+    signUp: SignUp? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     currentPendingAuth?.complete(
       ClerkResult.unknownFailure(
@@ -144,6 +236,8 @@ internal object SSOService {
 
     currentPendingAuth = completableDeferred
     currentTransferable = transferable
+    currentRedirectFlow = redirectFlow
+    currentSignUp = signUp
 
     val intent =
       Intent(Clerk.applicationContext?.get(), SSOReceiverActivity::class.java).apply {
@@ -184,16 +278,27 @@ internal object SSOService {
 
       val nonce = uri.getQueryParameter("rotating_token_nonce")
 
-      if (nonce != null) {
-        handleSignIn(nonce)
-      } else if (currentTransferable) {
-        handleSignUpTransfer()
-      } else {
-        ClerkLog.d("Sign-up transfer blocked: transferable is false")
-        currentPendingAuth?.complete(
-          ClerkResult.unknownFailure(Exception("external_account_not_found"))
-        )
-        clearCurrentAuth()
+      when (currentRedirectFlow) {
+        RedirectFlow.SIGN_IN -> {
+          if (nonce != null) {
+            handleSignIn(nonce)
+          } else if (currentTransferable) {
+            handleSignUpTransfer()
+          } else {
+            ClerkLog.d("Sign-up transfer blocked: transferable is false")
+            currentPendingAuth?.complete(
+              ClerkResult.unknownFailure(Exception("external_account_not_found"))
+            )
+            clearCurrentAuth()
+          }
+        }
+        RedirectFlow.SIGN_UP -> {
+          if (nonce != null) {
+            handleSignUp(nonce)
+          } else {
+            handleSignInTransfer()
+          }
+        }
       }
     } catch (e: Exception) {
       ClerkLog.e("Error completing authentication with redirect: ${e.message}")
@@ -265,6 +370,21 @@ internal object SSOService {
     clearCurrentAuth()
   }
 
+  private suspend fun handleSignUp(nonce: String) {
+    val signUpResult = requireNotNull(currentSignUp ?: Clerk.auth.currentSignUp).get(nonce)
+    currentPendingAuth?.complete(signUpResult.signUpToOAuthResult())
+
+    clearCurrentAuth()
+  }
+
+  private suspend fun handleSignInTransfer() {
+    ClerkLog.d("Handling sign-in transfer")
+    val signUpResult = requireNotNull(currentSignUp ?: Clerk.auth.currentSignUp).get()
+    currentPendingAuth?.complete(signUpResult.signUpToOAuthResultWithTransfer())
+
+    clearCurrentAuth()
+  }
+
   /**
    * Clears the current authentication state.
    *
@@ -275,6 +395,8 @@ internal object SSOService {
   private fun clearCurrentAuth() {
     currentPendingAuth = null
     currentTransferable = true
+    currentRedirectFlow = RedirectFlow.SIGN_IN
+    currentSignUp = null
   }
 
   /**
@@ -313,5 +435,10 @@ internal object SSOService {
    */
   fun hasPendingExternalAccountConnection(): Boolean {
     return ExternalAccountService.hasPendingExternalAccountConnection()
+  }
+
+  internal enum class RedirectFlow {
+    SIGN_IN,
+    SIGN_UP,
   }
 }

@@ -26,7 +26,6 @@ internal class GoogleSignInService(
   suspend fun signInWithGoogle(
     transferable: Boolean = true
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-
     return try {
       val result = googleCredentialManager.getSignInWithGoogleCredential()
       handleSignInResult(result.credential, transferable)
@@ -35,6 +34,19 @@ internal class GoogleSignInService(
       classifyGetCredentialFailure(e, credentialTypes = listOf(SignIn.CredentialType.GOOGLE))
     } catch (e: CredentialFlowException) {
       ClerkLog.e("Google sign-in cannot start: ${e.message}")
+      ClerkResult.unknownFailure(e)
+    }
+  }
+
+  suspend fun signUpWithGoogle(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    return try {
+      val result = googleCredentialManager.getSignInWithGoogleCredential()
+      handleSignUpResult(result.credential)
+    } catch (e: GetCredentialException) {
+      ClerkLog.e("Error retrieving Google ID token: ${e.message}")
+      classifyGetCredentialFailure(e, credentialTypes = listOf(SignIn.CredentialType.GOOGLE))
+    } catch (e: CredentialFlowException) {
+      ClerkLog.e("Google sign-up cannot start: ${e.message}")
       ClerkResult.unknownFailure(e)
     }
   }
@@ -61,12 +73,30 @@ internal class GoogleSignInService(
             authResult.error?.errors?.firstOrNull()?.code == "external_account_not_found" &&
               transferable
           ) {
-            SignUp.create(SignUp.CreateParams.GoogleOneTap(token = idToken)).signUpToOAuthResult()
+            SignUp.create(SignUp.CreateParams.GoogleOneTap(token = idToken))
+              .signUpToOAuthResultWithTransfer()
           } else {
             authResult.signInToOAuthResult()
           }
         }
       }
+    } else {
+      ClerkResult.unknownFailure(
+        IllegalStateException("Unsupported credential type: ${credential.type}")
+      )
+    }
+  }
+
+  suspend fun handleSignUpResult(
+    credential: Credential
+  ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    return if (
+      credential is CustomCredential &&
+        credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+    ) {
+      val idToken = googleCredentialManager.getIdTokenFromCredential(credential.data)
+      SignUp.create(SignUp.CreateParams.GoogleOneTap(token = idToken))
+        .signUpToOAuthResultWithTransfer()
     } else {
       ClerkResult.unknownFailure(
         IllegalStateException("Unsupported credential type: ${credential.type}")

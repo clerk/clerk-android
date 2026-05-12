@@ -14,10 +14,15 @@ sealed interface UserProfileRowIcon {
   data class Vector(val imageVector: ImageVector) : UserProfileRowIcon
 }
 
-/** Built-in rows in [com.clerk.ui.userprofile.UserProfileView] that can be used as placement anchors. */
+/**
+ * Built-in rows in [com.clerk.ui.userprofile.UserProfileView] that can be used as placement
+ * anchors.
+ */
 enum class UserProfileRow {
   ManageAccount,
   Security,
+  SwitchAccount,
+  AddAccount,
   SignOut,
 }
 
@@ -26,7 +31,7 @@ enum class UserProfileSection {
   /** Contains [UserProfileRow.ManageAccount] and [UserProfileRow.Security]. */
   Profile,
 
-  /** Contains [UserProfileRow.SignOut]. */
+  /** Contains account switching and sign-out rows. */
   Account,
 }
 

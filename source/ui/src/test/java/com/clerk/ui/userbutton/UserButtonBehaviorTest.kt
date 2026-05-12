@@ -49,4 +49,35 @@ class UserButtonBehaviorTest {
       )
     )
   }
+
+  @Test
+  fun `forced mfa auth dismisses when mfa is resolved`() {
+    assertTrue(
+      shouldDismissAuthWhenMfaResolved(
+        authMode = UserButtonAuthMode.ForcedMfa,
+        requiresForcedMfa = false,
+      )
+    )
+  }
+
+  @Test
+  fun `add account auth stays open when mfa is not required`() {
+    assertFalse(
+      shouldDismissAuthWhenMfaResolved(
+        authMode = UserButtonAuthMode.AddAccount,
+        requiresForcedMfa = false,
+      )
+    )
+  }
+
+  @Test
+  fun `add account auth uses browser OAuth`() {
+    assertFalse(UserButtonAuthMode.AddAccount.preferGoogleOneTap)
+  }
+
+  @Test
+  fun `add account auth uses sign in first social OAuth`() {
+    assertFalse(UserButtonAuthMode.AddAccount.startSocialOAuthAsSignUp)
+    assertFalse(UserButtonAuthMode.ForcedMfa.startSocialOAuthAsSignUp)
+  }
 }

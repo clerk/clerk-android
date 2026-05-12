@@ -7,7 +7,6 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.network.serialization.successOrElse
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -138,14 +137,16 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           ClerkApi.session.tokens(session.id)
         }
 
-      val result =
-        tokensRequest.successOrElse { failure ->
-          handleSessionInvalidationOnFailure(session, failure)
-          error("Failed to fetch token")
+      when (tokensRequest) {
+        is ClerkResult.Success -> {
+          SessionTokensCache.setToken(cacheKey, tokensRequest.value)
+          tokensRequest.value
         }
-
-      SessionTokensCache.setToken(cacheKey, result)
-      result
+        is ClerkResult.Failure -> {
+          handleSessionInvalidationOnFailure(session, tokensRequest)
+          null
+        }
+      }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
