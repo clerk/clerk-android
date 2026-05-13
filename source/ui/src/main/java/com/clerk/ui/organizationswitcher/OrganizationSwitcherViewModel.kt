@@ -10,11 +10,9 @@ import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.session.Session
 import com.clerk.api.user.User
 import com.clerk.api.user.getOrganizationMemberships
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 internal class OrganizationSwitcherViewModel : ViewModel() {
 
@@ -30,24 +28,20 @@ internal class OrganizationSwitcherViewModel : ViewModel() {
 
     _state.value =
       _state.value.copy(isLoading = true, initialLoadAttempted = true, errorMessage = null)
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch {
       user
         .getOrganizationMemberships(limit = PAGE_SIZE, offset = 0)
         .onSuccess { response ->
-          withContext(Dispatchers.Main) {
-            _state.value =
-              _state.value.copy(
-                isLoading = false,
-                memberships = response.data,
-                membershipsTotalCount = response.totalCount,
-                errorMessage = null,
-              )
-          }
+          _state.value =
+            _state.value.copy(
+              isLoading = false,
+              memberships = response.data,
+              membershipsTotalCount = response.totalCount,
+              errorMessage = null,
+            )
         }
         .onFailure { failure ->
-          withContext(Dispatchers.Main) {
-            _state.value = _state.value.copy(isLoading = false, errorMessage = failure.errorMessage)
-          }
+          _state.value = _state.value.copy(isLoading = false, errorMessage = failure.errorMessage)
         }
     }
   }
@@ -61,25 +55,21 @@ internal class OrganizationSwitcherViewModel : ViewModel() {
     if (user == null || !current.hasNextPage || current.isLoadingMore) return
 
     _state.value = current.copy(isLoadingMore = true, errorMessage = null)
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch {
       user
         .getOrganizationMemberships(limit = PAGE_SIZE, offset = current.memberships.size)
         .onSuccess { response ->
-          withContext(Dispatchers.Main) {
-            val latest = _state.value
-            _state.value =
-              latest.copy(
-                isLoadingMore = false,
-                memberships = latest.memberships + response.data,
-                membershipsTotalCount = response.totalCount,
-              )
-          }
+          val latest = _state.value
+          _state.value =
+            latest.copy(
+              isLoadingMore = false,
+              memberships = latest.memberships + response.data,
+              membershipsTotalCount = response.totalCount,
+            )
         }
         .onFailure { failure ->
-          withContext(Dispatchers.Main) {
-            _state.value =
-              _state.value.copy(isLoadingMore = false, errorMessage = failure.errorMessage)
-          }
+          _state.value =
+            _state.value.copy(isLoadingMore = false, errorMessage = failure.errorMessage)
         }
     }
   }
@@ -92,20 +82,16 @@ internal class OrganizationSwitcherViewModel : ViewModel() {
     if (_state.value.activeActionId != null) return
 
     _state.value = _state.value.copy(activeActionId = organizationId, errorMessage = null)
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch {
       Clerk.auth
         .setActive(sessionId = session.id, organizationId = organizationId)
         .onSuccess {
-          withContext(Dispatchers.Main) {
-            _state.value = _state.value.copy(activeActionId = null)
-            onSelected()
-          }
+          _state.value = _state.value.copy(activeActionId = null)
+          onSelected()
         }
         .onFailure { failure ->
-          withContext(Dispatchers.Main) {
-            _state.value =
-              _state.value.copy(activeActionId = null, errorMessage = failure.errorMessage)
-          }
+          _state.value =
+            _state.value.copy(activeActionId = null, errorMessage = failure.errorMessage)
         }
     }
   }
