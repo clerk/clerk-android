@@ -95,7 +95,13 @@ internal fun UserProfileAccountSwitcherSheet(
                 loadingActionId = session.id
                 errorMessage = null
                 scope.launch {
-                  when (val result = Clerk.auth.setActive(sessionId = session.id)) {
+                  when (
+                    val result =
+                      Clerk.auth.setActive(
+                        sessionId = session.id,
+                        organizationId = session.lastActiveOrganizationId,
+                      )
+                  ) {
                     is ClerkResult.Success -> {
                       loadingActionId = null
                       sheetState.hide()

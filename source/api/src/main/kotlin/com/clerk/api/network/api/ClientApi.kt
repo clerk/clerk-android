@@ -14,6 +14,8 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 
+internal const val SET_ACTIVE_INTENT_SELECT_ORG = "select_org"
+
 /**
  * Internal API interface for client-related operations.
  *
@@ -57,6 +59,7 @@ internal interface ClientApi {
   @POST(ApiPaths.Client.Sessions.SET_ACTIVE)
   suspend fun setActive(
     @Path("id") sessionId: String,
-    @Field("active_organization_id") organizationId: String?,
+    @Field("active_organization_id") organizationId: String,
+    @Field("intent") intent: String = SET_ACTIVE_INTENT_SELECT_ORG,
   ): ClerkResult<Session, ClerkErrorResponse>
 }

@@ -15,6 +15,7 @@ import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.api.SET_ACTIVE_INTENT_SELECT_ORG
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -646,7 +647,20 @@ class Auth internal constructor() {
 
     val fallbackSessions = fallbackClient?.sessions.orEmpty()
     val targetInFetchedSessions = sessions.any { it.id == activeSessionFallbackId }
-    val targetInFallbackSessions = fallbackSessions.any { it.id == activeSessionFallbackId }
+    val fallbackTargetSession = fallbackSessions.firstOrNull { it.id == activeSessionFallbackId }
+    val targetInFallbackSessions = fallbackTargetSession != null
+    val sessionsWithFallbackTarget =
+      if (targetInFetchedSessions && fallbackTargetSession != null) {
+        sessions.map { session ->
+          if (session.id == activeSessionFallbackId) {
+            session.withSessionMutationFallback(fallbackTargetSession)
+          } else {
+            session
+          }
+        }
+      } else {
+        sessions
+      }
 
     return when {
       // Fetched client is missing the target session entirely (e.g. cleared sessions list);
@@ -664,10 +678,20 @@ class Auth internal constructor() {
       // Fetched client has the target session but `lastActiveSessionId` is stale
       // (read-after-write lag); force the just-activated session back to active.
       targetInFetchedSessions && lastActiveSessionId != activeSessionFallbackId ->
-        copy(lastActiveSessionId = activeSessionFallbackId)
+        copy(sessions = sessionsWithFallbackTarget, lastActiveSessionId = activeSessionFallbackId)
+      targetInFetchedSessions && sessionsWithFallbackTarget != sessions ->
+        copy(sessions = sessionsWithFallbackTarget)
       else -> this
     }
   }
+
+  private fun Session.withSessionMutationFallback(fallbackSession: Session): Session =
+    copy(
+      user = user ?: fallbackSession.user,
+      publicUserData = publicUserData ?: fallbackSession.publicUserData,
+      lastActiveOrganizationId = fallbackSession.lastActiveOrganizationId,
+      lastActiveToken = lastActiveToken ?: fallbackSession.lastActiveToken,
+    )
 
   /**
    * Sets the active session.
@@ -687,13 +711,26 @@ class Auth internal constructor() {
     organizationId: String? = null,
   ): ClerkResult<Session, ClerkErrorResponse> {
     val previousClient = if (Clerk.clientInitialized) Clerk.client else null
-    val result = ClerkApi.client.setActive(sessionId, organizationId)
+    if (organizationId == null && Clerk.organizationSelectionIsForced) {
+      return Clerk.session?.let { ClerkResult.success(it) }
+        ?: ClerkResult.unknownFailure(
+          IllegalStateException("Cannot select a personal account without an active session.")
+        )
+    }
+
+    val result =
+      ClerkApi.client.setActive(
+        sessionId = sessionId,
+        organizationId = organizationId.orEmpty(),
+        intent = SET_ACTIVE_INTENT_SELECT_ORG,
+      )
     when (result) {
       is ClerkResult.Success -> {
         setActiveSessionLocally(
           sessionId,
           activeSession = result.value,
           sourceClient = previousClient,
+          activeOrganizationId = organizationId,
         )
         refreshClientAfterSessionMutation(
           activeSessionFallbackId = sessionId,
@@ -709,34 +746,46 @@ class Auth internal constructor() {
     sessionId: String,
     activeSession: Session? = null,
     sourceClient: Client? = null,
+    activeOrganizationId: String? = null,
   ) {
     val client = sourceClient ?: if (Clerk.clientInitialized) Clerk.client else return
-    val sessions = client.sessions.withUpdatedSession(activeSession)
+    val sessions = client.sessions.withUpdatedSession(activeSession, activeOrganizationId)
     if (sessions.none { it.id == sessionId }) return
 
     Clerk.updateClient(client.copy(sessions = sessions, lastActiveSessionId = sessionId))
   }
 
-  private fun List<Session>.withUpdatedSession(activeSession: Session?): List<Session> {
+  private fun List<Session>.withUpdatedSession(
+    activeSession: Session?,
+    activeOrganizationId: String?,
+  ): List<Session> {
     if (activeSession == null) return this
 
     var replacedSession = false
     val updatedSessions = map { existingSession ->
       if (existingSession.id == activeSession.id) {
         replacedSession = true
-        activeSession.withPreservedUserData(existingSession)
+        activeSession.withSetActiveState(existingSession, activeOrganizationId)
       } else {
         existingSession
       }
     }
 
-    return if (replacedSession) updatedSessions else updatedSessions + activeSession
+    return if (replacedSession) {
+      updatedSessions
+    } else {
+      updatedSessions + activeSession.copy(lastActiveOrganizationId = activeOrganizationId)
+    }
   }
 
-  private fun Session.withPreservedUserData(existingSession: Session): Session =
+  private fun Session.withSetActiveState(
+    existingSession: Session,
+    activeOrganizationId: String?,
+  ): Session =
     copy(
       user = user ?: existingSession.user,
       publicUserData = publicUserData ?: existingSession.publicUserData,
+      lastActiveOrganizationId = activeOrganizationId,
       lastActiveToken = lastActiveToken ?: existingSession.lastActiveToken,
     )
 
