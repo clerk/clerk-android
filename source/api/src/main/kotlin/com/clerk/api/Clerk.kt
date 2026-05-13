@@ -515,12 +515,14 @@ object Clerk {
    * The current user's membership in the active organization.
    *
    * Returns the membership whose organization matches [Session.lastActiveOrganizationId] on the
-   * current session, or `null` when there is no active organization selection.
+   * active session. Returns `null` when there is no active session, no active organization
+   * selection, or the user has no matching hydrated organization membership.
    */
   val organizationMembership: OrganizationMembership?
     get() {
-      val activeOrganizationId = session?.lastActiveOrganizationId ?: return null
-      return user?.organizationMemberships?.firstOrNull {
+      val activeSession = activeSession ?: return null
+      val activeOrganizationId = activeSession.lastActiveOrganizationId ?: return null
+      return activeSession.user?.organizationMemberships?.firstOrNull {
         it.organization.id == activeOrganizationId
       }
     }
