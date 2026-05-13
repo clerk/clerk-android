@@ -24,6 +24,8 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.organizations.Organization
+import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
@@ -508,6 +510,31 @@ object Clerk {
    */
   val activeUser: User?
     get() = activeSession?.user
+
+  /**
+   * The current user's membership in the active organization.
+   *
+   * Returns the membership whose organization matches [Session.lastActiveOrganizationId] on the
+   * active session. Returns `null` when there is no active session, no active organization
+   * selection, or the user has no matching hydrated organization membership.
+   */
+  val organizationMembership: OrganizationMembership?
+    get() {
+      val activeSession = activeSession ?: return null
+      val activeOrganizationId = activeSession.lastActiveOrganizationId ?: return null
+      return activeSession.user?.organizationMemberships?.firstOrNull {
+        it.organization.id == activeOrganizationId
+      }
+    }
+
+  /**
+   * The active organization for the current session.
+   *
+   * Returns `null` when there is no current session, no active organization selection, or the
+   * current user does not have a matching hydrated organization membership.
+   */
+  val organization: Organization?
+    get() = organizationMembership?.organization
 
   // endregion
 
