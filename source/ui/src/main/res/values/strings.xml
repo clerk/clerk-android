@@ -199,6 +199,10 @@
     <string name="edit_avatar">Edit avatar</string>
     <string name="user_avatar">User avatar</string>
     <string name="open_user_profile">Open user profile</string>
+    <string name="select_organization" tools:ignore="MissingTranslation">Select organization</string>
+    <string name="switch_organization" tools:ignore="MissingTranslation">Switch organization</string>
+    <string name="current_organization" tools:ignore="MissingTranslation">Current organization</string>
+    <string name="open_organization_switcher" tools:ignore="MissingTranslation">Open organization switcher</string>
     <string name="secured_by">Secured by</string>
     <string name="i_agree_to_the">I agree to the</string>
     <string name="terms_of_service">Terms of Service</string>

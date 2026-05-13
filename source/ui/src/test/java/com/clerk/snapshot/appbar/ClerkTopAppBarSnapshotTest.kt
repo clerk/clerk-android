@@ -33,12 +33,7 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       Box(Modifier.size(width = 360.dp, height = 72.dp)) {
         ClerkMaterialTheme {
-          ClerkTopAppBar(
-            onBackPressed = {},
-            title = "Log in to M2X",
-            hasLogo = true,
-            hasBackButton = true,
-          )
+          ClerkTopAppBar(onBackPressed = {}, hasLogo = true, hasBackButton = true)
         }
       }
     }
