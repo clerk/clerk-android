@@ -39,30 +39,31 @@ class OrganizationSwitcherBehaviorTest {
   }
 
   @Test
-  fun `shouldShowOrganizationSwitcher requires user session and memberships`() {
+  fun `shouldShowOrganizationSwitcher requires user session and enabled organizations`() {
     assertTrue(
-      shouldShowOrganizationSwitcher(hasUser = true, hasSession = true, hasMemberships = true)
+      shouldShowOrganizationSwitcher(hasUser = true, hasSession = true, organizationsEnabled = true)
     )
     assertFalse(
-      shouldShowOrganizationSwitcher(hasUser = false, hasSession = true, hasMemberships = true)
+      shouldShowOrganizationSwitcher(
+        hasUser = false,
+        hasSession = true,
+        organizationsEnabled = true,
+      )
     )
     assertFalse(
-      shouldShowOrganizationSwitcher(hasUser = true, hasSession = false, hasMemberships = true)
+      shouldShowOrganizationSwitcher(
+        hasUser = true,
+        hasSession = false,
+        organizationsEnabled = true,
+      )
     )
     assertFalse(
-      shouldShowOrganizationSwitcher(hasUser = true, hasSession = true, hasMemberships = false)
+      shouldShowOrganizationSwitcher(
+        hasUser = true,
+        hasSession = true,
+        organizationsEnabled = false,
+      )
     )
-  }
-
-  @Test
-  fun `organizationSwitcherMemberships places active organization first then sorts by name`() {
-    val zed = membership(organizationId = "org_zed", name = "Zed")
-    val acme = membership(organizationId = "org_acme", name = "Acme")
-    val beta = membership(organizationId = "org_beta", name = "Beta")
-
-    val sorted = organizationSwitcherMemberships(listOf(zed, acme, beta), "org_beta")
-
-    assertEquals(listOf(beta, acme, zed), sorted)
   }
 
   private fun session(activeOrganizationId: String?): Session {

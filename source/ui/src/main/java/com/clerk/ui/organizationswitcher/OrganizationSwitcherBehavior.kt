@@ -18,17 +18,7 @@ internal fun activeOrganizationMembership(
 internal fun shouldShowOrganizationSwitcher(
   hasUser: Boolean,
   hasSession: Boolean,
-  hasMemberships: Boolean,
+  organizationsEnabled: Boolean,
 ): Boolean {
-  return hasUser && hasSession && hasMemberships
-}
-
-internal fun organizationSwitcherMemberships(
-  memberships: List<OrganizationMembership>,
-  activeOrganizationId: String?,
-): List<OrganizationMembership> {
-  return memberships.sortedWith(
-    compareByDescending<OrganizationMembership> { it.organization.id == activeOrganizationId }
-      .thenBy { it.organization.name.lowercase() }
-  )
+  return hasUser && hasSession && organizationsEnabled
 }

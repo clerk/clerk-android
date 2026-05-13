@@ -165,6 +165,7 @@
     <string name="security">Security</string>
     <string name="edit_profile">Edit profile</string>
     <string name="manage_account">Manage account</string>
+    <string name="manage_organization" tools:ignore="MissingTranslation">Manage organization</string>
     <string name="switch_account" tools:ignore="MissingTranslation">Switch account</string>
     <string name="add_account" tools:ignore="MissingTranslation">Add account</string>
     <string name="sign_out" tools:ignore="MissingTranslation">Sign out</string>
