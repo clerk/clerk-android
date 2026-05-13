@@ -303,6 +303,22 @@ object Clerk {
         false
       }
 
+  val organizationDomainsIsEnabled: Boolean
+    get() =
+      if (::environment.isInitialized) {
+        environment.organizationSettings.domains.enabled
+      } else {
+        false
+      }
+
+  val organizationAdminDeleteIsEnabled: Boolean
+    get() =
+      if (::environment.isInitialized) {
+        environment.organizationSettings.actions.adminDelete
+      } else {
+        false
+      }
+
   val organizationSelectionIsForced: Boolean
     get() =
       if (::environment.isInitialized) {

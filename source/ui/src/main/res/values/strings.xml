@@ -163,6 +163,12 @@
     <string name="account">Account</string>
     <string name="delete_account">Delete account</string>
     <string name="security">Security</string>
+    <string name="organization" tools:ignore="MissingTranslation">Organization</string>
+    <string name="update_profile" tools:ignore="MissingTranslation">Update profile</string>
+    <string name="members" tools:ignore="MissingTranslation">Members</string>
+    <string name="verified_domains" tools:ignore="MissingTranslation">Verified domains</string>
+    <string name="leave_organization" tools:ignore="MissingTranslation">Leave organization</string>
+    <string name="delete_organization" tools:ignore="MissingTranslation">Delete organization</string>
     <string name="edit_profile">Edit profile</string>
     <string name="manage_account">Manage account</string>
     <string name="manage_organization" tools:ignore="MissingTranslation">Manage organization</string>
