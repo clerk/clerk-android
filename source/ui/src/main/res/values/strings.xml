@@ -37,6 +37,9 @@
     <string name="account_requires_new_password_before_continue" tools:ignore="MissingTranslation">Your account requires a new password before you can continue</string>
     <string name="sign_out_of_all_other_devices">Sign out of all other devices</string>
     <string name="choose_an_organization">Choose an organization</string>
+    <string name="choose_an_account" tools:ignore="MissingTranslation">Choose an account</string>
+    <string name="select_the_account_with_which_you_wish_to_continue" tools:ignore="MissingTranslation">Select the account with which you wish to continue.</string>
+    <string name="personal_account" tools:ignore="MissingTranslation">Personal account</string>
     <string name="join_an_existing_organization_or_create_a_new_one">Join an existing organization or create a new one</string>
     <string name="join_an_existing_organization">Join an existing organization</string>
     <string name="create_organization">Create organization</string>
