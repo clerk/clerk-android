@@ -44,6 +44,7 @@ import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.dimens.dp48
@@ -218,15 +219,15 @@ internal fun OrganizationAvatar(imageUrl: String?, shape: Shape, size: AvatarSiz
   ) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
       if (imageUrl.isNullOrBlank()) {
-        OrganizationAvatarPlaceholder()
+        OrganizationAvatarPlaceholder(size = size)
       } else {
         SubcomposeAsyncImage(
           model = imageUrl,
           contentDescription = stringResource(R.string.logo),
           modifier = Modifier.fillMaxSize(),
           contentScale = ContentScale.Crop,
-          loading = { OrganizationAvatarPlaceholder() },
-          error = { OrganizationAvatarPlaceholder() },
+          loading = { OrganizationAvatarPlaceholder(size = size) },
+          error = { OrganizationAvatarPlaceholder(size = size) },
         )
       }
     }
@@ -234,8 +235,9 @@ internal fun OrganizationAvatar(imageUrl: String?, shape: Shape, size: AvatarSiz
 }
 
 @Composable
-private fun OrganizationAvatarPlaceholder() {
+private fun OrganizationAvatarPlaceholder(size: AvatarSize) {
   Icon(
+    modifier = Modifier.size(size.toOrganizationSwitcherIconDp()),
     painter = painterResource(R.drawable.ic_organization),
     contentDescription = null,
     tint = ClerkMaterialTheme.colors.foreground,
@@ -248,4 +250,12 @@ private fun AvatarSize.toOrganizationSwitcherDp() =
     AvatarSize.MEDIUM -> dp36
     AvatarSize.LARGE -> dp48
     AvatarSize.X_LARGE -> dp96
+  }
+
+private fun AvatarSize.toOrganizationSwitcherIconDp() =
+  when (this) {
+    AvatarSize.SMALL -> dp12
+    AvatarSize.MEDIUM -> dp24
+    AvatarSize.LARGE -> dp32
+    AvatarSize.X_LARGE -> dp48
   }
