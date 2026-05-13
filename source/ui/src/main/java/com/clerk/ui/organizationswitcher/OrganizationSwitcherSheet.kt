@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,14 +26,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
-import com.clerk.ui.core.avatar.AvatarType
-import com.clerk.ui.core.avatar.AvatarView
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
@@ -215,13 +216,30 @@ internal fun OrganizationAvatar(imageUrl: String?, shape: Shape, size: AvatarSiz
     color = ClerkMaterialTheme.colors.muted,
     border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.border),
   ) {
-    AvatarView(
-      imageUrl = imageUrl,
-      size = size,
-      shape = shape,
-      avatarType = AvatarType.ORGANIZATION,
-    )
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+      if (imageUrl.isNullOrBlank()) {
+        OrganizationAvatarPlaceholder()
+      } else {
+        SubcomposeAsyncImage(
+          model = imageUrl,
+          contentDescription = stringResource(R.string.logo),
+          modifier = Modifier.fillMaxSize(),
+          contentScale = ContentScale.Crop,
+          loading = { OrganizationAvatarPlaceholder() },
+          error = { OrganizationAvatarPlaceholder() },
+        )
+      }
+    }
   }
+}
+
+@Composable
+private fun OrganizationAvatarPlaceholder() {
+  Icon(
+    painter = painterResource(R.drawable.ic_organization),
+    contentDescription = null,
+    tint = ClerkMaterialTheme.colors.foreground,
+  )
 }
 
 private fun AvatarSize.toOrganizationSwitcherDp() =
