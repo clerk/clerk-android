@@ -42,6 +42,33 @@ data class OrganizationDomain(
   val publicOrganizationData: PublicOrganizationData? = null,
   val totalPendingSuggestions: Int,
 ) {
+  /** The typed enrollment mode for new users joining an organization through this domain. */
+  sealed class EnrollmentMode(val value: String) {
+    data object ManualInvitation : EnrollmentMode("manual_invitation")
+
+    data object AutomaticInvitation : EnrollmentMode("automatic_invitation")
+
+    data object AutomaticSuggestion : EnrollmentMode("automatic_suggestion")
+
+    data class Unknown(val rawValue: String) : EnrollmentMode(rawValue)
+
+    companion object {
+      fun fromValue(value: String): EnrollmentMode =
+        when (value) {
+          ManualInvitation.value -> ManualInvitation
+          AutomaticInvitation.value -> AutomaticInvitation
+          AutomaticSuggestion.value -> AutomaticSuggestion
+          else -> Unknown(value)
+        }
+    }
+  }
+
+  val enrollmentModeType: EnrollmentMode
+    get() = EnrollmentMode.fromValue(enrollmentMode)
+
+  val isVerified: Boolean
+    get() = verification?.status == "verified"
+
   /**
    * Represents the verification details for an organization domain.
    *
@@ -123,6 +150,13 @@ suspend fun OrganizationDomain.updateEnrollmentMode(
     enrollmentMode = enrollmentMode,
     deletePending = deletePending,
   )
+}
+
+suspend fun OrganizationDomain.updateEnrollmentMode(
+  enrollmentMode: OrganizationDomain.EnrollmentMode,
+  deletePending: Boolean? = null,
+): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
+  return updateEnrollmentMode(enrollmentMode = enrollmentMode.value, deletePending = deletePending)
 }
 
 /**

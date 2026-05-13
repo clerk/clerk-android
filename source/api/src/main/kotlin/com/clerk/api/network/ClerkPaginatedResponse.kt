@@ -11,4 +11,6 @@ data class ClerkPaginatedResponse<T>(
   val data: List<T>,
   /** The total count of resources */
   val totalCount: Int,
+  /** Whether organization role updates are temporarily disabled while roles migrate. */
+  val hasRoleSetMigration: Boolean? = null,
 )
