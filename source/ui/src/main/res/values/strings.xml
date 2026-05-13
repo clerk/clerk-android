@@ -47,7 +47,14 @@
     <string name="organization_name">Organization name</string>
     <string name="slug">Slug</string>
     <string name="upload_logo">Upload logo</string>
+    <string name="remove_logo" tools:ignore="MissingTranslation">Remove logo</string>
     <string name="recommended_logo_size">Recommended size 1:1, up to 10MB.</string>
+    <string name="invite_new_members" tools:ignore="MissingTranslation">Invite new members</string>
+    <string name="enter_or_paste_email_addresses" tools:ignore="MissingTranslation">Enter or paste one or more email addresses, separated by spaces or commas.</string>
+    <string name="enter_email_addresses" tools:ignore="MissingTranslation">Enter email addresses</string>
+    <string name="role" tools:ignore="MissingTranslation">Role</string>
+    <string name="no_roles_available" tools:ignore="MissingTranslation">No roles available</string>
+    <string name="send_invitations" tools:ignore="MissingTranslation">Send invitations</string>
     <string name="join">Join</string>
     <string name="request_to_join">Request to join</string>
     <string name="pending_approval">Pending approval</string>

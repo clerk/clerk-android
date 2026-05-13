@@ -40,6 +40,7 @@ import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.custom.effectiveOrganizationProfileCustomRows
 import com.clerk.ui.organizationprofile.root.OrganizationProfileAction
 import com.clerk.ui.organizationprofile.root.OrganizationProfileRootView
+import com.clerk.ui.organizationprofile.update.OrganizationProfileUpdateProfileView
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
@@ -227,8 +228,8 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   }
 
   entry<OrganizationProfileDestination.UpdateProfile> {
-    OrganizationProfilePlaceholderView(
-      title = stringResource(R.string.update_profile),
+    OrganizationProfileUpdateProfileView(
+      organization = organization,
       onBackPressed = { backStack.removeLastOrNull() },
     )
   }

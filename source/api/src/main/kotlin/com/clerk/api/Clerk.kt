@@ -331,6 +331,11 @@ object Clerk {
     get() =
       if (::environment.isInitialized) !environment.organizationSettings.slug.disabled else true
 
+  val organizationDefaultRoleKey: String?
+    get() =
+      if (::environment.isInitialized) environment.organizationSettings.domains.defaultRole
+      else null
+
   /**
    * The image URL for the application logo used in authentication UI components.
    *
