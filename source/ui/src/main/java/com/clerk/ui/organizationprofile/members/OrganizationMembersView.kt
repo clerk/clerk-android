@@ -3,6 +3,7 @@
 package com.clerk.ui.organizationprofile.members
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,18 +12,31 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +49,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.userdata.PublicUserData
@@ -53,11 +70,14 @@ import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
+import com.clerk.ui.core.dimens.dp10
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp3
+import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.dimens.dp48
@@ -315,30 +335,90 @@ private fun OrganizationMembersTabs(
   selectedTab: OrganizationMembersTab?,
   onSelectTab: (OrganizationMembersTab) -> Unit,
 ) {
-  Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(dp8)) {
-    availableTabs.forEach { tab ->
-      val selected = tab == selectedTab
-      Surface(
-        modifier = Modifier.weight(1f).clickable { onSelectTab(tab) },
-        shape = ClerkMaterialTheme.shape,
-        color =
-          if (selected) ClerkMaterialTheme.colors.foreground
-          else ClerkMaterialTheme.colors.background,
-        border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.buttonBorder),
-      ) {
-        Text(
-          modifier = Modifier.padding(horizontal = dp8, vertical = dp8),
-          text = tab.label(),
-          style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
-          color =
-            if (selected) ClerkMaterialTheme.colors.background
-            else ClerkMaterialTheme.colors.foreground,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+  Surface(
+    modifier = modifier.fillMaxWidth().height(dp32),
+    shape = RoundedCornerShape(9.dp),
+    color = ClerkMaterialTheme.colors.muted,
+  ) {
+    Row(
+      modifier = Modifier.fillMaxSize().padding(dp2),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      availableTabs.forEachIndexed { index, tab ->
+        val selected = tab == selectedTab
+        OrganizationMembersTabButton(
+          modifier = Modifier.weight(1f).fillMaxHeight(),
+          tab = tab,
+          selected = selected,
+          onSelectTab = onSelectTab,
         )
+        if (index < availableTabs.lastIndex) {
+          val nextTab = availableTabs[index + 1]
+          OrganizationMembersTabSeparator(visible = tab != selectedTab && nextTab != selectedTab)
+        }
       }
     }
   }
+}
+
+@Composable
+private fun OrganizationMembersTabButton(
+  tab: OrganizationMembersTab,
+  selected: Boolean,
+  onSelectTab: (OrganizationMembersTab) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  val content: @Composable () -> Unit = {
+    Box(
+      modifier = Modifier.fillMaxSize().padding(horizontal = dp10, vertical = dp3),
+      contentAlignment = Alignment.Center,
+    ) {
+      Text(
+        text = tab.label(),
+        style =
+          ClerkMaterialTheme.typography.bodySmall.copy(
+            fontSize = 13.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            lineHeight = 18.sp,
+          ),
+        color =
+          if (selected) ClerkMaterialTheme.colors.foreground
+          else ClerkMaterialTheme.colors.mutedForeground,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+  }
+
+  if (selected) {
+    Surface(
+      modifier = modifier.clickable { onSelectTab(tab) },
+      shape = RoundedCornerShape(7.dp),
+      color = ClerkMaterialTheme.colors.background,
+      border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.border.copy(alpha = 0.06f)),
+      shadowElevation = dp3,
+      content = content,
+    )
+  } else {
+    Box(modifier = modifier.clickable { onSelectTab(tab) }, contentAlignment = Alignment.Center) {
+      content()
+    }
+  }
+}
+
+@Composable
+private fun OrganizationMembersTabSeparator(visible: Boolean) {
+  Box(
+    modifier =
+      Modifier.width(dp1)
+        .height(dp12)
+        .background(
+          color =
+            if (visible) ClerkMaterialTheme.colors.mutedForeground.copy(alpha = 0.3f)
+            else ClerkMaterialTheme.colors.muted,
+          shape = RoundedCornerShape(dp1),
+        )
+  )
 }
 
 @Composable
@@ -740,40 +820,138 @@ private fun MemberMoreMenu(
   onUpdateRole: (String) -> Unit,
   onRemove: () -> Unit,
 ) {
-  ItemMoreMenu(
-    dropDownItems =
-      buildList<DropDownItem<MemberAction>> {
-          if (roleEditingEnabled) {
-            roles
-              .filter { role -> role.key != currentRole }
-              .forEach { role ->
-                add(
-                  DropDownItem(
-                    id = MemberAction.UpdateRole(role.key),
-                    text = role.name,
-                    enabled = enabled,
-                  )
-                )
-              }
-          }
-          add(
-            DropDownItem(
-              id = MemberAction.Remove,
-              text = stringResource(R.string.remove_member),
-              danger = true,
-              enabled = enabled,
-            )
-          )
-        }
-        .toImmutableList(),
-    onClick = { action ->
-      when (action) {
-        is MemberAction.UpdateRole -> onUpdateRole(action.roleKey)
-        MemberAction.Remove -> onRemove()
+  var expanded by rememberSaveable { mutableStateOf(false) }
+  var mode by rememberSaveable { mutableStateOf(MemberMenuMode.Actions) }
+  val canChangeRole = roleEditingEnabled && roles.isNotEmpty()
+
+  Box {
+    IconButton(
+      onClick = {
+        mode = MemberMenuMode.Actions
+        expanded = true
       }
-    },
+    ) {
+      Icon(
+        imageVector = Icons.Outlined.MoreVert,
+        contentDescription = stringResource(R.string.more_options),
+        tint = ClerkMaterialTheme.colors.mutedForeground,
+      )
+    }
+
+    DropdownMenu(
+      modifier =
+        Modifier.defaultMinSize(minWidth = 220.dp).background(ClerkMaterialTheme.colors.background),
+      expanded = expanded,
+      onDismissRequest = {
+        expanded = false
+        mode = MemberMenuMode.Actions
+      },
+      shape = ClerkMaterialTheme.shape,
+    ) {
+      when (mode) {
+        MemberMenuMode.Actions ->
+          MemberActionsMenu(
+            canChangeRole = canChangeRole,
+            enabled = enabled,
+            onChangeRole = { mode = MemberMenuMode.Roles },
+            onRemove = {
+              expanded = false
+              mode = MemberMenuMode.Actions
+              onRemove()
+            },
+          )
+        MemberMenuMode.Roles ->
+          MemberRoleMenu(
+            currentRole = currentRole,
+            roles = roles,
+            enabled = enabled,
+            onBack = { mode = MemberMenuMode.Actions },
+            onSelectRole = { role ->
+              expanded = false
+              mode = MemberMenuMode.Actions
+              if (role.key != currentRole) onUpdateRole(role.key)
+            },
+          )
+      }
+    }
+  }
+}
+
+@Composable
+private fun MemberActionsMenu(
+  canChangeRole: Boolean,
+  enabled: Boolean,
+  onChangeRole: () -> Unit,
+  onRemove: () -> Unit,
+) {
+  if (canChangeRole) {
+    DropdownMenuItem(
+      contentPadding = PaddingValues(horizontal = dp12, vertical = dp12),
+      text = { Text(text = stringResource(R.string.change_role), style = menuItemTextStyle()) },
+      trailingIcon = {
+        Icon(
+          imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+          contentDescription = null,
+          tint = ClerkMaterialTheme.colors.foreground,
+        )
+      },
+      enabled = enabled,
+      onClick = onChangeRole,
+    )
+  }
+  DropdownMenuItem(
+    contentPadding = PaddingValues(horizontal = dp12, vertical = dp12),
+    text = { Text(text = stringResource(R.string.remove_member), style = menuItemTextStyle()) },
+    enabled = enabled,
+    colors = MenuDefaults.itemColors(textColor = ClerkMaterialTheme.colors.danger),
+    onClick = onRemove,
   )
 }
+
+@Composable
+private fun MemberRoleMenu(
+  currentRole: String?,
+  roles: List<Role>,
+  enabled: Boolean,
+  onBack: () -> Unit,
+  onSelectRole: (Role) -> Unit,
+) {
+  DropdownMenuItem(
+    contentPadding = PaddingValues(horizontal = dp12, vertical = dp12),
+    leadingIcon = {
+      Icon(
+        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+        contentDescription = null,
+        tint = ClerkMaterialTheme.colors.foreground,
+      )
+    },
+    text = { Text(text = stringResource(R.string.back), style = menuItemTextStyle()) },
+    onClick = onBack,
+  )
+  roles.forEach { role ->
+    val selected = role.key == currentRole
+    DropdownMenuItem(
+      contentPadding = PaddingValues(horizontal = dp12, vertical = dp12),
+      text = { Text(text = role.name, style = menuItemTextStyle()) },
+      trailingIcon =
+        if (selected) {
+          {
+            Icon(
+              imageVector = Icons.Filled.Check,
+              contentDescription = null,
+              tint = ClerkMaterialTheme.colors.foreground,
+            )
+          }
+        } else {
+          null
+        },
+      enabled = enabled,
+      onClick = { onSelectRole(role) },
+    )
+  }
+}
+
+@Composable private fun menuItemTextStyle() = ClerkMaterialTheme.typography.bodyLarge
 
 @Composable
 private fun LoadMoreButton(isLoading: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -875,10 +1053,9 @@ private fun formattedMembershipDate(timestampMillis: Long): String {
   return SimpleDateFormat("M/d/yyyy", Locale.getDefault()).format(Date(timestampMillis))
 }
 
-private sealed interface MemberAction {
-  data class UpdateRole(val roleKey: String) : MemberAction
-
-  data object Remove : MemberAction
+private enum class MemberMenuMode {
+  Actions,
+  Roles,
 }
 
 private enum class InvitationAction {

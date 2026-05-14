@@ -70,6 +70,7 @@
     <string name="role_set_migration_notice" tools:ignore="MissingTranslation">Role editing is temporarily unavailable while roles are migrating.</string>
     <string name="membership_slots_remaining" tools:ignore="MissingTranslation">%1$d membership slots remaining.</string>
     <string name="invite_limit_exceeded" tools:ignore="MissingTranslation">Inviting these members would exceed the organization membership limit.</string>
+    <string name="change_role" tools:ignore="MissingTranslation">Change role</string>
     <string name="remove_member" tools:ignore="MissingTranslation">Remove member</string>
     <string name="revoke_invitation" tools:ignore="MissingTranslation">Revoke invitation</string>
     <string name="accept" tools:ignore="MissingTranslation">Accept</string>
