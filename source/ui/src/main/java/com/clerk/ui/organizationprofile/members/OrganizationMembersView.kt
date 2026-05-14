@@ -626,7 +626,7 @@ private fun InviteMembersComposer(
       isEnabled = canSend,
       icons =
         ClerkButtonDefaults.icons(
-          trailingIcon = R.drawable.ic_arrow_right,
+          trailingIcon = R.drawable.ic_triangle_right,
           trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
         ),
       onClick = {
