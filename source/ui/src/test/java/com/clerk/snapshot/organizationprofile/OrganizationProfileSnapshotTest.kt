@@ -336,7 +336,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
               canManageDomains = true,
               flow = OrganizationVerifiedDomainsFlow.EnrollmentMode(domain),
               selectedEnrollmentMode = OrganizationDomain.EnrollmentMode.ManualInvitation,
-              deletePending = true,
             ),
           actions = noOpDomainActions,
         )
@@ -512,7 +511,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
       onVerifyCode = {},
       onResendVerificationCode = { _, _ -> },
       onSelectEnrollmentMode = {},
-      onDeletePendingChanged = {},
       onUpdateEnrollmentMode = {},
       onDeleteDomain = {},
     )

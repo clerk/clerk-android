@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
@@ -112,7 +111,6 @@ internal fun OrganizationVerifiedDomainsView(
             onVerifyCode = viewModel::verifyCode,
             onResendVerificationCode = viewModel::resendVerificationCode,
             onSelectEnrollmentMode = viewModel::selectEnrollmentMode,
-            onDeletePendingChanged = viewModel::setDeletePending,
             onUpdateEnrollmentMode = viewModel::updateEnrollmentMode,
             onDeleteDomain = viewModel::deleteDomain,
           ),
@@ -340,13 +338,6 @@ private fun EnrollmentModeContent(
         onClick = { actions.onSelectEnrollmentMode(option) },
       )
     }
-    if (state.isManualInvitationSelected) {
-      DeletePendingRow(
-        checked = state.deletePending,
-        enabled = state.activeMutationId == null,
-        onCheckedChange = actions.onDeletePendingChanged,
-      )
-    }
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.save),
@@ -558,29 +549,6 @@ private fun EnrollmentModeOptionRow(
 }
 
 @Composable
-private fun DeletePendingRow(
-  checked: Boolean,
-  enabled: Boolean,
-  onCheckedChange: (Boolean) -> Unit,
-) {
-  ListCard(modifier = Modifier.clickable(enabled = enabled) { onCheckedChange(!checked) }) {
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(dp8),
-    ) {
-      Checkbox(checked = checked, enabled = enabled, onCheckedChange = onCheckedChange)
-      Text(
-        modifier = Modifier.weight(1f),
-        text = stringResource(R.string.delete_pending_invitations_and_suggestions),
-        style = ClerkMaterialTheme.typography.bodyMedium,
-        color = ClerkMaterialTheme.colors.foreground,
-      )
-    }
-  }
-}
-
-@Composable
 private fun IconSurface(icon: Int) {
   Surface(
     modifier = Modifier.size(dp48),
@@ -680,7 +648,8 @@ private fun organizationVerifiedDomainsTitle(flow: OrganizationVerifiedDomainsFl
     OrganizationVerifiedDomainsFlow.AddDomain -> stringResource(R.string.add_domain)
     is OrganizationVerifiedDomainsFlow.VerifyEmail -> stringResource(R.string.verify_domain)
     is OrganizationVerifiedDomainsFlow.VerifyCode -> stringResource(R.string.verify_domain)
-    is OrganizationVerifiedDomainsFlow.EnrollmentMode -> stringResource(R.string.update_domain)
+    is OrganizationVerifiedDomainsFlow.EnrollmentMode ->
+      stringResource(R.string.update_domain_named, flow.domain.name)
     is OrganizationVerifiedDomainsFlow.DeleteDomain -> stringResource(R.string.remove_domain)
   }
 }

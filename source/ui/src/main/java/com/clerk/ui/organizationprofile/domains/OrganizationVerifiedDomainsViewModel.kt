@@ -127,7 +127,6 @@ internal class OrganizationVerifiedDomainsViewModel(
       current.copy(
         flow = OrganizationVerifiedDomainsFlow.EnrollmentMode(domain),
         selectedEnrollmentMode = selected,
-        deletePending = false,
         errorMessage = null,
       )
   }
@@ -148,7 +147,6 @@ internal class OrganizationVerifiedDomainsViewModel(
         domainName = "",
         affiliationEmailLocalPart = "",
         verificationCode = "",
-        deletePending = false,
         activeMutationId = null,
         errorMessage = null,
       )
@@ -234,20 +232,7 @@ internal class OrganizationVerifiedDomainsViewModel(
 
   fun selectEnrollmentMode(mode: OrganizationDomain.EnrollmentMode) {
     if (mode !in mutableState.value.enrollmentModeOptions) return
-    mutableState.value =
-      mutableState.value.copy(
-        selectedEnrollmentMode = mode,
-        deletePending =
-          if (mode == OrganizationDomain.EnrollmentMode.ManualInvitation) {
-            mutableState.value.deletePending
-          } else {
-            false
-          },
-      )
-  }
-
-  fun setDeletePending(deletePending: Boolean) {
-    mutableState.value = mutableState.value.copy(deletePending = deletePending)
+    mutableState.value = mutableState.value.copy(selectedEnrollmentMode = mode)
   }
 
   fun updateEnrollmentMode(domain: OrganizationDomain) {
@@ -257,16 +242,8 @@ internal class OrganizationVerifiedDomainsViewModel(
     mutableState.value =
       current.copy(activeMutationId = UPDATE_ENROLLMENT_MUTATION_ID, errorMessage = null)
     viewModelScope.launch(dispatcher) {
-      val deletePending =
-        current.deletePending.takeIf {
-          current.selectedEnrollmentMode == OrganizationDomain.EnrollmentMode.ManualInvitation
-        }
       when (
-        val result =
-          domain.updateEnrollmentMode(
-            enrollmentMode = current.selectedEnrollmentMode,
-            deletePending = deletePending,
-          )
+        val result = domain.updateEnrollmentMode(enrollmentMode = current.selectedEnrollmentMode)
       ) {
         is ClerkResult.Success -> {
           upsertDomain(result.value)
@@ -274,7 +251,6 @@ internal class OrganizationVerifiedDomainsViewModel(
             mutableState.value.copy(
               activeMutationId = null,
               flow = OrganizationVerifiedDomainsFlow.DomainsList,
-              deletePending = false,
             )
         }
         is ClerkResult.Failure -> mutationFailed(result.errorMessage)
