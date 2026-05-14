@@ -676,7 +676,13 @@ private fun RoleDropdown(
         contentDescription = null,
         tint = ClerkMaterialTheme.colors.mutedForeground,
       )
-      DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+      DropdownMenu(
+        modifier = Modifier.background(ClerkMaterialTheme.colors.background),
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+        containerColor = ClerkMaterialTheme.colors.background,
+        tonalElevation = dp0,
+      ) {
         roles.forEach { role ->
           DropdownMenuItem(
             text = { Text(role.name) },

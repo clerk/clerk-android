@@ -45,6 +45,7 @@ import com.clerk.api.organizations.Role
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
@@ -274,7 +275,13 @@ private fun RoleDropdown(
         )
       }
     }
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+    DropdownMenu(
+      modifier = Modifier.background(ClerkMaterialTheme.colors.background),
+      expanded = expanded,
+      onDismissRequest = { expanded = false },
+      containerColor = ClerkMaterialTheme.colors.background,
+      tonalElevation = dp0,
+    ) {
       roles.forEach { role ->
         DropdownMenuItem(
           text = { Text(role.name) },
