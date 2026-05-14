@@ -624,11 +624,6 @@ private fun InviteMembersComposer(
       text = stringResource(R.string.send_invitations),
       isLoading = state.activeMutationId == INVITE_MUTATION_ID,
       isEnabled = canSend,
-      icons =
-        ClerkButtonDefaults.icons(
-          trailingIcon = R.drawable.ic_arrow_right,
-          trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
-        ),
       onClick = {
         actions.onInviteInputSubmitted(emailInput)
         actions.onSendInvitations()
