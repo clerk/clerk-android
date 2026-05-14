@@ -210,8 +210,11 @@ private fun LazyListScope.membersTab(
       MemberList(
         members = state.members,
         viewerMembership = viewerMembership,
+        roles = state.roles,
         canManage = viewerMembership?.canManageMemberships == true,
+        roleEditingEnabled = !state.hasRoleSetMigration,
         activeMutationId = state.activeMutationId,
+        onUpdateMemberRole = actions.onUpdateMemberRole,
         onRemoveMember = actions.onRemoveMember,
       )
     }
@@ -342,8 +345,11 @@ private fun OrganizationMembersTabs(
 private fun MemberList(
   members: List<OrganizationMembership>,
   viewerMembership: OrganizationMembership?,
+  roles: List<Role>,
   canManage: Boolean,
+  roleEditingEnabled: Boolean,
   activeMutationId: String?,
+  onUpdateMemberRole: (OrganizationMembership, String) -> Unit,
   onRemoveMember: (OrganizationMembership) -> Unit,
 ) {
   Column(modifier = Modifier.fillMaxWidth()) {
@@ -351,9 +357,12 @@ private fun MemberList(
       MemberRow(
         membership = membership,
         isViewer = membership.isSameMembership(viewerMembership),
+        roles = roles,
         canManage = canManage,
+        roleEditingEnabled = roleEditingEnabled,
         showTopDivider = index == 0,
         isLoading = activeMutationId == membership.id,
+        onUpdateRole = { role -> onUpdateMemberRole(membership, role) },
         onRemove = { onRemoveMember(membership) },
       )
     }
@@ -364,9 +373,12 @@ private fun MemberList(
 private fun MemberRow(
   membership: OrganizationMembership,
   isViewer: Boolean,
+  roles: List<Role>,
   canManage: Boolean,
+  roleEditingEnabled: Boolean,
   showTopDivider: Boolean,
   isLoading: Boolean,
+  onUpdateRole: (String) -> Unit,
   onRemove: () -> Unit,
 ) {
   Surface(modifier = Modifier.fillMaxWidth(), color = ClerkMaterialTheme.colors.background) {
@@ -392,7 +404,14 @@ private fun MemberRow(
           MemberDetails(membership = membership, isViewer = isViewer)
         }
         if (canManage) {
-          MemberMoreMenu(enabled = !isLoading, onRemove = onRemove)
+          MemberMoreMenu(
+            currentRole = membership.role,
+            roles = roles,
+            roleEditingEnabled = roleEditingEnabled,
+            enabled = !isLoading,
+            onUpdateRole = onUpdateRole,
+            onRemove = onRemove,
+          )
         }
       }
       MemberDivider()
@@ -713,19 +732,46 @@ private fun RoleDropdown(
 }
 
 @Composable
-private fun MemberMoreMenu(enabled: Boolean, onRemove: () -> Unit) {
+private fun MemberMoreMenu(
+  currentRole: String?,
+  roles: List<Role>,
+  roleEditingEnabled: Boolean,
+  enabled: Boolean,
+  onUpdateRole: (String) -> Unit,
+  onRemove: () -> Unit,
+) {
   ItemMoreMenu(
     dropDownItems =
-      listOf(
-          DropDownItem(
-            id = MemberAction.Remove,
-            text = stringResource(R.string.remove_member),
-            danger = true,
-            enabled = enabled,
+      buildList<DropDownItem<MemberAction>> {
+          if (roleEditingEnabled) {
+            roles
+              .filter { role -> role.key != currentRole }
+              .forEach { role ->
+                add(
+                  DropDownItem(
+                    id = MemberAction.UpdateRole(role.key),
+                    text = role.name,
+                    enabled = enabled,
+                  )
+                )
+              }
+          }
+          add(
+            DropDownItem(
+              id = MemberAction.Remove,
+              text = stringResource(R.string.remove_member),
+              danger = true,
+              enabled = enabled,
+            )
           )
-        )
+        }
         .toImmutableList(),
-    onClick = { onRemove() },
+    onClick = { action ->
+      when (action) {
+        is MemberAction.UpdateRole -> onUpdateRole(action.roleKey)
+        MemberAction.Remove -> onRemove()
+      }
+    },
   )
 }
 
@@ -829,8 +875,10 @@ private fun formattedMembershipDate(timestampMillis: Long): String {
   return SimpleDateFormat("M/d/yyyy", Locale.getDefault()).format(Date(timestampMillis))
 }
 
-private enum class MemberAction {
-  Remove
+private sealed interface MemberAction {
+  data class UpdateRole(val roleKey: String) : MemberAction
+
+  data object Remove : MemberAction
 }
 
 private enum class InvitationAction {
