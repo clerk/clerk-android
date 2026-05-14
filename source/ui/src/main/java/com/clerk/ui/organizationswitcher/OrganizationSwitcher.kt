@@ -36,6 +36,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.SubcomposeAsyncImage
@@ -349,7 +351,7 @@ private fun OrganizationSwitcherSheets(
   )
 
   if (showOrganizationProfile) {
-    OrganizationSwitcherProfileSheet(
+    OrganizationSwitcherProfilePage(
       clerkTheme = clerkTheme,
       customRows = organizationProfileCustomRows,
       customDestination = organizationProfileCustomDestination,
@@ -366,7 +368,7 @@ private fun OrganizationSwitcherSheets(
   }
 
   if (postCreateInviteOrganization != null) {
-    OrganizationSwitcherPostCreateInvitationsSheet(
+    OrganizationSwitcherPostCreateInvitationsPage(
       organization = postCreateInviteOrganization,
       membership = postCreateInviteMembership,
       onDismiss = onDismissPostCreateInvitations,
@@ -420,21 +422,14 @@ private fun OrganizationSwitcherActiveSheet(
   )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OrganizationSwitcherProfileSheet(
+private fun OrganizationSwitcherProfilePage(
   clerkTheme: ClerkTheme?,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
   onDismiss: () -> Unit,
 ) {
-  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  ModalBottomSheet(
-    onDismissRequest = onDismiss,
-    sheetState = sheetState,
-    containerColor = ClerkMaterialTheme.colors.background,
-    contentColor = ClerkMaterialTheme.colors.foreground,
-  ) {
+  OrganizationSwitcherFullScreenPage(onDismiss = onDismiss) {
     OrganizationProfileView(
       modifier = Modifier.fillMaxSize(),
       clerkTheme = clerkTheme,
@@ -468,20 +463,13 @@ private fun OrganizationSwitcherCreateSheet(
   }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OrganizationSwitcherPostCreateInvitationsSheet(
+private fun OrganizationSwitcherPostCreateInvitationsPage(
   organization: Organization,
   membership: OrganizationMembership?,
   onDismiss: () -> Unit,
 ) {
-  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  ModalBottomSheet(
-    onDismissRequest = onDismiss,
-    sheetState = sheetState,
-    containerColor = ClerkMaterialTheme.colors.background,
-    contentColor = ClerkMaterialTheme.colors.foreground,
-  ) {
+  OrganizationSwitcherFullScreenPage(onDismiss = onDismiss) {
     OrganizationMembersView(
       modifier = Modifier.fillMaxSize(),
       organization = organization,
@@ -489,6 +477,25 @@ private fun OrganizationSwitcherPostCreateInvitationsSheet(
       initialTab = OrganizationMembersTab.Invitations,
       onBackPressed = onDismiss,
     )
+  }
+}
+
+@Composable
+private fun OrganizationSwitcherFullScreenPage(
+  onDismiss: () -> Unit,
+  content: @Composable () -> Unit,
+) {
+  Dialog(
+    onDismissRequest = onDismiss,
+    properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+  ) {
+    Surface(
+      modifier = Modifier.fillMaxSize(),
+      color = ClerkMaterialTheme.colors.background,
+      contentColor = ClerkMaterialTheme.colors.foreground,
+    ) {
+      content()
+    }
   }
 }
 
