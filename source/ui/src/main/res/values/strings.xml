@@ -217,6 +217,10 @@
     <string name="organization_domain_auto_join_removed" tools:ignore="MissingTranslation">Users won\'t be able to join the organization automatically after this.</string>
     <string name="leave_organization" tools:ignore="MissingTranslation">Leave organization</string>
     <string name="delete_organization" tools:ignore="MissingTranslation">Delete organization</string>
+    <string name="leave_organization_confirmation_message" tools:ignore="MissingTranslation">Are you sure you want to leave this organization? You will lose access to this organization and its applications.</string>
+    <string name="delete_organization_confirmation_message" tools:ignore="MissingTranslation">Are you sure you want to delete this organization?</string>
+    <string name="organization_action_irreversible" tools:ignore="MissingTranslation">This action is permanent and irreversible.</string>
+    <string name="type_organization_name_to_continue" tools:ignore="MissingTranslation">Type \"%1$s\" below to continue.</string>
     <string name="edit_profile">Edit profile</string>
     <string name="manage_account">Manage account</string>
     <string name="manage_organization" tools:ignore="MissingTranslation">Manage organization</string>

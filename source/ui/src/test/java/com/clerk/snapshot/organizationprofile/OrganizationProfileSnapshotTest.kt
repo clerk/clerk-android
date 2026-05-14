@@ -15,6 +15,10 @@ import com.clerk.api.organizations.OrganizationMembershipRequest
 import com.clerk.api.organizations.Role
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.R
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationActions
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationContent
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationState
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileConfirmationAction
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRowPlacement
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileRow
@@ -379,6 +383,70 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     }
   }
 
+  @Test
+  fun organizationActionLeaveDisabled() {
+    paparazzi.snapshot {
+      ActionSnapshotSurface {
+        OrganizationProfileActionConfirmationContent(
+          action = OrganizationProfileConfirmationAction.LeaveOrganization,
+          organizationName = "Acme Inc.",
+          state = OrganizationProfileActionConfirmationState(),
+          actions = noOpActionConfirmationActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationActionDeleteReady() {
+    paparazzi.snapshot {
+      ActionSnapshotSurface {
+        OrganizationProfileActionConfirmationContent(
+          action = OrganizationProfileConfirmationAction.DeleteOrganization,
+          organizationName = "Acme Inc.",
+          state = OrganizationProfileActionConfirmationState(confirmationText = "Acme Inc."),
+          actions = noOpActionConfirmationActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationActionLeaveLoading() {
+    paparazzi.snapshot {
+      ActionSnapshotSurface {
+        OrganizationProfileActionConfirmationContent(
+          action = OrganizationProfileConfirmationAction.LeaveOrganization,
+          organizationName = "Acme Inc.",
+          state =
+            OrganizationProfileActionConfirmationState(
+              confirmationText = "Acme Inc.",
+              isLoading = true,
+            ),
+          actions = noOpActionConfirmationActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationActionDeleteError() {
+    paparazzi.snapshot {
+      ActionSnapshotSurface {
+        OrganizationProfileActionConfirmationContent(
+          action = OrganizationProfileConfirmationAction.DeleteOrganization,
+          organizationName = "Acme Inc.",
+          state =
+            OrganizationProfileActionConfirmationState(
+              confirmationText = "Acme Inc.",
+              errorMessage = "Unable to delete organization",
+            ),
+          actions = noOpActionConfirmationActions,
+        )
+      }
+    }
+  }
+
   private val allMembersTabs =
     listOf(
       OrganizationMembersTab.Members,
@@ -447,6 +515,13 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
       onDeletePendingChanged = {},
       onUpdateEnrollmentMode = {},
       onDeleteDomain = {},
+    )
+
+  private val noOpActionConfirmationActions =
+    OrganizationProfileActionConfirmationActions(
+      onConfirmationTextChanged = {},
+      onConfirm = {},
+      onCancel = {},
     )
 
   private fun sampleMember(
@@ -544,6 +619,15 @@ private fun MembersSnapshotSurface(content: @Composable () -> Unit) {
 
 @Composable
 private fun DomainsSnapshotSurface(content: @Composable () -> Unit) {
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.size(740.dp).background(ClerkMaterialTheme.colors.background)) {
+      content()
+    }
+  }
+}
+
+@Composable
+private fun ActionSnapshotSurface(content: @Composable () -> Unit) {
   ClerkMaterialTheme {
     Box(modifier = Modifier.size(740.dp).background(ClerkMaterialTheme.colors.background)) {
       content()

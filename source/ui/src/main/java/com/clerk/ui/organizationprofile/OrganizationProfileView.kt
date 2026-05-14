@@ -16,7 +16,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
@@ -30,9 +29,10 @@ import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
-import com.clerk.ui.R
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationView
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileConfirmationAction
 import com.clerk.ui.organizationprofile.custom.LocalOrganizationProfileCustomNavigator
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomNavigator
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRouteNavKey
@@ -239,16 +239,22 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   }
 
   entry<OrganizationProfileDestination.LeaveOrganization> {
-    OrganizationProfilePlaceholderView(
-      title = stringResource(R.string.leave_organization),
+    OrganizationProfileActionConfirmationView(
+      action = OrganizationProfileConfirmationAction.LeaveOrganization,
+      organization = organization,
+      membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
+      onSuccess = onDismiss,
     )
   }
 
   entry<OrganizationProfileDestination.DeleteOrganization> {
-    OrganizationProfilePlaceholderView(
-      title = stringResource(R.string.delete_organization),
+    OrganizationProfileActionConfirmationView(
+      action = OrganizationProfileConfirmationAction.DeleteOrganization,
+      organization = organization,
+      membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
+      onSuccess = onDismiss,
     )
   }
 
@@ -275,15 +281,6 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
       LaunchedEffect(Unit) { backStack.removeLastOrNull() }
     }
   }
-}
-
-@Composable
-private fun OrganizationProfilePlaceholderView(title: String, onBackPressed: () -> Unit) {
-  com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold(
-    title = title,
-    onBackPressed = onBackPressed,
-    content = {},
-  )
 }
 
 private val OrganizationProfileAction.destination: OrganizationProfileDestination
