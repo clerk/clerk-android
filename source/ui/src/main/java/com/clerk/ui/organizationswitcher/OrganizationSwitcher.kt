@@ -13,12 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -355,7 +352,7 @@ private fun OrganizationSwitcherSheets(
   }
 
   if (showOrganizationCreate) {
-    OrganizationSwitcherCreateSheet(
+    OrganizationSwitcherCreatePage(
       creationDefaults = organizationCreateDefaults,
       onDismiss = onDismissOrganizationCreate,
       onInviteMembers = onShowPostCreateInvitations,
@@ -434,20 +431,13 @@ private fun OrganizationSwitcherProfilePage(
   }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OrganizationSwitcherCreateSheet(
+private fun OrganizationSwitcherCreatePage(
   creationDefaults: OrganizationCreationDefaults?,
   onDismiss: () -> Unit,
   onInviteMembers: (Organization) -> Unit,
 ) {
-  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  ModalBottomSheet(
-    onDismissRequest = onDismiss,
-    sheetState = sheetState,
-    containerColor = ClerkMaterialTheme.colors.background,
-    contentColor = ClerkMaterialTheme.colors.foreground,
-  ) {
+  OrganizationSwitcherFullScreenPage(onDismiss = onDismiss) {
     OrganizationCreateFlowView(
       modifier = Modifier.fillMaxSize(),
       creationDefaults = creationDefaults,
