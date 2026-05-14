@@ -18,7 +18,7 @@ import com.clerk.api.organizations.bulkCreateInvitations
 import com.clerk.api.organizations.getInvitations
 import com.clerk.api.organizations.getMembershipRequests
 import com.clerk.api.organizations.getOrganizationMemberships
-import com.clerk.api.organizations.getRoles
+import com.clerk.api.organizations.getRolesPaginated
 import com.clerk.api.organizations.reject
 import com.clerk.api.organizations.removeMember
 import com.clerk.api.organizations.revoke
@@ -62,6 +62,7 @@ internal class OrganizationMembersViewModel(
         selectedTab = selectedTab,
         isLoadingInitial = true,
         errorMessage = null,
+        hasRoleSetMigration = false,
       )
 
     viewModelScope.launch(dispatcher) {
@@ -249,12 +250,13 @@ internal class OrganizationMembersViewModel(
 
   private suspend fun loadRoles() {
     val currentOrganization = organization ?: return
-    when (val result = currentOrganization.getRoles()) {
+    when (val result = currentOrganization.getRolesPaginated()) {
       is ClerkResult.Success ->
         mutableState.value =
           mutableState.value.copy(
-            roles = result.value,
-            selectedInviteRoleKey = defaultInviteRole(result.value),
+            roles = result.value.data,
+            selectedInviteRoleKey = defaultInviteRole(result.value.data),
+            hasRoleSetMigration = result.value.hasRoleSetMigration == true,
           )
       is ClerkResult.Failure ->
         mutableState.value = mutableState.value.copy(errorMessage = result.errorMessage)
@@ -298,7 +300,8 @@ internal class OrganizationMembersViewModel(
         membersTotalCount = page.totalCount,
         membersHasNextPage = memberships.size < page.totalCount,
         isLoadingMoreMembers = false,
-        hasRoleSetMigration = page.hasRoleSetMigration == true,
+        hasRoleSetMigration =
+          mutableState.value.hasRoleSetMigration || page.hasRoleSetMigration == true,
       )
   }
 

@@ -202,6 +202,31 @@ suspend fun Organization.getRoles(
   offset: Int = 0,
   limit: Int = 20,
 ): ClerkResult<List<Role>, ClerkErrorResponse> {
+  return when (val result = getRolesPaginated(offset = offset, limit = limit)) {
+    is ClerkResult.Success -> ClerkResult.success(result.value.data).withTags(result.tags)
+    is ClerkResult.Failure ->
+      ClerkResult.Failure(
+        error = result.error,
+        throwable = result.throwable,
+        code = result.code,
+        errorType = result.errorType,
+        tags = result.tags,
+      )
+  }
+}
+
+/**
+ * Retrieves the paginated list of roles available within this organization.
+ *
+ * @param offset The number of roles to skip when paginating through results. Default is 0.
+ * @param limit The maximum number of roles to return per request. Default is 20.
+ * @return A [ClerkResult] containing a paginated response of [Role] objects on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun Organization.getRolesPaginated(
+  offset: Int = 0,
+  limit: Int = 20,
+): ClerkResult<ClerkPaginatedResponse<Role>, ClerkErrorResponse> {
   return ClerkApi.organization.getRoles(
     organizationId = this.id,
     limit = limit,

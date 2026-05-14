@@ -17,7 +17,7 @@ import com.clerk.api.organizations.bulkCreateInvitations
 import com.clerk.api.organizations.getInvitations
 import com.clerk.api.organizations.getMembershipRequests
 import com.clerk.api.organizations.getOrganizationMemberships
-import com.clerk.api.organizations.getRoles
+import com.clerk.api.organizations.getRolesPaginated
 import com.clerk.api.organizations.removeMember
 import com.clerk.api.organizations.updateMembership
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -73,7 +73,10 @@ class OrganizationMembersViewModelTest {
     val invitation = invitation("inv_1")
     val request = request("req_1")
     val roles = listOf(role("org:admin", "Admin"), role("org:member", "Member"))
-    coEvery { organization.getRoles() } returns ClerkResult.success(roles)
+    coEvery { organization.getRolesPaginated() } returns
+      ClerkResult.success(
+        ClerkPaginatedResponse(data = roles, totalCount = 2, hasRoleSetMigration = true)
+      )
     coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
       ClerkResult.success(
         ClerkPaginatedResponse(data = listOf(member), totalCount = 1, hasRoleSetMigration = true)
@@ -281,8 +284,13 @@ class OrganizationMembersViewModelTest {
   }
 
   private fun stubManageResources(organization: Organization) {
-    coEvery { organization.getRoles() } returns
-      ClerkResult.success(listOf(role("org:admin", "Admin"), role("org:member", "Member")))
+    coEvery { organization.getRolesPaginated() } returns
+      ClerkResult.success(
+        ClerkPaginatedResponse(
+          data = listOf(role("org:admin", "Admin"), role("org:member", "Member")),
+          totalCount = 2,
+        )
+      )
     coEvery {
       organization.getInvitations(
         limit = any(),
