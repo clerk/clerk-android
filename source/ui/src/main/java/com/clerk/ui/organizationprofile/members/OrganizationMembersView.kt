@@ -73,15 +73,17 @@ internal fun OrganizationMembersView(
   membership: OrganizationMembership?,
   onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
+  initialTab: OrganizationMembersTab? = null,
   viewModel: OrganizationMembersViewModel = viewModel(),
 ) {
   val state by viewModel.state.collectAsState()
 
-  LaunchedEffect(organization.id, membership?.id) {
+  LaunchedEffect(organization.id, membership?.id, initialTab) {
     viewModel.load(
       organization = organization,
       membership = membership,
       domainsEnabled = Clerk.organizationDomainsIsEnabled,
+      initialTab = initialTab,
     )
   }
 

@@ -49,12 +49,16 @@ internal class OrganizationMembersViewModel(
     organization: Organization,
     membership: OrganizationMembership?,
     domainsEnabled: Boolean = Clerk.organizationDomainsIsEnabled,
+    initialTab: OrganizationMembersTab? = null,
   ) {
     this.organization = organization
     this.membership = membership
     this.domainsEnabled = domainsEnabled
     val tabs = organizationMembersAvailableTabs(membership, domainsEnabled)
-    val selectedTab = mutableState.value.selectedTab?.takeIf { it in tabs } ?: tabs.firstOrNull()
+    val selectedTab =
+      mutableState.value.selectedTab?.takeIf { it in tabs }
+        ?: initialTab?.takeIf { it in tabs }
+        ?: tabs.firstOrNull()
 
     mutableState.value =
       mutableState.value.copy(

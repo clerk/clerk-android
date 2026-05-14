@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationCreationDefaults
+import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
@@ -31,7 +32,8 @@ import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.header.HeaderTextView
 import com.clerk.ui.core.header.HeaderType
 import com.clerk.ui.organizationprofile.form.OrganizationProfileFormView
-import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
+import com.clerk.ui.organizationprofile.members.OrganizationMembersTab
+import com.clerk.ui.organizationprofile.members.OrganizationMembersView
 import com.clerk.ui.sessiontask.organization.createOrganizationSlug
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -41,16 +43,22 @@ internal fun OrganizationCreateFlowView(
   onComplete: () -> Unit,
   modifier: Modifier = Modifier,
   skipInvitationScreen: Boolean = false,
+  onInviteMembers: ((Organization) -> Unit)? = null,
   viewModel: OrganizationCreateFlowViewModel = viewModel(),
 ) {
   val state by viewModel.state.collectAsState()
+  val user by Clerk.userFlow.collectAsState()
   var inviteOrganization by remember { mutableStateOf<Organization?>(null) }
 
   LaunchedEffect(state.createdOrganization) {
     val organization = state.createdOrganization ?: return@LaunchedEffect
     viewModel.clearCompletedCreate()
     if (shouldShowPostCreateInviteStep(organization, skipInvitationScreen)) {
-      inviteOrganization = organization
+      if (onInviteMembers != null) {
+        onInviteMembers(organization)
+      } else {
+        inviteOrganization = organization
+      }
     } else {
       onComplete()
     }
@@ -58,7 +66,13 @@ internal fun OrganizationCreateFlowView(
 
   val organizationForInvite = inviteOrganization
   if (organizationForInvite != null) {
-    OrganizationInviteMembersView(organization = organizationForInvite, onComplete = onComplete)
+    OrganizationMembersView(
+      modifier = modifier,
+      organization = organizationForInvite,
+      membership = user.organizationMembershipFor(organizationForInvite),
+      initialTab = OrganizationMembersTab.Invitations,
+      onBackPressed = onComplete,
+    )
   } else {
     CreateOrganizationFormContent(
       modifier = modifier,
@@ -166,3 +180,10 @@ private fun shouldShowPostCreateInviteStep(
   organization: Organization,
   skipInvitationScreen: Boolean,
 ): Boolean = !skipInvitationScreen && organization.maxAllowedMemberships != 1
+
+private fun com.clerk.api.user.User?.organizationMembershipFor(
+  organization: Organization
+): OrganizationMembership? {
+  return (listOfNotNull(Clerk.organizationMembership) + this?.organizationMemberships.orEmpty())
+    .firstOrNull { it.organization.id == organization.id }
+}

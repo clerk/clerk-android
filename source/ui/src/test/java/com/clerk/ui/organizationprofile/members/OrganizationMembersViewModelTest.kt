@@ -116,6 +116,26 @@ class OrganizationMembersViewModelTest {
   }
 
   @Test
+  fun `load selects requested initial tab when available`() = runTest {
+    val organization = organization()
+    val viewer = viewerMembership()
+    stubManageResources(organization)
+    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+
+    val viewModel = viewModel(pageSize = 2)
+    viewModel.load(
+      organization = organization,
+      membership = viewer,
+      domainsEnabled = true,
+      initialTab = OrganizationMembersTab.Invitations,
+    )
+    advanceUntilIdle()
+
+    assertEquals(OrganizationMembersTab.Invitations, viewModel.state.value.selectedTab)
+  }
+
+  @Test
   fun `loadMoreMembers appends next page`() = runTest {
     val organization = organization()
     val viewer = viewerMembership()
