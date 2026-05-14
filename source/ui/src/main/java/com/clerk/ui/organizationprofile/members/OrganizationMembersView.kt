@@ -8,8 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -48,6 +46,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -88,10 +87,12 @@ import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
+import com.clerk.ui.organizationprofile.invite.parseInviteEmailAddresses
 import com.clerk.ui.theme.ClerkMaterialTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -166,7 +167,7 @@ internal fun OrganizationMembersContent(
       item {
         OrganizationMembersTabs(
           modifier = Modifier.fillMaxWidth().padding(horizontal = dp18),
-          availableTabs = state.availableTabs,
+          availableTabs = state.availableTabs.toImmutableList(),
           selectedTab = state.selectedTab,
           onSelectTab = actions.onSelectTab,
         )
@@ -258,7 +259,7 @@ private fun LazyListScope.invitationsTab(
 ) {
   item {
     InviteMembersComposer(
-      modifier = Modifier.padding(horizontal = dp18),
+      modifier = Modifier.padding(horizontal = dp24),
       organization = organization,
       state = state,
       actions = actions,
@@ -330,9 +331,9 @@ private fun LazyListScope.requestsTab(
 
 @Composable
 private fun OrganizationMembersTabs(
-  modifier: Modifier = Modifier,
-  availableTabs: List<OrganizationMembersTab>,
+  availableTabs: ImmutableList<OrganizationMembersTab>,
   selectedTab: OrganizationMembersTab?,
+  modifier: Modifier = Modifier,
   onSelectTab: (OrganizationMembersTab) -> Unit,
 ) {
   Surface(
@@ -573,14 +574,36 @@ private fun InviteMembersComposer(
   modifier: Modifier = Modifier,
 ) {
   var emailInput by rememberSaveable { mutableStateOf("") }
-  val limitExceeded = state.inviteWouldExceedMembershipLimit(organization)
+  val submittedEmails = (state.inviteEmails + parseInviteEmailAddresses(emailInput)).distinct()
+  val limitExceeded = submittedEmails.size > state.remainingInviteSlots(organization)
+  val canSend =
+    state.selectedInviteRoleKey != null &&
+      submittedEmails.isNotEmpty() &&
+      state.activeMutationId == null &&
+      !limitExceeded
 
-  ListCard(modifier = modifier) {
-    Column(verticalArrangement = Arrangement.spacedBy(dp12)) {
+  Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp24)) {
+    Text(
+      text = stringResource(R.string.enter_or_paste_email_addresses),
+      style = ClerkMaterialTheme.typography.bodyMedium,
+      color = ClerkMaterialTheme.colors.mutedForeground,
+    )
+    ClerkTextField(
+      modifier = Modifier.fillMaxWidth().height(112.dp),
+      value = emailInput,
+      onValueChange = { emailInput = it },
+      label = stringResource(R.string.enter_email_addresses),
+      maxLines = INVITE_EMAIL_MAX_LINES,
+    )
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.spacedBy(dp12),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
       Text(
-        text = stringResource(R.string.invite_new_members),
-        style = ClerkMaterialTheme.typography.bodyMedium.withMediumWeight(),
-        color = ClerkMaterialTheme.colors.foreground,
+        text = stringResource(R.string.role),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+        color = ClerkMaterialTheme.colors.mutedForeground,
       )
       RoleDropdown(
         roles = state.roles,
@@ -588,86 +611,84 @@ private fun InviteMembersComposer(
         enabled = state.activeMutationId == null,
         onSelectRole = actions.onSelectInviteRole,
       )
-      Row(horizontalArrangement = Arrangement.spacedBy(dp8), verticalAlignment = Alignment.Top) {
-        ClerkTextField(
-          modifier = Modifier.weight(1f),
-          value = emailInput,
-          onValueChange = { emailInput = it },
-          label = stringResource(R.string.enter_email_addresses),
-          leadingIcon = R.drawable.ic_email,
-        )
-        ClerkButton(
-          text = stringResource(R.string.add),
-          isEnabled = emailInput.isNotBlank() && state.activeMutationId == null,
-          configuration =
-            ClerkButtonDefaults.configuration(
-              style = ClerkButtonConfiguration.ButtonStyle.Secondary
-            ),
-          onClick = {
-            actions.onInviteInputSubmitted(emailInput)
-            emailInput = ""
-          },
-        )
-      }
-      EmailChips(emails = state.inviteEmails, onRemoveEmail = actions.onRemoveInviteEmail)
-      MembershipLimitText(organization = organization, state = state, limitExceeded = limitExceeded)
-      ClerkButton(
-        modifier = Modifier.fillMaxWidth(),
-        text = stringResource(R.string.send_invitations),
-        isLoading = state.activeMutationId == INVITE_MUTATION_ID,
-        isEnabled = state.canInvite && !limitExceeded,
-        onClick = actions.onSendInvitations,
+    }
+    if (limitExceeded) {
+      Text(
+        text = stringResource(R.string.invite_limit_exceeded),
+        style = ClerkMaterialTheme.typography.bodySmall,
+        color = ClerkMaterialTheme.colors.danger,
       )
     }
+    ClerkButton(
+      modifier = Modifier.fillMaxWidth(),
+      text = stringResource(R.string.send_invitations),
+      isLoading = state.activeMutationId == INVITE_MUTATION_ID,
+      isEnabled = canSend,
+      icons =
+        ClerkButtonDefaults.icons(
+          trailingIcon = R.drawable.ic_arrow_right,
+          trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+        ),
+      onClick = {
+        actions.onInviteInputSubmitted(emailInput)
+        actions.onSendInvitations()
+        emailInput = ""
+      },
+    )
   }
 }
 
 @Composable
-@OptIn(ExperimentalLayoutApi::class)
-private fun EmailChips(emails: List<String>, onRemoveEmail: (String) -> Unit) {
-  if (emails.isEmpty()) return
-  FlowRow(
-    modifier = Modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.spacedBy(dp8),
-    verticalArrangement = Arrangement.spacedBy(dp8),
+private fun RoleDropdown(
+  roles: List<Role>,
+  selectedRoleKey: String?,
+  enabled: Boolean,
+  onSelectRole: (String) -> Unit,
+) {
+  var expanded by rememberSaveable { mutableStateOf(false) }
+  val selectedRole = roles.firstOrNull { it.key == selectedRoleKey } ?: roles.firstOrNull()
+
+  Surface(
+    modifier =
+      Modifier.height(dp32).clickable(enabled = enabled && roles.isNotEmpty()) { expanded = true },
+    shape = ClerkMaterialTheme.shape,
+    color = ClerkMaterialTheme.colors.background,
+    border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.buttonBorder),
+    shadowElevation = dp2,
   ) {
-    emails.forEach { email ->
-      Surface(
-        shape = ClerkMaterialTheme.shape,
-        color = ClerkMaterialTheme.colors.muted,
-        onClick = { onRemoveEmail(email) },
-      ) {
-        Text(
-          modifier = Modifier.padding(horizontal = dp12, vertical = dp8),
-          text = email,
-          style = ClerkMaterialTheme.typography.bodySmall,
-          color = ClerkMaterialTheme.colors.foreground,
-        )
+    Row(
+      modifier = Modifier.padding(start = dp12, top = dp4, end = dp8, bottom = dp4),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(dp4),
+    ) {
+      Text(
+        text = selectedRole?.name ?: stringResource(R.string.no_roles_available),
+        style = ClerkMaterialTheme.typography.bodyMedium,
+        color =
+          if (enabled) ClerkMaterialTheme.colors.foreground
+          else ClerkMaterialTheme.colors.mutedForeground,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      Icon(
+        modifier = Modifier.size(dp16),
+        painter = painterResource(R.drawable.ic_chevron_down),
+        contentDescription = null,
+        tint = ClerkMaterialTheme.colors.mutedForeground,
+      )
+      DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        roles.forEach { role ->
+          DropdownMenuItem(
+            text = { Text(role.name) },
+            onClick = {
+              expanded = false
+              onSelectRole(role.key)
+            },
+          )
+        }
       }
     }
   }
-}
-
-@Composable
-private fun MembershipLimitText(
-  organization: Organization,
-  state: OrganizationMembersState,
-  limitExceeded: Boolean,
-) {
-  if (organization.maxAllowedMemberships <= 0) return
-  val remaining = state.remainingInviteSlots(organization)
-  Text(
-    text =
-      if (limitExceeded) {
-        stringResource(R.string.invite_limit_exceeded)
-      } else {
-        stringResource(R.string.membership_slots_remaining, remaining)
-      },
-    style = ClerkMaterialTheme.typography.bodySmall,
-    color =
-      if (limitExceeded) ClerkMaterialTheme.colors.danger
-      else ClerkMaterialTheme.colors.mutedForeground,
-  )
 }
 
 @Composable
@@ -765,47 +786,6 @@ private fun MembershipRequestRow(
           isLoading = isLoading,
           onClick = onAccept,
         )
-      }
-    }
-  }
-}
-
-@Composable
-private fun RoleDropdown(
-  roles: List<Role>,
-  selectedRoleKey: String?,
-  enabled: Boolean,
-  onSelectRole: (String) -> Unit,
-) {
-  var expanded by rememberSaveable { mutableStateOf(false) }
-  val selectedRole = roles.firstOrNull { it.key == selectedRoleKey } ?: roles.firstOrNull()
-
-  Surface(
-    modifier = Modifier.clickable(enabled = enabled && roles.isNotEmpty()) { expanded = true },
-    shape = ClerkMaterialTheme.shape,
-    color = ClerkMaterialTheme.colors.background,
-    border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.buttonBorder),
-    shadowElevation = dp2,
-  ) {
-    Box {
-      Text(
-        modifier = Modifier.padding(horizontal = dp12, vertical = dp8),
-        text = selectedRole?.name ?: stringResource(R.string.no_roles_available),
-        style = ClerkMaterialTheme.typography.bodySmall,
-        color =
-          if (enabled) ClerkMaterialTheme.colors.foreground
-          else ClerkMaterialTheme.colors.mutedForeground,
-      )
-      DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        roles.forEach { role ->
-          DropdownMenuItem(
-            text = { Text(role.name) },
-            onClick = {
-              expanded = false
-              onSelectRole(role.key)
-            },
-          )
-        }
       }
     }
   }
@@ -1063,3 +1043,4 @@ private enum class InvitationAction {
 }
 
 private const val INVITE_MUTATION_ID = "invite"
+private const val INVITE_EMAIL_MAX_LINES = 4
