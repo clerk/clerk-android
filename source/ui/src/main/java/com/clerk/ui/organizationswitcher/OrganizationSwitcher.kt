@@ -66,8 +66,7 @@ import com.clerk.ui.organizationlist.OrganizationAccountListViewModel
 import com.clerk.ui.organizationprofile.OrganizationProfileView
 import com.clerk.ui.organizationprofile.create.OrganizationCreateFlowView
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
-import com.clerk.ui.organizationprofile.members.OrganizationMembersTab
-import com.clerk.ui.organizationprofile.members.OrganizationMembersView
+import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userbutton.UserButton
@@ -179,8 +178,6 @@ internal fun OrganizationSwitcherImpl(
   var postCreateInviteOrganization by remember { mutableStateOf<Organization?>(null) }
 
   val activeMembership = activeOrganizationMembership(user, session, state.memberships)
-  val postCreateInviteMembership =
-    postCreateInviteOrganization.organizationMembershipFor(activeMembership, user)
   val showPersonalAccount = user != null && !hidePersonal && !Clerk.organizationSelectionIsForced
   val dismissActiveSheet = { sheetDestination = null }
   val manageOrganizationAction =
@@ -246,7 +243,6 @@ internal fun OrganizationSwitcherImpl(
     showOrganizationCreate = showOrganizationCreate,
     organizationCreateDefaults = organizationCreateDefaults,
     postCreateInviteOrganization = postCreateInviteOrganization,
-    postCreateInviteMembership = postCreateInviteMembership,
     state = state,
     user = user,
     activeMembership = activeMembership,
@@ -317,7 +313,6 @@ private fun OrganizationSwitcherSheets(
   showOrganizationCreate: Boolean,
   organizationCreateDefaults: OrganizationCreationDefaults?,
   postCreateInviteOrganization: Organization?,
-  postCreateInviteMembership: OrganizationMembership?,
   state: OrganizationAccountListState,
   user: User?,
   activeMembership: OrganizationMembership?,
@@ -370,7 +365,6 @@ private fun OrganizationSwitcherSheets(
   if (postCreateInviteOrganization != null) {
     OrganizationSwitcherPostCreateInvitationsPage(
       organization = postCreateInviteOrganization,
-      membership = postCreateInviteMembership,
       onDismiss = onDismissPostCreateInvitations,
     )
   }
@@ -466,16 +460,13 @@ private fun OrganizationSwitcherCreateSheet(
 @Composable
 private fun OrganizationSwitcherPostCreateInvitationsPage(
   organization: Organization,
-  membership: OrganizationMembership?,
   onDismiss: () -> Unit,
 ) {
   OrganizationSwitcherFullScreenPage(onDismiss = onDismiss) {
-    OrganizationMembersView(
+    OrganizationInviteMembersView(
       modifier = Modifier.fillMaxSize(),
       organization = organization,
-      membership = membership,
-      initialTab = OrganizationMembersTab.Invitations,
-      onBackPressed = onDismiss,
+      onComplete = onDismiss,
     )
   }
 }
@@ -756,16 +747,6 @@ private fun User.displayName(): String {
   return fullName()
     .ifBlank { username.orEmpty() }
     .ifBlank { primaryEmailAddress?.emailAddress.orEmpty() }
-}
-
-private fun Organization?.organizationMembershipFor(
-  activeMembership: OrganizationMembership?,
-  user: User?,
-): OrganizationMembership? {
-  val organization = this ?: return null
-  return (listOfNotNull(activeMembership, Clerk.organizationMembership) +
-      user?.organizationMemberships.orEmpty())
-    .firstOrNull { it.organization.id == organization.id }
 }
 
 internal enum class OrganizationSwitcherSheetDestination {
