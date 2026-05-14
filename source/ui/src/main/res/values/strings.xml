@@ -196,7 +196,7 @@
     <string name="verified_domains" tools:ignore="MissingTranslation">Verified domains</string>
     <string name="add_domain" tools:ignore="MissingTranslation">Add domain</string>
     <string name="add_domain_description" tools:ignore="MissingTranslation">Add the domain to verify. Users with email addresses at this domain can join the organization automatically or request to join.</string>
-    <string name="add_domain_short_description" tools:ignore="MissingTranslation">Verify an email domain for this organization.</string>
+    <string name="add_domain_short_description" tools:ignore="MissingTranslation">Allow users to join the organization automatically or request to join based on a verified email domain.</string>
     <string name="domain" tools:ignore="MissingTranslation">Domain</string>
     <string name="verify_domain" tools:ignore="MissingTranslation">Verify domain</string>
     <string name="remove_domain" tools:ignore="MissingTranslation">Remove domain</string>

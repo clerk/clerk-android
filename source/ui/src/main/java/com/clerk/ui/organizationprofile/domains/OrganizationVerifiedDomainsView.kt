@@ -9,16 +9,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,11 +27,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.organizations.Organization
@@ -50,7 +50,7 @@ import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
-import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.input.ClerkTextField
@@ -168,12 +168,7 @@ private fun OrganizationDomainsList(
   actions: OrganizationVerifiedDomainsActions,
   modifier: Modifier = Modifier,
 ) {
-  LazyColumn(
-    modifier = modifier.fillMaxSize(),
-    contentPadding = PaddingValues(horizontal = dp18, vertical = dp16),
-    verticalArrangement = Arrangement.spacedBy(dp16),
-    horizontalAlignment = Alignment.CenterHorizontally,
-  ) {
+  LazyColumn(modifier = modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = dp16)) {
     if (state.isLoadingInitial) {
       item { LoadingState() }
       return@LazyColumn
@@ -186,22 +181,25 @@ private fun OrganizationDomainsList(
 
     state.errorMessage?.let { message -> item { ErrorNotice(text = message) } }
 
-    if (state.canManageDomains) {
-      item { AddDomainRow(onClick = actions.onShowAddDomain) }
-    }
-
-    if (state.domains.isEmpty()) {
+    if (state.domains.isEmpty() && !state.canManageDomains) {
       item { EmptyState(text = stringResource(R.string.no_verified_domains)) }
     } else {
-      items(state.domains, key = { it.id }) { domain ->
+      itemsIndexed(state.domains, key = { _, domain -> domain.id }) { index, domain ->
         DomainRow(
           domain = domain,
           canManage = state.canManageDomains,
+          showTopDivider = index == 0,
           isLoading = state.activeMutationId != null,
           onVerify = { actions.onShowVerifyEmail(domain) },
           onManage = { actions.onShowEnrollmentMode(domain) },
           onDelete = { actions.onShowDeleteDomain(domain) },
         )
+      }
+    }
+
+    if (state.canManageDomains) {
+      item {
+        AddDomainRow(showTopDivider = state.domains.isEmpty(), onClick = actions.onShowAddDomain)
       }
     }
 
@@ -388,26 +386,29 @@ private fun DeleteDomainContent(
 }
 
 @Composable
-private fun AddDomainRow(onClick: () -> Unit) {
-  ListCard(modifier = Modifier.clickable { onClick() }) {
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(dp12),
-    ) {
-      IconSurface(icon = R.drawable.ic_plus)
-      Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(dp4)) {
+private fun AddDomainRow(showTopDivider: Boolean, onClick: () -> Unit) {
+  Surface(
+    modifier = Modifier.fillMaxWidth().clickable { onClick() },
+    color = ClerkMaterialTheme.colors.background,
+  ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+      if (showTopDivider) DomainDivider()
+      Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = dp24, vertical = dp16),
+        verticalArrangement = Arrangement.spacedBy(dp4),
+      ) {
         Text(
           text = stringResource(R.string.add_domain),
-          style = ClerkMaterialTheme.typography.bodyMedium.withMediumWeight(),
-          color = ClerkMaterialTheme.colors.foreground,
+          style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
+          color = ClerkMaterialTheme.colors.primary,
         )
         Text(
           text = stringResource(R.string.add_domain_short_description),
-          style = ClerkMaterialTheme.typography.bodySmall,
+          style = ClerkMaterialTheme.typography.bodyMedium,
           color = ClerkMaterialTheme.colors.mutedForeground,
         )
       }
+      DomainDivider()
     }
   }
 }
@@ -416,37 +417,41 @@ private fun AddDomainRow(onClick: () -> Unit) {
 private fun DomainRow(
   domain: OrganizationDomain,
   canManage: Boolean,
+  showTopDivider: Boolean,
   isLoading: Boolean,
   onVerify: () -> Unit,
   onManage: () -> Unit,
   onDelete: () -> Unit,
 ) {
-  ListCard {
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(dp12),
-    ) {
-      IconSurface(icon = R.drawable.ic_globe)
-      Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(dp4)) {
-        Text(
-          text = domain.name,
-          style = ClerkMaterialTheme.typography.bodyMedium.withMediumWeight(),
-          color = ClerkMaterialTheme.colors.foreground,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        DomainStatusBadge(domain = domain)
+  Surface(modifier = Modifier.fillMaxWidth(), color = ClerkMaterialTheme.colors.background) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+      if (showTopDivider) DomainDivider()
+      Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = dp24, vertical = dp16),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(dp16),
+      ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(dp8)) {
+          DomainStatusBadge(domain = domain)
+          Text(
+            text = domain.name,
+            style = ClerkMaterialTheme.typography.bodyLarge,
+            color = ClerkMaterialTheme.colors.foreground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
+        if (canManage) {
+          DomainMoreMenu(
+            domain = domain,
+            enabled = !isLoading,
+            onVerify = onVerify,
+            onManage = onManage,
+            onDelete = onDelete,
+          )
+        }
       }
-      if (canManage) {
-        DomainMoreMenu(
-          domain = domain,
-          enabled = !isLoading,
-          onVerify = onVerify,
-          onManage = onManage,
-          onDelete = onDelete,
-        )
-      }
+      DomainDivider()
     }
   }
 }
@@ -506,15 +511,29 @@ private fun DomainStatusBadge(domain: OrganizationDomain) {
   val foreground =
     if (domain.isVerified) ClerkMaterialTheme.colors.mutedForeground
     else ClerkMaterialTheme.colors.warning
-  Surface(shape = ClerkMaterialTheme.shape, color = color) {
-    Text(
-      modifier = Modifier.padding(horizontal = dp8, vertical = dp4),
-      text = text,
-      style = ClerkMaterialTheme.typography.bodySmall,
-      color = foreground,
-      maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
-    )
+  val borderColor =
+    if (domain.isVerified) ClerkMaterialTheme.computedColors.buttonBorder
+    else ClerkMaterialTheme.computedColors.borderWarning
+  Surface(
+    modifier = Modifier.height(dp18),
+    shape = ClerkMaterialTheme.shape,
+    color = color,
+    border = BorderStroke(dp1, borderColor),
+  ) {
+    Box(modifier = Modifier.padding(horizontal = dp6), contentAlignment = Alignment.Center) {
+      Text(
+        text = text,
+        style =
+          ClerkMaterialTheme.typography.bodySmall.copy(
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+          ),
+        color = foreground,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
   }
 }
 
@@ -544,24 +563,6 @@ private fun EnrollmentModeOptionRow(
           color = ClerkMaterialTheme.colors.mutedForeground,
         )
       }
-    }
-  }
-}
-
-@Composable
-private fun IconSurface(icon: Int) {
-  Surface(
-    modifier = Modifier.size(dp48),
-    shape = ClerkMaterialTheme.shape,
-    color = ClerkMaterialTheme.colors.muted,
-  ) {
-    Box(contentAlignment = Alignment.Center) {
-      Icon(
-        modifier = Modifier.size(dp24),
-        painter = painterResource(icon),
-        contentDescription = null,
-        tint = ClerkMaterialTheme.colors.mutedForeground,
-      )
     }
   }
 }
@@ -610,6 +611,11 @@ private fun ErrorNotice(text: String) {
       color = ClerkMaterialTheme.colors.danger,
     )
   }
+}
+
+@Composable
+private fun DomainDivider() {
+  HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
 }
 
 @Composable
