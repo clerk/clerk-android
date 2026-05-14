@@ -11,18 +11,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -31,10 +28,14 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,10 +49,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.userdata.PublicUserData
@@ -69,13 +68,11 @@ import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
-import com.clerk.ui.core.dimens.dp10
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp3
 import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp4
@@ -329,6 +326,7 @@ private fun LazyListScope.requestsTab(
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OrganizationMembersTabs(
   availableTabs: ImmutableList<OrganizationMembersTab>,
@@ -336,90 +334,28 @@ private fun OrganizationMembersTabs(
   modifier: Modifier = Modifier,
   onSelectTab: (OrganizationMembersTab) -> Unit,
 ) {
-  Surface(
-    modifier = modifier.fillMaxWidth().height(dp32),
-    shape = RoundedCornerShape(9.dp),
-    color = ClerkMaterialTheme.colors.muted,
-  ) {
-    Row(
-      modifier = Modifier.fillMaxSize().padding(dp2),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      availableTabs.forEachIndexed { index, tab ->
-        val selected = tab == selectedTab
-        OrganizationMembersTabButton(
-          modifier = Modifier.weight(1f).fillMaxHeight(),
-          tab = tab,
-          selected = selected,
-          onSelectTab = onSelectTab,
-        )
-        if (index < availableTabs.lastIndex) {
-          val nextTab = availableTabs[index + 1]
-          OrganizationMembersTabSeparator(visible = tab != selectedTab && nextTab != selectedTab)
-        }
-      }
-    }
-  }
-}
+  val selected = selectedTab ?: availableTabs.firstOrNull()
+  val colors =
+    SegmentedButtonDefaults.colors(
+      activeContainerColor = ClerkMaterialTheme.colors.muted,
+      activeContentColor = ClerkMaterialTheme.colors.foreground,
+      activeBorderColor = ClerkMaterialTheme.computedColors.buttonBorder,
+      inactiveContainerColor = ClerkMaterialTheme.colors.background,
+      inactiveContentColor = ClerkMaterialTheme.colors.mutedForeground,
+      inactiveBorderColor = ClerkMaterialTheme.computedColors.buttonBorder,
+    )
 
-@Composable
-private fun OrganizationMembersTabButton(
-  tab: OrganizationMembersTab,
-  selected: Boolean,
-  onSelectTab: (OrganizationMembersTab) -> Unit,
-  modifier: Modifier = Modifier,
-) {
-  val content: @Composable () -> Unit = {
-    Box(
-      modifier = Modifier.fillMaxSize().padding(horizontal = dp10, vertical = dp3),
-      contentAlignment = Alignment.Center,
-    ) {
-      Text(
-        text = tab.label(),
-        style =
-          ClerkMaterialTheme.typography.bodySmall.copy(
-            fontSize = 13.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            lineHeight = 18.sp,
-          ),
-        color =
-          if (selected) ClerkMaterialTheme.colors.foreground
-          else ClerkMaterialTheme.colors.mutedForeground,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+  SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
+    availableTabs.forEachIndexed { index, tab ->
+      SegmentedButton(
+        selected = tab == selected,
+        onClick = { onSelectTab(tab) },
+        shape = SegmentedButtonDefaults.itemShape(index = index, count = availableTabs.size),
+        colors = colors,
+        label = { Text(text = tab.label(), maxLines = 1, overflow = TextOverflow.Ellipsis) },
       )
     }
   }
-
-  if (selected) {
-    Surface(
-      modifier = modifier.clickable { onSelectTab(tab) },
-      shape = RoundedCornerShape(7.dp),
-      color = ClerkMaterialTheme.colors.background,
-      border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.border.copy(alpha = 0.06f)),
-      shadowElevation = dp3,
-      content = content,
-    )
-  } else {
-    Box(modifier = modifier.clickable { onSelectTab(tab) }, contentAlignment = Alignment.Center) {
-      content()
-    }
-  }
-}
-
-@Composable
-private fun OrganizationMembersTabSeparator(visible: Boolean) {
-  Box(
-    modifier =
-      Modifier.width(dp1)
-        .height(dp12)
-        .background(
-          color =
-            if (visible) ClerkMaterialTheme.colors.mutedForeground.copy(alpha = 0.3f)
-            else ClerkMaterialTheme.colors.muted,
-          shape = RoundedCornerShape(dp1),
-        )
-  )
 }
 
 @Composable
