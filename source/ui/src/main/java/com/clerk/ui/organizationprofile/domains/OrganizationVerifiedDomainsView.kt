@@ -92,6 +92,7 @@ internal fun OrganizationVerifiedDomainsView(
       }
     },
     errorMessage = state.errorMessage,
+    onErrorShown = viewModel::clearError,
     content = {
       OrganizationVerifiedDomainsContent(
         state = state,
@@ -180,8 +181,6 @@ private fun OrganizationDomainsList(
       return@LazyColumn
     }
 
-    state.errorMessage?.let { message -> item { ErrorNotice(text = message) } }
-
     if (state.domains.isEmpty() && !state.canManageDomains) {
       item { EmptyState(text = stringResource(R.string.no_verified_domains)) }
     } else {
@@ -222,7 +221,6 @@ private fun AddDomainContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
       value = state.domainName,
@@ -254,7 +252,6 @@ private fun VerifyEmailContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
       value = state.affiliationEmailLocalPart,
@@ -288,7 +285,6 @@ private fun VerifyCodeContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
       value = state.verificationCode,
@@ -328,7 +324,6 @@ private fun EnrollmentModeContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     state.enrollmentModeOptions.forEach { option ->
       EnrollmentModeOptionRow(
         mode = option,
@@ -365,7 +360,6 @@ private fun DeleteDomainContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.remove),
@@ -595,23 +589,6 @@ private fun EmptyState(text: String) {
     style = ClerkMaterialTheme.typography.bodyMedium,
     color = ClerkMaterialTheme.colors.mutedForeground,
   )
-}
-
-@Composable
-private fun ErrorNotice(text: String) {
-  Surface(
-    modifier = Modifier.fillMaxWidth(),
-    shape = ClerkMaterialTheme.shape,
-    color = ClerkMaterialTheme.colors.danger.copy(alpha = 0.08f),
-    border = BorderStroke(dp1, ClerkMaterialTheme.colors.danger.copy(alpha = 0.2f)),
-  ) {
-    Text(
-      modifier = Modifier.padding(dp12),
-      text = text,
-      style = ClerkMaterialTheme.typography.bodySmall,
-      color = ClerkMaterialTheme.colors.danger,
-    )
-  }
 }
 
 @Composable

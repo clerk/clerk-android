@@ -2,14 +2,12 @@
 
 package com.clerk.ui.organizationprofile.actions
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -28,8 +26,6 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp0
-import com.clerk.ui.core.dimens.dp1
-import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.input.ClerkTextField
@@ -63,6 +59,7 @@ internal fun OrganizationProfileActionConfirmationView(
     horizontalPadding = dp0,
     onBackPressed = onBackPressed,
     errorMessage = state.errorMessage,
+    onErrorShown = viewModel::clearError,
     content = {
       OrganizationProfileActionConfirmationContent(
         action = action,
@@ -108,7 +105,6 @@ internal fun OrganizationProfileActionConfirmationContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.foreground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
       value = state.confirmationText,
@@ -162,23 +158,6 @@ private fun OrganizationProfileConfirmationAction.confirmationMessage(): String 
       stringResource(R.string.leave_organization_confirmation_message)
     OrganizationProfileConfirmationAction.DeleteOrganization ->
       stringResource(R.string.delete_organization_confirmation_message)
-  }
-}
-
-@Composable
-private fun ErrorNotice(text: String) {
-  Surface(
-    modifier = Modifier.fillMaxWidth(),
-    shape = ClerkMaterialTheme.shape,
-    color = ClerkMaterialTheme.colors.danger.copy(alpha = 0.08f),
-    border = BorderStroke(dp1, ClerkMaterialTheme.colors.danger.copy(alpha = 0.2f)),
-  ) {
-    Text(
-      modifier = Modifier.padding(dp12),
-      text = text,
-      style = ClerkMaterialTheme.typography.bodySmall,
-      color = ClerkMaterialTheme.colors.danger,
-    )
   }
 }
 

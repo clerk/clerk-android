@@ -118,6 +118,7 @@ internal fun OrganizationMembersView(
     horizontalPadding = dp0,
     onBackPressed = onBackPressed,
     errorMessage = state.errorMessage,
+    onErrorShown = viewModel::clearError,
     content = {
       OrganizationMembersContent(
         organization = organization,

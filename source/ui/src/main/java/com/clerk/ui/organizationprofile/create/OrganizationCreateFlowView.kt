@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +29,7 @@ import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.header.HeaderTextView
 import com.clerk.ui.core.header.HeaderType
@@ -46,6 +49,7 @@ internal fun OrganizationCreateFlowView(
 ) {
   val state by viewModel.state.collectAsState()
   var inviteOrganization by remember { mutableStateOf<Organization?>(null) }
+  val snackbarHostState = remember { SnackbarHostState() }
 
   LaunchedEffect(state.createdOrganization) {
     val organization = state.createdOrganization ?: return@LaunchedEffect
@@ -60,6 +64,12 @@ internal fun OrganizationCreateFlowView(
       onComplete()
     }
   }
+  LaunchedEffect(state.errorMessage) {
+    state.errorMessage?.let {
+      snackbarHostState.showSnackbar(it)
+      viewModel.clearError()
+    }
+  }
 
   val organizationForInvite = inviteOrganization
   if (organizationForInvite != null) {
@@ -69,18 +79,26 @@ internal fun OrganizationCreateFlowView(
       onComplete = onComplete,
     )
   } else {
-    CreateOrganizationFormContent(
-      modifier = modifier,
-      creationDefaults = creationDefaults,
-      state = state,
-      onSubmit = { submit ->
-        viewModel.createOrganization(
-          name = submit.name,
-          slug = submit.slug,
-          logoFile = submit.logoFile,
+    ClerkMaterialTheme {
+      Scaffold(
+        modifier = modifier,
+        containerColor = ClerkMaterialTheme.colors.background,
+        snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+      ) { innerPadding ->
+        CreateOrganizationFormContent(
+          modifier = Modifier.fillMaxSize().padding(innerPadding),
+          creationDefaults = creationDefaults,
+          state = state,
+          onSubmit = { submit ->
+            viewModel.createOrganization(
+              name = submit.name,
+              slug = submit.slug,
+              logoFile = submit.logoFile,
+            )
+          },
         )
-      },
-    )
+      }
+    }
   }
 }
 
@@ -103,9 +121,6 @@ private fun CreateOrganizationFormContent(
   ) {
     item { CreateOrganizationHeader() }
     creationDefaults?.advisory?.let { advisory -> item { AdvisoryText(advisory = advisory) } }
-    state.errorMessage?.let { errorMessage ->
-      item { CreateOrganizationErrorText(errorMessage = errorMessage) }
-    }
     item {
       OrganizationProfileFormView(
         initialName = defaultName,
@@ -136,16 +151,6 @@ private fun CreateOrganizationHeader() {
       type = HeaderType.Subtitle,
     )
   }
-}
-
-@Composable
-private fun CreateOrganizationErrorText(errorMessage: String) {
-  Text(
-    modifier = Modifier.fillMaxWidth(),
-    text = errorMessage,
-    style = ClerkMaterialTheme.typography.bodySmall,
-    color = ClerkMaterialTheme.colors.danger,
-  )
 }
 
 @Composable

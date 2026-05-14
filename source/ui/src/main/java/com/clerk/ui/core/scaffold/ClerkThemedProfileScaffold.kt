@@ -29,6 +29,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 internal fun ClerkThemedProfileScaffold(
   modifier: Modifier = Modifier,
   errorMessage: String? = null,
+  onErrorShown: () -> Unit = {},
   hasLogo: Boolean = false,
   hasBackButton: Boolean = true,
   title: String? = null,
@@ -41,7 +42,10 @@ internal fun ClerkThemedProfileScaffold(
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
   LaunchedEffect(errorMessage) {
-    if (errorMessage != null) snackbarHostState.showSnackbar(errorMessage)
+    if (errorMessage != null) {
+      snackbarHostState.showSnackbar(errorMessage)
+      onErrorShown()
+    }
   }
 
   ClerkMaterialTheme(clerkTheme = clerkTheme) {

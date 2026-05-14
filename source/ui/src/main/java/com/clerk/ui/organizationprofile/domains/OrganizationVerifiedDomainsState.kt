@@ -93,7 +93,7 @@ internal fun enrollmentModeOptions(
         else -> mode
       }
     }
-  return options.ifEmpty { defaultEnrollmentModeOptions }
+  return (defaultEnrollmentModeOptions + options).distinct()
 }
 
 internal const val CREATE_DOMAIN_MUTATION_ID = "create-domain"

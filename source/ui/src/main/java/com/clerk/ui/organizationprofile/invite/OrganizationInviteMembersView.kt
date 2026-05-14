@@ -82,7 +82,10 @@ internal fun OrganizationInviteMembersView(
     }
   }
   LaunchedEffect(state.errorMessage) {
-    state.errorMessage?.let { snackbarHostState.showSnackbar(it) }
+    state.errorMessage?.let {
+      snackbarHostState.showSnackbar(it)
+      viewModel.clearError()
+    }
   }
 
   ClerkMaterialTheme {

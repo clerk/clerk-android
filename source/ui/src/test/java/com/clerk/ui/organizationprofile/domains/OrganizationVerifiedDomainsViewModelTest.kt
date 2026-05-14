@@ -84,6 +84,13 @@ class OrganizationVerifiedDomainsViewModelTest {
   }
 
   @Test
+  fun `enrollment options include automatic invitations when client config omits it`() {
+    val options = enrollmentModeOptions(listOf("manual_invitation", "automatic_suggestion"))
+
+    assertEquals(defaultEnrollmentModeOptions, options)
+  }
+
+  @Test
   fun `loadMoreDomains appends next page`() = runTest {
     val organization = organization()
     val first = domain(id = "dom_1", name = "example.com")

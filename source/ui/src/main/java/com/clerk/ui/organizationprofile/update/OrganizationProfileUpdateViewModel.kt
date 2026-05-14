@@ -49,6 +49,10 @@ internal class OrganizationProfileUpdateViewModel : ViewModel() {
     _state.value = State.Idle
   }
 
+  fun clearError() {
+    if (_state.value is State.Error) _state.value = State.Idle
+  }
+
   private suspend fun applyLogoChange(
     organization: Organization,
     logoFile: File?,

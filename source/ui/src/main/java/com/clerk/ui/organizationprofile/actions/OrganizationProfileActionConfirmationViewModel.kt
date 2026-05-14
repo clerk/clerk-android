@@ -62,6 +62,10 @@ internal class OrganizationProfileActionConfirmationViewModel(
     mutableState.value = OrganizationProfileActionConfirmationState()
   }
 
+  fun clearError() {
+    mutableState.value = mutableState.value.copy(errorMessage = null)
+  }
+
   private suspend fun performAction(
     action: OrganizationProfileConfirmationAction,
     organization: Organization,
