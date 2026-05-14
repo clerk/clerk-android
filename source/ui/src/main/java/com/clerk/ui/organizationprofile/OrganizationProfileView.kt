@@ -38,6 +38,7 @@ import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomNavigato
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRouteNavKey
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.custom.effectiveOrganizationProfileCustomRows
+import com.clerk.ui.organizationprofile.domains.OrganizationVerifiedDomainsView
 import com.clerk.ui.organizationprofile.members.OrganizationMembersView
 import com.clerk.ui.organizationprofile.root.OrganizationProfileAction
 import com.clerk.ui.organizationprofile.root.OrganizationProfileRootView
@@ -111,13 +112,13 @@ fun OrganizationProfileView(
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun OrganizationProfileNavDisplay(
-  modifier: Modifier,
   backStack: NavBackStack<NavKey>,
   organization: Organization,
   membership: OrganizationMembership?,
   isDismissable: Boolean,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
+  modifier: Modifier = Modifier,
   onDismiss: () -> Unit,
 ) {
   NavDisplay(
@@ -223,8 +224,9 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   }
 
   entry<OrganizationProfileDestination.VerifiedDomains> {
-    OrganizationProfilePlaceholderView(
-      title = stringResource(R.string.verified_domains),
+    OrganizationVerifiedDomainsView(
+      organization = organization,
+      membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
     )
   }

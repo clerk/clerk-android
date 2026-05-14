@@ -189,6 +189,32 @@
     <string name="update_profile" tools:ignore="MissingTranslation">Update profile</string>
     <string name="members" tools:ignore="MissingTranslation">Members</string>
     <string name="verified_domains" tools:ignore="MissingTranslation">Verified domains</string>
+    <string name="add_domain" tools:ignore="MissingTranslation">Add domain</string>
+    <string name="add_domain_description" tools:ignore="MissingTranslation">Add the domain to verify. Users with email addresses at this domain can join the organization automatically or request to join.</string>
+    <string name="add_domain_short_description" tools:ignore="MissingTranslation">Verify an email domain for this organization.</string>
+    <string name="domain" tools:ignore="MissingTranslation">Domain</string>
+    <string name="verify_domain" tools:ignore="MissingTranslation">Verify domain</string>
+    <string name="update_domain" tools:ignore="MissingTranslation">Update domain</string>
+    <string name="remove_domain" tools:ignore="MissingTranslation">Remove domain</string>
+    <string name="manage" tools:ignore="MissingTranslation">Manage</string>
+    <string name="cancel" tools:ignore="MissingTranslation">Cancel</string>
+    <string name="delete_domain" tools:ignore="MissingTranslation">Delete domain</string>
+    <string name="send_code" tools:ignore="MissingTranslation">Send code</string>
+    <string name="verification_code" tools:ignore="MissingTranslation">Verification code</string>
+    <string name="verification_email_address" tools:ignore="MissingTranslation">Verification email address</string>
+    <string name="no_verified_domains" tools:ignore="MissingTranslation">No verified domains.</string>
+    <string name="no_automatic_enrollment" tools:ignore="MissingTranslation">No automatic enrollment</string>
+    <string name="automatic_invitations" tools:ignore="MissingTranslation">Automatic invitations</string>
+    <string name="automatic_suggestions" tools:ignore="MissingTranslation">Automatic suggestions</string>
+    <string name="no_automatic_enrollment_description" tools:ignore="MissingTranslation">Users can only be invited manually to the organization.</string>
+    <string name="automatic_invitations_description" tools:ignore="MissingTranslation">Users are automatically invited to join the organization when they sign up and can join anytime.</string>
+    <string name="automatic_suggestions_description" tools:ignore="MissingTranslation">Users receive a suggestion to request to join, but must be approved by an admin before they are able to join the organization.</string>
+    <string name="organization_domain_needs_email_verification" tools:ignore="MissingTranslation">The domain %1$s needs to be verified via email.</string>
+    <string name="organization_domain_code_sent_to" tools:ignore="MissingTranslation">A verification code was sent to %1$s. Enter the code to continue.</string>
+    <string name="organization_domain_enrollment_description" tools:ignore="MissingTranslation">Choose how users from this domain can join the organization.</string>
+    <string name="delete_pending_invitations_and_suggestions" tools:ignore="MissingTranslation">Delete pending invitations and suggestions</string>
+    <string name="organization_domain_will_be_removed" tools:ignore="MissingTranslation">The email domain %1$s will be removed.</string>
+    <string name="organization_domain_auto_join_removed" tools:ignore="MissingTranslation">Users won\'t be able to join the organization automatically after this.</string>
     <string name="leave_organization" tools:ignore="MissingTranslation">Leave organization</string>
     <string name="delete_organization" tools:ignore="MissingTranslation">Delete organization</string>
     <string name="edit_profile">Edit profile</string>

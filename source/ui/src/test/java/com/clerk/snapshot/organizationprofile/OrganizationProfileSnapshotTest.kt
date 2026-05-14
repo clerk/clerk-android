@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.clerk.api.network.model.userdata.PublicUserData
+import com.clerk.api.organizations.OrganizationDomain
 import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationMembershipRequest
@@ -18,6 +19,10 @@ import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRowPlacement
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileRow
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileRowIcon
+import com.clerk.ui.organizationprofile.domains.OrganizationVerifiedDomainsActions
+import com.clerk.ui.organizationprofile.domains.OrganizationVerifiedDomainsContent
+import com.clerk.ui.organizationprofile.domains.OrganizationVerifiedDomainsFlow
+import com.clerk.ui.organizationprofile.domains.OrganizationVerifiedDomainsState
 import com.clerk.ui.organizationprofile.members.OrganizationMembersActions
 import com.clerk.ui.organizationprofile.members.OrganizationMembersContent
 import com.clerk.ui.organizationprofile.members.OrganizationMembersState
@@ -188,6 +193,192 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     }
   }
 
+  @Test
+  fun organizationVerifiedDomainsLoading() {
+    paparazzi.snapshot {
+      DomainsSnapshotSurface {
+        OrganizationVerifiedDomainsContent(
+          state =
+            OrganizationVerifiedDomainsState(
+              domainsEnabled = true,
+              canReadDomains = true,
+              canManageDomains = true,
+              isLoadingInitial = true,
+            ),
+          actions = noOpDomainActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationVerifiedDomainsList() {
+    paparazzi.snapshot {
+      DomainsSnapshotSurface {
+        OrganizationVerifiedDomainsContent(
+          state =
+            OrganizationVerifiedDomainsState(
+              domainsEnabled = true,
+              canReadDomains = true,
+              canManageDomains = true,
+              domains =
+                listOf(
+                  sampleDomain("dom_1", "example.com"),
+                  sampleDomain(
+                    "dom_2",
+                    "pending.example.com",
+                    verified = false,
+                    enrollmentMode = "automatic_invitation",
+                  ),
+                ),
+              totalCount = 2,
+            ),
+          actions = noOpDomainActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationVerifiedDomainsEmptyState() {
+    paparazzi.snapshot {
+      DomainsSnapshotSurface {
+        OrganizationVerifiedDomainsContent(
+          state =
+            OrganizationVerifiedDomainsState(
+              domainsEnabled = true,
+              canReadDomains = true,
+              canManageDomains = false,
+            ),
+          actions = noOpDomainActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationVerifiedDomainsAddDomain() {
+    paparazzi.snapshot {
+      DomainsSnapshotSurface {
+        OrganizationVerifiedDomainsContent(
+          state =
+            OrganizationVerifiedDomainsState(
+              domainsEnabled = true,
+              canReadDomains = true,
+              canManageDomains = true,
+              flow = OrganizationVerifiedDomainsFlow.AddDomain,
+              domainName = "example.com",
+            ),
+          actions = noOpDomainActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationVerifiedDomainsVerifyEmail() {
+    val domain = sampleDomain("dom_1", "example.com", verified = false)
+    paparazzi.snapshot {
+      DomainsSnapshotSurface {
+        OrganizationVerifiedDomainsContent(
+          state =
+            OrganizationVerifiedDomainsState(
+              domainsEnabled = true,
+              canReadDomains = true,
+              canManageDomains = true,
+              flow = OrganizationVerifiedDomainsFlow.VerifyEmail(domain),
+              affiliationEmailLocalPart = "admin",
+            ),
+          actions = noOpDomainActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationVerifiedDomainsVerifyCode() {
+    val domain = sampleDomain("dom_1", "example.com", verified = false)
+    paparazzi.snapshot {
+      DomainsSnapshotSurface {
+        OrganizationVerifiedDomainsContent(
+          state =
+            OrganizationVerifiedDomainsState(
+              domainsEnabled = true,
+              canReadDomains = true,
+              canManageDomains = true,
+              flow =
+                OrganizationVerifiedDomainsFlow.VerifyCode(
+                  domain = domain,
+                  emailAddress = "admin@example.com",
+                ),
+              verificationCode = "123456",
+            ),
+          actions = noOpDomainActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationVerifiedDomainsEnrollmentMode() {
+    val domain = sampleDomain("dom_1", "example.com", enrollmentMode = "automatic_suggestion")
+    paparazzi.snapshot {
+      DomainsSnapshotSurface {
+        OrganizationVerifiedDomainsContent(
+          state =
+            OrganizationVerifiedDomainsState(
+              domainsEnabled = true,
+              canReadDomains = true,
+              canManageDomains = true,
+              flow = OrganizationVerifiedDomainsFlow.EnrollmentMode(domain),
+              selectedEnrollmentMode = OrganizationDomain.EnrollmentMode.ManualInvitation,
+              deletePending = true,
+            ),
+          actions = noOpDomainActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationVerifiedDomainsDeleteConfirmation() {
+    val domain = sampleDomain("dom_1", "example.com")
+    paparazzi.snapshot {
+      DomainsSnapshotSurface {
+        OrganizationVerifiedDomainsContent(
+          state =
+            OrganizationVerifiedDomainsState(
+              domainsEnabled = true,
+              canReadDomains = true,
+              canManageDomains = true,
+              flow = OrganizationVerifiedDomainsFlow.DeleteDomain(domain),
+            ),
+          actions = noOpDomainActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationVerifiedDomainsErrorState() {
+    paparazzi.snapshot {
+      DomainsSnapshotSurface {
+        OrganizationVerifiedDomainsContent(
+          state =
+            OrganizationVerifiedDomainsState(
+              domainsEnabled = true,
+              canReadDomains = true,
+              canManageDomains = true,
+              flow = OrganizationVerifiedDomainsFlow.AddDomain,
+              domainName = "example.com",
+              errorMessage = "Unable to add domain",
+            ),
+          actions = noOpDomainActions,
+        )
+      }
+    }
+  }
+
   private val allMembersTabs =
     listOf(
       OrganizationMembersTab.Members,
@@ -236,14 +427,27 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
       onRejectRequest = {},
     )
 
-  @Composable
-  private fun MembersSnapshotSurface(content: @Composable () -> Unit) {
-    ClerkMaterialTheme {
-      Box(modifier = Modifier.size(740.dp).background(ClerkMaterialTheme.colors.background)) {
-        content()
-      }
-    }
-  }
+  private val noOpDomainActions =
+    OrganizationVerifiedDomainsActions(
+      onRetry = {},
+      onLoadMore = {},
+      onShowAddDomain = {},
+      onShowVerifyEmail = {},
+      onShowEnrollmentMode = {},
+      onShowDeleteDomain = {},
+      onDismissFlow = {},
+      onDomainNameChanged = {},
+      onCreateDomain = {},
+      onAffiliationEmailLocalPartChanged = {},
+      onSendAffiliationEmail = {},
+      onVerificationCodeChanged = {},
+      onVerifyCode = {},
+      onResendVerificationCode = { _, _ -> },
+      onSelectEnrollmentMode = {},
+      onDeletePendingChanged = {},
+      onUpdateEnrollmentMode = {},
+      onDeleteDomain = {},
+    )
 
   private fun sampleMember(
     id: String,
@@ -287,6 +491,32 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     )
   }
 
+  private fun sampleDomain(
+    id: String,
+    name: String,
+    verified: Boolean = true,
+    enrollmentMode: String = "manual_invitation",
+  ): OrganizationDomain {
+    return OrganizationDomain(
+      id = id,
+      name = name,
+      organizationId = "org_acme",
+      enrollmentMode = enrollmentMode,
+      verification =
+        OrganizationDomain.Verification(
+          status = if (verified) "verified" else "unverified",
+          strategy = "email_code",
+          attempts = 0,
+          expireAt = null,
+        ),
+      affiliationEmailAddress = null,
+      totalPendingInvitations = 0,
+      createdAt = 1,
+      updatedAt = 1,
+      totalPendingSuggestions = 0,
+    )
+  }
+
   private fun samplePublicUserData(
     id: String,
     firstName: String,
@@ -300,5 +530,23 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
       identifier = "${firstName.lowercase()}@example.com",
       userId = "user_$id",
     )
+  }
+}
+
+@Composable
+private fun MembersSnapshotSurface(content: @Composable () -> Unit) {
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.size(740.dp).background(ClerkMaterialTheme.colors.background)) {
+      content()
+    }
+  }
+}
+
+@Composable
+private fun DomainsSnapshotSurface(content: @Composable () -> Unit) {
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.size(740.dp).background(ClerkMaterialTheme.colors.background)) {
+      content()
+    }
   }
 }
