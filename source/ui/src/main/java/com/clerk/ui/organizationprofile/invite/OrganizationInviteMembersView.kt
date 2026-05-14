@@ -44,6 +44,7 @@ import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.Role
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
@@ -192,6 +193,11 @@ private fun InviteMembersContent(
         !state.isSubmitting &&
         state.selectedRoleKey != null &&
         parseInviteEmailAddresses(emailInput).isNotEmpty(),
+    icons =
+      ClerkButtonDefaults.icons(
+        trailingIcon = R.drawable.ic_arrow_right,
+        trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+      ),
     onClick = onSendInvitations,
   )
 }
