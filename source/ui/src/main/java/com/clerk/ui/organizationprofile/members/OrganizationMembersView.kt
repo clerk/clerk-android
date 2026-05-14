@@ -352,6 +352,7 @@ private fun OrganizationMembersTabs(
         onClick = { onSelectTab(tab) },
         shape = SegmentedButtonDefaults.itemShape(index = index, count = availableTabs.size),
         colors = colors,
+        icon = {},
         label = { Text(text = tab.label(), maxLines = 1, overflow = TextOverflow.Ellipsis) },
       )
     }
