@@ -58,7 +58,11 @@
     <string name="send_invitations" tools:ignore="MissingTranslation">Send invitations</string>
     <string name="invitations" tools:ignore="MissingTranslation">Invitations</string>
     <string name="requests" tools:ignore="MissingTranslation">Requests</string>
+    <string name="search" tools:ignore="MissingTranslation">Search</string>
     <string name="search_members" tools:ignore="MissingTranslation">Search members</string>
+    <string name="you" tools:ignore="MissingTranslation">You</string>
+    <string name="joined_date" tools:ignore="MissingTranslation">Joined %1$s</string>
+    <string name="member_role_joined" tools:ignore="MissingTranslation">%1$s &#183; %2$s</string>
     <string name="no_members_sections_available" tools:ignore="MissingTranslation">No members sections are available.</string>
     <string name="no_members_found" tools:ignore="MissingTranslation">No members found.</string>
     <string name="no_pending_invitations" tools:ignore="MissingTranslation">No pending invitations.</string>

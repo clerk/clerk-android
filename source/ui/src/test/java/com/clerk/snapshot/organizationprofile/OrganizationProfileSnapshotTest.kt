@@ -535,7 +535,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
       permissions = emptyList(),
       publicUserData = samplePublicUserData(id, firstName, lastName),
       organization = previewOrganizationProfileOrganization(),
-      createdAt = 1,
+      createdAt = SAMPLE_JOINED_AT,
       updatedAt = 1,
     )
   }
@@ -605,6 +605,8 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     )
   }
 }
+
+private const val SAMPLE_JOINED_AT = 1746446400000L
 
 @Composable
 private fun MembersSnapshotSurface(content: @Composable () -> Unit) {

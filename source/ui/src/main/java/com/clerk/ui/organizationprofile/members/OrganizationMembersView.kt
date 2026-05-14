@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,8 +58,10 @@ import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.input.ClerkTextField
@@ -65,6 +69,9 @@ import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -131,13 +138,14 @@ internal fun OrganizationMembersContent(
 ) {
   LazyColumn(
     modifier = modifier.fillMaxSize(),
-    contentPadding = PaddingValues(horizontal = dp18, vertical = dp16),
+    contentPadding = PaddingValues(vertical = dp16),
     verticalArrangement = Arrangement.spacedBy(dp16),
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
     if (state.availableTabs.size > 1) {
       item {
         OrganizationMembersTabs(
+          modifier = Modifier.fillMaxWidth().padding(horizontal = dp18),
           availableTabs = state.availableTabs,
           selectedTab = state.selectedTab,
           onSelectTab = actions.onSelectTab,
@@ -173,37 +181,49 @@ private fun LazyListScope.membersTab(
 ) {
   item {
     ClerkTextField(
-      modifier = Modifier.fillMaxWidth(),
+      modifier = Modifier.fillMaxWidth().padding(horizontal = dp18),
       value = state.memberQuery,
       onValueChange = actions.onMemberSearchChanged,
-      label = stringResource(R.string.search_members),
+      label = stringResource(R.string.search),
       leadingIcon = R.drawable.ic_search,
     )
   }
 
   if (state.hasRoleSetMigration) {
-    item { NoticeText(text = stringResource(R.string.role_set_migration_notice)) }
+    item {
+      NoticeText(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = dp18),
+        text = stringResource(R.string.role_set_migration_notice),
+      )
+    }
   }
 
   if (state.members.isEmpty()) {
-    item { EmptyState(text = stringResource(R.string.no_members_found)) }
+    item {
+      EmptyState(
+        modifier = Modifier.padding(horizontal = dp18),
+        text = stringResource(R.string.no_members_found),
+      )
+    }
   } else {
-    items(state.members, key = { it.id }) { membership ->
-      MemberRow(
-        membership = membership,
-        roles = state.roles,
+    item {
+      MemberList(
+        members = state.members,
+        viewerMembership = viewerMembership,
         canManage = viewerMembership?.canManageMemberships == true,
-        roleEditingEnabled = !state.hasRoleSetMigration,
-        isLoading = state.activeMutationId == membership.id,
-        onUpdateRole = { role -> actions.onUpdateMemberRole(membership, role) },
-        onRemove = { actions.onRemoveMember(membership) },
+        activeMutationId = state.activeMutationId,
+        onRemoveMember = actions.onRemoveMember,
       )
     }
   }
 
   if (state.membersHasNextPage) {
     item {
-      LoadMoreButton(isLoading = state.isLoadingMoreMembers, onClick = actions.onLoadMoreMembers)
+      LoadMoreButton(
+        modifier = Modifier.padding(horizontal = dp18),
+        isLoading = state.isLoadingMoreMembers,
+        onClick = actions.onLoadMoreMembers,
+      )
     }
   }
 }
@@ -213,13 +233,26 @@ private fun LazyListScope.invitationsTab(
   state: OrganizationMembersState,
   actions: OrganizationMembersActions,
 ) {
-  item { InviteMembersComposer(organization = organization, state = state, actions = actions) }
+  item {
+    InviteMembersComposer(
+      modifier = Modifier.padding(horizontal = dp18),
+      organization = organization,
+      state = state,
+      actions = actions,
+    )
+  }
 
   if (state.invitations.isEmpty()) {
-    item { EmptyState(text = stringResource(R.string.no_pending_invitations)) }
+    item {
+      EmptyState(
+        modifier = Modifier.padding(horizontal = dp18),
+        text = stringResource(R.string.no_pending_invitations),
+      )
+    }
   } else {
     items(state.invitations, key = { it.id }) { invitation ->
       InvitationRow(
+        modifier = Modifier.padding(horizontal = dp18),
         invitation = invitation,
         isLoading = state.activeMutationId == invitation.id,
         onRevoke = { actions.onRevokeInvitation(invitation) },
@@ -230,6 +263,7 @@ private fun LazyListScope.invitationsTab(
   if (state.invitationsHasNextPage) {
     item {
       LoadMoreButton(
+        modifier = Modifier.padding(horizontal = dp18),
         isLoading = state.isLoadingMoreInvitations,
         onClick = actions.onLoadMoreInvitations,
       )
@@ -242,10 +276,16 @@ private fun LazyListScope.requestsTab(
   actions: OrganizationMembersActions,
 ) {
   if (state.requests.isEmpty()) {
-    item { EmptyState(text = stringResource(R.string.no_membership_requests)) }
+    item {
+      EmptyState(
+        modifier = Modifier.padding(horizontal = dp18),
+        text = stringResource(R.string.no_membership_requests),
+      )
+    }
   } else {
     items(state.requests, key = { it.id }) { request ->
       MembershipRequestRow(
+        modifier = Modifier.padding(horizontal = dp18),
         request = request,
         isLoading = state.activeMutationId == request.id,
         onAccept = { actions.onAcceptRequest(request) },
@@ -256,18 +296,23 @@ private fun LazyListScope.requestsTab(
 
   if (state.requestsHasNextPage) {
     item {
-      LoadMoreButton(isLoading = state.isLoadingMoreRequests, onClick = actions.onLoadMoreRequests)
+      LoadMoreButton(
+        modifier = Modifier.padding(horizontal = dp18),
+        isLoading = state.isLoadingMoreRequests,
+        onClick = actions.onLoadMoreRequests,
+      )
     }
   }
 }
 
 @Composable
 private fun OrganizationMembersTabs(
+  modifier: Modifier = Modifier,
   availableTabs: List<OrganizationMembersTab>,
   selectedTab: OrganizationMembersTab?,
   onSelectTab: (OrganizationMembersTab) -> Unit,
 ) {
-  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(dp8)) {
+  Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(dp8)) {
     availableTabs.forEach { tab ->
       val selected = tab == selectedTab
       Surface(
@@ -294,57 +339,131 @@ private fun OrganizationMembersTabs(
 }
 
 @Composable
-private fun MemberRow(
-  membership: OrganizationMembership,
-  roles: List<Role>,
+private fun MemberList(
+  members: List<OrganizationMembership>,
+  viewerMembership: OrganizationMembership?,
   canManage: Boolean,
-  roleEditingEnabled: Boolean,
-  isLoading: Boolean,
-  onUpdateRole: (String) -> Unit,
-  onRemove: () -> Unit,
+  activeMutationId: String?,
+  onRemoveMember: (OrganizationMembership) -> Unit,
 ) {
-  ListCard {
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(dp12),
-    ) {
-      UserAvatar(publicUserData = membership.publicUserData)
-      Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(dp4)) {
-        Text(
-          text = membership.publicUserData.displayName(),
-          style = ClerkMaterialTheme.typography.bodyMedium.withMediumWeight(),
-          color = ClerkMaterialTheme.colors.foreground,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-          text = membership.publicUserData?.identifier.orEmpty(),
-          style = ClerkMaterialTheme.typography.bodySmall,
-          color = ClerkMaterialTheme.colors.mutedForeground,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        if (canManage && roleEditingEnabled && roles.isNotEmpty()) {
-          RoleDropdown(
-            roles = roles,
-            selectedRoleKey = membership.role,
-            enabled = !isLoading,
-            onSelectRole = onUpdateRole,
-          )
-        } else {
-          Text(
-            text = membership.roleName.ifBlank { membership.role },
-            style = ClerkMaterialTheme.typography.bodySmall,
-            color = ClerkMaterialTheme.colors.mutedForeground,
-          )
-        }
-      }
-      if (canManage) {
-        MemberMoreMenu(enabled = !isLoading, onRemove = onRemove)
-      }
+  Column(modifier = Modifier.fillMaxWidth()) {
+    members.forEachIndexed { index, membership ->
+      MemberRow(
+        membership = membership,
+        isViewer = membership.isSameMembership(viewerMembership),
+        canManage = canManage,
+        showTopDivider = index == 0,
+        isLoading = activeMutationId == membership.id,
+        onRemove = { onRemoveMember(membership) },
+      )
     }
   }
+}
+
+@Composable
+private fun MemberRow(
+  membership: OrganizationMembership,
+  isViewer: Boolean,
+  canManage: Boolean,
+  showTopDivider: Boolean,
+  isLoading: Boolean,
+  onRemove: () -> Unit,
+) {
+  Surface(modifier = Modifier.fillMaxWidth(), color = ClerkMaterialTheme.colors.background) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+      if (showTopDivider) MemberDivider()
+      Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = dp24, vertical = dp16),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(dp16),
+      ) {
+        MemberAvatar(publicUserData = membership.publicUserData)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(dp4)) {
+          if (isViewer) {
+            CurrentMemberBadge()
+          }
+          Text(
+            text = membership.publicUserData.displayName(),
+            style = ClerkMaterialTheme.typography.bodyLarge,
+            color = ClerkMaterialTheme.colors.foreground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+          MemberDetails(membership = membership, isViewer = isViewer)
+        }
+        if (canManage) {
+          MemberMoreMenu(enabled = !isLoading, onRemove = onRemove)
+        }
+      }
+      MemberDivider()
+    }
+  }
+}
+
+@Composable
+private fun CurrentMemberBadge() {
+  Surface(
+    shape = ClerkMaterialTheme.shape,
+    color = ClerkMaterialTheme.colors.background,
+    border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.buttonBorder),
+  ) {
+    Text(
+      modifier = Modifier.padding(horizontal = dp6),
+      text = stringResource(R.string.you),
+      style = ClerkMaterialTheme.typography.bodySmall,
+      color = ClerkMaterialTheme.colors.mutedForeground,
+      maxLines = 1,
+    )
+  }
+}
+
+@Composable
+private fun MemberDetails(membership: OrganizationMembership, isViewer: Boolean) {
+  val identifier = membership.publicUserData?.identifier.orEmpty()
+  val joinedLabel =
+    stringResource(R.string.joined_date, formattedMembershipDate(membership.createdAt))
+  if (identifier.isNotBlank()) {
+    MemberDetailText(text = identifier)
+  }
+
+  if (isViewer) {
+    MemberDetailText(
+      text = stringResource(R.string.member_role_joined, membership.displayRole(), joinedLabel),
+      useSmallText = true,
+    )
+  } else {
+    MemberDetailText(text = membership.displayRole())
+    MemberDetailText(text = joinedLabel)
+  }
+}
+
+@Composable
+private fun MemberDetailText(text: String, useSmallText: Boolean = false) {
+  Text(
+    text = text,
+    style =
+      if (useSmallText) ClerkMaterialTheme.typography.bodySmall
+      else ClerkMaterialTheme.typography.bodyMedium,
+    color = ClerkMaterialTheme.colors.mutedForeground,
+    maxLines = 1,
+    overflow = TextOverflow.Ellipsis,
+  )
+}
+
+@Composable
+private fun MemberDivider() {
+  HorizontalDivider(color = ClerkMaterialTheme.computedColors.border.copy(alpha = 0.06f))
+}
+
+@Composable
+private fun MemberAvatar(publicUserData: PublicUserData?) {
+  AvatarView(
+    imageUrl = publicUserData?.imageUrl?.takeIf { it.isNotBlank() },
+    size = AvatarSize.MEDIUM,
+    shape = CircleShape,
+    avatarType = AvatarType.USER,
+    modifier = Modifier.size(dp36),
+  )
 }
 
 @Composable
@@ -352,11 +471,12 @@ private fun InviteMembersComposer(
   organization: Organization,
   state: OrganizationMembersState,
   actions: OrganizationMembersActions,
+  modifier: Modifier = Modifier,
 ) {
   var emailInput by rememberSaveable { mutableStateOf("") }
   val limitExceeded = state.inviteWouldExceedMembershipLimit(organization)
 
-  ListCard {
+  ListCard(modifier = modifier) {
     Column(verticalArrangement = Arrangement.spacedBy(dp12)) {
       Text(
         text = stringResource(R.string.invite_new_members),
@@ -456,8 +576,9 @@ private fun InvitationRow(
   invitation: OrganizationInvitation,
   isLoading: Boolean,
   onRevoke: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-  ListCard {
+  ListCard(modifier = modifier) {
     Row(
       modifier = Modifier.fillMaxWidth(),
       verticalAlignment = Alignment.CenterVertically,
@@ -501,8 +622,9 @@ private fun MembershipRequestRow(
   isLoading: Boolean,
   onAccept: () -> Unit,
   onReject: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-  ListCard {
+  ListCard(modifier = modifier) {
     Column(verticalArrangement = Arrangement.spacedBy(dp12)) {
       Row(
         modifier = Modifier.fillMaxWidth(),
@@ -608,9 +730,9 @@ private fun MemberMoreMenu(enabled: Boolean, onRemove: () -> Unit) {
 }
 
 @Composable
-private fun LoadMoreButton(isLoading: Boolean, onClick: () -> Unit) {
+private fun LoadMoreButton(isLoading: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
   ClerkButton(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth(),
     text = stringResource(R.string.load_more),
     isLoading = isLoading,
     configuration =
@@ -627,9 +749,9 @@ private fun LoadingState() {
 }
 
 @Composable
-private fun EmptyState(text: String) {
+private fun EmptyState(text: String, modifier: Modifier = Modifier) {
   Text(
-    modifier = Modifier.fillMaxWidth().padding(vertical = dp24),
+    modifier = modifier.fillMaxWidth().padding(vertical = dp24),
     text = text,
     style = ClerkMaterialTheme.typography.bodyMedium,
     color = ClerkMaterialTheme.colors.mutedForeground,
@@ -637,9 +759,9 @@ private fun EmptyState(text: String) {
 }
 
 @Composable
-private fun NoticeText(text: String) {
+private fun NoticeText(text: String, modifier: Modifier = Modifier) {
   Surface(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth(),
     shape = ClerkMaterialTheme.shape,
     color = ClerkMaterialTheme.colors.warning.copy(alpha = 0.08f),
     border = BorderStroke(dp1, ClerkMaterialTheme.colors.warning.copy(alpha = 0.2f)),
@@ -654,9 +776,9 @@ private fun NoticeText(text: String) {
 }
 
 @Composable
-private fun ListCard(content: @Composable () -> Unit) {
+private fun ListCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
   Surface(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth(),
     shape = ClerkMaterialTheme.shape,
     color = ClerkMaterialTheme.colors.background,
     border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.border),
@@ -691,6 +813,20 @@ private fun OrganizationMembersTab.label(): String {
 private fun PublicUserData?.displayName(): String {
   if (this == null) return ""
   return listOfNotNull(firstName, lastName).joinToString(" ").ifBlank { identifier }
+}
+
+private fun OrganizationMembership.isSameMembership(other: OrganizationMembership?): Boolean {
+  if (other == null) return false
+  return id == other.id ||
+    publicUserData?.userId?.let { userId -> userId == other.publicUserData?.userId } == true
+}
+
+private fun OrganizationMembership.displayRole(): String {
+  return roleName.ifBlank { role }
+}
+
+private fun formattedMembershipDate(timestampMillis: Long): String {
+  return SimpleDateFormat("M/d/yyyy", Locale.getDefault()).format(Date(timestampMillis))
 }
 
 private enum class MemberAction {
