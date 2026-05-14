@@ -38,6 +38,7 @@ import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomNavigato
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRouteNavKey
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.custom.effectiveOrganizationProfileCustomRows
+import com.clerk.ui.organizationprofile.members.OrganizationMembersView
 import com.clerk.ui.organizationprofile.root.OrganizationProfileAction
 import com.clerk.ui.organizationprofile.root.OrganizationProfileRootView
 import com.clerk.ui.organizationprofile.update.OrganizationProfileUpdateProfileView
@@ -214,8 +215,9 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   }
 
   entry<OrganizationProfileDestination.Members> {
-    OrganizationProfilePlaceholderView(
-      title = stringResource(R.string.members),
+    OrganizationMembersView(
+      organization = organization,
+      membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
     )
   }
