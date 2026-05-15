@@ -101,7 +101,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          organization = previewOrganizationProfileOrganization(),
           viewerMembership = previewOrganizationProfileMembership(),
           state =
             OrganizationMembersState(
@@ -120,7 +119,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          organization = previewOrganizationProfileOrganization(),
           viewerMembership = previewOrganizationProfileMembership(),
           state =
             OrganizationMembersState(
@@ -141,15 +139,12 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          organization = previewOrganizationProfileOrganization(),
           viewerMembership = previewOrganizationProfileMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
               selectedTab = OrganizationMembersTab.Invitations,
               roles = sampleRoles,
-              selectedInviteRoleKey = "org:member",
-              inviteEmails = listOf("new@example.com"),
               invitations = listOf(sampleInvitation("inv_1")),
               invitationsTotalCount = 1,
             ),
@@ -164,7 +159,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          organization = previewOrganizationProfileOrganization(),
           viewerMembership = previewOrganizationProfileMembership(),
           state =
             OrganizationMembersState(
@@ -184,7 +178,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          organization = previewOrganizationProfileOrganization(),
           viewerMembership = previewOrganizationProfileMembership(),
           state =
             OrganizationMembersState(
@@ -483,10 +476,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
       onLoadMoreMembers = {},
       onLoadMoreInvitations = {},
       onLoadMoreRequests = {},
-      onSelectInviteRole = {},
-      onInviteInputSubmitted = {},
-      onRemoveInviteEmail = {},
-      onSendInvitations = {},
       onUpdateMemberRole = { _, _ -> },
       onRemoveMember = {},
       onRevokeInvitation = {},

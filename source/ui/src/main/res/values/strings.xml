@@ -49,6 +49,7 @@
     <string name="upload_logo">Upload logo</string>
     <string name="remove_logo" tools:ignore="MissingTranslation">Remove logo</string>
     <string name="recommended_logo_size">Recommended size 1:1, up to 10MB.</string>
+    <string name="invite" tools:ignore="MissingTranslation">Invite</string>
     <string name="invite_new_members" tools:ignore="MissingTranslation">Invite new members</string>
     <string name="enter_or_paste_email_addresses" tools:ignore="MissingTranslation">Enter or paste one or more email addresses, separated by spaces or commas.</string>
     <string name="enter_email_addresses" tools:ignore="MissingTranslation">Enter email addresses</string>

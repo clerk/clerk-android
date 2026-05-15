@@ -37,6 +37,7 @@ internal fun ClerkThemedProfileScaffold(
   horizontalPadding: Dp = dp18,
   backgroundColor: Color? = null,
   bottomContent: (@Composable () -> Unit)? = null,
+  trailingContent: (@Composable () -> Unit)? = null,
   clerkTheme: ClerkTheme? = null,
   content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -60,6 +61,7 @@ internal fun ClerkThemedProfileScaffold(
           title = title,
           onBackPressed = onBackPressed,
           clerkTheme = clerkTheme,
+          trailingContent = trailingContent,
         )
       },
     ) { innerPadding ->

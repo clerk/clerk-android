@@ -14,7 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,6 +41,7 @@ import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRouteNav
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.custom.effectiveOrganizationProfileCustomRows
 import com.clerk.ui.organizationprofile.domains.OrganizationVerifiedDomainsView
+import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
 import com.clerk.ui.organizationprofile.members.OrganizationMembersView
 import com.clerk.ui.organizationprofile.root.OrganizationProfileAction
 import com.clerk.ui.organizationprofile.root.OrganizationProfileRootView
@@ -121,6 +124,8 @@ private fun OrganizationProfileNavDisplay(
   modifier: Modifier = Modifier,
   onDismiss: () -> Unit,
 ) {
+  var membersRefreshKey by remember { mutableIntStateOf(0) }
+
   NavDisplay(
     modifier = modifier,
     backStack = backStack,
@@ -147,6 +152,8 @@ private fun OrganizationProfileNavDisplay(
           membership = membership,
           isDismissable = isDismissable,
           onDismiss = onDismiss,
+          membersRefreshKey = membersRefreshKey,
+          onInviteMembersComplete = { membersRefreshKey += 1 },
           customRows = customRows,
           customDestination = customDestination,
         )
@@ -189,6 +196,8 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   membership: OrganizationMembership?,
   isDismissable: Boolean,
   onDismiss: () -> Unit,
+  membersRefreshKey: Int,
+  onInviteMembersComplete: () -> Unit,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
 ) {
@@ -220,6 +229,18 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
       organization = organization,
       membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
+      refreshKey = membersRefreshKey,
+      onInviteMembers = { backStack.add(OrganizationProfileDestination.InviteMembers) },
+    )
+  }
+
+  entry<OrganizationProfileDestination.InviteMembers> {
+    OrganizationInviteMembersView(
+      organization = organization,
+      onComplete = {
+        onInviteMembersComplete()
+        backStack.removeLastOrNull()
+      },
     )
   }
 
@@ -299,6 +320,8 @@ internal sealed interface OrganizationProfileDestination : NavKey {
   @Serializable data object Root : OrganizationProfileDestination
 
   @Serializable data object Members : OrganizationProfileDestination
+
+  @Serializable data object InviteMembers : OrganizationProfileDestination
 
   @Serializable data object VerifiedDomains : OrganizationProfileDestination
 
