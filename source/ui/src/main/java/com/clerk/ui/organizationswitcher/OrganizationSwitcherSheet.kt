@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList")
+
 package com.clerk.ui.organizationswitcher
 
 import androidx.compose.foundation.BorderStroke
@@ -5,10 +7,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,38 +34,43 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.user.User
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
-import com.clerk.ui.core.button.standard.ClerkButton
-import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
-import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
-import com.clerk.ui.core.dimens.dp14
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
-import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp36
-import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp96
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.organizationlist.OrganizationAccountListActions
+import com.clerk.ui.organizationlist.OrganizationAccountListContent
+import com.clerk.ui.organizationlist.OrganizationAccountListState
 import com.clerk.ui.theme.ClerkMaterialTheme
-import kotlinx.collections.immutable.ImmutableList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun OrganizationSwitcherSheet(
-  state: OrganizationSwitcherState,
-  memberships: ImmutableList<OrganizationMembership>,
+  destination: OrganizationSwitcherSheetDestination,
+  state: OrganizationAccountListState,
+  user: User?,
+  activeMembership: OrganizationMembership?,
   activeOrganizationId: String?,
+  showPersonalAccount: Boolean,
+  showCreateOrganization: Boolean,
   onDismiss: () -> Unit,
-  actions: OrganizationSwitcherSheetActions,
+  onShowAccountList: () -> Unit,
+  onManageOrganization: ((OrganizationMembership) -> Unit)?,
+  onErrorShown: () -> Unit,
+  actions: OrganizationAccountListActions,
 ) {
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   ModalBottomSheet(
@@ -70,59 +79,137 @@ internal fun OrganizationSwitcherSheet(
     containerColor = ClerkMaterialTheme.colors.background,
     contentColor = ClerkMaterialTheme.colors.foreground,
   ) {
-    OrganizationSwitcherSheetContent(
-      state = state,
-      memberships = memberships,
-      activeOrganizationId = activeOrganizationId,
-      actions = actions,
-    )
+    when (destination) {
+      OrganizationSwitcherSheetDestination.Overview -> {
+        if (activeMembership == null) {
+          OrganizationSwitcherAccountListSheetContent(
+            state = state,
+            user = user,
+            activeOrganizationId = activeOrganizationId,
+            showPersonalAccount = showPersonalAccount,
+            showCreateOrganization = showCreateOrganization,
+            actions = actions,
+            onErrorShown = onErrorShown,
+          )
+        } else {
+          OrganizationSwitcherOverviewSheetContent(
+            membership = activeMembership,
+            onManageOrganization =
+              onManageOrganization?.let { manageOrganization ->
+                { manageOrganization(activeMembership) }
+              },
+            onSwitchAccount = onShowAccountList,
+          )
+        }
+      }
+      OrganizationSwitcherSheetDestination.AccountList ->
+        OrganizationSwitcherAccountListSheetContent(
+          state = state,
+          user = user,
+          activeOrganizationId = activeOrganizationId,
+          showPersonalAccount = showPersonalAccount,
+          showCreateOrganization = showCreateOrganization,
+          actions = actions,
+          onErrorShown = onErrorShown,
+        )
+    }
   }
 }
 
 @Composable
-internal fun OrganizationSwitcherSheetContent(
-  state: OrganizationSwitcherState,
-  memberships: ImmutableList<OrganizationMembership>,
+internal fun OrganizationSwitcherOverviewSheetContent(
+  membership: OrganizationMembership,
+  onManageOrganization: (() -> Unit)?,
+  onSwitchAccount: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  Column(
+    modifier = modifier.fillMaxWidth().padding(horizontal = dp24),
+    horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
+    Spacer(modifier = Modifier.size(dp16))
+    OrganizationAvatar(
+      imageUrl = membership.organization.imageUrl,
+      shape = ClerkMaterialTheme.shape,
+      size = AvatarSize.X_LARGE,
+    )
+    Spacer(modifier = Modifier.size(dp16))
+    Text(
+      text = membership.organization.name,
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+      style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
+      color = ClerkMaterialTheme.colors.foreground,
+    )
+    Text(
+      text = membership.roleName,
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+      style = ClerkMaterialTheme.typography.bodyMedium,
+      color = ClerkMaterialTheme.colors.mutedForeground,
+    )
+    Spacer(modifier = Modifier.size(dp24))
+    onManageOrganization?.let {
+      OrganizationSwitcherActionRow(
+        text = stringResource(R.string.manage_organization),
+        icon = R.drawable.ic_cog,
+        onClick = it,
+      )
+      Spacer(modifier = Modifier.size(dp12))
+    }
+    OrganizationSwitcherActionRow(
+      text = stringResource(R.string.switch_account),
+      icon = R.drawable.ic_switch,
+      onClick = onSwitchAccount,
+    )
+    Spacer(modifier = Modifier.size(dp18))
+  }
+}
+
+@Composable
+internal fun OrganizationSwitcherAccountListSheetContent(
+  state: OrganizationAccountListState,
+  user: User?,
   activeOrganizationId: String?,
-  actions: OrganizationSwitcherSheetActions,
+  showPersonalAccount: Boolean,
+  showCreateOrganization: Boolean,
+  actions: OrganizationAccountListActions,
+  onErrorShown: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
   LaunchedEffect(state.errorMessage) {
     state.errorMessage?.let { errorMessage ->
       snackbarHostState.showSnackbar(errorMessage)
-      actions.onErrorShown()
+      onErrorShown()
     }
   }
 
-  Box(modifier = Modifier.fillMaxWidth()) {
+  Box(modifier = modifier.fillMaxWidth()) {
     Column(modifier = Modifier.fillMaxWidth()) {
-      Text(
-        modifier = Modifier.padding(horizontal = dp24, vertical = dp16),
-        text = stringResource(R.string.switch_organization),
-        style = ClerkMaterialTheme.typography.titleMedium.withMediumWeight(),
-        color = ClerkMaterialTheme.colors.foreground,
-      )
+      SheetTitle(text = stringResource(R.string.switch_account))
       HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
-
-      if (state.isLoading && memberships.isEmpty()) {
+      if (state.isLoading && !state.hasLoadedInitialResources) {
         Box(
-          modifier = Modifier.fillMaxWidth().padding(vertical = dp24),
+          modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp).padding(vertical = dp24),
           contentAlignment = Alignment.Center,
         ) {
           CircularProgressIndicator()
         }
       } else {
-        organizationSwitcherMemberships(memberships, activeOrganizationId).forEach { membership ->
-          OrganizationMembershipRow(
-            membership = membership,
-            isCurrent = membership.organization.id == activeOrganizationId,
-            isLoading = state.activeActionId == membership.organization.id,
-            enabled = state.activeActionId == null,
-            onClick = { actions.onSelect(membership.organization.id) },
-          )
-          HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
-        }
-        SheetFooter(state = state, onLoadMore = actions.onLoadMore)
+        OrganizationAccountListContent(
+          modifier = Modifier.fillMaxWidth().heightIn(max = 520.dp),
+          state = state,
+          user = user,
+          activeOrganizationId = activeOrganizationId,
+          header = null,
+          showPersonalAccount = showPersonalAccount,
+          showSelectedAccessory = true,
+          actions = actions,
+          contentPadding = PaddingValues(horizontal = dp16, vertical = dp16),
+          showSecuredByClerk = false,
+          showCreateOrganization = showCreateOrganization,
+        )
       }
     }
     Box(modifier = Modifier.align(Alignment.BottomCenter).padding(dp16)) {
@@ -132,79 +219,48 @@ internal fun OrganizationSwitcherSheetContent(
 }
 
 @Composable
-private fun SheetFooter(state: OrganizationSwitcherState, onLoadMore: () -> Unit) {
-  if (state.hasNextPage) {
-    Box(modifier = Modifier.fillMaxWidth().padding(dp16)) {
-      ClerkButton(
-        modifier = Modifier.fillMaxWidth(),
-        text = stringResource(R.string.load_more),
-        isLoading = state.isLoadingMore,
-        onClick = onLoadMore,
-        configuration =
-          ClerkButtonDefaults.configuration(
-            style = ClerkButtonConfiguration.ButtonStyle.Secondary,
-            emphasis = ClerkButtonConfiguration.Emphasis.High,
-          ),
-      )
-    }
-  } else {
-    Spacer(modifier = Modifier.size(dp18))
-  }
+private fun SheetTitle(text: String) {
+  Text(
+    modifier = Modifier.padding(horizontal = dp24, vertical = dp16),
+    text = text,
+    style = ClerkMaterialTheme.typography.titleMedium.withMediumWeight(),
+    color = ClerkMaterialTheme.colors.foreground,
+  )
 }
 
 @Composable
-private fun OrganizationMembershipRow(
-  membership: OrganizationMembership,
-  isCurrent: Boolean,
-  isLoading: Boolean,
-  enabled: Boolean,
-  onClick: () -> Unit,
-) {
-  Row(
-    modifier =
-      Modifier.fillMaxWidth()
-        .clickable(enabled = enabled && !isCurrent && !isLoading, onClick = onClick)
-        .padding(horizontal = dp24, vertical = dp14),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(dp12),
+private fun OrganizationSwitcherActionRow(text: String, icon: Int, onClick: () -> Unit) {
+  Surface(
+    modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+    shape = ClerkMaterialTheme.shape,
+    color = ClerkMaterialTheme.colors.background,
+    border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.border),
   ) {
-    OrganizationAvatar(
-      imageUrl = membership.organization.imageUrl,
-      shape = ClerkMaterialTheme.shape,
-      size = AvatarSize.LARGE,
-    )
-    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(dp4)) {
-      Text(
-        text = membership.organization.name,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
-        color = ClerkMaterialTheme.colors.foreground,
-      )
-      Text(
-        text = membership.roleName,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        style = ClerkMaterialTheme.typography.bodySmall,
-        color = ClerkMaterialTheme.colors.mutedForeground,
-      )
-    }
-    when {
-      isLoading -> CircularProgressIndicator(modifier = Modifier.size(dp24), strokeWidth = dp2)
-      isCurrent ->
+    Row(
+      modifier = Modifier.fillMaxWidth().padding(dp16),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(dp12),
+    ) {
+      Box(modifier = Modifier.size(dp36), contentAlignment = Alignment.Center) {
         Icon(
           modifier = Modifier.size(dp24),
-          painter = painterResource(R.drawable.ic_check),
-          contentDescription = stringResource(R.string.current_organization),
-          tint = ClerkMaterialTheme.colors.foreground,
-        )
-      else ->
-        Icon(
-          modifier = Modifier.size(dp24),
-          painter = painterResource(R.drawable.ic_chevron_right),
+          painter = painterResource(icon),
           contentDescription = null,
           tint = ClerkMaterialTheme.colors.mutedForeground,
         )
+      }
+      Text(
+        modifier = Modifier.weight(1f),
+        text = text,
+        style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
+        color = ClerkMaterialTheme.colors.foreground,
+      )
+      Icon(
+        modifier = Modifier.size(dp24),
+        painter = painterResource(R.drawable.ic_chevron_right),
+        contentDescription = null,
+        tint = ClerkMaterialTheme.colors.mutedForeground,
+      )
     }
   }
 }

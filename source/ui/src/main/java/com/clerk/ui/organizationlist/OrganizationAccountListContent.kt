@@ -81,6 +81,7 @@ internal fun OrganizationAccountListContent(
   modifier: Modifier = Modifier,
   contentPadding: PaddingValues = PaddingValues(horizontal = dp18, vertical = dp16),
   showSecuredByClerk: Boolean = true,
+  showCreateOrganization: Boolean = true,
 ) {
   LazyColumn(
     modifier = modifier.fillMaxSize(),
@@ -107,7 +108,11 @@ internal fun OrganizationAccountListContent(
     )
     invitationsSection(state = state, actions = actions)
     suggestionsSection(state = state, actions = actions)
-    createOrganizationSection(state = state, actions = actions)
+    createOrganizationSection(
+      state = state,
+      showCreateOrganization = showCreateOrganization,
+      actions = actions,
+    )
     securedByClerkSection(showSecuredByClerk = showSecuredByClerk)
   }
 }
@@ -233,11 +238,19 @@ private fun LazyListScope.suggestionsSection(
 
 private fun LazyListScope.createOrganizationSection(
   state: OrganizationAccountListState,
+  showCreateOrganization: Boolean,
   actions: OrganizationAccountListActions,
 ) {
-  if (state.hasLoadedInitialResources && !state.hasNextPage && state.canCreateOrganization) {
+  if (state.canShowCreateOrganization(showCreateOrganization)) {
     item { CreateOrganizationRow(onClick = actions.onCreateOrganization) }
   }
+}
+
+private fun OrganizationAccountListState.canShowCreateOrganization(
+  showCreateOrganization: Boolean
+): Boolean {
+  if (!showCreateOrganization) return false
+  return hasLoadedInitialResources && !hasNextPage && canCreateOrganization
 }
 
 private fun LazyListScope.securedByClerkSection(showSecuredByClerk: Boolean) {

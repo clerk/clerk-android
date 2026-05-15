@@ -8,8 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.organizationlist.OrganizationAccountListActions
+import com.clerk.ui.organizationlist.OrganizationAccountListState
 import com.clerk.ui.theme.ClerkMaterialTheme
-import kotlinx.collections.immutable.toImmutableList
 
 @PreviewLightDark
 @Composable
@@ -29,34 +30,50 @@ private fun OrganizationSwitcherButtonPreview() {
 private fun OrganizationSwitcherSheetContentPreview() {
   val memberships =
     listOf(
-        previewOrganizationMembership(
-          organizationId = "org_acme",
-          organizationName = "Acme Inc.",
-          roleName = "Admin",
-        ),
-        previewOrganizationMembership(
-          organizationId = "org_mosaic",
-          organizationName = "Mosaic Labs",
-          roleName = "Member",
-        ),
-        previewOrganizationMembership(
-          organizationId = "org_clerk",
-          organizationName = "Clerk",
-          roleName = "Owner",
-        ),
-      )
-      .toImmutableList()
+      previewOrganizationMembership(
+        organizationId = "org_acme",
+        organizationName = "Acme Inc.",
+        roleName = "Admin",
+      ),
+      previewOrganizationMembership(
+        organizationId = "org_mosaic",
+        organizationName = "Mosaic Labs",
+        roleName = "Member",
+      ),
+      previewOrganizationMembership(
+        organizationId = "org_clerk",
+        organizationName = "Clerk",
+        roleName = "Owner",
+      ),
+    )
 
   PreviewSurface {
-    OrganizationSwitcherSheetContent(
+    OrganizationSwitcherAccountListSheetContent(
       state =
-        OrganizationSwitcherState(
+        OrganizationAccountListState(
+          isLoading = false,
+          hasLoadedInitialResources = true,
           memberships = memberships,
           membershipsTotalCount = memberships.size,
         ),
-      memberships = memberships,
+      user = previewOrganizationSwitcherUser(),
       activeOrganizationId = "org_acme",
-      actions = OrganizationSwitcherSheetActions(onLoadMore = {}, onSelect = {}, onErrorShown = {}),
+      showPersonalAccount = true,
+      showCreateOrganization = true,
+      actions = previewOrganizationAccountListActions(),
+      onErrorShown = {},
+    )
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun OrganizationSwitcherOverviewSheetContentPreview() {
+  PreviewSurface {
+    OrganizationSwitcherOverviewSheetContent(
+      membership = previewOrganizationMembership(),
+      onManageOrganization = {},
+      onSwitchAccount = {},
     )
   }
 }
@@ -68,4 +85,18 @@ private fun PreviewSurface(content: @Composable () -> Unit) {
       content()
     }
   }
+}
+
+private fun previewOrganizationAccountListActions(): OrganizationAccountListActions {
+  return OrganizationAccountListActions(
+    onRetryInitialLoad = {},
+    onLoadMoreMemberships = {},
+    onLoadMoreInvitations = {},
+    onLoadMoreSuggestions = {},
+    onSelectPersonalAccount = {},
+    onSelectOrganization = {},
+    onAcceptInvitation = {},
+    onAcceptSuggestion = {},
+    onCreateOrganization = {},
+  )
 }

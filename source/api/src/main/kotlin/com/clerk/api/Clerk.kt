@@ -295,6 +295,14 @@ object Clerk {
         false
       }
 
+  val organizationIsEnabled: Boolean
+    get() =
+      if (::environment.isInitialized) {
+        environment.organizationSettings.enabled
+      } else {
+        false
+      }
+
   val organizationSelectionIsForced: Boolean
     get() =
       if (::environment.isInitialized) {

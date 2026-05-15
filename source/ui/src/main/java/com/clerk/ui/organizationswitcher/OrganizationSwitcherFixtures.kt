@@ -2,6 +2,7 @@ package com.clerk.ui.organizationswitcher
 
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.user.User
 import kotlinx.serialization.json.JsonNull
 
 internal fun previewOrganizationMembership(
@@ -27,6 +28,23 @@ internal fun previewOrganizationMembership(
         publicMetadata = JsonNull,
       ),
     createdAt = 1,
+    updatedAt = 1,
+  )
+}
+
+internal fun previewOrganizationSwitcherUser(): User {
+  return User(
+    id = "user_123",
+    firstName = "Ava",
+    lastName = "Stone",
+    username = "ava",
+    imageUrl = "",
+    hasImage = false,
+    passkeys = emptyList(),
+    passwordEnabled = true,
+    phoneNumbers = emptyList(),
+    totpEnabled = false,
+    twoFactorEnabled = false,
     updatedAt = 1,
   )
 }
