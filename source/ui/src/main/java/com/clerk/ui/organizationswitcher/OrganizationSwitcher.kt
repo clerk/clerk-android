@@ -31,8 +31,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,7 +58,6 @@ import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
-import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
 import com.clerk.ui.organizationlist.OrganizationAccountListViewModel
@@ -579,7 +580,13 @@ private fun NormalOrganizationSwitcherButton(
       text = content.label ?: stringResource(R.string.select_organization),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
-      style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
+      style =
+        ClerkMaterialTheme.typography.headlineLarge.copy(
+          fontSize = 34.sp,
+          lineHeight = 41.sp,
+          letterSpacing = 0.4.sp,
+          fontWeight = FontWeight.Bold,
+        ),
       color = ClerkMaterialTheme.colors.foreground,
     )
     if (isLoading) {
