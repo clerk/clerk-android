@@ -311,6 +311,14 @@ object Clerk {
         false
       }
 
+  val organizationDomainEnrollmentModes: List<String>
+    get() =
+      if (::environment.isInitialized) {
+        environment.organizationSettings.domains.enrollmentModes
+      } else {
+        emptyList()
+      }
+
   val organizationAdminDeleteIsEnabled: Boolean
     get() =
       if (::environment.isInitialized) {
