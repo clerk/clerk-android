@@ -4,11 +4,13 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.SessionApi
+import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
@@ -19,6 +21,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.take
@@ -125,6 +128,50 @@ class AuthTest {
     )
     coVerify(exactly = 1) { SignUp.authenticateWithGoogleOneTap() }
   }
+
+  @Test
+  fun `signInWithOtp email creates sign in with strategy without preparing first factor`() =
+    runTest {
+      val signInApi = mockk<SignInApi>(relaxed = true)
+      val createdSignIn = SignIn(id = "sign_in_123")
+      val createParams = slot<Map<String, String>>()
+      mockkObject(ClerkApi)
+      every { ClerkApi.signIn } returns signInApi
+      coEvery { signInApi.createSignIn(capture(createParams)) } returns
+        ClerkResult.success(createdSignIn)
+
+      val result = Auth().signInWithOtp { email = "user@example.com" }
+
+      assertTrue(result is ClerkResult.Success)
+      assertSame(createdSignIn, (result as ClerkResult.Success).value)
+      assertEquals("user@example.com", createParams.captured["identifier"])
+      assertEquals("email_code", createParams.captured["strategy"])
+      assertTrue(createParams.captured.containsKey("locale"))
+      coVerify(exactly = 1) { signInApi.createSignIn(any()) }
+      coVerify(exactly = 0) { signInApi.prepareSignInFirstFactor(any(), any()) }
+    }
+
+  @Test
+  fun `signInWithOtp phone creates sign in with strategy without preparing first factor`() =
+    runTest {
+      val signInApi = mockk<SignInApi>(relaxed = true)
+      val createdSignIn = SignIn(id = "sign_in_123")
+      val createParams = slot<Map<String, String>>()
+      mockkObject(ClerkApi)
+      every { ClerkApi.signIn } returns signInApi
+      coEvery { signInApi.createSignIn(capture(createParams)) } returns
+        ClerkResult.success(createdSignIn)
+
+      val result = Auth().signInWithOtp { phone = "+15555550123" }
+
+      assertTrue(result is ClerkResult.Success)
+      assertSame(createdSignIn, (result as ClerkResult.Success).value)
+      assertEquals("+15555550123", createParams.captured["identifier"])
+      assertEquals("phone_code", createParams.captured["strategy"])
+      assertTrue(createParams.captured.containsKey("locale"))
+      coVerify(exactly = 1) { signInApi.createSignIn(any()) }
+      coVerify(exactly = 0) { signInApi.prepareSignInFirstFactor(any(), any()) }
+    }
 
   @Test
   fun `sessions exposes all sessions on the current client`() {
