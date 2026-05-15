@@ -52,9 +52,24 @@
     <string name="invite_new_members" tools:ignore="MissingTranslation">Invite new members</string>
     <string name="enter_or_paste_email_addresses" tools:ignore="MissingTranslation">Enter or paste one or more email addresses, separated by spaces or commas.</string>
     <string name="enter_email_addresses" tools:ignore="MissingTranslation">Enter email addresses</string>
+    <string name="add" tools:ignore="MissingTranslation">Add</string>
     <string name="role" tools:ignore="MissingTranslation">Role</string>
     <string name="no_roles_available" tools:ignore="MissingTranslation">No roles available</string>
     <string name="send_invitations" tools:ignore="MissingTranslation">Send invitations</string>
+    <string name="invitations" tools:ignore="MissingTranslation">Invitations</string>
+    <string name="requests" tools:ignore="MissingTranslation">Requests</string>
+    <string name="search_members" tools:ignore="MissingTranslation">Search members</string>
+    <string name="no_members_sections_available" tools:ignore="MissingTranslation">No members sections are available.</string>
+    <string name="no_members_found" tools:ignore="MissingTranslation">No members found.</string>
+    <string name="no_pending_invitations" tools:ignore="MissingTranslation">No pending invitations.</string>
+    <string name="no_membership_requests" tools:ignore="MissingTranslation">No membership requests.</string>
+    <string name="role_set_migration_notice" tools:ignore="MissingTranslation">Role editing is temporarily unavailable while roles are migrating.</string>
+    <string name="membership_slots_remaining" tools:ignore="MissingTranslation">%1$d membership slots remaining.</string>
+    <string name="invite_limit_exceeded" tools:ignore="MissingTranslation">Inviting these members would exceed the organization membership limit.</string>
+    <string name="remove_member" tools:ignore="MissingTranslation">Remove member</string>
+    <string name="revoke_invitation" tools:ignore="MissingTranslation">Revoke invitation</string>
+    <string name="accept" tools:ignore="MissingTranslation">Accept</string>
+    <string name="reject" tools:ignore="MissingTranslation">Reject</string>
     <string name="join">Join</string>
     <string name="request_to_join">Request to join</string>
     <string name="pending_approval">Pending approval</string>
