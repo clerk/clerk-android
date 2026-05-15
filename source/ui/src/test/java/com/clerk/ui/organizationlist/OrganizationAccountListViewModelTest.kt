@@ -206,6 +206,36 @@ class OrganizationAccountListViewModelTest {
   }
 
   @Test
+  fun `accepted invitation does not count toward next pending invitation offset`() = runTest {
+    val user = user()
+    val pending = invitation("inv_1", organizationId = "org_invited")
+    val accepted = pending.copy(status = "accepted")
+    val nextPending = invitation("inv_2", organizationId = "org_next")
+    coEvery { pending.accept() } returns ClerkResult.success(accepted)
+    coEvery { user.getOrganizationInvitations(limit = 2, offset = 0, status = "pending") } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = listOf(nextPending), totalCount = 1))
+
+    val viewModel = testViewModel(user = user)
+    viewModel.setState(
+      OrganizationAccountListState(
+        isLoading = false,
+        hasLoadedInitialResources = true,
+        invitations = listOf(pending),
+        invitationsTotalCount = 2,
+      )
+    )
+
+    viewModel.acceptInvitation(pending)
+    assertTrue(viewModel.state.value.invitationsHasNextPage)
+
+    viewModel.loadMoreInvitations()
+
+    val state = viewModel.state.value
+    assertEquals(listOf(accepted, nextPending), state.invitations)
+    assertFalse(state.invitationsHasNextPage)
+  }
+
+  @Test
   fun `acceptSuggestion replaces suggestion with accepted result`() = runTest {
     val pending = suggestion("sug_1", organizationId = "org_suggested", status = "pending")
     val accepted = pending.copy(status = "accepted")
