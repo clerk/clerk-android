@@ -7,19 +7,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -36,13 +33,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.Role
 import com.clerk.ui.R
+import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.dimens.dp0
@@ -54,11 +51,8 @@ import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.dimens.dp4
-import com.clerk.ui.core.dimens.dp44
-import com.clerk.ui.core.dimens.dp72
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.error.ClerkErrorSnackbar
-import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -94,9 +88,13 @@ internal fun OrganizationInviteMembersView(
       containerColor = ClerkMaterialTheme.colors.background,
       snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
       topBar = {
-        InviteMembersTopBar(
+        ClerkTopAppBar(
           title = stringResource(R.string.invite_new_members),
-          onCancel = onComplete,
+          hasLogo = false,
+          hasBackButton = false,
+          backgroundColor = ClerkMaterialTheme.colors.background,
+          onBackPressed = {},
+          trailingContent = { InviteMembersCloseAction(onClick = onComplete) },
         )
       },
     ) { innerPadding ->
@@ -129,33 +127,14 @@ internal fun OrganizationInviteMembersView(
 }
 
 @Composable
-private fun InviteMembersTopBar(title: String, onCancel: () -> Unit) {
-  Column(modifier = Modifier.fillMaxWidth().background(ClerkMaterialTheme.colors.background)) {
-    Row(
-      modifier = Modifier.fillMaxWidth().statusBarsPadding().height(dp44).padding(horizontal = dp8),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Box(modifier = Modifier.width(dp72), contentAlignment = Alignment.CenterStart) {
-        Text(
-          modifier =
-            Modifier.clickable(onClick = onCancel).padding(horizontal = dp8, vertical = dp8),
-          text = stringResource(R.string.cancel),
-          style = ClerkMaterialTheme.typography.bodyLarge,
-          color = ClerkMaterialTheme.colors.primary,
-        )
-      }
-      Text(
-        modifier = Modifier.weight(1f),
-        text = title,
-        style = ClerkMaterialTheme.typography.titleMedium.withMediumWeight(),
-        color = ClerkMaterialTheme.colors.foreground,
-        textAlign = TextAlign.Center,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-      )
-      Spacer(modifier = Modifier.width(dp72))
-    }
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+private fun InviteMembersCloseAction(onClick: () -> Unit) {
+  IconButton(onClick = onClick) {
+    Icon(
+      modifier = Modifier.size(dp24),
+      painter = painterResource(R.drawable.ic_cross),
+      contentDescription = stringResource(R.string.close),
+      tint = ClerkMaterialTheme.colors.foreground,
+    )
   }
 }
 
