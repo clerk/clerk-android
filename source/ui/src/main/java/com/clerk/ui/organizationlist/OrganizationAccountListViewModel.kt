@@ -135,7 +135,7 @@ internal open class OrganizationAccountListViewModel(
       user
         .getOrganizationInvitations(
           limit = pageSize,
-          offset = current.invitations.size,
+          offset = current.pendingInvitationsCount,
           status = PENDING_STATUS,
         )
         .onSuccess { response ->
