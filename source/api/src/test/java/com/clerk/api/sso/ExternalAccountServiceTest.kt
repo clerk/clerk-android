@@ -70,6 +70,7 @@ class ExternalAccountServiceTest {
     // Setup basic mocks
     every { ClerkApi.user } returns mockUserApi
     every { Clerk.applicationContext } returns WeakReference(mockContext)
+    every { Clerk.debugMode } returns false
 
     // Setup verification mock
     every { mockVerification.status } returns Verification.Status.VERIFIED
