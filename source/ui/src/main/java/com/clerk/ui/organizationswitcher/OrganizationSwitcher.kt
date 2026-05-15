@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,6 +60,8 @@ import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
 import com.clerk.ui.organizationlist.OrganizationAccountListViewModel
+import com.clerk.ui.organizationprofile.OrganizationProfileView
+import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userbutton.UserButton
@@ -100,9 +105,13 @@ private constructor(internal val isCompact: Boolean, val size: Dp) {
  *   organization selection.
  * @param displayMode Controls whether the trigger renders in normal or compact form.
  * @param onManageOrganization Called when the active organization overview's manage action is
- *   selected. The action is hidden when this callback is `null`.
+ *   selected. When `null`, the switcher opens [OrganizationProfileView].
  * @param onCreateOrganization Called when the create-organization row is selected from the switch
  *   account sheet. The row is hidden when this callback is `null`.
+ * @param organizationProfileCustomRows Custom rows forwarded to the switcher's default
+ *   [OrganizationProfileView].
+ * @param organizationProfileCustomDestination Custom destination builder forwarded to the
+ *   switcher's default [OrganizationProfileView].
  */
 @Composable
 fun OrganizationSwitcher(
@@ -114,6 +123,8 @@ fun OrganizationSwitcher(
   displayMode: OrganizationSwitcherDisplayMode = OrganizationSwitcherDisplayMode.Normal,
   onManageOrganization: ((OrganizationMembership) -> Unit)? = null,
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
+  organizationProfileCustomRows: List<OrganizationProfileCustomRow> = emptyList(),
+  organizationProfileCustomDestination: (@Composable (String) -> Unit)? = null,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     ClerkMaterialTheme {
@@ -127,6 +138,8 @@ fun OrganizationSwitcher(
           displayMode = displayMode,
           onManageOrganization = onManageOrganization,
           onCreateOrganization = onCreateOrganization,
+          organizationProfileCustomRows = organizationProfileCustomRows,
+          organizationProfileCustomDestination = organizationProfileCustomDestination,
         )
       }
     }
@@ -143,6 +156,8 @@ internal fun OrganizationSwitcherImpl(
   displayMode: OrganizationSwitcherDisplayMode = OrganizationSwitcherDisplayMode.Normal,
   onManageOrganization: ((OrganizationMembership) -> Unit)? = null,
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
+  organizationProfileCustomRows: List<OrganizationProfileCustomRow> = emptyList(),
+  organizationProfileCustomDestination: (@Composable (String) -> Unit)? = null,
   viewModel: OrganizationAccountListViewModel = viewModel(),
 ) {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
@@ -151,6 +166,7 @@ internal fun OrganizationSwitcherImpl(
   var sheetDestination by rememberSaveable {
     mutableStateOf<OrganizationSwitcherSheetDestination?>(null)
   }
+  var showOrganizationProfile by rememberSaveable { mutableStateOf(false) }
 
   val activeMembership = activeOrganizationMembership(user, session, state.memberships)
   val showPersonalAccount = user != null && !hidePersonal && !Clerk.organizationSelectionIsForced
@@ -169,41 +185,125 @@ internal fun OrganizationSwitcherImpl(
       organizationsEnabled = Clerk.organizationIsEnabled,
     )
 
-  if (shouldShow) {
-    OrganizationSwitcherHeader(
-      modifier = modifier,
-      activeMembership = activeMembership,
-      user = user,
-      showPersonalAccount = showPersonalAccount,
-      isLoading = state.isLoading && activeMembership == null && !showPersonalAccount,
-      showUserButton = showUserButton,
-      clerkTheme = clerkTheme,
-      displayMode = displayMode,
-      onClick = {
-        sheetDestination =
-          if (activeMembership == null) {
-            OrganizationSwitcherSheetDestination.AccountList
-          } else {
-            OrganizationSwitcherSheetDestination.Overview
-          }
-      },
-    )
-  }
+  OrganizationSwitcherHeaderIfNeeded(
+    shouldShow = shouldShow,
+    modifier = modifier,
+    activeMembership = activeMembership,
+    user = user,
+    showPersonalAccount = showPersonalAccount,
+    isLoading = state.isLoading && activeMembership == null && !showPersonalAccount,
+    showUserButton = showUserButton,
+    clerkTheme = clerkTheme,
+    displayMode = displayMode,
+    onOpenSheet = { sheetDestination = it },
+  )
 
-  OrganizationSwitcherActiveSheet(
+  OrganizationSwitcherSheets(
     destination = sheetDestination,
+    showOrganizationProfile = showOrganizationProfile,
     state = state,
     user = user,
     activeMembership = activeMembership,
     activeOrganizationId = session?.lastActiveOrganizationId,
     showPersonalAccount = showPersonalAccount,
-    onDismiss = { sheetDestination = null },
+    clerkTheme = clerkTheme,
+    organizationProfileCustomRows = organizationProfileCustomRows,
+    organizationProfileCustomDestination = organizationProfileCustomDestination,
+    onDismissActiveSheet = { sheetDestination = null },
     onShowAccountList = { sheetDestination = OrganizationSwitcherSheetDestination.AccountList },
+    onShowOrganizationProfile = {
+      sheetDestination = null
+      showOrganizationProfile = true
+    },
+    onDismissOrganizationProfile = { showOrganizationProfile = false },
     onManageOrganization = onManageOrganization,
     onOrganizationChanged = onOrganizationChanged,
     onCreateOrganization = onCreateOrganization,
     viewModel = viewModel,
   )
+}
+
+@Composable
+private fun OrganizationSwitcherHeaderIfNeeded(
+  shouldShow: Boolean,
+  activeMembership: OrganizationMembership?,
+  user: User?,
+  showPersonalAccount: Boolean,
+  isLoading: Boolean,
+  showUserButton: Boolean,
+  clerkTheme: ClerkTheme?,
+  displayMode: OrganizationSwitcherDisplayMode,
+  onOpenSheet: (OrganizationSwitcherSheetDestination) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  if (!shouldShow) return
+
+  OrganizationSwitcherHeader(
+    modifier = modifier,
+    activeMembership = activeMembership,
+    user = user,
+    showPersonalAccount = showPersonalAccount,
+    isLoading = isLoading,
+    showUserButton = showUserButton,
+    clerkTheme = clerkTheme,
+    displayMode = displayMode,
+    onClick = {
+      onOpenSheet(
+        if (activeMembership == null) {
+          OrganizationSwitcherSheetDestination.AccountList
+        } else {
+          OrganizationSwitcherSheetDestination.Overview
+        }
+      )
+    },
+  )
+}
+
+@Composable
+private fun OrganizationSwitcherSheets(
+  destination: OrganizationSwitcherSheetDestination?,
+  showOrganizationProfile: Boolean,
+  state: OrganizationAccountListState,
+  user: User?,
+  activeMembership: OrganizationMembership?,
+  activeOrganizationId: String?,
+  showPersonalAccount: Boolean,
+  clerkTheme: ClerkTheme?,
+  organizationProfileCustomRows: List<OrganizationProfileCustomRow>,
+  organizationProfileCustomDestination: (@Composable (String) -> Unit)?,
+  onDismissActiveSheet: () -> Unit,
+  onShowAccountList: () -> Unit,
+  onShowOrganizationProfile: () -> Unit,
+  onDismissOrganizationProfile: () -> Unit,
+  onManageOrganization: ((OrganizationMembership) -> Unit)?,
+  onOrganizationChanged: (() -> Unit)?,
+  onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)?,
+  viewModel: OrganizationAccountListViewModel,
+) {
+  OrganizationSwitcherActiveSheet(
+    destination = destination,
+    state = state,
+    user = user,
+    activeMembership = activeMembership,
+    activeOrganizationId = activeOrganizationId,
+    showPersonalAccount = showPersonalAccount,
+    onDismiss = onDismissActiveSheet,
+    onShowAccountList = onShowAccountList,
+    onManageOrganization = onManageOrganization,
+    onShowOrganizationProfile = onShowOrganizationProfile,
+    onOrganizationChanged = onOrganizationChanged,
+    onCreateOrganization = onCreateOrganization,
+    viewModel = viewModel,
+  )
+
+  if (showOrganizationProfile) {
+    OrganizationSwitcherProfileSheet(
+      clerkTheme = clerkTheme,
+      customRows = organizationProfileCustomRows,
+      customDestination = organizationProfileCustomDestination,
+      onDismiss = onDismissOrganizationProfile,
+    )
+  }
 }
 
 @Composable
@@ -234,11 +334,19 @@ private fun OrganizationSwitcherActiveSheet(
   onDismiss: () -> Unit,
   onShowAccountList: () -> Unit,
   onManageOrganization: ((OrganizationMembership) -> Unit)?,
+  onShowOrganizationProfile: () -> Unit,
   onOrganizationChanged: (() -> Unit)?,
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)?,
   viewModel: OrganizationAccountListViewModel,
 ) {
   destination ?: return
+  val manageOrganizationAction =
+    onManageOrganization?.let { manageOrganization ->
+      { membership: OrganizationMembership ->
+        onDismiss()
+        manageOrganization(membership)
+      }
+    } ?: { _: OrganizationMembership -> onShowOrganizationProfile() }
 
   OrganizationSwitcherSheet(
     destination = destination,
@@ -250,13 +358,7 @@ private fun OrganizationSwitcherActiveSheet(
     showCreateOrganization = onCreateOrganization != null,
     onDismiss = onDismiss,
     onShowAccountList = onShowAccountList,
-    onManageOrganization =
-      onManageOrganization?.let { manageOrganization ->
-        { membership: OrganizationMembership ->
-          onDismiss()
-          manageOrganization(membership)
-        }
-      },
+    onManageOrganization = manageOrganizationAction,
     onErrorShown = viewModel::clearError,
     actions =
       organizationSwitcherAccountListActions(
@@ -267,6 +369,31 @@ private fun OrganizationSwitcherActiveSheet(
         onCreateOrganization = onCreateOrganization,
       ),
   )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OrganizationSwitcherProfileSheet(
+  clerkTheme: ClerkTheme?,
+  customRows: List<OrganizationProfileCustomRow>,
+  customDestination: (@Composable (String) -> Unit)?,
+  onDismiss: () -> Unit,
+) {
+  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+  ModalBottomSheet(
+    onDismissRequest = onDismiss,
+    sheetState = sheetState,
+    containerColor = ClerkMaterialTheme.colors.background,
+    contentColor = ClerkMaterialTheme.colors.foreground,
+  ) {
+    OrganizationProfileView(
+      modifier = Modifier.fillMaxSize(),
+      clerkTheme = clerkTheme,
+      customRows = customRows,
+      customDestination = customDestination,
+      onDismiss = onDismiss,
+    )
+  }
 }
 
 @Composable
