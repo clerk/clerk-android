@@ -5,6 +5,7 @@ import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.userdata.PublicUserData
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.user.currentSessionId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -112,6 +113,7 @@ suspend fun OrganizationMembership.updateMembership(
     organizationId = this.organization.id,
     userId = userId,
     role = role,
+    sessionId = currentSessionId(),
   )
 }
 

@@ -1,6 +1,5 @@
 package com.clerk.api.organizations
 
-import com.clerk.api.Clerk
 import com.clerk.api.image.ImageService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.ClerkPaginatedResponse
@@ -81,7 +80,7 @@ data class Organization(
      *   on failure.
      */
     suspend fun get(id: String): ClerkResult<Organization, ClerkErrorResponse> {
-      return ClerkApi.organization.getOrganization(id)
+      return ClerkApi.organization.getOrganization(id, sessionId = currentSessionId())
     }
   }
 }
@@ -102,6 +101,7 @@ suspend fun Organization.update(
     organizationId = this.id,
     name = name,
     slug = slug,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -115,7 +115,10 @@ suspend fun Organization.update(
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun Organization.delete(): ClerkResult<DeletedObject, ClerkErrorResponse> {
-  return ClerkApi.organization.deleteOrganization(organizationId = this.id)
+  return ClerkApi.organization.deleteOrganization(
+    organizationId = this.id,
+    sessionId = currentSessionId(),
+  )
 }
 
 /**
@@ -130,7 +133,11 @@ suspend fun Organization.delete(): ClerkResult<DeletedObject, ClerkErrorResponse
  */
 suspend fun Organization.updateLogo(file: File): ClerkResult<Organization, ClerkErrorResponse> {
   val body = ImageService().createMultipartBody(file)
-  return ClerkApi.organization.updateOrganizationLogo(organizationId = this.id, file = body)
+  return ClerkApi.organization.updateOrganizationLogo(
+    organizationId = this.id,
+    file = body,
+    sessionId = currentSessionId(),
+  )
 }
 
 /**
@@ -143,7 +150,7 @@ suspend fun Organization.updateLogo(file: File): ClerkResult<Organization, Clerk
  *   [ClerkErrorResponse] on failure.
  */
 suspend fun Organization.deleteLogo(): ClerkResult<Organization, ClerkErrorResponse> {
-  return ClerkApi.organization.deleteOrganizationLogo(this.id)
+  return ClerkApi.organization.deleteOrganizationLogo(this.id, sessionId = currentSessionId())
 }
 
 /**
@@ -158,7 +165,12 @@ suspend fun Organization.getRoles(
   offset: Int = 0,
   limit: Int = 20,
 ): ClerkResult<List<Role>, ClerkErrorResponse> {
-  return ClerkApi.organization.getRoles(organizationId = this.id, limit = limit, offset = offset)
+  return ClerkApi.organization.getRoles(
+    organizationId = this.id,
+    limit = limit,
+    offset = offset,
+    sessionId = currentSessionId(),
+  )
 }
 
 /**
@@ -175,7 +187,11 @@ suspend fun Organization.getRoles(
 suspend fun Organization.createDomain(
   name: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
-  return ClerkApi.organization.createOrganizationDomain(organizationId = this.id, name = name)
+  return ClerkApi.organization.createOrganizationDomain(
+    organizationId = this.id,
+    name = name,
+    sessionId = currentSessionId(),
+  )
 }
 
 /**
@@ -198,6 +214,7 @@ suspend fun Organization.getDomains(
     limit = limit,
     offset = offset,
     enrollmentMode = enrollmentMode,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -211,7 +228,11 @@ suspend fun Organization.getDomains(
 suspend fun Organization.getDomain(
   domainId: String
 ): ClerkResult<OrganizationDomain, ClerkErrorResponse> {
-  return ClerkApi.organization.getOrganizationDomain(organizationId = this.id, domainId = domainId)
+  return ClerkApi.organization.getOrganizationDomain(
+    organizationId = this.id,
+    domainId = domainId,
+    sessionId = currentSessionId(),
+  )
 }
 
 /**
@@ -230,6 +251,7 @@ suspend fun Organization.deleteDomain(
   return ClerkApi.organization.deleteOrganizationDomain(
     organizationId = this.id,
     domainId = domainId,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -254,7 +276,7 @@ suspend fun Organization.getOrganizationMemberships(
   offset: Int = 0,
 ): ClerkResult<ClerkPaginatedResponse<OrganizationMembership>, ClerkErrorResponse> {
   return ClerkApi.organization.getMembers(
-    sessionId = Clerk.session?.id,
+    sessionId = currentSessionId(),
     limit = limit,
     offset = offset,
     organizationId = id,
@@ -283,6 +305,7 @@ suspend fun Organization.createMembership(
     organizationId = this.id,
     role = role,
     userId = userId,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -296,7 +319,11 @@ suspend fun Organization.createMembership(
 suspend fun Organization.removeMember(
   userId: String
 ): ClerkResult<OrganizationMembership, ClerkErrorResponse> {
-  return ClerkApi.organization.removeMember(organizationId = this.id, userId = userId)
+  return ClerkApi.organization.removeMember(
+    organizationId = this.id,
+    userId = userId,
+    sessionId = currentSessionId(),
+  )
 }
 
 /**
@@ -314,6 +341,7 @@ suspend fun Organization.createInvitation(
     organizationId = this.id,
     emailAddress = emailAddress,
     role = role,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -335,6 +363,7 @@ suspend fun Organization.getInvitations(
     limit = limit,
     offset = offset,
     status = status.name.lowercase(),
+    sessionId = currentSessionId(),
   )
 }
 
@@ -355,6 +384,7 @@ suspend fun Organization.bulkCreateInvitations(
     organizationId = this.id,
     emailAddresses = emailAddresses,
     role = role,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -382,5 +412,6 @@ suspend fun Organization.getMembershipRequests(
     limit = limit,
     offset = offset,
     status = status,
+    sessionId = currentSessionId(),
   )
 }

@@ -50,6 +50,7 @@ interface OrganizationApi {
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query("limit") limit: Int? = null,
     @Query("offset") offset: Int? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<List<Role>, ClerkErrorResponse>
 
   /**
@@ -78,7 +79,8 @@ interface OrganizationApi {
    */
   @GET(ApiPaths.Organization.WITH_ID)
   suspend fun getOrganization(
-    @Path(ApiParams.ORGANIZATION_ID) organizationId: String
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<Organization, ClerkErrorResponse>
 
   /**
@@ -97,6 +99,7 @@ interface OrganizationApi {
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("name") name: String? = null,
     @Field("slug") slug: String? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<Organization, ClerkErrorResponse>
 
   /**
@@ -109,7 +112,8 @@ interface OrganizationApi {
    */
   @DELETE(ApiPaths.Organization.WITH_ID)
   suspend fun deleteOrganization(
-    @Path(ApiParams.ORGANIZATION_ID) organizationId: String
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   /**
@@ -126,6 +130,7 @@ interface OrganizationApi {
   suspend fun updateOrganizationLogo(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Part file: MultipartBody.Part,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<Organization, ClerkErrorResponse>
 
   /**
@@ -138,7 +143,8 @@ interface OrganizationApi {
    */
   @DELETE(ApiPaths.Organization.LOGO)
   suspend fun deleteOrganizationLogo(
-    @Path(ApiParams.ORGANIZATION_ID) organizationId: String
+    @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<Organization, ClerkErrorResponse>
 
   /**
@@ -155,6 +161,7 @@ interface OrganizationApi {
   suspend fun createOrganizationDomain(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("name") name: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 
   /**
@@ -176,6 +183,7 @@ interface OrganizationApi {
     @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query("verified") verified: Boolean? = null,
     @Query("enrollment_mode") enrollmentMode: String? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<ClerkPaginatedResponse<OrganizationDomain>, ClerkErrorResponse>
 
   /**
@@ -191,6 +199,7 @@ interface OrganizationApi {
   suspend fun getOrganizationDomain(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.DOMAIN_ID) domainId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 
   /**
@@ -206,6 +215,7 @@ interface OrganizationApi {
   suspend fun deleteOrganizationDomain(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.DOMAIN_ID) domainId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   /**
@@ -226,6 +236,7 @@ interface OrganizationApi {
     @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Field("enrollment_mode") enrollmentMode: String,
     @Field("delete_pending") deletePending: Boolean? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 
   /**
@@ -244,6 +255,7 @@ interface OrganizationApi {
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Field("affiliation_email_address") affiliationEmailAddress: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 
   /**
@@ -266,6 +278,7 @@ interface OrganizationApi {
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.DOMAIN_ID) domainId: String,
     @Field("code") code: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationDomain, ClerkErrorResponse>
 
   /**
@@ -284,6 +297,7 @@ interface OrganizationApi {
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field(ApiParams.ROLE) role: String?,
     @Field(ApiParams.USER_ID) userId: String?,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationMembership, ClerkErrorResponse>
 
   /**
@@ -327,6 +341,7 @@ interface OrganizationApi {
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.USER_ID) userId: String,
     @Field(ApiParams.ROLE) role: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationMembership, ClerkErrorResponse>
 
   /**
@@ -342,6 +357,7 @@ interface OrganizationApi {
   suspend fun removeMember(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.USER_ID) userId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationMembership, ClerkErrorResponse>
 
   /**
@@ -358,6 +374,7 @@ interface OrganizationApi {
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("email_address") emailAddress: String,
     @Field(ApiParams.ROLE) role: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationInvitation, ClerkErrorResponse>
 
   /**
@@ -377,6 +394,7 @@ interface OrganizationApi {
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query(ApiParams.STATUS) status: String? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<ClerkPaginatedResponse<OrganizationInvitation>, ClerkErrorResponse>
 
   /**
@@ -395,6 +413,7 @@ interface OrganizationApi {
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Field("email_address") emailAddresses: List<String>,
     @Field(ApiParams.ROLE) role: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<List<OrganizationInvitation>, ClerkErrorResponse>
 
   /**
@@ -405,10 +424,11 @@ interface OrganizationApi {
    * @param organizationId The id of the organization for which the invitations will be retrieved.
    * @param invitationId The id of the invitation to be revoked.
    */
-  @POST(ApiPaths.Organization.MembershipRequests.BASE)
+  @POST(ApiPaths.Organization.Invitations.REVOKE)
   suspend fun revokeOrganizationInvitation(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path(ApiParams.INVITATION_ID) invitationId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationInvitation, ClerkErrorResponse>
 
   /**
@@ -422,12 +442,13 @@ interface OrganizationApi {
    *   equal to zero. To be used in conjunction with limit.
    * @param status The status to filter by.
    */
-  @GET(ApiPaths.Organization.Invitations.BASE)
+  @GET(ApiPaths.Organization.MembershipRequests.BASE)
   suspend fun getMembershipRequests(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query(ApiParams.STATUS) status: String? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<ClerkPaginatedResponse<OrganizationMembershipRequest>, ClerkErrorResponse>
 
   /**
@@ -441,6 +462,7 @@ interface OrganizationApi {
   suspend fun acceptMembershipRequest(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path("request_id") membershipRequestId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationMembershipRequest, ClerkErrorResponse>
 
   /**
@@ -454,5 +476,6 @@ interface OrganizationApi {
   suspend fun rejectMembershipRequest(
     @Path(ApiParams.ORGANIZATION_ID) organizationId: String,
     @Path("request_id") membershipRequestId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<OrganizationMembershipRequest, ClerkErrorResponse>
 }

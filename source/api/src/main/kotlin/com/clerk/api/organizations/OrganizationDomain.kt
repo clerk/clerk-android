@@ -4,6 +4,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.user.currentSessionId
 import kotlinx.serialization.Serializable
 
 /**
@@ -99,6 +100,7 @@ suspend fun OrganizationDomain.delete(): ClerkResult<DeletedObject, ClerkErrorRe
   return organizationApi.deleteOrganizationDomain(
     organizationId = this.organizationId,
     domainId = this.id,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -116,6 +118,7 @@ suspend fun OrganizationDomain.prepareAffiliationVerification(
     organizationId = this.organizationId,
     domainId = this.id,
     affiliationEmailAddress = affiliationEmailAddress,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -137,6 +140,7 @@ suspend fun OrganizationDomain.attemptAffiliationVerification(
     organizationId = this.organizationId,
     domainId = this.id,
     code = code,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -149,6 +153,7 @@ suspend fun OrganizationDomain.updateEnrollmentMode(
     domainId = this.id,
     enrollmentMode = enrollmentMode,
     deletePending = deletePending,
+    sessionId = currentSessionId(),
   )
 }
 
