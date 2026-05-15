@@ -67,7 +67,10 @@
     <string name="no_members_sections_available" tools:ignore="MissingTranslation">No members sections are available.</string>
     <string name="no_members_found" tools:ignore="MissingTranslation">No members found.</string>
     <string name="no_pending_invitations" tools:ignore="MissingTranslation">No pending invitations.</string>
-    <string name="no_membership_requests" tools:ignore="MissingTranslation">No membership requests.</string>
+    <string name="no_invitations_sent" tools:ignore="MissingTranslation">No invitations sent</string>
+    <string name="no_invitations_sent_description" tools:ignore="MissingTranslation">Get started by inviting someone to join your organization</string>
+    <string name="no_membership_requests" tools:ignore="MissingTranslation">No membership requests</string>
+    <string name="no_membership_requests_description" tools:ignore="MissingTranslation">Users who request to join your organization will appear here for review</string>
     <string name="role_set_migration_notice" tools:ignore="MissingTranslation">Role editing is temporarily unavailable while roles are migrating.</string>
     <string name="membership_slots_remaining" tools:ignore="MissingTranslation">%1$d membership slots remaining.</string>
     <string name="invite_limit_exceeded" tools:ignore="MissingTranslation">Inviting these members would exceed the organization membership limit.</string>

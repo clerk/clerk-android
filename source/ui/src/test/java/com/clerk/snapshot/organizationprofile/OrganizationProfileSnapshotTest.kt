@@ -155,6 +155,23 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
   }
 
   @Test
+  fun organizationMembersInvitationsEmptyState() {
+    paparazzi.snapshot {
+      MembersSnapshotSurface {
+        OrganizationMembersContent(
+          viewerMembership = previewOrganizationProfileMembership(),
+          state =
+            OrganizationMembersState(
+              availableTabs = allMembersTabs,
+              selectedTab = OrganizationMembersTab.Invitations,
+            ),
+          actions = noOpMembersActions,
+        )
+      }
+    }
+  }
+
+  @Test
   fun organizationMembersRequestsTab() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
@@ -166,6 +183,23 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
               selectedTab = OrganizationMembersTab.Requests,
               requests = listOf(sampleRequest("req_1")),
               requestsTotalCount = 1,
+            ),
+          actions = noOpMembersActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationMembersRequestsEmptyState() {
+    paparazzi.snapshot {
+      MembersSnapshotSurface {
+        OrganizationMembersContent(
+          viewerMembership = previewOrganizationProfileMembership(),
+          state =
+            OrganizationMembersState(
+              availableTabs = allMembersTabs,
+              selectedTab = OrganizationMembersTab.Requests,
             ),
           actions = noOpMembersActions,
         )

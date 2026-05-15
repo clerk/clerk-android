@@ -15,10 +15,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -46,7 +48,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -87,6 +91,8 @@ import java.util.Date
 import java.util.Locale
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+
+private const val EMPTY_STATE_HEIGHT_FRACTION = 0.72f
 
 @Composable
 internal fun OrganizationMembersView(
@@ -269,9 +275,11 @@ private fun LazyListScope.invitationsTab(
 ) {
   if (state.invitations.isEmpty()) {
     item {
-      EmptyState(
-        modifier = Modifier.padding(horizontal = dp18),
-        text = stringResource(R.string.no_pending_invitations),
+      MembersEmptyState(
+        modifier = Modifier.fillMaxWidth().fillParentMaxHeight(EMPTY_STATE_HEIGHT_FRACTION),
+        icon = R.drawable.ic_email,
+        title = stringResource(R.string.no_invitations_sent),
+        description = stringResource(R.string.no_invitations_sent_description),
       )
     }
   } else {
@@ -302,9 +310,11 @@ private fun LazyListScope.requestsTab(
 ) {
   if (state.requests.isEmpty()) {
     item {
-      EmptyState(
-        modifier = Modifier.padding(horizontal = dp18),
-        text = stringResource(R.string.no_membership_requests),
+      MembersEmptyState(
+        modifier = Modifier.fillMaxWidth().fillParentMaxHeight(EMPTY_STATE_HEIGHT_FRACTION),
+        icon = R.drawable.ic_users,
+        title = stringResource(R.string.no_membership_requests),
+        description = stringResource(R.string.no_membership_requests_description),
       )
     }
   } else {
@@ -776,6 +786,57 @@ private fun EmptyState(text: String, modifier: Modifier = Modifier) {
     style = ClerkMaterialTheme.typography.bodyMedium,
     color = ClerkMaterialTheme.colors.mutedForeground,
   )
+}
+
+@Composable
+private fun MembersEmptyState(
+  icon: Int,
+  title: String,
+  description: String,
+  modifier: Modifier = Modifier,
+) {
+  Box(modifier = modifier, contentAlignment = Alignment.Center) {
+    Column(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = dp24),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(dp12),
+    ) {
+      Surface(
+        modifier = Modifier.size(dp48),
+        shape = RoundedCornerShape(dp12),
+        color = ClerkMaterialTheme.colors.muted.copy(alpha = 0.5f),
+        border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.border),
+      ) {
+        Box(contentAlignment = Alignment.Center) {
+          Icon(
+            modifier = Modifier.size(20.dp),
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = ClerkMaterialTheme.colors.mutedForeground,
+          )
+        }
+      }
+      Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(dp4),
+      ) {
+        Text(
+          modifier = Modifier.widthIn(max = 216.dp),
+          text = title,
+          style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
+          color = ClerkMaterialTheme.colors.foreground,
+          textAlign = TextAlign.Center,
+        )
+        Text(
+          modifier = Modifier.widthIn(max = 302.dp),
+          text = description,
+          style = ClerkMaterialTheme.typography.bodyMedium,
+          color = ClerkMaterialTheme.colors.mutedForeground,
+          textAlign = TextAlign.Center,
+        )
+      }
+    }
+  }
 }
 
 @Composable
