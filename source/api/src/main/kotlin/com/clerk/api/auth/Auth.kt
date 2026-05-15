@@ -711,7 +711,7 @@ class Auth internal constructor() {
     organizationId: String? = null,
   ): ClerkResult<Session, ClerkErrorResponse> {
     val previousClient = if (Clerk.clientInitialized) Clerk.client else null
-    if (organizationId == null && Clerk.organizationSelectionIsForced) {
+    if (organizationId.isNullOrBlank() && Clerk.organizationSelectionIsForced) {
       return Clerk.session?.let { ClerkResult.success(it) }
         ?: ClerkResult.unknownFailure(
           IllegalStateException("Cannot select a personal account without an active session.")
