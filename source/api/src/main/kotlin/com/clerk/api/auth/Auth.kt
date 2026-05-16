@@ -27,7 +27,6 @@ import com.clerk.api.session.Session
 import com.clerk.api.session.fetchToken
 import com.clerk.api.session.revoke
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.toMap
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
@@ -210,8 +209,8 @@ class Auth internal constructor() {
   /**
    * Signs in with OTP - automatically sends the verification code.
    *
-   * This is a one-shot method that creates the sign-in and immediately prepares the first factor
-   * verification, sending the code to the specified channel.
+   * This is a one-shot method that creates the sign-in with an OTP strategy, sending the code to
+   * the specified channel.
    *
    * @param block Builder block to configure the email or phone.
    * @return A [ClerkResult] containing the [SignIn] object on success, or a [ClerkErrorResponse] on
@@ -239,29 +238,7 @@ class Auth internal constructor() {
         "locale" to Clerk.locale.value.orEmpty(),
       )
 
-    val result =
-      when (val createResult = ClerkApi.signIn.createSignIn(params)) {
-        is ClerkResult.Failure -> createResult
-        is ClerkResult.Success -> {
-          val signIn = createResult.value
-          // Prepare first factor to send the code
-          val prepareParams =
-            if (builder.email != null) {
-              SignIn.PrepareFirstFactorParams.EmailCode(
-                emailAddressId =
-                  signIn.supportedFirstFactors?.find { it.strategy == EMAIL_CODE }?.emailAddressId
-                    ?: ""
-              )
-            } else {
-              SignIn.PrepareFirstFactorParams.PhoneCode(
-                phoneNumberId =
-                  signIn.supportedFirstFactors?.find { it.strategy == PHONE_CODE }?.phoneNumberId
-                    ?: ""
-              )
-            }
-          ClerkApi.signIn.prepareSignInFirstFactor(signIn.id, prepareParams.toMap())
-        }
-      }
+    val result = ClerkApi.signIn.createSignIn(params)
     result.onFailure { emitAuthError(it) }
     return result
   }
@@ -711,7 +688,7 @@ class Auth internal constructor() {
     organizationId: String? = null,
   ): ClerkResult<Session, ClerkErrorResponse> {
     val previousClient = if (Clerk.clientInitialized) Clerk.client else null
-    if (organizationId == null && Clerk.organizationSelectionIsForced) {
+    if (organizationId.isNullOrBlank() && Clerk.organizationSelectionIsForced) {
       return Clerk.session?.let { ClerkResult.success(it) }
         ?: ClerkResult.unknownFailure(
           IllegalStateException("Cannot select a personal account without an active session.")
