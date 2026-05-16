@@ -7,6 +7,10 @@ import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.network.ClerkApi
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -20,6 +24,7 @@ import org.robolectric.annotation.Config
 class ProxyUrlConfigurationTest {
 
   private lateinit var mockContext: Context
+  private val configurationManagers = mutableListOf<ConfigurationManager>()
 
   @Before
   fun setUp() {
@@ -28,7 +33,14 @@ class ProxyUrlConfigurationTest {
 
   @After
   fun tearDown() {
-    // No-op; fields are overwritten per configure
+    runBlocking {
+      configurationManagers.forEach { manager ->
+        manager.backgroundScope().coroutineContext[Job]?.children?.toList()?.forEach { child ->
+          child.cancelAndJoin()
+        }
+      }
+    }
+    configurationManagers.clear()
   }
 
   @Test
@@ -38,7 +50,7 @@ class ProxyUrlConfigurationTest {
     val options = ClerkConfigurationOptions(proxyUrl = proxyUrl)
 
     // When: configure using a fresh ConfigurationManager
-    ConfigurationManager().configure(mockContext, "pk_test_dummy", options)
+    createConfigurationManager().configure(mockContext, "pk_test_dummy", options)
 
     // Then
     assertEquals(proxyUrl, Clerk.baseUrl)
@@ -54,12 +66,22 @@ class ProxyUrlConfigurationTest {
     val publishableKey = "pk_test_" + encodedDomain
 
     // When: configure using a fresh ConfigurationManager without proxy
-    ConfigurationManager().configure(mockContext, publishableKey, null)
+    createConfigurationManager().configure(mockContext, publishableKey, null)
 
     // Then
     val expectedBaseUrl = "https://$domain"
     assertEquals(expectedBaseUrl, Clerk.baseUrl)
     assertEquals(expectedBaseUrl, ClerkApi.configuredBaseUrl)
     assertEquals("$expectedBaseUrl/v1/", ClerkApi.configuredUrlWithVersion)
+  }
+
+  private fun createConfigurationManager(): ConfigurationManager {
+    return ConfigurationManager().also { configurationManagers += it }
+  }
+
+  private fun ConfigurationManager.backgroundScope(): CoroutineScope {
+    val field = ConfigurationManager::class.java.getDeclaredField("scope")
+    field.isAccessible = true
+    return field.get(this) as CoroutineScope
   }
 }
