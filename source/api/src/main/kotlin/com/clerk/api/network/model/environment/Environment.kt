@@ -1,6 +1,5 @@
 package com.clerk.api.network.model.environment
 
-import com.clerk.api.Clerk.environment
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -73,7 +72,7 @@ internal data class Environment(
 }
 
 internal fun Environment.enabledFirstFactorAttributes(): List<String> {
-  return environment.userSettings.attributes
+  return userSettings.attributes
     .filter { it.value.enabled && it.value.usedForFirstFactor }
     .keys
     .toList()

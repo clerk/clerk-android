@@ -16,7 +16,7 @@ import com.clerk.api.sso.OAuthProvider
  */
 val User.unconnectedProviders: List<OAuthProvider>
   get() {
-    val socialProviders = Clerk.environment.allSocialProviders
+    val socialProviders = Clerk.environment?.allSocialProviders.orEmpty()
     val verifiedExternalProviders = this.verifiedExternalAccounts.map { it.oauthProviderType }
     return socialProviders.filter { !verifiedExternalProviders.contains(it) }
   }

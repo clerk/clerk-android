@@ -80,7 +80,7 @@ fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
  */
 val SignIn.startingFirstFactor: Factor?
   get() =
-    when (Clerk.environment.displayConfig?.preferredSignInStrategy) {
+    when (Clerk.environment?.displayConfig?.preferredSignInStrategy) {
       PreferredSignInStrategy.PASSWORD -> this.factorWhenPasswordIsPreferred
       else -> this.factorWhenOtpIsPreferred
     }
