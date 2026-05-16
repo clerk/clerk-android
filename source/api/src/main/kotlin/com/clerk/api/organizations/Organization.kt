@@ -1,8 +1,10 @@
 package com.clerk.api.organizations
 
+import com.clerk.api.Clerk
 import com.clerk.api.image.ImageService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.ClerkPaginatedResponse
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -154,6 +156,41 @@ suspend fun Organization.deleteLogo(): ClerkResult<Organization, ClerkErrorRespo
 }
 
 /**
+ * Reloads the organization by fetching a fresh client and returning the updated organization
+ * embedded in the active session membership.
+ *
+ * This keeps [Clerk.organization] and other active organization UI in sync after profile updates.
+ */
+suspend fun Organization.reload(): ClerkResult<Organization, ClerkErrorResponse> {
+  return when (val clientResult = Client.get()) {
+    is ClerkResult.Success -> {
+      Clerk.updateClient(clientResult.value)
+      val updated =
+        Clerk.organization?.takeIf { it.id == id }
+          ?: clientResult.value.sessions
+            .asSequence()
+            .flatMap { it.user?.organizationMemberships.orEmpty().asSequence() }
+            .map { it.organization }
+            .firstOrNull { it.id == id }
+
+      if (updated != null) {
+        ClerkResult.success(updated)
+      } else {
+        Organization.get(id)
+      }
+    }
+    is ClerkResult.Failure ->
+      ClerkResult.Failure(
+        error = clientResult.error,
+        throwable = clientResult.throwable,
+        code = clientResult.code,
+        errorType = clientResult.errorType,
+        tags = clientResult.tags,
+      )
+  }
+}
+
+/**
  * Retrieves the list of roles available within this organization.
  *
  * @param offset The number of roles to skip when paginating through results. Default is 0.
@@ -165,6 +202,31 @@ suspend fun Organization.getRoles(
   offset: Int = 0,
   limit: Int = 20,
 ): ClerkResult<List<Role>, ClerkErrorResponse> {
+  return when (val result = getRolesPaginated(offset = offset, limit = limit)) {
+    is ClerkResult.Success -> ClerkResult.success(result.value.data).withTags(result.tags)
+    is ClerkResult.Failure ->
+      ClerkResult.Failure(
+        error = result.error,
+        throwable = result.throwable,
+        code = result.code,
+        errorType = result.errorType,
+        tags = result.tags,
+      )
+  }
+}
+
+/**
+ * Retrieves the paginated list of roles available within this organization.
+ *
+ * @param offset The number of roles to skip when paginating through results. Default is 0.
+ * @param limit The maximum number of roles to return per request. Default is 20.
+ * @return A [ClerkResult] containing a paginated response of [Role] objects on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun Organization.getRolesPaginated(
+  offset: Int = 0,
+  limit: Int = 20,
+): ClerkResult<ClerkPaginatedResponse<Role>, ClerkErrorResponse> {
   return ClerkApi.organization.getRoles(
     organizationId = this.id,
     limit = limit,

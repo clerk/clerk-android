@@ -36,7 +36,7 @@ class GoogleCredentialManagerImpl : GoogleCredentialManager {
     val activity = Clerk.credentialActivity() ?: throw CredentialFlowException.MissingActivity()
 
     val oneTapClientId =
-      requireNotNull(Clerk.environment.displayConfig.googleOneTapClientId) {
+      requireNotNull(Clerk.environment?.displayConfig?.googleOneTapClientId) {
         "Google One Tap Client ID is not set. Please set it in your Clerk dashboard."
       }
 
@@ -60,7 +60,7 @@ class GoogleCredentialManagerImpl : GoogleCredentialManager {
   }
 
   override fun getGoogleIdOption(): GetGoogleIdOption {
-    val oneTapClientId = requireNotNull(Clerk.environment.displayConfig.googleOneTapClientId)
+    val oneTapClientId = requireNotNull(Clerk.environment?.displayConfig?.googleOneTapClientId)
 
     return GetGoogleIdOption.Builder()
       .setFilterByAuthorizedAccounts(false)

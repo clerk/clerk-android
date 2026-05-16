@@ -2,11 +2,13 @@ package com.clerk.snapshot.appbar
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.appbar.ClerkTopAppBar
+import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
 import io.mockk.every
 import io.mockk.mockkObject
@@ -34,6 +36,28 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
       Box(Modifier.size(width = 360.dp, height = 72.dp)) {
         ClerkMaterialTheme {
           ClerkTopAppBar(onBackPressed = {}, hasLogo = true, hasBackButton = true)
+        }
+      }
+    }
+  }
+
+  @Test
+  fun profileTopBar_placesTrailingActionUsingAndroidSpacing() {
+    paparazzi.snapshot {
+      Box(Modifier.size(width = 412.dp, height = 72.dp)) {
+        ClerkMaterialTheme {
+          ClerkTopAppBar(
+            onBackPressed = {},
+            hasLogo = false,
+            title = "Members",
+            trailingContent = {
+              Text(
+                text = "Invite",
+                style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
+                color = ClerkMaterialTheme.colors.primary,
+              )
+            },
+          )
         }
       }
     }

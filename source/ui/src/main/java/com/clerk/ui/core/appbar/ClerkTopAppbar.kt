@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material.icons.Icons
@@ -26,7 +27,9 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.OrganizationLogo
+import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.core.dimens.dp68
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -86,11 +89,15 @@ private fun RowScope.TopBarWithTrailingContent(
   title: String?,
   trailingContent: @Composable () -> Unit,
 ) {
-  Box(modifier = Modifier.size(dp48), contentAlignment = Alignment.Center) {
+  Spacer(Modifier.width(dp12))
+  Box(modifier = Modifier.size(width = dp68, height = dp48), contentAlignment = Alignment.Center) {
     BackButton(hasBackButton = hasBackButton, onBackPressed = onBackPressed)
   }
   Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) { TopBarTitle(title) }
-  Box(modifier = Modifier.size(dp48), contentAlignment = Alignment.Center) { trailingContent() }
+  Box(modifier = Modifier.size(width = dp68, height = dp48), contentAlignment = Alignment.Center) {
+    trailingContent()
+  }
+  Spacer(Modifier.width(dp12))
 }
 
 @Composable
