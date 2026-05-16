@@ -9,17 +9,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,11 +27,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.organizations.Organization
@@ -51,7 +50,7 @@ import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
-import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.input.ClerkTextField
@@ -59,6 +58,7 @@ import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.DefaultColors
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -92,6 +92,7 @@ internal fun OrganizationVerifiedDomainsView(
       }
     },
     errorMessage = state.errorMessage,
+    onErrorShown = viewModel::clearError,
     content = {
       OrganizationVerifiedDomainsContent(
         state = state,
@@ -112,7 +113,6 @@ internal fun OrganizationVerifiedDomainsView(
             onVerifyCode = viewModel::verifyCode,
             onResendVerificationCode = viewModel::resendVerificationCode,
             onSelectEnrollmentMode = viewModel::selectEnrollmentMode,
-            onDeletePendingChanged = viewModel::setDeletePending,
             onUpdateEnrollmentMode = viewModel::updateEnrollmentMode,
             onDeleteDomain = viewModel::deleteDomain,
           ),
@@ -170,12 +170,7 @@ private fun OrganizationDomainsList(
   actions: OrganizationVerifiedDomainsActions,
   modifier: Modifier = Modifier,
 ) {
-  LazyColumn(
-    modifier = modifier.fillMaxSize(),
-    contentPadding = PaddingValues(horizontal = dp18, vertical = dp16),
-    verticalArrangement = Arrangement.spacedBy(dp16),
-    horizontalAlignment = Alignment.CenterHorizontally,
-  ) {
+  LazyColumn(modifier = modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = dp16)) {
     if (state.isLoadingInitial) {
       item { LoadingState() }
       return@LazyColumn
@@ -186,24 +181,25 @@ private fun OrganizationDomainsList(
       return@LazyColumn
     }
 
-    state.errorMessage?.let { message -> item { ErrorNotice(text = message) } }
-
-    if (state.canManageDomains) {
-      item { AddDomainRow(onClick = actions.onShowAddDomain) }
-    }
-
-    if (state.domains.isEmpty()) {
+    if (state.domains.isEmpty() && !state.canManageDomains) {
       item { EmptyState(text = stringResource(R.string.no_verified_domains)) }
     } else {
-      items(state.domains, key = { it.id }) { domain ->
+      itemsIndexed(state.domains, key = { _, domain -> domain.id }) { index, domain ->
         DomainRow(
           domain = domain,
           canManage = state.canManageDomains,
+          showTopDivider = index == 0,
           isLoading = state.activeMutationId != null,
           onVerify = { actions.onShowVerifyEmail(domain) },
           onManage = { actions.onShowEnrollmentMode(domain) },
           onDelete = { actions.onShowDeleteDomain(domain) },
         )
+      }
+    }
+
+    if (state.canManageDomains) {
+      item {
+        AddDomainRow(showTopDivider = state.domains.isEmpty(), onClick = actions.onShowAddDomain)
       }
     }
 
@@ -225,7 +221,6 @@ private fun AddDomainContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
       value = state.domainName,
@@ -257,7 +252,6 @@ private fun VerifyEmailContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
       value = state.affiliationEmailLocalPart,
@@ -291,7 +285,6 @@ private fun VerifyCodeContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     ClerkTextField(
       modifier = Modifier.fillMaxWidth(),
       value = state.verificationCode,
@@ -331,20 +324,12 @@ private fun EnrollmentModeContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     state.enrollmentModeOptions.forEach { option ->
       EnrollmentModeOptionRow(
         mode = option,
         selected = state.selectedEnrollmentMode == option,
         enabled = state.activeMutationId == null,
         onClick = { actions.onSelectEnrollmentMode(option) },
-      )
-    }
-    if (state.isManualInvitationSelected) {
-      DeletePendingRow(
-        checked = state.deletePending,
-        enabled = state.activeMutationId == null,
-        onCheckedChange = actions.onDeletePendingChanged,
       )
     }
     ClerkButton(
@@ -375,7 +360,6 @@ private fun DeleteDomainContent(
       style = ClerkMaterialTheme.typography.bodyMedium,
       color = ClerkMaterialTheme.colors.mutedForeground,
     )
-    state.errorMessage?.let { ErrorNotice(text = it) }
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.remove),
@@ -397,26 +381,29 @@ private fun DeleteDomainContent(
 }
 
 @Composable
-private fun AddDomainRow(onClick: () -> Unit) {
-  ListCard(modifier = Modifier.clickable { onClick() }) {
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(dp12),
-    ) {
-      IconSurface(icon = R.drawable.ic_plus)
-      Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(dp4)) {
+private fun AddDomainRow(showTopDivider: Boolean, onClick: () -> Unit) {
+  Surface(
+    modifier = Modifier.fillMaxWidth().clickable { onClick() },
+    color = ClerkMaterialTheme.colors.background,
+  ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+      if (showTopDivider) DomainDivider()
+      Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = dp24, vertical = dp16),
+        verticalArrangement = Arrangement.spacedBy(dp4),
+      ) {
         Text(
           text = stringResource(R.string.add_domain),
-          style = ClerkMaterialTheme.typography.bodyMedium.withMediumWeight(),
-          color = ClerkMaterialTheme.colors.foreground,
+          style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
+          color = DefaultColors.clerk.primary ?: ClerkMaterialTheme.colors.primary,
         )
         Text(
           text = stringResource(R.string.add_domain_short_description),
-          style = ClerkMaterialTheme.typography.bodySmall,
+          style = ClerkMaterialTheme.typography.bodyMedium,
           color = ClerkMaterialTheme.colors.mutedForeground,
         )
       }
+      DomainDivider()
     }
   }
 }
@@ -425,37 +412,41 @@ private fun AddDomainRow(onClick: () -> Unit) {
 private fun DomainRow(
   domain: OrganizationDomain,
   canManage: Boolean,
+  showTopDivider: Boolean,
   isLoading: Boolean,
   onVerify: () -> Unit,
   onManage: () -> Unit,
   onDelete: () -> Unit,
 ) {
-  ListCard {
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(dp12),
-    ) {
-      IconSurface(icon = R.drawable.ic_globe)
-      Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(dp4)) {
-        Text(
-          text = domain.name,
-          style = ClerkMaterialTheme.typography.bodyMedium.withMediumWeight(),
-          color = ClerkMaterialTheme.colors.foreground,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        DomainStatusBadge(domain = domain)
+  Surface(modifier = Modifier.fillMaxWidth(), color = ClerkMaterialTheme.colors.background) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+      if (showTopDivider) DomainDivider()
+      Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = dp24, vertical = dp16),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(dp16),
+      ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(dp8)) {
+          DomainStatusBadge(domain = domain)
+          Text(
+            text = domain.name,
+            style = ClerkMaterialTheme.typography.bodyLarge,
+            color = ClerkMaterialTheme.colors.foreground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
+        if (canManage) {
+          DomainMoreMenu(
+            domain = domain,
+            enabled = !isLoading,
+            onVerify = onVerify,
+            onManage = onManage,
+            onDelete = onDelete,
+          )
+        }
       }
-      if (canManage) {
-        DomainMoreMenu(
-          domain = domain,
-          enabled = !isLoading,
-          onVerify = onVerify,
-          onManage = onManage,
-          onDelete = onDelete,
-        )
-      }
+      DomainDivider()
     }
   }
 }
@@ -515,15 +506,29 @@ private fun DomainStatusBadge(domain: OrganizationDomain) {
   val foreground =
     if (domain.isVerified) ClerkMaterialTheme.colors.mutedForeground
     else ClerkMaterialTheme.colors.warning
-  Surface(shape = ClerkMaterialTheme.shape, color = color) {
-    Text(
-      modifier = Modifier.padding(horizontal = dp8, vertical = dp4),
-      text = text,
-      style = ClerkMaterialTheme.typography.bodySmall,
-      color = foreground,
-      maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
-    )
+  val borderColor =
+    if (domain.isVerified) ClerkMaterialTheme.computedColors.buttonBorder
+    else ClerkMaterialTheme.computedColors.borderWarning
+  Surface(
+    modifier = Modifier.height(dp18),
+    shape = ClerkMaterialTheme.shape,
+    color = color,
+    border = BorderStroke(dp1, borderColor),
+  ) {
+    Box(modifier = Modifier.padding(horizontal = dp6), contentAlignment = Alignment.Center) {
+      Text(
+        text = text,
+        style =
+          ClerkMaterialTheme.typography.bodySmall.copy(
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+          ),
+        color = foreground,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
   }
 }
 
@@ -558,47 +563,6 @@ private fun EnrollmentModeOptionRow(
 }
 
 @Composable
-private fun DeletePendingRow(
-  checked: Boolean,
-  enabled: Boolean,
-  onCheckedChange: (Boolean) -> Unit,
-) {
-  ListCard(modifier = Modifier.clickable(enabled = enabled) { onCheckedChange(!checked) }) {
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(dp8),
-    ) {
-      Checkbox(checked = checked, enabled = enabled, onCheckedChange = onCheckedChange)
-      Text(
-        modifier = Modifier.weight(1f),
-        text = stringResource(R.string.delete_pending_invitations_and_suggestions),
-        style = ClerkMaterialTheme.typography.bodyMedium,
-        color = ClerkMaterialTheme.colors.foreground,
-      )
-    }
-  }
-}
-
-@Composable
-private fun IconSurface(icon: Int) {
-  Surface(
-    modifier = Modifier.size(dp48),
-    shape = ClerkMaterialTheme.shape,
-    color = ClerkMaterialTheme.colors.muted,
-  ) {
-    Box(contentAlignment = Alignment.Center) {
-      Icon(
-        modifier = Modifier.size(dp24),
-        painter = painterResource(icon),
-        contentDescription = null,
-        tint = ClerkMaterialTheme.colors.mutedForeground,
-      )
-    }
-  }
-}
-
-@Composable
 private fun LoadMoreButton(isLoading: Boolean, onClick: () -> Unit) {
   ClerkButton(
     modifier = Modifier.fillMaxWidth(),
@@ -628,20 +592,8 @@ private fun EmptyState(text: String) {
 }
 
 @Composable
-private fun ErrorNotice(text: String) {
-  Surface(
-    modifier = Modifier.fillMaxWidth(),
-    shape = ClerkMaterialTheme.shape,
-    color = ClerkMaterialTheme.colors.danger.copy(alpha = 0.08f),
-    border = BorderStroke(dp1, ClerkMaterialTheme.colors.danger.copy(alpha = 0.2f)),
-  ) {
-    Text(
-      modifier = Modifier.padding(dp12),
-      text = text,
-      style = ClerkMaterialTheme.typography.bodySmall,
-      color = ClerkMaterialTheme.colors.danger,
-    )
-  }
+private fun DomainDivider() {
+  HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
 }
 
 @Composable
@@ -680,7 +632,8 @@ private fun organizationVerifiedDomainsTitle(flow: OrganizationVerifiedDomainsFl
     OrganizationVerifiedDomainsFlow.AddDomain -> stringResource(R.string.add_domain)
     is OrganizationVerifiedDomainsFlow.VerifyEmail -> stringResource(R.string.verify_domain)
     is OrganizationVerifiedDomainsFlow.VerifyCode -> stringResource(R.string.verify_domain)
-    is OrganizationVerifiedDomainsFlow.EnrollmentMode -> stringResource(R.string.update_domain)
+    is OrganizationVerifiedDomainsFlow.EnrollmentMode ->
+      stringResource(R.string.update_domain_named, flow.domain.name)
     is OrganizationVerifiedDomainsFlow.DeleteDomain -> stringResource(R.string.remove_domain)
   }
 }

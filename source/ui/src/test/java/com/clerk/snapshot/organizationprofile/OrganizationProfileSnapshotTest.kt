@@ -15,6 +15,10 @@ import com.clerk.api.organizations.OrganizationMembershipRequest
 import com.clerk.api.organizations.Role
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.R
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationActions
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationContent
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationState
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileConfirmationAction
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRowPlacement
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileRow
@@ -97,7 +101,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          organization = previewOrganizationProfileOrganization(),
           viewerMembership = previewOrganizationProfileMembership(),
           state =
             OrganizationMembersState(
@@ -116,7 +119,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          organization = previewOrganizationProfileOrganization(),
           viewerMembership = previewOrganizationProfileMembership(),
           state =
             OrganizationMembersState(
@@ -137,17 +139,31 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          organization = previewOrganizationProfileOrganization(),
           viewerMembership = previewOrganizationProfileMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
               selectedTab = OrganizationMembersTab.Invitations,
               roles = sampleRoles,
-              selectedInviteRoleKey = "org:member",
-              inviteEmails = listOf("new@example.com"),
               invitations = listOf(sampleInvitation("inv_1")),
               invitationsTotalCount = 1,
+            ),
+          actions = noOpMembersActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationMembersInvitationsEmptyState() {
+    paparazzi.snapshot {
+      MembersSnapshotSurface {
+        OrganizationMembersContent(
+          viewerMembership = previewOrganizationProfileMembership(),
+          state =
+            OrganizationMembersState(
+              availableTabs = allMembersTabs,
+              selectedTab = OrganizationMembersTab.Invitations,
             ),
           actions = noOpMembersActions,
         )
@@ -160,7 +176,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          organization = previewOrganizationProfileOrganization(),
           viewerMembership = previewOrganizationProfileMembership(),
           state =
             OrganizationMembersState(
@@ -176,11 +191,27 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
   }
 
   @Test
+  fun organizationMembersRequestsEmptyState() {
+    paparazzi.snapshot {
+      MembersSnapshotSurface {
+        OrganizationMembersContent(
+          viewerMembership = previewOrganizationProfileMembership(),
+          state =
+            OrganizationMembersState(
+              availableTabs = allMembersTabs,
+              selectedTab = OrganizationMembersTab.Requests,
+            ),
+          actions = noOpMembersActions,
+        )
+      }
+    }
+  }
+
+  @Test
   fun organizationMembersEmptyState() {
     paparazzi.snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          organization = previewOrganizationProfileOrganization(),
           viewerMembership = previewOrganizationProfileMembership(),
           state =
             OrganizationMembersState(
@@ -332,7 +363,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
               canManageDomains = true,
               flow = OrganizationVerifiedDomainsFlow.EnrollmentMode(domain),
               selectedEnrollmentMode = OrganizationDomain.EnrollmentMode.ManualInvitation,
-              deletePending = true,
             ),
           actions = noOpDomainActions,
         )
@@ -379,6 +409,70 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     }
   }
 
+  @Test
+  fun organizationActionLeaveDisabled() {
+    paparazzi.snapshot {
+      ActionSnapshotSurface {
+        OrganizationProfileActionConfirmationContent(
+          action = OrganizationProfileConfirmationAction.LeaveOrganization,
+          organizationName = "Acme Inc.",
+          state = OrganizationProfileActionConfirmationState(),
+          actions = noOpActionConfirmationActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationActionDeleteReady() {
+    paparazzi.snapshot {
+      ActionSnapshotSurface {
+        OrganizationProfileActionConfirmationContent(
+          action = OrganizationProfileConfirmationAction.DeleteOrganization,
+          organizationName = "Acme Inc.",
+          state = OrganizationProfileActionConfirmationState(confirmationText = "Acme Inc."),
+          actions = noOpActionConfirmationActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationActionLeaveLoading() {
+    paparazzi.snapshot {
+      ActionSnapshotSurface {
+        OrganizationProfileActionConfirmationContent(
+          action = OrganizationProfileConfirmationAction.LeaveOrganization,
+          organizationName = "Acme Inc.",
+          state =
+            OrganizationProfileActionConfirmationState(
+              confirmationText = "Acme Inc.",
+              isLoading = true,
+            ),
+          actions = noOpActionConfirmationActions,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun organizationActionDeleteError() {
+    paparazzi.snapshot {
+      ActionSnapshotSurface {
+        OrganizationProfileActionConfirmationContent(
+          action = OrganizationProfileConfirmationAction.DeleteOrganization,
+          organizationName = "Acme Inc.",
+          state =
+            OrganizationProfileActionConfirmationState(
+              confirmationText = "Acme Inc.",
+              errorMessage = "Unable to delete organization",
+            ),
+          actions = noOpActionConfirmationActions,
+        )
+      }
+    }
+  }
+
   private val allMembersTabs =
     listOf(
       OrganizationMembersTab.Members,
@@ -416,10 +510,6 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
       onLoadMoreMembers = {},
       onLoadMoreInvitations = {},
       onLoadMoreRequests = {},
-      onSelectInviteRole = {},
-      onInviteInputSubmitted = {},
-      onRemoveInviteEmail = {},
-      onSendInvitations = {},
       onUpdateMemberRole = { _, _ -> },
       onRemoveMember = {},
       onRevokeInvitation = {},
@@ -444,9 +534,15 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
       onVerifyCode = {},
       onResendVerificationCode = { _, _ -> },
       onSelectEnrollmentMode = {},
-      onDeletePendingChanged = {},
       onUpdateEnrollmentMode = {},
       onDeleteDomain = {},
+    )
+
+  private val noOpActionConfirmationActions =
+    OrganizationProfileActionConfirmationActions(
+      onConfirmationTextChanged = {},
+      onConfirm = {},
+      onCancel = {},
     )
 
   private fun sampleMember(
@@ -462,7 +558,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
       permissions = emptyList(),
       publicUserData = samplePublicUserData(id, firstName, lastName),
       organization = previewOrganizationProfileOrganization(),
-      createdAt = 1,
+      createdAt = SAMPLE_JOINED_AT,
       updatedAt = 1,
     )
   }
@@ -533,6 +629,8 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
   }
 }
 
+private const val SAMPLE_JOINED_AT = 1746446400000L
+
 @Composable
 private fun MembersSnapshotSurface(content: @Composable () -> Unit) {
   ClerkMaterialTheme {
@@ -544,6 +642,15 @@ private fun MembersSnapshotSurface(content: @Composable () -> Unit) {
 
 @Composable
 private fun DomainsSnapshotSurface(content: @Composable () -> Unit) {
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.size(740.dp).background(ClerkMaterialTheme.colors.background)) {
+      content()
+    }
+  }
+}
+
+@Composable
+private fun ActionSnapshotSurface(content: @Composable () -> Unit) {
   ClerkMaterialTheme {
     Box(modifier = Modifier.size(740.dp).background(ClerkMaterialTheme.colors.background)) {
       content()

@@ -35,7 +35,6 @@ internal data class OrganizationVerifiedDomainsState(
   val enrollmentModeOptions: List<OrganizationDomain.EnrollmentMode> = defaultEnrollmentModeOptions,
   val selectedEnrollmentMode: OrganizationDomain.EnrollmentMode =
     OrganizationDomain.EnrollmentMode.ManualInvitation,
-  val deletePending: Boolean = false,
 ) {
   val canLoadDomains: Boolean
     get() = domainsEnabled && (canReadDomains || canManageDomains)
@@ -55,9 +54,6 @@ internal data class OrganizationVerifiedDomainsState(
       canManageDomains &&
         selectedEnrollmentMode in enrollmentModeOptions &&
         activeMutationId == null
-
-  val isManualInvitationSelected: Boolean
-    get() = selectedEnrollmentMode == OrganizationDomain.EnrollmentMode.ManualInvitation
 }
 
 internal data class OrganizationVerifiedDomainsActions(
@@ -76,7 +72,6 @@ internal data class OrganizationVerifiedDomainsActions(
   val onVerifyCode: (OrganizationDomain) -> Unit,
   val onResendVerificationCode: (OrganizationDomain, String) -> Unit,
   val onSelectEnrollmentMode: (OrganizationDomain.EnrollmentMode) -> Unit,
-  val onDeletePendingChanged: (Boolean) -> Unit,
   val onUpdateEnrollmentMode: (OrganizationDomain) -> Unit,
   val onDeleteDomain: (OrganizationDomain) -> Unit,
 )
@@ -98,7 +93,7 @@ internal fun enrollmentModeOptions(
         else -> mode
       }
     }
-  return options.ifEmpty { defaultEnrollmentModeOptions }
+  return (defaultEnrollmentModeOptions + options).distinct()
 }
 
 internal const val CREATE_DOMAIN_MUTATION_ID = "create-domain"

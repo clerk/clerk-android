@@ -155,6 +155,32 @@ class OrganizationProfileUpdateViewModelTest {
     }
   }
 
+  @Test
+  fun `clearError resets error state to idle`() = runTest {
+    val organization = organization()
+    coEvery { organization.update(name = "Acme Labs", slug = "acme-labs") } returns
+      ClerkResult.Failure(ClerkErrorResponse(errors = listOf(Error(longMessage = "boom"))))
+
+    val viewModel = OrganizationProfileUpdateViewModel()
+    viewModel.state.test {
+      assertEquals(OrganizationProfileUpdateViewModel.State.Idle, awaitItem())
+      viewModel.save(
+        organization = organization,
+        name = "Acme Labs",
+        slug = "acme-labs",
+        logoFile = null,
+        removeLogo = false,
+      )
+      assertEquals(OrganizationProfileUpdateViewModel.State.Loading, awaitItem())
+      assertEquals(
+        OrganizationProfileUpdateViewModel.State.Error("Failed to update organization: boom"),
+        awaitItem(),
+      )
+      viewModel.clearError()
+      assertEquals(OrganizationProfileUpdateViewModel.State.Idle, awaitItem())
+    }
+  }
+
   private fun organization(id: String = "org_123"): Organization {
     return mockk(name = id)
   }

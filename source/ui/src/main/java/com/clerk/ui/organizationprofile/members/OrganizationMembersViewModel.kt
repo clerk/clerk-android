@@ -12,18 +12,15 @@ import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationMembershipRequest
-import com.clerk.api.organizations.Role
 import com.clerk.api.organizations.accept
-import com.clerk.api.organizations.bulkCreateInvitations
 import com.clerk.api.organizations.getInvitations
 import com.clerk.api.organizations.getMembershipRequests
 import com.clerk.api.organizations.getOrganizationMemberships
-import com.clerk.api.organizations.getRoles
+import com.clerk.api.organizations.getRolesPaginated
 import com.clerk.api.organizations.reject
 import com.clerk.api.organizations.removeMember
 import com.clerk.api.organizations.revoke
 import com.clerk.api.organizations.updateMembership
-import com.clerk.ui.organizationprofile.invite.parseInviteEmailAddresses
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -49,12 +46,16 @@ internal class OrganizationMembersViewModel(
     organization: Organization,
     membership: OrganizationMembership?,
     domainsEnabled: Boolean = Clerk.organizationDomainsIsEnabled,
+    initialTab: OrganizationMembersTab? = null,
   ) {
     this.organization = organization
     this.membership = membership
     this.domainsEnabled = domainsEnabled
     val tabs = organizationMembersAvailableTabs(membership, domainsEnabled)
-    val selectedTab = mutableState.value.selectedTab?.takeIf { it in tabs } ?: tabs.firstOrNull()
+    val selectedTab =
+      mutableState.value.selectedTab?.takeIf { it in tabs }
+        ?: initialTab?.takeIf { it in tabs }
+        ?: tabs.firstOrNull()
 
     mutableState.value =
       mutableState.value.copy(
@@ -62,6 +63,7 @@ internal class OrganizationMembersViewModel(
         selectedTab = selectedTab,
         isLoadingInitial = true,
         errorMessage = null,
+        hasRoleSetMigration = false,
       )
 
     viewModelScope.launch(dispatcher) {
@@ -110,53 +112,6 @@ internal class OrganizationMembersViewModel(
   fun loadMoreRequests() {
     if (!mutableState.value.requestsHasNextPage || mutableState.value.isLoadingMoreRequests) return
     viewModelScope.launch(dispatcher) { loadRequests(reset = false) }
-  }
-
-  fun selectInviteRole(roleKey: String) {
-    mutableState.value = mutableState.value.copy(selectedInviteRoleKey = roleKey)
-  }
-
-  fun addInviteEmails(input: String) {
-    val emails = parseInviteEmailAddresses(input)
-    if (emails.isEmpty()) return
-
-    mutableState.value =
-      mutableState.value.copy(inviteEmails = (mutableState.value.inviteEmails + emails).distinct())
-  }
-
-  fun removeInviteEmail(email: String) {
-    mutableState.value =
-      mutableState.value.copy(inviteEmails = mutableState.value.inviteEmails - email)
-  }
-
-  @Suppress("ReturnCount")
-  fun sendInvitations() {
-    val currentOrganization = organization ?: return
-    val currentState = mutableState.value
-    val role = currentState.selectedInviteRoleKey ?: return
-    val emailAddresses = currentState.inviteEmails
-    if (emailAddresses.isEmpty() || currentState.activeMutationId != null) return
-    if (currentState.inviteWouldExceedMembershipLimit(currentOrganization)) {
-      mutableState.value =
-        currentState.copy(errorMessage = "Invite limit would exceed allowed memberships")
-      return
-    }
-
-    mutableState.value =
-      currentState.copy(activeMutationId = INVITE_MUTATION_ID, errorMessage = null)
-    viewModelScope.launch(dispatcher) {
-      when (
-        val result =
-          currentOrganization.bulkCreateInvitations(emailAddresses = emailAddresses, role = role)
-      ) {
-        is ClerkResult.Success -> {
-          mutableState.value =
-            mutableState.value.copy(activeMutationId = null, inviteEmails = emptyList())
-          loadInvitations(reset = true)
-        }
-        is ClerkResult.Failure -> mutationFailed(result.errorMessage)
-      }
-    }
   }
 
   @Suppress("ReturnCount")
@@ -249,12 +204,12 @@ internal class OrganizationMembersViewModel(
 
   private suspend fun loadRoles() {
     val currentOrganization = organization ?: return
-    when (val result = currentOrganization.getRoles()) {
+    when (val result = currentOrganization.getRolesPaginated()) {
       is ClerkResult.Success ->
         mutableState.value =
           mutableState.value.copy(
-            roles = result.value,
-            selectedInviteRoleKey = defaultInviteRole(result.value),
+            roles = result.value.data,
+            hasRoleSetMigration = result.value.hasRoleSetMigration == true,
           )
       is ClerkResult.Failure ->
         mutableState.value = mutableState.value.copy(errorMessage = result.errorMessage)
@@ -298,7 +253,8 @@ internal class OrganizationMembersViewModel(
         membersTotalCount = page.totalCount,
         membersHasNextPage = memberships.size < page.totalCount,
         isLoadingMoreMembers = false,
-        hasRoleSetMigration = page.hasRoleSetMigration == true,
+        hasRoleSetMigration =
+          mutableState.value.hasRoleSetMigration || page.hasRoleSetMigration == true,
       )
   }
 
@@ -387,14 +343,8 @@ internal class OrganizationMembersViewModel(
     mutableState.value =
       mutableState.value.copy(activeMutationId = null, errorMessage = errorMessage)
   }
-
-  private fun defaultInviteRole(roles: List<Role>): String? {
-    val defaultRole = Clerk.organizationDefaultRoleKey
-    return roles.firstOrNull { it.key == defaultRole }?.key ?: roles.singleOrNull()?.key
-  }
 }
 
 private const val DEFAULT_PAGE_SIZE = 20
 private const val MEMBER_SEARCH_DEBOUNCE_MS = 300L
 private const val REQUEST_PENDING_STATUS = "pending"
-private const val INVITE_MUTATION_ID = "invite"

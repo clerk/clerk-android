@@ -1,6 +1,5 @@
 package com.clerk.ui.organizationprofile.members
 
-import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -13,18 +12,15 @@ import com.clerk.api.organizations.OrganizationMembershipRequest
 import com.clerk.api.organizations.OrganizationSystemPermission
 import com.clerk.api.organizations.Role
 import com.clerk.api.organizations.accept
-import com.clerk.api.organizations.bulkCreateInvitations
 import com.clerk.api.organizations.getInvitations
 import com.clerk.api.organizations.getMembershipRequests
 import com.clerk.api.organizations.getOrganizationMemberships
-import com.clerk.api.organizations.getRoles
+import com.clerk.api.organizations.getRolesPaginated
 import com.clerk.api.organizations.removeMember
 import com.clerk.api.organizations.updateMembership
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.unmockkStatic
@@ -50,8 +46,6 @@ class OrganizationMembersViewModelTest {
 
   @BeforeTest
   fun setUp() {
-    mockkObject(Clerk)
-    every { Clerk.organizationDefaultRoleKey } returns "org:member"
     mockkStatic("com.clerk.api.organizations.OrganizationKt")
     mockkStatic("com.clerk.api.organizations.OrganizationMembershipKt")
     mockkStatic("com.clerk.api.organizations.OrganizationMembershipRequestKt")
@@ -73,7 +67,10 @@ class OrganizationMembersViewModelTest {
     val invitation = invitation("inv_1")
     val request = request("req_1")
     val roles = listOf(role("org:admin", "Admin"), role("org:member", "Member"))
-    coEvery { organization.getRoles() } returns ClerkResult.success(roles)
+    coEvery { organization.getRolesPaginated() } returns
+      ClerkResult.success(
+        ClerkPaginatedResponse(data = roles, totalCount = 2, hasRoleSetMigration = true)
+      )
     coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
       ClerkResult.success(
         ClerkPaginatedResponse(data = listOf(member), totalCount = 1, hasRoleSetMigration = true)
@@ -106,10 +103,29 @@ class OrganizationMembersViewModelTest {
     assertEquals(listOf(member), state.members)
     assertEquals(listOf(invitation), state.invitations)
     assertEquals(listOf(request), state.requests)
-    assertEquals("org:member", state.selectedInviteRoleKey)
     assertTrue(state.hasRoleSetMigration)
     assertFalse(state.isLoadingInitial)
     assertNull(state.errorMessage)
+  }
+
+  @Test
+  fun `load selects requested initial tab when available`() = runTest {
+    val organization = organization()
+    val viewer = viewerMembership()
+    stubManageResources(organization)
+    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+
+    val viewModel = viewModel(pageSize = 2)
+    viewModel.load(
+      organization = organization,
+      membership = viewer,
+      domainsEnabled = true,
+      initialTab = OrganizationMembersTab.Invitations,
+    )
+    advanceUntilIdle()
+
+    assertEquals(OrganizationMembersTab.Invitations, viewModel.state.value.selectedTab)
   }
 
   @Test
@@ -214,30 +230,6 @@ class OrganizationMembersViewModelTest {
   }
 
   @Test
-  fun `sendInvitations blocks when invites would exceed membership limit`() = runTest {
-    val organization = organization(maxAllowedMemberships = 2, membersCount = 1, pendingCount = 0)
-    val viewer = viewerMembership()
-    stubManageResources(organization)
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
-      ClerkResult.success(
-        ClerkPaginatedResponse(data = listOf(member("mem_1", "Ada")), totalCount = 1)
-      )
-
-    val viewModel = viewModel(pageSize = 2)
-    viewModel.load(organization = organization, membership = viewer, domainsEnabled = true)
-    advanceUntilIdle()
-    viewModel.addInviteEmails("one@example.com two@example.com")
-    viewModel.sendInvitations()
-    advanceUntilIdle()
-
-    coVerify(exactly = 0) { organization.bulkCreateInvitations(any<List<String>>(), any<String>()) }
-    assertEquals(
-      "Invite limit would exceed allowed memberships",
-      viewModel.state.value.errorMessage,
-    )
-  }
-
-  @Test
   fun `acceptRequest removes request from state`() = runTest {
     val organization = organization()
     val viewer = viewerMembership()
@@ -281,8 +273,13 @@ class OrganizationMembersViewModelTest {
   }
 
   private fun stubManageResources(organization: Organization) {
-    coEvery { organization.getRoles() } returns
-      ClerkResult.success(listOf(role("org:admin", "Admin"), role("org:member", "Member")))
+    coEvery { organization.getRolesPaginated() } returns
+      ClerkResult.success(
+        ClerkPaginatedResponse(
+          data = listOf(role("org:admin", "Admin"), role("org:member", "Member")),
+          totalCount = 2,
+        )
+      )
     coEvery {
       organization.getInvitations(
         limit = any(),

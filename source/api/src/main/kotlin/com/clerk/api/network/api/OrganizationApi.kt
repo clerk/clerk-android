@@ -41,7 +41,7 @@ interface OrganizationApi {
    * @param organizationId The unique identifier of the organization
    * @param limit Maximum number of roles to return (optional)
    * @param offset Number of roles to skip for pagination (optional)
-   * @return A [ClerkResult] containing either a list of [Role]s on success or a
+   * @return A [ClerkResult] containing either a paginated list of [Role]s on success or a
    *   [ClerkErrorResponse] on failure
    * @see com.clerk.api.organizations.getRoles
    */
@@ -51,7 +51,7 @@ interface OrganizationApi {
     @Query("limit") limit: Int? = null,
     @Query("offset") offset: Int? = null,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
-  ): ClerkResult<List<Role>, ClerkErrorResponse>
+  ): ClerkResult<ClerkPaginatedResponse<Role>, ClerkErrorResponse>
 
   /**
    * Creates a new organization.

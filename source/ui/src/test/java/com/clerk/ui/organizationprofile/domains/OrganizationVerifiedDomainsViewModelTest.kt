@@ -84,6 +84,13 @@ class OrganizationVerifiedDomainsViewModelTest {
   }
 
   @Test
+  fun `enrollment options include automatic invitations when client config omits it`() {
+    val options = enrollmentModeOptions(listOf("manual_invitation", "automatic_suggestion"))
+
+    assertEquals(defaultEnrollmentModeOptions, options)
+  }
+
+  @Test
   fun `loadMoreDomains appends next page`() = runTest {
     val organization = organization()
     val first = domain(id = "dom_1", name = "example.com")
@@ -177,7 +184,7 @@ class OrganizationVerifiedDomainsViewModelTest {
   }
 
   @Test
-  fun `updateEnrollmentMode passes deletePending when switching to manual invitation`() = runTest {
+  fun `updateEnrollmentMode saves selected enrollment mode`() = runTest {
     val organization = organization()
     val domain = domain(enrollmentMode = "automatic_suggestion")
     val updated = domain.copy(enrollmentMode = "manual_invitation")
@@ -185,8 +192,7 @@ class OrganizationVerifiedDomainsViewModelTest {
       ClerkResult.success(ClerkPaginatedResponse(data = listOf(domain), totalCount = 1))
     coEvery {
       domain.updateEnrollmentMode(
-        enrollmentMode = OrganizationDomain.EnrollmentMode.ManualInvitation,
-        deletePending = true,
+        enrollmentMode = OrganizationDomain.EnrollmentMode.ManualInvitation
       )
     } returns ClerkResult.success(updated)
 
@@ -195,14 +201,12 @@ class OrganizationVerifiedDomainsViewModelTest {
     advanceUntilIdle()
     viewModel.showEnrollmentMode(domain)
     viewModel.selectEnrollmentMode(OrganizationDomain.EnrollmentMode.ManualInvitation)
-    viewModel.setDeletePending(true)
     viewModel.updateEnrollmentMode(domain)
     advanceUntilIdle()
 
     coVerify(exactly = 1) {
       domain.updateEnrollmentMode(
-        enrollmentMode = OrganizationDomain.EnrollmentMode.ManualInvitation,
-        deletePending = true,
+        enrollmentMode = OrganizationDomain.EnrollmentMode.ManualInvitation
       )
     }
     assertEquals(updated, viewModel.state.value.domains.single())

@@ -13,12 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,12 +31,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.Clerk
+import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.ui.ClerkTheme
@@ -56,13 +58,13 @@ import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
-import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
 import com.clerk.ui.organizationlist.OrganizationAccountListViewModel
 import com.clerk.ui.organizationprofile.OrganizationProfileView
 import com.clerk.ui.organizationprofile.create.OrganizationCreateFlowView
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
+import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userbutton.UserButton
@@ -171,15 +173,46 @@ internal fun OrganizationSwitcherImpl(
   var showOrganizationProfile by rememberSaveable { mutableStateOf(false) }
   var showOrganizationCreate by rememberSaveable { mutableStateOf(false) }
   var organizationCreateDefaults by remember { mutableStateOf<OrganizationCreationDefaults?>(null) }
+  var postCreateInviteOrganization by remember { mutableStateOf<Organization?>(null) }
 
   val activeMembership = activeOrganizationMembership(user, session, state.memberships)
   val showPersonalAccount = user != null && !hidePersonal && !Clerk.organizationSelectionIsForced
+  val dismissActiveSheet = { sheetDestination = null }
+  val manageOrganizationAction =
+    onManageOrganization?.let { manageOrganization ->
+      { membership: OrganizationMembership ->
+        dismissActiveSheet()
+        manageOrganization(membership)
+      }
+    }
+      ?: { _: OrganizationMembership ->
+        dismissActiveSheet()
+        showOrganizationProfile = true
+      }
+  val createOrganizationAction =
+    onCreateOrganization
+      ?: { creationDefaults: OrganizationCreationDefaults? ->
+        dismissActiveSheet()
+        showOrganizationCreate = true
+        organizationCreateDefaults = creationDefaults
+      }
+  val activeSheetActions =
+    organizationSwitcherAccountListActions(
+      state = state,
+      viewModel = viewModel,
+      onDismiss = dismissActiveSheet,
+      onOrganizationChanged = onOrganizationChanged,
+      onCreateOrganization = createOrganizationAction,
+    )
 
   OrganizationSwitcherEffects(
     userId = user?.id,
     sessionId = session?.id,
     hasUser = user != null,
-    viewModel = viewModel,
+    onSessionChanged = {
+      viewModel.reset()
+      viewModel.load()
+    },
   )
 
   val shouldShow =
@@ -207,6 +240,7 @@ internal fun OrganizationSwitcherImpl(
     showOrganizationProfile = showOrganizationProfile,
     showOrganizationCreate = showOrganizationCreate,
     organizationCreateDefaults = organizationCreateDefaults,
+    postCreateInviteOrganization = postCreateInviteOrganization,
     state = state,
     user = user,
     activeMembership = activeMembership,
@@ -215,26 +249,22 @@ internal fun OrganizationSwitcherImpl(
     clerkTheme = clerkTheme,
     organizationProfileCustomRows = organizationProfileCustomRows,
     organizationProfileCustomDestination = organizationProfileCustomDestination,
-    onDismissActiveSheet = { sheetDestination = null },
+    onDismissActiveSheet = dismissActiveSheet,
     onShowAccountList = { sheetDestination = OrganizationSwitcherSheetDestination.AccountList },
-    onShowOrganizationProfile = {
-      sheetDestination = null
-      showOrganizationProfile = true
-    },
     onDismissOrganizationProfile = { showOrganizationProfile = false },
-    onShowOrganizationCreate = { creationDefaults ->
-      sheetDestination = null
-      showOrganizationCreate = true
-      organizationCreateDefaults = creationDefaults
-    },
     onDismissOrganizationCreate = {
       showOrganizationCreate = false
       organizationCreateDefaults = null
     },
-    onManageOrganization = onManageOrganization,
-    onOrganizationChanged = onOrganizationChanged,
-    onCreateOrganization = onCreateOrganization,
-    viewModel = viewModel,
+    onShowPostCreateInvitations = { organization ->
+      showOrganizationCreate = false
+      organizationCreateDefaults = null
+      postCreateInviteOrganization = organization
+    },
+    onDismissPostCreateInvitations = { postCreateInviteOrganization = null },
+    onManageOrganization = manageOrganizationAction,
+    onErrorShown = viewModel::clearError,
+    actions = activeSheetActions,
   )
 }
 
@@ -280,6 +310,7 @@ private fun OrganizationSwitcherSheets(
   showOrganizationProfile: Boolean,
   showOrganizationCreate: Boolean,
   organizationCreateDefaults: OrganizationCreationDefaults?,
+  postCreateInviteOrganization: Organization?,
   state: OrganizationAccountListState,
   user: User?,
   activeMembership: OrganizationMembership?,
@@ -290,14 +321,13 @@ private fun OrganizationSwitcherSheets(
   organizationProfileCustomDestination: (@Composable (String) -> Unit)?,
   onDismissActiveSheet: () -> Unit,
   onShowAccountList: () -> Unit,
-  onShowOrganizationProfile: () -> Unit,
   onDismissOrganizationProfile: () -> Unit,
-  onShowOrganizationCreate: (OrganizationCreationDefaults?) -> Unit,
   onDismissOrganizationCreate: () -> Unit,
-  onManageOrganization: ((OrganizationMembership) -> Unit)?,
-  onOrganizationChanged: (() -> Unit)?,
-  onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)?,
-  viewModel: OrganizationAccountListViewModel,
+  onShowPostCreateInvitations: (Organization) -> Unit,
+  onDismissPostCreateInvitations: () -> Unit,
+  onManageOrganization: (OrganizationMembership) -> Unit,
+  onErrorShown: () -> Unit,
+  actions: OrganizationAccountListActions,
 ) {
   OrganizationSwitcherActiveSheet(
     destination = destination,
@@ -309,15 +339,12 @@ private fun OrganizationSwitcherSheets(
     onDismiss = onDismissActiveSheet,
     onShowAccountList = onShowAccountList,
     onManageOrganization = onManageOrganization,
-    onShowOrganizationProfile = onShowOrganizationProfile,
-    onShowOrganizationCreate = onShowOrganizationCreate,
-    onOrganizationChanged = onOrganizationChanged,
-    onCreateOrganization = onCreateOrganization,
-    viewModel = viewModel,
+    onErrorShown = onErrorShown,
+    actions = actions,
   )
 
   if (showOrganizationProfile) {
-    OrganizationSwitcherProfileSheet(
+    OrganizationSwitcherProfilePage(
       clerkTheme = clerkTheme,
       customRows = organizationProfileCustomRows,
       customDestination = organizationProfileCustomDestination,
@@ -326,9 +353,17 @@ private fun OrganizationSwitcherSheets(
   }
 
   if (showOrganizationCreate) {
-    OrganizationSwitcherCreateSheet(
+    OrganizationSwitcherCreatePage(
       creationDefaults = organizationCreateDefaults,
       onDismiss = onDismissOrganizationCreate,
+      onInviteMembers = onShowPostCreateInvitations,
+    )
+  }
+
+  if (postCreateInviteOrganization != null) {
+    OrganizationSwitcherPostCreateInvitationsPage(
+      organization = postCreateInviteOrganization,
+      onDismiss = onDismissPostCreateInvitations,
     )
   }
 }
@@ -338,13 +373,10 @@ private fun OrganizationSwitcherEffects(
   userId: String?,
   sessionId: String?,
   hasUser: Boolean,
-  viewModel: OrganizationAccountListViewModel,
+  onSessionChanged: () -> Unit,
 ) {
   val telemetry = LocalTelemetryCollector.current
-  LaunchedEffect(userId, sessionId) {
-    viewModel.reset()
-    viewModel.load()
-  }
+  LaunchedEffect(userId, sessionId) { onSessionChanged() }
   LaunchedEffect(userId) {
     if (hasUser) telemetry.record(TelemetryEvents.viewDidAppear("OrganizationSwitcher"))
   }
@@ -360,27 +392,11 @@ private fun OrganizationSwitcherActiveSheet(
   showPersonalAccount: Boolean,
   onDismiss: () -> Unit,
   onShowAccountList: () -> Unit,
-  onManageOrganization: ((OrganizationMembership) -> Unit)?,
-  onShowOrganizationProfile: () -> Unit,
-  onShowOrganizationCreate: (OrganizationCreationDefaults?) -> Unit,
-  onOrganizationChanged: (() -> Unit)?,
-  onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)?,
-  viewModel: OrganizationAccountListViewModel,
+  onManageOrganization: (OrganizationMembership) -> Unit,
+  onErrorShown: () -> Unit,
+  actions: OrganizationAccountListActions,
 ) {
   destination ?: return
-  val manageOrganizationAction =
-    onManageOrganization?.let { manageOrganization ->
-      { membership: OrganizationMembership ->
-        onDismiss()
-        manageOrganization(membership)
-      }
-    } ?: { _: OrganizationMembership -> onShowOrganizationProfile() }
-  val createOrganizationAction =
-    onCreateOrganization
-      ?: { creationDefaults: OrganizationCreationDefaults? ->
-        onDismiss()
-        onShowOrganizationCreate(creationDefaults)
-      }
 
   OrganizationSwitcherSheet(
     destination = destination,
@@ -392,34 +408,20 @@ private fun OrganizationSwitcherActiveSheet(
     showCreateOrganization = true,
     onDismiss = onDismiss,
     onShowAccountList = onShowAccountList,
-    onManageOrganization = manageOrganizationAction,
-    onErrorShown = viewModel::clearError,
-    actions =
-      organizationSwitcherAccountListActions(
-        state = state,
-        viewModel = viewModel,
-        onDismiss = onDismiss,
-        onOrganizationChanged = onOrganizationChanged,
-        onCreateOrganization = createOrganizationAction,
-      ),
+    onManageOrganization = onManageOrganization,
+    onErrorShown = onErrorShown,
+    actions = actions,
   )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OrganizationSwitcherProfileSheet(
+private fun OrganizationSwitcherProfilePage(
   clerkTheme: ClerkTheme?,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
   onDismiss: () -> Unit,
 ) {
-  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  ModalBottomSheet(
-    onDismissRequest = onDismiss,
-    sheetState = sheetState,
-    containerColor = ClerkMaterialTheme.colors.background,
-    contentColor = ClerkMaterialTheme.colors.foreground,
-  ) {
+  OrganizationSwitcherFullScreenPage(onDismiss = onDismiss) {
     OrganizationProfileView(
       modifier = Modifier.fillMaxSize(),
       clerkTheme = clerkTheme,
@@ -430,24 +432,52 @@ private fun OrganizationSwitcherProfileSheet(
   }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OrganizationSwitcherCreateSheet(
+private fun OrganizationSwitcherCreatePage(
   creationDefaults: OrganizationCreationDefaults?,
   onDismiss: () -> Unit,
+  onInviteMembers: (Organization) -> Unit,
 ) {
-  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  ModalBottomSheet(
-    onDismissRequest = onDismiss,
-    sheetState = sheetState,
-    containerColor = ClerkMaterialTheme.colors.background,
-    contentColor = ClerkMaterialTheme.colors.foreground,
-  ) {
+  OrganizationSwitcherFullScreenPage(onDismiss = onDismiss) {
     OrganizationCreateFlowView(
       modifier = Modifier.fillMaxSize(),
       creationDefaults = creationDefaults,
       onComplete = onDismiss,
+      onInviteMembers = onInviteMembers,
     )
+  }
+}
+
+@Composable
+private fun OrganizationSwitcherPostCreateInvitationsPage(
+  organization: Organization,
+  onDismiss: () -> Unit,
+) {
+  OrganizationSwitcherFullScreenPage(onDismiss = onDismiss) {
+    OrganizationInviteMembersView(
+      modifier = Modifier.fillMaxSize(),
+      organization = organization,
+      onComplete = onDismiss,
+    )
+  }
+}
+
+@Composable
+private fun OrganizationSwitcherFullScreenPage(
+  onDismiss: () -> Unit,
+  content: @Composable () -> Unit,
+) {
+  Dialog(
+    onDismissRequest = onDismiss,
+    properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+  ) {
+    Surface(
+      modifier = Modifier.fillMaxSize(),
+      color = ClerkMaterialTheme.colors.background,
+      contentColor = ClerkMaterialTheme.colors.foreground,
+    ) {
+      content()
+    }
   }
 }
 
@@ -550,7 +580,13 @@ private fun NormalOrganizationSwitcherButton(
       text = content.label ?: stringResource(R.string.select_organization),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
-      style = ClerkMaterialTheme.typography.bodyLarge.withMediumWeight(),
+      style =
+        ClerkMaterialTheme.typography.headlineLarge.copy(
+          fontSize = 34.sp,
+          lineHeight = 41.sp,
+          letterSpacing = 0.4.sp,
+          fontWeight = FontWeight.Bold,
+        ),
       color = ClerkMaterialTheme.colors.foreground,
     )
     if (isLoading) {

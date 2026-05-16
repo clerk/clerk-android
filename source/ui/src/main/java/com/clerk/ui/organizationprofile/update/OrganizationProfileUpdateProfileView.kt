@@ -45,6 +45,7 @@ internal fun OrganizationProfileUpdateProfileView(
       horizontalPadding = dp0,
       onBackPressed = onBackPressed,
       errorMessage = errorMessage,
+      onErrorShown = viewModel::clearError,
       content = {
         Column(
           modifier = Modifier.fillMaxWidth().padding(horizontal = dp18, vertical = dp16),

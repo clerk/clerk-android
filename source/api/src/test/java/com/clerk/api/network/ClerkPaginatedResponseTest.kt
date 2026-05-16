@@ -1,5 +1,6 @@
 package com.clerk.api.network
 
+import com.clerk.api.organizations.Role
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -41,5 +42,34 @@ class ClerkPaginatedResponseTest {
     assertEquals(emptyList<String>(), response.data)
     assertEquals(0, response.totalCount)
     assertNull(response.hasRoleSetMigration)
+  }
+
+  @Test
+  fun `decodes paginated organization roles`() {
+    val response =
+      ClerkApi.json.decodeFromString<ClerkPaginatedResponse<Role>>(
+        """
+        {
+          "data": [
+            {
+              "id": "role_member",
+              "key": "org:member",
+              "name": "Member",
+              "description": "Member",
+              "permissions": [],
+              "created_at": 1,
+              "updated_at": 2
+            }
+          ],
+          "total_count": 1,
+          "has_role_set_migration": false
+        }
+        """
+          .trimIndent()
+      )
+
+    assertEquals("org:member", response.data.single().key)
+    assertEquals(1, response.totalCount)
+    assertEquals(false, response.hasRoleSetMigration)
   }
 }

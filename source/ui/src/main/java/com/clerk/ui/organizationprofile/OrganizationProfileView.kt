@@ -14,9 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
@@ -30,15 +31,17 @@ import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
-import com.clerk.ui.R
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationView
+import com.clerk.ui.organizationprofile.actions.OrganizationProfileConfirmationAction
 import com.clerk.ui.organizationprofile.custom.LocalOrganizationProfileCustomNavigator
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomNavigator
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRouteNavKey
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.custom.effectiveOrganizationProfileCustomRows
 import com.clerk.ui.organizationprofile.domains.OrganizationVerifiedDomainsView
+import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
 import com.clerk.ui.organizationprofile.members.OrganizationMembersView
 import com.clerk.ui.organizationprofile.root.OrganizationProfileAction
 import com.clerk.ui.organizationprofile.root.OrganizationProfileRootView
@@ -121,6 +124,8 @@ private fun OrganizationProfileNavDisplay(
   modifier: Modifier = Modifier,
   onDismiss: () -> Unit,
 ) {
+  var membersRefreshKey by remember { mutableIntStateOf(0) }
+
   NavDisplay(
     modifier = modifier,
     backStack = backStack,
@@ -147,6 +152,8 @@ private fun OrganizationProfileNavDisplay(
           membership = membership,
           isDismissable = isDismissable,
           onDismiss = onDismiss,
+          membersRefreshKey = membersRefreshKey,
+          onInviteMembersComplete = { membersRefreshKey += 1 },
           customRows = customRows,
           customDestination = customDestination,
         )
@@ -189,6 +196,8 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   membership: OrganizationMembership?,
   isDismissable: Boolean,
   onDismiss: () -> Unit,
+  membersRefreshKey: Int,
+  onInviteMembersComplete: () -> Unit,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
 ) {
@@ -220,6 +229,18 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
       organization = organization,
       membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
+      refreshKey = membersRefreshKey,
+      onInviteMembers = { backStack.add(OrganizationProfileDestination.InviteMembers) },
+    )
+  }
+
+  entry<OrganizationProfileDestination.InviteMembers> {
+    OrganizationInviteMembersView(
+      organization = organization,
+      onComplete = {
+        onInviteMembersComplete()
+        backStack.removeLastOrNull()
+      },
     )
   }
 
@@ -239,16 +260,22 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   }
 
   entry<OrganizationProfileDestination.LeaveOrganization> {
-    OrganizationProfilePlaceholderView(
-      title = stringResource(R.string.leave_organization),
+    OrganizationProfileActionConfirmationView(
+      action = OrganizationProfileConfirmationAction.LeaveOrganization,
+      organization = organization,
+      membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
+      onSuccess = onDismiss,
     )
   }
 
   entry<OrganizationProfileDestination.DeleteOrganization> {
-    OrganizationProfilePlaceholderView(
-      title = stringResource(R.string.delete_organization),
+    OrganizationProfileActionConfirmationView(
+      action = OrganizationProfileConfirmationAction.DeleteOrganization,
+      organization = organization,
+      membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
+      onSuccess = onDismiss,
     )
   }
 
@@ -277,15 +304,6 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   }
 }
 
-@Composable
-private fun OrganizationProfilePlaceholderView(title: String, onBackPressed: () -> Unit) {
-  com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold(
-    title = title,
-    onBackPressed = onBackPressed,
-    content = {},
-  )
-}
-
 private val OrganizationProfileAction.destination: OrganizationProfileDestination
   get() =
     when (this) {
@@ -302,6 +320,8 @@ internal sealed interface OrganizationProfileDestination : NavKey {
   @Serializable data object Root : OrganizationProfileDestination
 
   @Serializable data object Members : OrganizationProfileDestination
+
+  @Serializable data object InviteMembers : OrganizationProfileDestination
 
   @Serializable data object VerifiedDomains : OrganizationProfileDestination
 
