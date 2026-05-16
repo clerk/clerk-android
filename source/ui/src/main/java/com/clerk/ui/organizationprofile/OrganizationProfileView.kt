@@ -38,8 +38,11 @@ import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomNavigato
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRouteNavKey
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.custom.effectiveOrganizationProfileCustomRows
+import com.clerk.ui.organizationprofile.domains.OrganizationVerifiedDomainsView
+import com.clerk.ui.organizationprofile.members.OrganizationMembersView
 import com.clerk.ui.organizationprofile.root.OrganizationProfileAction
 import com.clerk.ui.organizationprofile.root.OrganizationProfileRootView
+import com.clerk.ui.organizationprofile.update.OrganizationProfileUpdateProfileView
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
@@ -109,13 +112,13 @@ fun OrganizationProfileView(
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun OrganizationProfileNavDisplay(
-  modifier: Modifier,
   backStack: NavBackStack<NavKey>,
   organization: Organization,
   membership: OrganizationMembership?,
   isDismissable: Boolean,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
+  modifier: Modifier = Modifier,
   onDismiss: () -> Unit,
 ) {
   NavDisplay(
@@ -213,22 +216,24 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   }
 
   entry<OrganizationProfileDestination.Members> {
-    OrganizationProfilePlaceholderView(
-      title = stringResource(R.string.members),
+    OrganizationMembersView(
+      organization = organization,
+      membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
     )
   }
 
   entry<OrganizationProfileDestination.VerifiedDomains> {
-    OrganizationProfilePlaceholderView(
-      title = stringResource(R.string.verified_domains),
+    OrganizationVerifiedDomainsView(
+      organization = organization,
+      membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
     )
   }
 
   entry<OrganizationProfileDestination.UpdateProfile> {
-    OrganizationProfilePlaceholderView(
-      title = stringResource(R.string.update_profile),
+    OrganizationProfileUpdateProfileView(
+      organization = organization,
       onBackPressed = { backStack.removeLastOrNull() },
     )
   }

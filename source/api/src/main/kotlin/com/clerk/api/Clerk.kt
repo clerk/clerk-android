@@ -311,6 +311,14 @@ object Clerk {
         false
       }
 
+  val organizationDomainEnrollmentModes: List<String>
+    get() =
+      if (::environment.isInitialized) {
+        environment.organizationSettings.domains.enrollmentModes
+      } else {
+        emptyList()
+      }
+
   val organizationAdminDeleteIsEnabled: Boolean
     get() =
       if (::environment.isInitialized) {
@@ -330,6 +338,11 @@ object Clerk {
   val organizationSlugIsEnabled: Boolean
     get() =
       if (::environment.isInitialized) !environment.organizationSettings.slug.disabled else true
+
+  val organizationDefaultRoleKey: String?
+    get() =
+      if (::environment.isInitialized) environment.organizationSettings.domains.defaultRole
+      else null
 
   /**
    * The image URL for the application logo used in authentication UI components.
