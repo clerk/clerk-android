@@ -77,17 +77,33 @@ import com.clerk.ui.userbutton.UserButton
  * needed.
  */
 sealed class OrganizationSwitcherDisplayMode
-private constructor(internal val isCompact: Boolean, val size: Dp) {
+private constructor(
+  internal val isCompact: Boolean,
+  /** Base visual size used by the switcher trigger. */
+  val size: Dp,
+) {
+  /** Shows the account avatar, organization or account name, and disclosure chevron. */
   data object Normal : OrganizationSwitcherDisplayMode(isCompact = false, size = dp36)
 
+  /** Shows only the account avatar-sized trigger. */
   data object Compact : OrganizationSwitcherDisplayMode(isCompact = true, size = dp36)
 
   private class Custom(isCompact: Boolean, size: Dp) :
     OrganizationSwitcherDisplayMode(isCompact = isCompact, size = size)
 
   companion object {
+    /**
+     * Shows the account avatar, organization or account name, and disclosure chevron.
+     *
+     * @param size Base avatar size used to scale the trigger.
+     */
     fun normal(size: Dp): OrganizationSwitcherDisplayMode = Custom(isCompact = false, size = size)
 
+    /**
+     * Shows only the account avatar-sized trigger.
+     *
+     * @param size Base avatar size used for the compact trigger.
+     */
     fun compact(size: Dp): OrganizationSwitcherDisplayMode = Custom(isCompact = true, size = size)
   }
 }
