@@ -139,7 +139,10 @@ jobs:
     # The skip is recorded permanently in the Actions run log.
     env:
       SDK_SNAPSHOT_SUFFIX: "-expo-compat-${{ github.run_id }}"
-      JAVASCRIPT_REPO_REF: "main"
+      # TEMP: pointing at chris/native-component-tests until the
+      # clerk_android_ref inputs land on main of clerk/javascript.
+      # Revert to "main" before merging this PR.
+      JAVASCRIPT_REPO_REF: "chris/native-component-tests"
     steps:
       - name: Dispatch mobile-e2e in clerk/javascript
         id: dispatch
