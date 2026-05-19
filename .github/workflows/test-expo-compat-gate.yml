@@ -1,0 +1,96 @@
+name: "TEST: @clerk/expo compat gate (dispatch only)"
+
+# Validates the cross-repo dispatch + JAVASCRIPT_REPO_DISPATCH_TOKEN secret
+# end-to-end without touching the release flow. Mirrors the env + steps of
+# the expo-compat job in manual-release.yml. Delete before merging the
+# expo-compat-gate PR.
+
+on:
+  workflow_dispatch:
+    inputs:
+      javascript_repo_ref:
+        description: "clerk/javascript ref hosting the mobile-e2e.yml workflow to dispatch"
+        required: false
+        type: string
+        default: "chris/native-component-tests"
+      clerk_android_ref:
+        description: "clerk-android ref to publish as a mavenLocal snapshot in the dispatched run"
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  test-dispatch:
+    name: Test dispatch
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SDK_SNAPSHOT_SUFFIX: "-expo-compat-test-${{ github.run_id }}"
+
+    steps:
+      - name: Resolve clerk-android ref to dispatch
+        id: ref
+        run: |
+          if [ -n "${{ inputs.clerk_android_ref }}" ]; then
+            echo "sha=${{ inputs.clerk_android_ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch mobile-e2e in clerk/javascript
+        id: dispatch
+        env:
+          GH_TOKEN: ${{ secrets.JAVASCRIPT_REPO_DISPATCH_TOKEN }}
+        run: |
+          dispatch_time="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          echo "dispatch_time=$dispatch_time" >> "$GITHUB_OUTPUT"
+
+          gh workflow run mobile-e2e.yml \
+            -R clerk/javascript \
+            -r "${{ inputs.javascript_repo_ref }}" \
+            -f clerk_android_ref="${{ steps.ref.outputs.sha }}" \
+            -f clerk_android_snapshot_suffix="$SDK_SNAPSHOT_SUFFIX"
+
+      - name: Resolve dispatched run id
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.JAVASCRIPT_REPO_DISPATCH_TOKEN }}
+          DISPATCH_TIME: ${{ steps.dispatch.outputs.dispatch_time }}
+        run: |
+          run_id=""
+          for i in $(seq 1 24); do
+            sleep 5
+            run_id=$(gh api \
+              "repos/clerk/javascript/actions/workflows/mobile-e2e.yml/runs?event=workflow_dispatch&created=%3E${DISPATCH_TIME}" \
+              --jq '.workflow_runs | sort_by(.created_at) | .[-1].id // empty')
+            if [ -n "$run_id" ]; then
+              echo "Found dispatched run: $run_id"
+              break
+            fi
+          done
+          if [ -z "$run_id" ]; then
+            echo "::error::Could not find dispatched mobile-e2e run in clerk/javascript within 2 minutes"
+            exit 1
+          fi
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "run_url=https://github.com/clerk/javascript/actions/runs/$run_id" >> "$GITHUB_OUTPUT"
+
+      - name: Link to dispatched run in job summary
+        run: |
+          {
+            echo "## Test dispatch — @clerk/expo compat gate"
+            echo ""
+            echo "Dispatched: ${{ steps.resolve.outputs.run_url }}"
+            echo ""
+            echo "clerk-android ref: \`${{ steps.ref.outputs.sha }}\`"
+            echo "Snapshot suffix:   \`${SDK_SNAPSHOT_SUFFIX}\`"
+            echo "clerk/javascript ref: \`${{ inputs.javascript_repo_ref }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wait for dispatched run to complete
+        env:
+          GH_TOKEN: ${{ secrets.JAVASCRIPT_REPO_DISPATCH_TOKEN }}
+        run: |
+          gh run watch ${{ steps.resolve.outputs.run_id }} \
+            -R clerk/javascript \
+            --exit-status
