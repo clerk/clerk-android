@@ -172,6 +172,7 @@ class OrganizationMembersViewModelTest {
     viewModel.setMemberQuery("a")
     viewModel.setMemberQuery("ad")
     viewModel.setMemberQuery("ada")
+    assertTrue(viewModel.state.value.isSearchingMembers)
     advanceTimeBy(299)
     coVerify(exactly = 0) {
       organization.getOrganizationMemberships(query = "ada", limit = 2, offset = 0)
@@ -184,6 +185,39 @@ class OrganizationMembersViewModelTest {
     }
     assertEquals("ada", viewModel.state.value.memberQuery)
     assertEquals("Ada", viewModel.state.value.members.first().publicUserData?.firstName)
+    assertFalse(viewModel.state.value.isSearchingMembers)
+  }
+
+  @Test
+  fun `submitMemberSearch runs current query immediately and cancels debounce`() = runTest {
+    val organization = organization()
+    val viewer =
+      viewerMembership(permissions = listOf(OrganizationSystemPermission.READ_MEMBERSHIPS))
+    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
+      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    coEvery {
+      organization.getOrganizationMemberships(query = "ada", limit = 2, offset = 0)
+    } returns
+      ClerkResult.success(
+        ClerkPaginatedResponse(data = listOf(member("mem_1", "Ada")), totalCount = 1)
+      )
+
+    val viewModel = viewModel(pageSize = 2)
+    viewModel.load(organization = organization, membership = viewer, domainsEnabled = false)
+    advanceUntilIdle()
+
+    viewModel.setMemberQuery("ada")
+    viewModel.submitMemberSearch()
+    assertTrue(viewModel.state.value.isSearchingMembers)
+    advanceUntilIdle()
+    advanceTimeBy(300)
+    advanceUntilIdle()
+
+    coVerify(exactly = 1) {
+      organization.getOrganizationMemberships(query = "ada", limit = 2, offset = 0)
+    }
+    assertEquals("Ada", viewModel.state.value.members.first().publicUserData?.firstName)
+    assertFalse(viewModel.state.value.isSearchingMembers)
   }
 
   @Test

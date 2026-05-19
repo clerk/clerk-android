@@ -243,6 +243,25 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
   }
 
   @Test
+  fun organizationMembersSearchLoading() {
+    paparazzi.snapshot {
+      MembersSnapshotSurface {
+        OrganizationMembersContent(
+          viewerMembership = previewOrganizationProfileMembership(),
+          state =
+            OrganizationMembersState(
+              availableTabs = allMembersTabs,
+              selectedTab = OrganizationMembersTab.Members,
+              memberQuery = "ada",
+              isSearchingMembers = true,
+            ),
+          actions = noOpMembersActions,
+        )
+      }
+    }
+  }
+
+  @Test
   fun organizationVerifiedDomainsLoading() {
     paparazzi.snapshot {
       DomainsSnapshotSurface {
@@ -525,6 +544,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
       onRetry = {},
       onSelectTab = {},
       onMemberSearchChanged = {},
+      onSubmitMemberSearch = {},
       onLoadMoreMembers = {},
       onLoadMoreInvitations = {},
       onLoadMoreRequests = {},
