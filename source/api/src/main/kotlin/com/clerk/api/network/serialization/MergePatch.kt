@@ -18,7 +18,11 @@ import kotlinx.serialization.json.JsonObject
  * - `desired === JsonNull`: returned verbatim (caller decides what null means)
  * - any other type mismatch: [desired] is returned (full replace at that node)
  */
-@Suppress("ReturnCount") // Two guard clauses plus a final return is the natural shape here.
+@Suppress(
+  "ReturnCount", // Two guard clauses plus a final return is the natural shape here.
+  "CyclomaticComplexMethod", // RFC 7396 merge has irreducible per-key branching; splitting it
+  // into helpers would obscure the spec mapping without simplifying the logic.
+)
 internal fun computeMergePatch(current: JsonElement, desired: JsonElement): JsonElement {
   if (desired is JsonNull) {
     return JsonNull
@@ -31,18 +35,15 @@ internal fun computeMergePatch(current: JsonElement, desired: JsonElement): Json
 
   for ((key, des) in desired) {
     val cur = current[key]
-    if (cur == null) {
-      patch[key] = des
-      continue
-    }
-    if (cur is JsonObject && des is JsonObject) {
-      val sub = computeMergePatch(cur, des)
-      if (sub is JsonObject && sub.isEmpty()) {
-        continue
+    when {
+      cur == null -> patch[key] = des
+      cur is JsonObject && des is JsonObject -> {
+        val sub = computeMergePatch(cur, des)
+        if (sub !is JsonObject || sub.isNotEmpty()) {
+          patch[key] = sub
+        }
       }
-      patch[key] = sub
-    } else if (cur != des) {
-      patch[key] = des
+      cur != des -> patch[key] = des
     }
   }
 

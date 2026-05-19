@@ -29,6 +29,7 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
 import com.clerk.api.user.User.CreateExternalAccountParams
+import com.clerk.api.user.User.UpdateMetadataParams
 import com.clerk.api.user.User.UpdateParams
 import com.clerk.api.user.User.UpdatePasswordParams
 import com.clerk.automap.annotations.AutoMap
@@ -501,9 +502,10 @@ suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorRespo
   // fresh server state instead of the stale `this` receiver.
   var lastSuccess: ClerkResult.Success<User>? = null
   if (restMap.isNotEmpty()) {
-    val patchResult = ClerkApi.user.updateUser(fields = restMap)
-    if (patchResult is ClerkResult.Failure) return patchResult
-    lastSuccess = patchResult
+    when (val patchResult = ClerkApi.user.updateUser(fields = restMap)) {
+      is ClerkResult.Failure -> return patchResult
+      is ClerkResult.Success -> lastSuccess = patchResult
+    }
   }
 
   val current = this.unsafeMetadata ?: JsonObject(emptyMap())
