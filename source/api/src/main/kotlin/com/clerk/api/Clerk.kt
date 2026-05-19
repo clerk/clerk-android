@@ -297,36 +297,16 @@ object Clerk {
     get() = environment?.organizationSettings?.organizationCreationDefaults?.enabled ?: false
 
   val organizationIsEnabled: Boolean
-    get() =
-      if (::environment.isInitialized) {
-        environment.organizationSettings.enabled
-      } else {
-        false
-      }
+    get() = environment?.organizationSettings?.enabled ?: false
 
   val organizationDomainsIsEnabled: Boolean
-    get() =
-      if (::environment.isInitialized) {
-        environment.organizationSettings.domains.enabled
-      } else {
-        false
-      }
+    get() = environment?.organizationSettings?.domains?.enabled ?: false
 
   val organizationDomainEnrollmentModes: List<String>
-    get() =
-      if (::environment.isInitialized) {
-        environment.organizationSettings.domains.enrollmentModes
-      } else {
-        emptyList()
-      }
+    get() = environment?.organizationSettings?.domains?.enrollmentModes ?: emptyList()
 
   val organizationAdminDeleteIsEnabled: Boolean
-    get() =
-      if (::environment.isInitialized) {
-        environment.organizationSettings.actions.adminDelete
-      } else {
-        false
-      }
+    get() = environment?.organizationSettings?.actions?.adminDelete ?: false
 
   val organizationSelectionIsForced: Boolean
     get() = environment?.organizationSettings?.forceOrganizationSelection ?: false
@@ -335,9 +315,7 @@ object Clerk {
     get() = environment?.organizationSettings?.slug?.disabled?.not() ?: true
 
   val organizationDefaultRoleKey: String?
-    get() =
-      if (::environment.isInitialized) environment.organizationSettings.domains.defaultRole
-      else null
+    get() = environment?.organizationSettings?.domains?.defaultRole
 
   /**
    * The image URL for the application logo used in authentication UI components.
@@ -432,7 +410,7 @@ object Clerk {
    * updating [Client.lastActiveSessionId].
    */
   val multiSessionModeIsEnabled: Boolean
-    get() = if (::environment.isInitialized) !environment.authConfig.singleSessionMode else false
+    get() = environment?.authConfig?.singleSessionMode?.not() ?: false
 
   // endregion
 
