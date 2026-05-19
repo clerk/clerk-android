@@ -18,7 +18,7 @@ on:
         description: "clerk/javascript ref hosting the mobile-e2e.yml workflow to dispatch"
         required: false
         type: string
-        default: "chris/native-component-tests"
+        default: "chris/mobile-e2e-android-snapshot-renovate"
       clerk_android_ref:
         description: "clerk-android ref to publish as a mavenLocal snapshot in the dispatched run"
         required: false
@@ -47,7 +47,7 @@ jobs:
         id: jsref
         run: |
           ref_input="${{ inputs.javascript_repo_ref }}"
-          echo "ref=${ref_input:-chris/native-component-tests}" >> "$GITHUB_OUTPUT"
+          echo "ref=${ref_input:-chris/mobile-e2e-android-snapshot-renovate}" >> "$GITHUB_OUTPUT"
 
       - name: Dispatch mobile-e2e in clerk/javascript
         id: dispatch
