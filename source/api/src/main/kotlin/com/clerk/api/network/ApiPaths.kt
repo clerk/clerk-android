@@ -57,6 +57,7 @@ internal object ApiPaths {
   /** User-related endpoints */
   internal object User {
     internal const val BASE = "me"
+    internal const val METADATA = "${BASE}/metadata"
     internal const val PROFILE_IMAGE = "${BASE}/profile_image"
 
     internal const val ORGANIZATION_INVITATIONS = "${BASE}/organization_invitations"

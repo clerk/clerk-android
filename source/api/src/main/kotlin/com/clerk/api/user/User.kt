@@ -14,6 +14,7 @@ import com.clerk.api.network.model.image.ImageResource
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.computeMergePatch
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
@@ -35,6 +36,7 @@ import com.clerk.automap.annotations.MapProperty
 import java.io.File
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -194,11 +196,56 @@ data class User(
     @SerialName("primary_phone_number_id") val primaryPhoneNumberId: String? = null,
     /** The ID for the image to be set as profile image. */
     @SerialName("profile_image_id") val profileImageId: String? = null,
-    /** JSON string containing public metadata to update. */
-    @SerialName("public_metadata") val publicMetadata: String? = null,
-    /** JSON string containing private metadata to update. */
-    @SerialName("private_metadata") val privateMetadata: String? = null,
-    /** JSON string containing unsafe metadata to update. */
+    /**
+     * Public metadata. Never settable from the Frontend API — modifications must be made
+     * via the Backend API.
+     */
+    @Deprecated(
+      "publicMetadata is not writable from the Frontend API and is a no-op here. " +
+        "Update public metadata via the Backend API. This parameter will be removed in a " +
+        "future major version."
+    )
+    @SerialName("public_metadata")
+    val publicMetadata: String? = null,
+    /**
+     * Private metadata. Never settable from the Frontend API — modifications must be made
+     * via the Backend API.
+     */
+    @Deprecated(
+      "privateMetadata is not writable from the Frontend API and is a no-op here. " +
+        "Update private metadata via the Backend API. This parameter will be removed in a " +
+        "future major version."
+    )
+    @SerialName("private_metadata")
+    val privateMetadata: String? = null,
+    /**
+     * JSON string containing unsafe metadata to update. Passing this here is deprecated:
+     * the SDK now routes it through [updateMetadata] under the hood. Migrate calls to
+     * [User.updateMetadata] for clearer intent and direct access to deep-merge semantics.
+     */
+    @Deprecated(
+      "Use User.updateMetadata(...) for partial updates (deep merge). Passing unsafeMetadata " +
+        "to update() is deprecated and will be removed in a future major version."
+    )
+    @SerialName("unsafe_metadata")
+    val unsafeMetadata: String? = null,
+  )
+
+  /**
+   * Parameters for [User.updateMetadata].
+   *
+   * Only [unsafeMetadata] is end-user-writable on the Frontend API. The submitted value
+   * is deep-merged into the existing `unsafeMetadata` on the server: keys present in
+   * the patch overwrite existing keys, and any key whose value is `null` is removed at
+   * any nesting level. Omit the field entirely (leave it `null`) to make no change.
+   */
+  @AutoMap
+  @Serializable
+  data class UpdateMetadataParams(
+    /**
+     * JSON string containing the unsafe metadata patch to merge into the current
+     * `unsafeMetadata`. Use `null` keys to remove existing entries.
+     */
     @SerialName("unsafe_metadata") val unsafeMetadata: String? = null,
   )
 
@@ -418,12 +465,87 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
 /**
  * Updates the current user, or the user with the given session ID, with the provided parameters.
  *
+ * When [UpdateParams.unsafeMetadata] is provided, the SDK issues two FAPI calls: one
+ * `PATCH /v1/me` for the non-metadata fields and one `PATCH /v1/me/metadata` for the
+ * metadata. As a result, the operation is no longer server-atomic when both kinds of
+ * fields are submitted together — if the first call succeeds and the second fails, the
+ * non-metadata fields will have been persisted while the metadata is unchanged. Callers
+ * that need strict atomicity should call [update] and [updateMetadata] separately and
+ * handle partial failures themselves.
+ *
  * @param params The parameters to update the user with. **See**: [UpdateParams].
  * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
  *   [ClerkErrorResponse] if it failed.
  */
+@Suppress(
+  "DEPRECATION", // params.unsafeMetadata is itself deprecated; we route it here.
+  "ReturnCount", // Each return is a distinct exit in the split-update flow; see body.
+)
 suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorResponse> {
-  return ClerkApi.user.updateUser(fields = params.toMap())
+  val rawMetadata = params.unsafeMetadata
+
+  if (rawMetadata == null) {
+    return ClerkApi.user.updateUser(fields = params.toMap())
+  }
+
+  // Parse before any mutation so a malformed payload fails atomically (no network call).
+  val desired =
+    runCatching { Json.parseToJsonElement(rawMetadata) as? JsonObject }.getOrNull()
+      ?: return ClerkResult.unknownFailure(
+        IllegalArgumentException("UpdateParams.unsafeMetadata is not a valid JSON object"),
+      )
+
+  val rest = params.copy(unsafeMetadata = null)
+  val restMap = rest.toMap()
+  // Hold onto the PATCH /me response so the no-op metadata path below can return the
+  // fresh server state instead of the stale `this` receiver.
+  var lastSuccess: ClerkResult.Success<User>? = null
+  if (restMap.isNotEmpty()) {
+    val patchResult = ClerkApi.user.updateUser(fields = restMap)
+    if (patchResult is ClerkResult.Failure) return patchResult
+    lastSuccess = patchResult
+  }
+
+  val current = this.unsafeMetadata ?: JsonObject(emptyMap())
+  val patch = computeMergePatch(current, desired) as? JsonObject ?: desired as JsonObject
+
+  // No-op short-circuit: nothing changed, no metadata call needed.
+  if (patch.isEmpty()) {
+    return lastSuccess ?: ClerkResult.success(this)
+  }
+
+  return updateMetadata(patch)
+}
+
+/**
+ * Updates the current user's metadata via `PATCH /v1/me/metadata` with deep-merge semantics:
+ * keys in the patch overwrite or extend the current `unsafeMetadata`, and any key set to
+ * `null` is removed at any nesting level.
+ *
+ * @param params The parameters to update the user's metadata with. **See**: [UpdateMetadataParams].
+ * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
+ *   [ClerkErrorResponse] if it failed.
+ */
+suspend fun User.updateMetadata(
+  params: UpdateMetadataParams
+): ClerkResult<User, ClerkErrorResponse> {
+  return ClerkApi.user.updateUserMetadata(fields = params.toMap())
+}
+
+/**
+ * Convenience overload of [updateMetadata] that accepts a parsed [JsonObject] for
+ * `unsafeMetadata`. The SDK handles JSON serialization for you.
+ *
+ * @param unsafeMetadata The metadata patch to merge with the current value. Use
+ *   `JsonNull` for any key whose value should be removed.
+ * @return A [ClerkResult] containing the updated [User] on success or a [ClerkErrorResponse]
+ *   on failure.
+ * @see updateMetadata
+ */
+suspend fun User.updateMetadata(
+  unsafeMetadata: JsonObject
+): ClerkResult<User, ClerkErrorResponse> {
+  return updateMetadata(UpdateMetadataParams(unsafeMetadata = unsafeMetadata.toString()))
 }
 
 /** Deletes the current user, or the user with the given session ID, from the Clerk API. */
