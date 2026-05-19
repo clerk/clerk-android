@@ -238,10 +238,19 @@ private fun LazyListScope.membersTab(
 
   if (state.members.isEmpty()) {
     item {
-      EmptyState(
-        modifier = Modifier.padding(horizontal = dp18),
-        text = stringResource(R.string.no_members_found),
-      )
+      if (state.memberQuery.isNotBlank()) {
+        MembersEmptyState(
+          modifier = Modifier.fillMaxWidth().padding(horizontal = dp18),
+          icon = R.drawable.ic_search,
+          title = stringResource(R.string.no_members_search_results),
+          description = stringResource(R.string.no_members_search_results_description),
+        )
+      } else {
+        EmptyState(
+          modifier = Modifier.padding(horizontal = dp18),
+          text = stringResource(R.string.no_members_found),
+        )
+      }
     }
   } else {
     item {

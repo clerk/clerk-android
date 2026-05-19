@@ -225,6 +225,24 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
   }
 
   @Test
+  fun organizationMembersSearchEmptyState() {
+    paparazzi.snapshot {
+      MembersSnapshotSurface {
+        OrganizationMembersContent(
+          viewerMembership = previewOrganizationProfileMembership(),
+          state =
+            OrganizationMembersState(
+              availableTabs = allMembersTabs,
+              selectedTab = OrganizationMembersTab.Members,
+              memberQuery = "ada",
+            ),
+          actions = noOpMembersActions,
+        )
+      }
+    }
+  }
+
+  @Test
   fun organizationVerifiedDomainsLoading() {
     paparazzi.snapshot {
       DomainsSnapshotSurface {
