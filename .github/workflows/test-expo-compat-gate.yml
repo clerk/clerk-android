@@ -6,6 +6,12 @@ name: "TEST: @clerk/expo compat gate (dispatch only)"
 # expo-compat-gate PR.
 
 on:
+  # workflow_dispatch can't trigger this workflow because the file isn't on
+  # the default branch yet. Use a push trigger scoped to this branch +
+  # workflow file so any commit to it fires the validation run.
+  push:
+    branches: [chris/expo-compat-gate]
+    paths: [.github/workflows/test-expo-compat-gate.yml]
   workflow_dispatch:
     inputs:
       javascript_repo_ref:
@@ -31,11 +37,17 @@ jobs:
       - name: Resolve clerk-android ref to dispatch
         id: ref
         run: |
-          if [ -n "${{ inputs.clerk_android_ref }}" ]; then
-            echo "sha=${{ inputs.clerk_android_ref }}" >> "$GITHUB_OUTPUT"
+          ref_input="${{ inputs.clerk_android_ref }}"
+          if [ -n "$ref_input" ]; then
+            echo "sha=$ref_input" >> "$GITHUB_OUTPUT"
           else
             echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
           fi
+      - name: Resolve clerk/javascript ref
+        id: jsref
+        run: |
+          ref_input="${{ inputs.javascript_repo_ref }}"
+          echo "ref=${ref_input:-chris/native-component-tests}" >> "$GITHUB_OUTPUT"
 
       - name: Dispatch mobile-e2e in clerk/javascript
         id: dispatch
@@ -47,7 +59,7 @@ jobs:
 
           gh workflow run mobile-e2e.yml \
             -R clerk/javascript \
-            -r "${{ inputs.javascript_repo_ref }}" \
+            -r "${{ steps.jsref.outputs.ref }}" \
             -f clerk_android_ref="${{ steps.ref.outputs.sha }}" \
             -f clerk_android_snapshot_suffix="$SDK_SNAPSHOT_SUFFIX"
 
@@ -84,7 +96,7 @@ jobs:
             echo ""
             echo "clerk-android ref: \`${{ steps.ref.outputs.sha }}\`"
             echo "Snapshot suffix:   \`${SDK_SNAPSHOT_SUFFIX}\`"
-            echo "clerk/javascript ref: \`${{ inputs.javascript_repo_ref }}\`"
+            echo "clerk/javascript ref: \`${{ steps.jsref.outputs.ref }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Wait for dispatched run to complete
