@@ -8,9 +8,12 @@ import com.clerk.api.network.serialization.ClerkResult
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -76,7 +79,12 @@ class UserUpdateRoutingTest {
   }
 
   @Test
-  fun `only metadata routes to a single PATCH me_metadata with the computed patch`() = runTest {
+  fun `only metadata reloads then issues a PATCH me_metadata with the computed patch`() = runTest {
+    // Server reflects what the receiver has cached locally.
+    interceptor.serverUnsafeMetadata = buildJsonObject {
+      put("theme", "dark")
+      put("layout", "compact")
+    }
     val user =
       newUser(
         unsafeMetadata =
@@ -89,17 +97,21 @@ class UserUpdateRoutingTest {
     val result = user.update(User.UpdateParams(unsafeMetadata = """{"theme":"light"}"""))
 
     assertTrue(result is ClerkResult.Success)
-    assertEquals(1, interceptor.calls.size)
-    val call = interceptor.calls[0]
-    assertEquals("PATCH", call.method)
-    assertEquals("/v1/me/metadata", call.path)
+    // Two calls now: a GET /me reload to refresh the diff baseline, then the PATCH /me/metadata.
+    assertEquals(2, interceptor.calls.size)
+    assertEquals("GET", interceptor.calls[0].method)
+    assertEquals("/v1/me", interceptor.calls[0].path)
+    val patchMetadata = interceptor.calls[1]
+    assertEquals("PATCH", patchMetadata.method)
+    assertEquals("/v1/me/metadata", patchMetadata.path)
     // The patch null-deletes `layout` (absent from desired) and overwrites `theme`.
-    assertEquals("""{"theme":"light","layout":null}""", call.body["unsafe_metadata"])
+    assertEquals("""{"theme":"light","layout":null}""", patchMetadata.body["unsafe_metadata"])
   }
 
   @Test
   fun `mixed metadata and non-metadata fields issue PATCH me then PATCH me_metadata in order`() =
     runTest {
+      interceptor.serverUnsafeMetadata = buildJsonObject { put("foo", "old") }
       val user = newUser(unsafeMetadata = buildJsonObject { put("foo", "old") })
 
       val result =
@@ -135,13 +147,17 @@ class UserUpdateRoutingTest {
   }
 
   @Test
-  fun `metadata identical to current short-circuits without a metadata call`() = runTest {
+  fun `identical metadata skips the metadata PATCH`() = runTest {
+    interceptor.serverUnsafeMetadata = buildJsonObject { put("theme", "dark") }
     val user = newUser(unsafeMetadata = buildJsonObject { put("theme", "dark") })
 
     val result = user.update(User.UpdateParams(unsafeMetadata = """{"theme":"dark"}"""))
 
     assertTrue(result is ClerkResult.Success)
-    assertTrue("Identical metadata must not issue any network call", interceptor.calls.isEmpty())
+    // The pre-diff reload always runs, but the patch is empty so no PATCH /me/metadata.
+    assertEquals(1, interceptor.calls.size)
+    assertEquals("GET", interceptor.calls[0].method)
+    assertEquals("/v1/me", interceptor.calls[0].path)
   }
 
   @Test
@@ -149,6 +165,7 @@ class UserUpdateRoutingTest {
     // Receiver has the stale firstName; the server response (USER_RESPONSE) has the fresh one.
     // The bug was that the empty-patch short-circuit returned `this` (stale) instead of the
     // fresh updateUser response.
+    interceptor.serverUnsafeMetadata = buildJsonObject { put("theme", "dark") }
     val user =
       newUser(firstName = "Stale", unsafeMetadata = buildJsonObject { put("theme", "dark") })
 
@@ -172,6 +189,37 @@ class UserUpdateRoutingTest {
       "Returned user must be the PATCH /me response, not the stale receiver",
       "Fresh",
       returned.firstName,
+    )
+  }
+
+  @Test
+  fun `reloads before diffing so server-side mutations are not lost`() = runTest {
+    // The local cache thinks unsafeMetadata is { position: "goalie" }, but the server has
+    // drifted to { position: "goalie", adminAdded: "yes" }. 
+    // Without the pre-diff reload the SDK would compute
+    // mergePatch({position:goalie}, {city:Toronto}) = {position:null, city:Toronto},
+    // and `adminAdded` would survive on the server — silently violating replace semantics.
+    interceptor.serverUnsafeMetadata = buildJsonObject {
+      put("position", "goalie")
+      put("adminAdded", "yes")
+    }
+    val user = newUser(unsafeMetadata = buildJsonObject { put("position", "goalie") })
+
+    val result = user.update(User.UpdateParams(unsafeMetadata = """{"city":"Toronto"}"""))
+
+    assertTrue(result is ClerkResult.Success)
+    assertEquals(2, interceptor.calls.size)
+    assertEquals("GET", interceptor.calls[0].method)
+    assertEquals("/v1/me", interceptor.calls[0].path)
+
+    val patchMetadata = interceptor.calls[1]
+    assertEquals("PATCH", patchMetadata.method)
+    assertEquals("/v1/me/metadata", patchMetadata.path)
+    // The patch null-deletes BOTH server-side keys because the reload surfaced them; without
+    // the freshness fix `adminAdded` would not appear here.
+    assertEquals(
+      """{"city":"Toronto","position":null,"adminAdded":null}""",
+      patchMetadata.body["unsafe_metadata"],
     )
   }
 
@@ -211,6 +259,14 @@ class UserUpdateRoutingTest {
   private class CapturingInterceptor : Interceptor {
     val calls: MutableList<CapturedCall> = mutableListOf()
 
+    /**
+     * When non-null, the mock embeds this value as `unsafe_metadata` in every successful
+     * response, simulating the server's view of the user. Tests set this to either match or
+     * diverge from the receiver's locally cached metadata depending on what behavior they
+     * want to exercise.
+     */
+    var serverUnsafeMetadata: JsonObject? = null
+
     override fun intercept(chain: Interceptor.Chain): Response {
       val request = chain.request()
       calls.add(
@@ -226,9 +282,28 @@ class UserUpdateRoutingTest {
         .protocol(Protocol.HTTP_1_1)
         .code(200)
         .message("OK")
-        .body(USER_RESPONSE.toResponseBody("application/json".toMediaType()))
+        .body(buildUserResponseJson(serverUnsafeMetadata).toResponseBody("application/json".toMediaType()))
         .build()
     }
+
+    private fun buildUserResponseJson(metadata: JsonObject?): String =
+      buildJsonObject {
+          putJsonObject("response") {
+            put("id", "user_123")
+            put("image_url", "")
+            put("has_image", false)
+            put("first_name", "Fresh")
+            putJsonArray("passkeys") {}
+            put("password_enabled", false)
+            putJsonArray("phone_numbers") {}
+            put("totp_enabled", false)
+            put("two_factor_enabled", false)
+            put("updated_at", 0)
+            metadata?.let { put("unsafe_metadata", it) }
+          }
+          put("client", JsonNull)
+        }
+        .toString()
 
     private fun okhttp3.RequestBody?.readFormBody(): Map<String, String> {
       if (this == null) return emptyMap()
@@ -247,26 +322,5 @@ class UserUpdateRoutingTest {
     }
 
     private fun String.urlDecode(): String = URLDecoder.decode(this, StandardCharsets.UTF_8.name())
-  }
-
-  private companion object {
-    const val USER_RESPONSE =
-      """
-      {
-        "response": {
-          "id": "user_123",
-          "image_url": "",
-          "has_image": false,
-          "first_name": "Fresh",
-          "passkeys": [],
-          "password_enabled": false,
-          "phone_numbers": [],
-          "totp_enabled": false,
-          "two_factor_enabled": false,
-          "updated_at": 0
-        },
-        "client": null
-      }
-      """
   }
 }

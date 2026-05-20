@@ -466,12 +466,18 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
 /**
  * Updates the current user, or the user with the given session ID, with the provided parameters.
  *
- * When [UpdateParams.unsafeMetadata] is provided, the SDK issues two FAPI calls: one `PATCH /v1/me`
- * for the non-metadata fields and one `PATCH /v1/me/metadata` for the metadata. As a result, the
+ * When [UpdateParams.unsafeMetadata] is provided, the SDK issues a `PATCH /v1/me` (or `GET /v1/me`
+ * when no non-metadata fields are present) followed by `PATCH /v1/me/metadata` carrying the
+ * computed merge patch. The metadata PATCH is skipped when the diff is empty. As a result, the
  * operation is no longer server-atomic when both kinds of fields are submitted together — if the
  * first call succeeds and the second fails, the non-metadata fields will have been persisted while
  * the metadata is unchanged. Callers that need strict atomicity should call [update] and
  * [updateMetadata] separately and handle partial failures themselves.
+ *
+ * The pre-metadata `/v1/me` call also serves as a freshness anchor: the merge-patch diff is
+ * computed against the server's current state, not the locally cached value on `this`. Without
+ * that step, server-side mutations made by another tab, client, or backend job would silently
+ * survive the "replace" call.
  *
  * @param params The parameters to update the user with. **See**: [UpdateParams].
  * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
@@ -483,7 +489,7 @@ suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorRespo
     updateWithDeprecatedUnsafeMetadata(params, rawMetadata)
   } ?: ClerkApi.user.updateUser(fields = params.toMap())
 
-private suspend fun User.updateWithDeprecatedUnsafeMetadata(
+private suspend fun updateWithDeprecatedUnsafeMetadata(
   params: UpdateParams,
   rawMetadata: String,
 ): ClerkResult<User, ClerkErrorResponse> =
@@ -507,22 +513,39 @@ private fun parseUnsafeMetadata(rawMetadata: String): ClerkResult<JsonObject, Cl
     )
 
 @Suppress("DEPRECATION") // params.unsafeMetadata is itself deprecated; we route it here.
-private suspend fun User.updateProfileFieldsBeforeMetadata(
+private fun UpdateParams.hasNonMetadataFields(): Boolean =
+  firstName != null ||
+    lastName != null ||
+    username != null ||
+    primaryEmailAddressId != null ||
+    primaryPhoneNumberId != null ||
+    profileImageId != null ||
+    publicMetadata != null ||
+    privateMetadata != null
+
+@Suppress("DEPRECATION") // params.unsafeMetadata is itself deprecated; we route it here.
+private suspend fun updateProfileFieldsBeforeMetadata(
   params: UpdateParams
 ): ClerkResult<User, ClerkErrorResponse> =
-  params.copy(unsafeMetadata = null).toMap().let { restMap ->
-    if (restMap.isEmpty()) {
-      ClerkResult.success(this)
-    } else {
-      ClerkApi.user.updateUser(fields = restMap)
-    }
+  if (params.hasNonMetadataFields()) {
+    ClerkApi.user.updateUser(fields = params.copy(unsafeMetadata = null).toMap())
+  } else {
+    // No rest fields to send. Fetch the current user explicitly so the merge-patch diff
+    // baseline below is fresh — the receiver's `unsafeMetadata`. A stale baseline
+    // silently under-null-deletes those server-only keys and leaks partial-replace
+    // semantics out of an API the caller expects to behave like full replace.
+    ClerkApi.user.getUser()
   }
 
-private suspend fun User.updateMetadataAfterProfileUpdate(
+private suspend fun updateMetadataAfterProfileUpdate(
   desired: JsonObject,
   profileResult: ClerkResult.Success<User>,
 ): ClerkResult<User, ClerkErrorResponse> {
-  val current = this.unsafeMetadata ?: JsonObject(emptyMap())
+  // Diff against the *fresh* user returned by the PATCH /me or GET /me call above — never
+  // against stale `this`. The response reflects the current server state, so the merge
+  // patch (with RFC 7396 null-deletes for removed keys) correctly captures replace
+  // semantics even when other actors have mutated metadata since this client's last sync.
+  val current = profileResult.value.unsafeMetadata ?: JsonObject(emptyMap())
   val patch = computeMergePatch(current, desired) as? JsonObject ?: desired
 
   return if (patch.isEmpty()) {
