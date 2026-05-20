@@ -27,7 +27,7 @@ turbineVersion = "1.2.1"
 uiToolingPreviewAndroid = "1.11.2"
 kotlinStdlib = "2.3.10"
 kotlinTest = "2.3.10"
-paparazziPlugin = "2.0.0-alpha04"
+paparazziPlugin = "2.0.0-alpha05"
 
 # Build Versions -- Do not delete
 jdk = "17"
