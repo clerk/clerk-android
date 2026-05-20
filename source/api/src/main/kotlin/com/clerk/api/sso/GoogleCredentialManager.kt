@@ -5,6 +5,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import com.clerk.api.Clerk
+import com.clerk.api.credentials.CredentialFlowException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import java.util.UUID
@@ -32,9 +33,10 @@ internal interface GoogleCredentialManager {
 
 class GoogleCredentialManagerImpl : GoogleCredentialManager {
   override suspend fun getSignInWithGoogleCredential(): GetCredentialResponse {
+    val activity = Clerk.credentialActivity() ?: throw CredentialFlowException.MissingActivity()
 
     val oneTapClientId =
-      requireNotNull(Clerk.environment.displayConfig.googleOneTapClientId) {
+      requireNotNull(Clerk.environment?.displayConfig?.googleOneTapClientId) {
         "Google One Tap Client ID is not set. Please set it in your Clerk dashboard."
       }
 
@@ -48,12 +50,9 @@ class GoogleCredentialManagerImpl : GoogleCredentialManager {
 
     val request = GetCredentialRequest.Builder().addCredentialOption(googleIdOption).build()
 
-    val credentialManager = CredentialManager.create(Clerk.applicationContext!!.get()!!)
+    val credentialManager = CredentialManager.create(activity)
 
-    return credentialManager.getCredential(
-      request = request,
-      context = Clerk.applicationContext!!.get()!!,
-    )
+    return credentialManager.getCredential(request = request, context = activity)
   }
 
   override fun getIdTokenFromCredential(credentialData: Bundle): String {
@@ -61,7 +60,7 @@ class GoogleCredentialManagerImpl : GoogleCredentialManager {
   }
 
   override fun getGoogleIdOption(): GetGoogleIdOption {
-    val oneTapClientId = requireNotNull(Clerk.environment.displayConfig.googleOneTapClientId)
+    val oneTapClientId = requireNotNull(Clerk.environment?.displayConfig?.googleOneTapClientId)
 
     return GetGoogleIdOption.Builder()
       .setFilterByAuthorizedAccounts(false)

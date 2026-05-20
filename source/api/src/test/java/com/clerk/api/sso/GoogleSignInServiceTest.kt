@@ -1,21 +1,25 @@
 package com.clerk.api.sso
 
-import android.content.Context
 import android.os.Bundle
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialUnknownException
+import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
+import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
+import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -33,7 +37,6 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class GoogleSignInServiceTest {
 
-  private lateinit var mockContext: Context
   private lateinit var mockGoogleCredentialManager: GoogleCredentialManager
   private lateinit var mockGetCredentialResponse: GetCredentialResponse
   private lateinit var mockCustomCredential: CustomCredential
@@ -46,7 +49,6 @@ class GoogleSignInServiceTest {
 
   @Before
   fun setup() {
-    mockContext = mockk(relaxed = true)
     mockGoogleCredentialManager = mockk(relaxed = true)
     mockGetCredentialResponse = mockk(relaxed = true)
     mockCustomCredential = mockk(relaxed = true)
@@ -55,6 +57,7 @@ class GoogleSignInServiceTest {
     mockSignUp = mockk(relaxed = true)
     mockEnvironment = mockk(relaxed = true)
     mockDisplayConfig = mockk(relaxed = true)
+    every { mockSignUp.verifications } returns emptyMap()
 
     // Mock Clerk object and its environment
     mockkObject(Clerk)
@@ -68,6 +71,7 @@ class GoogleSignInServiceTest {
 
     // Mock SignUp.create
     mockkObject(SignUp.Companion)
+    mockkObject(SignIn.Companion)
 
     // Create service instance with mocked credential manager
     googleSignInService = GoogleSignInService(mockGoogleCredentialManager)
@@ -144,6 +148,52 @@ class GoogleSignInServiceTest {
   }
 
   @Test
+  fun `signInWithGoogle transfers created sign-up back to sign-in when external account exists`() =
+    runTest {
+      // Given
+      val idToken = "test_id_token"
+      val error =
+        Error(
+          code = "external_account_not_found",
+          message = "Account not found",
+          longMessage = "External account not found for this user",
+        )
+      val errorResponse = ClerkErrorResponse(errors = listOf(error), clerkTraceId = "test_trace_id")
+      val transferableSignUp =
+        testSignUp(
+          verifications =
+            mapOf("external_account" to Verification(status = Verification.Status.TRANSFERABLE))
+        )
+
+      every { mockGetCredentialResponse.credential } returns mockCustomCredential
+      every { mockCustomCredential.type } returns
+        GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+      every { mockCustomCredential.data } returns mockBundle
+
+      coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } returns
+        mockGetCredentialResponse
+      every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
+
+      coEvery { ClerkApi.signIn.authenticateWithGoogle(token = idToken) } returns
+        ClerkResult.apiFailure(errorResponse)
+      coEvery { SignUp.create(any<SignUp.CreateParams.GoogleOneTap>()) } returns
+        ClerkResult.success(transferableSignUp)
+      coEvery { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) } returns
+        ClerkResult.success(mockSignIn)
+
+      // When
+      val result = googleSignInService.signInWithGoogle()
+
+      // Then
+      assertTrue(result is ClerkResult.Success)
+      val oauthResult = (result as ClerkResult.Success).value
+      assertEquals(mockSignIn, oauthResult.signIn)
+      assertEquals(null, oauthResult.signUp)
+      assertEquals(ResultType.SIGN_IN, oauthResult.resultType)
+      coVerify(exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) }
+    }
+
+  @Test
   fun `signInWithGoogle returns error when authentication fails with other error`() = runTest {
     // Given
     val idToken = "test_id_token"
@@ -213,6 +263,30 @@ class GoogleSignInServiceTest {
   }
 
   @Test
+  fun `signInWithGoogle classifies missing Google account`() = runTest {
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } throws
+      NoCredentialException("No credentials available")
+
+    val result = googleSignInService.signInWithGoogle()
+
+    assertTrue(result is ClerkResult.Failure)
+    val failure = result as ClerkResult.Failure
+    assertTrue(failure.throwable is CredentialFlowException.NoGoogleAccount)
+  }
+
+  @Test
+  fun `signInWithGoogle classifies user cancellation`() = runTest {
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } throws
+      GetCredentialCancellationException()
+
+    val result = googleSignInService.signInWithGoogle()
+
+    assertTrue(result is ClerkResult.Failure)
+    val failure = result as ClerkResult.Failure
+    assertTrue(failure.throwable is CredentialFlowException.UserCancelled)
+  }
+
+  @Test
   fun `signInWithGoogle verifies correct SignUp CreateParams are used`() = runTest {
     // Given
     val idToken = "test_id_token"
@@ -243,5 +317,53 @@ class GoogleSignInServiceTest {
 
     // Then
     assertEquals(idToken, createParamsSlot.captured.token)
+  }
+
+  @Test
+  fun `signUpWithGoogle transfers existing external account to sign-in`() = runTest {
+    // Given
+    val idToken = "test_id_token"
+    val transferableSignUp =
+      testSignUp(
+        verifications =
+          mapOf("external_account" to Verification(status = Verification.Status.TRANSFERABLE))
+      )
+
+    every { mockGetCredentialResponse.credential } returns mockCustomCredential
+    every { mockCustomCredential.type } returns
+      GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+    every { mockCustomCredential.data } returns mockBundle
+
+    coEvery { mockGoogleCredentialManager.getSignInWithGoogleCredential() } returns
+      mockGetCredentialResponse
+    every { mockGoogleCredentialManager.getIdTokenFromCredential(mockBundle) } returns idToken
+
+    coEvery { SignUp.create(any<SignUp.CreateParams.GoogleOneTap>()) } returns
+      ClerkResult.success(transferableSignUp)
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) } returns
+      ClerkResult.success(mockSignIn)
+
+    // When
+    val result = googleSignInService.signUpWithGoogle()
+
+    // Then
+    assertTrue(result is ClerkResult.Success)
+    val oauthResult = (result as ClerkResult.Success).value
+    assertEquals(mockSignIn, oauthResult.signIn)
+    assertEquals(null, oauthResult.signUp)
+    assertEquals(ResultType.SIGN_IN, oauthResult.resultType)
+    coVerify(exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy.Transfer>()) }
+  }
+
+  private fun testSignUp(verifications: Map<String, Verification?> = emptyMap()): SignUp {
+    return SignUp(
+      id = "sign_up_123",
+      requiredFields = emptyList(),
+      optionalFields = emptyList(),
+      missingFields = emptyList(),
+      unverifiedFields = emptyList(),
+      verifications = verifications,
+      passwordEnabled = false,
+    )
   }
 }

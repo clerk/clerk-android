@@ -61,6 +61,7 @@ internal object ApiPaths {
 
     internal const val ORGANIZATION_INVITATIONS = "${BASE}/organization_invitations"
     internal const val ORGANIZATION_SUGGESTIONS = "${BASE}/organization_suggestions"
+    internal const val ORGANIZATION_CREATION_DEFAULTS = "${BASE}/organization_creation_defaults"
     internal const val ACCEPT_ORGANIZATION_INVITATION =
       "${ORGANIZATION_INVITATIONS}/{invitation_id}/accept"
     internal const val ACCEPT_ORGANIZATION_SUGGESTION =

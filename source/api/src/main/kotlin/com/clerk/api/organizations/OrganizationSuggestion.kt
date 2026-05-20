@@ -1,9 +1,9 @@
 package com.clerk.api.organizations
 
-import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.user.currentSessionId
 import kotlinx.serialization.Serializable
 
 /** An interface representing an organization suggestion. */
@@ -26,6 +26,6 @@ suspend fun OrganizationSuggestion.accept():
   ClerkResult<OrganizationSuggestion, ClerkErrorResponse> {
   return ClerkApi.user.acceptOrganizationSuggestion(
     suggestionId = this.id,
-    sessionId = Clerk.session?.id,
+    sessionId = currentSessionId(),
   )
 }

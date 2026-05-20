@@ -1,6 +1,5 @@
 package com.clerk.api.network.model.environment
 
-import com.clerk.api.Clerk.environment
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -12,6 +11,8 @@ internal data class Environment(
   @SerialName("auth_config") val authConfig: AuthConfig,
   @SerialName("display_config") val displayConfig: DisplayConfig,
   @SerialName("user_settings") val userSettings: UserSettings,
+  @SerialName("organization_settings")
+  val organizationSettings: OrganizationSettings = OrganizationSettings(),
 ) {
   val passkeyIsEnabled: Boolean
     get() = userSettings.attributes.any { (key, value) -> key == "passkey" && value.enabled }
@@ -71,7 +72,7 @@ internal data class Environment(
 }
 
 internal fun Environment.enabledFirstFactorAttributes(): List<String> {
-  return environment.userSettings.attributes
+  return userSettings.attributes
     .filter { it.value.enabled && it.value.usedForFirstFactor }
     .keys
     .toList()

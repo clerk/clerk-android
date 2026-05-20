@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
+import com.clerk.api.Clerk
 import com.clerk.api.Constants
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTaskKey
@@ -134,6 +135,8 @@ internal class AuthState(
         handlePostAuthCompletion(
           taskKey = signIn.pendingSessionTaskKey(session),
           hasUnresolvedCreatedSession = signIn.createdSessionId != null && session == null,
+          shouldChooseOrganizationForCreatedSession =
+            signIn.createdSessionId != null && Clerk.organizationSelectionIsForced,
           onAuthComplete = onAuthComplete,
         )
       }
@@ -149,11 +152,19 @@ internal class AuthState(
   private fun handlePostAuthCompletion(
     taskKey: SessionTaskKey?,
     hasUnresolvedCreatedSession: Boolean,
+    shouldChooseOrganizationForCreatedSession: Boolean,
     onAuthComplete: () -> Unit,
   ) {
-    when (postAuthCompletionAction(taskKey, hasUnresolvedCreatedSession)) {
+    when (
+      postAuthCompletionAction(
+        taskKey = taskKey,
+        hasUnresolvedCreatedSession = hasUnresolvedCreatedSession,
+        shouldChooseOrganizationForCreatedSession = shouldChooseOrganizationForCreatedSession,
+      )
+    ) {
       PostAuthCompletionAction.ROUTE_TO_MFA -> routeToSessionTaskMfa()
       PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD -> routeToSessionTaskResetPassword()
+      PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION -> routeToChooseOrganization()
       PostAuthCompletionAction.ROUTE_TO_HELP -> backStack.add(AuthDestination.SignInGetHelp)
       PostAuthCompletionAction.COMPLETE_AUTH -> onAuthComplete()
     }
@@ -165,6 +176,10 @@ internal class AuthState(
 
   private fun routeToSessionTaskResetPassword() {
     routeToSessionTask(AuthDestination.SessionTaskResetPassword)
+  }
+
+  private fun routeToChooseOrganization() {
+    routeToSessionTask(AuthDestination.SessionTaskChooseOrganization)
   }
 
   private fun routeToSessionTask(destination: NavKey) {
@@ -201,6 +216,8 @@ internal class AuthState(
         handlePostAuthCompletion(
           taskKey = signUp.pendingSessionTaskKey(session),
           hasUnresolvedCreatedSession = signUp.createdSessionId != null && session == null,
+          shouldChooseOrganizationForCreatedSession =
+            signUp.createdSessionId != null && Clerk.organizationSelectionIsForced,
           onAuthComplete = onAuthComplete,
         )
         return

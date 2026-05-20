@@ -15,6 +15,8 @@ import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.api.SET_ACTIVE_INTENT_SELECT_ORG
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
@@ -25,7 +27,6 @@ import com.clerk.api.session.Session
 import com.clerk.api.session.fetchToken
 import com.clerk.api.session.revoke
 import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.toMap
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
@@ -126,6 +127,15 @@ class Auth internal constructor() {
   val currentSignUp: SignUp?
     get() = if (Clerk.clientInitialized) Clerk.client.signUp else null
 
+  /**
+   * The sessions currently known on this client.
+   *
+   * In multi-session mode this can include sessions for multiple accounts. The current session is
+   * the one whose ID matches [Client.lastActiveSessionId].
+   */
+  val sessions: List<Session>
+    get() = if (Clerk.clientInitialized) Clerk.client.sessions else emptyList()
+
   // endregion
 
   // region Sign In
@@ -199,8 +209,8 @@ class Auth internal constructor() {
   /**
    * Signs in with OTP - automatically sends the verification code.
    *
-   * This is a one-shot method that creates the sign-in and immediately prepares the first factor
-   * verification, sending the code to the specified channel.
+   * This is a one-shot method that creates the sign-in with an OTP strategy, sending the code to
+   * the specified channel.
    *
    * @param block Builder block to configure the email or phone.
    * @return A [ClerkResult] containing the [SignIn] object on success, or a [ClerkErrorResponse] on
@@ -228,29 +238,7 @@ class Auth internal constructor() {
         "locale" to Clerk.locale.value.orEmpty(),
       )
 
-    val result =
-      when (val createResult = ClerkApi.signIn.createSignIn(params)) {
-        is ClerkResult.Failure -> createResult
-        is ClerkResult.Success -> {
-          val signIn = createResult.value
-          // Prepare first factor to send the code
-          val prepareParams =
-            if (builder.email != null) {
-              SignIn.PrepareFirstFactorParams.EmailCode(
-                emailAddressId =
-                  signIn.supportedFirstFactors?.find { it.strategy == EMAIL_CODE }?.emailAddressId
-                    ?: ""
-              )
-            } else {
-              SignIn.PrepareFirstFactorParams.PhoneCode(
-                phoneNumberId =
-                  signIn.supportedFirstFactors?.find { it.strategy == PHONE_CODE }?.phoneNumberId
-                    ?: ""
-              )
-            }
-          ClerkApi.signIn.prepareSignInFirstFactor(signIn.id, prepareParams.toMap())
-        }
-      }
+    val result = ClerkApi.signIn.createSignIn(params)
     result.onFailure { emitAuthError(it) }
     return result
   }
@@ -439,10 +427,30 @@ class Auth internal constructor() {
     provider: OAuthProvider
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val result =
-      SSOService.authenticateWithRedirect(
+      SSOService.authenticateSignUpWithRedirect(
         strategy = provider.providerData.strategy,
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       )
+    result.onFailure { emitAuthError(it) }
+    return result
+  }
+
+  /**
+   * Signs up with Google One Tap.
+   *
+   * This native Google flow starts from sign-up and may resolve to either a sign-up or a sign-in,
+   * depending on whether the selected Google account already exists in Clerk.
+   *
+   * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
+   *   failure.
+   *
+   * ### Example usage:
+   * ```kotlin
+   * val result = clerk.auth.signUpWithGoogleOneTap()
+   * ```
+   */
+  suspend fun signUpWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    val result = SignUp.authenticateWithGoogleOneTap()
     result.onFailure { emitAuthError(it) }
     return result
   }
@@ -543,22 +551,27 @@ class Auth internal constructor() {
   // region Session Management
 
   /**
-   * Signs out the current session or a specific session.
+   * Signs out all sessions or removes a specific session from the current client.
    *
-   * @param sessionId Optional session ID to sign out. If null, signs out the current session.
+   * @param sessionId Optional session ID to sign out. If null, signs out all sessions on this
+   *   client.
    * @return A [ClerkResult] with Unit on success, or a [ClerkErrorResponse] on failure.
    *
    * ### Example usage:
    * ```kotlin
-   * clerk.auth.signOut()
+   * clerk.auth.signOut() // sign out all accounts
+   * clerk.auth.signOut(sessionId = Clerk.session?.id) // sign out the current account only
    * ```
    */
   suspend fun signOut(sessionId: String? = null): ClerkResult<Unit, ClerkErrorResponse> {
     val result =
       if (sessionId != null) {
-        // Sign out a specific session
         when (val result = ClerkApi.session.removeSession(sessionId)) {
-          is ClerkResult.Success -> ClerkResult.success(Unit)
+          is ClerkResult.Success -> {
+            removeSessionLocally(sessionId)
+            refreshClientAfterSessionMutation()
+            ClerkResult.success(Unit)
+          }
           is ClerkResult.Failure -> ClerkResult.apiFailure(result.error)
         }
       } else {
@@ -567,6 +580,95 @@ class Auth internal constructor() {
     result.onFailure { emitAuthError(it) }
     return result
   }
+
+  private fun removeSessionLocally(sessionId: String) {
+    if (!Clerk.clientInitialized) return
+
+    val client = Clerk.client
+    val remainingSessions = client.sessions.filterNot { it.id == sessionId }
+    val lastActiveSessionId =
+      if (client.lastActiveSessionId == sessionId) {
+        remainingSessions.firstOrNull { it.status == Session.SessionStatus.ACTIVE }?.id
+          ?: remainingSessions.firstOrNull()?.id
+      } else {
+        client.lastActiveSessionId
+      }
+
+    Clerk.updateClient(
+      client.copy(sessions = remainingSessions, lastActiveSessionId = lastActiveSessionId)
+    )
+  }
+
+  private suspend fun refreshClientAfterSessionMutation(
+    activeSessionFallbackId: String? = null,
+    fallbackClient: Client? = null,
+  ) {
+    when (val clientResult = Client.get()) {
+      is ClerkResult.Success ->
+        Clerk.updateClient(
+          clientResult.value.withActiveSessionFallback(
+            activeSessionFallbackId = activeSessionFallbackId,
+            fallbackClient = fallbackClient,
+          )
+        )
+      is ClerkResult.Failure ->
+        ClerkLog.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
+    }
+  }
+
+  private fun Client.withActiveSessionFallback(
+    activeSessionFallbackId: String?,
+    fallbackClient: Client?,
+  ): Client {
+    if (activeSessionFallbackId == null) return this
+
+    val fallbackSessions = fallbackClient?.sessions.orEmpty()
+    val targetInFetchedSessions = sessions.any { it.id == activeSessionFallbackId }
+    val fallbackTargetSession = fallbackSessions.firstOrNull { it.id == activeSessionFallbackId }
+    val targetInFallbackSessions = fallbackTargetSession != null
+    val sessionsWithFallbackTarget =
+      if (targetInFetchedSessions && fallbackTargetSession != null) {
+        sessions.map { session ->
+          if (session.id == activeSessionFallbackId) {
+            session.withSessionMutationFallback(fallbackTargetSession)
+          } else {
+            session
+          }
+        }
+      } else {
+        sessions
+      }
+
+    return when {
+      // Fetched client is missing the target session entirely (e.g. cleared sessions list);
+      // splice it back in from the fallback and force it active.
+      !targetInFetchedSessions && targetInFallbackSessions -> {
+        val missingFallbackSessions =
+          fallbackSessions.filterNot { fallbackSession ->
+            sessions.any { it.id == fallbackSession.id }
+          }
+        copy(
+          sessions = sessions + missingFallbackSessions,
+          lastActiveSessionId = activeSessionFallbackId,
+        )
+      }
+      // Fetched client has the target session but `lastActiveSessionId` is stale
+      // (read-after-write lag); force the just-activated session back to active.
+      targetInFetchedSessions && lastActiveSessionId != activeSessionFallbackId ->
+        copy(sessions = sessionsWithFallbackTarget, lastActiveSessionId = activeSessionFallbackId)
+      targetInFetchedSessions && sessionsWithFallbackTarget != sessions ->
+        copy(sessions = sessionsWithFallbackTarget)
+      else -> this
+    }
+  }
+
+  private fun Session.withSessionMutationFallback(fallbackSession: Session): Session =
+    copy(
+      user = user ?: fallbackSession.user,
+      publicUserData = publicUserData ?: fallbackSession.publicUserData,
+      lastActiveOrganizationId = fallbackSession.lastActiveOrganizationId,
+      lastActiveToken = lastActiveToken ?: fallbackSession.lastActiveToken,
+    )
 
   /**
    * Sets the active session.
@@ -585,10 +687,84 @@ class Auth internal constructor() {
     sessionId: String,
     organizationId: String? = null,
   ): ClerkResult<Session, ClerkErrorResponse> {
-    val result = ClerkApi.client.setActive(sessionId, organizationId)
-    result.onFailure { emitAuthError(it) }
+    val previousClient = if (Clerk.clientInitialized) Clerk.client else null
+    if (organizationId.isNullOrBlank() && Clerk.organizationSelectionIsForced) {
+      return Clerk.session?.let { ClerkResult.success(it) }
+        ?: ClerkResult.unknownFailure(
+          IllegalStateException("Cannot select a personal account without an active session.")
+        )
+    }
+
+    val result =
+      ClerkApi.client.setActive(
+        sessionId = sessionId,
+        organizationId = organizationId.orEmpty(),
+        intent = SET_ACTIVE_INTENT_SELECT_ORG,
+      )
+    when (result) {
+      is ClerkResult.Success -> {
+        setActiveSessionLocally(
+          sessionId,
+          activeSession = result.value,
+          sourceClient = previousClient,
+          activeOrganizationId = organizationId,
+        )
+        refreshClientAfterSessionMutation(
+          activeSessionFallbackId = sessionId,
+          fallbackClient = if (Clerk.clientInitialized) Clerk.client else previousClient,
+        )
+      }
+      is ClerkResult.Failure -> emitAuthError(result)
+    }
     return result
   }
+
+  private fun setActiveSessionLocally(
+    sessionId: String,
+    activeSession: Session? = null,
+    sourceClient: Client? = null,
+    activeOrganizationId: String? = null,
+  ) {
+    val client = sourceClient ?: if (Clerk.clientInitialized) Clerk.client else return
+    val sessions = client.sessions.withUpdatedSession(activeSession, activeOrganizationId)
+    if (sessions.none { it.id == sessionId }) return
+
+    Clerk.updateClient(client.copy(sessions = sessions, lastActiveSessionId = sessionId))
+  }
+
+  private fun List<Session>.withUpdatedSession(
+    activeSession: Session?,
+    activeOrganizationId: String?,
+  ): List<Session> {
+    if (activeSession == null) return this
+
+    var replacedSession = false
+    val updatedSessions = map { existingSession ->
+      if (existingSession.id == activeSession.id) {
+        replacedSession = true
+        activeSession.withSetActiveState(existingSession, activeOrganizationId)
+      } else {
+        existingSession
+      }
+    }
+
+    return if (replacedSession) {
+      updatedSessions
+    } else {
+      updatedSessions + activeSession.copy(lastActiveOrganizationId = activeOrganizationId)
+    }
+  }
+
+  private fun Session.withSetActiveState(
+    existingSession: Session,
+    activeOrganizationId: String?,
+  ): Session =
+    copy(
+      user = user ?: existingSession.user,
+      publicUserData = publicUserData ?: existingSession.publicUserData,
+      lastActiveOrganizationId = activeOrganizationId,
+      lastActiveToken = lastActiveToken ?: existingSession.lastActiveToken,
+    )
 
   /**
    * Gets a token for the current session.

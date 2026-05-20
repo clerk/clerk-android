@@ -1,6 +1,5 @@
 package com.clerk.api.passkeys
 
-import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.credentials.Credential
 import androidx.credentials.CredentialOption
@@ -10,9 +9,12 @@ import androidx.credentials.GetPasswordOption
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Fields.STRATEGY
+import com.clerk.api.credentials.CredentialFlowException
+import com.clerk.api.credentials.classifyGetCredentialFailure
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -111,27 +113,42 @@ internal object GoogleCredentialAuthenticationService {
     credentialTypes: List<SignIn.CredentialType>,
     allowedCredentialIds: List<String> = emptyList(),
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    if (credentialTypes.isEmpty()) {
-      return ClerkResult.unknownFailure(IllegalStateException("No credential types specified"))
-    }
     ClerkLog.d("Starting passkey sign-in")
-
-    val context = Clerk.applicationContext!!.get()!!
-    return when (val createResult = createSignIn()) {
-      is ClerkResult.Success -> {
-        val signIn = createResult.value
-        try {
-          val credential =
-            getCredentialFromManager(context, signIn, allowedCredentialIds, credentialTypes)
-          handleCredential(credential, signIn)
-        } catch (e: Exception) {
-          ClerkLog.e("Passkey sign-in failed: ${e.message}")
-          ClerkResult.unknownFailure(e)
-        }
+    return when {
+      credentialTypes.isEmpty() -> {
+        ClerkResult.unknownFailure(IllegalStateException("No credential types specified"))
       }
-      is ClerkResult.Failure -> {
-        ClerkLog.e("Failed to create SignIn: ${createResult.error}")
-        createResult
+
+      Clerk.credentialActivity() == null -> {
+        ClerkLog.e("Passkey sign-in requires an active Activity")
+        ClerkResult.unknownFailure(CredentialFlowException.MissingActivity())
+      }
+
+      else -> {
+        val activity = Clerk.credentialActivity()!!
+        when (val createResult = createSignIn()) {
+          is ClerkResult.Success -> {
+            val signIn = createResult.value
+            try {
+              val credential =
+                getCredentialFromManager(activity, signIn, allowedCredentialIds, credentialTypes)
+              handleCredential(credential, signIn)
+            } catch (e: GetCredentialException) {
+              ClerkLog.e("Passkey sign-in failed: ${e.message}")
+              classifyGetCredentialFailure(e, credentialTypes)
+            } catch (e: CredentialFlowException) {
+              ClerkLog.e("Passkey sign-in cannot start: ${e.message}")
+              ClerkResult.unknownFailure(e)
+            } catch (e: Exception) {
+              ClerkLog.e("Passkey sign-in failed: ${e.message}")
+              ClerkResult.unknownFailure(e)
+            }
+          }
+          is ClerkResult.Failure -> {
+            ClerkLog.e("Failed to create SignIn: ${createResult.error}")
+            createResult
+          }
+        }
       }
     }
   }
@@ -182,7 +199,7 @@ internal object GoogleCredentialAuthenticationService {
    *   errors.
    */
   private suspend fun getCredentialFromManager(
-    context: Context,
+    activity: android.app.Activity,
     signIn: SignIn,
     allowedCredentialIds: List<String> = emptyList(),
     credentialRequestTypes: List<SignIn.CredentialType>,
@@ -192,7 +209,7 @@ internal object GoogleCredentialAuthenticationService {
 
     val result =
       try {
-        credentialManager.getCredential(context, credentialRequest)
+        credentialManager.getCredential(activity, credentialRequest)
       } catch (e: NoCredentialException) {
         ClerkLog.e("No credential available: ${e.message}")
         throw e

@@ -252,8 +252,9 @@ private fun AuthSignedInAccountSheet(
       Spacers.Vertical.Spacer12()
       HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
       SignOutActionRow {
+        val sessionId = Clerk.session?.id ?: return@SignOutActionRow
         scope.launch {
-          Clerk.auth.signOut()
+          Clerk.auth.signOut(sessionId = sessionId)
           sheetState.hide()
           onDismissRequest()
         }

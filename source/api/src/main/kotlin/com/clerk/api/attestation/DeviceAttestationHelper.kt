@@ -277,6 +277,8 @@ internal object DeviceAttestationHelper {
     preparedProviders.clear()
     hashCache.clear()
     integrityTokenProvider = null
+    integrityManager = null
+    isManagerInitialized = false
     ClerkLog.d("DeviceAttestationHelper cache cleared")
   }
 

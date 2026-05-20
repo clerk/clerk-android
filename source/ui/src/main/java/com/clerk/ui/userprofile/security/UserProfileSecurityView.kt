@@ -25,7 +25,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -119,7 +118,7 @@ private fun UserProfileSecurityMainContent(
   var currentSheetType by remember {
     mutableStateOf<BottomSheetType>(BottomSheetType.DeleteAccount)
   }
-  val context = LocalContext.current
+  val defaultErrorMessage = stringResource(R.string.something_went_wrong_please_try_again)
   Scaffold(
     containerColor = ClerkMaterialTheme.colors.muted,
     snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
@@ -164,11 +163,7 @@ private fun UserProfileSecurityMainContent(
           }
       },
       onError = { message ->
-        coroutineScope.launch {
-          snackbarHostState.showSnackbar(
-            message ?: context.getString(R.string.something_went_wrong_please_try_again)
-          )
-        }
+        coroutineScope.launch { snackbarHostState.showSnackbar(message ?: defaultErrorMessage) }
       },
     )
     BottomSheetContent(
@@ -203,11 +198,7 @@ private fun UserProfileSecurityMainContent(
             showBottomSheet = true
           },
           onError = { message ->
-            coroutineScope.launch {
-              snackbarHostState.showSnackbar(
-                message ?: context.getString(R.string.something_went_wrong_please_try_again)
-              )
-            }
+            coroutineScope.launch { snackbarHostState.showSnackbar(message ?: defaultErrorMessage) }
           },
         ),
     )
@@ -274,11 +265,7 @@ private fun BottomSheetContent(
       val programmaticDismissCallbacks =
         callbacks.copy(
           onDismiss = {
-            scope.launch {
-              sheetState.hide()
-            }.invokeOnCompletion {
-              callbacks.onDismiss()
-            }
+            scope.launch { sheetState.hide() }.invokeOnCompletion { callbacks.onDismiss() }
           }
         )
 

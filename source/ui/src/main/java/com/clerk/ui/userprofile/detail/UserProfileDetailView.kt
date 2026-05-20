@@ -44,6 +44,9 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
+private const val EMAIL_IMMUTABLE_SNACKBAR_MESSAGE =
+  "Email addresses cannot be changed for this application."
+
 @Composable
 fun UserProfileDetailView(modifier: Modifier = Modifier) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
@@ -89,8 +92,12 @@ private fun UserProfileDetailViewImpl(
         phoneNumbers = phoneNumbers,
         externalAccounts = externalAccounts,
         onShowBottomSheet = { type ->
-          bottomSheetType = type
-          showBottomSheet = true
+          if (type == BottomSheetMode.EmailAddress && Clerk.isEmailImmutable) {
+            scope.launch { snackbarHostState.showSnackbar(EMAIL_IMMUTABLE_SNACKBAR_MESSAGE) }
+          } else {
+            bottomSheetType = type
+            showBottomSheet = true
+          }
         },
         onError = { errorMessage -> scope.launch { snackbarHostState.showSnackbar(errorMessage) } },
       )
@@ -130,8 +137,10 @@ private fun ProfileContent(
         .padding(innerPadding)
         .verticalScroll(scrollState)
   ) {
-    val showEmailSection = Clerk.isEmailEnabled && !(Clerk.isEmailImmutable && emailAddresses.isEmpty())
-    val showPhoneSection = Clerk.isPhoneNumberEnabled && !(Clerk.isPhoneNumberImmutable && phoneNumbers.isEmpty())
+    val showEmailSection =
+      Clerk.isEmailEnabled && !(Clerk.isEmailImmutable && emailAddresses.isEmpty())
+    val showPhoneSection =
+      Clerk.isPhoneNumberEnabled && !(Clerk.isPhoneNumberImmutable && phoneNumbers.isEmpty())
 
     HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     if (showEmailSection) {

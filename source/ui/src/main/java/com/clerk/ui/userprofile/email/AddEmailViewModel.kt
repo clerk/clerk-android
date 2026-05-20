@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.email
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
@@ -13,12 +14,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+private const val ADD_EMAIL_IMMUTABLE_MESSAGE =
+  "Email addresses cannot be changed for this application."
+
 internal class AddEmailViewModel : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
 
   fun addEmail(email: String) {
+    if (Clerk.isEmailImmutable) {
+      _state.value = State.Error(ADD_EMAIL_IMMUTABLE_MESSAGE)
+      return
+    }
     _state.value = State.Loading
     guardUser(userDoesNotExist = { _state.value = State.Error("No current user found") }) { user ->
       viewModelScope.launch(Dispatchers.IO) {

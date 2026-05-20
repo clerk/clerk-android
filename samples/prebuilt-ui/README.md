@@ -1,6 +1,6 @@
-# Clerk Android Prebuilt Ui
+# Clerk Android Prebuilt UI
 
-This sample app is integrates the Clerk prebuilt UI components
+This sample app integrates Clerk prebuilt UI components for authentication, user accounts, and organizations.
 
 ## Prerequisites
 - A Clerk account (sign up at [clerk.com](https://clerk.com))
@@ -46,6 +46,65 @@ This sample app is integrates the Clerk prebuilt UI components
    ```bash
    ./gradlew :samples:prebuilt-ui:installDebug
    ```
+
+## Organization Views
+
+Enable Organizations in the Clerk Dashboard to try the organization prebuilt flows. Once signed in, the sample shows `OrganizationSwitcher` in the app chrome plus buttons that present `OrganizationListView` and `OrganizationProfileView` as full-screen Compose flows.
+
+Basic usage:
+
+```kotlin
+@Composable
+fun SignedInScreen() {
+  var showOrganizationList by rememberSaveable { mutableStateOf(false) }
+  var showOrganizationProfile by rememberSaveable { mutableStateOf(false) }
+
+  Column {
+    OrganizationSwitcher()
+
+    Button(onClick = { showOrganizationList = true }) {
+      Text("Open organization list")
+    }
+
+    Button(onClick = { showOrganizationProfile = true }) {
+      Text("Open organization profile")
+    }
+  }
+
+  if (showOrganizationList) {
+    OrganizationListView(onDismissRequest = { showOrganizationList = false })
+  }
+
+  if (showOrganizationProfile) {
+    OrganizationProfileView(onDismiss = { showOrganizationProfile = false })
+  }
+}
+```
+
+Custom organization profile rows:
+
+```kotlin
+private const val BillingRoute = "billing"
+
+val customRows =
+  listOf(
+    OrganizationProfileCustomRow(
+      routeKey = BillingRoute,
+      title = "Billing",
+      icon = OrganizationProfileRowIcon.Resource(com.clerk.ui.R.drawable.ic_credit_card),
+      placement = OrganizationProfileCustomRowPlacement.After(OrganizationProfileRow.Members),
+    )
+  )
+
+OrganizationSwitcher(
+  organizationProfileCustomRows = customRows,
+  organizationProfileCustomDestination = { routeKey ->
+    when (routeKey) {
+      BillingRoute -> BillingSettingsScreen()
+    }
+  },
+)
+```
 
 ## Related Documentation
 

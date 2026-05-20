@@ -14,6 +14,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.image.ImageResource
 import com.clerk.api.network.model.totp.TOTPResource
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.organizations.OrganizationInvitation
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSuggestion
@@ -614,11 +615,16 @@ internal interface UserApi {
    */
   @GET(ApiPaths.User.ORGANIZATION_SUGGESTIONS)
   suspend fun getOrganizationSuggestions(
-    @Query("status") status: String? = null,
+    @Query("status") status: List<String>? = null,
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
     @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null,
   ): ClerkResult<ClerkPaginatedResponse<OrganizationSuggestion>, ClerkErrorResponse>
+
+  @GET(ApiPaths.User.ORGANIZATION_CREATION_DEFAULTS)
+  suspend fun getOrganizationCreationDefaults(
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = null
+  ): ClerkResult<OrganizationCreationDefaults, ClerkErrorResponse>
 
   /**
    * Sets whether a phone number is reserved for second-factor authentication.

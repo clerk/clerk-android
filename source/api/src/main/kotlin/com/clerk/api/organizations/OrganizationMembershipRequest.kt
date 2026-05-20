@@ -4,6 +4,7 @@ import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.userdata.PublicUserData
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.user.currentSessionId
 import kotlinx.serialization.Serializable
 
 /**
@@ -43,6 +44,7 @@ suspend fun OrganizationMembershipRequest.accept():
   return ClerkApi.organization.acceptMembershipRequest(
     organizationId = this.organizationId,
     membershipRequestId = this.id,
+    sessionId = currentSessionId(),
   )
 }
 
@@ -60,5 +62,6 @@ suspend fun OrganizationMembershipRequest.reject():
   return ClerkApi.organization.rejectMembershipRequest(
     organizationId = this.organizationId,
     membershipRequestId = this.id,
+    sessionId = currentSessionId(),
   )
 }

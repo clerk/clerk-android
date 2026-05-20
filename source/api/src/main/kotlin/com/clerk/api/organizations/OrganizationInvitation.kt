@@ -3,6 +3,7 @@ package com.clerk.api.organizations
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.user.currentSessionId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -49,5 +50,6 @@ suspend fun OrganizationInvitation.revoke():
   return ClerkApi.organization.revokeOrganizationInvitation(
     organizationId = this.organizationId!!,
     invitationId = this.id,
+    sessionId = currentSessionId(),
   )
 }

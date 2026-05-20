@@ -5,8 +5,28 @@ import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.userdata.PublicUserData
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.user.currentSessionId
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+
+/** Clerk-provided organization system permission keys. */
+@Serializable
+enum class OrganizationSystemPermission(val value: String) {
+  @SerialName("org:sys_profile:manage") MANAGE_PROFILE("org:sys_profile:manage"),
+  @SerialName("org:sys_profile:delete") DELETE_PROFILE("org:sys_profile:delete"),
+  @SerialName("org:sys_memberships:read") READ_MEMBERSHIPS("org:sys_memberships:read"),
+  @SerialName("org:sys_memberships:manage") MANAGE_MEMBERSHIPS("org:sys_memberships:manage"),
+  @SerialName("org:sys_domains:read") READ_DOMAINS("org:sys_domains:read"),
+  @SerialName("org:sys_domains:manage") MANAGE_DOMAINS("org:sys_domains:manage"),
+  @SerialName("org:sys_billing:read") READ_BILLING("org:sys_billing:read"),
+  @SerialName("org:sys_billing:manage") MANAGE_BILLING("org:sys_billing:manage"),
+  @SerialName("org:sys_api_keys:read") READ_API_KEYS("org:sys_api_keys:read"),
+  @SerialName("org:sys_api_keys:manage") MANAGE_API_KEYS("org:sys_api_keys:manage");
+
+  val key: String
+    get() = value
+}
 
 /**
  * The [OrganizationMembership] object is the model around an organization membership entity and
@@ -35,7 +55,47 @@ data class OrganizationMembership(
   val createdAt: Long,
   /** The timestamp when the organization membership was last updated */
   val updatedAt: Long,
-)
+) {
+  /** Returns whether this membership includes the provided organization system permission. */
+  fun hasPermission(permission: OrganizationSystemPermission): Boolean {
+    return hasPermission(permission.value)
+  }
+
+  /** Returns whether this membership includes the provided organization permission key. */
+  fun hasPermission(permission: String): Boolean {
+    return permissions?.contains(permission) == true
+  }
+
+  val canManageProfile: Boolean
+    get() = hasPermission(OrganizationSystemPermission.MANAGE_PROFILE)
+
+  val canDeleteOrganization: Boolean
+    get() = hasPermission(OrganizationSystemPermission.DELETE_PROFILE)
+
+  val canReadMemberships: Boolean
+    get() = hasPermission(OrganizationSystemPermission.READ_MEMBERSHIPS)
+
+  val canManageMemberships: Boolean
+    get() = hasPermission(OrganizationSystemPermission.MANAGE_MEMBERSHIPS)
+
+  val canReadDomains: Boolean
+    get() = hasPermission(OrganizationSystemPermission.READ_DOMAINS)
+
+  val canManageDomains: Boolean
+    get() = hasPermission(OrganizationSystemPermission.MANAGE_DOMAINS)
+
+  val canReadBilling: Boolean
+    get() = hasPermission(OrganizationSystemPermission.READ_BILLING)
+
+  val canManageBilling: Boolean
+    get() = hasPermission(OrganizationSystemPermission.MANAGE_BILLING)
+
+  val canReadApiKeys: Boolean
+    get() = hasPermission(OrganizationSystemPermission.READ_API_KEYS)
+
+  val canManageApiKeys: Boolean
+    get() = hasPermission(OrganizationSystemPermission.MANAGE_API_KEYS)
+}
 
 /**
  * Updates the role of a member within the organization.
@@ -53,6 +113,7 @@ suspend fun OrganizationMembership.updateMembership(
     organizationId = this.organization.id,
     userId = userId,
     role = role,
+    sessionId = currentSessionId(),
   )
 }
 

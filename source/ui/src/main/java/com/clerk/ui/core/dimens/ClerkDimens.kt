@@ -37,5 +37,6 @@ internal val dp58 = 58.dp
 internal val dp60 = 60.dp
 internal val dp62 = 62.dp
 internal val dp64 = 64.dp
+internal val dp68 = 68.dp
 internal val dp72 = 72.dp
 internal val dp96 = 96.dp

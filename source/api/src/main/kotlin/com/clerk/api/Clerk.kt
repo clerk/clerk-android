@@ -1,17 +1,23 @@
 package com.clerk.api
 
+import android.app.Activity
+import android.app.Application
 import android.content.Context
+import android.content.ContextWrapper
 import com.clerk.api.Clerk.activeSession
 import com.clerk.api.Clerk.activeUser
 import com.clerk.api.Clerk.initialize
 import com.clerk.api.Clerk.isInitialized
 import com.clerk.api.Clerk.session
 import com.clerk.api.Clerk.user
+import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.auth.Auth
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
+import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.InstanceEnvironmentType
@@ -21,9 +27,15 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.organizations.Organization
+import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.sso.SSOService
+import com.clerk.api.storage.StorageHelper
+import com.clerk.api.storage.StorageKey
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import com.clerk.sdk.BuildConfig
@@ -38,6 +50,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * Provides access to authentication state, user information, and core functionality for managing
  * user sessions and sign-in flows.
  */
+@Suppress("TooManyFunctions")
 object Clerk {
 
   // region Configuration & Initialization
@@ -77,10 +90,58 @@ object Clerk {
   /** Application context used for setting up deep links and SSO Receivers */
   internal var applicationContext: WeakReference<Context>? = null
 
+  /** The current foreground activity used for Credential Manager operations. */
+  internal var currentActivity: WeakReference<Activity>? = null
+
+  private var trackedApplication: Application? = null
+
+  private val activityLifecycleCallbacks =
+    object : Application.ActivityLifecycleCallbacks {
+      override fun onActivityCreated(activity: Activity, savedInstanceState: android.os.Bundle?) {
+        currentActivity = WeakReference(activity)
+      }
+
+      override fun onActivityStarted(activity: Activity) {
+        currentActivity = WeakReference(activity)
+      }
+
+      override fun onActivityResumed(activity: Activity) {
+        currentActivity = WeakReference(activity)
+      }
+
+      override fun onActivityPaused(activity: Activity) = Unit
+
+      override fun onActivityStopped(activity: Activity) {
+        if (currentActivity?.get() == activity && !activity.isChangingConfigurations) {
+          currentActivity = null
+        }
+      }
+
+      override fun onActivitySaveInstanceState(activity: Activity, outState: android.os.Bundle) =
+        Unit
+
+      override fun onActivityDestroyed(activity: Activity) {
+        if (currentActivity?.get() == activity) {
+          currentActivity = null
+        }
+      }
+    }
+
   internal var applicationId: String? = null
 
+  private val _multiSessionModeIsEnabled = MutableStateFlow(false)
+
+  /**
+   * Reactive state indicating whether this Clerk instance allows multiple sessions on the same
+   * client.
+   *
+   * When enabled, a client can hold sessions for multiple accounts and switch the active session by
+   * updating [Client.lastActiveSessionId].
+   */
+  val multiSessionModeIsEnabledFlow: StateFlow<Boolean> = _multiSessionModeIsEnabled.asStateFlow()
+
   /** Internal environment configuration containing display settings and authentication options. */
-  internal lateinit var environment: Environment
+  internal var environment: Environment? = null
 
   /**
    * The Client object representing the current device and its authentication state.
@@ -150,7 +211,7 @@ object Clerk {
   val initializationError: StateFlow<Throwable?> = configurationManager.initializationError
 
   val applicationName: String?
-    get() = if (::environment.isInitialized) environment.displayConfig.applicationName else null
+    get() = environment?.displayConfig?.applicationName
 
   /**
    * The current version of the Clerk Android SDK.
@@ -177,11 +238,10 @@ object Clerk {
    *   empty list if the SDK is not initialized or if no first factor attributes are enabled.
    */
   val enabledFirstFactorAttributes: List<String>
-    get() =
-      if (::environment.isInitialized) environment.enabledFirstFactorAttributes() else emptyList()
+    get() = environment?.enabledFirstFactorAttributes().orEmpty()
 
   val isUserNameEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.usernameIsEnabled else false
+    get() = environment?.usernameIsEnabled ?: false
 
   /**
    * Indicates whether the 'First Name' field is enabled for user profiles.
@@ -192,7 +252,7 @@ object Clerk {
    *   the SDK is not yet initialized.
    */
   val isFirstNameEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.firstNameIsEnabled else false
+    get() = environment?.firstNameIsEnabled ?: false
 
   /**
    * Indicates whether the last name field is enabled for user profiles.
@@ -204,34 +264,58 @@ object Clerk {
    *   SDK is not yet initialized.
    */
   val isLastNameEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.lastNameIsEnabled else false
+    get() = environment?.lastNameIsEnabled ?: false
 
   val passwordIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.passwordIsEnabled else false
+    get() = environment?.passwordIsEnabled ?: false
 
   val mfaIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.mfaIsEnabled else false
+    get() = environment?.mfaIsEnabled ?: false
 
   val passkeyIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.passkeyIsEnabled else false
+    get() = environment?.passkeyIsEnabled ?: false
 
   val isEmailEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.emailIsEnabled else false
+    get() = environment?.emailIsEnabled ?: false
 
   val isPhoneNumberEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.phoneNumberIsEnabled else false
+    get() = environment?.phoneNumberIsEnabled ?: false
 
   val isEmailImmutable: Boolean
-    get() = if (::environment.isInitialized) environment.emailIsImmutable else false
+    get() = environment?.emailIsImmutable ?: false
 
   val isPhoneNumberImmutable: Boolean
-    get() = if (::environment.isInitialized) environment.phoneNumberIsImmutable else false
+    get() = environment?.phoneNumberIsImmutable ?: false
 
   val isUsernameImmutable: Boolean
-    get() = if (::environment.isInitialized) environment.usernameIsImmutable else false
+    get() = environment?.usernameIsImmutable ?: false
 
   val deleteSelfIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.userSettings.actions.deleteSelf else false
+    get() = environment?.userSettings?.actions?.deleteSelf ?: false
+
+  val organizationCreationDefaultsIsEnabled: Boolean
+    get() = environment?.organizationSettings?.organizationCreationDefaults?.enabled ?: false
+
+  val organizationIsEnabled: Boolean
+    get() = environment?.organizationSettings?.enabled ?: false
+
+  val organizationDomainsIsEnabled: Boolean
+    get() = environment?.organizationSettings?.domains?.enabled ?: false
+
+  val organizationDomainEnrollmentModes: List<String>
+    get() = environment?.organizationSettings?.domains?.enrollmentModes ?: emptyList()
+
+  val organizationAdminDeleteIsEnabled: Boolean
+    get() = environment?.organizationSettings?.actions?.adminDelete ?: false
+
+  val organizationSelectionIsForced: Boolean
+    get() = environment?.organizationSettings?.forceOrganizationSelection ?: false
+
+  val organizationSlugIsEnabled: Boolean
+    get() = environment?.organizationSettings?.slug?.disabled?.not() ?: true
+
+  val organizationDefaultRoleKey: String?
+    get() = environment?.organizationSettings?.domains?.defaultRole
 
   /**
    * The image URL for the application logo used in authentication UI components.
@@ -241,7 +325,7 @@ object Clerk {
    * not yet initialized or no logo URL is configured.
    */
   val organizationLogoUrl: String?
-    get() = if (::environment.isInitialized) environment.displayConfig.logoImageUrl else null
+    get() = environment?.displayConfig?.logoImageUrl
 
   /**
    * Indicates whether Google One Tap sign-in is enabled for the application.
@@ -254,9 +338,7 @@ object Clerk {
    *   not yet initialized.
    */
   val isGoogleOneTapEnabled: Boolean
-    get() =
-      if (::environment.isInitialized) environment.displayConfig.googleOneTapClientId != null
-      else false
+    get() = environment?.displayConfig?.googleOneTapClientId != null
 
   /**
    * Indicates whether Clerk branding is enabled for the application.
@@ -268,7 +350,7 @@ object Clerk {
    *   initialized.
    */
   val isBranded: Boolean
-    get() = if (::environment.isInitialized) environment.displayConfig.branded else true
+    get() = environment?.displayConfig?.branded ?: true
 
   /**
    * The URL of the Terms of Service page for the application.
@@ -280,7 +362,7 @@ object Clerk {
    *   initialized.
    */
   val termsUrl: String?
-    get() = if (::environment.isInitialized) environment.displayConfig.termsUrl else null
+    get() = environment?.displayConfig?.termsUrl
 
   /**
    * The URL of the Privacy Policy page for the application.
@@ -292,7 +374,7 @@ object Clerk {
    *   not yet initialized.
    */
   val privacyPolicyUrl: String?
-    get() = if (::environment.isInitialized) environment.displayConfig.privacyPolicyUrl else null
+    get() = environment?.displayConfig?.privacyPolicyUrl
 
   /**
    * Indicates whether MFA (Multi-Factor Authentication) via phone code is enabled.
@@ -304,7 +386,7 @@ object Clerk {
    *   is not yet initialized.
    */
   val mfaPhoneCodeIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.mfaPhoneCodeIsEnabled else false
+    get() = environment?.mfaPhoneCodeIsEnabled ?: false
 
   /**
    * Indicates whether MFA (Multi-Factor Authentication) via backup codes is enabled.
@@ -316,14 +398,34 @@ object Clerk {
    *   SDK is not yet initialized.
    */
   val mfaBackupCodeIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.mfaBackupCodeIsEnabled else false
+    get() = environment?.mfaBackupCodeIsEnabled ?: false
 
   val mfaAuthenticatorAppIsEnabled: Boolean
-    get() = if (::environment.isInitialized) environment.mfaAuthenticatorAppIsEnabled else false
+    get() = environment?.mfaAuthenticatorAppIsEnabled ?: false
+
+  /**
+   * Indicates whether this Clerk instance allows multiple sessions on the same client.
+   *
+   * When enabled, a client can hold sessions for multiple accounts and switch the active session by
+   * updating [Client.lastActiveSessionId].
+   */
+  val multiSessionModeIsEnabled: Boolean
+    get() = environment?.authConfig?.singleSessionMode?.not() ?: false
 
   // endregion
 
   // region Session Management
+
+  /** Internal mutable state flow for all sessions on the current client. */
+  private val _sessions = MutableStateFlow<List<Session>>(emptyList())
+
+  /**
+   * Reactive state for all sessions available on the current client.
+   *
+   * In multi-session mode this may contain sessions for multiple user accounts. The current session
+   * is still determined by [Client.lastActiveSessionId] and exposed through [sessionFlow].
+   */
+  val sessionsFlow: StateFlow<List<Session>> = _sessions.asStateFlow()
 
   /** Internal mutable state flow for session changes. */
   private val _session = MutableStateFlow<Session?>(null)
@@ -417,6 +519,31 @@ object Clerk {
   val activeUser: User?
     get() = activeSession?.user
 
+  /**
+   * The current user's membership in the active organization.
+   *
+   * Returns the membership whose organization matches [Session.lastActiveOrganizationId] on the
+   * active session. Returns `null` when there is no active session, no active organization
+   * selection, or the user has no matching hydrated organization membership.
+   */
+  val organizationMembership: OrganizationMembership?
+    get() {
+      val activeSession = activeSession ?: return null
+      val activeOrganizationId = activeSession.lastActiveOrganizationId ?: return null
+      return activeSession.user?.organizationMemberships?.firstOrNull {
+        it.organization.id == activeOrganizationId
+      }
+    }
+
+  /**
+   * The active organization for the current session.
+   *
+   * Returns `null` when there is no current session, no active organization selection, or the
+   * current user does not have a matching hydrated organization membership.
+   */
+  val organization: Organization?
+    get() = organizationMembership?.organization
+
   // endregion
 
   // region Authentication Features & Settings
@@ -434,7 +561,7 @@ object Clerk {
    * @see [SignIn.create] for usage with OAuth authentication.
    */
   val socialProviders: Map<String, UserSettings.SocialConfig>
-    get() = if (::environment.isInitialized) environment.userSettings.social else emptyMap()
+    get() = environment?.userSettings?.social ?: emptyMap()
 
   // endregion
 
@@ -520,9 +647,35 @@ object Clerk {
     options: ClerkConfigurationOptions? = null,
     theme: ClerkTheme? = null,
   ) {
+    if (configurationManager.isConfigured()) {
+      context.findActivityOrNull()?.let { currentActivity = WeakReference(it) }
+      configurationManager.configure(
+        context = context,
+        publishableKey = publishableKey,
+        options = options,
+      )
+      return
+    }
+
+    val appContext = context.applicationContext
     this.debugMode = options?.enableDebugMode == true
     this.proxyUrl = options?.proxyUrl
-    this.applicationContext = WeakReference(context)
+    this.applicationContext = WeakReference(appContext)
+    val application = appContext as? Application
+    if (application != null && trackedApplication !== application) {
+      trackedApplication?.unregisterActivityLifecycleCallbacks(activityLifecycleCallbacks)
+      application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
+      trackedApplication = application
+    }
+    // Seed currentActivity from the passed context if it (or a wrapper around
+    // it) is an Activity. Without this, callers that initialize() after the
+    // host Activity has already passed onResume — e.g. React Native bridges,
+    // late-init flows behind a permission gate, or any framework that boots
+    // Clerk after activity creation — would see currentActivity stay null
+    // until the next OS-driven resume cycle, breaking the first Credential
+    // Manager call (Google sign-in, passkeys). Callers without an Activity
+    // context can use [attachActivity] instead.
+    context.findActivityOrNull()?.let { currentActivity = WeakReference(it) }
     this.customTheme = theme
     this.telemetryEnabled = options?.telemetryEnabled ?: true
     configurationManager.configure(
@@ -530,6 +683,95 @@ object Clerk {
       publishableKey = publishableKey,
       options = options,
     )
+  }
+
+  /**
+   * Clears the active Clerk configuration and local runtime state.
+   *
+   * This is a local SDK reset: it cancels in-process refresh work, clears the configured API
+   * client, drops the device token, clears session/user flows, and removes cached authentication
+   * state. It does not revoke the server-side session. Call `Clerk.auth.signOut()` first if the
+   * current session should also be ended on Clerk's servers.
+   *
+   * After reset completes, call [initialize] again to configure a new publishable key or proxy URL.
+   */
+  fun reset() {
+    configurationManager.reset()
+    StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
+    clearSessionAndUserState()
+    SessionTokensCache.clear()
+    SSOService.cancelPendingAuthentication()
+    ExternalAccountService.cancelPendingExternalAccountConnection()
+    DeviceAttestationHelper.clearCache()
+    LocaleProvider.cleanup()
+    ClerkApi.reset()
+    updateClient(Client())
+    environment = null
+    publishableKey = null
+    baseUrl = ""
+    proxyUrl = null
+    debugMode = false
+    telemetryEnabled = true
+    customTheme = null
+    applicationId = null
+    applicationContext = null
+    currentActivity = null
+    trackedApplication?.unregisterActivityLifecycleCallbacks(activityLifecycleCallbacks)
+    trackedApplication = null
+  }
+
+  /**
+   * Switches the active Clerk configuration in the current process.
+   *
+   * This performs a local [reset] and then calls [initialize] with the provided configuration. Like
+   * [initialize], the client/environment refresh happens asynchronously; observe [isInitialized] to
+   * know when the new configuration is ready.
+   */
+  fun switchConfiguration(
+    context: Context,
+    publishableKey: String,
+    options: ClerkConfigurationOptions? = null,
+    theme: ClerkTheme? = null,
+  ) {
+    reset()
+    initialize(context = context, publishableKey = publishableKey, options = options, theme = theme)
+  }
+
+  /**
+   * Provides the current foreground [Activity] to Clerk explicitly.
+   *
+   * Useful for framework integrations — e.g. React Native bridges, plug-in SDKs, or any host that
+   * calls [initialize] with a non-Activity [Context] after the host Activity has already passed
+   * [Activity.onResume]. In that case the [Application.ActivityLifecycleCallbacks] registered by
+   * [initialize] miss the initial resume, leaving Clerk's tracked activity null — which makes the
+   * first Credential Manager call (Google sign-in, passkeys) fail with a `MissingActivity` error
+   * until the user backgrounds and foregrounds the app.
+   *
+   * Calling this with the current Activity immediately after [initialize] eliminates that gap.
+   * Subsequent activity changes are still observed via the registered lifecycle callbacks; this
+   * method only seeds the initial value.
+   *
+   * @param activity The current foreground Activity. Held as a [WeakReference] so it can still be
+   *   garbage-collected when destroyed.
+   */
+  fun attachActivity(activity: Activity) {
+    currentActivity = WeakReference(activity)
+  }
+
+  /**
+   * Walks a [Context]/[ContextWrapper] chain looking for an [Activity].
+   *
+   * Returns the first Activity found, or null if the chain bottoms out at the Application context
+   * (or any other non-Activity context). Used by [initialize] so callers that pass an Activity (or
+   * a wrapper around one) automatically seed [currentActivity].
+   */
+  private fun Context.findActivityOrNull(): Activity? {
+    var ctx: Context? = this
+    while (ctx is ContextWrapper) {
+      if (ctx is Activity) return ctx
+      ctx = ctx.baseContext
+    }
+    return null
   }
 
   /**
@@ -592,7 +834,10 @@ object Clerk {
    */
   internal fun updateEnvironment(environment: Environment) {
     this.environment = environment
+    _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
   }
+
+  internal fun credentialActivity(): Activity? = currentActivity?.get()
 
   /**
    * Internal method to update the client and trigger state updates.
@@ -602,12 +847,28 @@ object Clerk {
    * @param client The updated client configuration.
    */
   internal fun updateClient(client: Client) {
-    this.client = client
+    this.client = client.withResolvedActiveSession(previousSession = _session.value)
     // Only update state if flows are initialized (not during static initialization)
     try {
       updateSessionAndUserState()
     } catch (e: Exception) {
       ClerkLog.e("${e.message}")
+    }
+  }
+
+  private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
+    val currentActiveSessionId =
+      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
+    val resolvedActiveSessionId =
+      currentActiveSessionId
+        ?: previousSession?.id?.takeIf { previousSessionId ->
+          sessions.any { it.id == previousSessionId }
+        }
+        ?: if (lastActiveSessionId == null) sessions.singleOrNull()?.id else null
+    return if (resolvedActiveSessionId == lastActiveSessionId || resolvedActiveSessionId == null) {
+      this
+    } else {
+      copy(lastActiveSessionId = resolvedActiveSessionId)
     }
   }
 
@@ -622,10 +883,8 @@ object Clerk {
     val previousSession = _session.value
 
     // Find session by ID from all sessions (not just active sessions)
-    val currentSession =
-      if (::client.isInitialized) {
-        client.sessions.firstOrNull { it.id == client.lastActiveSessionId }
-      } else null
+    val currentSessions = if (::client.isInitialized) client.sessions else emptyList()
+    val currentSession = currentSessions.firstOrNull { it.id == client.lastActiveSessionId }
 
     if (currentSession?.status == Session.SessionStatus.PENDING) {
       ClerkLog.w(
@@ -635,6 +894,7 @@ object Clerk {
       )
     }
 
+    _sessions.value = currentSessions
     _session.value = currentSession
     _userFlow.value = currentSession?.user
 
@@ -660,6 +920,7 @@ object Clerk {
    */
   internal fun clearSessionAndUserState() {
     val previousSession = _session.value
+    _sessions.value = emptyList()
     _session.value = null
     _userFlow.value = null
 

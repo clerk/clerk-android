@@ -3,12 +3,15 @@ package com.clerk.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.credentials.resolvedCredentialFlowMessage
+import com.clerk.api.credentials.shouldSuppressCredentialFlowError
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
+import com.clerk.api.signin.authenticateWithPreparedRedirect
 import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
@@ -143,21 +146,26 @@ internal class AuthStartViewModel : ViewModel() {
   /**
    * Initiates authentication using a specified social (OAuth) provider.
    *
-   * If Google One Tap is enabled and the provider is Google, it attempts Google One Tap
-   * authentication. Otherwise, it proceeds with the standard OAuth redirect flow for the given
-   * provider.
+   * If [preferGoogleOneTap] is true, Google One Tap is enabled, and the provider is Google, it
+   * attempts Google One Tap authentication. Otherwise, it proceeds with the standard OAuth redirect
+   * flow for the given provider.
    *
    * @param provider The [OAuthProvider] to authenticate with (e.g., Google, Facebook).
+   * @param transferable Whether the flow can transfer between sign-in and sign-up.
+   * @param preferGoogleOneTap Whether Google should prefer native One Tap over browser OAuth.
+   * @param startOAuthWithSignUp Whether browser OAuth should create a sign-up attempt first.
    */
   internal fun authenticateWithSocialProvider(
     provider: OAuthProvider,
     transferable: Boolean = true,
+    preferGoogleOneTap: Boolean = true,
+    startOAuthWithSignUp: Boolean = false,
   ) {
     _state.value = AuthState.OAuthState.Loading
-    if (provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
+    if (preferGoogleOneTap && provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
       handleGoogleOneTap(transferable)
     } else {
-      authenticateWithOAuthProvider(provider, transferable)
+      authenticateWithOAuthProvider(provider, transferable, startOAuthWithSignUp)
     }
   }
 
@@ -183,18 +191,36 @@ internal class AuthStartViewModel : ViewModel() {
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            _state.value = AuthState.OAuthState.Error(it.errorMessage)
+            _state.value =
+              if (it.shouldSuppressCredentialFlowError) {
+                AuthState.Idle
+              } else {
+                AuthState.OAuthState.Error(it.resolvedCredentialFlowMessage)
+              }
           }
         }
     }
   }
 
-  private fun authenticateWithOAuthProvider(provider: OAuthProvider, transferable: Boolean) {
+  private fun authenticateWithOAuthProvider(
+    provider: OAuthProvider,
+    transferable: Boolean,
+    startOAuthWithSignUp: Boolean,
+  ) {
     viewModelScope.launch {
-      SignIn.authenticateWithRedirect(
-          SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider),
-          transferable = transferable,
-        )
+      val result =
+        if (startOAuthWithSignUp) {
+          SignUp.authenticateWithRedirect(
+            SignUp.AuthenticateWithRedirectParams.OAuth(provider = provider)
+          )
+        } else {
+          SignIn.authenticateWithRedirect(
+            SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider),
+            transferable = transferable,
+          )
+        }
+
+      result
         .onSuccess {
           _state.value =
             when (it.resultType) {
@@ -240,26 +266,15 @@ internal class AuthStartViewModel : ViewModel() {
   private suspend fun handleEnterpriseSSO(signIn: SignIn, transferable: Boolean) {
     signIn
       .prepareFirstFactor(SignIn.PrepareFirstFactorParams.EnterpriseSSO())
-      .onSuccess {
-        it.firstFactorVerification?.externalVerificationRedirectUrl?.let { url ->
-          authenticateWithRedirect(url, transferable)
-        }
-      }
+      .onSuccess { authenticateWithPreparedRedirect(it, transferable) }
       .onFailure { throwable ->
         _state.value = withContext(Dispatchers.Main) { AuthState.Error(throwable.errorMessage) }
       }
   }
 
-  private suspend fun authenticateWithRedirect(
-    externalVerificationRedirectUrl: String,
-    transferable: Boolean,
-  ) {
-    SignIn.authenticateWithRedirect(
-        SignIn.AuthenticateWithRedirectParams.EnterpriseSSO(
-          redirectUrl = externalVerificationRedirectUrl
-        ),
-        transferable = transferable,
-      )
+  private suspend fun authenticateWithPreparedRedirect(signIn: SignIn, transferable: Boolean) {
+    signIn
+      .authenticateWithPreparedRedirect(transferable = transferable)
       .onSuccess {
         withContext(Dispatchers.Main) {
           val successType =
@@ -274,6 +289,9 @@ internal class AuthStartViewModel : ViewModel() {
 
           _state.value = successType
         }
+      }
+      .onFailure { failure ->
+        withContext(Dispatchers.Main) { _state.value = AuthState.Error(failure.errorMessage) }
       }
   }
 

@@ -1,10 +1,12 @@
 package com.clerk.api.passkeys
 
-import android.content.Context
+import android.app.Activity
 import android.os.Bundle
 import androidx.credentials.CreateCredentialResponse
 import androidx.credentials.CreatePublicKeyCredentialRequest
+import androidx.credentials.exceptions.CreateCredentialCancellationException
 import com.clerk.api.Clerk
+import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -17,7 +19,6 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.unmockkAll
-import java.lang.ref.WeakReference
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -32,7 +33,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class PasskeyCreationServiceTest {
 
-  private lateinit var mockContext: Context
+  private lateinit var mockActivity: Activity
   private lateinit var mockCredentialManager: PasskeyCredentialManager
   private lateinit var mockCreateCredentialResponse: CreateCredentialResponse
   private lateinit var mockBundle: Bundle
@@ -41,7 +42,7 @@ class PasskeyCreationServiceTest {
 
   @Before
   fun setup() {
-    mockContext = mockk(relaxed = true)
+    mockActivity = mockk(relaxed = true)
     mockCredentialManager = mockk(relaxed = true)
     mockCreateCredentialResponse = mockk(relaxed = true)
     mockBundle = mockk(relaxed = true)
@@ -50,7 +51,7 @@ class PasskeyCreationServiceTest {
 
     // Mock Clerk application context
     mockkObject(Clerk)
-    every { Clerk.applicationContext } returns WeakReference(mockContext)
+    every { Clerk.credentialActivity() } returns mockActivity
 
     // Mock ClerkApi and its nested objects
     mockkObject(ClerkApi)
@@ -106,7 +107,7 @@ class PasskeyCreationServiceTest {
     // Then
     assertTrue(result is ClerkResult.Success)
     coVerify { ClerkApi.user.createPasskey() }
-    coVerify { mockCredentialManager.createCredential(eq(mockContext), any()) }
+    coVerify { mockCredentialManager.createCredential(eq(mockActivity), any()) }
     coVerify {
       ClerkApi.user.attemptPasskeyVerification(passkeyId = passkeyId, publicKeyCredential = any())
     }
@@ -164,7 +165,7 @@ class PasskeyCreationServiceTest {
 
     coEvery { ClerkApi.user.createPasskey() } returns ClerkResult.success(mockPasskey)
     coEvery {
-      mockCredentialManager.createCredential(eq(mockContext), capture(requestSlot))
+      mockCredentialManager.createCredential(eq(mockActivity), capture(requestSlot))
     } returns mockCreateCredentialResponse
     coEvery {
       ClerkApi.user.attemptPasskeyVerification(passkeyId = any(), publicKeyCredential = any())
@@ -177,7 +178,7 @@ class PasskeyCreationServiceTest {
     assertTrue(result is ClerkResult.Success)
     assertEquals(nonce, requestSlot.captured.requestJson)
     coVerify { ClerkApi.user.createPasskey() }
-    coVerify { mockCredentialManager.createCredential(eq(mockContext), any()) }
+    coVerify { mockCredentialManager.createCredential(eq(mockActivity), any()) }
     coVerify {
       ClerkApi.user.attemptPasskeyVerification(passkeyId = passkeyId, publicKeyCredential = any())
     }
@@ -234,6 +235,35 @@ class PasskeyCreationServiceTest {
       capturedJson.contains("test-attestation-object"),
     )
     assertTrue("Should contain client data JSON", capturedJson.contains("test-client-data-json"))
+  }
+
+  @Test
+  fun `createPasskey handles cancellation without surfacing unknown failure`() = runTest {
+    val nonce = """{"challenge":"test-challenge"}"""
+
+    every { mockVerification.nonce } returns nonce
+    every { mockPasskey.id } returns "test-passkey-id"
+    every { mockPasskey.verification } returns mockVerification
+
+    coEvery { ClerkApi.user.createPasskey() } returns ClerkResult.success(mockPasskey)
+    coEvery { mockCredentialManager.createCredential(any(), any()) } throws
+      CreateCredentialCancellationException()
+
+    val result = PasskeyCreationService.createPasskey()
+
+    assertTrue(result is ClerkResult.Failure)
+    assertTrue((result as ClerkResult.Failure).throwable is CredentialFlowException.UserCancelled)
+  }
+
+  @Test
+  fun `createPasskey fails when no activity is available`() = runTest {
+    every { Clerk.credentialActivity() } returns null
+
+    val result = PasskeyCreationService.createPasskey()
+
+    assertTrue(result is ClerkResult.Failure)
+    assertTrue((result as ClerkResult.Failure).throwable is CredentialFlowException.MissingActivity)
+    coVerify(exactly = 0) { mockCredentialManager.createCredential(any(), any()) }
   }
 
   @Test

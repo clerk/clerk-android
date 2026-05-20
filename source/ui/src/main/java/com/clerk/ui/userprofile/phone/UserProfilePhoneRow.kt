@@ -47,14 +47,7 @@ internal fun UserProfilePhoneRow(
 ) {
   val isPreview = LocalInspectionMode.current
   val state by viewModel.state.collectAsStateWithLifecycle()
-  LaunchedEffect(state) {
-    if (
-      state is UserProfileAddPhoneViewModel.State.Error &&
-        (state as UserProfileAddPhoneViewModel.State.Error).message != null
-    ) {
-      onError((state as UserProfileAddPhoneViewModel.State.Error).message!!)
-    }
-  }
+  ReportPhoneRowError(state, onError)
 
   ClerkMaterialTheme {
     Row(
@@ -103,6 +96,19 @@ internal fun UserProfilePhoneRow(
           },
         )
       }
+    }
+  }
+}
+
+@Composable
+private fun ReportPhoneRowError(
+  state: UserProfileAddPhoneViewModel.State,
+  onError: (String) -> Unit,
+) {
+  val errorMessage = (state as? UserProfileAddPhoneViewModel.State.Error)?.message
+  LaunchedEffect(errorMessage) {
+    if (errorMessage != null) {
+      onError(errorMessage)
     }
   }
 }
