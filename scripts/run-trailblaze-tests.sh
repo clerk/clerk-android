@@ -19,15 +19,15 @@ if ! command -v trailblaze >/dev/null 2>&1; then
   exit 127
 fi
 
-install_task="${TRAILBLAZE_INSTALL_TASK:-:samples:quickstart:installDebug}"
-trails_dir="${TRAILBLAZE_TRAILS_DIR:-trails}"
+install_task="${TRAILBLAZE_INSTALL_TASK:-:e2e:installDebug}"
+trails_dir="${TRAILBLAZE_TRAILS_DIR:-trails/e2e}"
 device="${TRAILBLAZE_DEVICE:-android}"
 
 if [[ "${TRAILBLAZE_WARN_PLACEHOLDER_KEY:-1}" == "1" ]] &&
-  [[ -z "${ORG_GRADLE_PROJECT_QUICKSTART_CLERK_PUBLISHABLE_KEY:-}" ]] &&
-  grep -q "^QUICKSTART_CLERK_PUBLISHABLE_KEY=pk_test_placeholder" gradle.properties; then
-  echo "Warning: QUICKSTART_CLERK_PUBLISHABLE_KEY is still the placeholder value."
-  echo "The quickstart app may remain on its loading state until a real Clerk test key is set."
+  [[ -z "${ORG_GRADLE_PROJECT_E2E_CLERK_PUBLISHABLE_KEY:-}" ]] &&
+  grep -q "^E2E_CLERK_PUBLISHABLE_KEY=pk_test_placeholder" gradle.properties; then
+  echo "Warning: E2E_CLERK_PUBLISHABLE_KEY is still the placeholder value."
+  echo "The e2e app may remain on its loading state until a real Clerk test key is set."
 fi
 
 if [[ "${TRAILBLAZE_INSTALL_APP:-1}" == "1" ]]; then

@@ -4,3 +4,4 @@
 # discover this config automatically.
 targets:
   - clerk-quickstart
+  - clerk-e2e

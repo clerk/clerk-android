@@ -26,6 +26,7 @@ local.properties
 /.kotlin/
 /source/telemetry/build/
 /samples/prebuilt-ui/build/
+/e2e/build/
 /docs/
 .trailblaze/
 .keys.json

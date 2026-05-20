@@ -25,6 +25,7 @@ dependencyResolutionManagement {
 rootProject.name = "Clerk"
 
 include(
+  ":e2e",
   ":samples:quickstart",
   ":samples:custom-flows",
   ":samples:linear-clone",
