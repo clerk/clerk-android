@@ -96,6 +96,7 @@ internal fun OrganizationListViewImpl(
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
+  val telemetry = LocalTelemetryCollector.current
   val callbacks =
     OrganizationListCallbacks(
       onDismissRequest = onDismissRequest,
@@ -112,15 +113,21 @@ internal fun OrganizationListViewImpl(
   val showPersonalAccount =
     user != null && !hidePersonalAccount && !Clerk.organizationSelectionIsForced
 
-  OrganizationListEffects(
-    userId = user?.id,
-    sessionId = session?.id,
-    errorMessage = state.errorMessage,
-    snackbarHostState = snackbarHostState,
-    viewModel = viewModel,
-  )
+  LaunchedEffect(user?.id, session?.id) {
+    viewModel.reset()
+    viewModel.load()
+  }
+  LaunchedEffect(user?.id) {
+    if (user != null) telemetry.record(TelemetryEvents.viewDidAppear("OrganizationListView"))
+  }
+  LaunchedEffect(state.errorMessage) {
+    state.errorMessage?.let {
+      snackbarHostState.showSnackbar(it)
+      viewModel.clearError()
+    }
+  }
 
-  OrganizationListScaffold(modifier = modifier, chrome = chrome) { innerPadding ->
+  OrganizationListScaffold(chrome = chrome, modifier = modifier) { innerPadding ->
     OrganizationListBody(
       modifier = Modifier.fillMaxSize().padding(innerPadding),
       state = state,
@@ -146,33 +153,9 @@ private data class OrganizationListChrome(
 )
 
 @Composable
-private fun OrganizationListEffects(
-  userId: String?,
-  sessionId: String?,
-  errorMessage: String?,
-  snackbarHostState: SnackbarHostState,
-  viewModel: OrganizationAccountListViewModel,
-) {
-  val telemetry = LocalTelemetryCollector.current
-  LaunchedEffect(userId, sessionId) {
-    viewModel.reset()
-    viewModel.load()
-  }
-  LaunchedEffect(userId) {
-    if (userId != null) telemetry.record(TelemetryEvents.viewDidAppear("OrganizationListView"))
-  }
-  LaunchedEffect(errorMessage) {
-    errorMessage?.let {
-      snackbarHostState.showSnackbar(it)
-      viewModel.clearError()
-    }
-  }
-}
-
-@Composable
 private fun OrganizationListScaffold(
-  modifier: Modifier,
   chrome: OrganizationListChrome,
+  modifier: Modifier = Modifier,
   content: @Composable (PaddingValues) -> Unit,
 ) {
   Scaffold(

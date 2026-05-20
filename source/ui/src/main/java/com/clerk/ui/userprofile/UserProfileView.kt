@@ -82,7 +82,7 @@ internal fun UserProfileStateProvider(
  * @param onDismiss Callback when the user profile view is dismissed.
  */
 @OptIn(ExperimentalAnimationApi::class)
-@SuppressLint("ComposeUnstableReceiver")
+@SuppressLint("ComposeModifierMissing", "ComposeUnstableReceiver")
 @Suppress("LongMethod")
 @Composable
 fun UserProfileView(

@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">prebuilt-ui</string>
+    <string name="organization_samples_title">Organization prebuilt views</string>
+    <string name="open_organization_list">Open organization list</string>
+    <string name="open_organization_profile">Open organization profile</string>
+    <string name="billing">Billing</string>
+    <string name="support">Support</string>
+    <string name="billing_destination_title">Billing settings</string>
+    <string name="support_destination_title">Support settings</string>
+    <string name="custom_destination_body">This is an app-owned destination inside the Clerk organization profile flow.</string>
+    <string name="done">Done</string>
 </resources>

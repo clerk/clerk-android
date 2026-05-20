@@ -31,6 +31,13 @@ internal constructor(
   }
 }
 
+/**
+ * Composition local that exposes organization profile custom-destination navigation.
+ *
+ * This value is provided only while rendering a custom destination from
+ * [com.clerk.ui.organizationprofile.OrganizationProfileView] or
+ * [com.clerk.ui.organizationswitcher.OrganizationSwitcher].
+ */
 @SuppressLint("ComposeCompositionLocalUsage")
 val LocalOrganizationProfileCustomNavigator =
   staticCompositionLocalOf<OrganizationProfileCustomNavigator> {
