@@ -81,6 +81,7 @@ internal fun OrganizationProfileFormView(
   footer: (@Composable () -> Unit)? = null,
 ) {
   val context = LocalContext.current
+  val invalidSlugMessage = stringResource(R.string.enter_a_valid_organization_slug)
   var organizationName by rememberSaveable(initialName) { mutableStateOf(initialName) }
   var slug by rememberSaveable(initialSlug) { mutableStateOf(initialSlug.orEmpty()) }
   var slugError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -161,7 +162,7 @@ internal fun OrganizationProfileFormView(
         val name = organizationName.trim()
         val trimmedSlug = slug.trim()
         if (slugEnabled && !isValidOrganizationSlug(trimmedSlug)) {
-          slugError = context.getString(R.string.enter_a_valid_organization_slug)
+          slugError = invalidSlugMessage
           return@ClerkButton
         }
         onSubmit(

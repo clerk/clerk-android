@@ -146,43 +146,45 @@ private fun InviteMembersContent(
   onSelectRole: (String) -> Unit,
   onSendInvitations: () -> Unit,
 ) {
-  Text(
-    text = stringResource(R.string.enter_or_paste_email_addresses),
-    style = ClerkMaterialTheme.typography.bodyMedium,
-    color = ClerkMaterialTheme.colors.mutedForeground,
-  )
+  Column(verticalArrangement = Arrangement.spacedBy(dp24)) {
+    Text(
+      text = stringResource(R.string.enter_or_paste_email_addresses),
+      style = ClerkMaterialTheme.typography.bodyMedium,
+      color = ClerkMaterialTheme.colors.mutedForeground,
+    )
 
-  ClerkTextField(
-    modifier = Modifier.fillMaxWidth().height(112.dp),
-    value = emailInput,
-    onValueChange = onEmailInputChanged,
-    label = stringResource(R.string.enter_email_addresses),
-    maxLines = INVITE_EMAIL_MAX_LINES,
-  )
+    ClerkTextField(
+      modifier = Modifier.fillMaxWidth().height(112.dp),
+      value = emailInput,
+      onValueChange = onEmailInputChanged,
+      label = stringResource(R.string.enter_email_addresses),
+      maxLines = INVITE_EMAIL_MAX_LINES,
+    )
 
-  RoleSelector(
-    roles = state.roles,
-    selectedRoleKey = state.selectedRoleKey,
-    isLoading = state.isLoadingRoles,
-    onSelectRole = onSelectRole,
-  )
+    RoleSelector(
+      roles = state.roles,
+      selectedRoleKey = state.selectedRoleKey,
+      isLoading = state.isLoadingRoles,
+      onSelectRole = onSelectRole,
+    )
 
-  ClerkButton(
-    modifier = Modifier.fillMaxWidth(),
-    text = stringResource(R.string.send_invitations),
-    isLoading = state.isSubmitting,
-    isEnabled =
-      !state.isLoadingRoles &&
-        !state.isSubmitting &&
-        state.selectedRoleKey != null &&
-        parseInviteEmailAddresses(emailInput).isNotEmpty(),
-    icons =
-      ClerkButtonDefaults.icons(
-        trailingIcon = R.drawable.ic_triangle_right,
-        trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
-      ),
-    onClick = onSendInvitations,
-  )
+    ClerkButton(
+      modifier = Modifier.fillMaxWidth(),
+      text = stringResource(R.string.send_invitations),
+      isLoading = state.isSubmitting,
+      isEnabled =
+        !state.isLoadingRoles &&
+          !state.isSubmitting &&
+          state.selectedRoleKey != null &&
+          parseInviteEmailAddresses(emailInput).isNotEmpty(),
+      icons =
+        ClerkButtonDefaults.icons(
+          trailingIcon = R.drawable.ic_triangle_right,
+          trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+        ),
+      onClick = onSendInvitations,
+    )
+  }
 }
 
 @Composable

@@ -115,9 +115,9 @@ private fun ObservePendingSessionTaskRouting(backStack: NavBackStack<NavKey>) {
 @Composable
 private fun AuthNavDisplay(
   backStack: NavBackStack<NavKey>,
-  modifier: Modifier = Modifier,
   preferGoogleOneTap: Boolean,
   startSocialOAuthAsSignUp: Boolean,
+  modifier: Modifier = Modifier,
   onAuthComplete: () -> Unit,
 ) {
   NavDisplay(

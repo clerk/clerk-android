@@ -92,6 +92,36 @@ class OrganizationProfileRowOrderingTest {
   }
 
   @Test
+  fun `custom rows with the same placement keep declaration order`() {
+    val billing =
+      customRow(
+        routeKey = "billing",
+        placement = OrganizationProfileCustomRowPlacement.After(OrganizationProfileRow.Members),
+      )
+    val preferences =
+      customRow(
+        routeKey = "preferences",
+        placement = OrganizationProfileCustomRowPlacement.After(OrganizationProfileRow.Members),
+      )
+
+    val rows =
+      buildOrganizationProfileRenderedRows(
+        builtInRows = listOf(OrganizationProfileRow.Members),
+        section = OrganizationProfileSection.Profile,
+        customRows = listOf(billing, preferences),
+      )
+
+    assertEquals(
+      listOf(
+        OrganizationProfileListRow.BuiltIn(OrganizationProfileRow.Members),
+        OrganizationProfileListRow.Custom(billing),
+        OrganizationProfileListRow.Custom(preferences),
+      ),
+      rows,
+    )
+  }
+
+  @Test
   fun `filters custom rows to their section`() {
     val actionRow =
       customRow(
