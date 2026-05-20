@@ -211,6 +211,8 @@
     <string name="member_role_joined">%1$s · %2$s</string>
     <string name="no_members_sections_available">没有可用的成员部分。</string>
     <string name="no_members_found">未找到成员</string>
+    <string name="no_members_search_results">未找到成员</string>
+    <string name="no_members_search_results_description">没有成员与你的搜索匹配。请尝试其他姓名或电子邮件地址。</string>
     <string name="no_pending_invitations">没有待处理的邀请。</string>
     <string name="no_invitations_sent">未发送邀请</string>
     <string name="no_invitations_sent_description">邀请他人加入你的组织即可开始</string>

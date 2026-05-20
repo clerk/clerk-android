@@ -27,6 +27,9 @@ internal object AppLifecycleListener {
    */
   private var callback: () -> Unit = {}
 
+  @Volatile private var isListening = false
+  @Volatile private var listenerGeneration = 0
+
   /**
    * The lifecycle observer that monitors app foreground/background state changes.
    *
@@ -88,15 +91,48 @@ internal object AppLifecycleListener {
    */
   fun configure(callback: () -> Unit) {
     this.callback = callback
+    listenerGeneration += 1
+    val generation = listenerGeneration
+    if (isListening) {
+      return
+    }
 
     // Ensure observer is added on the main thread
     if (Looper.myLooper() == Looper.getMainLooper()) {
       // Already on main thread
       ProcessLifecycleOwner.get().lifecycle.addObserver(listener)
+      isListening = true
     } else {
       // Post to main thread
       Handler(Looper.getMainLooper()).post {
-        ProcessLifecycleOwner.get().lifecycle.addObserver(listener)
+        if (listenerGeneration == generation) {
+          ProcessLifecycleOwner.get().lifecycle.addObserver(listener)
+          isListening = true
+        }
+      }
+    }
+  }
+
+  /** Stops lifecycle monitoring and clears the foreground callback. */
+  fun stop() {
+    callback = {}
+    listener.wasBackgrounded = false
+    listenerGeneration += 1
+    val generation = listenerGeneration
+
+    if (!isListening) {
+      return
+    }
+
+    if (Looper.myLooper() == Looper.getMainLooper()) {
+      ProcessLifecycleOwner.get().lifecycle.removeObserver(listener)
+      isListening = false
+    } else {
+      Handler(Looper.getMainLooper()).post {
+        if (listenerGeneration == generation) {
+          ProcessLifecycleOwner.get().lifecycle.removeObserver(listener)
+          isListening = false
+        }
       }
     }
   }

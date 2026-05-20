@@ -211,6 +211,8 @@
     <string name="member_role_joined">%1$s · %2$s</string>
     <string name="no_members_sections_available">사용 가능한 멤버 섹션이 없습니다.</string>
     <string name="no_members_found">멤버를 찾을 수 없음</string>
+    <string name="no_members_search_results">멤버를 찾을 수 없음</string>
+    <string name="no_members_search_results_description">검색과 일치하는 멤버가 없습니다. 다른 이름이나 이메일 주소를 사용해 보세요.</string>
     <string name="no_pending_invitations">대기 중인 초대가 없습니다.</string>
     <string name="no_invitations_sent">보낸 초대가 없습니다</string>
     <string name="no_invitations_sent_description">조직에 참여할 사람을 초대하여 시작하세요</string>

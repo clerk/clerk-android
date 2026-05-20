@@ -91,6 +91,20 @@ internal object ClerkApi {
     _organization = retrofit.create(OrganizationApi::class.java)
   }
 
+  /** Clears all configured Retrofit services. */
+  fun reset() {
+    _client = null
+    _environment = null
+    _session = null
+    _signIn = null
+    _signUp = null
+    _user = null
+    _deviceAttestation = null
+    _organization = null
+    configuredBaseUrl = null
+    configuredUrlWithVersion = null
+  }
+
   /** Builds and configures the Retrofit instance. */
   private fun buildRetrofit(baseUrl: String): Retrofit {
     val urlWithVersion = "$baseUrl/v1/"

@@ -66,6 +66,8 @@
     <string name="member_role_joined">%1$s &#183; %2$s</string>
     <string name="no_members_sections_available">No members sections are available.</string>
     <string name="no_members_found">No members found.</string>
+    <string name="no_members_search_results">No members found</string>
+    <string name="no_members_search_results_description">No members match your search. Try a different name or email address.</string>
     <string name="no_pending_invitations">No pending invitations.</string>
     <string name="no_invitations_sent">No invitations sent</string>
     <string name="no_invitations_sent_description">Get started by inviting someone to join your organization</string>

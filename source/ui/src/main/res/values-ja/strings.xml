@@ -211,6 +211,8 @@
     <string name="member_role_joined">%1$s · %2$s</string>
     <string name="no_members_sections_available">利用可能なメンバーセクションはありません。</string>
     <string name="no_members_found">メンバーが見つかりません</string>
+    <string name="no_members_search_results">メンバーが見つかりません</string>
+    <string name="no_members_search_results_description">検索に一致するメンバーはいません。別の名前またはメールアドレスを試してください。</string>
     <string name="no_pending_invitations">保留中の招待はありません。</string>
     <string name="no_invitations_sent">招待は送信されていません</string>
     <string name="no_invitations_sent_description">組織に参加する人を招待して始めましょう</string>

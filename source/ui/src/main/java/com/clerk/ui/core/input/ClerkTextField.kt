@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -78,6 +79,7 @@ fun ClerkTextField(
   inputContentType: ContentType = ContentType.Username,
   visualTransformation: VisualTransformation = VisualTransformation.None,
   keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+  keyboardActions: KeyboardActions = KeyboardActions.Default,
   clerkTheme: ClerkTheme? = null,
 ) {
   var isVisible by remember {
@@ -91,33 +93,19 @@ fun ClerkTextField(
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val textFieldColors = getTextFieldColors()
 
-    val labelStyle =
-      if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
-      else MaterialTheme.typography.bodyLarge
-    val labelColor =
-      when {
-        isError -> ClerkMaterialTheme.colors.danger
-        isFocused -> ClerkMaterialTheme.colors.primary
-        else -> ClerkMaterialTheme.colors.mutedForeground
-      }
-
     OutlinedTextField(
       interactionSource = interactionSource,
       modifier = modifier.fillMaxWidth().semantics { contentType = inputContentType },
       value = value,
       onValueChange = { onValueChange(it) },
       keyboardOptions = keyboardOptions,
+      keyboardActions = keyboardActions,
       maxLines = maxLines,
       enabled = enabled,
       shape = ClerkMaterialTheme.shape,
       isError = isError,
       colors = textFieldColors,
-      visualTransformation =
-        if (visualTransformation is PasswordVisualTransformation) {
-          if (isVisible) VisualTransformation.None else PasswordVisualTransformation()
-        } else {
-          visualTransformation
-        },
+      visualTransformation = resolvedVisualTransformation(isVisible, visualTransformation),
       leadingIcon =
         leadingIcon?.let { resId ->
           { ClickableIcon(resId = resId, onClick = {}, contentDescription = null) }
@@ -135,24 +123,62 @@ fun ClerkTextField(
         )
       },
       placeholder = placeholder?.let { ph -> { Text(ph) } },
-      label = label?.let { text -> { Text(text = text, style = labelStyle, color = labelColor) } },
+      label = textFieldLabel(label, isFocused, value, isError),
       textStyle = ClerkMaterialTheme.typography.bodyLarge,
-      supportingText =
-        supportingText?.let { support ->
-          {
-            Text(
-              modifier = Modifier.padding(top = dp4),
-              text = support,
-              style = ClerkMaterialTheme.typography.bodySmall,
-              color =
-                if (isError) ClerkMaterialTheme.colors.danger
-                else ClerkMaterialTheme.colors.mutedForeground,
-            )
-          }
-        },
+      supportingText = supportingTextContent(supportingText, isError),
     )
   }
 }
+
+private fun resolvedVisualTransformation(
+  isVisible: Boolean,
+  visualTransformation: VisualTransformation,
+): VisualTransformation =
+  if (visualTransformation is PasswordVisualTransformation) {
+    if (isVisible) VisualTransformation.None else PasswordVisualTransformation()
+  } else {
+    visualTransformation
+  }
+
+@Composable
+private fun textFieldLabel(
+  label: String?,
+  isFocused: Boolean,
+  value: String,
+  isError: Boolean,
+): (@Composable () -> Unit)? =
+  label?.let { text ->
+    {
+      val labelStyle =
+        if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
+        else MaterialTheme.typography.bodyLarge
+      val labelColor =
+        when {
+          isError -> ClerkMaterialTheme.colors.danger
+          isFocused -> ClerkMaterialTheme.colors.primary
+          else -> ClerkMaterialTheme.colors.mutedForeground
+        }
+      Text(text = text, style = labelStyle, color = labelColor)
+    }
+  }
+
+@Composable
+private fun supportingTextContent(
+  supportingText: String?,
+  isError: Boolean,
+): (@Composable () -> Unit)? =
+  supportingText?.let { support ->
+    {
+      Text(
+        modifier = Modifier.padding(top = dp4),
+        text = support,
+        style = ClerkMaterialTheme.typography.bodySmall,
+        color =
+          if (isError) ClerkMaterialTheme.colors.danger
+          else ClerkMaterialTheme.colors.mutedForeground,
+      )
+    }
+  }
 
 @Composable
 private fun TrailingIcon(

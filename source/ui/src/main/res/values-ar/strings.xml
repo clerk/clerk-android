@@ -211,6 +211,8 @@
     <string name="member_role_joined">%1$s · %2$s</string>
     <string name="no_members_sections_available">لا توجد أقسام أعضاء متاحة.</string>
     <string name="no_members_found">لم يتم العثور على أعضاء</string>
+    <string name="no_members_search_results">لم يتم العثور على أعضاء</string>
+    <string name="no_members_search_results_description">لا يوجد أعضاء يطابقون بحثك. جرّب اسمًا أو بريدًا إلكترونيًا مختلفًا.</string>
     <string name="no_pending_invitations">لا توجد دعوات معلقة.</string>
     <string name="no_invitations_sent">لم يتم إرسال أي دعوات</string>
     <string name="no_invitations_sent_description">ابدأ بدعوة شخص ما للانضمام إلى مؤسستك</string>

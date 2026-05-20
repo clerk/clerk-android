@@ -211,6 +211,8 @@
     <string name="member_role_joined">%1$s · %2$s</string>
     <string name="no_members_sections_available">Δεν υπάρχουν διαθέσιμες ενότητες μελών.</string>
     <string name="no_members_found">Δεν βρέθηκαν μέλη</string>
+    <string name="no_members_search_results">Δεν βρέθηκαν μέλη</string>
+    <string name="no_members_search_results_description">Κανένα μέλος δεν ταιριάζει με την αναζήτησή σας. Δοκιμάστε διαφορετικό όνομα ή διεύθυνση email.</string>
     <string name="no_pending_invitations">Δεν υπάρχουν εκκρεμείς προσκλήσεις.</string>
     <string name="no_invitations_sent">Δεν έχουν σταλεί προσκλήσεις</string>
     <string name="no_invitations_sent_description">Ξεκινήστε προσκαλώντας κάποιον να συμμετάσχει στον οργανισμό σας</string>

@@ -211,6 +211,8 @@
     <string name="member_role_joined">%1$s · %2$s</string>
     <string name="no_members_sections_available">No hay secciones de miembros disponibles.</string>
     <string name="no_members_found">No se encontraron miembros</string>
+    <string name="no_members_search_results">No se encontraron miembros</string>
+    <string name="no_members_search_results_description">Ningún miembro coincide con tu búsqueda. Prueba con otro nombre o correo electrónico.</string>
     <string name="no_pending_invitations">No hay invitaciones pendientes.</string>
     <string name="no_invitations_sent">No se enviaron invitaciones</string>
     <string name="no_invitations_sent_description">Comienza invitando a alguien a unirse a tu organización</string>

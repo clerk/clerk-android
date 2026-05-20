@@ -211,6 +211,8 @@
     <string name="member_role_joined">%1$s · %2$s</string>
     <string name="no_members_sections_available">कोई सदस्य अनुभाग उपलब्ध नहीं है।</string>
     <string name="no_members_found">कोई सदस्य नहीं मिला</string>
+    <string name="no_members_search_results">कोई सदस्य नहीं मिला</string>
+    <string name="no_members_search_results_description">आपकी खोज से कोई सदस्य मेल नहीं खाता। कोई अलग नाम या ईमेल पता आज़माएं।</string>
     <string name="no_pending_invitations">कोई लंबित आमंत्रण नहीं है।</string>
     <string name="no_invitations_sent">कोई आमंत्रण नहीं भेजा गया</string>
     <string name="no_invitations_sent_description">किसी व्यक्ति को अपने संगठन में शामिल होने के लिए आमंत्रित करके शुरू करें</string>
