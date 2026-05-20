@@ -1,0 +1,18 @@
+- config:
+    id: clerk/quickstart/auth-start
+    target: clerk-quickstart
+    platform: android
+    driver: ANDROID_ONDEVICE_ACCESSIBILITY
+    tags:
+      - smoke
+      - quickstart
+- tools:
+    - launchApp:
+        appId: com.clerk.quickstart
+        launchMode: REINSTALL
+- prompts:
+    - verify: The sign-up form is visible with Email and Password fields.
+    - step: Switch to the sign-in form.
+    - verify: The sign-in form is visible with Email and Password fields.
+    - step: Switch back to the sign-up form.
+    - verify: The sign-up form is visible again.

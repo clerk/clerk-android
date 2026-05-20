@@ -27,4 +27,5 @@ local.properties
 /source/telemetry/build/
 /samples/prebuilt-ui/build/
 /docs/
+.trailblaze/
 .keys.json

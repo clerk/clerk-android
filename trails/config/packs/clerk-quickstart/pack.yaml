@@ -1,0 +1,7 @@
+id: clerk-quickstart
+target:
+  display_name: Clerk Quickstart Sample
+  platforms:
+    android:
+      app_ids:
+        - com.clerk.quickstart
