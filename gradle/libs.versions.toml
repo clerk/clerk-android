@@ -99,7 +99,7 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbineVersion" 
 versioning-plugin = { module = "org.jetbrains.dokka:versioning-plugin", version.ref = "dokka" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
-paparazzi = "app.cash.paparazzi:paparazzi:2.0.0-alpha04"
+paparazzi = "app.cash.paparazzi:paparazzi:2.0.0-alpha05"
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activityKtx" }
 
 [plugins]
