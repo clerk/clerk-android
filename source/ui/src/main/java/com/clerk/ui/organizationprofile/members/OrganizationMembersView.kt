@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -50,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -138,6 +141,7 @@ internal fun OrganizationMembersView(
             onRetry = viewModel::retry,
             onSelectTab = viewModel::selectTab,
             onMemberSearchChanged = viewModel::setMemberQuery,
+            onSubmitMemberSearch = viewModel::submitMemberSearch,
             onLoadMoreMembers = viewModel::loadMoreMembers,
             onLoadMoreInvitations = viewModel::loadMoreInvitations,
             onLoadMoreRequests = viewModel::loadMoreRequests,
@@ -176,17 +180,27 @@ internal fun OrganizationMembersContent(
       }
     }
 
-    if (state.isLoadingInitial) {
-      item { LoadingState() }
-      return@LazyColumn
-    }
+    val selectedTab = state.selectedTab ?: state.availableTabs.firstOrNull()
 
-    if (state.availableTabs.isEmpty()) {
+    if (!state.isLoadingInitial && state.availableTabs.isEmpty()) {
       item { EmptyState(text = stringResource(R.string.no_members_sections_available)) }
       return@LazyColumn
     }
 
-    when (state.selectedTab ?: state.availableTabs.firstOrNull()) {
+    if (selectedTab == OrganizationMembersTab.Members && !state.isLoadingInitial) {
+      memberSearchField(state = state, actions = actions)
+    }
+
+    if (state.isLoadingInitial || state.isSearchingMembers) {
+      item {
+        LoadingState(
+          modifier = Modifier.fillMaxWidth().fillParentMaxHeight(EMPTY_STATE_HEIGHT_FRACTION)
+        )
+      }
+      return@LazyColumn
+    }
+
+    when (selectedTab) {
       OrganizationMembersTab.Members ->
         membersTab(state = state, viewerMembership = viewerMembership, actions = actions)
       OrganizationMembersTab.Invitations -> invitationsTab(state = state, actions = actions)
@@ -212,9 +226,8 @@ private fun InviteMembersAction(onClick: () -> Unit) {
   }
 }
 
-private fun LazyListScope.membersTab(
+private fun LazyListScope.memberSearchField(
   state: OrganizationMembersState,
-  viewerMembership: OrganizationMembership?,
   actions: OrganizationMembersActions,
 ) {
   item {
@@ -224,9 +237,17 @@ private fun LazyListScope.membersTab(
       onValueChange = actions.onMemberSearchChanged,
       label = stringResource(R.string.search),
       leadingIcon = R.drawable.ic_search,
+      keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+      keyboardActions = KeyboardActions(onSearch = { actions.onSubmitMemberSearch() }),
     )
   }
+}
 
+private fun LazyListScope.membersTab(
+  state: OrganizationMembersState,
+  viewerMembership: OrganizationMembership?,
+  actions: OrganizationMembersActions,
+) {
   if (state.hasRoleSetMigration) {
     item {
       NoticeText(
@@ -238,10 +259,22 @@ private fun LazyListScope.membersTab(
 
   if (state.members.isEmpty()) {
     item {
-      EmptyState(
-        modifier = Modifier.padding(horizontal = dp18),
-        text = stringResource(R.string.no_members_found),
-      )
+      if (state.memberQuery.isNotBlank()) {
+        MembersEmptyState(
+          modifier =
+            Modifier.fillMaxWidth()
+              .fillParentMaxHeight(EMPTY_STATE_HEIGHT_FRACTION)
+              .padding(horizontal = dp18),
+          icon = R.drawable.ic_search,
+          title = stringResource(R.string.no_members_search_results),
+          description = stringResource(R.string.no_members_search_results_description),
+        )
+      } else {
+        EmptyState(
+          modifier = Modifier.padding(horizontal = dp18),
+          text = stringResource(R.string.no_members_found),
+        )
+      }
     }
   } else {
     item {
@@ -772,8 +805,8 @@ private fun LoadMoreButton(isLoading: Boolean, onClick: () -> Unit, modifier: Mo
 }
 
 @Composable
-private fun LoadingState() {
-  Box(modifier = Modifier.fillMaxWidth().padding(dp24), contentAlignment = Alignment.Center) {
+private fun LoadingState(modifier: Modifier = Modifier) {
+  Box(modifier = modifier.fillMaxWidth().padding(dp24), contentAlignment = Alignment.Center) {
     CircularProgressIndicator()
   }
 }

@@ -37,9 +37,9 @@
     <string name="account_requires_new_password_before_continue" tools:ignore="MissingTranslation">Your account requires a new password before you can continue</string>
     <string name="sign_out_of_all_other_devices">Sign out of all other devices</string>
     <string name="choose_an_organization">Choose an organization</string>
-    <string name="choose_an_account" tools:ignore="MissingTranslation">Choose an account</string>
-    <string name="select_the_account_with_which_you_wish_to_continue" tools:ignore="MissingTranslation">Select the account with which you wish to continue.</string>
-    <string name="personal_account" tools:ignore="MissingTranslation">Personal account</string>
+    <string name="choose_an_account">Choose an account</string>
+    <string name="select_the_account_with_which_you_wish_to_continue">Select the account with which you wish to continue.</string>
+    <string name="personal_account">Personal account</string>
     <string name="join_an_existing_organization_or_create_a_new_one">Join an existing organization or create a new one</string>
     <string name="join_an_existing_organization">Join an existing organization</string>
     <string name="create_organization">Create organization</string>
@@ -47,38 +47,40 @@
     <string name="organization_name">Organization name</string>
     <string name="slug">Slug</string>
     <string name="upload_logo">Upload logo</string>
-    <string name="remove_logo" tools:ignore="MissingTranslation">Remove logo</string>
+    <string name="remove_logo">Remove logo</string>
     <string name="recommended_logo_size">Recommended size 1:1, up to 10MB.</string>
-    <string name="invite" tools:ignore="MissingTranslation">Invite</string>
-    <string name="invite_new_members" tools:ignore="MissingTranslation">Invite new members</string>
-    <string name="enter_or_paste_email_addresses" tools:ignore="MissingTranslation">Enter or paste one or more email addresses, separated by spaces or commas.</string>
-    <string name="enter_email_addresses" tools:ignore="MissingTranslation">Enter email addresses</string>
-    <string name="add" tools:ignore="MissingTranslation">Add</string>
-    <string name="role" tools:ignore="MissingTranslation">Role</string>
-    <string name="no_roles_available" tools:ignore="MissingTranslation">No roles available</string>
-    <string name="send_invitations" tools:ignore="MissingTranslation">Send invitations</string>
-    <string name="invitations" tools:ignore="MissingTranslation">Invitations</string>
-    <string name="requests" tools:ignore="MissingTranslation">Requests</string>
-    <string name="search" tools:ignore="MissingTranslation">Search</string>
-    <string name="search_members" tools:ignore="MissingTranslation">Search members</string>
-    <string name="you" tools:ignore="MissingTranslation">You</string>
-    <string name="joined_date" tools:ignore="MissingTranslation">Joined %1$s</string>
-    <string name="member_role_joined" tools:ignore="MissingTranslation">%1$s &#183; %2$s</string>
-    <string name="no_members_sections_available" tools:ignore="MissingTranslation">No members sections are available.</string>
-    <string name="no_members_found" tools:ignore="MissingTranslation">No members found.</string>
-    <string name="no_pending_invitations" tools:ignore="MissingTranslation">No pending invitations.</string>
-    <string name="no_invitations_sent" tools:ignore="MissingTranslation">No invitations sent</string>
-    <string name="no_invitations_sent_description" tools:ignore="MissingTranslation">Get started by inviting someone to join your organization</string>
-    <string name="no_membership_requests" tools:ignore="MissingTranslation">No membership requests</string>
-    <string name="no_membership_requests_description" tools:ignore="MissingTranslation">Users who request to join your organization will appear here for review</string>
-    <string name="role_set_migration_notice" tools:ignore="MissingTranslation">Role editing is temporarily unavailable while roles are migrating.</string>
-    <string name="membership_slots_remaining" tools:ignore="MissingTranslation">%1$d membership slots remaining.</string>
-    <string name="invite_limit_exceeded" tools:ignore="MissingTranslation">Inviting these members would exceed the organization membership limit.</string>
-    <string name="change_role" tools:ignore="MissingTranslation">Change role</string>
-    <string name="remove_member" tools:ignore="MissingTranslation">Remove member</string>
-    <string name="revoke_invitation" tools:ignore="MissingTranslation">Revoke invitation</string>
-    <string name="accept" tools:ignore="MissingTranslation">Accept</string>
-    <string name="reject" tools:ignore="MissingTranslation">Reject</string>
+    <string name="invite">Invite</string>
+    <string name="invite_new_members">Invite new members</string>
+    <string name="enter_or_paste_email_addresses">Enter or paste one or more email addresses, separated by spaces or commas.</string>
+    <string name="enter_email_addresses">Enter email addresses</string>
+    <string name="add">Add</string>
+    <string name="role">Role</string>
+    <string name="no_roles_available">No roles available</string>
+    <string name="send_invitations">Send invitations</string>
+    <string name="invitations">Invitations</string>
+    <string name="requests">Requests</string>
+    <string name="search">Search</string>
+    <string name="search_members">Search members</string>
+    <string name="you">You</string>
+    <string name="joined_date">Joined %1$s</string>
+    <string name="member_role_joined">%1$s &#183; %2$s</string>
+    <string name="no_members_sections_available">No members sections are available.</string>
+    <string name="no_members_found">No members found.</string>
+    <string name="no_members_search_results">No members found</string>
+    <string name="no_members_search_results_description">No members match your search. Try a different name or email address.</string>
+    <string name="no_pending_invitations">No pending invitations.</string>
+    <string name="no_invitations_sent">No invitations sent</string>
+    <string name="no_invitations_sent_description">Get started by inviting someone to join your organization</string>
+    <string name="no_membership_requests">No membership requests</string>
+    <string name="no_membership_requests_description">Users who request to join your organization will appear here for review</string>
+    <string name="role_set_migration_notice">Role editing is temporarily unavailable while roles are migrating.</string>
+    <string name="membership_slots_remaining">%1$d membership slots remaining.</string>
+    <string name="invite_limit_exceeded">Inviting these members would exceed the organization membership limit.</string>
+    <string name="change_role">Change role</string>
+    <string name="remove_member">Remove member</string>
+    <string name="revoke_invitation">Revoke invitation</string>
+    <string name="accept">Accept</string>
+    <string name="reject">Reject</string>
     <string name="join">Join</string>
     <string name="request_to_join">Request to join</string>
     <string name="pending_approval">Pending approval</string>
@@ -194,48 +196,48 @@
     <string name="account">Account</string>
     <string name="delete_account">Delete account</string>
     <string name="security">Security</string>
-    <string name="organization" tools:ignore="MissingTranslation">Organization</string>
-    <string name="update_profile" tools:ignore="MissingTranslation">Update profile</string>
-    <string name="members" tools:ignore="MissingTranslation">Members</string>
-    <string name="verified_domains" tools:ignore="MissingTranslation">Verified domains</string>
-    <string name="add_domain" tools:ignore="MissingTranslation">Add domain</string>
-    <string name="add_domain_description" tools:ignore="MissingTranslation">Add the domain to verify. Users with email addresses at this domain can join the organization automatically or request to join.</string>
-    <string name="add_domain_short_description" tools:ignore="MissingTranslation">Allow users to join the organization automatically or request to join based on a verified email domain.</string>
-    <string name="domain" tools:ignore="MissingTranslation">Domain</string>
-    <string name="verify_domain" tools:ignore="MissingTranslation">Verify domain</string>
-    <string name="remove_domain" tools:ignore="MissingTranslation">Remove domain</string>
-    <string name="manage" tools:ignore="MissingTranslation">Manage</string>
-    <string name="cancel" tools:ignore="MissingTranslation">Cancel</string>
-    <string name="delete_domain" tools:ignore="MissingTranslation">Delete domain</string>
-    <string name="send_code" tools:ignore="MissingTranslation">Send code</string>
-    <string name="verification_code" tools:ignore="MissingTranslation">Verification code</string>
-    <string name="verification_email_address" tools:ignore="MissingTranslation">Verification email address</string>
-    <string name="no_verified_domains" tools:ignore="MissingTranslation">No verified domains.</string>
-    <string name="no_automatic_enrollment" tools:ignore="MissingTranslation">No automatic enrollment</string>
-    <string name="automatic_invitations" tools:ignore="MissingTranslation">Automatic invitations</string>
-    <string name="automatic_suggestions" tools:ignore="MissingTranslation">Automatic suggestions</string>
-    <string name="no_automatic_enrollment_description" tools:ignore="MissingTranslation">Users can only be invited manually to the organization.</string>
-    <string name="automatic_invitations_description" tools:ignore="MissingTranslation">Users are automatically invited to join the organization when they sign-up and can join anytime.</string>
-    <string name="automatic_suggestions_description" tools:ignore="MissingTranslation">Users receive a suggestion to request to join, but must be approved by an admin before they are able to join the organization.</string>
-    <string name="organization_domain_needs_email_verification" tools:ignore="MissingTranslation">The domain %1$s needs to be verified via email.</string>
-    <string name="organization_domain_code_sent_to" tools:ignore="MissingTranslation">A verification code was sent to %1$s. Enter the code to continue.</string>
-    <string name="organization_domain_enrollment_description" tools:ignore="MissingTranslation">Choose how users from this domain can join the organization.</string>
-    <string name="organization_domain_will_be_removed" tools:ignore="MissingTranslation">The email domain %1$s will be removed.</string>
-    <string name="update_domain_named" tools:ignore="MissingTranslation">Update %1$s</string>
-    <string name="organization_domain_auto_join_removed" tools:ignore="MissingTranslation">Users won\'t be able to join the organization automatically after this.</string>
-    <string name="leave_organization" tools:ignore="MissingTranslation">Leave organization</string>
-    <string name="delete_organization" tools:ignore="MissingTranslation">Delete organization</string>
-    <string name="leave_organization_confirmation_message" tools:ignore="MissingTranslation">Are you sure you want to leave this organization? You will lose access to this organization and its applications.</string>
-    <string name="delete_organization_confirmation_message" tools:ignore="MissingTranslation">Are you sure you want to delete this organization?</string>
-    <string name="organization_action_irreversible" tools:ignore="MissingTranslation">This action is permanent and irreversible.</string>
-    <string name="type_organization_name_to_continue" tools:ignore="MissingTranslation">Type \"%1$s\" below to continue.</string>
+    <string name="organization">Organization</string>
+    <string name="update_profile">Update profile</string>
+    <string name="members">Members</string>
+    <string name="verified_domains">Verified domains</string>
+    <string name="add_domain">Add domain</string>
+    <string name="add_domain_description">Add the domain to verify. Users with email addresses at this domain can join the organization automatically or request to join.</string>
+    <string name="add_domain_short_description">Allow users to join the organization automatically or request to join based on a verified email domain.</string>
+    <string name="domain">Domain</string>
+    <string name="verify_domain">Verify domain</string>
+    <string name="remove_domain">Remove domain</string>
+    <string name="manage">Manage</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_domain">Delete domain</string>
+    <string name="send_code">Send code</string>
+    <string name="verification_code">Verification code</string>
+    <string name="verification_email_address">Verification email address</string>
+    <string name="no_verified_domains">No verified domains.</string>
+    <string name="no_automatic_enrollment">No automatic enrollment</string>
+    <string name="automatic_invitations">Automatic invitations</string>
+    <string name="automatic_suggestions">Automatic suggestions</string>
+    <string name="no_automatic_enrollment_description">Users can only be invited manually to the organization.</string>
+    <string name="automatic_invitations_description">Users are automatically invited to join the organization when they sign-up and can join anytime.</string>
+    <string name="automatic_suggestions_description">Users receive a suggestion to request to join, but must be approved by an admin before they are able to join the organization.</string>
+    <string name="organization_domain_needs_email_verification">The domain %1$s needs to be verified via email.</string>
+    <string name="organization_domain_code_sent_to">A verification code was sent to %1$s. Enter the code to continue.</string>
+    <string name="organization_domain_enrollment_description">Choose how users from this domain can join the organization.</string>
+    <string name="organization_domain_will_be_removed">The email domain %1$s will be removed.</string>
+    <string name="update_domain_named">Update %1$s</string>
+    <string name="organization_domain_auto_join_removed">Users won\'t be able to join the organization automatically after this.</string>
+    <string name="leave_organization">Leave organization</string>
+    <string name="delete_organization">Delete organization</string>
+    <string name="leave_organization_confirmation_message">Are you sure you want to leave this organization? You will lose access to this organization and its applications.</string>
+    <string name="delete_organization_confirmation_message">Are you sure you want to delete this organization?</string>
+    <string name="organization_action_irreversible">This action is permanent and irreversible.</string>
+    <string name="type_organization_name_to_continue">Type \"%1$s\" below to continue.</string>
     <string name="edit_profile">Edit profile</string>
     <string name="manage_account">Manage account</string>
-    <string name="manage_organization" tools:ignore="MissingTranslation">Manage organization</string>
-    <string name="switch_account" tools:ignore="MissingTranslation">Switch account</string>
-    <string name="add_account" tools:ignore="MissingTranslation">Add account</string>
-    <string name="sign_out" tools:ignore="MissingTranslation">Sign out</string>
-    <string name="sign_out_of_all_accounts" tools:ignore="MissingTranslation">Sign out of all accounts</string>
+    <string name="manage_organization">Manage organization</string>
+    <string name="switch_account">Switch account</string>
+    <string name="add_account">Add account</string>
+    <string name="sign_out">Sign out</string>
+    <string name="sign_out_of_all_accounts">Sign out of all accounts</string>
     <string name="log_out">Log out</string>
     <string name="take_a_photo">Take a photo</string>
     <string name="choose_photo">Choose photo</string>
@@ -269,10 +271,10 @@
     <string name="edit_avatar">Edit avatar</string>
     <string name="user_avatar">User avatar</string>
     <string name="open_user_profile">Open user profile</string>
-    <string name="select_organization" tools:ignore="MissingTranslation">Select organization</string>
-    <string name="switch_organization" tools:ignore="MissingTranslation">Switch organization</string>
-    <string name="current_organization" tools:ignore="MissingTranslation">Current organization</string>
-    <string name="open_organization_switcher" tools:ignore="MissingTranslation">Open organization switcher</string>
+    <string name="select_organization">Select organization</string>
+    <string name="switch_organization">Switch organization</string>
+    <string name="current_organization">Current organization</string>
+    <string name="open_organization_switcher">Open organization switcher</string>
     <string name="secured_by">Secured by</string>
     <string name="i_agree_to_the">I agree to the</string>
     <string name="terms_of_service">Terms of Service</string>

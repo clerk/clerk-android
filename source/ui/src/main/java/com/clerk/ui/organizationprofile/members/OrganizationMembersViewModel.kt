@@ -63,6 +63,7 @@ internal class OrganizationMembersViewModel(
         selectedTab = selectedTab,
         isLoadingInitial = true,
         errorMessage = null,
+        isSearchingMembers = false,
         hasRoleSetMigration = false,
       )
 
@@ -88,13 +89,20 @@ internal class OrganizationMembersViewModel(
 
   fun setMemberQuery(query: String) {
     if (query == mutableState.value.memberQuery) return
-    mutableState.value = mutableState.value.copy(memberQuery = query)
+    mutableState.value = mutableState.value.copy(memberQuery = query, isSearchingMembers = true)
     searchJob?.cancel()
     searchJob =
       viewModelScope.launch(dispatcher) {
         delay(MEMBER_SEARCH_DEBOUNCE_MS)
         loadMembers(reset = true)
       }
+  }
+
+  fun submitMemberSearch() {
+    searchJob?.cancel()
+    searchJob = null
+    mutableState.value = mutableState.value.copy(isSearchingMembers = true)
+    viewModelScope.launch(dispatcher) { loadMembers(reset = true) }
   }
 
   fun loadMoreMembers() {
@@ -217,10 +225,17 @@ internal class OrganizationMembersViewModel(
   }
 
   private suspend fun loadMembers(reset: Boolean) {
-    val currentOrganization = organization ?: return
+    val currentOrganization =
+      organization
+        ?: run {
+          mutableState.value =
+            mutableState.value.copy(isSearchingMembers = false, isLoadingMoreMembers = false)
+          return
+        }
     val current = mutableState.value
     mutableState.value =
       current.copy(
+        isSearchingMembers = reset && !current.isLoadingInitial,
         isLoadingMoreMembers = !reset,
         errorMessage = null,
         membersHasNextPage = if (reset) false else current.membersHasNextPage,
@@ -238,7 +253,11 @@ internal class OrganizationMembersViewModel(
       is ClerkResult.Success -> applyMembersPage(result.value, append = !reset)
       is ClerkResult.Failure ->
         mutableState.value =
-          mutableState.value.copy(isLoadingMoreMembers = false, errorMessage = result.errorMessage)
+          mutableState.value.copy(
+            isSearchingMembers = false,
+            isLoadingMoreMembers = false,
+            errorMessage = result.errorMessage,
+          )
     }
   }
 
@@ -252,6 +271,7 @@ internal class OrganizationMembersViewModel(
         members = memberships,
         membersTotalCount = page.totalCount,
         membersHasNextPage = memberships.size < page.totalCount,
+        isSearchingMembers = false,
         isLoadingMoreMembers = false,
         hasRoleSetMigration =
           mutableState.value.hasRoleSetMigration || page.hasRoleSetMigration == true,
