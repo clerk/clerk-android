@@ -477,45 +477,59 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
  * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
  *   [ClerkErrorResponse] if it failed.
  */
-@Suppress(
-  "DEPRECATION", // params.unsafeMetadata is itself deprecated; we route it here.
-  "ReturnCount", // Each return is a distinct exit in the split-update flow; see body.
-)
-suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorResponse> {
-  val rawMetadata = params.unsafeMetadata
+@Suppress("DEPRECATION") // params.unsafeMetadata is itself deprecated; we route it here.
+suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorResponse> =
+  params.unsafeMetadata?.let { rawMetadata ->
+    updateWithDeprecatedUnsafeMetadata(params, rawMetadata)
+  } ?: ClerkApi.user.updateUser(fields = params.toMap())
 
-  if (rawMetadata == null) {
-    return ClerkApi.user.updateUser(fields = params.toMap())
+private suspend fun User.updateWithDeprecatedUnsafeMetadata(
+  params: UpdateParams,
+  rawMetadata: String,
+): ClerkResult<User, ClerkErrorResponse> =
+  // Parse before any mutation so a malformed payload fails atomically (no network call).
+  when (val metadataResult = parseUnsafeMetadata(rawMetadata)) {
+    is ClerkResult.Failure -> metadataResult
+    is ClerkResult.Success ->
+      when (val profileResult = updateProfileFieldsBeforeMetadata(params)) {
+        is ClerkResult.Failure -> profileResult
+        is ClerkResult.Success ->
+          updateMetadataAfterProfileUpdate(metadataResult.value, profileResult)
+      }
   }
 
-  // Parse before any mutation so a malformed payload fails atomically (no network call).
-  val desired =
-    runCatching { Json.parseToJsonElement(rawMetadata) as? JsonObject }.getOrNull()
-      ?: return ClerkResult.unknownFailure(
-        IllegalArgumentException("UpdateParams.unsafeMetadata is not a valid JSON object")
-      )
+private fun parseUnsafeMetadata(rawMetadata: String): ClerkResult<JsonObject, ClerkErrorResponse> =
+  runCatching { Json.parseToJsonElement(rawMetadata) as? JsonObject }
+    .getOrNull()
+    ?.let { ClerkResult.success(it) }
+    ?: ClerkResult.unknownFailure(
+      IllegalArgumentException("UpdateParams.unsafeMetadata is not a valid JSON object")
+    )
 
-  val rest = params.copy(unsafeMetadata = null)
-  val restMap = rest.toMap()
-  // Hold onto the PATCH /me response so the no-op metadata path below can return the
-  // fresh server state instead of the stale `this` receiver.
-  var lastSuccess: ClerkResult.Success<User>? = null
-  if (restMap.isNotEmpty()) {
-    when (val patchResult = ClerkApi.user.updateUser(fields = restMap)) {
-      is ClerkResult.Failure -> return patchResult
-      is ClerkResult.Success -> lastSuccess = patchResult
+@Suppress("DEPRECATION") // params.unsafeMetadata is itself deprecated; we route it here.
+private suspend fun User.updateProfileFieldsBeforeMetadata(
+  params: UpdateParams
+): ClerkResult<User, ClerkErrorResponse> =
+  params.copy(unsafeMetadata = null).toMap().let { restMap ->
+    if (restMap.isEmpty()) {
+      ClerkResult.success(this)
+    } else {
+      ClerkApi.user.updateUser(fields = restMap)
     }
   }
 
+private suspend fun User.updateMetadataAfterProfileUpdate(
+  desired: JsonObject,
+  profileResult: ClerkResult.Success<User>,
+): ClerkResult<User, ClerkErrorResponse> {
   val current = this.unsafeMetadata ?: JsonObject(emptyMap())
   val patch = computeMergePatch(current, desired) as? JsonObject ?: desired
 
-  // No-op short-circuit: nothing changed, no metadata call needed.
-  if (patch.isEmpty()) {
-    return lastSuccess ?: ClerkResult.success(this)
+  return if (patch.isEmpty()) {
+    profileResult
+  } else {
+    updateMetadata(patch)
   }
-
-  return updateMetadata(patch)
 }
 
 /**
