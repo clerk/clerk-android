@@ -55,6 +55,7 @@ class SignInFactorCodeViewModelTest {
       SignInFactorCodeViewModel(
         attemptHandler = mockAttemptHandler,
         prepareHandler = mockPrepareHandler,
+        workDispatcher = testDispatcher,
       )
   }
 
