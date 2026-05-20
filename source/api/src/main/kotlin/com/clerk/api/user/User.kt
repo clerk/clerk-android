@@ -512,7 +512,15 @@ private fun parseUnsafeMetadata(rawMetadata: String): ClerkResult<JsonObject, Cl
       IllegalArgumentException("UpdateParams.unsafeMetadata is not a valid JSON object")
     )
 
-@Suppress("DEPRECATION") // params.unsafeMetadata is itself deprecated; we route it here.
+/**
+ * Returns `true` when the caller supplied any field other than `unsafeMetadata`. Used by the
+ * routing logic to decide whether the `/v1/me` step is a `PATCH` (to apply non-metadata
+ * changes) or a `GET` (to refresh the merge-patch baseline without other mutations).
+ *
+ * Note: [UpdateParams.publicMetadata] and [UpdateParams.privateMetadata] are deprecated.
+ * They are only settable from the Backend API; on the Frontend API they are no-ops
+ */
+@Suppress("DEPRECATION") // params.{public,private,unsafe}Metadata are themselves deprecated.
 private fun UpdateParams.hasNonMetadataFields(): Boolean =
   firstName != null ||
     lastName != null ||
@@ -551,7 +559,7 @@ private suspend fun updateMetadataAfterProfileUpdate(
   return if (patch.isEmpty()) {
     profileResult
   } else {
-    updateMetadata(patch)
+    profileResult.value.updateMetadata(patch)
   }
 }
 
