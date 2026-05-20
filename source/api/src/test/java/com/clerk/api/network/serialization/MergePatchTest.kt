@@ -75,9 +75,7 @@ class MergePatchTest {
         },
       )
     }
-    val expected = buildJsonObject {
-      put("profile", buildJsonObject { put("theme", "light") })
-    }
+    val expected = buildJsonObject { put("profile", buildJsonObject { put("theme", "light") }) }
     assertEquals(expected, computeMergePatch(current, desired))
   }
 
@@ -92,12 +90,8 @@ class MergePatchTest {
         },
       )
     }
-    val desired = buildJsonObject {
-      put("profile", buildJsonObject { put("font", "sans") })
-    }
-    val expected = buildJsonObject {
-      put("profile", buildJsonObject { put("theme", JsonNull) })
-    }
+    val desired = buildJsonObject { put("profile", buildJsonObject { put("font", "sans") }) }
+    val expected = buildJsonObject { put("profile", buildJsonObject { put("theme", JsonNull) }) }
     assertEquals(expected, computeMergePatch(current, desired))
   }
 
@@ -151,16 +145,10 @@ class MergePatchTest {
       )
     }
     val desired = buildJsonObject {
-      put(
-        "tags",
-        kotlinx.serialization.json.buildJsonArray { add(JsonPrimitive("a")) },
-      )
+      put("tags", kotlinx.serialization.json.buildJsonArray { add(JsonPrimitive("a")) })
     }
     val expected = buildJsonObject {
-      put(
-        "tags",
-        kotlinx.serialization.json.buildJsonArray { add(JsonPrimitive("a")) },
-      )
+      put("tags", kotlinx.serialization.json.buildJsonArray { add(JsonPrimitive("a")) })
     }
     assertEquals(expected, computeMergePatch(current, desired))
   }
@@ -203,10 +191,7 @@ class MergePatchTest {
     if (patch !is JsonObject) {
       return patch
     }
-    val out =
-      mutableMapOf<String, JsonElement>().apply {
-        if (target is JsonObject) putAll(target)
-      }
+    val out = mutableMapOf<String, JsonElement>().apply { if (target is JsonObject) putAll(target) }
     for ((key, value) in patch) {
       if (value is JsonNull) {
         out.remove(key)

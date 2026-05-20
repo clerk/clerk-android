@@ -86,8 +86,7 @@ class UserUpdateRoutingTest {
           }
       )
 
-    val result =
-      user.update(User.UpdateParams(unsafeMetadata = """{"theme":"light"}"""))
+    val result = user.update(User.UpdateParams(unsafeMetadata = """{"theme":"light"}"""))
 
     assertTrue(result is ClerkResult.Success)
     assertEquals(1, interceptor.calls.size)
@@ -105,10 +104,7 @@ class UserUpdateRoutingTest {
 
       val result =
         user.update(
-          User.UpdateParams(
-            firstName = "Jane",
-            unsafeMetadata = """{"foo":"new","bar":"added"}""",
-          )
+          User.UpdateParams(firstName = "Jane", unsafeMetadata = """{"foo":"new","bar":"added"}""")
         )
 
       assertTrue(result is ClerkResult.Success)
@@ -124,10 +120,7 @@ class UserUpdateRoutingTest {
       assertEquals("PATCH", patchMetadata.method)
       assertEquals("/v1/me/metadata", patchMetadata.path)
       // Patch keeps both keys: `foo` because the value changed, `bar` because it was added.
-      assertEquals(
-        """{"foo":"new","bar":"added"}""",
-        patchMetadata.body["unsafe_metadata"],
-      )
+      assertEquals("""{"foo":"new","bar":"added"}""", patchMetadata.body["unsafe_metadata"])
     }
 
   @Test
@@ -137,14 +130,8 @@ class UserUpdateRoutingTest {
     val result = user.update(User.UpdateParams(unsafeMetadata = "{not-valid"))
 
     assertTrue(result is ClerkResult.Failure)
-    assertEquals(
-      ClerkResult.Failure.ErrorType.UNKNOWN,
-      (result as ClerkResult.Failure).errorType,
-    )
-    assertTrue(
-      "No network calls must be issued before validation",
-      interceptor.calls.isEmpty(),
-    )
+    assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, (result as ClerkResult.Failure).errorType)
+    assertTrue("No network calls must be issued before validation", interceptor.calls.isEmpty())
   }
 
   @Test
@@ -154,10 +141,7 @@ class UserUpdateRoutingTest {
     val result = user.update(User.UpdateParams(unsafeMetadata = """{"theme":"dark"}"""))
 
     assertTrue(result is ClerkResult.Success)
-    assertTrue(
-      "Identical metadata must not issue any network call",
-      interceptor.calls.isEmpty(),
-    )
+    assertTrue("Identical metadata must not issue any network call", interceptor.calls.isEmpty())
   }
 
   @Test
@@ -166,10 +150,7 @@ class UserUpdateRoutingTest {
     // The bug was that the empty-patch short-circuit returned `this` (stale) instead of the
     // fresh updateUser response.
     val user =
-      newUser(
-        firstName = "Stale",
-        unsafeMetadata = buildJsonObject { put("theme", "dark") },
-      )
+      newUser(firstName = "Stale", unsafeMetadata = buildJsonObject { put("theme", "dark") })
 
     val result =
       user.update(

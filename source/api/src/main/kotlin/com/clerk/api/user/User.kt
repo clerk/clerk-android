@@ -198,8 +198,8 @@ data class User(
     /** The ID for the image to be set as profile image. */
     @SerialName("profile_image_id") val profileImageId: String? = null,
     /**
-     * Public metadata. Never settable from the Frontend API — modifications must be made
-     * via the Backend API.
+     * Public metadata. Never settable from the Frontend API — modifications must be made via the
+     * Backend API.
      */
     @Deprecated(
       "publicMetadata is not writable from the Frontend API and is a no-op here. " +
@@ -209,8 +209,8 @@ data class User(
     @SerialName("public_metadata")
     val publicMetadata: String? = null,
     /**
-     * Private metadata. Never settable from the Frontend API — modifications must be made
-     * via the Backend API.
+     * Private metadata. Never settable from the Frontend API — modifications must be made via the
+     * Backend API.
      */
     @Deprecated(
       "privateMetadata is not writable from the Frontend API and is a no-op here. " +
@@ -220,9 +220,9 @@ data class User(
     @SerialName("private_metadata")
     val privateMetadata: String? = null,
     /**
-     * JSON string containing unsafe metadata to update. Passing this here is deprecated:
-     * the SDK now routes it through [updateMetadata] under the hood. Migrate calls to
-     * [User.updateMetadata] for clearer intent and direct access to deep-merge semantics.
+     * JSON string containing unsafe metadata to update. Passing this here is deprecated: the SDK
+     * now routes it through [updateMetadata] under the hood. Migrate calls to [User.updateMetadata]
+     * for clearer intent and direct access to deep-merge semantics.
      */
     @Deprecated(
       "Use User.updateMetadata(...) for partial updates (deep merge). Passing unsafeMetadata " +
@@ -235,19 +235,19 @@ data class User(
   /**
    * Parameters for [User.updateMetadata].
    *
-   * Only [unsafeMetadata] is end-user-writable on the Frontend API. The submitted value
-   * is deep-merged into the existing `unsafeMetadata` on the server: keys present in
-   * the patch overwrite existing keys, and any key whose value is `null` is removed at
-   * any nesting level. Omit the field entirely (leave it `null`) to make no change.
+   * Only [unsafeMetadata] is end-user-writable on the Frontend API. The submitted value is
+   * deep-merged into the existing `unsafeMetadata` on the server: keys present in the patch
+   * overwrite existing keys, and any key whose value is `null` is removed at any nesting level.
+   * Omit the field entirely (leave it `null`) to make no change.
    */
   @AutoMap
   @Serializable
   data class UpdateMetadataParams(
     /**
-     * JSON string containing the unsafe metadata patch to merge into the current
-     * `unsafeMetadata`. Use `null` keys to remove existing entries.
+     * JSON string containing the unsafe metadata patch to merge into the current `unsafeMetadata`.
+     * Use `null` keys to remove existing entries.
      */
-    @SerialName("unsafe_metadata") val unsafeMetadata: String? = null,
+    @SerialName("unsafe_metadata") val unsafeMetadata: String? = null
   )
 
   /**
@@ -466,13 +466,12 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
 /**
  * Updates the current user, or the user with the given session ID, with the provided parameters.
  *
- * When [UpdateParams.unsafeMetadata] is provided, the SDK issues two FAPI calls: one
- * `PATCH /v1/me` for the non-metadata fields and one `PATCH /v1/me/metadata` for the
- * metadata. As a result, the operation is no longer server-atomic when both kinds of
- * fields are submitted together — if the first call succeeds and the second fails, the
- * non-metadata fields will have been persisted while the metadata is unchanged. Callers
- * that need strict atomicity should call [update] and [updateMetadata] separately and
- * handle partial failures themselves.
+ * When [UpdateParams.unsafeMetadata] is provided, the SDK issues two FAPI calls: one `PATCH /v1/me`
+ * for the non-metadata fields and one `PATCH /v1/me/metadata` for the metadata. As a result, the
+ * operation is no longer server-atomic when both kinds of fields are submitted together — if the
+ * first call succeeds and the second fails, the non-metadata fields will have been persisted while
+ * the metadata is unchanged. Callers that need strict atomicity should call [update] and
+ * [updateMetadata] separately and handle partial failures themselves.
  *
  * @param params The parameters to update the user with. **See**: [UpdateParams].
  * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
@@ -493,7 +492,7 @@ suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorRespo
   val desired =
     runCatching { Json.parseToJsonElement(rawMetadata) as? JsonObject }.getOrNull()
       ?: return ClerkResult.unknownFailure(
-        IllegalArgumentException("UpdateParams.unsafeMetadata is not a valid JSON object"),
+        IllegalArgumentException("UpdateParams.unsafeMetadata is not a valid JSON object")
       )
 
   val rest = params.copy(unsafeMetadata = null)
@@ -509,7 +508,7 @@ suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorRespo
   }
 
   val current = this.unsafeMetadata ?: JsonObject(emptyMap())
-  val patch = computeMergePatch(current, desired) as? JsonObject ?: desired as JsonObject
+  val patch = computeMergePatch(current, desired) as? JsonObject ?: desired
 
   // No-op short-circuit: nothing changed, no metadata call needed.
   if (patch.isEmpty()) {
@@ -520,9 +519,9 @@ suspend fun User.update(params: UpdateParams): ClerkResult<User, ClerkErrorRespo
 }
 
 /**
- * Updates the current user's metadata via `PATCH /v1/me/metadata` with deep-merge semantics:
- * keys in the patch overwrite or extend the current `unsafeMetadata`, and any key set to
- * `null` is removed at any nesting level.
+ * Updates the current user's metadata via `PATCH /v1/me/metadata` with deep-merge semantics: keys
+ * in the patch overwrite or extend the current `unsafeMetadata`, and any key set to `null` is
+ * removed at any nesting level.
  *
  * @param params The parameters to update the user's metadata with. **See**: [UpdateMetadataParams].
  * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
@@ -535,18 +534,16 @@ suspend fun User.updateMetadata(
 }
 
 /**
- * Convenience overload of [updateMetadata] that accepts a parsed [JsonObject] for
- * `unsafeMetadata`. The SDK handles JSON serialization for you.
+ * Convenience overload of [updateMetadata] that accepts a parsed [JsonObject] for `unsafeMetadata`.
+ * The SDK handles JSON serialization for you.
  *
- * @param unsafeMetadata The metadata patch to merge with the current value. Use
- *   `JsonNull` for any key whose value should be removed.
- * @return A [ClerkResult] containing the updated [User] on success or a [ClerkErrorResponse]
- *   on failure.
+ * @param unsafeMetadata The metadata patch to merge with the current value. Use `JsonNull` for any
+ *   key whose value should be removed.
+ * @return A [ClerkResult] containing the updated [User] on success or a [ClerkErrorResponse] on
+ *   failure.
  * @see updateMetadata
  */
-suspend fun User.updateMetadata(
-  unsafeMetadata: JsonObject
-): ClerkResult<User, ClerkErrorResponse> {
+suspend fun User.updateMetadata(unsafeMetadata: JsonObject): ClerkResult<User, ClerkErrorResponse> {
   return updateMetadata(UpdateMetadataParams(unsafeMetadata = unsafeMetadata.toString()))
 }
 
