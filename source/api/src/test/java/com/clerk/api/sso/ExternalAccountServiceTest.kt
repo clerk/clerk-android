@@ -90,6 +90,12 @@ class ExternalAccountServiceTest {
   @OptIn(ExperimentalCoroutinesApi::class)
   @After
   fun tearDown() {
+    // ExternalAccountService is an `internal object` — its
+    // currentPendingExternalAccountConnection deferred persists between
+    // tests in the same JVM. Cancel any pending connection here so the
+    // deferred doesn't dereference now-unmocked dependencies in the next
+    // test (manifests as kotlinx.coroutines.test.UncaughtExceptionsBeforeTest).
+    ExternalAccountService.cancelPendingExternalAccountConnection()
     Dispatchers.resetMain()
     unmockkAll()
   }
