@@ -8,6 +8,7 @@ import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.guardSignIn
 import com.clerk.ui.core.common.StrategyKeys
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 internal class SignInFactorCodeViewModel(
   private val attemptHandler: SignInAttemptHandler = SignInAttemptHandler(),
   private val prepareHandler: SignInPrepareHandler = SignInPrepareHandler(),
+  private val workDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
   private val _verificationUiState = MutableStateFlow<VerificationUiState>(VerificationUiState.Idle)
@@ -29,7 +31,7 @@ internal class SignInFactorCodeViewModel(
     _state.value = AuthenticationViewState.Loading
 
     guardSignIn(_state) { inProgressSignIn ->
-      viewModelScope.launch(Dispatchers.IO) {
+      viewModelScope.launch(workDispatcher) {
         when (factor.strategy) {
           StrategyKeys.EMAIL_CODE -> {
             prepareHandler.prepareForEmailCode(inProgressSignIn, factor, isSecondFactor) {
@@ -72,7 +74,7 @@ internal class SignInFactorCodeViewModel(
         _state.value = AuthenticationViewState.Error(message)
       }
 
-      viewModelScope.launch(Dispatchers.IO) {
+      viewModelScope.launch(workDispatcher) {
         when (factor.strategy) {
           StrategyKeys.EMAIL_CODE ->
             attemptHandler.attemptEmailCode(
