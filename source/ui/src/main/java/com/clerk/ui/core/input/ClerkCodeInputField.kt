@@ -47,6 +47,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
@@ -149,8 +150,13 @@ private fun OtpField(
   val interactionSource = remember { MutableInteractionSource() }
   val isFocused by interactionSource.collectIsFocusedAsState()
   val focusRequester = remember { FocusRequester() }
+  val inspectionMode = LocalInspectionMode.current
   var otpText by remember { mutableStateOf("") }
-  LaunchedEffect(Unit) { focusRequester.requestFocus() }
+  LaunchedEffect(inspectionMode) {
+    if (!inspectionMode) {
+      focusRequester.requestFocus()
+    }
+  }
   BasicTextField(
     interactionSource = interactionSource,
     value = otpText,

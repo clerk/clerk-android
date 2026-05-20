@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
@@ -20,27 +22,29 @@ class ClerkCodeInputFieldSnapshotTest : BaseSnapshotTest() {
   @Test
   fun testClerkCodeInputField() {
     paparazzi.snapshot {
-      ClerkMaterialTheme {
-        Column(
-          modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp16),
-          verticalArrangement = Arrangement.spacedBy(dp16),
-        ) {
-          ClerkCodeInputField(onTextChange = {}, onClickResend = {})
-          ClerkCodeInputField(
-            onTextChange = {},
-            verificationState = VerificationState.Error,
-            onClickResend = {},
-          )
-          ClerkCodeInputField(
-            onTextChange = {},
-            verificationState = VerificationState.Success,
-            onClickResend = {},
-          )
-          ClerkCodeInputField(
-            onTextChange = {},
-            verificationState = VerificationState.Verifying,
-            onClickResend = {},
-          )
+      CompositionLocalProvider(LocalInspectionMode provides true) {
+        ClerkMaterialTheme {
+          Column(
+            modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp16),
+            verticalArrangement = Arrangement.spacedBy(dp16),
+          ) {
+            ClerkCodeInputField(onTextChange = {}, onClickResend = {})
+            ClerkCodeInputField(
+              onTextChange = {},
+              verificationState = VerificationState.Error,
+              onClickResend = {},
+            )
+            ClerkCodeInputField(
+              onTextChange = {},
+              verificationState = VerificationState.Success,
+              onClickResend = {},
+            )
+            ClerkCodeInputField(
+              onTextChange = {},
+              verificationState = VerificationState.Verifying,
+              onClickResend = {},
+            )
+          }
         }
       }
     }
@@ -50,27 +54,29 @@ class ClerkCodeInputFieldSnapshotTest : BaseSnapshotTest() {
   fun testClerkCodeInputFieldDarkMode() {
     Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
     paparazzi.snapshot {
-      ClerkMaterialTheme {
-        Column(
-          modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp16),
-          verticalArrangement = Arrangement.spacedBy(dp16),
-        ) {
-          ClerkCodeInputField(onTextChange = {}, onClickResend = {})
-          ClerkCodeInputField(
-            onTextChange = {},
-            verificationState = VerificationState.Error,
-            onClickResend = {},
-          )
-          ClerkCodeInputField(
-            onTextChange = {},
-            verificationState = VerificationState.Success,
-            onClickResend = {},
-          )
-          ClerkCodeInputField(
-            onTextChange = {},
-            verificationState = VerificationState.Verifying,
-            onClickResend = {},
-          )
+      CompositionLocalProvider(LocalInspectionMode provides true) {
+        ClerkMaterialTheme {
+          Column(
+            modifier = Modifier.background(ClerkMaterialTheme.colors.background).padding(dp16),
+            verticalArrangement = Arrangement.spacedBy(dp16),
+          ) {
+            ClerkCodeInputField(onTextChange = {}, onClickResend = {})
+            ClerkCodeInputField(
+              onTextChange = {},
+              verificationState = VerificationState.Error,
+              onClickResend = {},
+            )
+            ClerkCodeInputField(
+              onTextChange = {},
+              verificationState = VerificationState.Success,
+              onClickResend = {},
+            )
+            ClerkCodeInputField(
+              onTextChange = {},
+              verificationState = VerificationState.Verifying,
+              onClickResend = {},
+            )
+          }
         }
       }
     }
