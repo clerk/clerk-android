@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -78,6 +79,7 @@ fun ClerkTextField(
   inputContentType: ContentType = ContentType.Username,
   visualTransformation: VisualTransformation = VisualTransformation.None,
   keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+  keyboardActions: KeyboardActions = KeyboardActions.Default,
   clerkTheme: ClerkTheme? = null,
 ) {
   var isVisible by remember {
@@ -107,6 +109,7 @@ fun ClerkTextField(
       value = value,
       onValueChange = { onValueChange(it) },
       keyboardOptions = keyboardOptions,
+      keyboardActions = keyboardActions,
       maxLines = maxLines,
       enabled = enabled,
       shape = ClerkMaterialTheme.shape,
