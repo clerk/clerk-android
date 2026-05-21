@@ -124,6 +124,26 @@
                 androidAccessibility:
                   textRegex: Continue
           - assertVisibleBySelector:
+              reason: Verify the prebuilt password screen is shown before switching methods.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Enter password
+          - tapOnElementBySelector:
+              reason: Open alternate prebuilt sign-in methods.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Use another method
+          - assertVisibleBySelector:
+              reason: Verify the phone code sign-in method is available.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: .*Send SMS code.*
+          - tapOnElementBySelector:
+              reason: Choose SMS code for the prebuilt sign-in flow.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: .*Send SMS code.*
+          - assertVisibleBySelector:
               reason: Verify the prebuilt code screen is shown.
               nodeSelector:
                 androidAccessibility:

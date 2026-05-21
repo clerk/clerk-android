@@ -77,14 +77,17 @@ private fun E2EApp(viewModel: E2EViewModel) {
         route == E2ERoute.Home ->
           HomeScreen(
             user = user,
-            onCustomOtpSignIn = {
-              viewModel.resetCustomOtpState()
-              route = E2ERoute.CustomOtpSignIn
-            },
-            onPrebuiltSignIn = { route = E2ERoute.PrebuiltAuth },
-            onCustomProfile = { route = E2ERoute.CustomProfile },
-            onPrebuiltProfile = { route = E2ERoute.PrebuiltProfile },
-            onSignOut = viewModel::signOut,
+            actions =
+              HomeActions(
+                onCustomOtpSignIn = {
+                  viewModel.resetCustomOtpState()
+                  route = E2ERoute.CustomOtpSignIn
+                },
+                onPrebuiltSignIn = { route = E2ERoute.PrebuiltAuth },
+                onCustomProfile = { route = E2ERoute.CustomProfile },
+                onPrebuiltProfile = { route = E2ERoute.PrebuiltProfile },
+                onSignOut = viewModel::signOut,
+              ),
           )
         route == E2ERoute.CustomOtpSignIn ->
           CustomOtpSignInScreen(
@@ -116,35 +119,36 @@ private fun LoadingScreen() {
 }
 
 @Composable
-private fun HomeScreen(
-  user: User?,
-  onCustomOtpSignIn: () -> Unit,
-  onPrebuiltSignIn: () -> Unit,
-  onCustomProfile: () -> Unit,
-  onPrebuiltProfile: () -> Unit,
-  onSignOut: () -> Unit,
-) {
+private fun HomeScreen(user: User?, actions: HomeActions) {
   E2EColumn {
     Text("Clerk Android E2E", style = MaterialTheme.typography.headlineSmall)
     if (user == null) {
-      Button(modifier = Modifier.fillMaxWidth(), onClick = onCustomOtpSignIn) {
+      Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onCustomOtpSignIn) {
         Text("Custom OTP Sign In")
       }
-      Button(modifier = Modifier.fillMaxWidth(), onClick = onPrebuiltSignIn) {
+      Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onPrebuiltSignIn) {
         Text("Prebuilt UI Sign In")
       }
     } else {
       Text("Already signed in")
-      Button(modifier = Modifier.fillMaxWidth(), onClick = onCustomProfile) {
+      Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onCustomProfile) {
         Text("Open Custom Profile")
       }
-      Button(modifier = Modifier.fillMaxWidth(), onClick = onPrebuiltProfile) {
+      Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onPrebuiltProfile) {
         Text("Open Prebuilt Profile")
       }
-      Button(modifier = Modifier.fillMaxWidth(), onClick = onSignOut) { Text("Sign Out") }
+      Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onSignOut) { Text("Sign Out") }
     }
   }
 }
+
+private data class HomeActions(
+  val onCustomOtpSignIn: () -> Unit,
+  val onPrebuiltSignIn: () -> Unit,
+  val onCustomProfile: () -> Unit,
+  val onPrebuiltProfile: () -> Unit,
+  val onSignOut: () -> Unit,
+)
 
 @Composable
 private fun CustomOtpSignInScreen(
