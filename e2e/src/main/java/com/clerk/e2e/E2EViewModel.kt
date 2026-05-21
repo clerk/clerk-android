@@ -193,20 +193,21 @@ class E2EViewModel : ViewModel() {
   }
 
   private suspend fun completeOAuthResult(result: OAuthResult) {
+    val signIn = result.signIn
+    val signUp = result.signUp
     val errorMessage =
       when {
-        result.signIn?.status?.let { it != SignIn.Status.COMPLETE } == true ->
-          "OAuth sign-in requires another step: ${result.signIn.status}."
-        result.signUp?.status?.let { it != SignUp.Status.COMPLETE } == true ->
-          "OAuth sign-up requires another step: ${result.signUp.status}."
-        result.signIn == null && result.signUp == null ->
-          "OAuth completed without a sign-in or sign-up result."
+        signIn != null && signIn.status != SignIn.Status.COMPLETE ->
+          "OAuth sign-in requires another step: ${signIn.status}."
+        signUp != null && signUp.status != SignUp.Status.COMPLETE ->
+          "OAuth sign-up requires another step: ${signUp.status}."
+        signIn == null && signUp == null -> "OAuth completed without a sign-in or sign-up result."
         else -> null
       }
     if (errorMessage != null) {
       _oauthState.value = OAuthState.Error(errorMessage)
     } else {
-      activateOAuthSession(result.signIn?.createdSessionId ?: result.signUp?.createdSessionId)
+      activateOAuthSession(signIn?.createdSessionId ?: signUp?.createdSessionId)
     }
   }
 
