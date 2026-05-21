@@ -227,6 +227,13 @@ object Clerk {
         InstanceEnvironmentType.PRODUCTION
       else InstanceEnvironmentType.DEVELOPMENT
 
+  internal val shouldShowDevelopmentModeWarning: Boolean
+    get() {
+      val displayConfig = environment?.displayConfig ?: return false
+      return displayConfig.showDevModeWarning &&
+        displayConfig.instanceEnvironmentType != InstanceEnvironmentType.PRODUCTION
+    }
+
   /**
    * A list of enabled first factor attributes, sorted by priority.
    *
