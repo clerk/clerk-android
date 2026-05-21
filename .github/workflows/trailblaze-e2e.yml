@@ -27,7 +27,6 @@ jobs:
       contents: read
 
     env:
-      ORG_GRADLE_PROJECT_E2E_CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY }}
       TRAILBLAZE_DEVICE: android/emulator-5554
       TRAILBLAZE_EXTRA_ARGS: "--no-capture-video"
 
@@ -58,9 +57,6 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/block/trailblaze/main/install.sh | bash
           echo "$HOME/.trailblaze/bin" >> "$GITHUB_PATH"
-
-      - name: Verify Clerk E2E key is configured
-        run: test -n "$ORG_GRADLE_PROJECT_E2E_CLERK_PUBLISHABLE_KEY"
 
       - name: Run Trailblaze E2E
         uses: reactivecircus/android-emulator-runner@v2
