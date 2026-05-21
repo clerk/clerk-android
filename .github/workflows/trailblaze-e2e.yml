@@ -1,0 +1,92 @@
+name: Trailblaze E2E
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".github/workflows/trailblaze-e2e.yml"
+      - "e2e/**"
+      - "gradle.properties"
+      - "scripts/run-trailblaze-tests.sh"
+      - "settings.gradle.kts"
+      - "source/api/**"
+      - "source/ui/**"
+      - "trails/**"
+
+concurrency:
+  group: trailblaze-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trailblaze-e2e:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 35
+
+    permissions:
+      contents: read
+
+    env:
+      ORG_GRADLE_PROJECT_E2E_CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY }}
+      TRAILBLAZE_DEVICE: android/emulator-5554
+      TRAILBLAZE_EXTRA_ARGS: "--no-capture-video"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: "zulu"
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install Trailblaze
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/block/trailblaze/main/install.sh | bash
+          echo "$HOME/.trailblaze/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Clerk E2E key is configured
+        run: test -n "$ORG_GRADLE_PROJECT_E2E_CLERK_PUBLISHABLE_KEY"
+
+      - name: Run Trailblaze E2E
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          emulator-options: -no-window -no-audio -no-snapshot -gpu swiftshader_indirect
+          script: scripts/run-trailblaze-tests.sh
+
+      - name: Collect Trailblaze artifacts
+        if: always()
+        run: |
+          mkdir -p build/trailblaze-artifacts
+          if [ -d "$HOME/.trailblaze/logs" ]; then
+            cp -R "$HOME/.trailblaze/logs" build/trailblaze-artifacts/logs
+          fi
+
+      - name: Upload Trailblaze artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trailblaze-artifacts
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            build/trailblaze-artifacts/**
+            build/reports/**
