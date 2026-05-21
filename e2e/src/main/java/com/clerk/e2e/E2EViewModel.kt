@@ -12,6 +12,8 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.attemptVerification
 import com.clerk.api.signup.sendEmailCode
 import com.clerk.api.signup.sendPhoneCode
+import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.sso.OAuthResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -19,6 +21,7 @@ import kotlinx.coroutines.launch
 private const val US_PHONE_NUMBER_DIGIT_COUNT = 10
 private const val US_PHONE_NUMBER_WITH_COUNTRY_CODE_DIGIT_COUNT = 11
 
+@Suppress("TooManyFunctions")
 class E2EViewModel : ViewModel() {
   private companion object {
     const val TEST_PASSWORD = "Trailblaze424242!"
@@ -26,11 +29,17 @@ class E2EViewModel : ViewModel() {
 
   private val _customOtpState = MutableStateFlow<CustomOtpState>(CustomOtpState.Idle)
   val customOtpState = _customOtpState.asStateFlow()
+  private val _oauthState = MutableStateFlow<OAuthState>(OAuthState.Idle)
+  val oauthState = _oauthState.asStateFlow()
   private var customOtpMode: CustomOtpMode? = null
 
   fun resetCustomOtpState() {
     customOtpMode = null
     _customOtpState.value = CustomOtpState.Idle
+  }
+
+  fun resetOAuthState() {
+    _oauthState.value = OAuthState.Idle
   }
 
   fun submitCustomOtpPhone(phoneNumber: String) {
@@ -173,10 +182,53 @@ class E2EViewModel : ViewModel() {
     }
   }
 
+  fun signInWithGoogleOAuth() {
+    _oauthState.value = OAuthState.Loading
+    viewModelScope.launch {
+      when (val result = Clerk.auth.signInWithOAuth(OAuthProvider.GOOGLE)) {
+        is ClerkResult.Success -> completeOAuthResult(result.value)
+        is ClerkResult.Failure -> _oauthState.value = OAuthState.Error(result.errorMessage)
+      }
+    }
+  }
+
+  private suspend fun completeOAuthResult(result: OAuthResult) {
+    val errorMessage =
+      when {
+        result.signIn?.status?.let { it != SignIn.Status.COMPLETE } == true ->
+          "OAuth sign-in requires another step: ${result.signIn.status}."
+        result.signUp?.status?.let { it != SignUp.Status.COMPLETE } == true ->
+          "OAuth sign-up requires another step: ${result.signUp.status}."
+        result.signIn == null && result.signUp == null ->
+          "OAuth completed without a sign-in or sign-up result."
+        else -> null
+      }
+    if (errorMessage != null) {
+      _oauthState.value = OAuthState.Error(errorMessage)
+    } else {
+      activateOAuthSession(result.signIn?.createdSessionId ?: result.signUp?.createdSessionId)
+    }
+  }
+
+  private suspend fun activateOAuthSession(createdSessionId: String?) {
+    if (createdSessionId == null) {
+      _oauthState.value = OAuthState.SignedIn
+      return
+    }
+
+    when (val result = Clerk.auth.setActive(createdSessionId)) {
+      is ClerkResult.Success -> _oauthState.value = OAuthState.SignedIn
+      is ClerkResult.Failure -> _oauthState.value = OAuthState.Error(result.errorMessage)
+    }
+  }
+
   fun signOut() {
     viewModelScope.launch {
       when (val result = Clerk.auth.signOut()) {
-        is ClerkResult.Success -> resetCustomOtpState()
+        is ClerkResult.Success -> {
+          resetCustomOtpState()
+          resetOAuthState()
+        }
         is ClerkResult.Failure -> _customOtpState.value = CustomOtpState.Error(result.errorMessage)
       }
     }
@@ -193,6 +245,16 @@ sealed interface CustomOtpState {
   data object SignedIn : CustomOtpState
 
   data class Error(val message: String?) : CustomOtpState
+}
+
+sealed interface OAuthState {
+  data object Idle : OAuthState
+
+  data object Loading : OAuthState
+
+  data object SignedIn : OAuthState
+
+  data class Error(val message: String?) : OAuthState
 }
 
 private enum class CustomOtpMode {

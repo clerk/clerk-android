@@ -168,9 +168,40 @@
               nodeSelector:
                 androidAccessibility:
                   textRegex: Manage account
+          - assertVisibleBySelector:
+              reason: Verify email profile details are visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: EMAIL ADDRESSES
+          - assertVisibleBySelector:
+              reason: Verify phone profile details are visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: PHONE NUMBER
+          - assertVisibleBySelector:
+              reason: Verify connected account profile details are visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: CONNECTED ACCOUNTS
           - pressBack: {}
           - assertVisibleBySelector:
               reason: Verify the profile account root is visible again.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Account
+          - tapOnElementBySelector:
+              reason: Open the prebuilt security screen.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Security
+          - assertVisibleBySelector:
+              reason: Verify the prebuilt security screen opened.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Security
+          - pressBack: {}
+          - assertVisibleBySelector:
+              reason: Verify the profile account root is visible after returning from security.
               nodeSelector:
                 androidAccessibility:
                   textRegex: Account

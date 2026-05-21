@@ -51,10 +51,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun E2EApp(viewModel: E2EViewModel) {
   val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   val customOtpState by viewModel.customOtpState.collectAsStateWithLifecycle()
+  val oauthState by viewModel.oauthState.collectAsStateWithLifecycle()
   var route by rememberSaveable { mutableStateOf(E2ERoute.Home) }
 
   LaunchedEffect(customOtpState) {
@@ -63,9 +65,16 @@ private fun E2EApp(viewModel: E2EViewModel) {
     }
   }
 
+  LaunchedEffect(oauthState) {
+    if (oauthState == OAuthState.SignedIn) {
+      route = E2ERoute.PrebuiltProfile
+    }
+  }
+
   LaunchedEffect(user?.id, route) {
     if (user == null && (route == E2ERoute.CustomProfile || route == E2ERoute.PrebuiltProfile)) {
       viewModel.resetCustomOtpState()
+      viewModel.resetOAuthState()
       route = E2ERoute.Home
     }
   }
@@ -84,6 +93,10 @@ private fun E2EApp(viewModel: E2EViewModel) {
                   route = E2ERoute.CustomOtpSignIn
                 },
                 onPrebuiltSignIn = { route = E2ERoute.PrebuiltAuth },
+                onOAuthSignIn = {
+                  viewModel.resetOAuthState()
+                  route = E2ERoute.OAuthSignIn
+                },
                 onCustomProfile = { route = E2ERoute.CustomProfile },
                 onPrebuiltProfile = { route = E2ERoute.PrebuiltProfile },
                 onSignOut = viewModel::signOut,
@@ -98,6 +111,12 @@ private fun E2EApp(viewModel: E2EViewModel) {
           )
         route == E2ERoute.CustomProfile ->
           CustomProfileScreen(user = user, onSignOut = viewModel::signOut)
+        route == E2ERoute.OAuthSignIn ->
+          OAuthSignInScreen(
+            state = oauthState,
+            onSignInWithGoogle = viewModel::signInWithGoogleOAuth,
+            onBack = { route = E2ERoute.Home },
+          )
         route == E2ERoute.PrebuiltAuth ->
           AuthView(
             initialIdentifier = TEST_PHONE_E164,
@@ -129,6 +148,9 @@ private fun HomeScreen(user: User?, actions: HomeActions) {
       Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onPrebuiltSignIn) {
         Text("Prebuilt UI Sign In")
       }
+      Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onOAuthSignIn) {
+        Text("OAuth Sign In")
+      }
     } else {
       Text("Already signed in")
       Button(modifier = Modifier.fillMaxWidth(), onClick = actions.onCustomProfile) {
@@ -145,6 +167,7 @@ private fun HomeScreen(user: User?, actions: HomeActions) {
 private data class HomeActions(
   val onCustomOtpSignIn: () -> Unit,
   val onPrebuiltSignIn: () -> Unit,
+  val onOAuthSignIn: () -> Unit,
   val onCustomProfile: () -> Unit,
   val onPrebuiltProfile: () -> Unit,
   val onSignOut: () -> Unit,
@@ -198,6 +221,28 @@ private fun CustomOtpSignInScreen(
 }
 
 @Composable
+private fun OAuthSignInScreen(
+  state: OAuthState,
+  onSignInWithGoogle: () -> Unit,
+  onBack: () -> Unit,
+) {
+  E2EColumn {
+    Text("OAuth Sign In", style = MaterialTheme.typography.headlineSmall)
+    if (state is OAuthState.Error) {
+      Text(state.message ?: "Something went wrong", color = MaterialTheme.colorScheme.error)
+    }
+    if (state == OAuthState.Loading) {
+      CircularProgressIndicator()
+    } else {
+      Button(modifier = Modifier.fillMaxWidth(), onClick = onSignInWithGoogle) {
+        Text("Sign in with Google")
+      }
+    }
+    TextButton(onClick = onBack) { Text("Back to E2E Home") }
+  }
+}
+
+@Composable
 private fun CustomProfileScreen(user: User?, onSignOut: () -> Unit) {
   var showDetails by rememberSaveable { mutableStateOf(false) }
   E2EColumn {
@@ -243,6 +288,7 @@ private enum class E2ERoute {
   Home,
   CustomOtpSignIn,
   CustomProfile,
+  OAuthSignIn,
   PrebuiltAuth,
   PrebuiltProfile,
 }
