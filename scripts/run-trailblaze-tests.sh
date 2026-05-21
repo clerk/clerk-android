@@ -59,6 +59,7 @@ wait_for_android_device() {
   fi
 
   adb -s "$serial" shell input keyevent 82 >/dev/null 2>&1 || true
+  dismiss_android_system_interruptions "$serial"
   reset_adb_forward_state "$serial"
   verify_adb_forward "$serial"
 }
@@ -85,6 +86,21 @@ verify_adb_forward() {
   adb -s "$serial" wait-for-device
   adb -s "$serial" forward "tcp:$port" "tcp:$port"
   adb -s "$serial" forward --remove "tcp:$port" >/dev/null 2>&1 || true
+}
+
+dismiss_android_system_interruptions() {
+  local serial="$1"
+
+  # CI can surface stale launcher ANR dialogs above the e2e app before the first assertion.
+  adb -s "$serial" shell am force-stop com.google.android.apps.nexuslauncher >/dev/null 2>&1 || true
+  adb -s "$serial" shell am force-stop com.android.launcher3 >/dev/null 2>&1 || true
+  adb -s "$serial" shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
+}
+
+trailblaze_log_has_failure() {
+  local log_file="$1"
+
+  grep -Eq "FAILED:|Recording failed|failed tool:|Results: .* [1-9][0-9]* failed" "$log_file"
 }
 
 if [[ "${TRAILBLAZE_WARN_PLACEHOLDER_KEY:-1}" == "1" ]] &&
@@ -155,6 +171,11 @@ while true; do
   "${cmd[@]}" 2>&1 | tee "$log_file"
   status=${PIPESTATUS[0]}
   set -e
+
+  if [[ "$status" -eq 0 ]] && trailblaze_log_has_failure "$log_file"; then
+    echo "Trailblaze reported a failed run in $log_file despite exiting successfully."
+    status=1
+  fi
 
   if [[ "$status" -eq 0 ]]; then
     exit 0

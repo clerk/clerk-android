@@ -50,11 +50,11 @@
                   textRegex: Phone number
           - inputText:
               text: 555-555-0100
-          - tapOnElementBySelector:
-              reason: Submit the phone number to request an OTP.
-              nodeSelector:
-                androidAccessibility:
-                  textRegex: Continue
+              hideKeyboardAfter: false
+          - tapOnPoint:
+              reasoning: Submit the phone number to request an OTP.
+              x: 540
+              y: 1257
           - assertVisibleBySelector:
               reason: Verify the verification code field is visible.
               nodeSelector:
@@ -67,11 +67,11 @@
                   textRegex: Verification code
           - inputText:
               text: "424242"
-          - tapOnElementBySelector:
-              reason: Verify the custom OTP code.
-              nodeSelector:
-                androidAccessibility:
-                  textRegex: Verify
+              hideKeyboardAfter: false
+          - tapOnPoint:
+              reasoning: Verify the custom OTP code.
+              x: 540
+              y: 1257
           - assertVisibleBySelector:
               reason: Verify the custom profile is shown after sign-in.
               nodeSelector:
@@ -150,6 +150,7 @@
                   textRegex: Check your phone
           - inputText:
               text: "424242"
+              hideKeyboardAfter: false
           - assertVisibleBySelector:
               reason: Verify the prebuilt user profile account screen is shown after sign-in.
               nodeSelector:
