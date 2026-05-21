@@ -18,8 +18,11 @@ import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-internal fun SecuredByClerkView(modifier: Modifier = Modifier) {
-  if (Clerk.isBranded) {
+internal fun SecuredByClerkView(
+  modifier: Modifier = Modifier,
+  isBranded: Boolean = Clerk.isBranded,
+) {
+  if (isBranded) {
     ClerkMaterialTheme {
       Row(
         modifier = Modifier.then(modifier),

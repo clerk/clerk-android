@@ -21,7 +21,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.error.ClerkErrorSnackbar
-import com.clerk.ui.core.footer.SecuredByClerkView
+import com.clerk.ui.core.footer.ClerkFooterView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -80,7 +80,7 @@ internal fun ClerkThemedProfileScaffold(
         bottomContent?.invoke()
 
         Spacers.Vertical.Spacer16()
-        SecuredByClerkView()
+        ClerkFooterView()
         Spacers.Vertical.Spacer16()
       }
     }

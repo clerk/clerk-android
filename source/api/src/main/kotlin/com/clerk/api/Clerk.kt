@@ -23,6 +23,7 @@ import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.InstanceEnvironmentType
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.environment.enabledFirstFactorAttributes
+import com.clerk.api.network.model.environment.shouldShowDevModeWarning
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.isResetFactor
@@ -351,6 +352,15 @@ object Clerk {
    */
   val isBranded: Boolean
     get() = environment?.displayConfig?.branded ?: true
+
+  /**
+   * Internal support for the prebuilt UI development mode notice.
+   *
+   * This mirrors the Backend API display config and only enables the notice for development
+   * instances.
+   */
+  val shouldShowDevModeWarning: Boolean
+    get() = environment?.displayConfig?.shouldShowDevModeWarning ?: false
 
   /**
    * The URL of the Terms of Service page for the application.

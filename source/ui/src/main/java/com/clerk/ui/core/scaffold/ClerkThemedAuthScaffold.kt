@@ -58,7 +58,7 @@ import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.extensions.withMediumWeight
-import com.clerk.ui.core.footer.SecuredByClerkView
+import com.clerk.ui.core.footer.ClerkFooterView
 import com.clerk.ui.core.header.HeaderTextView
 import com.clerk.ui.core.header.HeaderType
 import com.clerk.ui.core.input.ClerkTextField
@@ -170,7 +170,7 @@ private fun AuthScaffoldContent(
     Spacer(modifier = Modifier.height(config.spacingAfterIdentifier))
     content()
     Spacers.Vertical.Spacer32()
-    SecuredByClerkView()
+    ClerkFooterView()
   }
 }
 

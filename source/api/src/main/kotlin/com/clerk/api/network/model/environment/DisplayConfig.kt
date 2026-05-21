@@ -19,6 +19,7 @@ import kotlinx.serialization.Serializable
  * @property privacyPolicyUrl URL of the privacy policy (optional)
  * @property termsUrl URL of the terms of service (optional)
  * @property googleOneTapClientId Google One Tap client ID for enhanced sign-in (optional)
+ * @property showDevModeWarning Whether prebuilt UI should warn about development mode
  */
 @Serializable
 internal data class DisplayConfig(
@@ -50,7 +51,13 @@ internal data class DisplayConfig(
 
   /** Google One Tap client ID for enhanced sign-in (optional) */
   @SerialName("google_one_tap_client_id") val googleOneTapClientId: String?,
+
+  /** Whether prebuilt UI should warn about development mode */
+  @SerialName("show_devmode_warning") val showDevModeWarning: Boolean = false,
 )
+
+internal val DisplayConfig.shouldShowDevModeWarning: Boolean
+  get() = showDevModeWarning && instanceEnvironmentType == InstanceEnvironmentType.DEVELOPMENT
 
 /**
  * Enumeration of preferred sign-in strategies.
