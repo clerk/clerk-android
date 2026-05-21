@@ -1,0 +1,73 @@
+- config:
+    id: clerk/quickstart/auth-start
+    target: clerk-quickstart
+    platform: android
+    driver: ANDROID_ONDEVICE_ACCESSIBILITY
+    tags:
+      - smoke
+      - quickstart
+- tools:
+    - launchApp:
+        appId: com.clerk.quickstart
+        launchMode: REINSTALL
+- prompts:
+    - verify: The sign-up form is visible with Email and Password fields.
+      recording:
+        tools:
+          - assertVisibleBySelector:
+              reason: Verify the quickstart sample starts on the sign-up form.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Sign Up
+          - assertVisibleBySelector:
+              reason: Verify the email field is visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Email
+          - assertVisibleBySelector:
+              reason: Verify the password field is visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Password
+    - step: Switch to the sign-in form.
+      recording:
+        tools:
+          - tapOnElementBySelector:
+              reason: Tap the existing-account switcher to show the sign-in form.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: 'Already have an account\? Sign in'
+    - verify: The sign-in form is visible with Email and Password fields.
+      recording:
+        tools:
+          - assertVisibleBySelector:
+              reason: Verify the sign-in form is visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Sign In
+          - assertVisibleBySelector:
+              reason: Verify the email field is visible on the sign-in form.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Email
+          - assertVisibleBySelector:
+              reason: Verify the password field is visible on the sign-in form.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Password
+    - step: Switch back to the sign-up form.
+      recording:
+        tools:
+          - tapOnElementBySelector:
+              reason: Tap the new-account switcher to return to the sign-up form.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: 'Don''t have an account\? Sign up'
+    - verify: The sign-up form is visible again.
+      recording:
+        tools:
+          - assertVisibleBySelector:
+              reason: Verify the sign-up form is visible again.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Sign Up

@@ -1,0 +1,7 @@
+# Workspace anchor for Clerk Android Trailblaze tests.
+#
+# Run trailblaze from the repository root or any directory below it and the CLI will
+# discover this config automatically.
+targets:
+  - clerk-quickstart
+  - clerk-e2e

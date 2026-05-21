@@ -1,0 +1,19 @@
+- config:
+    id: clerk/e2e/sign-in-profile-sign-out
+    target: clerk-e2e
+    platform: android
+    driver: ANDROID_ONDEVICE_ACCESSIBILITY
+    tags:
+      - e2e
+      - custom-flow
+      - prebuilt-ui
+- tools:
+    - launchApp:
+        appId: com.clerk.e2e
+        launchMode: REINSTALL
+- prompts:
+    - verify: The Clerk Android E2E home screen is visible.
+    - step: Complete the custom OTP sign-in with phone number 555-555-0100 and code 424242.
+    - step: Open the custom profile details, close details, and sign out.
+    - step: Complete the prebuilt UI sign-in with the same phone number and code 424242.
+    - step: Open manage account in the prebuilt user profile, verify email, phone, and connected account sections, open security, return to the account screen, and sign out.

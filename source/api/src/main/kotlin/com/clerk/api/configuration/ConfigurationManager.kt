@@ -26,6 +26,7 @@ import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -398,6 +399,8 @@ internal class ConfigurationManager {
         }
 
         executeRefresh(attempt = attempt, mode = mode, skipClientId = skipClientId)
+      } catch (e: CancellationException) {
+        throw e
       } catch (e: Exception) {
         ClerkLog.e("Exception during client and environment refresh: ${e.message}")
         if (mode == RefreshMode.INITIALIZATION) {
@@ -561,7 +564,7 @@ internal class ConfigurationManager {
    * @param retryCount Current retry attempt number.
    */
   private fun handleInitializationFailure(error: Throwable, attempt: RefreshAttempt) {
-    if (attempt.expectedConfigurationVersion != configurationVersion) {
+    if (!hasConfigured || attempt.expectedConfigurationVersion != configurationVersion) {
       return
     }
 
