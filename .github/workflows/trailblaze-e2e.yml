@@ -29,6 +29,8 @@ jobs:
     env:
       TRAILBLAZE_DEVICE: android/emulator-5554
       TRAILBLAZE_EXTRA_ARGS: "--no-capture-video"
+      TRAILBLAZE_ADB_TIMEOUT_MS: "30000"
+      TRAILBLAZE_ATTEMPTS: "2"
 
     steps:
       - name: Checkout
