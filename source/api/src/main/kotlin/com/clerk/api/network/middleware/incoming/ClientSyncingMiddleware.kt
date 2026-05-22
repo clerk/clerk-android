@@ -63,7 +63,12 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
                 // Extract and set the client
                 val client = json.decodeFromJsonElement<Client>(clientJson)
                 ClerkLog.d("Client synced: ${client.id}")
-                Clerk.updateClient(client)
+                if (shouldDeferSessionStateSync(request = request, jsonObject = jsonElement)) {
+                  ClerkLog.d("Client sync deferred session state updates for auth completion flow")
+                  Clerk.client = client
+                } else {
+                  Clerk.updateClient(client)
+                }
               }
             }
           }
@@ -154,5 +159,27 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
 
   private fun isSignUpCreationRequest(path: String, method: String): Boolean {
     return method == "POST" && path.endsWith("/${ApiPaths.Client.SignUp.BASE}")
+  }
+
+  private fun shouldDeferSessionStateSync(request: Request, jsonObject: JsonObject): Boolean {
+    val requestPath = request.url.encodedPath
+    val isSignInCompletion =
+      requestPath.endsWith("/${ApiPaths.Client.SignIn.ATTEMPT_FIRST_FACTOR}") ||
+        requestPath.endsWith("/${ApiPaths.Client.SignIn.ATTEMPT_SECOND_FACTOR}")
+    val isSignUpCompletion = requestPath.endsWith("/${ApiPaths.Client.SignUp.ATTEMPT_VERIFICATION}")
+    if (!isSignInCompletion && !isSignUpCompletion) return false
+
+    val responseElement = jsonObject["response"] ?: return false
+    val isCompleteSignIn =
+      runCatching { json.decodeFromJsonElement<SignIn>(responseElement) }
+        .getOrNull()
+        ?.let { it.status == SignIn.Status.COMPLETE && it.createdSessionId != null }
+        ?: false
+    val isCompleteSignUp =
+      runCatching { json.decodeFromJsonElement<SignUp>(responseElement) }
+        .getOrNull()
+        ?.let { it.status == SignUp.Status.COMPLETE && it.createdSessionId != null }
+        ?: false
+    return isCompleteSignIn || isCompleteSignUp
   }
 }

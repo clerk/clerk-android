@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.encodeToString
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Protocol
@@ -178,6 +179,65 @@ class ClientSyncingMiddlewareTest {
 
     assertEquals(client, Clerk.client)
     assertEquals(listOf(session), Clerk.sessionsFlow.value)
+  }
+
+  @Test
+  fun `intercept defers auth state updates for complete sign up verification`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val session = testSession("sess_from_signup")
+    val syncedClient =
+      Client(
+        id = "client_signup",
+        sessions = listOf(session),
+        lastActiveSessionId = session.id,
+      )
+
+    val request =
+      Request.Builder()
+        .url("https://api.clerk.com/v1/client/sign_ups/su_123/attempt_verification")
+        .post("".toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+        .build()
+
+    val responseBody =
+      """
+      {
+        "response": {
+          "id": "su_123",
+          "status": "complete",
+          "required_fields": [],
+          "optional_fields": [],
+          "missing_fields": [],
+          "unverified_fields": [],
+          "verifications": {},
+          "password_enabled": false,
+          "created_session_id": "${session.id}",
+          "created_at": 0,
+          "updated_at": 0
+        },
+        "client": ${ClerkApi.json.encodeToString(syncedClient)}
+      }
+      """
+        .trimIndent()
+        .toResponseBody("application/json".toMediaType())
+
+    val response =
+      Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .body(responseBody)
+        .build()
+
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns request
+    every { chain.proceed(request) } returns response
+
+    middleware.intercept(chain)
+
+    assertEquals(syncedClient, Clerk.client)
+    assertEquals(emptyList<Session>(), Clerk.sessionsFlow.value)
+    assertEquals(null, Clerk.sessionFlow.value)
   }
 
   private fun testSession(id: String): Session =
