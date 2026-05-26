@@ -15,12 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -30,13 +29,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.ui.R
-import com.clerk.ui.core.dimens.dp1
-import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
 internal fun DevelopmentModeWarningBox(
   modifier: Modifier = Modifier,
+  background: DevelopmentModeWarningBackground = DevelopmentModeWarningBackground.Grey,
   content: @Composable BoxScope.() -> Unit,
 ) {
   val shouldShowWarning = shouldShowDevelopmentModeWarning()
@@ -53,21 +51,30 @@ internal fun DevelopmentModeWarningBox(
       DevelopmentModeWarningContent(
         modifier = Modifier.align(Alignment.BottomCenter),
         metrics = metrics,
+        background = background,
       )
     }
   }
 }
 
 @Composable
-internal fun DevelopmentModeWarning(modifier: Modifier = Modifier) {
+internal fun DevelopmentModeWarning(
+  modifier: Modifier = Modifier,
+  background: DevelopmentModeWarningBackground = DevelopmentModeWarningBackground.Grey,
+) {
   if (!shouldShowDevelopmentModeWarning()) return
 
-  DevelopmentModeWarningContent(modifier = modifier, metrics = developmentModeWarningMetrics())
+  DevelopmentModeWarningContent(
+    modifier = modifier,
+    metrics = developmentModeWarningMetrics(),
+    background = background,
+  )
 }
 
 @Composable
 private fun DevelopmentModeWarningContent(
   metrics: DevelopmentModeWarningMetrics,
+  background: DevelopmentModeWarningBackground,
   modifier: Modifier = Modifier,
 ) {
   ClerkMaterialTheme {
@@ -76,10 +83,10 @@ private fun DevelopmentModeWarningContent(
         modifier
           .fillMaxWidth()
           .height(metrics.height)
-          .drawBehind {
-            drawRect(DEVELOPMENT_MODE_BACKGROUND_GRADIENT)
-            drawDevelopmentModeStripes(color = DEVELOPMENT_MODE_WARNING_COLOR)
-          }
+          .paint(
+            painter = painterResource(background.drawableResId),
+            contentScale = ContentScale.FillBounds,
+          )
           .padding(bottom = metrics.labelBottomPadding),
       contentAlignment = Alignment.BottomCenter,
     ) {
@@ -112,32 +119,6 @@ private fun developmentModeWarningMetrics(): DevelopmentModeWarningMetrics {
   )
 }
 
-private fun DrawScope.drawDevelopmentModeStripes(color: Color) {
-  val stripeBrush =
-    Brush.verticalGradient(
-      colorStops =
-        arrayOf(
-          0.0f to Color.Transparent,
-          DEVELOPMENT_MODE_STRIPE_FADE_START to Color.Transparent,
-          1.0f to color.copy(alpha = DEVELOPMENT_MODE_STRIPE_ALPHA),
-        ),
-      startY = 0f,
-      endY = size.height,
-    )
-  val spacing = dp12.toPx()
-  val strokeWidth = dp1.toPx()
-  var x = -size.height
-  while (x < size.width + size.height) {
-    drawLine(
-      brush = stripeBrush,
-      start = Offset(x, size.height),
-      end = Offset(x + size.height, 0f),
-      strokeWidth = strokeWidth,
-    )
-    x += spacing
-  }
-}
-
 private data class DevelopmentModeWarningMetrics(val height: Dp, val labelBottomPadding: Dp)
 
 private val DEVELOPMENT_MODE_BACKGROUND_HEIGHT = 100.dp
@@ -145,8 +126,6 @@ private val DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT = 26.dp
 private val DEVELOPMENT_MODE_LABEL_BOTTOM_GAP = 13.dp
 private val DEVELOPMENT_MODE_BRANDING_LABEL_GAP = 9.dp
 private val DEVELOPMENT_MODE_WARNING_COLOR = Color(0xFFF36B16)
-private val DEVELOPMENT_MODE_BACKGROUND_GRADIENT =
-  Brush.verticalGradient(colors = listOf(Color(0xFFF9F9F9), Color(0x99FFF6ED)))
 private val DEVELOPMENT_MODE_TEXT_STYLE =
   TextStyle(
     fontSize = 12.sp,
@@ -155,5 +134,3 @@ private val DEVELOPMENT_MODE_TEXT_STYLE =
     color = DEVELOPMENT_MODE_WARNING_COLOR,
     letterSpacing = 0.sp,
   )
-private const val DEVELOPMENT_MODE_STRIPE_ALPHA = 0.12f
-private const val DEVELOPMENT_MODE_STRIPE_FADE_START = 0.45f

@@ -53,6 +53,7 @@ import com.clerk.ui.core.dimens.dp96
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.footer.DevelopmentModeWarning
+import com.clerk.ui.core.footer.DevelopmentModeWarningBackground
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListContent
 import com.clerk.ui.organizationlist.OrganizationAccountListState
@@ -117,7 +118,7 @@ internal fun OrganizationSwitcherSheet(
             onErrorShown = onErrorShown,
           )
       }
-      DevelopmentModeWarning()
+      DevelopmentModeWarning(background = DevelopmentModeWarningBackground.White)
     }
   }
 }
