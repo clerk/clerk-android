@@ -1,8 +1,11 @@
 package com.clerk.ui.core.footer
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,10 +38,11 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 internal fun DevelopmentModeWarningBox(
   modifier: Modifier = Modifier,
   background: DevelopmentModeWarningBackground = DevelopmentModeWarningBackground.Grey,
+  showBranding: Boolean = true,
   content: @Composable BoxScope.() -> Unit,
 ) {
   val shouldShowWarning = shouldShowDevelopmentModeWarning()
-  val metrics = developmentModeWarningMetrics()
+  val metrics = developmentModeWarningMetrics(showBranding = showBranding)
   Box(modifier = modifier) {
     Box(
       modifier =
@@ -52,6 +56,7 @@ internal fun DevelopmentModeWarningBox(
         modifier = Modifier.align(Alignment.BottomCenter),
         metrics = metrics,
         background = background,
+        showBranding = showBranding,
       )
     }
   }
@@ -61,13 +66,15 @@ internal fun DevelopmentModeWarningBox(
 internal fun DevelopmentModeWarning(
   modifier: Modifier = Modifier,
   background: DevelopmentModeWarningBackground = DevelopmentModeWarningBackground.Grey,
+  showBranding: Boolean = true,
 ) {
   if (!shouldShowDevelopmentModeWarning()) return
 
   DevelopmentModeWarningContent(
     modifier = modifier,
-    metrics = developmentModeWarningMetrics(),
+    metrics = developmentModeWarningMetrics(showBranding = showBranding),
     background = background,
+    showBranding = showBranding,
   )
 }
 
@@ -75,6 +82,7 @@ internal fun DevelopmentModeWarning(
 private fun DevelopmentModeWarningContent(
   metrics: DevelopmentModeWarningMetrics,
   background: DevelopmentModeWarningBackground,
+  showBranding: Boolean,
   modifier: Modifier = Modifier,
 ) {
   ClerkMaterialTheme {
@@ -91,11 +99,28 @@ private fun DevelopmentModeWarningContent(
       contentAlignment = Alignment.BottomCenter,
     ) {
       Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        SecuredByClerkView(hideWhenDevelopmentModeWarning = false)
-        Spacer(modifier = Modifier.height(DEVELOPMENT_MODE_BRANDING_LABEL_GAP))
+        if (showBranding) {
+          DevelopmentModeBranding()
+          Spacer(modifier = Modifier.height(DEVELOPMENT_MODE_BRANDING_LABEL_GAP))
+        }
         Text(text = stringResource(R.string.development_mode), style = DEVELOPMENT_MODE_TEXT_STYLE)
       }
     }
+  }
+}
+
+@Composable
+private fun DevelopmentModeBranding(modifier: Modifier = Modifier) {
+  if (!Clerk.isBranded) return
+
+  Row(
+    modifier = modifier,
+    horizontalArrangement =
+      Arrangement.spacedBy(DEVELOPMENT_MODE_BRANDING_LOGO_GAP, Alignment.CenterHorizontally),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Text(text = stringResource(R.string.secured_by), style = DEVELOPMENT_MODE_BRANDING_TEXT_STYLE)
+    Image(painter = painterResource(R.drawable.ic_clerk_logo), contentDescription = "Clerk")
   }
 }
 
@@ -106,13 +131,18 @@ private fun shouldShowDevelopmentModeWarning(): Boolean {
 }
 
 @Composable
-private fun developmentModeWarningMetrics(): DevelopmentModeWarningMetrics {
+private fun developmentModeWarningMetrics(showBranding: Boolean): DevelopmentModeWarningMetrics {
   val density = LocalDensity.current
   val reportedBottomInset = with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
   val bottomInset = maxOf(reportedBottomInset, DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT)
+  val designHeight =
+    if (showBranding) {
+      DEVELOPMENT_MODE_BRANDED_BACKGROUND_HEIGHT
+    } else {
+      DEVELOPMENT_MODE_LABEL_ONLY_BACKGROUND_HEIGHT
+    }
   val height =
-    DEVELOPMENT_MODE_BACKGROUND_HEIGHT +
-      maxOf(reportedBottomInset - DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT, 0.dp)
+    designHeight + maxOf(reportedBottomInset - DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT, 0.dp)
   return DevelopmentModeWarningMetrics(
     height = height,
     labelBottomPadding = bottomInset + DEVELOPMENT_MODE_LABEL_BOTTOM_GAP,
@@ -121,10 +151,12 @@ private fun developmentModeWarningMetrics(): DevelopmentModeWarningMetrics {
 
 private data class DevelopmentModeWarningMetrics(val height: Dp, val labelBottomPadding: Dp)
 
-private val DEVELOPMENT_MODE_BACKGROUND_HEIGHT = 100.dp
+private val DEVELOPMENT_MODE_BRANDED_BACKGROUND_HEIGHT = 100.dp
+private val DEVELOPMENT_MODE_LABEL_ONLY_BACKGROUND_HEIGHT = 125.dp
 private val DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT = 26.dp
 private val DEVELOPMENT_MODE_LABEL_BOTTOM_GAP = 13.dp
 private val DEVELOPMENT_MODE_BRANDING_LABEL_GAP = 9.dp
+private val DEVELOPMENT_MODE_BRANDING_LOGO_GAP = 8.dp
 private val DEVELOPMENT_MODE_WARNING_COLOR = Color(0xFFF36B16)
 private val DEVELOPMENT_MODE_TEXT_STYLE =
   TextStyle(
@@ -132,5 +164,13 @@ private val DEVELOPMENT_MODE_TEXT_STYLE =
     lineHeight = 13.sp,
     fontWeight = FontWeight(590),
     color = DEVELOPMENT_MODE_WARNING_COLOR,
+    letterSpacing = 0.sp,
+  )
+private val DEVELOPMENT_MODE_BRANDING_TEXT_STYLE =
+  TextStyle(
+    fontSize = 13.sp,
+    lineHeight = 18.sp,
+    fontWeight = FontWeight.Normal,
+    color = Color(0xFF747686),
     letterSpacing = 0.sp,
   )
