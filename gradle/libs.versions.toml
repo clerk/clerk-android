@@ -1,6 +1,6 @@
 [versions]
 activityKtx = "1.13.0"
-agp = "8.13.2"
+agp = "9.2.1"
 appcompat = "1.7.1"
 automap = "0.1.2"
 composeBom = "2026.05.01"
@@ -74,6 +74,7 @@ junit = "junit:junit:4.13.2"
 jwt-decode = "com.auth0.android:jwtdecode:2.0.2"
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdlib" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
+kotlin-test-junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit", version.ref = "kotlinTest" }
 kotlinx-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0"
 kotlinx-coroutines-test = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0"
 kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.8.0-0.6.x-compat"
