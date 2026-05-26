@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -51,6 +52,7 @@ import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp96
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.footer.DevelopmentModeWarning
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListContent
 import com.clerk.ui.organizationlist.OrganizationAccountListState
@@ -78,10 +80,33 @@ internal fun OrganizationSwitcherSheet(
     sheetState = sheetState,
     containerColor = ClerkMaterialTheme.colors.background,
     contentColor = ClerkMaterialTheme.colors.foreground,
+    contentWindowInsets = { WindowInsets(0) },
   ) {
-    when (destination) {
-      OrganizationSwitcherSheetDestination.Overview -> {
-        if (activeMembership == null) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+      when (destination) {
+        OrganizationSwitcherSheetDestination.Overview -> {
+          if (activeMembership == null) {
+            OrganizationSwitcherAccountListSheetContent(
+              state = state,
+              user = user,
+              activeOrganizationId = activeOrganizationId,
+              showPersonalAccount = showPersonalAccount,
+              showCreateOrganization = showCreateOrganization,
+              actions = actions,
+              onErrorShown = onErrorShown,
+            )
+          } else {
+            OrganizationSwitcherOverviewSheetContent(
+              membership = activeMembership,
+              onManageOrganization =
+                onManageOrganization?.let { manageOrganization ->
+                  { manageOrganization(activeMembership) }
+                },
+              onSwitchAccount = onShowAccountList,
+            )
+          }
+        }
+        OrganizationSwitcherSheetDestination.AccountList ->
           OrganizationSwitcherAccountListSheetContent(
             state = state,
             user = user,
@@ -91,27 +116,8 @@ internal fun OrganizationSwitcherSheet(
             actions = actions,
             onErrorShown = onErrorShown,
           )
-        } else {
-          OrganizationSwitcherOverviewSheetContent(
-            membership = activeMembership,
-            onManageOrganization =
-              onManageOrganization?.let { manageOrganization ->
-                { manageOrganization(activeMembership) }
-              },
-            onSwitchAccount = onShowAccountList,
-          )
-        }
       }
-      OrganizationSwitcherSheetDestination.AccountList ->
-        OrganizationSwitcherAccountListSheetContent(
-          state = state,
-          user = user,
-          activeOrganizationId = activeOrganizationId,
-          showPersonalAccount = showPersonalAccount,
-          showCreateOrganization = showCreateOrganization,
-          actions = actions,
-          onErrorShown = onErrorShown,
-        )
+      DevelopmentModeWarning()
     }
   }
 }

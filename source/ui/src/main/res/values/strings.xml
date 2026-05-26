@@ -276,6 +276,7 @@
     <string name="current_organization">Current organization</string>
     <string name="open_organization_switcher">Open organization switcher</string>
     <string name="secured_by">Secured by</string>
+    <string name="development_mode" tools:ignore="MissingTranslation">Development mode</string>
     <string name="i_agree_to_the">I agree to the</string>
     <string name="terms_of_service">Terms of Service</string>
     <string name="privacy_policy">Privacy Policy</string>

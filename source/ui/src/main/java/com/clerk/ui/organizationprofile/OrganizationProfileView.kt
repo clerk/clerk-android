@@ -33,6 +33,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
+import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationView
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileConfirmationAction
 import com.clerk.ui.organizationprofile.custom.LocalOrganizationProfileCustomNavigator
@@ -90,19 +91,21 @@ fun OrganizationProfileView(
         hasOrganization = organization != null,
       )
 
-      if (organization != null) {
-        OrganizationProfileNavDisplay(
-          modifier = modifier,
-          backStack = backStack,
-          organization = organization,
-          membership = membership,
-          isDismissable = isDismissable,
-          customRows = customRows,
-          customDestination = customDestination,
-          onDismiss = onDismiss,
-        )
-      } else {
-        Box(modifier = modifier.fillMaxSize())
+      DevelopmentModeWarningBox(modifier = modifier.fillMaxSize()) {
+        if (organization != null) {
+          OrganizationProfileNavDisplay(
+            modifier = Modifier.fillMaxSize(),
+            backStack = backStack,
+            organization = organization,
+            membership = membership,
+            isDismissable = isDismissable,
+            customRows = customRows,
+            customDestination = customDestination,
+            onDismiss = onDismiss,
+          )
+        } else {
+          Box(modifier = Modifier.fillMaxSize())
+        }
       }
 
       LaunchedEffect(session?.id, user?.id) {

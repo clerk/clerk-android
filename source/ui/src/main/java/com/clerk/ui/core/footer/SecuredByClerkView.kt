@@ -7,19 +7,28 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
-internal fun SecuredByClerkView(modifier: Modifier = Modifier) {
-  if (Clerk.isBranded) {
+internal fun SecuredByClerkView(
+  modifier: Modifier = Modifier,
+  hideWhenDevelopmentModeWarning: Boolean = true,
+) {
+  val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
+  val shouldHideForDevelopmentMode =
+    hideWhenDevelopmentModeWarning && isInitialized && Clerk.shouldShowDevelopmentModeWarning
+
+  if (Clerk.isBranded && !shouldHideForDevelopmentMode) {
     ClerkMaterialTheme {
       Row(
         modifier = Modifier.then(modifier),
