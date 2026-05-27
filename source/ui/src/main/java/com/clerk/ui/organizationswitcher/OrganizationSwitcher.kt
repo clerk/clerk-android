@@ -59,6 +59,7 @@ import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
 import com.clerk.ui.organizationlist.OrganizationAccountListViewModel
@@ -620,7 +621,7 @@ private fun OrganizationSwitcherProfilePage(
   customDestination: (@Composable (String) -> Unit)?,
   onDismiss: () -> Unit,
 ) {
-  OrganizationSwitcherFullScreenPage(onDismiss = onDismiss) {
+  OrganizationSwitcherFullScreenPage(onDismiss = onDismiss, showDevelopmentModeWarning = false) {
     OrganizationProfileView(
       modifier = Modifier.fillMaxSize(),
       clerkTheme = clerkTheme,
@@ -665,6 +666,7 @@ private fun OrganizationSwitcherPostCreateInvitationsPage(
 @Composable
 private fun OrganizationSwitcherFullScreenPage(
   onDismiss: () -> Unit,
+  showDevelopmentModeWarning: Boolean = true,
   content: @Composable () -> Unit,
 ) {
   Dialog(
@@ -676,7 +678,12 @@ private fun OrganizationSwitcherFullScreenPage(
       color = ClerkMaterialTheme.colors.background,
       contentColor = ClerkMaterialTheme.colors.foreground,
     ) {
-      content()
+      DevelopmentModeWarningBox(
+        modifier = Modifier.fillMaxSize(),
+        showWarning = showDevelopmentModeWarning,
+      ) {
+        content()
+      }
     }
   }
 }

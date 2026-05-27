@@ -27,6 +27,7 @@ import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.error.ClerkErrorSnackbar
+import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
@@ -66,15 +67,17 @@ fun OrganizationListView(
   ClerkThemeOverrideProvider(clerkTheme) {
     ClerkMaterialTheme {
       TelemetryProvider {
-        OrganizationListViewImpl(
-          modifier = modifier,
-          clerkTheme = clerkTheme,
-          hidePersonalAccount = hidePersonalAccount,
-          isDismissable = isDismissable,
-          onDismissRequest = onDismissRequest,
-          onCreateOrganization = onCreateOrganization,
-          onAccountSelected = onAccountSelected,
-        )
+        DevelopmentModeWarningBox(modifier = modifier.fillMaxSize()) {
+          OrganizationListViewImpl(
+            modifier = Modifier.fillMaxSize(),
+            clerkTheme = clerkTheme,
+            hidePersonalAccount = hidePersonalAccount,
+            isDismissable = isDismissable,
+            onDismissRequest = onDismissRequest,
+            onCreateOrganization = onCreateOrganization,
+            onAccountSelected = onAccountSelected,
+          )
+        }
       }
     }
   }

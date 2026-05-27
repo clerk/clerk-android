@@ -227,7 +227,13 @@ object Clerk {
         InstanceEnvironmentType.PRODUCTION
       else InstanceEnvironmentType.DEVELOPMENT
 
-  internal val shouldShowDevelopmentModeWarning: Boolean
+  /**
+   * Indicates whether prebuilt UI components should display the development mode warning.
+   *
+   * The warning is shown only when the current environment asks for it and the instance is not a
+   * production instance.
+   */
+  val shouldShowDevelopmentModeWarning: Boolean
     get() {
       val displayConfig = environment?.displayConfig ?: return false
       return displayConfig.showDevModeWarning &&

@@ -28,6 +28,8 @@ import com.clerk.telemetry.telemetryPayload
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalTelemetryCollector
+import com.clerk.ui.core.footer.DevelopmentModeWarningBackground
+import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
 import com.clerk.ui.sessiontask.organization.SessionTaskChooseOrganizationView
 import com.clerk.ui.sessiontask.organization.SessionTaskCreateOrganizationView
@@ -82,13 +84,19 @@ fun AuthView(
     AuthStateProvider(backStack = backStack, identifierConfig = identifierConfig) {
       ObservePendingSessionTaskRouting(backStack = backStack)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
-      AuthNavDisplay(
+      DevelopmentModeWarningBox(
         modifier = fullScreenModifier,
-        backStack = backStack,
-        preferGoogleOneTap = preferGoogleOneTap,
-        startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-        onAuthComplete = onAuthComplete,
-      )
+        background = DevelopmentModeWarningBackground.White,
+        showBranding = false,
+      ) {
+        AuthNavDisplay(
+          modifier = Modifier.fillMaxSize(),
+          backStack = backStack,
+          preferGoogleOneTap = preferGoogleOneTap,
+          startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+          onAuthComplete = onAuthComplete,
+        )
+      }
     }
   }
 }
