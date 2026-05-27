@@ -1,6 +1,5 @@
 package com.clerk.telemetry
 
-import com.clerk.api.log.ClerkLog
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -172,9 +171,7 @@ class TelemetryCollector(
           setBody(envelope)
         }
         .body<Unit>()
-    } catch (e: Exception) {
-      ClerkLog.e("${e.message}")
-    }
+    } catch (_: Exception) {}
   }
 
   private companion object {

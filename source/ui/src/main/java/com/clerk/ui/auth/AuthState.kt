@@ -18,6 +18,7 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signin.startingSecondFactor
 import com.clerk.api.signup.SignUp
+import com.clerk.api.signup.emailVerificationStrategy
 import com.clerk.api.signup.firstFieldToCollect
 import com.clerk.api.signup.firstFieldToVerify
 import com.clerk.ui.core.common.NavigableState
@@ -44,6 +45,7 @@ internal class AuthState(
   val backStack: NavBackStack<NavKey>,
   private val sharedPreferences: SharedPreferences,
   identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
+  organizationLogoUrl: String? = null,
 ) : NavigableState<AuthDestination> {
 
   private var appliedIdentifierConfig: AuthIdentifierConfig? = null
@@ -73,6 +75,11 @@ internal class AuthState(
       authStartPhoneNumberState = value
       persistStoredValue(AUTH_START_PHONE_NUMBER_STORAGE_KEY, value)
     }
+
+  var lastSubmittedIdentifier by mutableStateOf<String?>(null)
+
+  var organizationLogoUrl by mutableStateOf(organizationLogoUrl)
+    private set
 
   // Sign In
   var signInPassword by mutableStateOf("")
@@ -189,8 +196,16 @@ internal class AuthState(
   }
 
   private fun routeToFirstFactorOrHelp(signIn: SignIn) {
-    signIn.startingFirstFactor?.let { backStack.add(AuthDestination.SignInFactorOne(factor = it)) }
-      ?: backStack.add(AuthDestination.SignInGetHelp)
+    val resolvedSignIn =
+      if (signIn.identifier.isNullOrBlank() && !lastSubmittedIdentifier.isNullOrBlank()) {
+        signIn.copy(identifier = lastSubmittedIdentifier)
+      } else {
+        signIn
+      }
+
+    resolvedSignIn.startingFirstFactor?.let {
+      backStack.add(AuthDestination.SignInFactorOne(factor = it))
+    } ?: backStack.add(AuthDestination.SignInGetHelp)
   }
 
   private fun routeToSecondFactorOrHelp(signIn: SignIn) {
@@ -227,11 +242,15 @@ internal class AuthState(
   }
 
   private fun handleMissingRequirements(signUp: SignUp) {
+    val firstFieldToCollect = signUp.firstFieldToCollect
+    if (firstFieldToCollect != null) {
+      handleFieldCollection(signUp)
+      return
+    }
+
     val firstFieldToVerify = signUp.firstFieldToVerify
     if (firstFieldToVerify != null) {
       handleFieldVerification(signUp, firstFieldToVerify)
-    } else {
-      handleFieldCollection(signUp)
     }
   }
 
@@ -240,7 +259,13 @@ internal class AuthState(
       EMAIL_ADDRESS -> {
         val emailAddress = signUp.emailAddress
         if (emailAddress != null) {
-          backStack.add(AuthDestination.SignUpCode(field = SignUpCodeField.Email(emailAddress)))
+          val destination =
+            if (signUp.emailVerificationStrategy == Constants.Strategy.EMAIL_LINK) {
+              AuthDestination.SignUpEmailLink(emailAddress = emailAddress)
+            } else {
+              AuthDestination.SignUpCode(field = SignUpCodeField.Email(emailAddress))
+            }
+          backStack.add(destination)
         } else {
           resetToRoot()
         }
@@ -301,6 +326,10 @@ internal class AuthState(
         updateAuthStartPhoneNumber("")
       }
     }
+  }
+
+  internal fun updateOrganizationLogoUrl(logoUrl: String?) {
+    organizationLogoUrl = logoUrl
   }
 
   fun storeLastUsedIdentifierType(identifierType: IdentifierType) {
