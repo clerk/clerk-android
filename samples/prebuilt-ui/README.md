@@ -1,8 +1,10 @@
 # Clerk Android Prebuilt UI
 
-This sample app integrates Clerk prebuilt UI components for authentication, user accounts, and organizations.
+This sample app integrates Clerk prebuilt UI components for authentication, user accounts, and
+organizations.
 
 ## Prerequisites
+
 - A Clerk account (sign up at [clerk.com](https://clerk.com))
 - Google account for OAuth setup (optional, for Google Sign-In)
 
@@ -12,7 +14,8 @@ This sample app integrates Clerk prebuilt UI components for authentication, user
     - Sign up for a Clerk account at [dashboard.clerk.com](https://dashboard.clerk.com/sign-up)
     - Create a new application in your Clerk dashboard
     - Give it whatever name you like (e.g., "Prebuilt UI")
-    - You can select whichever authentication methods you prefer, the Prebuilt components will handle them automatically.
+    - You can select whichever authentication methods you prefer, the Prebuilt components will
+      handle them automatically.
 
 2. **Get Your Publishable Key**
     - Navigate to **Developers** → **API Keys**
@@ -33,7 +36,8 @@ This sample app integrates Clerk prebuilt UI components for authentication, user
    PREBUILT_UI_CLERK_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
    ```
 
-   > ⚠️ **Important**: Replace `pk_test_your_publishable_key_here` with your actual publishable key from the Clerk dashboard.
+   > ⚠️ **Important**: Replace `pk_test_your_publishable_key_here` with your actual publishable key
+   from the Clerk dashboard.
 
 ## How to Run
 
@@ -46,65 +50,6 @@ This sample app integrates Clerk prebuilt UI components for authentication, user
    ```bash
    ./gradlew :samples:prebuilt-ui:installDebug
    ```
-
-## Organization Views
-
-Enable Organizations in the Clerk Dashboard to try the organization prebuilt flows. Once signed in, the sample shows `OrganizationSwitcher` in the app chrome plus buttons that present `OrganizationListView` and `OrganizationProfileView` as full-screen Compose flows.
-
-Basic usage:
-
-```kotlin
-@Composable
-fun SignedInScreen() {
-  var showOrganizationList by rememberSaveable { mutableStateOf(false) }
-  var showOrganizationProfile by rememberSaveable { mutableStateOf(false) }
-
-  Column {
-    OrganizationSwitcher()
-
-    Button(onClick = { showOrganizationList = true }) {
-      Text("Open organization list")
-    }
-
-    Button(onClick = { showOrganizationProfile = true }) {
-      Text("Open organization profile")
-    }
-  }
-
-  if (showOrganizationList) {
-    OrganizationListView(onDismissRequest = { showOrganizationList = false })
-  }
-
-  if (showOrganizationProfile) {
-    OrganizationProfileView(onDismiss = { showOrganizationProfile = false })
-  }
-}
-```
-
-Custom organization profile rows:
-
-```kotlin
-private const val BillingRoute = "billing"
-
-val customRows =
-  listOf(
-    OrganizationProfileCustomRow(
-      routeKey = BillingRoute,
-      title = "Billing",
-      icon = OrganizationProfileRowIcon.Resource(com.clerk.ui.R.drawable.ic_credit_card),
-      placement = OrganizationProfileCustomRowPlacement.After(OrganizationProfileRow.Members),
-    )
-  )
-
-OrganizationSwitcher(
-  organizationProfileCustomRows = customRows,
-  organizationProfileCustomDestination = { routeKey ->
-    when (routeKey) {
-      BillingRoute -> BillingSettingsScreen()
-    }
-  },
-)
-```
 
 ## Related Documentation
 
