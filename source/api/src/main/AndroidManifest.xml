@@ -11,11 +11,11 @@
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboard|keyboardHidden"
             android:exported="false"
             android:launchMode="singleTask"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
+            android:theme="@style/Theme.Clerk.AuthBridge" />
         <activity
             android:name="com.clerk.api.sso.SSOReceiverActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
+            android:theme="@style/Theme.Clerk.AuthBridge">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
