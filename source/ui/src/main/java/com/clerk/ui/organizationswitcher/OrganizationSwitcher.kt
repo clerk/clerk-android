@@ -59,6 +59,7 @@ import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
+import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
@@ -69,7 +70,6 @@ import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
-import com.clerk.ui.userbutton.UserButton
 
 /**
  * Controls how [OrganizationSwitcher] renders its trigger.
@@ -118,8 +118,6 @@ private constructor(
  * switching between personal and organization accounts.
  *
  * @param clerkTheme Optional theme customization for the switcher UI.
- * @param showUserButton When `true` (default), render [UserButton] on the trailing edge to match
- *   Clerk's mobile prebuilt header pattern.
  * @param onOrganizationChanged Optional callback invoked after a successful organization or
  *   personal-account switch.
  * @param hidePersonal Hides personal account selection when the instance does not force
@@ -138,7 +136,6 @@ private constructor(
 fun OrganizationSwitcher(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
-  showUserButton: Boolean = true,
   onOrganizationChanged: (() -> Unit)? = null,
   hidePersonal: Boolean = false,
   displayMode: OrganizationSwitcherDisplayMode = OrganizationSwitcherDisplayMode.Normal,
@@ -153,7 +150,6 @@ fun OrganizationSwitcher(
         OrganizationSwitcherImpl(
           modifier = modifier,
           clerkTheme = clerkTheme,
-          showUserButton = showUserButton,
           onOrganizationChanged = onOrganizationChanged,
           hidePersonal = hidePersonal,
           displayMode = displayMode,
@@ -232,7 +228,6 @@ fun OrganizationSwitcherSheet(
 internal fun OrganizationSwitcherImpl(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
-  showUserButton: Boolean = true,
   onOrganizationChanged: (() -> Unit)? = null,
   hidePersonal: Boolean = false,
   displayMode: OrganizationSwitcherDisplayMode = OrganizationSwitcherDisplayMode.Normal,
@@ -309,8 +304,6 @@ internal fun OrganizationSwitcherImpl(
         user = user,
         showPersonalAccount = showPersonalAccount,
         isLoading = state.isLoading && activeMembership == null && !showPersonalAccount,
-        showUserButton = showUserButton,
-        clerkTheme = clerkTheme,
         displayMode = displayMode,
         onOpenSheet = { sheetDestination = it },
       )
@@ -466,8 +459,6 @@ private fun OrganizationSwitcherHeaderIfNeeded(
   user: User?,
   showPersonalAccount: Boolean,
   isLoading: Boolean,
-  showUserButton: Boolean,
-  clerkTheme: ClerkTheme?,
   displayMode: OrganizationSwitcherDisplayMode,
   onOpenSheet: (OrganizationSwitcherSheetDestination) -> Unit,
   modifier: Modifier = Modifier,
@@ -480,8 +471,6 @@ private fun OrganizationSwitcherHeaderIfNeeded(
     user = user,
     showPersonalAccount = showPersonalAccount,
     isLoading = isLoading,
-    showUserButton = showUserButton,
-    clerkTheme = clerkTheme,
     displayMode = displayMode,
     onClick = {
       onOpenSheet(
@@ -694,8 +683,6 @@ private fun OrganizationSwitcherHeader(
   user: User?,
   showPersonalAccount: Boolean,
   isLoading: Boolean,
-  showUserButton: Boolean,
-  clerkTheme: ClerkTheme?,
   displayMode: OrganizationSwitcherDisplayMode,
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
@@ -716,9 +703,6 @@ private fun OrganizationSwitcherHeader(
     )
     if (displayMode.isCompact) {
       Spacer(modifier = Modifier.weight(1f))
-    }
-    if (showUserButton) {
-      UserButton(clerkTheme = clerkTheme)
     }
   }
 }
@@ -774,7 +758,7 @@ private fun NormalOrganizationSwitcherButton(
   Row(
     modifier = modifier,
     verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(dp12),
+    horizontalArrangement = Arrangement.spacedBy(dp8),
   ) {
     OrganizationSwitcherAccountAvatar(
       imageUrl = content.imageUrl,
@@ -789,10 +773,9 @@ private fun NormalOrganizationSwitcherButton(
       overflow = TextOverflow.Ellipsis,
       style =
         ClerkMaterialTheme.typography.headlineLarge.copy(
-          fontSize = 34.sp,
-          lineHeight = 41.sp,
-          letterSpacing = 0.4.sp,
-          fontWeight = FontWeight.Bold,
+          fontSize = 20.sp,
+          lineHeight = 25.sp,
+          fontWeight = FontWeight.SemiBold,
         ),
       color = ClerkMaterialTheme.colors.foreground,
     )
