@@ -58,17 +58,17 @@ class AuthTest {
   }
 
   @Test
-  fun `signUpWithGoogleOneTap delegates to Google sign-up flow`() = runTest {
-    mockkObject(SignUp.Companion)
+  fun `signUpWithGoogleOneTap delegates to transferable Google One Tap flow`() = runTest {
+    mockkObject(SignIn.Companion)
     val signUp = mockk<SignUp>(relaxed = true)
     val oauthResult = OAuthResult(signUp = signUp)
-    coEvery { SignUp.authenticateWithGoogleOneTap() } returns ClerkResult.success(oauthResult)
+    coEvery { SignIn.authenticateWithGoogleOneTap(true) } returns ClerkResult.success(oauthResult)
 
     val result = Auth().signUpWithGoogleOneTap()
 
     assertTrue(result is ClerkResult.Success)
     assertSame(oauthResult, (result as ClerkResult.Success).value)
-    coVerify(exactly = 1) { SignUp.authenticateWithGoogleOneTap() }
+    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
   }
 
   @Test
@@ -103,7 +103,7 @@ class AuthTest {
 
   @Test
   fun `signUpWithGoogleOneTap emits auth error event on failure`() = runTest {
-    mockkObject(SignUp.Companion)
+    mockkObject(SignIn.Companion)
     val error =
       ClerkErrorResponse(
         errors =
@@ -116,7 +116,7 @@ class AuthTest {
           ),
         clerkTraceId = "trace_123",
       )
-    coEvery { SignUp.authenticateWithGoogleOneTap() } returns ClerkResult.apiFailure(error)
+    coEvery { SignIn.authenticateWithGoogleOneTap(true) } returns ClerkResult.apiFailure(error)
 
     val auth = Auth()
     val events = mutableListOf<AuthEvent>()
@@ -134,7 +134,7 @@ class AuthTest {
       "Account already exists. Use sign in instead.",
       (events.single() as AuthEvent.Error).message,
     )
-    coVerify(exactly = 1) { SignUp.authenticateWithGoogleOneTap() }
+    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
   }
 
   @Test

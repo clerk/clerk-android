@@ -39,9 +39,10 @@ internal fun DevelopmentModeWarningBox(
   modifier: Modifier = Modifier,
   background: DevelopmentModeWarningBackground = DevelopmentModeWarningBackground.Grey,
   showBranding: Boolean = true,
+  showWarning: Boolean = true,
   content: @Composable BoxScope.() -> Unit,
 ) {
-  val shouldShowWarning = shouldShowDevelopmentModeWarning()
+  val shouldShowWarning = showWarning && shouldShowDevelopmentModeWarning()
   val metrics = developmentModeWarningMetrics(showBranding = showBranding)
   Box(modifier = modifier) {
     Box(

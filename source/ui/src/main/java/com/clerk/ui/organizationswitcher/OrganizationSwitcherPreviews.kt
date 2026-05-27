@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.organizations.OrganizationSuggestion
+import com.clerk.api.organizations.PublicOrganizationData
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
@@ -53,8 +55,11 @@ private fun OrganizationSwitcherSheetContentPreview() {
         OrganizationAccountListState(
           isLoading = false,
           hasLoadedInitialResources = true,
+          canCreateOrganization = true,
           memberships = memberships,
           membershipsTotalCount = memberships.size,
+          suggestions = listOf(previewSuggestion()),
+          suggestionsTotalCount = 1,
         ),
       user = previewOrganizationSwitcherUser(),
       activeOrganizationId = "org_acme",
@@ -98,5 +103,22 @@ private fun previewOrganizationAccountListActions(): OrganizationAccountListActi
     onAcceptInvitation = {},
     onAcceptSuggestion = {},
     onCreateOrganization = {},
+  )
+}
+
+private fun previewSuggestion(): OrganizationSuggestion {
+  return OrganizationSuggestion(
+    id = "sug_1",
+    publicOrganizationData =
+      PublicOrganizationData(
+        id = "org_suggested",
+        hasImage = false,
+        imageUrl = "",
+        name = "Suggested Labs",
+        slug = "suggested",
+      ),
+    status = "pending",
+    createdAt = 1,
+    updatedAt = 1,
   )
 }

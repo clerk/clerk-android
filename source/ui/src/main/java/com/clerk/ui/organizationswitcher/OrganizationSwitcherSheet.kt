@@ -61,7 +61,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun OrganizationSwitcherSheet(
+internal fun OrganizationSwitcherModalSheet(
   destination: OrganizationSwitcherSheetDestination,
   state: OrganizationAccountListState,
   user: User?,
@@ -74,9 +74,11 @@ internal fun OrganizationSwitcherSheet(
   onManageOrganization: ((OrganizationMembership) -> Unit)?,
   onErrorShown: () -> Unit,
   actions: OrganizationAccountListActions,
+  modifier: Modifier = Modifier,
 ) {
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   ModalBottomSheet(
+    modifier = modifier,
     onDismissRequest = onDismiss,
     sheetState = sheetState,
     containerColor = ClerkMaterialTheme.colors.background,

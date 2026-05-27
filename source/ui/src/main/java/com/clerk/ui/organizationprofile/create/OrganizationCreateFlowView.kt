@@ -25,6 +25,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.ui.R
+import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
@@ -38,6 +39,7 @@ import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
 import com.clerk.ui.sessiontask.organization.createOrganizationSlug
 import com.clerk.ui.theme.ClerkMaterialTheme
 
+@Suppress("LongMethod")
 @Composable
 internal fun OrganizationCreateFlowView(
   creationDefaults: OrganizationCreationDefaults?,
@@ -45,6 +47,7 @@ internal fun OrganizationCreateFlowView(
   modifier: Modifier = Modifier,
   skipInvitationScreen: Boolean = false,
   onInviteMembers: ((Organization) -> Unit)? = null,
+  onBackPressed: (() -> Unit)? = null,
   viewModel: OrganizationCreateFlowViewModel = viewModel(),
 ) {
   val state by viewModel.state.collectAsState()
@@ -84,6 +87,15 @@ internal fun OrganizationCreateFlowView(
         modifier = modifier,
         containerColor = ClerkMaterialTheme.colors.background,
         snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+        topBar = {
+          onBackPressed?.let {
+            ClerkTopAppBar(
+              onBackPressed = it,
+              hasLogo = false,
+              backgroundColor = ClerkMaterialTheme.colors.background,
+            )
+          }
+        },
       ) { innerPadding ->
         CreateOrganizationFormContent(
           modifier = Modifier.fillMaxSize().padding(innerPadding),

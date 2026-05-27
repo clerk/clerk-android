@@ -438,8 +438,8 @@ class Auth internal constructor() {
   /**
    * Signs up with Google One Tap.
    *
-   * This native Google flow starts from sign-up and may resolve to either a sign-up or a sign-in,
-   * depending on whether the selected Google account already exists in Clerk.
+   * This native Google flow may resolve to either a sign-up or a sign-in, depending on whether the
+   * selected Google account already exists in Clerk.
    *
    * @return A [ClerkResult] containing the [OAuthResult] on success, or a [ClerkErrorResponse] on
    *   failure.
@@ -450,7 +450,7 @@ class Auth internal constructor() {
    * ```
    */
   suspend fun signUpWithGoogleOneTap(): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    val result = SignUp.authenticateWithGoogleOneTap()
+    val result = SignIn.authenticateWithGoogleOneTap(transferable = true)
     result.onFailure { emitAuthError(it) }
     return result
   }
