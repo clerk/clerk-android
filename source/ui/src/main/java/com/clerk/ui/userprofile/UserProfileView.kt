@@ -31,6 +31,7 @@ import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
+import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountSwitcherSheet
 import com.clerk.ui.userprofile.account.UserProfileAccountView
@@ -118,48 +119,51 @@ fun UserProfileView(
           onAuthComplete = { showAuth = false },
         )
       } else {
-        NavDisplay(
-          backStack = backStack,
-          onBack = {
-            if (backStack.size == 1) {
-              onDismiss()
-            } else {
-              backStack.removeLastOrNull()
-            }
-          },
-          transitionSpec = {
-            val spec = tween<IntOffset>(durationMillis = 300)
-            slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-              slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-          },
-          popTransitionSpec = {
-            val spec = tween<IntOffset>(durationMillis = 300)
-            slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-              slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-          },
-          predictivePopTransitionSpec = { distance ->
-            // Use the provided distance to align with the system back gesture
-            slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-              slideOutHorizontally(targetOffsetX = { distance })
-          },
-          entryProvider =
-            entryProvider {
-              userProfileEntries(
-                backStack = backStack,
-                onDismiss = onDismiss,
-                customRows = customRows,
-                customDestination = customDestination,
-                onSwitchAccount = { showAccountSwitcher = true },
-                onAddAccount = showAddAccountAuth,
-              )
+        DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize()) {
+          NavDisplay(
+            modifier = Modifier.fillMaxSize(),
+            backStack = backStack,
+            onBack = {
+              if (backStack.size == 1) {
+                onDismiss()
+              } else {
+                backStack.removeLastOrNull()
+              }
             },
-        )
-
-        if (showAccountSwitcher) {
-          UserProfileAccountSwitcherSheet(
-            onDismissRequest = { showAccountSwitcher = false },
-            onAddAccount = showAddAccountAuth,
+            transitionSpec = {
+              val spec = tween<IntOffset>(durationMillis = 300)
+              slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+                slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+            },
+            popTransitionSpec = {
+              val spec = tween<IntOffset>(durationMillis = 300)
+              slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+                slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+            },
+            predictivePopTransitionSpec = { distance ->
+              // Use the provided distance to align with the system back gesture
+              slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+                slideOutHorizontally(targetOffsetX = { distance })
+            },
+            entryProvider =
+              entryProvider {
+                userProfileEntries(
+                  backStack = backStack,
+                  onDismiss = onDismiss,
+                  customRows = customRows,
+                  customDestination = customDestination,
+                  onSwitchAccount = { showAccountSwitcher = true },
+                  onAddAccount = showAddAccountAuth,
+                )
+              },
           )
+
+          if (showAccountSwitcher) {
+            UserProfileAccountSwitcherSheet(
+              onDismissRequest = { showAccountSwitcher = false },
+              onAddAccount = showAddAccountAuth,
+            )
+          }
         }
       }
     }

@@ -1,18 +1,8 @@
 name: Trailblaze E2E
 
 on:
-  workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - ".github/workflows/trailblaze-e2e.yml"
-      - "e2e/**"
-      - "gradle.properties"
-      - "scripts/run-trailblaze-tests.sh"
-      - "settings.gradle.kts"
-      - "source/api/**"
-      - "source/ui/**"
-      - "trails/**"
+  release:
+    types: [published]
 
 concurrency:
   group: trailblaze-e2e-${{ github.ref }}
