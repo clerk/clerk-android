@@ -92,9 +92,15 @@ private fun SignInFactorTwoBackupCodeViewImpl(
       onValueChange = { authState.signInBackupCode = it },
       label = stringResource(R.string.backup_code),
       keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-      keyboardActions = KeyboardActions(onGo = {
-        if (authState.signInBackupCode.isNotEmpty()) viewModel.submit(authState.signInBackupCode)
-      }),
+      keyboardActions =
+        KeyboardActions(
+          onGo = {
+            if (
+              authState.signInBackupCode.isNotEmpty() && state !is AuthenticationViewState.Loading
+            )
+              viewModel.submit(authState.signInBackupCode)
+          }
+        ),
     )
     Spacers.Vertical.Spacer24()
     ClerkButton(

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -156,7 +156,7 @@ internal fun AuthStartViewImpl(
       ) {
         if (authViewHelper.showIdentifierField) {
           val onSubmit: () -> Unit = {
-            if (isContinueEnabled) {
+            if (isContinueEnabled && state !is AuthStartViewModel.AuthState.Loading) {
               if (authState.mode != AuthMode.SignUp) {
                 storeIdentifierType(
                   authState = authState,
@@ -285,7 +285,10 @@ private fun AuthInputField(
         onValueChange = onIdentifierChange,
         label = authViewHelper.emailOrUsernamePlaceholder(),
         keyboardOptions =
-          KeyboardOptions(keyboardType = authViewHelper.getKeyboardType(phoneNumberFieldIsActive), imeAction = ImeAction.Go),
+          KeyboardOptions(
+            keyboardType = authViewHelper.getKeyboardType(phoneNumberFieldIsActive),
+            imeAction = ImeAction.Go,
+          ),
         keyboardActions = KeyboardActions(onGo = { onSubmit() }),
       )
     }

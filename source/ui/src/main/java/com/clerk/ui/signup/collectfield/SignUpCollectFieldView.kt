@@ -94,7 +94,7 @@ private fun SignUpCollectFieldViewImpl(
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       val onSubmit: () -> Unit = {
-        if (continueIsEnabled) {
+        if (continueIsEnabled && state !is AuthenticationViewState.Loading) {
           viewModel.updateSignUp(
             collectField,
             email = authState.signUpEmail,
@@ -164,7 +164,8 @@ private fun InputField(
           onValueChange = onEmailChange,
           label = collectFieldHelper.label(collectField),
           inputContentType = ContentType.EmailAddress,
-          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Go),
+          keyboardOptions =
+            KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Go),
           keyboardActions = KeyboardActions(onGo = { onSubmit() }),
         )
       }
@@ -176,7 +177,12 @@ private fun InputField(
           label = collectFieldHelper.label(collectField),
           inputContentType = ContentType.Password,
           visualTransformation = PasswordVisualTransformation(),
-          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Go, autoCorrectEnabled = false),
+          keyboardOptions =
+            KeyboardOptions(
+              keyboardType = KeyboardType.Password,
+              imeAction = ImeAction.Go,
+              autoCorrectEnabled = false,
+            ),
           keyboardActions = KeyboardActions(onGo = { onSubmit() }),
         )
       }

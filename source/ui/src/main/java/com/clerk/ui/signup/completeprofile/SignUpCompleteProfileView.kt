@@ -147,7 +147,7 @@ private fun SignUpCompleteProfileImpl(
         onLastChange = { authState.signUpLastName = it },
         onFocusChange = { helper.focusTo(it) },
         onSubmit = {
-          if (isSubmitEnabled) {
+          if (isSubmitEnabled && state !is AuthenticationViewState.Loading) {
             viewModel.updateSignUp(
               firstName = authState.signUpFirstName.takeIf { firstEnabled },
               lastName = authState.signUpLastName.takeIf { lastEnabled },
@@ -200,11 +200,12 @@ private fun InputRow(
   // When both fields are shown, first→Next moves focus; last→Done submits.
   // When only one field is shown, Done submits directly.
   val firstNameImeAction = if (bothEnabled) ImeAction.Next else ImeAction.Done
-  val firstNameKeyboardActions = if (bothEnabled) {
-    KeyboardActions(onNext = { lastNameFocusRequester.requestFocus() })
-  } else {
-    KeyboardActions(onDone = { onSubmit() })
-  }
+  val firstNameKeyboardActions =
+    if (bothEnabled) {
+      KeyboardActions(onNext = { lastNameFocusRequester.requestFocus() })
+    } else {
+      KeyboardActions(onDone = { onSubmit() })
+    }
 
   BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
     val enabledCount = (if (firstEnabled) 1 else 0) + (if (lastEnabled) 1 else 0)

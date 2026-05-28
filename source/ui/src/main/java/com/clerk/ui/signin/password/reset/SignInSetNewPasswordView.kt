@@ -117,7 +117,7 @@ private fun SignInSetNewPasswordViewImpl(
       authState.signInConfirmNewPassword.isNotBlank() &&
       passwordsMatch
   val onResetPassword = {
-    if (passwordsMatch) {
+    if (passwordsMatch && state !is AuthenticationViewState.Loading) {
       when (mode) {
         ResetPasswordMode.SIGN_IN ->
           viewModel.setNewPassword(authState.signInNewPassword, signOutOtherDevices)
@@ -169,7 +169,12 @@ private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean, onSubm
     visualTransformation = PasswordVisualTransformation(),
     label = stringResource(R.string.new_password),
     inputContentType = ContentType.Password,
-    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next, autoCorrectEnabled = false),
+    keyboardOptions =
+      KeyboardOptions(
+        keyboardType = KeyboardType.Password,
+        imeAction = ImeAction.Next,
+        autoCorrectEnabled = false,
+      ),
     keyboardActions = KeyboardActions(onNext = { confirmFocusRequester.requestFocus() }),
   )
   Spacers.Vertical.Spacer24()
@@ -182,7 +187,12 @@ private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean, onSubm
     inputContentType = ContentType.Password,
     isError = showPasswordMismatchError,
     supportingText = if (showPasswordMismatchError) "Passwords don't match" else null,
-    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done, autoCorrectEnabled = false),
+    keyboardOptions =
+      KeyboardOptions(
+        keyboardType = KeyboardType.Password,
+        imeAction = ImeAction.Done,
+        autoCorrectEnabled = false,
+      ),
     keyboardActions = KeyboardActions(onDone = { onSubmit() }),
   )
 }

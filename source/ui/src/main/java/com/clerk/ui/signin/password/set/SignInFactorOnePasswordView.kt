@@ -34,6 +34,7 @@ import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthState
 import com.clerk.ui.auth.AuthStateEffects
+import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
@@ -110,10 +111,18 @@ private fun SignInFactorOnePasswordViewImpl(
       visualTransformation = PasswordVisualTransformation(),
       inputContentType = ContentType.Password,
       keyboardOptions =
-        KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Password, imeAction = ImeAction.Go),
-      keyboardActions = KeyboardActions(onGo = {
-        if (authState.signInPassword.isNotEmpty()) viewModel.submitPassword(authState.signInPassword)
-      }),
+        KeyboardOptions(
+          autoCorrectEnabled = false,
+          keyboardType = KeyboardType.Password,
+          imeAction = ImeAction.Go,
+        ),
+      keyboardActions =
+        KeyboardActions(
+          onGo = {
+            if (authState.signInPassword.isNotEmpty() && state !is AuthenticationViewState.Loading)
+              viewModel.submitPassword(authState.signInPassword)
+          }
+        ),
     )
     Spacer(Modifier.height(dp24))
     ClerkButton(
@@ -121,6 +130,7 @@ private fun SignInFactorOnePasswordViewImpl(
       onClick = { viewModel.submitPassword(password = authState.signInPassword) },
       text = stringResource(R.string.continue_text),
       isEnabled = authState.signInPassword.isNotEmpty(),
+      isLoading = state is AuthenticationViewState.Loading,
       icons =
         ClerkButtonDefaults.icons(
           trailingIcon = R.drawable.ic_triangle_right,
