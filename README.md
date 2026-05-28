@@ -80,7 +80,7 @@ authentication and reset password. See the [README](samples/custom-flows/README.
 and includes Sign in with Google, Passkey authentication, Sign out, and Email Code Authentication. See the [README](samples/linear-clone/README.md) for more info.
 
 #### Prebuilt UI
-`samples/prebuilt-ui`: This is an example that shows how to integrate the Clerk prebuilt UI components. See the [README](samples/prebuilt-ui/README.md) for more info.
+`samples/prebuilt-ui`: This is an example that shows how to integrate the Clerk prebuilt UI components. See the [README](samples/prebuilt-ui/README.md) for more info. 
 
 ## Documentation
 

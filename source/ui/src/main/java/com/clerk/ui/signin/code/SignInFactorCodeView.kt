@@ -126,10 +126,8 @@ private fun SignInFactorCodeViewImpl(
     SignInCodeInput(
       factor = factor,
       verificationTextState = verificationTextState,
-      onTextChange = {
-        handleCodeTextChange(it, verificationTextState, viewModel, factor, isSecondFactor)
-      },
-      onClickResend = { viewModel.prepare(factor, isSecondFactor = isSecondFactor) },
+      isSecondFactor = isSecondFactor,
+      viewModel = viewModel,
     )
     Spacers.Vertical.Spacer24()
     if (SignInFactorCodeUiHelper.showUseAnotherMethod(factor)) {
@@ -154,35 +152,27 @@ private fun SignInFactorCodeViewImpl(
 private fun signInFactorCodeViewModelKey(isSecondFactor: Boolean): String =
   "sign-in-code-${Clerk.auth.currentSignIn?.id ?: "no-sign-in"}-$isSecondFactor"
 
-private fun handleCodeTextChange(
-  code: String,
-  verificationTextState: VerificationUiState,
-  viewModel: SignInFactorCodeViewModel,
-  factor: Factor,
-  isSecondFactor: Boolean,
-) {
-  if (verificationTextState is VerificationUiState.Error) {
-    viewModel.resetState()
-    viewModel.resetVerificationState()
-  }
-  if (code.length == VERIFICATION_CODE_LENGTH) {
-    viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = code)
-  }
-}
-
 @Composable
 private fun SignInCodeInput(
   factor: Factor,
   verificationTextState: VerificationUiState,
-  onTextChange: (String) -> Unit,
-  onClickResend: () -> Unit,
+  isSecondFactor: Boolean,
+  viewModel: SignInFactorCodeViewModel,
 ) {
   ClerkCodeInputField(
     verificationState = verificationTextState.verificationState(),
-    onTextChange = onTextChange,
+    onTextChange = {
+      if (verificationTextState is VerificationUiState.Error) {
+        viewModel.resetState()
+        viewModel.resetVerificationState()
+      }
+      if (it.length == 6) {
+        viewModel.attempt(factor, isSecondFactor = isSecondFactor, code = it)
+      }
+    },
     showResend =
       SignInFactorCodeUiHelper.showResend(factor, verificationTextState.verificationState()),
-    onClickResend = onClickResend,
+    onClickResend = { viewModel.prepare(factor, isSecondFactor = isSecondFactor) },
   )
 }
 
@@ -203,8 +193,6 @@ private fun PreviewSignInFactorCodeView() {
     }
   }
 }
-
-private const val VERIFICATION_CODE_LENGTH = 6
 
 /**
  * Sealed interface representing the various verification states for code input components.

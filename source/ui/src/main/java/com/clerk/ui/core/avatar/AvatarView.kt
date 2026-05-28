@@ -204,11 +204,11 @@ internal fun OrganizationAvatar(
   shape: Shape? = null,
   size: AvatarSize = AvatarSize.MEDIUM,
   clerkTheme: ClerkTheme? = null,
-  imageUrl: String? = Clerk.organizationLogoUrl,
 ) {
+  val url = Clerk.organizationLogoUrl
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     AvatarView(
-      imageUrl = imageUrl,
+      imageUrl = url,
       size = size,
       shape = shape ?: ClerkMaterialTheme.shape,
       modifier = modifier,

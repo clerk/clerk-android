@@ -20,13 +20,13 @@ import com.clerk.ui.userbutton.UserButton
 @Composable
 fun UserProfileTopBar() {
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  val currentSession = session
+  val user by Clerk.userFlow.collectAsStateWithLifecycle()
   Scaffold(
     topBar = {
       TopAppBar(
         title = { Text("Home screen") },
         actions = {
-          if (currentSession != null && currentSession.pendingTaskKey == null) {
+          if (user != null && session?.pendingTaskKey == null) {
             UserButton()
           }
         },

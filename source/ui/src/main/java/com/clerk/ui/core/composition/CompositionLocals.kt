@@ -9,7 +9,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import com.clerk.api.Clerk
 import com.clerk.telemetry.ClerkTelemetryEnvironment
 import com.clerk.telemetry.TelemetryCollector
 import com.clerk.telemetry.TelemetryModule
@@ -28,15 +27,7 @@ internal val LocalTelemetryCollector =
 private fun rememberTelemetryCollector(): TelemetryCollector {
   val context = LocalContext.current.applicationContext
 
-  val environment = remember {
-    ClerkTelemetryEnvironment(
-      sdkVersion = Clerk.version,
-      instanceTypeProvider = { Clerk.instanceEnvironmentType.name },
-      telemetryEnabledProvider = { Clerk.telemetryEnabled },
-      debugModeEnabledProvider = { Clerk.debugMode },
-      publishableKeyProvider = { Clerk.publishableKey },
-    )
-  }
+  val environment = remember { ClerkTelemetryEnvironment() }
 
   return remember { TelemetryModule.createCollector(context = context, environment = environment) }
 }
@@ -63,13 +54,9 @@ internal fun AuthStateProvider(
         backStack = backStack,
         sharedPreferences = sharedPreferences,
         identifierConfig = identifierConfig,
-        organizationLogoUrl = Clerk.organizationLogoUrlFlow.value,
       )
     }
 
   LaunchedEffect(identifierConfig) { authState.applyIdentifierConfig(identifierConfig) }
-  LaunchedEffect(authState) {
-    Clerk.organizationLogoUrlFlow.collect { authState.updateOrganizationLogoUrl(it) }
-  }
   TelemetryProvider { CompositionLocalProvider(LocalAuthState provides authState) { content() } }
 }

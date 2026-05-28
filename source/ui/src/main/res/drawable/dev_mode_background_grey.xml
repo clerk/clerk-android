@@ -9,112 +9,112 @@
         android:pathData="M0,0h402v100h-402z"/>
     <path
         android:pathData="M0,0h402v100h-402z"
-        android:fillColor="@color/dev_mode_warning_background"/>
+        android:fillColor="#FFF6ED"/>
     <path
         android:pathData="M210.44,-207.56l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M219.37,-198.63l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M228.3,-189.7l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M237.23,-180.77l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M246.16,-171.84l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M255.09,-162.91l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M264.02,-153.98l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M272.95,-145.04l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M281.89,-136.12l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M290.82,-127.18l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M299.75,-118.25l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M308.68,-109.32l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M317.61,-100.39l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M326.54,-91.46l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M335.47,-82.53l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M344.4,-73.6l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M353.33,-64.67l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M362.26,-55.74l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M371.19,-46.81l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M380.12,-37.88l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M389.05,-28.95l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M397.98,-20.02l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M406.91,-11.09l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M415.84,-2.16l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M424.77,6.77l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M433.7,15.7l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M442.63,24.63l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M451.56,33.56l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M460.49,42.49l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M469.42,51.42l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M478.35,60.35l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M487.28,69.28l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M496.21,78.21l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M505.14,87.14l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M514.07,96.07l4.69,4.69l-312.51,312.51l-4.69,-4.69z"
-        android:fillColor="@color/dev_mode_warning_stripe"/>
+        android:fillColor="#FFEBD5"/>
     <path
         android:pathData="M0,0h402v100h-402z">
       <aapt:attr name="android:fillColor">
@@ -124,8 +124,8 @@
             android:endX="201"
             android:endY="100"
             android:type="linear">
-          <item android:offset="0" android:color="@color/dev_mode_background_grey_start"/>
-          <item android:offset="1" android:color="@color/dev_mode_warning_gradient_end"/>
+          <item android:offset="0" android:color="#FFF9F9F9"/>
+          <item android:offset="1" android:color="#99FFF6ED"/>
         </gradient>
       </aapt:attr>
     </path>

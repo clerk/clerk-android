@@ -52,7 +52,6 @@ class ExternalAccountServiceTest {
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
-    ExternalAccountService.cancelPendingExternalAccountConnection()
 
     // Mock objects
     mockContext = mockk(relaxed = true)
@@ -91,7 +90,6 @@ class ExternalAccountServiceTest {
   @OptIn(ExperimentalCoroutinesApi::class)
   @After
   fun tearDown() {
-    ExternalAccountService.cancelPendingExternalAccountConnection()
     Dispatchers.resetMain()
     unmockkAll()
   }

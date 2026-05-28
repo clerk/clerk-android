@@ -14,11 +14,6 @@ import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.magiclink.NativeMagicLinkAuthResult
-import com.clerk.api.magiclink.NativeMagicLinkError
-import com.clerk.api.magiclink.NativeMagicLinkManager
-import com.clerk.api.magiclink.NativeMagicLinkService
-import com.clerk.api.magiclink.canHandleNativeMagicLink
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SET_ACTIVE_INTENT_SELECT_ORG
 import com.clerk.api.network.model.client.Client
@@ -131,10 +126,6 @@ class Auth internal constructor() {
    */
   val currentSignUp: SignUp?
     get() = if (Clerk.clientInitialized) Clerk.client.signUp else null
-
-  /** Native magic-link manager for PKCE-bound email link flows. */
-  val nativeMagicLink: NativeMagicLinkManager
-    get() = NativeMagicLinkService
 
   /**
    * The sessions currently known on this client.
@@ -378,33 +369,6 @@ class Auth internal constructor() {
     val result = ClerkApi.signIn.createSignIn(params)
     result.onFailure { emitAuthError(it) }
     return result
-  }
-
-  /**
-   * Starts a native email-link sign-in flow secured by PKCE.
-   *
-   * The flow sends only a code challenge to Clerk and expects completion through a deep-link
-   * callback carrying `flow_id` and `approval_token`.
-   */
-  suspend fun startEmailLinkSignIn(email: String): ClerkResult<SignIn, NativeMagicLinkError> {
-    return nativeMagicLink.startEmailLinkSignIn(email)
-  }
-
-  /**
-   * Handles a native magic-link deep-link callback and completes sign-in or sign-up using a ticket.
-   */
-  suspend fun handleMagicLinkDeepLink(
-    uri: Uri
-  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
-    return nativeMagicLink.handleMagicLinkDeepLink(uri)
-  }
-
-  /** Completes a pending native magic-link flow using callback values from the deep link. */
-  suspend fun completeMagicLink(
-    flowId: String,
-    approvalToken: String,
-  ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
-    return nativeMagicLink.complete(flowId, approvalToken)
   }
 
   // endregion
@@ -852,10 +816,10 @@ class Auth internal constructor() {
   // region Deep Link Handling
 
   /**
-   * Handles OAuth/SSO and native magic-link deep link callbacks.
+   * Handles OAuth/SSO deep link callbacks.
    *
-   * Call this method from your Activity when receiving a deep link callback from Clerk
-   * authentication flows.
+   * Call this method from your Activity when receiving a deep link callback from an OAuth or SSO
+   * provider.
    *
    * @param uri The deep link URI received from the callback.
    * @return true if the URI was handled, false otherwise.
@@ -863,24 +827,19 @@ class Auth internal constructor() {
    * ### Example usage:
    * ```kotlin
    * // In your Activity's onCreate or onNewIntent
-   * lifecycleScope.launch {
-   *   clerk.auth.handle(intent.data)
-   * }
+   * clerk.auth.handle(intent.data)
    * ```
    */
-  suspend fun handle(uri: Uri?): Boolean {
-    val callbackUri = uri ?: return false
-    val handledByMagicLink = canHandleNativeMagicLink(callbackUri)
-    if (handledByMagicLink) {
-      NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri)
+  fun handle(uri: Uri?): Boolean {
+    // Check if this is a Clerk OAuth callback
+    val isClerkCallback = uri?.scheme?.startsWith("clerk") == true
+
+    if (isClerkCallback) {
+      // Let the SSO service handle the callback
+      kotlinx.coroutines.runBlocking { SSOService.completeAuthenticateWithRedirect(uri) }
     }
 
-    val isClerkCallback = callbackUri.scheme?.startsWith("clerk") == true
-    if (!handledByMagicLink && isClerkCallback) {
-      SSOService.completeAuthenticateWithRedirect(callbackUri)
-    }
-
-    return handledByMagicLink || isClerkCallback
+    return isClerkCallback
   }
 
   // endregion

@@ -54,27 +54,11 @@ class MainActivity : ComponentActivity() {
       val context = LocalContext.current
       WorkbenchTheme {
         MainContent(
-          onSave = { publishableKey, proxyUrl ->
-            val normalizedKey = publishableKey.trim()
-            val normalizedProxy = proxyUrl.trim()
-
-            if (normalizedKey.isBlank()) {
-              StorageHelper.deleteValue(StorageKey.PUBLIC_KEY)
-            } else {
-              StorageHelper.saveValue(StorageKey.PUBLIC_KEY, normalizedKey)
-            }
-
-            if (normalizedProxy.isBlank()) {
-              StorageHelper.deleteValue(StorageKey.PROXY_URL)
-            } else {
-              StorageHelper.saveValue(StorageKey.PROXY_URL, normalizedProxy)
-            }
+          onSave = {
+            StorageHelper.saveValue(StorageKey.PUBLIC_KEY, it)
             ProcessPhoenix.triggerRebirth(context)
           },
-          onClear = {
-            StorageHelper.deleteValue(StorageKey.PUBLIC_KEY)
-            StorageHelper.deleteValue(StorageKey.PROXY_URL)
-          },
+          onClear = { StorageHelper.deleteValue(StorageKey.PUBLIC_KEY) },
           onClickFirstItem = { context.startActivity(Intent(context, UiActivity1::class.java)) },
           onClickSecondItem = { context.startActivity(Intent(context, UiActivity2::class.java)) },
         )
@@ -87,7 +71,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun MainContent(
   onClear: () -> Unit,
-  onSave: (String, String) -> Unit,
+  onSave: (String) -> Unit,
   onClickFirstItem: () -> Unit,
   onClickSecondItem: () -> Unit,
 ) {
@@ -123,9 +107,9 @@ private fun MainContent(
   if (showBottomSheet) {
     ModalBottomSheet(onDismissRequest = { showBottomSheet = false }) {
       SettingsBottomSheetContent(
-        onSave = { publishableKey, proxyUrl ->
+        onSave = { publishableKey ->
           showBottomSheet = false
-          onSave(publishableKey, proxyUrl)
+          onSave(publishableKey)
         },
         onClear = onClear,
       )
@@ -211,11 +195,9 @@ private fun ClickableTestItem(text: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun SettingsBottomSheetContent(onSave: (String, String) -> Unit, onClear: () -> Unit) {
+private fun SettingsBottomSheetContent(onSave: (String) -> Unit, onClear: () -> Unit) {
   val publicKey = StorageHelper.loadValue(StorageKey.PUBLIC_KEY) ?: ""
-  val savedProxyUrl = StorageHelper.loadValue(StorageKey.PROXY_URL) ?: ""
   var publishableKey by remember { mutableStateOf(publicKey) }
-  var proxyUrl by remember { mutableStateOf(savedProxyUrl) }
 
   Column(
     modifier =
@@ -245,23 +227,13 @@ private fun SettingsBottomSheetContent(onSave: (String, String) -> Unit, onClear
       singleLine = true,
     )
     Spacer(modifier = Modifier.height(Spacing.medium))
-    OutlinedTextField(
-      value = proxyUrl,
-      onValueChange = { proxyUrl = it },
-      label = { Text(WorkbenchConstants.PROXY_URL_LABEL) },
-      placeholder = { Text(WorkbenchConstants.PROXY_URL_PLACEHOLDER) },
-      modifier = Modifier.fillMaxWidth(),
-      singleLine = true,
-    )
-    Spacer(modifier = Modifier.height(Spacing.medium))
-    Button(onClick = { onSave(publishableKey, proxyUrl) }, modifier = Modifier.fillMaxWidth()) {
+    Button(onClick = { onSave(publishableKey) }, modifier = Modifier.fillMaxWidth()) {
       Text(WorkbenchConstants.SAVE_BUTTON_TEXT)
     }
     Button(
       modifier = Modifier.fillMaxWidth(),
       onClick = {
         publishableKey = ""
-        proxyUrl = ""
         onClear()
       },
       colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
@@ -276,11 +248,9 @@ private object WorkbenchConstants {
   const val APP_TITLE = "Clerk Workbench"
   const val INSTRUCTIONS_TITLE = "Instructions:"
   const val SETTINGS_TITLE = "Settings"
-  const val SETTINGS_DESCRIPTION = "Please enter your publishable key and optional proxy URL"
+  const val SETTINGS_DESCRIPTION = "Please enter your publishable key"
   const val PUBLISHABLE_KEY_LABEL = "Publishable Key"
   const val PUBLISHABLE_KEY_PLACEHOLDER = "Enter publishable key"
-  const val PROXY_URL_LABEL = "Proxy URL"
-  const val PROXY_URL_PLACEHOLDER = "Enter proxy URL for local/dev instances"
   const val SAVE_BUTTON_TEXT = "Save"
 
   val instructionSteps =

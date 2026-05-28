@@ -3,6 +3,7 @@ package com.clerk.api.integration
 import com.clerk.api.Clerk
 import java.io.File
 import java.util.UUID
+import kotlin.random.Random
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
@@ -62,11 +63,11 @@ suspend fun initializeClerkAndWait(publishableKey: String, timeoutMs: Long = INI
 fun generateTestEmail(): String = "test+clerk_test_${UUID.randomUUID()}@example.com"
 
 fun generateTestPhone(): String {
-  val seed = UUID.randomUUID()
-  val areaSeed = seed.mostSignificantBits and Long.MAX_VALUE
-  val firstDigit = 2 + (areaSeed % 8L).toInt()
-  val secondDigit = ((areaSeed / 8L) % 10L).toInt()
-  val thirdDigit = ((areaSeed / 80L) % 10L).toInt()
-  val suffix = ((seed.leastSignificantBits and 0x7FFF).toInt()) % 100
-  return "+1${firstDigit}${secondDigit}${thirdDigit}55501%02d".format(suffix)
+  val areaCode = buildString {
+    append(Random.nextInt(from = 2, until = 10))
+    append(Random.nextInt(from = 0, until = 10))
+    append(Random.nextInt(from = 0, until = 10))
+  }
+  val suffix = Random.nextInt(from = 0, until = 100).toString().padStart(length = 2, padChar = '0')
+  return "+1${areaCode}55501${suffix}"
 }

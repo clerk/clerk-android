@@ -29,6 +29,7 @@ import org.robolectric.RobolectricTestRunner
  */
 @RunWith(RobolectricTestRunner::class)
 class AuthIntegrationTests {
+
   @Test
   fun `sign up and sign in with email codes`(): Unit = runBlocking {
     val pk = requirePublishableKey()

@@ -16,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -183,12 +184,6 @@ internal fun AuthStartViewImpl(
                   authStartIdentifier = authState.authStartIdentifier,
                 )
               }
-              authState.lastSubmittedIdentifier =
-                if (phoneActive && authViewHelper.phoneNumberIsEnabled) {
-                  authState.authStartPhoneNumber
-                } else {
-                  authState.authStartIdentifier
-                }
               authStartViewModel.startAuth(
                 authMode = authState.mode,
                 isPhoneNumberFieldActive = phoneActive,
@@ -270,7 +265,7 @@ private fun AuthInputField(
   } else {
     LastUsedAuthBadgeOverlay(isVisible = showEmailUsernameBadge) {
       ClerkTextField(
-        inputContentType = authViewHelper.identifierContentType(),
+        inputContentType = ContentType.EmailAddress,
         value = authStartIdentifier,
         onValueChange = onIdentifierChange,
         label = authViewHelper.emailOrUsernamePlaceholder(),

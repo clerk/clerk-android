@@ -41,7 +41,7 @@ internal interface SignUpApi {
   @POST(ApiPaths.Client.SignUp.PREPARE_VERIFICATION)
   suspend fun prepareSignUpVerification(
     @Path(ApiParams.ID) signUpId: String,
-    @FieldMap fields: Map<String, String>,
+    @Field(ApiParams.STRATEGY) strategy: String,
   ): ClerkResult<SignUp, ClerkErrorResponse>
 
   /** @see [com.clerk.api.signup.attemptVerification] */
