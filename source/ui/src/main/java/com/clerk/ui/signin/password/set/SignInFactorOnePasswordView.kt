@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -18,6 +19,7 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -108,7 +110,10 @@ private fun SignInFactorOnePasswordViewImpl(
       visualTransformation = PasswordVisualTransformation(),
       inputContentType = ContentType.Password,
       keyboardOptions =
-        KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Password),
+        KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Password, imeAction = ImeAction.Go),
+      keyboardActions = KeyboardActions(onGo = {
+        if (authState.signInPassword.isNotEmpty()) viewModel.submitPassword(authState.signInPassword)
+      }),
     )
     Spacer(Modifier.height(dp24))
     ClerkButton(

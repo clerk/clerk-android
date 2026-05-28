@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -13,7 +15,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -141,6 +146,15 @@ private fun SignUpCompleteProfileImpl(
         onFirstChange = { authState.signUpFirstName = it },
         onLastChange = { authState.signUpLastName = it },
         onFocusChange = { helper.focusTo(it) },
+        onSubmit = {
+          if (isSubmitEnabled) {
+            viewModel.updateSignUp(
+              firstName = authState.signUpFirstName.takeIf { firstEnabled },
+              lastName = authState.signUpLastName.takeIf { lastEnabled },
+              legalAccepted = if (showLegalConsent) authState.signUpLegalAccepted else null,
+            )
+          }
+        },
       )
 
       if (showLegalConsent) {
@@ -178,7 +192,20 @@ private fun InputRow(
   onFirstChange: (String) -> Unit,
   onLastChange: (String) -> Unit,
   onFocusChange: (CompleteProfileField) -> Unit = {},
+  onSubmit: () -> Unit = {},
 ) {
+  val bothEnabled = firstEnabled && lastEnabled
+  val lastNameFocusRequester = remember { FocusRequester() }
+
+  // When both fields are shown, first→Next moves focus; last→Done submits.
+  // When only one field is shown, Done submits directly.
+  val firstNameImeAction = if (bothEnabled) ImeAction.Next else ImeAction.Done
+  val firstNameKeyboardActions = if (bothEnabled) {
+    KeyboardActions(onNext = { lastNameFocusRequester.requestFocus() })
+  } else {
+    KeyboardActions(onDone = { onSubmit() })
+  }
+
   BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
     val enabledCount = (if (firstEnabled) 1 else 0) + (if (lastEnabled) 1 else 0)
     val spacing = dp12
@@ -199,16 +226,20 @@ private fun InputRow(
             onValueChange = onFirstChange,
             label = stringResource(R.string.first_name),
             onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
+            keyboardOptions = KeyboardOptions(imeAction = firstNameImeAction),
+            keyboardActions = firstNameKeyboardActions,
           )
         }
         if (lastEnabled) {
           ClerkTextField(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(lastNameFocusRequester),
             value = last,
             inputContentType = ContentType.PersonLastName,
             onValueChange = onLastChange,
             label = stringResource(R.string.last_name),
             onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { onSubmit() }),
           )
         }
       }
@@ -226,16 +257,20 @@ private fun InputRow(
             onValueChange = onFirstChange,
             label = stringResource(R.string.first_name),
             onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
+            keyboardOptions = KeyboardOptions(imeAction = firstNameImeAction),
+            keyboardActions = firstNameKeyboardActions,
           )
         }
         if (lastEnabled) {
           ClerkTextField(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).focusRequester(lastNameFocusRequester),
             value = last,
             inputContentType = ContentType.PersonLastName,
             onValueChange = onLastChange,
             label = stringResource(R.string.last_name),
             onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { onSubmit() }),
           )
         }
       }

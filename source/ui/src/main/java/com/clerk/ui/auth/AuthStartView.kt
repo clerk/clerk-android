@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -153,28 +155,8 @@ internal fun AuthStartViewImpl(
         verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
       ) {
         if (authViewHelper.showIdentifierField) {
-          AuthInputField(
-            authViewHelper = authViewHelper,
-            phoneNumberFieldIsActive = phoneActive,
-            authStartPhoneNumber = authState.authStartPhoneNumber,
-            authStartIdentifier = authState.authStartIdentifier,
-            onPhoneNumberChange = { authState.authStartPhoneNumber = it },
-            onIdentifierChange = { authState.authStartIdentifier = it },
-            showPhoneBadge = lastUsedAuth?.showsPhoneBadge == true,
-            showEmailUsernameBadge = lastUsedAuth?.showsEmailUsernameBadge == true,
-          )
-
-          ClerkButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = stringResource(R.string.continue_text),
-            isLoading = state is AuthStartViewModel.AuthState.Loading,
-            isEnabled = isContinueEnabled,
-            icons =
-              ClerkButtonDefaults.icons(
-                trailingIcon = R.drawable.ic_triangle_right,
-                trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
-              ),
-            onClick = {
+          val onSubmit: () -> Unit = {
+            if (isContinueEnabled) {
               if (authState.mode != AuthMode.SignUp) {
                 storeIdentifierType(
                   authState = authState,
@@ -195,7 +177,32 @@ internal fun AuthStartViewImpl(
                 identifier = authState.authStartIdentifier,
                 phoneNumber = authState.authStartPhoneNumber,
               )
-            },
+            }
+          }
+
+          AuthInputField(
+            authViewHelper = authViewHelper,
+            phoneNumberFieldIsActive = phoneActive,
+            authStartPhoneNumber = authState.authStartPhoneNumber,
+            authStartIdentifier = authState.authStartIdentifier,
+            onPhoneNumberChange = { authState.authStartPhoneNumber = it },
+            onIdentifierChange = { authState.authStartIdentifier = it },
+            showPhoneBadge = lastUsedAuth?.showsPhoneBadge == true,
+            showEmailUsernameBadge = lastUsedAuth?.showsEmailUsernameBadge == true,
+            onSubmit = onSubmit,
+          )
+
+          ClerkButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(R.string.continue_text),
+            isLoading = state is AuthStartViewModel.AuthState.Loading,
+            isEnabled = isContinueEnabled,
+            icons =
+              ClerkButtonDefaults.icons(
+                trailingIcon = R.drawable.ic_triangle_right,
+                trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
+              ),
+            onClick = onSubmit,
           )
 
           if (authViewHelper.showIdentifierSwitcher) {
@@ -258,6 +265,7 @@ private fun AuthInputField(
   onIdentifierChange: (String) -> Unit,
   showPhoneBadge: Boolean,
   showEmailUsernameBadge: Boolean,
+  onSubmit: () -> Unit,
 ) {
   if (authViewHelper.phoneNumberIsEnabled && phoneNumberFieldIsActive) {
     LastUsedAuthBadgeOverlay(isVisible = showPhoneBadge) {
@@ -265,6 +273,8 @@ private fun AuthInputField(
         value = authStartPhoneNumber,
         modifier = Modifier.fillMaxWidth(),
         onValueChange = onPhoneNumberChange,
+        imeAction = ImeAction.Go,
+        keyboardActions = KeyboardActions(onGo = { onSubmit() }),
       )
     }
   } else {
@@ -275,7 +285,8 @@ private fun AuthInputField(
         onValueChange = onIdentifierChange,
         label = authViewHelper.emailOrUsernamePlaceholder(),
         keyboardOptions =
-          KeyboardOptions(keyboardType = authViewHelper.getKeyboardType(phoneNumberFieldIsActive)),
+          KeyboardOptions(keyboardType = authViewHelper.getKeyboardType(phoneNumberFieldIsActive), imeAction = ImeAction.Go),
+        keyboardActions = KeyboardActions(onGo = { onSubmit() }),
       )
     }
   }
