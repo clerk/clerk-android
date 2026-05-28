@@ -83,6 +83,8 @@ internal fun ClerkThemedAuthScaffold(
 ) {
   val user = Clerk.userFlow.collectAsStateWithLifecycle().value
   val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
+  val shouldShowLogo =
+    shouldShowInstanceLogo(hasLogo = hasLogo, organizationLogoUrl = Clerk.organizationLogoUrl)
   var showSignedInAccountSheet by remember { mutableStateOf(false) }
   val displayName = user.displayName()
   val displayIdentifier = session?.publicUserData?.identifier ?: user?.username.orEmpty()
@@ -109,7 +111,7 @@ internal fun ClerkThemedAuthScaffold(
         ClerkTopAppBar(
           backgroundColor = ClerkMaterialTheme.colors.background,
           onBackPressed = onBackPressed,
-          hasLogo = hasLogo,
+          hasLogo = shouldShowLogo,
           hasBackButton = hasBackButton,
           trailingContent = trailingContent,
         )

@@ -24,9 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.core.avatar.OrganizationLogo
+import com.clerk.ui.core.avatar.OrganizationAvatar
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp68
@@ -43,6 +44,7 @@ internal fun ClerkTopAppBar(
   title: String? = null,
   backgroundColor: Color? = null, // sensible default
   clerkTheme: ClerkTheme? = null,
+  logoUrl: String? = Clerk.organizationLogoUrl,
   trailingContent: (@Composable () -> Unit)? = null,
 ) {
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
@@ -69,12 +71,17 @@ internal fun ClerkTopAppBar(
             trailingContent = trailingContent,
           )
         } else {
+          val logoContent: (@Composable () -> Unit)? =
+            if (hasLogo) {
+              { OrganizationAvatar(clerkTheme = clerkTheme, imageUrl = logoUrl) }
+            } else {
+              null
+            }
           TopBarWithLogo(
             hasBackButton = hasBackButton,
             onBackPressed = onBackPressed,
             title = title,
-            hasLogo = hasLogo,
-            clerkTheme = clerkTheme,
+            logoContent = logoContent,
           )
         }
       }
@@ -105,13 +112,12 @@ private fun RowScope.TopBarWithLogo(
   hasBackButton: Boolean,
   onBackPressed: () -> Unit,
   title: String?,
-  hasLogo: Boolean,
-  clerkTheme: ClerkTheme?,
+  logoContent: (@Composable () -> Unit)?,
 ) {
   BackButton(hasBackButton = hasBackButton, onBackPressed = onBackPressed)
   Spacer(Modifier.weight(1f))
   TopBarTitle(title)
-  if (hasLogo) OrganizationLogo(clerkTheme = clerkTheme)
+  logoContent?.invoke()
   Spacer(Modifier.weight(1f))
   if (hasBackButton) {
     IconButton(onClick = {}) {}

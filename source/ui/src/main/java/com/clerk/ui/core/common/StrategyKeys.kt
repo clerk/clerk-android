@@ -7,6 +7,7 @@ internal object StrategyKeys {
   internal const val PASSWORD = "password"
   internal const val PHONE_CODE = "phone_code"
   internal const val EMAIL_CODE = "email_code"
+  internal const val EMAIL_LINK = "email_link"
   internal const val TOTP = "totp"
 
   internal const val BACKUP_CODE = "backup_code"

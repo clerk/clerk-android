@@ -2,6 +2,7 @@ package com.clerk.api.sso
 
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SignInApi
+import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
@@ -34,7 +35,12 @@ class SSOServiceAuthenticateWithRedirectTest {
     val signInApi = mockk<SignInApi>()
     val redirectUrl = "clerk://example.callback"
     val externalVerificationRedirectUrl = "https://oauth.example.com/start"
-    val createdSignIn = SignIn(id = "sign_in_123")
+    val createdSignIn =
+      SignIn(
+        id = "sign_in_123",
+        status = SignIn.Status.NEEDS_FIRST_FACTOR,
+        supportedFirstFactors = listOf(Factor(strategy = "oauth_google")),
+      )
     val preparedSignIn =
       SignIn(
         id = createdSignIn.id,

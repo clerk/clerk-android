@@ -41,5 +41,6 @@ internal object StorageHelper {
 }
 
 internal enum class StorageKey {
-  PUBLIC_KEY
+  PUBLIC_KEY,
+  PROXY_URL,
 }

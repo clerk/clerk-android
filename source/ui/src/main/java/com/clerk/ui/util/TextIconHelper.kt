@@ -34,6 +34,14 @@ internal class TextIconHelper {
           context.getString(R.string.email_code_to_email, safeIdentifier)
         }
       }
+      StrategyKeys.EMAIL_LINK -> {
+        val safeIdentifier = factor.safeIdentifier
+        if (safeIdentifier.isNullOrBlank()) {
+          context.getString(R.string.send_email_to, context.getString(R.string.email_address))
+        } else {
+          context.getString(R.string.send_email_to, safeIdentifier)
+        }
+      }
       StrategyKeys.PASSKEY -> context.getString(R.string.sign_in_with_your_passkey)
       StrategyKeys.PASSWORD -> context.getString(R.string.sign_in_with_your_password)
       StrategyKeys.TOTP -> context.getString(R.string.use_your_authenticator_app)
@@ -52,6 +60,7 @@ internal class TextIconHelper {
     return when (factor.strategy) {
       StrategyKeys.PHONE_CODE -> R.drawable.ic_sms
       StrategyKeys.EMAIL_CODE -> R.drawable.ic_email
+      StrategyKeys.EMAIL_LINK -> R.drawable.ic_email
       StrategyKeys.PASSKEY -> R.drawable.ic_fingerprint
       StrategyKeys.PASSWORD -> R.drawable.ic_lock
       else -> null

@@ -76,14 +76,14 @@ class PasskeyCreationServiceTest {
       """
       {
         "id": "credential-id",
-        "rawId": "raw-credential-id", 
+        "rawId": "raw-credential-id",
         "type": "public-key",
         "response": {
           "attestationObject": "test-attestation",
           "clientDataJSON": "test-client-data"
         }
       }
-    """
+      """
         .trimIndent()
 
     every { mockVerification.nonce } returns nonce
@@ -159,7 +159,7 @@ class PasskeyCreationServiceTest {
           "extraField": "should-be-ignored"
         }
       }
-    """
+      """
         .trimIndent()
     every { mockCreateCredentialResponse.data } returns mockBundle
 
@@ -199,7 +199,7 @@ class PasskeyCreationServiceTest {
           "extraField": "should-be-ignored"
         }
       }
-    """
+      """
         .trimIndent()
 
     val publicKeyCredentialSlot = slot<String>()
@@ -288,14 +288,14 @@ class PasskeyCreationServiceTest {
       """
       {
         "id": "test-id",
-        "rawId": "test-raw-id", 
+        "rawId": "test-raw-id",
         "type": "public-key",
         "response": {
           "attestationObject": "test-attestation",
           "clientDataJSON": "test-client-data"
         }
       }
-    """
+      """
         .trimIndent()
     every { mockCreateCredentialResponse.data } returns mockBundle
 

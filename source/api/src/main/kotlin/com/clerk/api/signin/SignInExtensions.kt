@@ -4,6 +4,7 @@ package com.clerk.api.signin
 
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.EMAIL_CODE
+import com.clerk.api.Constants.Strategy.EMAIL_LINK
 import com.clerk.api.Constants.Strategy.PHONE_CODE
 import com.clerk.api.Constants.Strategy.RESET_PASSWORD_EMAIL_CODE
 import com.clerk.api.Constants.Strategy.RESET_PASSWORD_PHONE_CODE
@@ -79,11 +80,15 @@ fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
  *   is found.
  */
 val SignIn.startingFirstFactor: Factor?
-  get() =
-    when (Clerk.environment?.displayConfig?.preferredSignInStrategy) {
+  get() {
+    preparedFirstFactor?.let {
+      return it
+    }
+    return when (Clerk.environment?.displayConfig?.preferredSignInStrategy) {
       PreferredSignInStrategy.PASSWORD -> this.factorWhenPasswordIsPreferred
       else -> this.factorWhenOtpIsPreferred
     }
+  }
 
 val SignIn.startingSecondFactor: Factor?
   get() {
@@ -102,9 +107,11 @@ val SignIn.startingSecondFactor: Factor?
 
 private val SignIn.factorWhenPasswordIsPreferred: Factor?
   get() {
-    // email links are not supported on iOS (keeping the same exclusion here)
-    val availableFirstFactors =
-      supportedFirstFactors?.filter { it.strategy != "email_link" } ?: return null
+    val availableFirstFactors = supportedFirstFactors ?: return null
+
+    availableFirstFactors.emailLinkFactorForIdentifier(identifier)?.let {
+      return it
+    }
 
     // Prefer passkey
     availableFirstFactors
@@ -128,9 +135,11 @@ private val SignIn.factorWhenPasswordIsPreferred: Factor?
 
 private val SignIn.factorWhenOtpIsPreferred: Factor?
   get() {
-    // email links are not supported on iOS (keeping the same exclusion here)
-    val availableFirstFactors =
-      supportedFirstFactors?.filter { it.strategy != "email_link" } ?: return null
+    val availableFirstFactors = supportedFirstFactors ?: return null
+
+    availableFirstFactors.emailLinkFactorForIdentifier(identifier)?.let {
+      return it
+    }
 
     // Prefer passkey
     availableFirstFactors
@@ -143,6 +152,43 @@ private val SignIn.factorWhenOtpIsPreferred: Factor?
     val sorted = availableFirstFactors.sortedWith(FactorComparators.otpPrefComparator)
     return sorted.firstOrNull { it.safeIdentifier == identifier } ?: sorted.firstOrNull()
   }
+
+private val SignIn.preparedFirstFactor: Factor?
+  get() {
+    val preparedStrategy = firstFactorVerification?.strategy ?: return null
+    val availableFirstFactors = supportedFirstFactors ?: return null
+
+    return availableFirstFactors.firstOrNull {
+      it.strategy == preparedStrategy && it.safeIdentifier == identifier
+    } ?: availableFirstFactors.singleOrNull { it.strategy == preparedStrategy }
+  }
+
+private fun List<Factor>.emailLinkFactorForIdentifier(identifier: String?): Factor? {
+  val isEmailIdentifier = !identifier.isNullOrBlank() && identifier.contains("@")
+  val matchingEmailFactor =
+    if (isEmailIdentifier) {
+      firstOrNull { it.isEmailFactor && it.safeIdentifier == identifier }
+    } else {
+      null
+    }
+
+  return when {
+    !isEmailIdentifier -> null
+    matchingEmailFactor == null -> filter { it.strategy == EMAIL_LINK }.singleOrNull()
+    else ->
+      firstOrNull { it.strategy == EMAIL_LINK && it.hasSameIdentityAs(matchingEmailFactor) }
+        ?: matchingEmailFactor.takeIf { it.strategy == EMAIL_LINK }
+  }
+}
+
+private val Factor.isEmailFactor: Boolean
+  get() = strategy == EMAIL_LINK || strategy == EMAIL_CODE
+
+private fun Factor.hasSameIdentityAs(other: Factor): Boolean {
+  return (!emailAddressId.isNullOrBlank() && emailAddressId == other.emailAddressId) ||
+    (!phoneNumberId.isNullOrBlank() && phoneNumberId == other.phoneNumberId) ||
+    (!safeIdentifier.isNullOrBlank() && safeIdentifier == other.safeIdentifier)
+}
 
 // endregion
 

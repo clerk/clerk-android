@@ -18,6 +18,8 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 
@@ -82,15 +84,28 @@ class SignInPrepareHandlerTest {
   @Test
   fun prepareForEmailCodeAsSecondFactorShouldHandleFailureGracefully() = runTest {
     val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
-    val errorResponse = mockk<ClerkErrorResponse>()
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            ClerkApiError(message = "Short", longMessage = "Email second factor failed", code = "x")
+          ),
+        clerkTraceId = null,
+      )
     val failureResult = ClerkResult.apiFailure(errorResponse)
+    var capturedMessage: String? = null
 
     coEvery { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") } returns failureResult
 
-    // This should not throw an exception - the handler logs but doesn't propagate errors
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = true, onError = {})
+    handler.prepareForEmailCode(
+      mockSignIn,
+      factor,
+      isSecondFactor = true,
+      onError = { capturedMessage = it },
+    )
 
     coVerify { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") }
+    assertEquals("Email second factor failed", capturedMessage)
   }
 
   @Test
@@ -128,15 +143,28 @@ class SignInPrepareHandlerTest {
   @Test
   fun prepareForPhoneCodeAsSecondFactorShouldHandleFailureGracefully() = runTest {
     val factor = Factor(strategy = "phone_code", phoneNumberId = "phone_789")
-    val errorResponse = mockk<ClerkErrorResponse>()
+    val errorResponse =
+      ClerkErrorResponse(
+        errors =
+          listOf(
+            ClerkApiError(message = "Short", longMessage = "Phone second factor failed", code = "x")
+          ),
+        clerkTraceId = null,
+      )
     val failureResult = ClerkResult.apiFailure(errorResponse)
+    var capturedMessage: String? = null
 
     coEvery { mockSignIn.prepareSecondFactor("phone_789") } returns failureResult
 
-    // This should not throw an exception - the handler logs but doesn't propagate errors
-    handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = true, onError = {})
+    handler.prepareForPhoneCode(
+      mockSignIn,
+      factor,
+      isSecondFactor = true,
+      onError = { capturedMessage = it },
+    )
 
     coVerify { mockSignIn.prepareSecondFactor("phone_789") }
+    assertEquals("Phone second factor failed", capturedMessage)
   }
 
   @Test
@@ -222,9 +250,14 @@ class SignInPrepareHandlerTest {
     } returns failureResult
 
     var capturedMessage: String? = null
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = { capturedMessage = it })
+    handler.prepareForEmailCode(
+      mockSignIn,
+      factor,
+      isSecondFactor = false,
+      onError = { capturedMessage = it },
+    )
 
-    assert(capturedMessage == "Long message")
+    assertEquals("Long message", capturedMessage)
   }
 
   @Test
@@ -252,7 +285,7 @@ class SignInPrepareHandlerTest {
     )
 
     // Falls back to default when no message present in error
-    assert(capturedMessage == "Error occurred with unknown message.")
+    assertEquals("Error occurred with unknown message.", capturedMessage)
   }
 
   @Test
@@ -274,7 +307,7 @@ class SignInPrepareHandlerTest {
     var capturedMessage: String? = null
     handler.prepareForResetPasswordWithPhone(mockSignIn, factor, onError = { capturedMessage = it })
 
-    assert(capturedMessage == "Short")
+    assertEquals("Short", capturedMessage)
   }
 
   @Test
@@ -296,7 +329,7 @@ class SignInPrepareHandlerTest {
     var capturedMessage: String? = null
     handler.prepareForResetWithEmailCode(mockSignIn, factor, onError = { capturedMessage = it })
 
-    assert(capturedMessage == "Long fail")
+    assertEquals("Long fail", capturedMessage)
   }
 
   @Test
@@ -304,10 +337,15 @@ class SignInPrepareHandlerTest {
     val factor = Factor(strategy = "email_code", emailAddressId = null)
     var called = false
 
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = { called = true })
+    handler.prepareForEmailCode(
+      mockSignIn,
+      factor,
+      isSecondFactor = false,
+      onError = { called = true },
+    )
 
     coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
-    assert(!called)
+    assertFalse(called)
   }
 
   @Test
@@ -323,6 +361,40 @@ class SignInPrepareHandlerTest {
     )
 
     coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
-    assert(!called)
+    assertFalse(called)
+  }
+
+  @Test
+  fun prepareForEmailCodeShouldSkipApiCallWhenFirstFactorIsNotSupported() = runTest {
+    every { mockSignIn.supportedFirstFactors } returns listOf(Factor(strategy = "ticket"))
+    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
+    var capturedMessage: String? = null
+
+    handler.prepareForEmailCode(
+      inProgressSignIn = mockSignIn,
+      factor = factor,
+      isSecondFactor = false,
+      onError = { capturedMessage = it },
+    )
+
+    coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
+    assertEquals("Selected sign-in method is no longer available.", capturedMessage)
+  }
+
+  @Test
+  fun prepareForEmailCodeShouldSkipApiCallWhenSecondFactorIsNotSupported() = runTest {
+    every { mockSignIn.supportedSecondFactors } returns listOf(Factor(strategy = "totp"))
+    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
+    var capturedMessage: String? = null
+
+    handler.prepareForEmailCode(
+      inProgressSignIn = mockSignIn,
+      factor = factor,
+      isSecondFactor = true,
+      onError = { capturedMessage = it },
+    )
+
+    coVerify(exactly = 0) { mockSignIn.prepareSecondFactor(emailAddressId = any()) }
+    assertEquals("Selected sign-in method is no longer available.", capturedMessage)
   }
 }

@@ -1,33 +1,32 @@
 package com.clerk.telemetry
 
-import com.clerk.api.Clerk
-
 private const val CLERK_ANDROID = "clerk-android"
 
-/**
- * An implementation of [TelemetryEnvironment] that retrieves configuration and state directly from
- * the main [Clerk] singleton. This class acts as a bridge between the telemetry system and the core
- * Clerk SDK's settings.
- */
-class ClerkTelemetryEnvironment : TelemetryEnvironment {
+/** A [TelemetryEnvironment] implementation that reads values from injected providers. */
+class ClerkTelemetryEnvironment(
+  override val sdkVersion: String,
+  private val instanceTypeProvider: suspend () -> String,
+  private val telemetryEnabledProvider: suspend () -> Boolean,
+  private val debugModeEnabledProvider: suspend () -> Boolean,
+  private val publishableKeyProvider: suspend () -> String?,
+) : TelemetryEnvironment {
 
   override val sdkName: String = CLERK_ANDROID
-  override val sdkVersion: String = Clerk.version
 
   override suspend fun instanceTypeString(): String {
-    return Clerk.instanceEnvironmentType.name
+    return instanceTypeProvider()
   }
 
   override suspend fun isTelemetryEnabled(): Boolean {
-    return Clerk.telemetryEnabled
+    return telemetryEnabledProvider()
   }
 
   override suspend fun isDebugModeEnabled(): Boolean {
-    return Clerk.debugMode
+    return debugModeEnabledProvider()
   }
 
   override suspend fun publishableKey(): String? {
-    val key = Clerk.publishableKey
+    val key = publishableKeyProvider()
     return key.takeIf { !it.isNullOrEmpty() }
   }
 }

@@ -330,6 +330,15 @@ object Clerk {
   val organizationDefaultRoleKey: String?
     get() = environment?.organizationSettings?.domains?.defaultRole
 
+  private val _organizationLogoUrlFlow = MutableStateFlow<String?>(null)
+
+  /**
+   * Reactive image URL for the application logo used in authentication UI components.
+   *
+   * Emits `null` until the SDK environment is initialized or when no logo URL is configured.
+   */
+  val organizationLogoUrlFlow: StateFlow<String?> = _organizationLogoUrlFlow.asStateFlow()
+
   /**
    * The image URL for the application logo used in authentication UI components.
    *
@@ -847,6 +856,7 @@ object Clerk {
    */
   internal fun updateEnvironment(environment: Environment) {
     this.environment = environment
+    _organizationLogoUrlFlow.value = environment.displayConfig.logoImageUrl
     _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
   }
 
