@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -42,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -111,6 +113,8 @@ fun ClerkPhoneNumberField(
   modifier: Modifier = Modifier,
   errorText: String? = null,
   onValueChange: (String) -> Unit,
+  imeAction: ImeAction = ImeAction.Default,
+  keyboardActions: KeyboardActions = KeyboardActions.Default,
   clerkTheme: ClerkTheme? = null,
 ) {
   ClerkPhoneNumberFieldImpl(
@@ -118,6 +122,8 @@ fun ClerkPhoneNumberField(
     errorText = errorText,
     value = value,
     onValueChange = onValueChange,
+    imeAction = imeAction,
+    keyboardActions = keyboardActions,
     clerkTheme = clerkTheme,
   )
 }
@@ -192,6 +198,8 @@ internal fun ClerkPhoneNumberFieldImpl(
   value: String,
   modifier: Modifier = Modifier,
   errorText: String? = null,
+  imeAction: ImeAction = ImeAction.Default,
+  keyboardActions: KeyboardActions = KeyboardActions.Default,
   clerkTheme: ClerkTheme? = null,
 ) {
   val defaultCountry = PhoneInputUtils.getDefaultCountry()
@@ -252,6 +260,8 @@ internal fun ClerkPhoneNumberFieldImpl(
           onValueChange = onValueChange,
           errorText = errorText,
           countryCode = selectedCountry.countryShortName,
+          imeAction = imeAction,
+          keyboardActions = keyboardActions,
         )
       }
     }
@@ -280,6 +290,8 @@ private fun PhoneNumberInput(
   onValueChange: (String) -> Unit,
   countryCode: String,
   errorText: String? = null,
+  imeAction: ImeAction = ImeAction.Default,
+  keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
 
   val interactionSource = remember { MutableInteractionSource() }
@@ -323,7 +335,8 @@ private fun PhoneNumberInput(
         )
       },
       shape = ClerkMaterialTheme.shape,
-      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = imeAction),
+      keyboardActions = keyboardActions,
       singleLine = true,
     )
     errorText?.let { errorText ->
