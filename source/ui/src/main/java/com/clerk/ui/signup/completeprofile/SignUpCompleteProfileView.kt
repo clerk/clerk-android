@@ -138,6 +138,16 @@ private fun SignUpCompleteProfileImpl(
       verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+      val onSubmit: () -> Unit = {
+        if (isSubmitEnabled && state !is AuthenticationViewState.Loading) {
+          viewModel.updateSignUp(
+            firstName = authState.signUpFirstName.takeIf { firstEnabled },
+            lastName = authState.signUpLastName.takeIf { lastEnabled },
+            legalAccepted = if (showLegalConsent) authState.signUpLegalAccepted else null,
+          )
+        }
+      }
+
       InputRow(
         firstEnabled = firstEnabled,
         lastEnabled = lastEnabled,
@@ -146,15 +156,7 @@ private fun SignUpCompleteProfileImpl(
         onFirstChange = { authState.signUpFirstName = it },
         onLastChange = { authState.signUpLastName = it },
         onFocusChange = { helper.focusTo(it) },
-        onSubmit = {
-          if (isSubmitEnabled && state !is AuthenticationViewState.Loading) {
-            viewModel.updateSignUp(
-              firstName = authState.signUpFirstName.takeIf { firstEnabled },
-              lastName = authState.signUpLastName.takeIf { lastEnabled },
-              legalAccepted = if (showLegalConsent) authState.signUpLegalAccepted else null,
-            )
-          }
-        },
+        onSubmit = onSubmit,
       )
 
       if (showLegalConsent) {
@@ -171,13 +173,7 @@ private fun SignUpCompleteProfileImpl(
         isEnabled = isSubmitEnabled,
         text = stringResource(helper.submitLabelRes()),
         isLoading = state is AuthenticationViewState.Loading,
-        onClick = {
-          viewModel.updateSignUp(
-            firstName = authState.signUpFirstName.takeIf { firstEnabled },
-            lastName = authState.signUpLastName.takeIf { lastEnabled },
-            legalAccepted = if (showLegalConsent) authState.signUpLegalAccepted else null,
-          )
-        },
+        onClick = onSubmit,
       )
     }
   }

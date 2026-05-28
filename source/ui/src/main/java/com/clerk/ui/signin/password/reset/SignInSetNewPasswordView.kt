@@ -117,7 +117,7 @@ private fun SignInSetNewPasswordViewImpl(
       authState.signInConfirmNewPassword.isNotBlank() &&
       passwordsMatch
   val onResetPassword = {
-    if (passwordsMatch && state !is AuthenticationViewState.Loading) {
+    if (isButtonEnabled && state !is AuthenticationViewState.Loading) {
       when (mode) {
         ResetPasswordMode.SIGN_IN ->
           viewModel.setNewPassword(authState.signInNewPassword, signOutOtherDevices)
