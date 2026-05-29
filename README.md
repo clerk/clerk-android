@@ -88,7 +88,7 @@ and includes Sign in with Google, Passkey authentication, Sign out, and Email Co
 - [Clerk Docs](https://clerk.com/docs)
 - [Android Integration Guide](https://clerk.com/docs/quickstarts/android)
 
-## 📝 License
+## License
 
 This project is licensed under the **MIT license**.
 
