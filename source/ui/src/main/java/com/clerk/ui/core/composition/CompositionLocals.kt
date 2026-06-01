@@ -28,15 +28,7 @@ internal val LocalTelemetryCollector =
 private fun rememberTelemetryCollector(): TelemetryCollector {
   val context = LocalContext.current.applicationContext
 
-  val environment = remember {
-    ClerkTelemetryEnvironment(
-      sdkVersion = Clerk.version,
-      instanceTypeProvider = { Clerk.instanceEnvironmentType.name },
-      telemetryEnabledProvider = { Clerk.telemetryEnabled },
-      debugModeEnabledProvider = { Clerk.debugMode },
-      publishableKeyProvider = { Clerk.publishableKey },
-    )
-  }
+  val environment = remember { ClerkTelemetryEnvironment() }
 
   return remember { TelemetryModule.createCollector(context = context, environment = environment) }
 }

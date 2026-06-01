@@ -1,5 +1,7 @@
 package com.clerk.telemetry
 
+import com.clerk.api.Clerk
+
 private const val CLERK_ANDROID = "clerk-android"
 
 /** A [TelemetryEnvironment] implementation that reads values from injected providers. */
@@ -10,6 +12,15 @@ class ClerkTelemetryEnvironment(
   private val debugModeEnabledProvider: suspend () -> Boolean,
   private val publishableKeyProvider: suspend () -> String?,
 ) : TelemetryEnvironment {
+
+  constructor() :
+    this(
+      sdkVersion = Clerk.version,
+      instanceTypeProvider = { Clerk.instanceEnvironmentType.name },
+      telemetryEnabledProvider = { Clerk.telemetryEnabled },
+      debugModeEnabledProvider = { Clerk.debugMode },
+      publishableKeyProvider = { Clerk.publishableKey },
+    )
 
   override val sdkName: String = CLERK_ANDROID
 
