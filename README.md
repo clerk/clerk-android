@@ -45,7 +45,7 @@ Use this if you want to build your own custom UI:
 
 ```kotlin
 dependencies {
-    implementation("com.clerk:clerk-android-api:0.1.28")
+    implementation("com.clerk:clerk-android-api:<latest-version>")
 }
 ```
 
@@ -55,7 +55,7 @@ Use this if you want to use the prebuilt Jetpack Compose UI components:
 
 ```kotlin
 dependencies {
-    implementation("com.clerk:clerk-android-ui:0.1.3")
+    implementation("com.clerk:clerk-android-ui:<latest-version>")
 }
 ```
 
