@@ -24,7 +24,6 @@ import com.clerk.ui.organizationswitcher.previewOrganizationMembership
 import com.clerk.ui.organizationswitcher.previewOrganizationSwitcherUser
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
-import java.time.Instant
 import org.junit.Test
 
 class OrganizationListSnapshotTest : BaseSnapshotTest() {
@@ -116,8 +115,8 @@ class OrganizationListSnapshotTest : BaseSnapshotTest() {
         publicMetadata = "{}",
         role = "org:member",
         status = "pending",
-        createdAt = Instant.EPOCH,
-        updatedAt = Instant.EPOCH,
+        createdAt = 0L,
+        updatedAt = 0L,
       )
     }
 

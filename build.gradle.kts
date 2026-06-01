@@ -101,9 +101,7 @@ subprojects {
     the<com.android.build.api.dsl.ApplicationExtension>().compileOptions {
       sourceCompatibility = JavaVersion.VERSION_17
       targetCompatibility = JavaVersion.VERSION_17
-      isCoreLibraryDesugaringEnabled = true
     }
-    dependencies.add("coreLibraryDesugaring", libs.android.desugar.jdk.libs)
   }
 
   // Kotlin configuration
