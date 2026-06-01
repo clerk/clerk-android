@@ -22,7 +22,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -61,16 +63,20 @@ class ClerkConfigurationSwitchTest {
 
   @Test
   fun `reset clears local configuration and runtime auth state while preserving device id`() =
-    runTest {
+    runBlocking {
+      val (client, user) = signedInClient()
+      coEvery { Client.get() } returns ClerkResult.success(client)
+      coEvery { Environment.get() } returns ClerkResult.success(testEnvironment("Old Application"))
+      StorageHelper.saveValue(StorageKey.DEVICE_ID, "device_id_123")
+
       Clerk.initialize(
         context = context,
         publishableKey = FIRST_KEY,
         options = ClerkConfigurationOptions(enableDebugMode = true, proxyUrl = FIRST_PROXY),
       )
-      val (client, user) = signedInClient()
+      withTimeout(1_000) { Clerk.isInitialized.first { it } }
       Clerk.updateEnvironment(testEnvironment("Old Application"))
       Clerk.updateClient(client)
-      StorageHelper.saveValue(StorageKey.DEVICE_ID, "device_id_123")
       StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
       SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
 

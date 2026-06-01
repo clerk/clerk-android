@@ -34,12 +34,11 @@ jdk = "17"
 jvmTarget = "17"
 kotlin = "2.3.21"
 minSdk = "24"
-compileSdk = "36"
+compileSdk = "37"
 
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
-android-desugar-jdk-libs = "com.android.tools:desugar_jdk_libs:2.1.5"
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"
 androidx-browser = "androidx.browser:browser:1.10.0"

@@ -27,8 +27,6 @@ android {
     }
   }
 
-  compileOptions { isCoreLibraryDesugaringEnabled = true }
-
   buildFeatures { buildConfig = true }
   packaging {
     resources {
@@ -90,8 +88,6 @@ mavenPublishing {
 
 dependencies {
   api(libs.kotlinx.serialization)
-
-  coreLibraryDesugaring(libs.android.desugar.jdk.libs)
 
   implementation(platform(libs.compose.bom))
   implementation(libs.androidx.appcompat)
