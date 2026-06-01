@@ -122,6 +122,7 @@ private fun ObserveHostResume(onHostResumed: () -> Unit) {
 private fun OpenEmailAppButton(snackbarHostState: SnackbarHostState) {
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
+  val noEmailClientsMessage = stringResource(R.string.no_email_clients_installed_on_device)
 
   ClerkButton(
     text = stringResource(R.string.open_email_app),
@@ -129,7 +130,7 @@ private fun OpenEmailAppButton(snackbarHostState: SnackbarHostState) {
       if (!EmailAppLauncher.open(context)) {
         coroutineScope.launch {
           snackbarHostState.showSnackbar(
-            message = context.getString(R.string.no_email_clients_installed_on_device),
+            message = noEmailClientsMessage,
             duration = SnackbarDuration.Short,
           )
         }

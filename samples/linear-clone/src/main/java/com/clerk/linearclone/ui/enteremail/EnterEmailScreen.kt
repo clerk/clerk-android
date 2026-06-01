@@ -61,7 +61,7 @@ fun EnterEmailScreen(
     EnterEmailViewModel.UiState.SignedOut ->
       EnterEmailContent(
         modifier = modifier,
-        viewModel = viewModel,
+        onContinueWithEmail = viewModel::prepareEmailVerification,
         onNavigateToLogin = onNavigateToLogin,
       )
   }
@@ -69,7 +69,7 @@ fun EnterEmailScreen(
 
 @Composable
 private fun EnterEmailContent(
-  viewModel: EnterEmailViewModel,
+  onContinueWithEmail: (String) -> Unit,
   modifier: Modifier = Modifier,
   onNavigateToLogin: () -> Unit,
 ) {
@@ -100,7 +100,7 @@ private fun EnterEmailContent(
     InputContent(
       buttonText = stringResource(R.string.continue_with_email),
       placeholder = stringResource(R.string.enter_your_email_address),
-      onClick = viewModel::prepareEmailVerification,
+      onClick = onContinueWithEmail,
       navigateToLogin = onNavigateToLogin,
       contentTypeValue = ContentType.EmailAddress,
     )
