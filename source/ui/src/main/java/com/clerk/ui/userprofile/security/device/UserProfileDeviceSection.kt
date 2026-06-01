@@ -44,7 +44,7 @@ private fun UserProfileDevicesSectionImpl(
     ) {
       Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-          modifier = Modifier.padding(horizontal = dp24).then(modifier),
+          modifier = Modifier.padding(horizontal = dp24),
           text = stringResource(R.string.active_devices).uppercase(),
           color = ClerkMaterialTheme.colors.mutedForeground,
           style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
