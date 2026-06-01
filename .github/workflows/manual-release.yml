@@ -90,6 +90,9 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: create-release
     if: always() && (github.event_name == 'release' || needs.create-release.result == 'success')
+    outputs:
+      tag_name: ${{ steps.release_metadata.outputs.tag_name }}
+      release_url: ${{ steps.release_metadata.outputs.release_url }}
 
     steps:
       - name: Checkout code
@@ -117,41 +120,26 @@ jobs:
           PUBLISH_UI: ${{ github.event.inputs.publish_ui }}
           PUBLISH_TELEMETRY: ${{ github.event.inputs.publish_telemetry }}
         run: |
-          CLERK_API_VERSION=$(awk -F= '/^CLERK_API_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
-          CLERK_TELEMETRY_VERSION=$(awk -F= '/^CLERK_TELEMETRY_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
-          CLERK_UI_VERSION=$(awk -F= '/^CLERK_UI_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
-
-          if [ -z "$CLERK_API_VERSION" ] || [ -z "$CLERK_TELEMETRY_VERSION" ] || [ -z "$CLERK_UI_VERSION" ]; then
-            echo "Failed to read Clerk release versions from gradle.properties"
-            exit 1
-          fi
-
           if [ "$GITHUB_EVENT_NAME" = "release" ]; then
             TAG_NAME="$EVENT_RELEASE_TAG_NAME"
             RELEASE_URL="$EVENT_RELEASE_URL"
             TASKS=":source:api:publishAndReleaseToMavenCentral :source:ui:publishAndReleaseToMavenCentral :source:telemetry:publishAndReleaseToMavenCentral"
-            PUBLISHED_MODULES="clerk-android-api $CLERK_API_VERSION, clerk-android-ui $CLERK_UI_VERSION, clerk-android-telemetry $CLERK_TELEMETRY_VERSION"
           else
             TAG_NAME="$DISPATCH_RELEASE_TAG_NAME"
             RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG_NAME"
             TASKS=""
-            PUBLISHED_MODULES=""
 
             if [ "$PUBLISH_API" = "true" ]; then
               TASKS="$TASKS :source:api:publishMavenPublicationToMavenCentralRepository"
-              PUBLISHED_MODULES="${PUBLISHED_MODULES}clerk-android-api $CLERK_API_VERSION, "
             fi
             if [ "$PUBLISH_UI" = "true" ]; then
               TASKS="$TASKS :source:ui:publishAndReleaseToMavenCentral"
-              PUBLISHED_MODULES="${PUBLISHED_MODULES}clerk-android-ui $CLERK_UI_VERSION, "
             fi
             if [ "$PUBLISH_TELEMETRY" = "true" ]; then
               TASKS="$TASKS :source:telemetry:publishAndReleaseToMavenCentral"
-              PUBLISHED_MODULES="${PUBLISHED_MODULES}clerk-android-telemetry $CLERK_TELEMETRY_VERSION, "
             fi
 
             TASKS="${TASKS# }"
-            PUBLISHED_MODULES="${PUBLISHED_MODULES%, }"
           fi
 
           if [ -z "$TAG_NAME" ]; then
@@ -170,10 +158,6 @@ jobs:
             echo "tag_name=$TAG_NAME"
             echo "release_url=$RELEASE_URL"
             echo "tasks=$TASKS"
-            echo "published_modules=$PUBLISHED_MODULES"
-            echo "clerk_api_version=$CLERK_API_VERSION"
-            echo "clerk_ui_version=$CLERK_UI_VERSION"
-            echo "clerk_telemetry_version=$CLERK_TELEMETRY_VERSION"
           } >> "$GITHUB_OUTPUT"
 
       - name: Publish to Maven Central
@@ -188,16 +172,17 @@ jobs:
           echo "Publishing modules: $TASKS"
           ./gradlew $TASKS
 
+  notify-slack:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    needs: publish
+    if: needs.publish.result == 'success'
+
+    steps:
       - name: Notify Slack
-        if: success()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          RELEASE_TAG: ${{ steps.release_metadata.outputs.tag_name }}
-          RELEASE_URL: ${{ steps.release_metadata.outputs.release_url }}
-          PUBLISHED_MODULES: ${{ steps.release_metadata.outputs.published_modules }}
-          CLERK_API_VERSION: ${{ steps.release_metadata.outputs.clerk_api_version }}
-          CLERK_UI_VERSION: ${{ steps.release_metadata.outputs.clerk_ui_version }}
-          CLERK_TELEMETRY_VERSION: ${{ steps.release_metadata.outputs.clerk_telemetry_version }}
+          RELEASE_TAG: ${{ needs.publish.outputs.tag_name }}
+          RELEASE_URL: ${{ needs.publish.outputs.release_url }}
         run: |
           if [ -z "$SLACK_WEBHOOK_URL" ]; then
             echo "::warning::SLACK_WEBHOOK_URL is not configured; skipping Slack notification"
@@ -207,11 +192,6 @@ jobs:
           PAYLOAD=$(jq -n \
             --arg tag "$RELEASE_TAG" \
             --arg release_url "$RELEASE_URL" \
-            --arg repository "$GITHUB_REPOSITORY" \
-            --arg published_modules "$PUBLISHED_MODULES" \
-            --arg api_version "$CLERK_API_VERSION" \
-            --arg ui_version "$CLERK_UI_VERSION" \
-            --arg telemetry_version "$CLERK_TELEMETRY_VERSION" \
             '{
               text: "Clerk Android SDK \($tag) has been released",
               blocks: [
@@ -221,31 +201,6 @@ jobs:
                     type: "mrkdwn",
                     text: "*Clerk Android SDK \($tag) has been released*"
                   }
-                },
-                {
-                  type: "section",
-                  fields: [
-                    {
-                      type: "mrkdwn",
-                      text: "*Published modules:*\n\($published_modules)"
-                    },
-                    {
-                      type: "mrkdwn",
-                      text: "*Repository:*\n\($repository)"
-                    },
-                    {
-                      type: "mrkdwn",
-                      text: "*clerk-android-api:*\n\($api_version)"
-                    },
-                    {
-                      type: "mrkdwn",
-                      text: "*clerk-android-ui:*\n\($ui_version)"
-                    },
-                    {
-                      type: "mrkdwn",
-                      text: "*clerk-android-telemetry:*\n\($telemetry_version)"
-                    }
-                  ]
                 },
                 {
                   type: "context",
