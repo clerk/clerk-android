@@ -63,20 +63,21 @@ internal fun ClerkTopAppBar(
             .padding(vertical = dp8),
         verticalAlignment = Alignment.CenterVertically,
       ) {
+        val logoContent: (@Composable () -> Unit)? =
+          if (hasLogo) {
+            { OrganizationAvatar(clerkTheme = clerkTheme, imageUrl = logoUrl) }
+          } else {
+            null
+          }
         if (trailingContent != null) {
           TopBarWithTrailingContent(
             hasBackButton = hasBackButton,
             onBackPressed = onBackPressed,
             title = title,
+            logoContent = logoContent,
             trailingContent = trailingContent,
           )
         } else {
-          val logoContent: (@Composable () -> Unit)? =
-            if (hasLogo) {
-              { OrganizationAvatar(clerkTheme = clerkTheme, imageUrl = logoUrl) }
-            } else {
-              null
-            }
           TopBarWithLogo(
             hasBackButton = hasBackButton,
             onBackPressed = onBackPressed,
@@ -94,13 +95,20 @@ private fun RowScope.TopBarWithTrailingContent(
   hasBackButton: Boolean,
   onBackPressed: () -> Unit,
   title: String?,
+  logoContent: (@Composable () -> Unit)?,
   trailingContent: @Composable () -> Unit,
 ) {
   Spacer(Modifier.width(dp12))
   Box(modifier = Modifier.size(width = dp68, height = dp48), contentAlignment = Alignment.Center) {
     BackButton(hasBackButton = hasBackButton, onBackPressed = onBackPressed)
   }
-  Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) { TopBarTitle(title) }
+  Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+    if (title != null) {
+      TopBarTitle(title)
+    } else {
+      logoContent?.invoke()
+    }
+  }
   Box(modifier = Modifier.size(width = dp68, height = dp48), contentAlignment = Alignment.Center) {
     trailingContent()
   }
