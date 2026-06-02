@@ -19,8 +19,10 @@ import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
+import com.clerk.automap.annotations.MapTransform
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -277,10 +279,10 @@ data class SignUp(
     val legalAccepted: Boolean?
 
     /**
-     * JSON string containing custom metadata that will be attached to the created user. This
-     * metadata is not validated by Clerk and should not contain sensitive information.
+     * Custom metadata that will be attached to the created user. This metadata is not validated by
+     * Clerk and should not contain sensitive information.
      */
-    val unsafeMetadata: String?
+    val unsafeMetadata: Map<String, Any>?
 
     /**
      * OAuth authentication parameters for redirect-based sign-up.
@@ -300,7 +302,10 @@ data class SignUp(
       override val identifier: String? = null,
       @SerialName("email_address") override val emailAddress: String? = null,
       @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
-      @SerialName("unsafe_metadata") override val unsafeMetadata: String? = null,
+      @Transient
+      @SerialName("unsafe_metadata")
+      @MapTransform("toUnsafeMetadataJsonString")
+      override val unsafeMetadata: Map<String, Any>? = null,
     ) : AuthenticateWithRedirectParams
 
     /**
@@ -321,7 +326,10 @@ data class SignUp(
       @SerialName("legal_accepted") override val legalAccepted: Boolean? = null,
       @SerialName("email_address") override val emailAddress: String? = null,
       override val identifier: String? = null,
-      @SerialName("unsafe_metadata") override val unsafeMetadata: String? = null,
+      @Transient
+      @SerialName("unsafe_metadata")
+      @MapTransform("toUnsafeMetadataJsonString")
+      override val unsafeMetadata: Map<String, Any>? = null,
     ) : AuthenticateWithRedirectParams
   }
 
@@ -390,9 +398,8 @@ data class SignUp(
      * @param username The user's username (optional).
      * @param phoneNumber The user's phone number in E.164 format (optional).
      * @param legalAccepted Whether the user has accepted the legal terms and conditions (optional).
-     * @param unsafeMetadata JSON string containing custom metadata that will be attached to the
-     *   created user. This metadata is not validated by Clerk and should not contain sensitive
-     *   information.
+     * @param unsafeMetadata Custom metadata that will be attached to the created user. This
+     *   metadata is not validated by Clerk and should not contain sensitive information.
      */
     @AutoMap
     @Serializable
@@ -404,7 +411,10 @@ data class SignUp(
       val username: String? = null,
       @SerialName("phone_number") val phoneNumber: String? = null,
       @SerialName("legal_accepted") val legalAccepted: Boolean? = null,
-      @SerialName("unsafe_metadata") val unsafeMetadata: String? = null,
+      @Transient
+      @SerialName("unsafe_metadata")
+      @MapTransform("toUnsafeMetadataJsonString")
+      val unsafeMetadata: Map<String, Any>? = null,
     ) : CreateParams
 
     /**

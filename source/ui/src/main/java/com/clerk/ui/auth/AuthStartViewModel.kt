@@ -227,7 +227,7 @@ internal class AuthStartViewModel : ViewModel() {
           SignUp.authenticateWithRedirect(
             SignUp.AuthenticateWithRedirectParams.OAuth(
               provider = provider,
-              unsafeMetadata = unsafeMetadata?.toUnsafeMetadataJsonString(),
+              unsafeMetadata = unsafeMetadata,
             )
           )
         } else {
@@ -263,14 +263,12 @@ internal class AuthStartViewModel : ViewModel() {
     phoneNumber: String,
     unsafeMetadata: Map<String, Any>?,
   ): SignUp.CreateParams.Standard {
-    val unsafeMetadataJson = unsafeMetadata?.toUnsafeMetadataJsonString()
     return when {
       isPhoneNumberFieldActive ->
-        SignUp.CreateParams.Standard(phoneNumber = phoneNumber, unsafeMetadata = unsafeMetadataJson)
+        SignUp.CreateParams.Standard(phoneNumber = phoneNumber, unsafeMetadata = unsafeMetadata)
       identifier.isEmailAddress ->
-        SignUp.CreateParams.Standard(emailAddress = identifier, unsafeMetadata = unsafeMetadataJson)
-      else ->
-        SignUp.CreateParams.Standard(username = identifier, unsafeMetadata = unsafeMetadataJson)
+        SignUp.CreateParams.Standard(emailAddress = identifier, unsafeMetadata = unsafeMetadata)
+      else -> SignUp.CreateParams.Standard(username = identifier, unsafeMetadata = unsafeMetadata)
     }
   }
 

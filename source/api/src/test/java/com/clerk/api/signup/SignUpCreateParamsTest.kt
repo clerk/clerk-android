@@ -9,10 +9,11 @@ class SignUpCreateParamsTest {
   @Test
   fun `standard create params include unsafe metadata when provided`() {
     val unsafeMetadataJson = """{"test":"test"}"""
+    val unsafeMetadata = mapOf("test" to "test")
     val params =
       SignUp.CreateParams.Standard(
         emailAddress = "user@example.com",
-        unsafeMetadata = unsafeMetadataJson,
+        unsafeMetadata = unsafeMetadata,
       )
 
     val paramsMap = params.toMap()

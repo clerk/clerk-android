@@ -34,7 +34,7 @@ import com.clerk.api.session.revoke
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.toUnsafeMetadataJsonString
+import com.clerk.api.signup.toMap
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
@@ -432,17 +432,18 @@ class Auth internal constructor() {
   suspend fun signUp(block: SignUpBuilder.() -> Unit): ClerkResult<SignUp, ClerkErrorResponse> {
     val builder = SignUpBuilder().apply(block)
 
-    val params = buildMap {
-      builder.email?.let { put("email_address", it) }
-      builder.phone?.let { put("phone_number", it) }
-      builder.password?.let { put("password", it) }
-      builder.firstName?.let { put("first_name", it) }
-      builder.lastName?.let { put("last_name", it) }
-      builder.username?.let { put("username", it) }
-      builder.legalAccepted?.let { put("legal_accepted", it.toString()) }
-      builder.unsafeMetadata?.let { put("unsafe_metadata", it.toUnsafeMetadataJsonString()) }
-      put("locale", Clerk.locale.value.orEmpty())
-    }
+    val params =
+      SignUp.CreateParams.Standard(
+          emailAddress = builder.email,
+          phoneNumber = builder.phone,
+          password = builder.password,
+          firstName = builder.firstName,
+          lastName = builder.lastName,
+          username = builder.username,
+          legalAccepted = builder.legalAccepted,
+          unsafeMetadata = builder.unsafeMetadata,
+        )
+        .toMap() + ("locale" to Clerk.locale.value.orEmpty())
 
     val result = ClerkApi.signUp.createSignUp(params)
     result.onFailure { emitAuthError(it) }

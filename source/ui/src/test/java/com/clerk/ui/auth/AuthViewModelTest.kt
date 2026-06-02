@@ -23,9 +23,6 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -229,13 +226,10 @@ class AuthViewModelTest {
     coVerify(timeout = 1_000, exactly = 1) { SignUp.create(any<SignUp.CreateParams>()) }
     testDispatcher.scheduler.advanceUntilIdle()
     val params = paramsSlot.captured as SignUp.CreateParams.Standard
-    val unsafeMetadata = Json.parseToJsonElement(requireNotNull(params.unsafeMetadata)).jsonObject
+    val unsafeMetadata = requireNotNull(params.unsafeMetadata)
     assertEquals("test@example.com", params.emailAddress)
-    assertEquals("test", unsafeMetadata.getValue("test").jsonPrimitive.content)
-    assertEquals(
-      "true",
-      unsafeMetadata.getValue("nested").jsonObject.getValue("active").jsonPrimitive.content,
-    )
+    assertEquals("test", unsafeMetadata.getValue("test"))
+    assertEquals(mapOf("active" to true), unsafeMetadata.getValue("nested"))
   }
 
   @Test
@@ -261,9 +255,9 @@ class AuthViewModelTest {
     coVerify(timeout = 1_000, exactly = 1) { SignUp.create(any<SignUp.CreateParams>()) }
     testDispatcher.scheduler.advanceUntilIdle()
     val params = paramsSlot.captured as SignUp.CreateParams.Standard
-    val unsafeMetadata = Json.parseToJsonElement(requireNotNull(params.unsafeMetadata)).jsonObject
+    val unsafeMetadata = requireNotNull(params.unsafeMetadata)
     assertEquals("+1234567890", params.phoneNumber)
-    assertEquals("prebuilt", unsafeMetadata.getValue("source").jsonPrimitive.content)
+    assertEquals("prebuilt", unsafeMetadata.getValue("source"))
   }
 
   @Test
@@ -422,8 +416,8 @@ class AuthViewModelTest {
 
     coVerify(exactly = 1) { SignUp.authenticateWithRedirect(any()) }
     val params = paramsSlot.captured as SignUp.AuthenticateWithRedirectParams.OAuth
-    val unsafeMetadata = Json.parseToJsonElement(requireNotNull(params.unsafeMetadata)).jsonObject
-    assertEquals("social", unsafeMetadata.getValue("source").jsonPrimitive.content)
+    val unsafeMetadata = requireNotNull(params.unsafeMetadata)
+    assertEquals("social", unsafeMetadata.getValue("source"))
   }
 
   @Test

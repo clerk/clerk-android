@@ -8,8 +8,8 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-internal fun Map<String, Any>.toUnsafeMetadataJsonString(): String =
-  Json.encodeToString(toJsonObject())
+internal fun toUnsafeMetadataJsonString(metadata: Map<String, Any>): String =
+  Json.encodeToString(metadata.toJsonObject())
 
 private fun Map<*, *>.toJsonObject(): JsonObject =
   JsonObject(entries.associate { entry -> entry.key.toString() to entry.value.toJsonElement() })
