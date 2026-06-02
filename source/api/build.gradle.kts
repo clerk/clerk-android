@@ -58,7 +58,7 @@ tasks
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-api", property("CLERK_API_VERSION") as String)
   publishToMavenCentral()
-
+  signAllPublications()
   pom {
     name.set("Clerk Android UI")
     description.set("UI components for Clerk Android SDK")
