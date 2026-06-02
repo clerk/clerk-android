@@ -37,6 +37,10 @@ jobs:
 
       - name: Get versions from gradle.properties
         id: get_version
+        env:
+          PUBLISH_API: ${{ github.event.inputs.publish_api }}
+          PUBLISH_UI: ${{ github.event.inputs.publish_ui }}
+          PUBLISH_TELEMETRY: ${{ github.event.inputs.publish_telemetry }}
         run: |
           CLERK_API_VERSION=$(awk -F= '/^CLERK_API_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
           CLERK_TELEMETRY_VERSION=$(awk -F= '/^CLERK_TELEMETRY_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
@@ -47,10 +51,22 @@ jobs:
             exit 1
           fi
 
-          # Use clerk-api version for the tag
-          TAG_NAME="v$CLERK_API_VERSION"
+          if [ "$PUBLISH_API" != "true" ] && [ "$PUBLISH_UI" != "true" ] && [ "$PUBLISH_TELEMETRY" != "true" ]; then
+            echo "No modules selected for publishing"
+            exit 1
+          fi
 
-          echo "version=$CLERK_API_VERSION" >> $GITHUB_OUTPUT
+          # SDK releases use the API version. Telemetry-only releases use the telemetry version so
+          # they can be published independently without colliding with SDK release tags.
+          if [ "$PUBLISH_API" != "true" ] && [ "$PUBLISH_UI" != "true" ] && [ "$PUBLISH_TELEMETRY" = "true" ]; then
+            TAG_NAME="telemetry-v$CLERK_TELEMETRY_VERSION"
+            RELEASE_VERSION="$CLERK_TELEMETRY_VERSION"
+          else
+            TAG_NAME="v$CLERK_API_VERSION"
+            RELEASE_VERSION="$CLERK_API_VERSION"
+          fi
+
+          echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
           echo "clerk_api_version=$CLERK_API_VERSION" >> $GITHUB_OUTPUT
           echo "clerk_telemetry_version=$CLERK_TELEMETRY_VERSION" >> $GITHUB_OUTPUT
           echo "clerk_ui_version=$CLERK_UI_VERSION" >> $GITHUB_OUTPUT
@@ -60,6 +76,10 @@ jobs:
           echo "  clerk-android-api: $CLERK_API_VERSION"
           echo "  clerk-android-telemetry: $CLERK_TELEMETRY_VERSION"
           echo "  clerk-android-ui: $CLERK_UI_VERSION"
+          echo "Selected modules:"
+          echo "  clerk-android-api: $PUBLISH_API"
+          echo "  clerk-android-telemetry: $PUBLISH_TELEMETRY"
+          echo "  clerk-android-ui: $PUBLISH_UI"
           echo "Tag name: $TAG_NAME"
 
       - name: Create and push tag
