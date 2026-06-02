@@ -3,6 +3,8 @@
 package com.clerk.ui.organizationprofile.form
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Bitmap.CompressFormat
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -41,6 +43,9 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.ui.R
+import com.clerk.ui.core.avatar.AvatarSize
+import com.clerk.ui.core.avatar.AvatarType
+import com.clerk.ui.core.avatar.AvatarView
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -76,6 +81,7 @@ internal fun OrganizationProfileFormView(
   initialHasLogo: Boolean = false,
   preloadInitialLogo: Boolean = false,
   autoGenerateSlug: Boolean = false,
+  useAvatarLogoUpload: Boolean = false,
   enabled: Boolean = true,
   advisory: (@Composable () -> Unit)? = null,
   footer: (@Composable () -> Unit)? = null,
@@ -94,6 +100,14 @@ internal fun OrganizationProfileFormView(
     rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
       if (uri != null) {
         selectedLogoFile = createImageFileFromUri(context, uri)
+        removeLogo = false
+      }
+    }
+
+  val cameraLauncher =
+    rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+      if (bitmap != null) {
+        selectedLogoFile = createImageFileFromBitmap(context, bitmap)
         removeLogo = false
       }
     }
@@ -119,22 +133,36 @@ internal fun OrganizationProfileFormView(
       } else {
         selectedLogoFile ?: preloadedLogoFile ?: initialLogoUrl?.takeIf { it.isNotBlank() }
       }
-    OrganizationLogoSection(
-      logoModel = logoModel,
-      isLoading = logoIsLoading,
-      canRemoveLogo = selectedLogoFile != null || initialHasLogo,
-      enabled = enabled && !isLoading,
-      onUploadClick = {
-        imagePicker.launch(
-          PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-        )
-      },
-      onRemoveClick = {
-        selectedLogoFile = null
-        preloadedLogoFile = null
-        removeLogo = initialHasLogo
-      },
-    )
+    val canRemoveLogo = selectedLogoFile != null || initialHasLogo
+    val uploadEnabled = enabled && !isLoading
+    val onUploadLogo = {
+      imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
+    val onRemoveLogo = {
+      selectedLogoFile = null
+      preloadedLogoFile = null
+      removeLogo = initialHasLogo
+    }
+    if (useAvatarLogoUpload) {
+      OrganizationAvatarLogoSection(
+        logoModel = logoModel,
+        isLoading = logoIsLoading,
+        canRemoveLogo = canRemoveLogo,
+        enabled = uploadEnabled,
+        onTakePhotoClick = { cameraLauncher.launch(null) },
+        onUploadClick = onUploadLogo,
+        onRemoveClick = onRemoveLogo,
+      )
+    } else {
+      OrganizationLogoSection(
+        logoModel = logoModel,
+        isLoading = logoIsLoading,
+        canRemoveLogo = canRemoveLogo,
+        enabled = uploadEnabled,
+        onUploadClick = onUploadLogo,
+        onRemoveClick = onRemoveLogo,
+      )
+    }
 
     OrganizationFormFields(
       organizationName = organizationName,
@@ -186,6 +214,54 @@ internal data class OrganizationProfileFormSubmit(
   val logoFile: File?,
   val removeLogo: Boolean,
 )
+
+@Composable
+private fun OrganizationAvatarLogoSection(
+  logoModel: Any?,
+  isLoading: Boolean,
+  canRemoveLogo: Boolean,
+  enabled: Boolean,
+  onTakePhotoClick: () -> Unit,
+  onUploadClick: () -> Unit,
+  onRemoveClick: () -> Unit,
+) {
+  Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+    Surface(
+      modifier = Modifier.align(Alignment.Center).size(dp96),
+      shape = CircleShape,
+      color = ClerkMaterialTheme.colors.muted,
+      border = BorderStroke(dp1, ClerkMaterialTheme.computedColors.border),
+    ) {}
+    AvatarView(
+      modifier = Modifier.align(Alignment.Center),
+      imageUrl = null,
+      imageModel = logoModel,
+      size = AvatarSize.X_LARGE,
+      shape = CircleShape,
+      avatarType = AvatarType.ORGANIZATION,
+      hasEditButton = enabled,
+      editContentDescription = R.string.upload_logo,
+      choosePhotoText = R.string.upload_logo,
+      removePhotoText = R.string.remove_logo,
+      showRemovePhoto = canRemoveLogo,
+      showPlaceholder = logoModel != null,
+      onEditTakePhoto = onTakePhotoClick,
+      onEditChoosePhoto = onUploadClick,
+      onEditRemovePhoto = onRemoveClick,
+    )
+    if (isLoading) {
+      Surface(
+        modifier = Modifier.align(Alignment.Center).size(dp96),
+        shape = CircleShape,
+        color = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.25f),
+      ) {
+        Box(contentAlignment = Alignment.Center) {
+          CircularProgressIndicator(modifier = Modifier.size(dp24))
+        }
+      }
+    }
+  }
+}
 
 @Composable
 private fun OrganizationLogoSection(
@@ -353,6 +429,19 @@ private fun createImageFileFromUri(context: Context, uri: Uri): File? {
       val file = File(context.cacheDir, "organization_logo_${System.nanoTime()}.jpg")
       context.contentResolver.openInputStream(uri).use { input ->
         FileOutputStream(file).use { output -> requireNotNull(input).copyTo(output) }
+      }
+      file
+    }
+    .getOrNull()
+}
+
+private const val IMAGE_COMPRESSION = 100
+
+private fun createImageFileFromBitmap(context: Context, bitmap: Bitmap): File? {
+  return runCatching {
+      val file = File(context.cacheDir, "organization_logo_${System.nanoTime()}.png")
+      FileOutputStream(file).use { output ->
+        bitmap.compress(CompressFormat.PNG, IMAGE_COMPRESSION, output)
       }
       file
     }

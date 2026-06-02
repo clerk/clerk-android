@@ -29,6 +29,7 @@ import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.SecuredByClerkView
@@ -93,6 +94,7 @@ internal fun OrganizationCreateFlowView(
               onBackPressed = it,
               hasLogo = false,
               backgroundColor = ClerkMaterialTheme.colors.background,
+              contentPadding = PaddingValues(start = dp6),
             )
           }
         },
@@ -141,6 +143,7 @@ private fun CreateOrganizationFormContent(
         preloadInitialLogo = true,
         slugEnabled = Clerk.organizationSlugIsEnabled,
         autoGenerateSlug = true,
+        useAvatarLogoUpload = true,
         submitText = stringResource(R.string.create_organization),
         isLoading = state.isLoading,
         onSubmit = onSubmit,
