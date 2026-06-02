@@ -164,33 +164,64 @@ fun OrganizationSwitcher(
 }
 
 /**
- * Self-contained organization switcher sheet.
+ * Self-contained active organization switcher with a custom trigger.
  *
- * Use this when an app owns the trigger and only wants Clerk's account-switching sheet UI. Render
- * this composable while your trigger's sheet state is open and remove it from composition from
- * [onDismissRequest].
+ * Use [triggerContent] when an app wants Clerk to own the switcher sheets while rendering its own
+ * clickable trigger content.
  *
- * @param onDismissRequest Called when the sheet, or any default full-screen follow-up flow, should
- *   be dismissed.
- * @param clerkTheme Optional theme customization for the sheet UI.
- * @param showCreateOrganization Shows the create-organization row when organization creation is
- *   enabled for the current user.
+ * @param clerkTheme Optional theme customization for the switcher UI.
  * @param onOrganizationChanged Optional callback invoked after a successful organization or
  *   personal-account switch.
  * @param hidePersonal Hides personal account selection when the instance does not force
  *   organization selection.
+ * @param displayMode Stored for parity with the default switcher configuration. Custom trigger
+ *   content is rendered as provided.
+ * @param triggerContent Custom clickable trigger content.
  * @param onManageOrganization Called when the active organization overview's manage action is
- *   selected. When `null`, the sheet opens the default [OrganizationProfileView].
- * @param onCreateOrganization Called when the create-organization row is selected. When `null`, the
- *   sheet opens the default organization creation flow.
- * @param organizationProfileCustomRows Custom rows forwarded to the default
+ *   selected. When `null`, the switcher opens [OrganizationProfileView].
+ * @param onCreateOrganization Called when the create-organization row is selected from the switch
+ *   account sheet. When `null`, the switcher opens the default organization creation flow.
+ * @param organizationProfileCustomRows Custom rows forwarded to the switcher's default
  *   [OrganizationProfileView].
- * @param organizationProfileCustomDestination Custom destination builder forwarded to the default
- *   [OrganizationProfileView].
+ * @param organizationProfileCustomDestination Custom destination builder forwarded to the
+ *   switcher's default [OrganizationProfileView].
  */
 @Composable
+fun OrganizationSwitcher(
+  modifier: Modifier = Modifier,
+  clerkTheme: ClerkTheme? = null,
+  onOrganizationChanged: (() -> Unit)? = null,
+  hidePersonal: Boolean = false,
+  displayMode: OrganizationSwitcherDisplayMode = OrganizationSwitcherDisplayMode.Normal,
+  triggerContent: @Composable () -> Unit,
+  onManageOrganization: ((OrganizationMembership) -> Unit)? = null,
+  onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
+  organizationProfileCustomRows: List<OrganizationProfileCustomRow> = emptyList(),
+  organizationProfileCustomDestination: (@Composable (String) -> Unit)? = null,
+) {
+  ClerkThemeOverrideProvider(clerkTheme) {
+    ClerkMaterialTheme {
+      TelemetryProvider {
+        OrganizationSwitcherImpl(
+          modifier = modifier,
+          clerkTheme = clerkTheme,
+          onOrganizationChanged = onOrganizationChanged,
+          hidePersonal = hidePersonal,
+          displayMode = displayMode,
+          triggerContent = triggerContent,
+          onManageOrganization = onManageOrganization,
+          onCreateOrganization = onCreateOrganization,
+          organizationProfileCustomRows = organizationProfileCustomRows,
+          organizationProfileCustomDestination = organizationProfileCustomDestination,
+        )
+      }
+    }
+  }
+}
+
+@Composable
 @Suppress("LongParameterList")
-fun OrganizationSwitcherSheet(
+internal fun OrganizationSwitcherSheet(
   onDismissRequest: () -> Unit,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
@@ -231,6 +262,7 @@ internal fun OrganizationSwitcherImpl(
   onOrganizationChanged: (() -> Unit)? = null,
   hidePersonal: Boolean = false,
   displayMode: OrganizationSwitcherDisplayMode = OrganizationSwitcherDisplayMode.Normal,
+  triggerContent: (@Composable () -> Unit)? = null,
   onManageOrganization: ((OrganizationMembership) -> Unit)? = null,
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
   organizationProfileCustomRows: List<OrganizationProfileCustomRow> = emptyList(),
@@ -305,6 +337,7 @@ internal fun OrganizationSwitcherImpl(
         showPersonalAccount = showPersonalAccount,
         isLoading = state.isLoading && activeMembership == null && !showPersonalAccount,
         displayMode = displayMode,
+        triggerContent = triggerContent,
         onOpenSheet = { sheetDestination = it },
       )
 
@@ -326,6 +359,12 @@ internal fun OrganizationSwitcherImpl(
         onDismissActiveSheet = dismissActiveSheet,
         onShowAccountList = { sheetDestination = OrganizationSwitcherSheetDestination.AccountList },
         onDismissOrganizationProfile = { showOrganizationProfile = false },
+        onOrganizationProfileComplete = {
+          showOrganizationProfile = false
+          viewModel.reset()
+          viewModel.load()
+          sheetDestination = OrganizationSwitcherSheetDestination.AccountList
+        },
         onDismissOrganizationCreate = {
           showOrganizationCreate = false
           organizationCreateDefaults = null
@@ -439,6 +478,7 @@ private fun OrganizationSwitcherSheetImpl(
     onDismissActiveSheet = onDismissRequest,
     onShowAccountList = { sheetDestination = OrganizationSwitcherSheetDestination.AccountList },
     onDismissOrganizationProfile = onDismissRequest,
+    onOrganizationProfileComplete = onDismissRequest,
     onDismissOrganizationCreate = onDismissRequest,
     onShowPostCreateInvitations = { organization ->
       showOrganizationCreate = false
@@ -460,6 +500,7 @@ private fun OrganizationSwitcherHeaderIfNeeded(
   showPersonalAccount: Boolean,
   isLoading: Boolean,
   displayMode: OrganizationSwitcherDisplayMode,
+  triggerContent: (@Composable () -> Unit)?,
   onOpenSheet: (OrganizationSwitcherSheetDestination) -> Unit,
   modifier: Modifier = Modifier,
 ) {
@@ -472,6 +513,7 @@ private fun OrganizationSwitcherHeaderIfNeeded(
     showPersonalAccount = showPersonalAccount,
     isLoading = isLoading,
     displayMode = displayMode,
+    triggerContent = triggerContent,
     onClick = {
       onOpenSheet(
         if (activeMembership == null) {
@@ -503,6 +545,7 @@ private fun OrganizationSwitcherSheets(
   onDismissActiveSheet: () -> Unit,
   onShowAccountList: () -> Unit,
   onDismissOrganizationProfile: () -> Unit,
+  onOrganizationProfileComplete: () -> Unit,
   onDismissOrganizationCreate: () -> Unit,
   onShowPostCreateInvitations: (Organization) -> Unit,
   onDismissPostCreateInvitations: () -> Unit,
@@ -534,6 +577,7 @@ private fun OrganizationSwitcherSheets(
         customRows = organizationProfileCustomRows,
         customDestination = organizationProfileCustomDestination,
         onDismiss = onDismissOrganizationProfile,
+        onComplete = onOrganizationProfileComplete,
       )
     }
 
@@ -609,6 +653,7 @@ private fun OrganizationSwitcherProfilePage(
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
   onDismiss: () -> Unit,
+  onComplete: () -> Unit,
 ) {
   OrganizationSwitcherFullScreenPage(onDismiss = onDismiss, showDevelopmentModeWarning = false) {
     OrganizationProfileView(
@@ -617,6 +662,7 @@ private fun OrganizationSwitcherProfilePage(
       customRows = customRows,
       customDestination = customDestination,
       onDismiss = onDismiss,
+      onComplete = onComplete,
     )
   }
 }
@@ -684,9 +730,20 @@ private fun OrganizationSwitcherHeader(
   showPersonalAccount: Boolean,
   isLoading: Boolean,
   displayMode: OrganizationSwitcherDisplayMode,
+  triggerContent: (@Composable () -> Unit)?,
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  if (triggerContent != null) {
+    OrganizationSwitcherCustomTrigger(
+      modifier = modifier.fillMaxWidth(),
+      isLoading = isLoading,
+      onClick = onClick,
+      content = triggerContent,
+    )
+    return
+  }
+
   Row(
     modifier = modifier.fillMaxWidth(),
     verticalAlignment = Alignment.CenterVertically,
@@ -704,6 +761,24 @@ private fun OrganizationSwitcherHeader(
     if (displayMode.isCompact) {
       Spacer(modifier = Modifier.weight(1f))
     }
+  }
+}
+
+@Composable
+internal fun OrganizationSwitcherCustomTrigger(
+  isLoading: Boolean,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  content: @Composable () -> Unit,
+) {
+  val openOrganizationSwitcherDescription = stringResource(R.string.open_organization_switcher)
+  Box(
+    modifier =
+      modifier.clickable(enabled = !isLoading, onClick = onClick).semantics {
+        contentDescription = openOrganizationSwitcherDescription
+      }
+  ) {
+    content()
   }
 }
 

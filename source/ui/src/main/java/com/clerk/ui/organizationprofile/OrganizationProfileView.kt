@@ -65,6 +65,8 @@ import kotlinx.serialization.Serializable
  * @param customDestination Composable that renders the destination for a given route key. The route
  *   key matches [OrganizationProfileCustomRow.routeKey] of the tapped row.
  * @param onDismiss Callback when the organization profile view is dismissed.
+ * @param onComplete Callback when a destructive organization action completes and the profile can
+ *   no longer be shown.
  */
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("ComposeUnstableReceiver")
@@ -76,6 +78,7 @@ fun OrganizationProfileView(
   customRows: List<OrganizationProfileCustomRow> = emptyList(),
   customDestination: (@Composable (String) -> Unit)? = null,
   onDismiss: () -> Unit = {},
+  onComplete: () -> Unit = onDismiss,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     TelemetryProvider {
@@ -87,7 +90,7 @@ fun OrganizationProfileView(
 
       OrganizationProfileEffects(
         organizationId = organization?.id,
-        onDismiss = onDismiss,
+        onComplete = onComplete,
         hasOrganization = organization != null,
       )
 
@@ -102,6 +105,7 @@ fun OrganizationProfileView(
             customRows = customRows,
             customDestination = customDestination,
             onDismiss = onDismiss,
+            onComplete = onComplete,
           )
         } else {
           Box(modifier = Modifier.fillMaxSize())
@@ -109,7 +113,7 @@ fun OrganizationProfileView(
       }
 
       LaunchedEffect(session?.id, user?.id) {
-        if (Clerk.organizationMembership == null && Clerk.organization == null) onDismiss()
+        if (Clerk.organizationMembership == null && Clerk.organization == null) onComplete()
       }
     }
   }
@@ -126,6 +130,7 @@ private fun OrganizationProfileNavDisplay(
   customDestination: (@Composable (String) -> Unit)?,
   modifier: Modifier = Modifier,
   onDismiss: () -> Unit,
+  onComplete: () -> Unit,
 ) {
   var membersRefreshKey by remember { mutableIntStateOf(0) }
 
@@ -159,6 +164,7 @@ private fun OrganizationProfileNavDisplay(
           onInviteMembersComplete = { membersRefreshKey += 1 },
           customRows = customRows,
           customDestination = customDestination,
+          onComplete = onComplete,
         )
       },
   )
@@ -180,14 +186,14 @@ private fun handleOrganizationProfileBack(
 private fun OrganizationProfileEffects(
   organizationId: String?,
   hasOrganization: Boolean,
-  onDismiss: () -> Unit,
+  onComplete: () -> Unit,
 ) {
   val telemetry = LocalTelemetryCollector.current
   LaunchedEffect(organizationId) {
     if (hasOrganization) {
       telemetry.record(TelemetryEvents.viewDidAppear("OrganizationProfileView"))
     } else {
-      onDismiss()
+      onComplete()
     }
   }
 }
@@ -203,6 +209,7 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   onInviteMembersComplete: () -> Unit,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
+  onComplete: () -> Unit,
 ) {
   entry<OrganizationProfileDestination.Root> {
     OrganizationProfileRootView(
@@ -268,7 +275,7 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
       organization = organization,
       membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
-      onSuccess = onDismiss,
+      onSuccess = onComplete,
     )
   }
 
@@ -278,7 +285,7 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
       organization = organization,
       membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
-      onSuccess = onDismiss,
+      onSuccess = onComplete,
     )
   }
 
