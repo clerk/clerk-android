@@ -4,4 +4,5 @@
     <color name="dev_mode_background_white_start">#FF131316</color>
     <color name="dev_mode_warning_background">#FF241A14</color>
     <color name="dev_mode_warning_gradient_end">#991F1712</color>
+    <color name="dev_mode_warning_stripe">#FF332219</color>
 </resources>
