@@ -359,6 +359,12 @@ internal fun OrganizationSwitcherImpl(
         onDismissActiveSheet = dismissActiveSheet,
         onShowAccountList = { sheetDestination = OrganizationSwitcherSheetDestination.AccountList },
         onDismissOrganizationProfile = { showOrganizationProfile = false },
+        onOrganizationProfileComplete = {
+          showOrganizationProfile = false
+          viewModel.reset()
+          viewModel.load()
+          sheetDestination = OrganizationSwitcherSheetDestination.AccountList
+        },
         onDismissOrganizationCreate = {
           showOrganizationCreate = false
           organizationCreateDefaults = null
@@ -472,6 +478,7 @@ private fun OrganizationSwitcherSheetImpl(
     onDismissActiveSheet = onDismissRequest,
     onShowAccountList = { sheetDestination = OrganizationSwitcherSheetDestination.AccountList },
     onDismissOrganizationProfile = onDismissRequest,
+    onOrganizationProfileComplete = onDismissRequest,
     onDismissOrganizationCreate = onDismissRequest,
     onShowPostCreateInvitations = { organization ->
       showOrganizationCreate = false
@@ -538,6 +545,7 @@ private fun OrganizationSwitcherSheets(
   onDismissActiveSheet: () -> Unit,
   onShowAccountList: () -> Unit,
   onDismissOrganizationProfile: () -> Unit,
+  onOrganizationProfileComplete: () -> Unit,
   onDismissOrganizationCreate: () -> Unit,
   onShowPostCreateInvitations: (Organization) -> Unit,
   onDismissPostCreateInvitations: () -> Unit,
@@ -569,6 +577,7 @@ private fun OrganizationSwitcherSheets(
         customRows = organizationProfileCustomRows,
         customDestination = organizationProfileCustomDestination,
         onDismiss = onDismissOrganizationProfile,
+        onComplete = onOrganizationProfileComplete,
       )
     }
 
@@ -644,6 +653,7 @@ private fun OrganizationSwitcherProfilePage(
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
   onDismiss: () -> Unit,
+  onComplete: () -> Unit,
 ) {
   OrganizationSwitcherFullScreenPage(onDismiss = onDismiss, showDevelopmentModeWarning = false) {
     OrganizationProfileView(
@@ -652,6 +662,7 @@ private fun OrganizationSwitcherProfilePage(
       customRows = customRows,
       customDestination = customDestination,
       onDismiss = onDismiss,
+      onComplete = onComplete,
     )
   }
 }

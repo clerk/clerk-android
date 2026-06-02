@@ -7,16 +7,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
@@ -28,6 +34,8 @@ import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.organizationprofile.create.OrganizationCreateFlowView
+import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
@@ -43,12 +51,12 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  *   allowed.
  * @param isDismissable Shows a top dismiss affordance and calls [onDismissRequest] after a
  *   successful selection when possible.
- * @param skipPostCreateInviteFlow Reserved for create-organization flows that include a post-create
- *   invitation step. Android's current create flow already stops after creation.
+ * @param skipPostCreateInviteFlow Skips the post-create invitation step in the default
+ *   create-organization flow.
  * @param onDismissRequest Called when the dismiss affordance is pressed or a dismissable selection
  *   completes.
- * @param onCreateOrganization Called when the create-organization row is selected. The latest
- *   creation defaults are provided when available.
+ * @param onCreateOrganization Optional callback for apps that own create-organization navigation.
+ *   When `null`, the list opens Clerk's default create-organization flow.
  * @param onAccountSelected Called after selecting the personal account (`null`) or an organization
  *   ID.
  */
@@ -61,7 +69,7 @@ fun OrganizationListView(
   isDismissable: Boolean = true,
   skipPostCreateInviteFlow: Boolean = false,
   onDismissRequest: (() -> Unit)? = null,
-  onCreateOrganization: (OrganizationCreationDefaults?) -> Unit = {},
+  onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
   onAccountSelected: ((String?) -> Unit)? = null,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
@@ -73,6 +81,7 @@ fun OrganizationListView(
             clerkTheme = clerkTheme,
             hidePersonalAccount = hidePersonalAccount,
             isDismissable = isDismissable,
+            skipPostCreateInviteFlow = skipPostCreateInviteFlow,
             onDismissRequest = onDismissRequest,
             onCreateOrganization = onCreateOrganization,
             onAccountSelected = onAccountSelected,
@@ -90,8 +99,9 @@ internal fun OrganizationListViewImpl(
   clerkTheme: ClerkTheme? = null,
   hidePersonalAccount: Boolean = false,
   isDismissable: Boolean = true,
+  skipPostCreateInviteFlow: Boolean = false,
   onDismissRequest: (() -> Unit)? = null,
-  onCreateOrganization: (OrganizationCreationDefaults?) -> Unit = {},
+  onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
   onAccountSelected: ((String?) -> Unit)? = null,
   viewModel: OrganizationAccountListViewModel = viewModel(),
 ) {
@@ -100,10 +110,16 @@ internal fun OrganizationListViewImpl(
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val telemetry = LocalTelemetryCollector.current
+  val createFlowState = remember { OrganizationListCreateFlowState() }
+  val createOrganizationAction =
+    onCreateOrganization
+      ?: { creationDefaults: OrganizationCreationDefaults? ->
+        createFlowState.openCreate(creationDefaults)
+      }
   val callbacks =
     OrganizationListCallbacks(
       onDismissRequest = onDismissRequest,
-      onCreateOrganization = onCreateOrganization,
+      onCreateOrganization = createOrganizationAction,
       onAccountSelected = onAccountSelected,
     )
   val chrome =
@@ -140,6 +156,40 @@ internal fun OrganizationListViewImpl(
       actions = organizationListActions(state = state, viewModel = viewModel, chrome = chrome),
     )
   }
+
+  OrganizationListCreateFlowDialogs(
+    state = createFlowState,
+    skipPostCreateInviteFlow = skipPostCreateInviteFlow,
+  )
+}
+
+@Composable
+private fun OrganizationListCreateFlowDialogs(
+  state: OrganizationListCreateFlowState,
+  skipPostCreateInviteFlow: Boolean,
+) {
+  if (state.showOrganizationCreate) {
+    OrganizationListFullScreenPage(onDismiss = state::dismissCreate) {
+      OrganizationCreateFlowView(
+        modifier = Modifier.fillMaxSize(),
+        creationDefaults = state.organizationCreateDefaults,
+        skipInvitationScreen = skipPostCreateInviteFlow,
+        onComplete = state::dismissCreate,
+        onInviteMembers = state::showPostCreateInvitations,
+        onBackPressed = state::dismissCreate,
+      )
+    }
+  }
+
+  state.postCreateInviteOrganization?.let { organization ->
+    OrganizationListFullScreenPage(onDismiss = state::dismissPostCreateInvitations) {
+      OrganizationInviteMembersView(
+        modifier = Modifier.fillMaxSize(),
+        organization = organization,
+        onComplete = state::dismissPostCreateInvitations,
+      )
+    }
+  }
 }
 
 private data class OrganizationListCallbacks(
@@ -147,6 +197,52 @@ private data class OrganizationListCallbacks(
   val onCreateOrganization: (OrganizationCreationDefaults?) -> Unit,
   val onAccountSelected: ((String?) -> Unit)?,
 )
+
+private class OrganizationListCreateFlowState {
+  var showOrganizationCreate by mutableStateOf(false)
+    private set
+
+  var organizationCreateDefaults by mutableStateOf<OrganizationCreationDefaults?>(null)
+    private set
+
+  var postCreateInviteOrganization by mutableStateOf<Organization?>(null)
+    private set
+
+  fun openCreate(creationDefaults: OrganizationCreationDefaults?) {
+    organizationCreateDefaults = creationDefaults
+    showOrganizationCreate = true
+  }
+
+  fun dismissCreate() {
+    showOrganizationCreate = false
+    organizationCreateDefaults = null
+  }
+
+  fun showPostCreateInvitations(organization: Organization) {
+    dismissCreate()
+    postCreateInviteOrganization = organization
+  }
+
+  fun dismissPostCreateInvitations() {
+    postCreateInviteOrganization = null
+  }
+}
+
+@Composable
+private fun OrganizationListFullScreenPage(onDismiss: () -> Unit, content: @Composable () -> Unit) {
+  Dialog(
+    onDismissRequest = onDismiss,
+    properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+  ) {
+    Surface(
+      modifier = Modifier.fillMaxSize(),
+      color = ClerkMaterialTheme.colors.background,
+      contentColor = ClerkMaterialTheme.colors.foreground,
+    ) {
+      DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize()) { content() }
+    }
+  }
+}
 
 private data class OrganizationListChrome(
   val clerkTheme: ClerkTheme?,
@@ -169,7 +265,6 @@ private fun OrganizationListScaffold(
         onBackPressed = { chrome.callbacks.onDismissRequest?.invoke() },
         hasLogo = false,
         hasBackButton = chrome.isDismissable && chrome.callbacks.onDismissRequest != null,
-        title = stringResource(R.string.choose_an_account),
         backgroundColor = ClerkMaterialTheme.colors.background,
         clerkTheme = chrome.clerkTheme,
       )
