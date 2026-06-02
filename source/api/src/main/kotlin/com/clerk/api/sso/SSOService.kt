@@ -167,6 +167,7 @@ internal object SSOService {
     identifier: String? = null,
     emailAddress: String? = null,
     legalAccepted: Boolean? = null,
+    unsafeMetadata: String? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     currentPendingAuth?.complete(
       ClerkResult.unknownFailure(
@@ -184,6 +185,7 @@ internal object SSOService {
           identifier?.let { put("identifier", it) }
           emailAddress?.let { put("email_address", it) }
           legalAccepted?.let { put("legal_accepted", it.toString()) }
+          unsafeMetadata?.let { put("unsafe_metadata", it) }
         }
       )
 

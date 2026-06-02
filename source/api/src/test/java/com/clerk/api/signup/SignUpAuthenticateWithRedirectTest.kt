@@ -58,4 +58,43 @@ class SignUpAuthenticateWithRedirectTest {
       )
     }
   }
+
+  @Test
+  fun `authenticateWithRedirect forwards unsafe metadata`() = runTest {
+    mockkObject(SSOService)
+    val unsafeMetadataJson = """{"test":"test"}"""
+    val signUp = mockk<SignUp>(relaxed = true)
+    val oauthResult = OAuthResult(signUp = signUp)
+    coEvery {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "oauth_google",
+        redirectUrl = any(),
+        identifier = null,
+        emailAddress = null,
+        legalAccepted = null,
+        unsafeMetadata = unsafeMetadataJson,
+      )
+    } returns ClerkResult.success(oauthResult)
+
+    val result =
+      SignUp.authenticateWithRedirect(
+        SignUp.AuthenticateWithRedirectParams.OAuth(
+          provider = OAuthProvider.GOOGLE,
+          unsafeMetadata = unsafeMetadataJson,
+        )
+      )
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(oauthResult, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "oauth_google",
+        redirectUrl = any(),
+        identifier = null,
+        emailAddress = null,
+        legalAccepted = null,
+        unsafeMetadata = unsafeMetadataJson,
+      )
+    }
+  }
 }

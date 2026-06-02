@@ -6,6 +6,7 @@ import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.SET_ACTIVE_INTENT_SELECT_ORG
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
+import com.clerk.api.network.api.SignUpApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.DisplayConfig
@@ -35,6 +36,9 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -99,6 +103,35 @@ class AuthTest {
         legalAccepted = null,
       )
     }
+  }
+
+  @Test
+  fun `signUp forwards unsafe metadata`() = runTest {
+    val signUpApi = mockk<SignUpApi>()
+    val createdSignUp = mockk<SignUp>(relaxed = true)
+    val createParams = slot<Map<String, String>>()
+    mockkObject(ClerkApi)
+    every { ClerkApi.signUp } returns signUpApi
+    coEvery { signUpApi.createSignUp(capture(createParams)) } returns
+      ClerkResult.success(createdSignUp)
+
+    val result =
+      Auth().signUp {
+        email = "user@example.com"
+        unsafeMetadata = mapOf("test" to "test", "nested" to mapOf("active" to true))
+      }
+
+    val unsafeMetadata =
+      Json.parseToJsonElement(createParams.captured.getValue("unsafe_metadata")).jsonObject
+    assertTrue(result is ClerkResult.Success)
+    assertSame(createdSignUp, (result as ClerkResult.Success).value)
+    assertEquals("user@example.com", createParams.captured["email_address"])
+    assertEquals("test", unsafeMetadata.getValue("test").jsonPrimitive.content)
+    assertEquals(
+      "true",
+      unsafeMetadata.getValue("nested").jsonObject.getValue("active").jsonPrimitive.content,
+    )
+    coVerify(exactly = 1) { signUpApi.createSignUp(any()) }
   }
 
   @Test

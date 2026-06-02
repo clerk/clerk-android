@@ -34,6 +34,7 @@ import com.clerk.api.session.revoke
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signout.SignOutService
 import com.clerk.api.signup.SignUp
+import com.clerk.api.signup.toUnsafeMetadataJsonString
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
@@ -439,6 +440,7 @@ class Auth internal constructor() {
       builder.lastName?.let { put("last_name", it) }
       builder.username?.let { put("username", it) }
       builder.legalAccepted?.let { put("legal_accepted", it.toString()) }
+      builder.unsafeMetadata?.let { put("unsafe_metadata", it.toUnsafeMetadataJsonString()) }
       put("locale", Clerk.locale.value.orEmpty())
     }
 

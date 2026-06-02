@@ -188,6 +188,7 @@ internal fun AuthStartViewImpl(
                 isPhoneNumberFieldActive = phoneActive,
                 identifier = authState.authStartIdentifier,
                 phoneNumber = authState.authStartPhoneNumber,
+                unsafeMetadata = authState.unsafeMetadata,
               )
             }
           }
@@ -240,6 +241,7 @@ internal fun AuthStartViewImpl(
                     transferable = authState.mode.transferable,
                     preferGoogleOneTap = preferGoogleOneTap,
                     startOAuthWithSignUp = startSocialOAuthAsSignUp,
+                    unsafeMetadata = authState.unsafeMetadata,
                   )
                 },
                 forceIconOnly = false,
@@ -256,6 +258,7 @@ internal fun AuthStartViewImpl(
                   transferable = authState.mode.transferable,
                   preferGoogleOneTap = preferGoogleOneTap,
                   startOAuthWithSignUp = startSocialOAuthAsSignUp,
+                  unsafeMetadata = authState.unsafeMetadata,
                 )
               },
             )

@@ -2,6 +2,8 @@ package com.clerk.ui.auth
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error as ClerkError
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
@@ -13,6 +15,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,6 +23,9 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -206,6 +212,61 @@ class AuthViewModelTest {
   }
 
   @Test
+  fun startAuthWithSignUpPassesUnsafeMetadataToSignUpCreate() = runTest {
+    val paramsSlot = slot<SignUp.CreateParams>()
+    val mockSignUp = mockk<SignUp>(relaxed = true)
+    mockkObject(SignUp.Companion)
+    coEvery { SignUp.create(capture(paramsSlot)) } returns ClerkResult.success(mockSignUp)
+
+    viewModel.startAuth(
+      authMode = AuthMode.SignUp,
+      isPhoneNumberFieldActive = false,
+      phoneNumber = "",
+      identifier = "test@example.com",
+      unsafeMetadata = mapOf("test" to "test", "nested" to mapOf("active" to true)),
+    )
+
+    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(any<SignUp.CreateParams>()) }
+    testDispatcher.scheduler.advanceUntilIdle()
+    val params = paramsSlot.captured as SignUp.CreateParams.Standard
+    val unsafeMetadata = Json.parseToJsonElement(requireNotNull(params.unsafeMetadata)).jsonObject
+    assertEquals("test@example.com", params.emailAddress)
+    assertEquals("test", unsafeMetadata.getValue("test").jsonPrimitive.content)
+    assertEquals(
+      "true",
+      unsafeMetadata.getValue("nested").jsonObject.getValue("active").jsonPrimitive.content,
+    )
+  }
+
+  @Test
+  fun signInOrUpFallbackPassesUnsafeMetadataToSignUpCreate() = runTest {
+    val paramsSlot = slot<SignUp.CreateParams>()
+    val mockSignUp = mockk<SignUp>(relaxed = true)
+    mockkObject(SignIn.Companion)
+    mockkObject(SignUp.Companion)
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.apiFailure(
+        ClerkErrorResponse(errors = listOf(ClerkError(code = "form_identifier_not_found")))
+      )
+    coEvery { SignUp.create(capture(paramsSlot)) } returns ClerkResult.success(mockSignUp)
+
+    viewModel.startAuth(
+      authMode = AuthMode.SignInOrUp,
+      isPhoneNumberFieldActive = true,
+      phoneNumber = "+1234567890",
+      identifier = "test@example.com",
+      unsafeMetadata = mapOf("source" to "prebuilt"),
+    )
+
+    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(any<SignUp.CreateParams>()) }
+    testDispatcher.scheduler.advanceUntilIdle()
+    val params = paramsSlot.captured as SignUp.CreateParams.Standard
+    val unsafeMetadata = Json.parseToJsonElement(requireNotNull(params.unsafeMetadata)).jsonObject
+    assertEquals("+1234567890", params.phoneNumber)
+    assertEquals("prebuilt", unsafeMetadata.getValue("source").jsonPrimitive.content)
+  }
+
+  @Test
   fun enterpriseSSODetectionShouldWorkCorrectly() {
     // Test the enterprise SSO detection logic directly
     val ssoStrategy = "enterprise_sso"
@@ -340,6 +401,29 @@ class AuthViewModelTest {
 
     coVerify(exactly = 1) { SignUp.authenticateWithRedirect(any()) }
     coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
+  }
+
+  @Test
+  fun socialOAuthSignUpPassesUnsafeMetadata() = runTest {
+    val paramsSlot = slot<SignUp.AuthenticateWithRedirectParams>()
+    val mockSignUp = mockk<SignUp>(relaxed = true)
+    mockkObject(SignUp.Companion)
+    coEvery { SignUp.authenticateWithRedirect(capture(paramsSlot)) } returns
+      ClerkResult.success(OAuthResult(signUp = mockSignUp))
+
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GOOGLE,
+      transferable = true,
+      preferGoogleOneTap = false,
+      startOAuthWithSignUp = true,
+      unsafeMetadata = mapOf("source" to "social"),
+    )
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) { SignUp.authenticateWithRedirect(any()) }
+    val params = paramsSlot.captured as SignUp.AuthenticateWithRedirectParams.OAuth
+    val unsafeMetadata = Json.parseToJsonElement(requireNotNull(params.unsafeMetadata)).jsonObject
+    assertEquals("social", unsafeMetadata.getValue("source").jsonPrimitive.content)
   }
 
   @Test
