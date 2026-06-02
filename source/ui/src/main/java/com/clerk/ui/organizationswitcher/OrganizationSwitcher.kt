@@ -219,34 +219,9 @@ fun OrganizationSwitcher(
   }
 }
 
-/**
- * Self-contained organization switcher sheet.
- *
- * Use this when an app owns the trigger and only wants Clerk's account-switching sheet UI. Render
- * this composable while your trigger's sheet state is open and remove it from composition from
- * [onDismissRequest].
- *
- * @param onDismissRequest Called when the sheet, or any default full-screen follow-up flow, should
- *   be dismissed.
- * @param clerkTheme Optional theme customization for the sheet UI.
- * @param showCreateOrganization Shows the create-organization row when organization creation is
- *   enabled for the current user.
- * @param onOrganizationChanged Optional callback invoked after a successful organization or
- *   personal-account switch.
- * @param hidePersonal Hides personal account selection when the instance does not force
- *   organization selection.
- * @param onManageOrganization Called when the active organization overview's manage action is
- *   selected. When `null`, the sheet opens the default [OrganizationProfileView].
- * @param onCreateOrganization Called when the create-organization row is selected. When `null`, the
- *   sheet opens the default organization creation flow.
- * @param organizationProfileCustomRows Custom rows forwarded to the default
- *   [OrganizationProfileView].
- * @param organizationProfileCustomDestination Custom destination builder forwarded to the default
- *   [OrganizationProfileView].
- */
 @Composable
 @Suppress("LongParameterList")
-fun OrganizationSwitcherSheet(
+internal fun OrganizationSwitcherSheet(
   onDismissRequest: () -> Unit,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
