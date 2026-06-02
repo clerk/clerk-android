@@ -441,4 +441,31 @@ class AuthViewModelTest {
     coVerify(timeout = 1_000, exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
     coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
   }
+
+  @Test
+  fun googleSocialAuthFallsBackToBrowserRedirectWhenOneTapHasNoGoogleAccount() = runTest {
+    mockkObject(Clerk)
+    every { Clerk.isGoogleOneTapEnabled } returns true
+    mockkObject(SignIn.Companion)
+    val mockSignIn = mockk<SignIn>(relaxed = true)
+    val noGoogleAccountException =
+      Class.forName("com.clerk.api.credentials.CredentialFlowException\$NoGoogleAccount")
+        .getDeclaredConstructor()
+        .newInstance() as Throwable
+
+    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns
+      ClerkResult.unknownFailure(noGoogleAccountException)
+    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+      ClerkResult.success(OAuthResult(signIn = mockSignIn))
+
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GOOGLE,
+      transferable = true,
+      preferGoogleOneTap = true,
+    )
+
+    coVerify(timeout = 1_000, exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    testDispatcher.scheduler.advanceUntilIdle()
+    coVerify(timeout = 1_000, exactly = 1) { SignIn.authenticateWithRedirect(any(), true) }
+  }
 }
