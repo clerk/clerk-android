@@ -2,6 +2,7 @@ package com.clerk.ui.core.appbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -45,6 +46,7 @@ internal fun ClerkTopAppBar(
   backgroundColor: Color? = null, // sensible default
   clerkTheme: ClerkTheme? = null,
   logoUrl: String? = Clerk.organizationLogoUrl,
+  contentPadding: PaddingValues = PaddingValues(),
   trailingContent: (@Composable () -> Unit)? = null,
 ) {
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
@@ -60,6 +62,7 @@ internal fun ClerkTopAppBar(
         modifier =
           Modifier.fillMaxWidth()
             .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(contentPadding)
             .padding(vertical = dp8),
         verticalAlignment = Alignment.CenterVertically,
       ) {

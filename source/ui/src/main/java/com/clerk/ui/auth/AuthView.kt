@@ -107,7 +107,6 @@ fun AuthView(
       DevelopmentModeWarningBox(
         modifier = fullScreenModifier,
         background = DevelopmentModeWarningBackground.White,
-        showBranding = false,
       ) {
         AuthNavDisplay(
           modifier = Modifier.fillMaxSize(),

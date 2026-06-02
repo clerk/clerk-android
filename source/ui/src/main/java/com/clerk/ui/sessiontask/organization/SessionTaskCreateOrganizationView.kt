@@ -77,6 +77,7 @@ internal fun SessionTaskCreateOrganizationView(
           preloadInitialLogo = true,
           slugEnabled = Clerk.organizationSlugIsEnabled,
           autoGenerateSlug = true,
+          useAvatarLogoUpload = true,
           submitText = stringResource(R.string.continue_text),
           isLoading = state.isLoading,
           onSubmit = { submit ->
