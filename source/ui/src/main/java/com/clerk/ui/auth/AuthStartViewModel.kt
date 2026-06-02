@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
+import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
 import com.clerk.api.credentials.shouldSuppressCredentialFlowError
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -176,13 +177,18 @@ internal class AuthStartViewModel : ViewModel() {
   ) {
     _state.value = AuthState.OAuthState.Loading
     if (preferGoogleOneTap && provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
-      handleGoogleOneTap(transferable)
+      handleGoogleOneTap(provider, transferable, startOAuthWithSignUp, unsafeMetadata)
     } else {
       authenticateWithOAuthProvider(provider, transferable, startOAuthWithSignUp, unsafeMetadata)
     }
   }
 
-  private fun handleGoogleOneTap(transferable: Boolean) {
+  private fun handleGoogleOneTap(
+    provider: OAuthProvider,
+    transferable: Boolean,
+    startOAuthWithSignUp: Boolean,
+    unsafeMetadata: Map<String, Any>?,
+  ) {
     viewModelScope.launch(Dispatchers.IO) {
       SignIn.authenticateWithGoogleOneTap(transferable)
         .onSuccess {
@@ -204,12 +210,17 @@ internal class AuthStartViewModel : ViewModel() {
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            _state.value =
-              if (it.shouldSuppressCredentialFlowError) {
-                AuthState.Idle
-              } else {
-                AuthState.OAuthState.Error(it.resolvedCredentialFlowMessage)
-              }
+            when {
+              it.shouldSuppressCredentialFlowError -> _state.value = AuthState.Idle
+              it.shouldFallbackToOAuthFromGoogleOneTap ->
+                authenticateWithOAuthProvider(
+                  provider = provider,
+                  transferable = transferable,
+                  startOAuthWithSignUp = startOAuthWithSignUp,
+                  unsafeMetadata = unsafeMetadata,
+                )
+              else -> _state.value = AuthState.OAuthState.Error(it.resolvedCredentialFlowMessage)
+            }
           }
         }
     }
