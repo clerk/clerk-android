@@ -70,8 +70,8 @@ internal fun resolveFirstFactor(fallback: Factor): Factor {
     fallback
   } else {
     emailLinkFactor
-      ?: if (fallbackIsSupported) fallback else preparedFactor ?: currentSignIn.startingFirstFactor
-        ?: fallback
+      ?: if (fallbackIsSupported) fallback
+      else preparedFactor ?: currentSignIn.startingFirstFactor ?: fallback
   }
 }
 

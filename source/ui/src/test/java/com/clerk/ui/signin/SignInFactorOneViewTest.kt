@@ -89,6 +89,31 @@ class SignInFactorOneViewTest {
   }
 
   @Test
+  fun resolveFirstFactorShouldKeepSupportedFallbackWhenPasswordIsPrepared() {
+    val emailCodeFactor =
+      Factor(
+        strategy = StrategyKeys.EMAIL_CODE,
+        emailAddressId = "email_123",
+        safeIdentifier = "sam@clerk.dev",
+      )
+    every { mockAuth.currentSignIn } returns
+      SignIn(
+        id = "sign_in_123",
+        identifier = "sam@clerk.dev",
+        supportedFirstFactors = listOf(Factor(strategy = StrategyKeys.PASSWORD), emailCodeFactor),
+        firstFactorVerification =
+          com.clerk.api.network.model.verification.Verification(
+            status = com.clerk.api.network.model.verification.Verification.Status.UNVERIFIED,
+            strategy = StrategyKeys.PASSWORD,
+          ),
+      )
+
+    val resolved = resolveFirstFactor(emailCodeFactor)
+
+    assertEquals(emailCodeFactor, resolved)
+  }
+
+  @Test
   fun resolveFirstFactorShouldKeepResetPasswordEmailCodeWhenEmailLinkIsSupported() {
     val resetFactor =
       Factor(
