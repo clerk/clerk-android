@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.ui.ClerkTheme
@@ -45,6 +46,8 @@ fun SignInFactorOneView(
 }
 
 internal fun resolveFirstFactor(fallback: Factor): Factor {
+  if (fallback.isResetFactor()) return fallback
+
   val currentSignIn = Clerk.auth.currentSignIn
   val supportedFactors = currentSignIn?.supportedFirstFactors.orEmpty()
   val hasSignInContext = currentSignIn != null && supportedFactors.isNotEmpty()
@@ -67,8 +70,8 @@ internal fun resolveFirstFactor(fallback: Factor): Factor {
     fallback
   } else {
     emailLinkFactor
-      ?: preparedFactor
-      ?: if (fallbackIsSupported) fallback else currentSignIn.startingFirstFactor ?: fallback
+      ?: if (fallbackIsSupported) fallback else preparedFactor ?: currentSignIn.startingFirstFactor
+        ?: fallback
   }
 }
 

@@ -1,7 +1,11 @@
 package com.clerk.ui.auth
 
+import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.session.SessionTaskKey
+import com.clerk.ui.core.common.StrategyKeys
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -84,5 +88,24 @@ class AuthViewForceMfaRoutingTest {
   @Test
   fun `regular auth route is not a session task destination`() {
     assertFalse(AuthDestination.SignInGetHelp.isSessionTaskDestination())
+  }
+
+  @Test
+  fun `forgot password factor selection pushes the selected first factor`() {
+    val passwordFactor = Factor(strategy = StrategyKeys.PASSWORD)
+    val emailCodeFactor =
+      Factor(
+        strategy = StrategyKeys.EMAIL_CODE,
+        emailAddressId = "email_123",
+        safeIdentifier = "sam@clerk.dev",
+      )
+    val backStack = NavBackStack<NavKey>(AuthDestination.AuthStart)
+    backStack.add(AuthDestination.SignInFactorOne(passwordFactor))
+    backStack.add(AuthDestination.SignInForgotPassword)
+
+    navigateToForgotPasswordFactor(backStack, emailCodeFactor)
+
+    assertEquals(AuthDestination.SignInFactorOne(emailCodeFactor), backStack.last())
+    assertEquals(AuthDestination.SignInForgotPassword, backStack[backStack.size - 2])
   }
 }
