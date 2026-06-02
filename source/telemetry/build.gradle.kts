@@ -9,7 +9,7 @@ plugins {
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-telemetry", property("CLERK_TELEMETRY_VERSION") as String)
   publishToMavenCentral()
-  signAllPublications()
+
   pom {
     name.set("Clerk Android Telemetry")
     description.set("Telemetry module for Clerk Android SDK")
@@ -38,7 +38,7 @@ mavenPublishing {
 }
 
 kotlin {
-  androidLibrary {
+  android {
     namespace = "com.clerk.telemetry"
     compileSdk = libs.versions.compileSdk.get().toInt()
     minSdk = libs.versions.minSdk.get().toInt()

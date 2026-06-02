@@ -116,6 +116,7 @@ fun UserProfileView(
         AuthView(
           modifier = Modifier.fillMaxSize(),
           preferGoogleOneTap = false,
+          onDismiss = { showAuth = false },
           onAuthComplete = { showAuth = false },
         )
       } else {

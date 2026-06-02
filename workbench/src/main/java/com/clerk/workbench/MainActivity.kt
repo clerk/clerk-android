@@ -173,7 +173,7 @@ private fun InstructionsCard() {
 private fun TestOptionsCard(onClickFirstItem: () -> Unit, onClickSecondItem: () -> Unit) {
   WorkbenchCard {
     Column(modifier = Modifier.padding(Spacing.small)) {
-      ClickableTestItem(text = "Test 1", onClickFirstItem)
+      ClickableTestItem(text = "Dismissable AuthView", onClickFirstItem)
       WorkbenchDivider()
       ClickableTestItem(text = "Test 2", onClick = onClickSecondItem)
     }

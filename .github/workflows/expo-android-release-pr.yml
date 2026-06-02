@@ -1,0 +1,104 @@
+name: Open Expo Android Release PR
+
+on:
+  workflow_run:
+    workflows: ["Manual Publish"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      clerk_android_version:
+        description: "clerk-android version to pin in @clerk/expo. Defaults to gradle.properties."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: expo-android-release-pr-${{ github.event.workflow_run.head_sha || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  open-pr:
+    name: Open clerk/javascript PR
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout release source
+        if: github.event_name == 'workflow_run'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          path: android-release
+
+      - name: Checkout release source
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v6
+        with:
+          path: android-release
+
+      - name: Resolve clerk-android version
+        id: release
+        working-directory: android-release
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.clerk_android_version }}
+        run: |
+          set -euo pipefail
+
+          clerk_api_version=$(awk -F= '/^CLERK_API_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
+          clerk_ui_version=$(awk -F= '/^CLERK_UI_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
+
+          if [ -z "$clerk_api_version" ] || [ -z "$clerk_ui_version" ]; then
+            echo "::error::Failed to read CLERK_API_VERSION or CLERK_UI_VERSION from gradle.properties."
+            exit 1
+          fi
+
+          if [ -z "${INPUT_VERSION:-}" ] && [ "$clerk_api_version" != "$clerk_ui_version" ]; then
+            echo "::notice::Skipping Expo PR because CLERK_API_VERSION (${clerk_api_version}) and CLERK_UI_VERSION (${clerk_ui_version}) differ."
+            echo "should_open=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          version="${INPUT_VERSION:-$clerk_api_version}"
+          if [[ ! "$version" =~ ^[0-9]+[.][0-9]+[.][0-9]+([-.][0-9A-Za-z]+)*$ ]]; then
+            echo "::error::Invalid clerk-android version: ${version}"
+            exit 1
+          fi
+
+          {
+            echo "should_open=true"
+            echo "version=${version}"
+            echo "release_url=https://github.com/clerk/clerk-android/releases/tag/v${version}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check target repository token
+        if: steps.release.outputs.should_open == 'true'
+        env:
+          JAVASCRIPT_RELEASE_TOKEN: ${{ secrets.CLERK_JAVASCRIPT_RELEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${JAVASCRIPT_RELEASE_TOKEN:-}" ]; then
+            echo "::error::Set CLERK_JAVASCRIPT_RELEASE_TOKEN with access to push branches and open PRs in clerk/javascript."
+            exit 1
+          fi
+
+      - name: Checkout clerk/javascript
+        if: steps.release.outputs.should_open == 'true'
+        uses: actions/checkout@v6
+        with:
+          repository: clerk/javascript
+          ref: main
+          token: ${{ secrets.CLERK_JAVASCRIPT_RELEASE_TOKEN }}
+          path: javascript
+          fetch-depth: 0
+
+      - name: Open or update Expo Android release PR
+        if: steps.release.outputs.should_open == 'true'
+        env:
+          CLERK_ANDROID_VERSION: ${{ steps.release.outputs.version }}
+          CLERK_ANDROID_RELEASE_URL: ${{ steps.release.outputs.release_url }}
+          GH_TOKEN: ${{ secrets.CLERK_JAVASCRIPT_RELEASE_TOKEN }}
+          JAVASCRIPT_DIR: ${{ github.workspace }}/javascript
+        run: bash android-release/.github/scripts/open-expo-android-release-pr.sh

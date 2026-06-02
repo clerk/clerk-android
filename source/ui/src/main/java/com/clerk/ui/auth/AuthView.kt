@@ -69,6 +69,10 @@ import kotlinx.serialization.Serializable
  *   configured. When `false`, Google social auth always uses browser OAuth.
  * @param startSocialOAuthAsSignUp When `true`, browser OAuth social auth starts from a sign-up
  *   attempt and transfers back to sign-in if the selected account already exists.
+ * @param isDismissable When `true`, the auth start screen may show a close affordance. The close
+ *   affordance is shown when [onDismiss] is provided.
+ * @param onDismiss Called when the user presses the close affordance.
+ * @param onAuthComplete Called when authentication completes.
  */
 @Composable
 fun AuthView(
@@ -78,6 +82,8 @@ fun AuthView(
   persistIdentifiers: Boolean = true,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
+  isDismissable: Boolean = true,
+  onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit = {},
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
@@ -102,9 +108,14 @@ fun AuthView(
         AuthNavDisplay(
           modifier = Modifier.fillMaxSize(),
           backStack = backStack,
-          preferGoogleOneTap = preferGoogleOneTap,
-          startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-          onAuthComplete = onAuthComplete,
+          options =
+            AuthNavOptions(
+              preferGoogleOneTap = preferGoogleOneTap,
+              startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+              isDismissable = isDismissable,
+              onDismiss = onDismiss,
+              onAuthComplete = onAuthComplete,
+            ),
         )
       }
     }
@@ -161,13 +172,19 @@ private fun ObservePendingSessionTaskRouting(backStack: NavBackStack<NavKey>) {
   }
 }
 
+private data class AuthNavOptions(
+  val preferGoogleOneTap: Boolean,
+  val startSocialOAuthAsSignUp: Boolean,
+  val isDismissable: Boolean,
+  val onDismiss: (() -> Unit)?,
+  val onAuthComplete: () -> Unit,
+)
+
 @Composable
 private fun AuthNavDisplay(
   backStack: NavBackStack<NavKey>,
-  preferGoogleOneTap: Boolean,
-  startSocialOAuthAsSignUp: Boolean,
+  options: AuthNavOptions,
   modifier: Modifier = Modifier,
-  onAuthComplete: () -> Unit,
 ) {
   NavDisplay(
     modifier = modifier,
@@ -191,95 +208,89 @@ private fun AuthNavDisplay(
         backStack.removeLastOrNull()
       }
     },
-    entryProvider =
-      authEntryProvider(
-        backStack = backStack,
-        preferGoogleOneTap = preferGoogleOneTap,
-        startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-        onAuthComplete = onAuthComplete,
-      ),
+    entryProvider = authEntryProvider(backStack = backStack, options = options),
   )
 }
 
 @Suppress("LongMethod")
-private fun authEntryProvider(
-  backStack: NavBackStack<NavKey>,
-  preferGoogleOneTap: Boolean,
-  startSocialOAuthAsSignUp: Boolean,
-  onAuthComplete: () -> Unit,
-) = entryProvider {
-  entry<AuthDestination.AuthStart> {
-    AuthStartView(
-      preferGoogleOneTap = preferGoogleOneTap,
-      startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-      onAuthComplete = onAuthComplete,
-    )
+private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavOptions) =
+  entryProvider {
+    entry<AuthDestination.AuthStart> {
+      AuthStartView(
+        preferGoogleOneTap = options.preferGoogleOneTap,
+        startSocialOAuthAsSignUp = options.startSocialOAuthAsSignUp,
+        isDismissable = options.isDismissable,
+        onDismiss = options.onDismiss,
+        onAuthComplete = options.onAuthComplete,
+      )
+    }
+    entry<AuthDestination.SignInFactorOne> {
+      SignInFactorOneView(factor = it.factor, onAuthComplete = options.onAuthComplete)
+    }
+    entry<AuthDestination.SignInFactorOneUseAnotherMethod> {
+      SignInFactorAlternativeMethodsView(
+        currentFactor = it.currentFactor,
+        onAuthComplete = options.onAuthComplete,
+      )
+    }
+    entry<AuthDestination.SignInFactorTwo> {
+      SignInFactorTwoView(factor = it.factor, onAuthComplete = options.onAuthComplete)
+    }
+    entry<AuthDestination.SessionTaskMfa> {
+      SessionTaskMfaView(onAuthComplete = options.onAuthComplete)
+    }
+    entry<AuthDestination.SessionTaskResetPassword> {
+      SessionTaskResetPasswordView(onAuthComplete = options.onAuthComplete)
+    }
+    entry<AuthDestination.SessionTaskChooseOrganization> {
+      val authState = LocalAuthState.current
+      SessionTaskChooseOrganizationView(
+        onAuthComplete = options.onAuthComplete,
+        onCreateOrganization = {
+          authState.navigateTo(AuthDestination.SessionTaskCreateOrganization(it))
+        },
+      )
+    }
+    entry<AuthDestination.SessionTaskCreateOrganization> {
+      SessionTaskCreateOrganizationView(
+        creationDefaults = it.creationDefaults,
+        showBackButton = true,
+        onAuthComplete = options.onAuthComplete,
+      )
+    }
+    entry<AuthDestination.SignInFactorTwoUseAnotherMethod> {
+      SignInFactorAlternativeMethodsView(
+        currentFactor = it.currentFactor,
+        isSecondFactor = true,
+        onAuthComplete = options.onAuthComplete,
+      )
+    }
+    entry<AuthDestination.SignInForgotPassword> {
+      SignInFactorOneForgotPasswordView(
+        onClickFactor = { backStack.removeLastOrNull() },
+        onAuthComplete = options.onAuthComplete,
+      )
+    }
+    entry<AuthDestination.SignInSetNewPassword> {
+      SignInSetNewPasswordView(onAuthComplete = options.onAuthComplete)
+    }
+    entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
+    entry<AuthDestination.SignInClientTrust> {
+      SignInClientTrustView(factor = it.factor, onAuthComplete = options.onAuthComplete)
+    }
+    entry<AuthDestination.SignUpCollectField> {
+      SignUpCollectFieldView(field = it.field, onAuthComplete = options.onAuthComplete)
+    }
+    entry<AuthDestination.SignUpCode> {
+      SignUpCodeView(field = it.field, onAuthComplete = options.onAuthComplete)
+    }
+    entry<AuthDestination.SignUpEmailLink> {
+      SignUpEmailLinkView(emailAddress = it.emailAddress, onAuthComplete = options.onAuthComplete)
+    }
+    entry<AuthDestination.SignUpCompleteProfile> {
+      SignUpCompleteProfileView(onAuthComplete = options.onAuthComplete)
+    }
   }
-  entry<AuthDestination.SignInFactorOne> {
-    SignInFactorOneView(factor = it.factor, onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignInFactorOneUseAnotherMethod> {
-    SignInFactorAlternativeMethodsView(
-      currentFactor = it.currentFactor,
-      onAuthComplete = onAuthComplete,
-    )
-  }
-  entry<AuthDestination.SignInFactorTwo> {
-    SignInFactorTwoView(factor = it.factor, onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SessionTaskMfa> { SessionTaskMfaView(onAuthComplete = onAuthComplete) }
-  entry<AuthDestination.SessionTaskResetPassword> {
-    SessionTaskResetPasswordView(onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SessionTaskChooseOrganization> {
-    val authState = LocalAuthState.current
-    SessionTaskChooseOrganizationView(
-      onAuthComplete = onAuthComplete,
-      onCreateOrganization = {
-        authState.navigateTo(AuthDestination.SessionTaskCreateOrganization(it))
-      },
-    )
-  }
-  entry<AuthDestination.SessionTaskCreateOrganization> {
-    SessionTaskCreateOrganizationView(
-      creationDefaults = it.creationDefaults,
-      showBackButton = true,
-      onAuthComplete = onAuthComplete,
-    )
-  }
-  entry<AuthDestination.SignInFactorTwoUseAnotherMethod> {
-    SignInFactorAlternativeMethodsView(
-      currentFactor = it.currentFactor,
-      isSecondFactor = true,
-      onAuthComplete = onAuthComplete,
-    )
-  }
-  entry<AuthDestination.SignInForgotPassword> {
-    SignInFactorOneForgotPasswordView(
-      onClickFactor = { backStack.removeLastOrNull() },
-      onAuthComplete = onAuthComplete,
-    )
-  }
-  entry<AuthDestination.SignInSetNewPassword> {
-    SignInSetNewPasswordView(onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignInGetHelp> { SignInGetHelpView() }
-  entry<AuthDestination.SignInClientTrust> {
-    SignInClientTrustView(factor = it.factor, onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignUpCollectField> {
-    SignUpCollectFieldView(field = it.field, onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignUpCode> {
-    SignUpCodeView(field = it.field, onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignUpEmailLink> {
-    SignUpEmailLinkView(emailAddress = it.emailAddress, onAuthComplete = onAuthComplete)
-  }
-  entry<AuthDestination.SignUpCompleteProfile> {
-    SignUpCompleteProfileView(onAuthComplete = onAuthComplete)
-  }
-}
 
 internal fun shouldRouteToSessionTaskMfa(requiresForcedMfa: Boolean, top: NavKey?): Boolean {
   return requiresForcedMfa && top != AuthDestination.SessionTaskMfa

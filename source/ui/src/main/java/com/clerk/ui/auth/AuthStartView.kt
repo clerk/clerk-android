@@ -4,8 +4,11 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -49,12 +53,16 @@ fun AuthStartView(
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
+  isDismissable: Boolean = true,
+  onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit,
 ) {
   AuthStartViewImpl(
     modifier = modifier,
     preferGoogleOneTap = preferGoogleOneTap,
     startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+    isDismissable = isDismissable,
+    onDismiss = onDismiss,
     onAuthComplete = onAuthComplete,
     clerkTheme = clerkTheme,
   )
@@ -69,6 +77,8 @@ internal fun AuthStartViewImpl(
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
+  isDismissable: Boolean = true,
+  onDismiss: (() -> Unit)? = null,
   authStartViewModel: AuthStartViewModel = viewModel(),
 ) {
   val authState = LocalAuthState.current
@@ -111,6 +121,7 @@ internal fun AuthStartViewImpl(
     } else {
       socialProviders.filter { it != lastUsedSocialProvider }
     }
+  val showDismissButton = shouldShowAuthDismissButton(isDismissable, onDismiss)
 
   LaunchedEffect(state) {
     when (val s = state) {
@@ -144,6 +155,7 @@ internal fun AuthStartViewImpl(
     ClerkThemedAuthScaffold(
       modifier = modifier,
       hasBackButton = false,
+      trailingContent = dismissTrailingContent(showDismissButton, onDismiss),
       showSignedInUserButton = false,
       title = authViewHelper.titleString(authState.mode),
       subtitle = authViewHelper.subtitleString(authState.mode),
@@ -252,6 +264,34 @@ internal fun AuthStartViewImpl(
       }
     }
   }
+}
+
+private fun dismissTrailingContent(
+  showDismissButton: Boolean,
+  onDismiss: (() -> Unit)?,
+): (@Composable () -> Unit)? {
+  if (!showDismissButton || onDismiss == null) return null
+
+  return { AuthDismissButton(onDismiss) }
+}
+
+@Composable
+private fun AuthDismissButton(onDismiss: () -> Unit) {
+  IconButton(onClick = onDismiss) {
+    Icon(
+      modifier = Modifier.size(dp24),
+      painter = painterResource(R.drawable.ic_cross),
+      contentDescription = stringResource(R.string.close),
+      tint = ClerkMaterialTheme.colors.foreground,
+    )
+  }
+}
+
+internal fun shouldShowAuthDismissButton(
+  isDismissable: Boolean,
+  onDismiss: (() -> Unit)?,
+): Boolean {
+  return isDismissable && onDismiss != null
 }
 
 @Composable

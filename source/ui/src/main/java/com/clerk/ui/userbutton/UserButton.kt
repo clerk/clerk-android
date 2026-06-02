@@ -290,6 +290,7 @@ private fun AuthDialog(
       modifier = Modifier.fillMaxSize(),
       preferGoogleOneTap = preferGoogleOneTap,
       startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+      onDismiss = onDismiss,
       onAuthComplete = onDismiss,
     )
   }
