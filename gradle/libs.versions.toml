@@ -25,8 +25,8 @@ sortDependencies = "0.18.0"
 spotless = "8.6.0"
 turbineVersion = "1.2.1"
 uiToolingPreviewAndroid = "1.11.2"
-kotlinStdlib = "2.3.10"
-kotlinTest = "2.3.10"
+kotlinStdlib = "2.3.21"
+kotlinTest = "2.3.21"
 paparazziPlugin = "2.0.0-alpha05"
 
 # Build Versions -- Do not delete
@@ -34,7 +34,7 @@ jdk = "17"
 jvmTarget = "17"
 kotlin = "2.3.21"
 minSdk = "24"
-compileSdk = "37"
+compileSdk = "36"
 
 
 [libraries]
