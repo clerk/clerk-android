@@ -270,7 +270,7 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
     }
     entry<AuthDestination.SignInForgotPassword> {
       SignInFactorOneForgotPasswordView(
-        onClickFactor = { backStack.removeLastOrNull() },
+        onClickFactor = { navigateToForgotPasswordFactor(backStack, it) },
         onAuthComplete = options.onAuthComplete,
       )
     }
@@ -314,6 +314,10 @@ internal fun shouldRouteToPendingSessionTask(taskKey: SessionTaskKey?, top: NavK
   return taskKey != null &&
     destination != null &&
     !top.satisfiesPendingSessionTask(taskKey = taskKey, destination = destination)
+}
+
+internal fun navigateToForgotPasswordFactor(backStack: NavBackStack<NavKey>, factor: Factor) {
+  backStack.add(AuthDestination.SignInFactorOne(factor = factor))
 }
 
 private fun NavKey?.satisfiesPendingSessionTask(
