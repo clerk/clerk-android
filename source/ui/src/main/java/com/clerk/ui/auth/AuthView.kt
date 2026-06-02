@@ -69,6 +69,8 @@ import kotlinx.serialization.Serializable
  *   configured. When `false`, Google social auth always uses browser OAuth.
  * @param startSocialOAuthAsSignUp When `true`, browser OAuth social auth starts from a sign-up
  *   attempt and transfers back to sign-in if the selected account already exists.
+ * @param unsafeMetadata Custom metadata to attach to users created by the prebuilt sign-up flow.
+ *   This metadata is not validated by Clerk and should not contain sensitive information.
  * @param isDismissable When `true`, the auth start screen may show a close affordance. The close
  *   affordance is shown when [onDismiss] is provided.
  * @param onDismiss Called when the user presses the close affordance.
@@ -82,6 +84,7 @@ fun AuthView(
   persistIdentifiers: Boolean = true,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
+  unsafeMetadata: Map<String, Any>? = null,
   isDismissable: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit = {},
@@ -90,10 +93,11 @@ fun AuthView(
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
     val identifierConfig =
-      remember(initialIdentifier, persistIdentifiers) {
+      remember(initialIdentifier, persistIdentifiers, unsafeMetadata) {
         AuthIdentifierConfig(
           initialIdentifier = initialIdentifier,
           persistIdentifiers = persistIdentifiers,
+          unsafeMetadata = unsafeMetadata,
         )
       }
     AuthStateProvider(backStack = backStack, identifierConfig = identifierConfig) {

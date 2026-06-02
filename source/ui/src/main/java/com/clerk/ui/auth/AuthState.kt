@@ -53,6 +53,9 @@ internal class AuthState(
   var persistIdentifiers by mutableStateOf(identifierConfig.persistIdentifiers)
     private set
 
+  var unsafeMetadata by mutableStateOf(identifierConfig.unsafeMetadata)
+    private set
+
   var identifierConfigVersion by mutableStateOf(0)
     private set
 
@@ -300,10 +303,19 @@ internal class AuthState(
   }
 
   fun applyIdentifierConfig(config: AuthIdentifierConfig) {
-    if (config == appliedIdentifierConfig) return
+    val previousConfig = appliedIdentifierConfig
+    if (config == previousConfig) return
 
     appliedIdentifierConfig = config
     persistIdentifiers = config.persistIdentifiers
+    unsafeMetadata = config.unsafeMetadata
+
+    val identifierFieldsChanged =
+      previousConfig == null ||
+        config.initialIdentifier != previousConfig.initialIdentifier ||
+        config.persistIdentifiers != previousConfig.persistIdentifiers
+    if (!identifierFieldsChanged) return
+
     identifierConfigVersion++
 
     if (!config.persistIdentifiers) {
@@ -367,6 +379,7 @@ internal class AuthState(
 internal data class AuthIdentifierConfig(
   val initialIdentifier: String? = null,
   val persistIdentifiers: Boolean = true,
+  val unsafeMetadata: Map<String, Any>? = null,
 )
 
 internal fun authSharedPreferences(context: Context): SharedPreferences {

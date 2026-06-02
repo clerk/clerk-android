@@ -133,6 +133,37 @@ class AuthStateConfigurationTest {
     assertNull(LastUsedIdentifierStorage.retrieve(prefs))
   }
 
+  @Test
+  fun unsafeMetadataIsAvailableOnAuthState() {
+    val metadata = mapOf("plan" to "pro")
+
+    val authState =
+      createAuthState(identifierConfig = AuthIdentifierConfig(unsafeMetadata = metadata))
+
+    assertEquals(metadata, authState.unsafeMetadata)
+  }
+
+  @Test
+  fun metadataOnlyConfigChangesDoNotResetIdentifierFields() {
+    val authState =
+      createAuthState(
+        identifierConfig = AuthIdentifierConfig(initialIdentifier = "seed@example.com")
+      )
+    val version = authState.identifierConfigVersion
+    authState.authStartIdentifier = "edited@example.com"
+
+    authState.applyIdentifierConfig(
+      AuthIdentifierConfig(
+        initialIdentifier = "seed@example.com",
+        unsafeMetadata = mapOf("plan" to "pro"),
+      )
+    )
+
+    assertEquals("edited@example.com", authState.authStartIdentifier)
+    assertEquals(mapOf("plan" to "pro"), authState.unsafeMetadata)
+    assertEquals(version, authState.identifierConfigVersion)
+  }
+
   private fun createAuthState(
     sharedPreferences: SharedPreferences = authPreferences(),
     identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
