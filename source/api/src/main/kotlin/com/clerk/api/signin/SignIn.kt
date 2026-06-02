@@ -746,16 +746,25 @@ suspend fun SignIn.prepareFirstFactor(
 ): ClerkResult<SignIn, ClerkErrorResponse> {
   val isResetPasswordStrategy =
     params.strategy == RESET_PASSWORD_EMAIL_CODE || params.strategy == RESET_PASSWORD_PHONE_CODE
+  val isRedirectStrategy = params.isRedirectStrategy
+  val canPrepareFromStatus =
+    if (isRedirectStrategy) {
+      status == SignIn.Status.NEEDS_IDENTIFIER || status == SignIn.Status.NEEDS_FIRST_FACTOR
+    } else {
+      status == SignIn.Status.NEEDS_FIRST_FACTOR
+    }
 
   val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategy }.orEmpty()
   val validationError =
     when {
-      !isResetPasswordStrategy && status != SignIn.Status.NEEDS_FIRST_FACTOR ->
+      !isResetPasswordStrategy && !canPrepareFromStatus ->
         invalidPrepareState(
           code = "sign_in_status_invalid",
           longMessage = "Cannot prepare first factor while sign-in status is ${status.name}",
         )
-      !isResetPasswordStrategy && params.strategy !in supportedFirstFactorStrategies ->
+      !isResetPasswordStrategy &&
+        !isRedirectStrategy &&
+        params.strategy !in supportedFirstFactorStrategies ->
         invalidPrepareState(
           code = "first_factor_strategy_not_supported",
           longMessage = "${params.strategy} is not supported for this sign-in attempt",
@@ -765,6 +774,11 @@ suspend fun SignIn.prepareFirstFactor(
 
   return validationError ?: ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
 }
+
+private val SignIn.PrepareFirstFactorParams.isRedirectStrategy: Boolean
+  get() =
+    this is SignIn.PrepareFirstFactorParams.OAuth ||
+      this is SignIn.PrepareFirstFactorParams.EnterpriseSSO
 
 /**
  * Sends a verification code to the user's phone number for first factor authentication.
