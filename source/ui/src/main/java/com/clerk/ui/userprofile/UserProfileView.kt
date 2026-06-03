@@ -105,7 +105,10 @@ fun UserProfileView(
         onAddAccount?.invoke() ?: run { showAuth = true }
       }
 
-      LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
+      LaunchedEffect(Unit) {
+        telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView"))
+        Clerk.refreshClient()
+      }
       LaunchedEffect(user?.id, showAuth) {
         if (user == null && !showAuth) {
           onDismiss()

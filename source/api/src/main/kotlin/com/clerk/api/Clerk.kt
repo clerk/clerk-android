@@ -152,6 +152,17 @@ object Clerk {
   lateinit var client: Client
     private set
 
+  private val _clientFlow = MutableStateFlow<Client?>(null)
+
+  /**
+   * Reactive state for the current client.
+   *
+   * Emits `null` before initialization and after [reset]. Emits the current [Client] whenever Clerk
+   * receives updated client state, including initialization, sign-in, sign-up, sign-out, session
+   * mutations, and piggybacked API responses.
+   */
+  val clientFlow: StateFlow<Client?> = _clientFlow.asStateFlow()
+
   /** Internal property to check if the client has been initialized. */
   internal val clientInitialized: Boolean
     get() = ::client.isInitialized
@@ -728,6 +739,7 @@ object Clerk {
     LocaleProvider.cleanup()
     ClerkApi.reset()
     updateClient(Client())
+    _clientFlow.value = null
     environment = null
     publishableKey = null
     baseUrl = ""
@@ -757,6 +769,17 @@ object Clerk {
   ) {
     reset()
     initialize(context = context, publishableKey = publishableKey, options = options, theme = theme)
+  }
+
+  /** Refreshes the current client and updates Clerk's reactive auth state. */
+  suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> {
+    return when (val result = Client.get()) {
+      is ClerkResult.Success -> {
+        updateClient(result.value)
+        result
+      }
+      is ClerkResult.Failure -> result
+    }
   }
 
   /**
@@ -870,7 +893,10 @@ object Clerk {
    * @param client The updated client configuration.
    */
   internal fun updateClient(client: Client) {
-    this.client = client.withResolvedActiveSession(previousSession = _session.value)
+    val updatedClient = client.withResolvedActiveSession(previousSession = _session.value)
+
+    this.client = updatedClient
+    _clientFlow.value = updatedClient
     // Only update state if flows are initialized (not during static initialization)
     try {
       updateSessionAndUserState()

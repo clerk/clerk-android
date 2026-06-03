@@ -88,6 +88,7 @@ class ClerkConfigurationSwitchTest {
 
       assertNull(Clerk.session)
       assertNull(Clerk.user)
+      assertNull(Clerk.clientFlow.value)
       assertNull(Clerk.applicationName)
       assertNull(Clerk.publishableKey)
       assertNull(Clerk.proxyUrl)
