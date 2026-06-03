@@ -12,8 +12,6 @@ import com.clerk.api.Clerk.session
 import com.clerk.api.Clerk.user
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.auth.Auth
-import com.clerk.api.client.ClientChanged
-import com.clerk.api.client.ClientEvent
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
 import com.clerk.api.externalaccount.ExternalAccountService
@@ -42,11 +40,8 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import com.clerk.sdk.BuildConfig
 import java.lang.ref.WeakReference
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
@@ -171,15 +166,6 @@ object Clerk {
   /** Internal property to check if the client has been initialized. */
   internal val clientInitialized: Boolean
     get() = ::client.isInitialized
-
-  private val _clientEvents = MutableSharedFlow<ClientEvent>(extraBufferCapacity = 64)
-
-  /**
-   * Flow of client events.
-   *
-   * Subscribe to this flow to receive notifications about client state changes.
-   */
-  val clientEvents: Flow<ClientEvent> = _clientEvents.asSharedFlow()
 
   /**
    * Reactive state indicating whether the Clerk SDK has completed initialization.
@@ -896,7 +882,6 @@ object Clerk {
    * @param client The updated client configuration.
    */
   internal fun updateClient(client: Client) {
-    val previousClient = if (::client.isInitialized) this.client else null
     val updatedClient = client.withResolvedActiveSession(previousSession = _session.value)
 
     this.client = updatedClient
@@ -906,17 +891,6 @@ object Clerk {
       updateSessionAndUserState()
     } catch (e: Exception) {
       ClerkLog.e("${e.message}")
-    }
-
-    if (previousClient != updatedClient) {
-      sendClientEvent(ClientChanged(updatedClient))
-    }
-  }
-
-  private fun sendClientEvent(event: ClientEvent) {
-    val emitted = _clientEvents.tryEmit(event)
-    if (!emitted) {
-      ClerkLog.w("Dropped client event due to backpressure: ${event::class.simpleName}")
     }
   }
 
