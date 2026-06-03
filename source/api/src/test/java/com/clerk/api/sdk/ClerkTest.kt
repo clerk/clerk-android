@@ -3,6 +3,8 @@ package com.clerk.api.sdk
 import android.content.Context
 import com.clerk.api.Clerk
 import com.clerk.api.auth.AuthEvent
+import com.clerk.api.client.ClientChanged
+import com.clerk.api.client.ClientEvent
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.DisplayConfig
@@ -190,11 +192,7 @@ class ClerkTest {
         updatedAt = 1_000,
       )
 
-    return Client(
-      id = "client_123",
-      sessions = listOf(session),
-      lastActiveSessionId = session.id,
-    )
+    return Client(id = "client_123", sessions = listOf(session), lastActiveSessionId = session.id)
   }
 
   private fun initializeClerkWithClient(client: Client) {
@@ -679,28 +677,28 @@ class ClerkTest {
   }
 
   @Test
-  fun `updateClient emits ClientChanged when client changes`() = runTest {
+  fun `updateClient emits ClientChanged client event when client changes`() = runTest {
     val client = Client(id = "client_123")
-    val events = mutableListOf<AuthEvent>()
+    val events = mutableListOf<ClientEvent>()
     val eventJob =
-      launch(start = CoroutineStart.UNDISPATCHED) { Clerk.auth.events.take(1).toList(events) }
+      launch(start = CoroutineStart.UNDISPATCHED) { Clerk.clientEvents.take(1).toList(events) }
 
     Clerk.updateClient(client)
 
     withTimeout(1_000) { eventJob.join() }
 
-    assertTrue(events.single() is AuthEvent.ClientChanged)
-    assertEquals(client, (events.single() as AuthEvent.ClientChanged).client)
+    assertTrue(events.single() is ClientChanged)
+    assertEquals(client, (events.single() as ClientChanged).client)
   }
 
   @Test
-  fun `updateClient does not emit ClientChanged when client is unchanged`() = runTest {
+  fun `updateClient does not emit ClientChanged client event when client is unchanged`() = runTest {
     val client = Client(id = "client_123")
     Clerk.updateClient(client)
 
-    val events = mutableListOf<AuthEvent>()
+    val events = mutableListOf<ClientEvent>()
     val eventJob =
-      launch(start = CoroutineStart.UNDISPATCHED) { Clerk.auth.events.take(1).toList(events) }
+      launch(start = CoroutineStart.UNDISPATCHED) { Clerk.clientEvents.take(1).toList(events) }
 
     Clerk.updateClient(client)
 
@@ -711,22 +709,23 @@ class ClerkTest {
   }
 
   @Test
-  fun `updateClient emits ClientChanged when nested user property changes`() = runTest {
-    val initialClient = clientWithUser(firstName = "Jane")
-    val updatedClient = clientWithUser(firstName = "Janet")
-    Clerk.updateClient(initialClient)
+  fun `updateClient emits ClientChanged client event when nested user property changes`() =
+    runTest {
+      val initialClient = clientWithUser(firstName = "Jane")
+      val updatedClient = clientWithUser(firstName = "Janet")
+      Clerk.updateClient(initialClient)
 
-    val events = mutableListOf<AuthEvent>()
-    val eventJob =
-      launch(start = CoroutineStart.UNDISPATCHED) { Clerk.auth.events.take(2).toList(events) }
+      val events = mutableListOf<ClientEvent>()
+      val eventJob =
+        launch(start = CoroutineStart.UNDISPATCHED) { Clerk.clientEvents.take(1).toList(events) }
 
-    Clerk.updateClient(updatedClient)
+      Clerk.updateClient(updatedClient)
 
-    withTimeout(1_000) { eventJob.join() }
+      withTimeout(1_000) { eventJob.join() }
 
-    val clientChanged = events.single { it is AuthEvent.ClientChanged } as AuthEvent.ClientChanged
-    assertEquals(updatedClient, clientChanged.client)
-  }
+      val clientChanged = events.single() as ClientChanged
+      assertEquals(updatedClient, clientChanged.client)
+    }
 
   @Test
   fun `clearSessionAndUserState emits SessionChanged and SignedOut when session is cleared`() =
