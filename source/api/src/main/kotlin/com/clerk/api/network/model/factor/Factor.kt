@@ -21,11 +21,20 @@ data class Factor(
   /** The ID of the Web3 wallet that will be used to sign a message. */
   val web3WalletId: String? = null,
 
+  /** The ID of the enterprise connection that will be used for SSO. */
+  @SerialName("enterprise_connection_id") val enterpriseConnectionId: String? = null,
+
+  /** The display name of the enterprise connection that will be used for SSO. */
+  @SerialName("enterprise_connection_name") val enterpriseConnectionName: String? = null,
+
   /** The safe identifier of the factor. */
   @SerialName("safe_identifier") val safeIdentifier: String? = null,
 
   /** Whether the factor is the primary factor. */
   val primary: Boolean? = null,
+
+  /** Whether the factor is the default second factor. */
+  @SerialName("default") val default: Boolean? = null,
 )
 
 fun Factor.isResetFactor() =

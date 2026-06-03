@@ -1,6 +1,8 @@
 package com.clerk.api.session
 
 import com.clerk.api.Clerk
+import com.clerk.api.Constants.Strategy.PASSKEY
+import com.clerk.api.Constants.Strategy.PASSWORD
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -8,6 +10,7 @@ import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.model.userdata.PublicUserData
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.user.User
+import com.clerk.automap.annotations.AutoMap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -73,6 +76,54 @@ data class Session(
     @SerialName("unknown") UNKNOWN,
     @SerialName("pending") PENDING,
   }
+
+  /** Parameters for starting an in-session reverification flow. */
+  @Serializable @AutoMap data class StartVerificationParams(val level: String)
+
+  /** Parameters for preparing a first factor in an in-session reverification flow. */
+  @Serializable
+  @AutoMap
+  data class PrepareFirstFactorParams(
+    val strategy: String,
+    @SerialName("email_address_id") val emailAddressId: String? = null,
+    @SerialName("phone_number_id") val phoneNumberId: String? = null,
+    @SerialName("enterprise_connection_id") val enterpriseConnectionId: String? = null,
+    @SerialName("redirect_url") val redirectUrl: String? = null,
+  )
+
+  /** Parameters for attempting a first factor in an in-session reverification flow. */
+  sealed interface AttemptFirstFactorParams {
+    val strategy: String
+
+    @Serializable
+    @AutoMap
+    data class Password(val password: String, override val strategy: String = PASSWORD) :
+      AttemptFirstFactorParams
+
+    @Serializable
+    @AutoMap
+    data class Passkey(
+      @SerialName("public_key_credential") val publicKeyCredential: String,
+      override val strategy: String = PASSKEY,
+    ) : AttemptFirstFactorParams
+
+    @Serializable
+    @AutoMap
+    data class Code(val code: String, override val strategy: String) : AttemptFirstFactorParams
+  }
+
+  /** Parameters for preparing a second factor in an in-session reverification flow. */
+  @Serializable
+  @AutoMap
+  data class PrepareSecondFactorParams(
+    val strategy: String,
+    @SerialName("phone_number_id") val phoneNumberId: String? = null,
+  )
+
+  /** Parameters for attempting a second factor in an in-session reverification flow. */
+  @Serializable
+  @AutoMap
+  data class AttemptSecondFactorParams(val strategy: String, val code: String)
 }
 
 @Serializable data class SessionTask(val key: String)
