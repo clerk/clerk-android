@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.ui.organizationlist.OrganizationListView
 import com.clerk.ui.organizationswitcher.OrganizationSwitcher
+import com.clerk.ui.userbutton.UserButton
 import com.clerk.workbench.ui.theme.Background
 import com.clerk.workbench.ui.theme.BackgroundDark
 import com.clerk.workbench.ui.theme.WorkbenchTheme
@@ -39,7 +40,7 @@ class UiActivity2 : ComponentActivity() {
               modifier =
                 Modifier.background(color = backgroundColor).fillMaxSize().statusBarsPadding()
             ) {
-              OrganizationSwitcher()
+              UserButton()
             }
           }
         }

@@ -7,7 +7,7 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.user.User
-import com.clerk.api.user.allSessions
+import com.clerk.api.user.activeSessions
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
@@ -46,7 +46,7 @@ class UserProfileSecurityViewModelTest {
     val user = mockk<User>()
     val sessions = listOf(mockk<Session>(), mockk())
     every { Clerk.user } returns user
-    coEvery { user.allSessions() } returns ClerkResult.success(sessions)
+    coEvery { user.activeSessions() } returns ClerkResult.success(sessions)
 
     val viewModel = UserProfileSecurityViewModel()
     viewModel.state.test {
@@ -62,7 +62,7 @@ class UserProfileSecurityViewModelTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
     val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "fail")))
-    coEvery { user.allSessions() } returns ClerkResult.Failure(error)
+    coEvery { user.activeSessions() } returns ClerkResult.Failure(error)
 
     val viewModel = UserProfileSecurityViewModel()
     viewModel.state.test {
