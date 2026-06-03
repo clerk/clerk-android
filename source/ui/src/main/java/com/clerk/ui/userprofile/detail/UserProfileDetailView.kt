@@ -13,6 +13,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,7 @@ private const val EMAIL_IMMUTABLE_SNACKBAR_MESSAGE =
 @Composable
 fun UserProfileDetailView(modifier: Modifier = Modifier) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  LaunchedEffect(Unit) { Clerk.refreshClient() }
   UserProfileDetailViewImpl(
     emailAddresses = user.sortedEmailAddresses(),
     phoneNumbers = user.sortedPhoneNumbers(),

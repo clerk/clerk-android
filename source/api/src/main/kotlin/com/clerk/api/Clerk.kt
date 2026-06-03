@@ -771,6 +771,17 @@ object Clerk {
     initialize(context = context, publishableKey = publishableKey, options = options, theme = theme)
   }
 
+  /** Refreshes the current client and updates Clerk's reactive auth state. */
+  suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> {
+    return when (val result = Client.get()) {
+      is ClerkResult.Success -> {
+        updateClient(result.value)
+        result
+      }
+      is ClerkResult.Failure -> result
+    }
+  }
+
   /**
    * Provides the current foreground [Activity] to Clerk explicitly.
    *

@@ -88,6 +88,7 @@ fun OrganizationProfileView(
       val membership = Clerk.organizationMembership
       val organization = membership?.organization ?: Clerk.organization
 
+      LaunchedEffect(Unit) { Clerk.refreshClient() }
       OrganizationProfileEffects(
         organizationId = organization?.id,
         onComplete = onComplete,
