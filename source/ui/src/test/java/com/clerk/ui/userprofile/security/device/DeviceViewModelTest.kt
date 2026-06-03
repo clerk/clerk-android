@@ -8,7 +8,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.session.revoke
 import com.clerk.api.user.User
-import com.clerk.api.user.allSessions
+import com.clerk.api.user.activeSessions
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
@@ -50,7 +50,7 @@ class DeviceViewModelTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
     coEvery { session.revoke() } returns ClerkResult.success(session)
-    coEvery { user.allSessions() } returns ClerkResult.success(emptyList())
+    coEvery { user.activeSessions() } returns ClerkResult.success(emptyList())
 
     val viewModel = DeviceViewModel()
     viewModel.state.test {
