@@ -81,9 +81,12 @@ private fun SignUpCompleteProfileImpl(
   val firstEnabled = firstNameEnabled || signUp?.supportsField(FIRST_NAME_FIELD) == true
   val lastEnabled = lastNameEnabled || signUp?.supportsField(LAST_NAME_FIELD) == true
 
-  // Check if legal_accepted is in missing fields
+  // Check if legal_accepted is required and missing. Mobile signup intentionally skips optional
+  // fields.
   val legalConsentRequired =
-    legalConsentMissing || (signUp?.missingFields?.contains(LEGAL_ACCEPTED_FIELD) == true)
+    legalConsentMissing ||
+      (signUp?.requiredFields?.contains(LEGAL_ACCEPTED_FIELD) == true &&
+        signUp.missingFields.contains(LEGAL_ACCEPTED_FIELD))
   val termsUrl = Clerk.termsUrl
   val privacyPolicyUrl = Clerk.privacyPolicyUrl
   val hasLegalUrls = termsUrl != null || privacyPolicyUrl != null
