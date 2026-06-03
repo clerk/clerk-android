@@ -239,3 +239,13 @@ jobs:
             --header "Content-type: application/json" \
             --data "$PAYLOAD" \
             "$SLACK_WEBHOOK_URL"
+
+  open-expo-android-release-pr:
+    needs: publish
+    if: needs.publish.result == 'success' && (github.event_name == 'release' || (github.event.inputs.publish_api == 'true' && github.event.inputs.publish_ui == 'true'))
+    uses: ./.github/workflows/expo-android-release-pr.yml
+    with:
+      release_tag: ${{ needs.publish.outputs.tag_name }}
+      release_url: ${{ needs.publish.outputs.release_url }}
+    secrets:
+      CLERK_JAVASCRIPT_RELEASE_TOKEN: ${{ secrets.CLERK_JAVASCRIPT_RELEASE_TOKEN }}
