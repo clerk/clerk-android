@@ -562,13 +562,19 @@ data class SignUp(
 /**
  * Helper property to get the first field that needs to be collected.
  *
- * This property returns the name of the first field in the `missingFields` list, sorted by
- * priority. The priority order is defined by [SignUp.fieldPriority].
+ * This property returns the name of the first required field in the `missingFields` list, sorted by
+ * priority. Optional missing fields are intentionally skipped by mobile sign-up flows. The priority
+ * order is defined by [SignUp.fieldPriority].
  *
- * @return The name of the first field to collect, or `null` if there are no missing fields.
+ * @return The name of the first required field to collect, or `null` if there are no required
+ *   missing fields.
  */
 val SignUp.firstFieldToCollect: String?
-  get() = missingFields.sortedByPriority(SignUp.fieldPriority).firstOrNull()
+  get() =
+    missingFields
+      .filter { requiredFields.contains(it) }
+      .sortedByPriority(SignUp.fieldPriority)
+      .firstOrNull()
 
 /**
  * Helper property to get the first field that needs to be verified.

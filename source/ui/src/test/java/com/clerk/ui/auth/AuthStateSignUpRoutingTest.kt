@@ -104,18 +104,37 @@ class AuthStateSignUpRoutingTest {
     }
   }
 
+  @Test
+  fun setToStepForStatusDoesNotCollectOptionalMissingFields() {
+    val signUp =
+      signUp(
+        verifications = emptyMap(),
+        requiredFields = listOf("email_address"),
+        optionalFields = listOf("first_name", "last_name"),
+        missingFields = listOf("first_name", "last_name"),
+        unverifiedFields = emptyList(),
+      )
+
+    authState.setToStepForStatus(signUp) {}
+
+    verify(exactly = 0) { backStack.add(any()) }
+  }
+
   private fun signUp(
     verifications: Map<String, Verification?>,
     missingFields: List<String> = emptyList(),
+    requiredFields: List<String> = listOf("email_address", "password"),
+    optionalFields: List<String> = emptyList(),
+    unverifiedFields: List<String> = listOf("email_address"),
   ): SignUp {
     every { backStack.add(any()) } returns true
     return SignUp(
       id = "sign_up_123",
       status = SignUp.Status.MISSING_REQUIREMENTS,
-      requiredFields = listOf("email_address", "password"),
-      optionalFields = emptyList(),
+      requiredFields = requiredFields,
+      optionalFields = optionalFields,
       missingFields = missingFields,
-      unverifiedFields = listOf("email_address"),
+      unverifiedFields = unverifiedFields,
       verifications = verifications,
       emailAddress = "sam@clerk.dev",
       passwordEnabled = false,

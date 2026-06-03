@@ -24,9 +24,12 @@ class CompleteProfileViewModelTest {
   }
 
   @Test
-  fun `completeProfileUpdateParams keeps supported non blank name fields`() {
+  fun `completeProfileUpdateParams keeps required non blank name fields`() {
     val signUp =
-      signUp(requiredFields = listOf(FIRST_NAME_FIELD), optionalFields = listOf(LAST_NAME_FIELD))
+      signUp(
+        requiredFields = listOf(FIRST_NAME_FIELD, LAST_NAME_FIELD),
+        optionalFields = emptyList(),
+      )
 
     val params =
       signUp.completeProfileUpdateParams(
@@ -37,6 +40,26 @@ class CompleteProfileViewModelTest {
 
     assertEquals("Sam", params.firstName)
     assertEquals("McTest", params.lastName)
+    assertNull(params.legalAccepted)
+  }
+
+  @Test
+  fun `completeProfileUpdateParams omits optional name fields`() {
+    val signUp =
+      signUp(
+        requiredFields = emptyList(),
+        optionalFields = listOf(FIRST_NAME_FIELD, LAST_NAME_FIELD),
+      )
+
+    val params =
+      signUp.completeProfileUpdateParams(
+        firstName = "Sam",
+        lastName = "McTest",
+        legalAccepted = null,
+      )
+
+    assertNull(params.firstName)
+    assertNull(params.lastName)
     assertNull(params.legalAccepted)
   }
 
