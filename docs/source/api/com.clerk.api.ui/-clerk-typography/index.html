@@ -43,7 +43,7 @@
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
-                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":source:api/main">androidJvm</button>
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":source:api/release">release</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
                 <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
@@ -54,9 +54,9 @@
                     </div>
                         <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
                             <label class="checkbox">
-                                <input type="checkbox" class="checkbox--input" id=":source:api/main" data-filter=":source:api/main">
+                                <input type="checkbox" class="checkbox--input" id=":source:api/release" data-filter=":source:api/release">
                                 <span class="checkbox--icon"></span>
-                                androidJvm
+                                release
                             </label>
                         </li>
                 </ul>
@@ -90,28 +90,28 @@
         </nav>
         <div id="resizer" class="resizer" data-item-type="BAR"></div>
         <div id="main" data-item-type="SECTION" role="main">
-<div class="main-content" data-page-type="classlike" id="content" pageids="Clerk Android API::com.clerk.api.ui/ClerkTypography///PointingToDeclaration//686701518">
+<div class="main-content" data-page-type="classlike" id="content" pageids="Clerk Android API::com.clerk.api.ui/ClerkTypography///PointingToDeclaration//-1784893667">
   <div class="breadcrumbs"><a href="../../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="../index.html">com.clerk.api.ui</a><span class="delimiter">/</span><span class="current">ClerkTypography</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Clerk</span><wbr><span><span>Typography</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">ClerkTypography</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>displaySmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.displaySmall<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>headlineLarge<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineLarge<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>headlineMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineMedium<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>headlineSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineSmall<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>titleMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.titleMedium<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>titleSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.titleSmall<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>bodyLarge<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodyLarge<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>bodyMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodyMedium<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>bodySmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodySmall<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>labelMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.labelMedium<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>labelSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.labelSmall</span></span><span class="token punctuation">)</span></div><p class="paragraph">Platform-agnostic description of a complete typography scale used by Clerk UI components.</p><p class="paragraph">This container mirrors the Material3 typography slots to make it straightforward for UI implementations (Compose/View) to map these definitions to concrete platform <code class="lang-kotlin">TextStyle</code>s or <code class="lang-kotlin">Typeface</code>s.</p><p class="paragraph">Unlike UI-layer types, this API layer does not prescribe a specific rendering engine. Each entry is represented by a lightweight Font that points to a font resource, a nominal size, and a semantic weight (ClerkFontWeight) that downstream code can translate to platform equivalents.</p><p class="paragraph">Slots correspond roughly to textual hierarchy levels, from larger display styles to small labels:</p><ul><li><p class="paragraph">displayLarge, displayMedium, displaySmall</p></li><li><p class="paragraph">headlineLarge, headlineMedium, headlineSmall</p></li><li><p class="paragraph">titleLarge, titleMedium, titleSmall</p></li><li><p class="paragraph">bodyLarge, bodyMedium, bodySmall</p></li><li><p class="paragraph">labelLarge, labelMedium, labelSmall</p></li></ul><p class="paragraph">Use the zero-argument constructor (<code class="lang-kotlin">ClerkTypography()</code>) to start from Clerk's baseline styles and override only a subset via named parameters. If you need the raw <code class="lang-kotlin">TextStyle</code> instances outside of the theme container, reference <a href="../-clerk-typography-defaults/index.html">ClerkTypographyDefaults</a> directly.</p><p class="paragraph">Notes:</p><ul><li><p class="paragraph">Size is expressed as a floating-point number (commonly interpreted as points by consumers); UI layers should convert to the appropriate unit (e.g., sp) during mapping.</p></li><li><p class="paragraph">Weight values are provided via the ClerkFontWeight enum which wraps named constants defined in ClerkFontWeights instead of using hard-coded numbers.</p></li></ul></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">ClerkTypography</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>displaySmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.displaySmall<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>headlineLarge<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineLarge<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>headlineMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineMedium<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>headlineSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineSmall<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>titleMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.titleMedium<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>titleSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.titleSmall<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>bodyLarge<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodyLarge<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>bodyMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodyMedium<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>bodySmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodySmall<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>labelMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.labelMedium<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>labelSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.labelSmall</span></span><span class="token punctuation">)</span></div><p class="paragraph">Platform-agnostic description of a complete typography scale used by Clerk UI components.</p><p class="paragraph">This container mirrors the Material3 typography slots to make it straightforward for UI implementations (Compose/View) to map these definitions to concrete platform <code class="lang-kotlin">TextStyle</code>s or <code class="lang-kotlin">Typeface</code>s.</p><p class="paragraph">Unlike UI-layer types, this API layer does not prescribe a specific rendering engine. Each entry is represented by a lightweight Font that points to a font resource, a nominal size, and a semantic weight (ClerkFontWeight) that downstream code can translate to platform equivalents.</p><p class="paragraph">Slots correspond roughly to textual hierarchy levels, from larger display styles to small labels:</p><ul><li><p class="paragraph">displayLarge, displayMedium, displaySmall</p></li><li><p class="paragraph">headlineLarge, headlineMedium, headlineSmall</p></li><li><p class="paragraph">titleLarge, titleMedium, titleSmall</p></li><li><p class="paragraph">bodyLarge, bodyMedium, bodySmall</p></li><li><p class="paragraph">labelLarge, labelMedium, labelSmall</p></li></ul><p class="paragraph">Use the zero-argument constructor (<code class="lang-kotlin">ClerkTypography()</code>) to start from Clerk's baseline styles and override only a subset via named parameters. If you need the raw <code class="lang-kotlin">TextStyle</code> instances outside of the theme container, reference <a href="../-clerk-typography-defaults/index.html">ClerkTypographyDefaults</a> directly.</p><p class="paragraph">Notes:</p><ul><li><p class="paragraph">Size is expressed as a floating-point number (commonly interpreted as points by consumers); UI layers should convert to the appropriate unit (e.g., sp) during mapping.</p></li><li><p class="paragraph">Weight values are provided via the ClerkFontWeight enum which wraps named constants defined in ClerkFontWeights instead of using hard-coded numbers.</p></li></ul></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="tableheader">Constructors</h2>
-        <div class="table"><a data-name="-1008407622%2FConstructors%2F686701518" anchor-label="ClerkTypography" id="-1008407622%2FConstructors%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+        <div class="table"><a data-name="-1008407622%2FConstructors%2F-1784893667" anchor-label="ClerkTypography" id="-1008407622%2FConstructors%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-clerk-typography.html"><span>Clerk</span><wbr><span><span>Typography</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1008407622%2FConstructors%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1008407622%2FConstructors%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">displaySmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.displaySmall<span class="token punctuation">, </span></span><span class="parameter ">headlineLarge<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineLarge<span class="token punctuation">, </span></span><span class="parameter ">headlineMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineMedium<span class="token punctuation">, </span></span><span class="parameter ">headlineSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineSmall<span class="token punctuation">, </span></span><span class="parameter ">titleMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.titleMedium<span class="token punctuation">, </span></span><span class="parameter ">titleSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.titleSmall<span class="token punctuation">, </span></span><span class="parameter ">bodyLarge<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodyLarge<span class="token punctuation">, </span></span><span class="parameter ">bodyMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodyMedium<span class="token punctuation">, </span></span><span class="parameter ">bodySmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodySmall<span class="token punctuation">, </span></span><span class="parameter ">labelMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.labelMedium<span class="token punctuation">, </span></span><span class="parameter ">labelSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.labelSmall</span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">displaySmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.displaySmall<span class="token punctuation">, </span></span><span class="parameter ">headlineLarge<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineLarge<span class="token punctuation">, </span></span><span class="parameter ">headlineMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineMedium<span class="token punctuation">, </span></span><span class="parameter ">headlineSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.headlineSmall<span class="token punctuation">, </span></span><span class="parameter ">titleMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.titleMedium<span class="token punctuation">, </span></span><span class="parameter ">titleSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.titleSmall<span class="token punctuation">, </span></span><span class="parameter ">bodyLarge<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodyLarge<span class="token punctuation">, </span></span><span class="parameter ">bodyMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodyMedium<span class="token punctuation">, </span></span><span class="parameter ">bodySmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.bodySmall<span class="token punctuation">, </span></span><span class="parameter ">labelMedium<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.labelMedium<span class="token punctuation">, </span></span><span class="parameter ">labelSmall<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span><span class="token operator"> = </span>ClerkTypographyDefaults.labelSmall</span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -120,167 +120,167 @@
       </div>
       <div data-togglable="PROPERTY">
         <h2 class="tableheader">Properties</h2>
-        <div class="table"><a data-name="-1815268464%2FProperties%2F686701518" anchor-label="bodyLarge" id="-1815268464%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+        <div class="table"><a data-name="-1815268464%2FProperties%2F-1784893667" anchor-label="bodyLarge" id="-1815268464%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="body-large.html"><span>body</span><wbr><span><span>Large</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1815268464%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1815268464%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="body-large.html">bodyLarge</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="body-large.html">bodyLarge</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-2079554310%2FProperties%2F686701518" anchor-label="bodyMedium" id="-2079554310%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="-2079554310%2FProperties%2F-1784893667" anchor-label="bodyMedium" id="-2079554310%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="body-medium.html"><span>body</span><wbr><span><span>Medium</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2079554310%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2079554310%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="body-medium.html">bodyMedium</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="body-medium.html">bodyMedium</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1242974396%2FProperties%2F686701518" anchor-label="bodySmall" id="-1242974396%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="-1242974396%2FProperties%2F-1784893667" anchor-label="bodySmall" id="-1242974396%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="body-small.html"><span>body</span><wbr><span><span>Small</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1242974396%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1242974396%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="body-small.html">bodySmall</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="body-small.html">bodySmall</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1056566796%2FProperties%2F686701518" anchor-label="displaySmall" id="1056566796%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="1056566796%2FProperties%2F-1784893667" anchor-label="displaySmall" id="1056566796%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="display-small.html"><span>display</span><wbr><span><span>Small</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1056566796%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1056566796%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="display-small.html">displaySmall</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="display-small.html">displaySmall</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="417631810%2FProperties%2F686701518" anchor-label="headlineLarge" id="417631810%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="417631810%2FProperties%2F-1784893667" anchor-label="headlineLarge" id="417631810%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="headline-large.html"><span>headline</span><wbr><span><span>Large</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="417631810%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="417631810%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="headline-large.html">headlineLarge</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="headline-large.html">headlineLarge</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1579122552%2FProperties%2F686701518" anchor-label="headlineMedium" id="-1579122552%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="-1579122552%2FProperties%2F-1784893667" anchor-label="headlineMedium" id="-1579122552%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="headline-medium.html"><span>headline</span><wbr><span><span>Medium</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1579122552%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1579122552%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="headline-medium.html">headlineMedium</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="headline-medium.html">headlineMedium</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="989925878%2FProperties%2F686701518" anchor-label="headlineSmall" id="989925878%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="989925878%2FProperties%2F-1784893667" anchor-label="headlineSmall" id="989925878%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="headline-small.html"><span>headline</span><wbr><span><span>Small</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="989925878%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="989925878%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="headline-small.html">headlineSmall</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="headline-small.html">headlineSmall</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="640230848%2FProperties%2F686701518" anchor-label="labelMedium" id="640230848%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="640230848%2FProperties%2F-1784893667" anchor-label="labelMedium" id="640230848%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="label-medium.html"><span>label</span><wbr><span><span>Medium</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="640230848%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="640230848%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="label-medium.html">labelMedium</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="label-medium.html">labelMedium</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-185408066%2FProperties%2F686701518" anchor-label="labelSmall" id="-185408066%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="-185408066%2FProperties%2F-1784893667" anchor-label="labelSmall" id="-185408066%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="label-small.html"><span>label</span><wbr><span><span>Small</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-185408066%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-185408066%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="label-small.html">labelSmall</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="label-small.html">labelSmall</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="45684188%2FProperties%2F686701518" anchor-label="titleMedium" id="45684188%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="45684188%2FProperties%2F-1784893667" anchor-label="titleMedium" id="45684188%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="title-medium.html"><span>title</span><wbr><span><span>Medium</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="45684188%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="45684188%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="title-medium.html">titleMedium</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="title-medium.html">titleMedium</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="349602338%2FProperties%2F686701518" anchor-label="titleSmall" id="349602338%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="349602338%2FProperties%2F-1784893667" anchor-label="titleSmall" id="349602338%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="title-small.html"><span>title</span><wbr><span><span>Small</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="349602338%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="349602338%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="title-small.html">titleSmall</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="title-small.html">titleSmall</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/text/TextStyle.html">TextStyle</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>

@@ -6,10 +6,12 @@ com.clerk.api
 com.clerk.api.auth
 com.clerk.api.auth.builders
 com.clerk.api.auth.types
+com.clerk.api.credentials
 com.clerk.api.emailaddress
 com.clerk.api.extensions
 com.clerk.api.externalaccount
 com.clerk.api.log
+com.clerk.api.magiclink
 com.clerk.api.network
 com.clerk.api.network.api
 com.clerk.api.network.model.account
@@ -41,11 +43,16 @@ com.clerk.ui.core.badge
 com.clerk.ui.core.button.social
 com.clerk.ui.core.button.standard
 com.clerk.ui.core.input
+com.clerk.ui.organizationlist
+com.clerk.ui.organizationprofile
+com.clerk.ui.organizationprofile.custom
+com.clerk.ui.organizationswitcher
 com.clerk.ui.signin
 com.clerk.ui.signin.alternativemethods
 com.clerk.ui.signin.backupcode
 com.clerk.ui.signin.clienttrust
 com.clerk.ui.signin.code
+com.clerk.ui.signin.emaillink
 com.clerk.ui.signin.help
 com.clerk.ui.signin.passkey
 com.clerk.ui.signin.password.forgot
@@ -54,6 +61,7 @@ com.clerk.ui.signin.password.set
 com.clerk.ui.signup.code
 com.clerk.ui.signup.collectfield
 com.clerk.ui.signup.completeprofile
+com.clerk.ui.signup.emaillink
 com.clerk.ui.userbutton
 com.clerk.ui.userprofile
 com.clerk.ui.userprofile.custom

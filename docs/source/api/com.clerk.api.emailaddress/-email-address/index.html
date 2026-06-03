@@ -43,7 +43,7 @@
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
-                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":source:api/main">androidJvm</button>
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":source:api/release">release</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
                 <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
@@ -54,9 +54,9 @@
                     </div>
                         <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
                             <label class="checkbox">
-                                <input type="checkbox" class="checkbox--input" id=":source:api/main" data-filter=":source:api/main">
+                                <input type="checkbox" class="checkbox--input" id=":source:api/release" data-filter=":source:api/release">
                                 <span class="checkbox--icon"></span>
-                                androidJvm
+                                release
                             </label>
                         </li>
                 </ul>
@@ -90,28 +90,28 @@
         </nav>
         <div id="resizer" class="resizer" data-item-type="BAR"></div>
         <div id="main" data-item-type="SECTION" role="main">
-<div class="main-content" data-page-type="classlike" id="content" pageids="Clerk Android API::com.clerk.api.emailaddress/EmailAddress///PointingToDeclaration//686701518">
+<div class="main-content" data-page-type="classlike" id="content" pageids="Clerk Android API::com.clerk.api.emailaddress/EmailAddress///PointingToDeclaration//-1784893667">
   <div class="breadcrumbs"><a href="../../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="../index.html">com.clerk.api.emailaddress</a><span class="delimiter">/</span><span class="current">EmailAddress</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Email</span><wbr><span><span>Address</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">EmailAddress</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>id<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>emailAddress<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>verification<span class="token operator">: </span><a href="../../com.clerk.api.network.model.verification/-verification/index.html">Verification</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>linkedTo<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-linked-entity/index.html">EmailAddress.LinkedEntity</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>createdAt<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><p class="paragraph">The EmailAddress object represents an email address associated with a user.</p><p class="paragraph">This class provides methods to create, retrieve, verify, and delete email addresses.</p><h4 class="tableheader">Parameters</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>id</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The unique identifier for the email address.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>email</span><wbr><span><span>Address</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The email address value.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>verification</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The verification status of the email address.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>linked</span><wbr><span><span>To</span></span></u></div></span></div><div><div class="title"><p class="paragraph">A list of linked accounts or identifiers associated with this email address.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>created</span><wbr><span><span>At</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The creation timestamp of the email address, as a Unix timestamp in milliseconds.</p></div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">EmailAddress</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>id<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>emailAddress<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>verification<span class="token operator">: </span><a href="../../com.clerk.api.network.model.verification/-verification/index.html">Verification</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>linkedTo<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-linked-entity/index.html">EmailAddress.LinkedEntity</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>createdAt<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><p class="paragraph">The EmailAddress object represents an email address associated with a user.</p><p class="paragraph">This class provides methods to create, retrieve, verify, and delete email addresses.</p><h4 class="tableheader">Parameters</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>id</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The unique identifier for the email address.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>email</span><wbr><span><span>Address</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The email address value.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>verification</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The verification status of the email address.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>linked</span><wbr><span><span>To</span></span></u></div></span></div><div><div class="title"><p class="paragraph">A list of linked accounts or identifiers associated with this email address.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>created</span><wbr><span><span>At</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The creation timestamp of the email address, as a Unix timestamp in milliseconds.</p></div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="tableheader">Constructors</h2>
-        <div class="table"><a data-name="-1001524758%2FConstructors%2F686701518" anchor-label="EmailAddress" id="-1001524758%2FConstructors%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+        <div class="table"><a data-name="-1001524758%2FConstructors%2F-1784893667" anchor-label="EmailAddress" id="-1001524758%2FConstructors%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-email-address.html"><span>Email</span><wbr><span><span>Address</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1001524758%2FConstructors%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1001524758%2FConstructors%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">emailAddress<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">verification<span class="token operator">: </span><a href="../../com.clerk.api.network.model.verification/-verification/index.html">Verification</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">linkedTo<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-linked-entity/index.html">EmailAddress.LinkedEntity</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">createdAt<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">emailAddress<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">verification<span class="token operator">: </span><a href="../../com.clerk.api.network.model.verification/-verification/index.html">Verification</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">linkedTo<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-linked-entity/index.html">EmailAddress.LinkedEntity</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">createdAt<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -120,47 +120,47 @@
       </div>
       <div data-togglable="TYPE">
         <h2 class="tableheader">Types</h2>
-        <div class="table"><a data-name="-1500304066%2FClasslikes%2F686701518" anchor-label="Companion" id="-1500304066%2FClasslikes%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+        <div class="table"><a data-name="-1500304066%2FClasslikes%2F-1784893667" anchor-label="Companion" id="-1500304066%2FClasslikes%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1500304066%2FClasslikes%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1500304066%2FClasslikes%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1959522076%2FClasslikes%2F686701518" anchor-label="LinkedEntity" id="1959522076%2FClasslikes%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="1959522076%2FClasslikes%2F-1784893667" anchor-label="LinkedEntity" id="1959522076%2FClasslikes%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-linked-entity/index.html"><span>Linked</span><wbr><span><span>Entity</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1959522076%2FClasslikes%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1959522076%2FClasslikes%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="-linked-entity/index.html">LinkedEntity</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>id<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>type<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="-linked-entity/index.html">LinkedEntity</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>id<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>type<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1245700894%2FClasslikes%2F686701518" anchor-label="PrepareVerificationParams" id="-1245700894%2FClasslikes%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="-1245700894%2FClasslikes%2F-1784893667" anchor-label="PrepareVerificationParams" id="-1245700894%2FClasslikes%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-prepare-verification-params/index.html"><span>Prepare</span><wbr><span>Verification</span><wbr><span><span>Params</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1245700894%2FClasslikes%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1245700894%2FClasslikes%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-prepare-verification-params/index.html">PrepareVerificationParams</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-prepare-verification-params/index.html">PrepareVerificationParams</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -169,107 +169,107 @@
       </div>
       <div data-togglable="PROPERTY">
         <h2 class="tableheader">Properties</h2>
-        <div class="table"><a data-name="-2094614756%2FProperties%2F686701518" anchor-label="createdAt" id="-2094614756%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+        <div class="table"><a data-name="-2094614756%2FProperties%2F-1784893667" anchor-label="createdAt" id="-2094614756%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="created-at.html"><span>created</span><wbr><span><span>At</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2094614756%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2094614756%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/SerialName///PointingToDeclaration/"><span class="token annotation builtin">SerialName</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"created_at"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="created-at.html">createdAt</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Created at timestamp</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/SerialName///PointingToDeclaration/"><span class="token annotation builtin">SerialName</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"created_at"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="created-at.html">createdAt</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Created at timestamp</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="144517003%2FProperties%2F686701518" anchor-label="emailAddress" id="144517003%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="144517003%2FProperties%2F-1784893667" anchor-label="emailAddress" id="144517003%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="email-address.html"><span>email</span><wbr><span><span>Address</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="144517003%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="144517003%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/SerialName///PointingToDeclaration/"><span class="token annotation builtin">SerialName</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"email_address"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="email-address.html">emailAddress</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The email address value.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/SerialName///PointingToDeclaration/"><span class="token annotation builtin">SerialName</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"email_address"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="email-address.html">emailAddress</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The email address value.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="780054536%2FProperties%2F686701518" anchor-label="id" id="780054536%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="780054536%2FProperties%2F-1784893667" anchor-label="id" id="780054536%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="id.html"><span><span>id</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="780054536%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="780054536%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="id.html">id</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The unique identifier for the email address.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="id.html">id</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The unique identifier for the email address.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-64533319%2FProperties%2F686701518" anchor-label="isPrimary" id="-64533319%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="-64533319%2FProperties%2F-1784893667" anchor-label="isPrimary" id="-64533319%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../is-primary.html"><span>is</span><wbr><span><span>Primary</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-64533319%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-64533319%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../is-primary.html">isPrimary</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Convenience function to tell whether the email is the user's primary email.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../is-primary.html">isPrimary</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Convenience function to tell whether the email is the user's primary email.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1832975177%2FProperties%2F686701518" anchor-label="isVerified" id="-1832975177%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="-1832975177%2FProperties%2F-1784893667" anchor-label="isVerified" id="-1832975177%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../is-verified.html"><span>is</span><wbr><span><span>Verified</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1832975177%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1832975177%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../is-verified.html">isVerified</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Convenience function to tell whether the email is verified.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../is-verified.html">isVerified</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Convenience function to tell whether the email is verified.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-2145134513%2FProperties%2F686701518" anchor-label="linkedTo" id="-2145134513%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="-2145134513%2FProperties%2F-1784893667" anchor-label="linkedTo" id="-2145134513%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="linked-to.html"><span>linked</span><wbr><span><span>To</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2145134513%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2145134513%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/SerialName///PointingToDeclaration/"><span class="token annotation builtin">SerialName</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"linked_to"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="linked-to.html">linkedTo</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-linked-entity/index.html">EmailAddress.LinkedEntity</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">A list of linked accounts or identifiers associated with this email address.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/SerialName///PointingToDeclaration/"><span class="token annotation builtin">SerialName</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"linked_to"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="linked-to.html">linkedTo</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-linked-entity/index.html">EmailAddress.LinkedEntity</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">A list of linked accounts or identifiers associated with this email address.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-300222584%2FProperties%2F686701518" anchor-label="verification" id="-300222584%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="-300222584%2FProperties%2F-1784893667" anchor-label="verification" id="-300222584%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="verification.html"><span><span>verification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-300222584%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-300222584%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="verification.html">verification</a><span class="token operator">: </span><a href="../../com.clerk.api.network.model.verification/-verification/index.html">Verification</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The verification status of the email address.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="verification.html">verification</a><span class="token operator">: </span><a href="../../com.clerk.api.network.model.verification/-verification/index.html">Verification</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The verification status of the email address.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -278,92 +278,92 @@
       </div>
       <div data-togglable="EXTENSION_FUNCTION">
         <h2 class="tableheader">Functions</h2>
-        <div class="table"><a data-name="-573118373%2FFunctions%2F686701518" anchor-label="attemptVerification" id="-573118373%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+        <div class="table"><a data-name="-573118373%2FFunctions%2F-1784893667" anchor-label="attemptVerification" id="-573118373%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../attempt-verification.html"><span>attempt</span><wbr><span><span>Verification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-573118373%2FFunctions%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-573118373%2FFunctions%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../attempt-verification.html"><span class="token function">attemptVerification</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">code<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Attempts to verify the email address with the given code.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../attempt-verification.html"><span class="token function">attemptVerification</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">code<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Attempts to verify the email address with the given code.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="593401168%2FFunctions%2F686701518" anchor-label="delete" id="593401168%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="593401168%2FFunctions%2F-1784893667" anchor-label="delete" id="593401168%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../delete.html"><span><span>delete</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="593401168%2FFunctions%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="593401168%2FFunctions%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../delete.html"><span class="token function">delete</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../../com.clerk.api.network.model.deleted/-deleted-object/index.html">DeletedObject</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Deletes the <a href="index.html">EmailAddress</a> from the server.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../delete.html"><span class="token function">delete</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="../../com.clerk.api.network.model.deleted/-deleted-object/index.html">DeletedObject</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Deletes the <a href="index.html">EmailAddress</a> from the server.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-919793385%2FFunctions%2F686701518" anchor-label="get" id="-919793385%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="-919793385%2FFunctions%2F-1784893667" anchor-label="get" id="-919793385%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../get.html"><span><span>get</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-919793385%2FFunctions%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-919793385%2FFunctions%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../get.html"><span class="token function">get</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves the <a href="index.html">EmailAddress</a> from the server.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../get.html"><span class="token function">get</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves the <a href="index.html">EmailAddress</a> from the server.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="420229937%2FFunctions%2F686701518" anchor-label="prepareVerification" id="420229937%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="420229937%2FFunctions%2F-1784893667" anchor-label="prepareVerification" id="420229937%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../prepare-verification.html"><span>prepare</span><wbr><span><span>Verification</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="420229937%2FFunctions%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="420229937%2FFunctions%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../prepare-verification.html"><span class="token function">prepareVerification</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">params<span class="token operator">: </span><a href="-prepare-verification-params/index.html">EmailAddress.PrepareVerificationParams</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Prepares the email address for verification using the specified strategy.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../prepare-verification.html"><span class="token function">prepareVerification</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">params<span class="token operator">: </span><a href="-prepare-verification-params/index.html">EmailAddress.PrepareVerificationParams</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Prepares the email address for verification using the specified strategy.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="567218362%2FFunctions%2F686701518" anchor-label="sendCode" id="567218362%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="567218362%2FFunctions%2F-1784893667" anchor-label="sendCode" id="567218362%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../send-code.html"><span>send</span><wbr><span><span>Code</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="567218362%2FFunctions%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="567218362%2FFunctions%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../send-code.html"><span class="token function">sendCode</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Sends a verification code to this email address.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../send-code.html"><span class="token function">sendCode</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Sends a verification code to this email address.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1368447545%2FFunctions%2F686701518" anchor-label="verifyCode" id="1368447545%2FFunctions%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="1368447545%2FFunctions%2F-1784893667" anchor-label="verifyCode" id="1368447545%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../verify-code.html"><span>verify</span><wbr><span><span>Code</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1368447545%2FFunctions%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1368447545%2FFunctions%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../verify-code.html"><span class="token function">verifyCode</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">code<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Verifies this email address using the provided verification code.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">EmailAddress</a><span class="token punctuation">.</span><a href="../verify-code.html"><span class="token function">verifyCode</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">code<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.clerk.api.network.serialization/-clerk-result/index.html">ClerkResult</a><span class="token operator">&lt;</span><a href="index.html">EmailAddress</a><span class="token punctuation">, </span><a href="../../com.clerk.api.network.model.error/-clerk-error-response/index.html">ClerkErrorResponse</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Verifies this email address using the provided verification code.</p></div></div></div>
                 </div>
               </div>
             </div>

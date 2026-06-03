@@ -43,7 +43,7 @@
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
-                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":source:api/main">androidJvm</button>
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":source:api/release">release</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
                 <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
@@ -54,9 +54,9 @@
                     </div>
                         <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
                             <label class="checkbox">
-                                <input type="checkbox" class="checkbox--input" id=":source:api/main" data-filter=":source:api/main">
+                                <input type="checkbox" class="checkbox--input" id=":source:api/release" data-filter=":source:api/release">
                                 <span class="checkbox--icon"></span>
-                                androidJvm
+                                release
                             </label>
                         </li>
                 </ul>
@@ -90,28 +90,28 @@
         </nav>
         <div id="resizer" class="resizer" data-item-type="BAR"></div>
         <div id="main" data-item-type="SECTION" role="main">
-<div class="main-content" data-page-type="classlike" id="content" pageids="Clerk Android API::com.clerk.api.signin/SignIn.PrepareSecondFactorParams///PointingToDeclaration//686701518">
+<div class="main-content" data-page-type="classlike" id="content" pageids="Clerk Android API::com.clerk.api.signin/SignIn.PrepareSecondFactorParams///PointingToDeclaration//-1784893667">
   <div class="breadcrumbs"><a href="../../../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="../../index.html">com.clerk.api.signin</a><span class="delimiter">/</span><a href="../index.html">SignIn</a><span class="delimiter">/</span><span class="current">PrepareSecondFactorParams</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Prepare</span><wbr><span>Second</span><wbr><span>Factor</span><wbr><span><span>Params</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">PrepareSecondFactorParams</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>strategy<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator"> = </span>PHONE_CODE<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>phoneNumberId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>emailAddressId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><p class="paragraph">A parameter object for preparing the second factor verification.</p><p class="paragraph">This class is used to specify the strategy and related details for preparing a second factor authentication method. For example, if you want to use a one-time code sent to the user's phone, you would set the strategy to "phone_code".</p><h4 class="tableheader">See also</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../prepare-second-factor.html"><span>SignIn.</span><wbr><span>prepare</span><wbr><span>Second</span><wbr><span><span>Factor</span></span></a></div></span></div><div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">PrepareSecondFactorParams</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>strategy<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator"> = </span>PHONE_CODE<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>phoneNumberId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>emailAddressId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><p class="paragraph">A parameter object for preparing the second factor verification.</p><p class="paragraph">This class is used to specify the strategy and related details for preparing a second factor authentication method. For example, if you want to use a one-time code sent to the user's phone, you would set the strategy to "phone_code".</p><h4 class="tableheader">See also</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../prepare-second-factor.html"><span>SignIn.</span><wbr><span>prepare</span><wbr><span>Second</span><wbr><span><span>Factor</span></span></a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="tableheader">Constructors</h2>
-        <div class="table"><a data-name="-1218424801%2FConstructors%2F686701518" anchor-label="PrepareSecondFactorParams" id="-1218424801%2FConstructors%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+        <div class="table"><a data-name="-1218424801%2FConstructors%2F-1784893667" anchor-label="PrepareSecondFactorParams" id="-1218424801%2FConstructors%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-prepare-second-factor-params.html"><span>Prepare</span><wbr><span>Second</span><wbr><span>Factor</span><wbr><span><span>Params</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1218424801%2FConstructors%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1218424801%2FConstructors%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">strategy<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator"> = </span>PHONE_CODE<span class="token punctuation">, </span></span><span class="parameter ">phoneNumberId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">emailAddressId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">strategy<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator"> = </span>PHONE_CODE<span class="token punctuation">, </span></span><span class="parameter ">phoneNumberId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">emailAddressId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -120,17 +120,17 @@
       </div>
       <div data-togglable="TYPE">
         <h2 class="tableheader">Types</h2>
-        <div class="table"><a data-name="-967006244%2FClasslikes%2F686701518" anchor-label="Companion" id="-967006244%2FClasslikes%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+        <div class="table"><a data-name="-967006244%2FClasslikes%2F-1784893667" anchor-label="Companion" id="-967006244%2FClasslikes%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-967006244%2FClasslikes%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-967006244%2FClasslikes%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -139,47 +139,47 @@
       </div>
       <div data-togglable="PROPERTY">
         <h2 class="tableheader">Properties</h2>
-        <div class="table"><a data-name="285090642%2FProperties%2F686701518" anchor-label="emailAddressId" id="285090642%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+        <div class="table"><a data-name="285090642%2FProperties%2F-1784893667" anchor-label="emailAddressId" id="285090642%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="email-address-id.html"><span>email</span><wbr><span>Address</span><wbr><span><span>Id</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="285090642%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="285090642%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/SerialName///PointingToDeclaration/"><span class="token annotation builtin">SerialName</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"email_address_id"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="email-address-id.html">emailAddressId</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The ID of the email address to use for <code class="lang-kotlin">email_code</code> verification. This is typically retrieved from the <code class="lang-kotlin">supportedSecondFactors</code> list on the <code class="lang-kotlin">SignIn</code> object.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/SerialName///PointingToDeclaration/"><span class="token annotation builtin">SerialName</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"email_address_id"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="email-address-id.html">emailAddressId</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The ID of the email address to use for <code class="lang-kotlin">email_code</code> verification. This is typically retrieved from the <code class="lang-kotlin">supportedSecondFactors</code> list on the <code class="lang-kotlin">SignIn</code> object.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1717399811%2FProperties%2F686701518" anchor-label="phoneNumberId" id="1717399811%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="1717399811%2FProperties%2F-1784893667" anchor-label="phoneNumberId" id="1717399811%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="phone-number-id.html"><span>phone</span><wbr><span>Number</span><wbr><span><span>Id</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1717399811%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1717399811%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/SerialName///PointingToDeclaration/"><span class="token annotation builtin">SerialName</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"phone_number_id"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="phone-number-id.html">phoneNumberId</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The ID of the phone number to use for <code class="lang-kotlin">phone_code</code> verification. This is typically retrieved from the <code class="lang-kotlin">supportedSecondFactors</code> list on the <code class="lang-kotlin">SignIn</code> object.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/SerialName///PointingToDeclaration/"><span class="token annotation builtin">SerialName</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"phone_number_id"</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="phone-number-id.html">phoneNumberId</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The ID of the phone number to use for <code class="lang-kotlin">phone_code</code> verification. This is typically retrieved from the <code class="lang-kotlin">supportedSecondFactors</code> list on the <code class="lang-kotlin">SignIn</code> object.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1710213586%2FProperties%2F686701518" anchor-label="strategy" id="1710213586%2FProperties%2F686701518" data-filterable-set=":source:api/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/main" data-filterable-set=":source:api/main">
+<a data-name="1710213586%2FProperties%2F-1784893667" anchor-label="strategy" id="1710213586%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="strategy.html"><span><span>strategy</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1710213586%2FProperties%2F686701518"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1710213586%2FProperties%2F-1784893667"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="strategy.html">strategy</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The strategy used for second factor verification.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="strategy.html">strategy</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The strategy used for second factor verification.</p></div></div></div>
                 </div>
               </div>
             </div>

@@ -1,1 +1,1 @@
-sourceset_dependencies = '{":source:api/main":[],":source:api/release":[],":source:ui/main":[],":source:ui/release":[]}'
+sourceset_dependencies = '{":source:api/release":[],":source:ui/release":[]}'
