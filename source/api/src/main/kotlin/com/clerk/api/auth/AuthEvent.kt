@@ -1,5 +1,6 @@
 package com.clerk.api.auth
 
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
@@ -21,6 +22,17 @@ sealed interface AuthEvent {
 
   /** Emitted when a user signs out. */
   data object SignedOut : AuthEvent
+
+  /**
+   * Emitted when the current client changes.
+   *
+   * This event fires whenever Clerk receives a new [Client] value that differs from the previously
+   * stored client. Because [Client] is a data class, nested changes such as a session or user
+   * property update also trigger this event.
+   *
+   * @property client The updated client.
+   */
+  data class ClientChanged(val client: Client) : AuthEvent
 
   /**
    * Emitted when the current session changes.

@@ -26,6 +26,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -162,6 +163,38 @@ class ClerkTest {
     } catch (_: Exception) {
       // Ignore reflection errors - they mean the fields weren't accessible
     }
+  }
+
+  private fun clientWithUser(firstName: String): Client {
+    val user =
+      User(
+        id = "user_123",
+        imageUrl = "",
+        hasImage = false,
+        passkeys = emptyList(),
+        passwordEnabled = false,
+        phoneNumbers = emptyList(),
+        totpEnabled = false,
+        twoFactorEnabled = false,
+        updatedAt = 0L,
+        firstName = firstName,
+      )
+    val session =
+      Session(
+        id = "session_123",
+        status = Session.SessionStatus.ACTIVE,
+        expireAt = 10_000,
+        lastActiveAt = 1_000,
+        user = user,
+        createdAt = 1_000,
+        updatedAt = 1_000,
+      )
+
+    return Client(
+      id = "client_123",
+      sessions = listOf(session),
+      lastActiveSessionId = session.id,
+    )
   }
 
   private fun initializeClerkWithClient(client: Client) {
@@ -643,6 +676,56 @@ class ClerkTest {
     assertTrue(events[1] is AuthEvent.SignedIn)
     assertEquals(mockSession, (events[1] as AuthEvent.SignedIn).session)
     assertEquals(mockUser, (events[1] as AuthEvent.SignedIn).user)
+  }
+
+  @Test
+  fun `updateClient emits ClientChanged when client changes`() = runTest {
+    val client = Client(id = "client_123")
+    val events = mutableListOf<AuthEvent>()
+    val eventJob =
+      launch(start = CoroutineStart.UNDISPATCHED) { Clerk.auth.events.take(1).toList(events) }
+
+    Clerk.updateClient(client)
+
+    withTimeout(1_000) { eventJob.join() }
+
+    assertTrue(events.single() is AuthEvent.ClientChanged)
+    assertEquals(client, (events.single() as AuthEvent.ClientChanged).client)
+  }
+
+  @Test
+  fun `updateClient does not emit ClientChanged when client is unchanged`() = runTest {
+    val client = Client(id = "client_123")
+    Clerk.updateClient(client)
+
+    val events = mutableListOf<AuthEvent>()
+    val eventJob =
+      launch(start = CoroutineStart.UNDISPATCHED) { Clerk.auth.events.take(1).toList(events) }
+
+    Clerk.updateClient(client)
+
+    withTimeoutOrNull(100) { eventJob.join() }
+    eventJob.cancel()
+
+    assertTrue(events.isEmpty())
+  }
+
+  @Test
+  fun `updateClient emits ClientChanged when nested user property changes`() = runTest {
+    val initialClient = clientWithUser(firstName = "Jane")
+    val updatedClient = clientWithUser(firstName = "Janet")
+    Clerk.updateClient(initialClient)
+
+    val events = mutableListOf<AuthEvent>()
+    val eventJob =
+      launch(start = CoroutineStart.UNDISPATCHED) { Clerk.auth.events.take(2).toList(events) }
+
+    Clerk.updateClient(updatedClient)
+
+    withTimeout(1_000) { eventJob.join() }
+
+    val clientChanged = events.single { it is AuthEvent.ClientChanged } as AuthEvent.ClientChanged
+    assertEquals(updatedClient, clientChanged.client)
   }
 
   @Test

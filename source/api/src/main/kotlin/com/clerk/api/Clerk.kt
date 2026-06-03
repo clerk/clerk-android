@@ -870,12 +870,19 @@ object Clerk {
    * @param client The updated client configuration.
    */
   internal fun updateClient(client: Client) {
-    this.client = client.withResolvedActiveSession(previousSession = _session.value)
+    val previousClient = if (::client.isInitialized) this.client else null
+    val updatedClient = client.withResolvedActiveSession(previousSession = _session.value)
+
+    this.client = updatedClient
     // Only update state if flows are initialized (not during static initialization)
     try {
       updateSessionAndUserState()
     } catch (e: Exception) {
       ClerkLog.e("${e.message}")
+    }
+
+    if (previousClient != updatedClient) {
+      auth.send(com.clerk.api.auth.AuthEvent.ClientChanged(updatedClient))
     }
   }
 
