@@ -35,7 +35,7 @@ internal fun WorkbenchAuthGate(
         isDismissible = true,
         persistIdentifiers = persistIdentifiers,
         onAuthComplete = { isAuthFlowActive = false },
-        onDismiss = {}
+        onDismiss = {},
       )
     else -> signedInContent()
   }

@@ -75,8 +75,12 @@ class MainActivity : ComponentActivity() {
             StorageHelper.deleteValue(StorageKey.PUBLIC_KEY)
             StorageHelper.deleteValue(StorageKey.PROXY_URL)
           },
-          onClickFirstItem = { context.startActivity(Intent(context, UiActivity1::class.java)) },
-          onClickSecondItem = { context.startActivity(Intent(context, UiActivity2::class.java)) },
+          onClickFirstItem = {
+            context.startActivity(Intent(context, UserProfileBackActivity::class.java))
+          },
+          onClickSecondItem = {
+            context.startActivity(Intent(context, UserProfileCloseActivity::class.java))
+          },
         )
       }
     }
@@ -173,9 +177,17 @@ private fun InstructionsCard() {
 private fun TestOptionsCard(onClickFirstItem: () -> Unit, onClickSecondItem: () -> Unit) {
   WorkbenchCard {
     Column(modifier = Modifier.padding(Spacing.small)) {
-      ClickableTestItem(text = "Test 1", onClickFirstItem)
+      ClickableTestItem(
+        title = "User profile as a route",
+        description = "Uses a top-left back arrow for screens pushed from navigation.",
+        onClick = onClickFirstItem,
+      )
       WorkbenchDivider()
-      ClickableTestItem(text = "Test 2", onClick = onClickSecondItem)
+      ClickableTestItem(
+        title = "User profile as a modal",
+        description = "Uses a top-right X for profile opened from an avatar or account menu.",
+        onClick = onClickSecondItem,
+      )
     }
   }
 }
@@ -204,9 +216,17 @@ private fun WorkbenchDivider() {
 }
 
 @Composable
-private fun ClickableTestItem(text: String, onClick: () -> Unit) {
+private fun ClickableTestItem(title: String, description: String, onClick: () -> Unit) {
   Row(modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(8.dp)) {
-    Text(text = text, color = ClerkPrimary, style = MaterialTheme.typography.titleMedium)
+    Column {
+      Text(text = title, color = ClerkPrimary, style = MaterialTheme.typography.titleMedium)
+      Spacer(modifier = Modifier.height(Spacing.extraSmall))
+      Text(
+        text = description,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodyMedium,
+      )
+    }
   }
 }
 
