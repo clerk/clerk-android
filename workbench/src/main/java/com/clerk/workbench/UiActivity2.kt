@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.ui.userprofile.UserProfileDismissButtonStyle
 import com.clerk.ui.userprofile.UserProfileView
 import com.clerk.workbench.ui.theme.Background
 import com.clerk.workbench.ui.theme.BackgroundDark
@@ -39,11 +38,7 @@ class UiActivity2 : ComponentActivity() {
               modifier =
                 Modifier.background(color = backgroundColor).fillMaxSize().statusBarsPadding()
             ) {
-              UserProfileView(
-                isDismissible = true,
-                onDismiss = {},
-                dismissButtonStyle = UserProfileDismissButtonStyle.Close,
-              )
+              UserProfileView(isDismissible = true, onDismiss = {})
             }
           }
         }

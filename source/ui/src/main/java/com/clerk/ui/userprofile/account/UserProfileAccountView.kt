@@ -30,7 +30,6 @@ import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.UserProfileDismissButtonStyle
 import com.clerk.ui.userprofile.custom.CustomRowView
 import com.clerk.ui.userprofile.custom.UserProfileCustomRow
 import com.clerk.ui.userprofile.custom.UserProfileListRow
@@ -41,14 +40,12 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-@Suppress("LongParameterList")
 internal fun UserProfileAccountView(
   onClick: (UserProfileAction) -> Unit,
   onBackPressed: () -> Unit,
   onClickEdit: () -> Unit,
   modifier: Modifier = Modifier,
   isDismissible: Boolean = true,
-  dismissButtonStyle: UserProfileDismissButtonStyle = UserProfileDismissButtonStyle.Back,
   customRows: ImmutableList<UserProfileCustomRow> = persistentListOf(),
   onCustomRowClick: (routeKey: String) -> Unit = {},
 ) {
@@ -66,7 +63,6 @@ internal fun UserProfileAccountView(
     onBackPressed = onBackPressed,
     onEditAvatarClick = onClickEdit,
     isDismissible = isDismissible,
-    dismissButtonStyle = dismissButtonStyle,
     customRows = customRows,
     onCustomRowClick = onCustomRowClick,
   )
@@ -84,7 +80,6 @@ private fun UserProfileAccountViewImpl(
   onEditAvatarClick: () -> Unit,
   modifier: Modifier = Modifier,
   isDismissible: Boolean = true,
-  dismissButtonStyle: UserProfileDismissButtonStyle = UserProfileDismissButtonStyle.Back,
   imageUrl: String? = null,
   viewModel: UserProfileAccountViewModel = viewModel(),
   customRows: ImmutableList<UserProfileCustomRow> = persistentListOf(),
@@ -102,15 +97,10 @@ private fun UserProfileAccountViewImpl(
       modifier = modifier,
       title = stringResource(R.string.account),
       backgroundColor = ClerkMaterialTheme.colors.muted,
-      hasBackButton = shouldShowUserProfileBackButton(isDismissible, dismissButtonStyle),
+      hasBackButton = false,
       horizontalPadding = dp0,
       onBackPressed = onBackPressed,
-      trailingContent =
-        userProfileDismissTrailingContent(
-          isDismissible = isDismissible,
-          dismissButtonStyle = dismissButtonStyle,
-          onDismiss = onBackPressed,
-        ),
+      trailingContent = userProfileDismissTrailingContent(isDismissible, onDismiss = onBackPressed),
       content = {
         Spacers.Vertical.Spacer32()
         AvatarHeaderView(

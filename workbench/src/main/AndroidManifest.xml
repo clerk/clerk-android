@@ -20,10 +20,6 @@
             android:exported="false" />
 
         <activity
-            android:name=".UserProfileBackActivity"
-            android:exported="false" />
-
-        <activity
             android:name=".UserProfileCloseActivity"
             android:exported="false" />
 

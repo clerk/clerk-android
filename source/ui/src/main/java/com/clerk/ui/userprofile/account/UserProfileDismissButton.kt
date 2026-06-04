@@ -10,14 +10,12 @@ import androidx.compose.ui.res.stringResource
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.theme.ClerkMaterialTheme
-import com.clerk.ui.userprofile.UserProfileDismissButtonStyle
 
 internal fun userProfileDismissTrailingContent(
   isDismissible: Boolean,
-  dismissButtonStyle: UserProfileDismissButtonStyle,
   onDismiss: () -> Unit,
 ): (@Composable () -> Unit)? {
-  if (!shouldShowUserProfileCloseButton(isDismissible, dismissButtonStyle)) return null
+  if (!shouldShowUserProfileCloseButton(isDismissible)) return null
 
   return { UserProfileCloseButton(onDismiss) }
 }
@@ -34,12 +32,4 @@ private fun UserProfileCloseButton(onDismiss: () -> Unit) {
   }
 }
 
-internal fun shouldShowUserProfileBackButton(
-  isDismissible: Boolean,
-  dismissButtonStyle: UserProfileDismissButtonStyle,
-): Boolean = isDismissible && dismissButtonStyle == UserProfileDismissButtonStyle.Back
-
-internal fun shouldShowUserProfileCloseButton(
-  isDismissible: Boolean,
-  dismissButtonStyle: UserProfileDismissButtonStyle,
-): Boolean = isDismissible && dismissButtonStyle == UserProfileDismissButtonStyle.Close
+internal fun shouldShowUserProfileCloseButton(isDismissible: Boolean): Boolean = isDismissible

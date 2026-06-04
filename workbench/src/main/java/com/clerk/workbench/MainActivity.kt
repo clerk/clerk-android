@@ -75,10 +75,7 @@ class MainActivity : ComponentActivity() {
             StorageHelper.deleteValue(StorageKey.PUBLIC_KEY)
             StorageHelper.deleteValue(StorageKey.PROXY_URL)
           },
-          onClickFirstItem = {
-            context.startActivity(Intent(context, UserProfileBackActivity::class.java))
-          },
-          onClickSecondItem = {
+          onClickProfileDemo = {
             context.startActivity(Intent(context, UserProfileCloseActivity::class.java))
           },
         )
@@ -92,8 +89,7 @@ class MainActivity : ComponentActivity() {
 private fun MainContent(
   onClear: () -> Unit,
   onSave: (String, String) -> Unit,
-  onClickFirstItem: () -> Unit,
-  onClickSecondItem: () -> Unit,
+  onClickProfileDemo: () -> Unit,
 ) {
   var showBottomSheet by remember { mutableStateOf(false) }
 
@@ -120,7 +116,7 @@ private fun MainContent(
       Spacer(modifier = Modifier.height(Spacing.large))
       InstructionsCard()
       Spacer(modifier = Modifier.height(Spacing.large))
-      TestOptionsCard(onClickFirstItem = onClickFirstItem, onClickSecondItem = onClickSecondItem)
+      TestOptionsCard(onClickProfileDemo = onClickProfileDemo)
     }
   }
 
@@ -174,19 +170,13 @@ private fun InstructionsCard() {
 }
 
 @Composable
-private fun TestOptionsCard(onClickFirstItem: () -> Unit, onClickSecondItem: () -> Unit) {
+private fun TestOptionsCard(onClickProfileDemo: () -> Unit) {
   WorkbenchCard {
     Column(modifier = Modifier.padding(Spacing.small)) {
       ClickableTestItem(
-        title = "User profile as a route",
-        description = "Uses a top-left back arrow for screens pushed from navigation.",
-        onClick = onClickFirstItem,
-      )
-      WorkbenchDivider()
-      ClickableTestItem(
-        title = "User profile as a modal",
+        title = "User profile dismiss affordance",
         description = "Uses a top-right X for profile opened from an avatar or account menu.",
-        onClick = onClickSecondItem,
+        onClick = onClickProfileDemo,
       )
     }
   }

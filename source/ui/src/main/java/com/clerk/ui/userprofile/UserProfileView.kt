@@ -83,12 +83,11 @@ internal fun UserProfileStateProvider(
  * @param onAddAccount Optional callback for hosting the add-account auth flow outside the profile.
  * @param onDismiss Callback when the user profile view is dismissed. When omitted, top-level
  *   dismissal falls back to the system back dispatcher.
- * @param isDismissible Whether to show a top-level back affordance that dismisses the profile.
- * @param dismissButtonStyle Where and how to render the top-level dismiss affordance.
+ * @param isDismissible Whether to show a top-right close affordance that dismisses the profile.
  */
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("ComposeModifierMissing", "ComposeUnstableReceiver")
-@Suppress("LongMethod", "LongParameterList")
+@Suppress("LongMethod")
 @Composable
 fun UserProfileView(
   clerkTheme: ClerkTheme? = null,
@@ -97,7 +96,6 @@ fun UserProfileView(
   onAddAccount: (() -> Unit)? = null,
   onDismiss: (() -> Unit)? = null,
   isDismissible: Boolean = true,
-  dismissButtonStyle: UserProfileDismissButtonStyle = UserProfileDismissButtonStyle.Back,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
@@ -162,7 +160,6 @@ fun UserProfileView(
                 userProfileEntries(
                   backStack = backStack,
                   isDismissible = isDismissible,
-                  dismissButtonStyle = dismissButtonStyle,
                   onDismiss = dismissHandler,
                   customRows = customRows,
                   customDestination = customDestination,
@@ -188,7 +185,6 @@ fun UserProfileView(
 private fun EntryProviderScope<NavKey>.userProfileEntries(
   backStack: NavBackStack<NavKey>,
   isDismissible: Boolean,
-  dismissButtonStyle: UserProfileDismissButtonStyle,
   onDismiss: () -> Unit,
   customRows: List<UserProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
@@ -219,7 +215,6 @@ private fun EntryProviderScope<NavKey>.userProfileEntries(
         )
       },
       isDismissible = isDismissible,
-      dismissButtonStyle = dismissButtonStyle,
       onClickEdit = { backStack.add(UserProfileDestination.UserProfileUpdate) },
       customRows =
         effectiveCustomRows(customRows, hasDestination = customDestination != null)
@@ -267,15 +262,6 @@ private fun EntryProviderScope<NavKey>.userProfileEntries(
       LaunchedEffect(Unit) { backStack.removeLastOrNull() }
     }
   }
-}
-
-/** Visual style and placement for the top-level [UserProfileView] dismiss affordance. */
-enum class UserProfileDismissButtonStyle {
-  /** Shows a back arrow in the top-left navigation slot. */
-  Back,
-
-  /** Shows a close icon in the top-right action slot. */
-  Close,
 }
 
 internal fun handleUserProfileBack(

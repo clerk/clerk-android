@@ -7,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.ui.userprofile.UserProfileDismissButtonStyle
 import com.clerk.ui.userprofile.UserProfileView
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 
@@ -21,13 +20,7 @@ class UserProfileCloseActivity : ComponentActivity() {
     )
     setContent {
       WorkbenchTheme {
-        UserProfileDemoSurface {
-          UserProfileView(
-            isDismissible = true,
-            dismissButtonStyle = UserProfileDismissButtonStyle.Close,
-            onDismiss = { finish() },
-          )
-        }
+        UserProfileDemoSurface { UserProfileView(isDismissible = true, onDismiss = { finish() }) }
       }
     }
   }
