@@ -32,8 +32,10 @@ internal fun WorkbenchAuthGate(
     !isInitialized -> CircularProgressIndicator()
     isAuthFlowActive || user == null || pendingTaskKey != null ->
       AuthView(
+        isDismissible = true,
         persistIdentifiers = persistIdentifiers,
         onAuthComplete = { isAuthFlowActive = false },
+        onDismiss = {},
       )
     else -> signedInContent()
   }

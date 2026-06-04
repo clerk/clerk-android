@@ -75,8 +75,9 @@ class MainActivity : ComponentActivity() {
             StorageHelper.deleteValue(StorageKey.PUBLIC_KEY)
             StorageHelper.deleteValue(StorageKey.PROXY_URL)
           },
-          onClickFirstItem = { context.startActivity(Intent(context, UiActivity1::class.java)) },
-          onClickSecondItem = { context.startActivity(Intent(context, UiActivity2::class.java)) },
+          onClickProfileDemo = {
+            context.startActivity(Intent(context, UserProfileCloseActivity::class.java))
+          },
         )
       }
     }
@@ -88,8 +89,7 @@ class MainActivity : ComponentActivity() {
 private fun MainContent(
   onClear: () -> Unit,
   onSave: (String, String) -> Unit,
-  onClickFirstItem: () -> Unit,
-  onClickSecondItem: () -> Unit,
+  onClickProfileDemo: () -> Unit,
 ) {
   var showBottomSheet by remember { mutableStateOf(false) }
 
@@ -116,7 +116,7 @@ private fun MainContent(
       Spacer(modifier = Modifier.height(Spacing.large))
       InstructionsCard()
       Spacer(modifier = Modifier.height(Spacing.large))
-      TestOptionsCard(onClickFirstItem = onClickFirstItem, onClickSecondItem = onClickSecondItem)
+      TestOptionsCard(onClickProfileDemo = onClickProfileDemo)
     }
   }
 
@@ -170,12 +170,14 @@ private fun InstructionsCard() {
 }
 
 @Composable
-private fun TestOptionsCard(onClickFirstItem: () -> Unit, onClickSecondItem: () -> Unit) {
+private fun TestOptionsCard(onClickProfileDemo: () -> Unit) {
   WorkbenchCard {
     Column(modifier = Modifier.padding(Spacing.small)) {
-      ClickableTestItem(text = "Test 1", onClickFirstItem)
-      WorkbenchDivider()
-      ClickableTestItem(text = "Test 2", onClick = onClickSecondItem)
+      ClickableTestItem(
+        title = "User profile dismiss affordance",
+        description = "Uses a top-right X for profile opened from an avatar or account menu.",
+        onClick = onClickProfileDemo,
+      )
     }
   }
 }
@@ -204,9 +206,17 @@ private fun WorkbenchDivider() {
 }
 
 @Composable
-private fun ClickableTestItem(text: String, onClick: () -> Unit) {
+private fun ClickableTestItem(title: String, description: String, onClick: () -> Unit) {
   Row(modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(8.dp)) {
-    Text(text = text, color = ClerkPrimary, style = MaterialTheme.typography.titleMedium)
+    Column {
+      Text(text = title, color = ClerkPrimary, style = MaterialTheme.typography.titleMedium)
+      Spacer(modifier = Modifier.height(Spacing.extraSmall))
+      Text(
+        text = description,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodyMedium,
+      )
+    }
   }
 }
 

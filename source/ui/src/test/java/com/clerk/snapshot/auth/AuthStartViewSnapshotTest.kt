@@ -32,7 +32,7 @@ class AuthStartViewSnapshotTest : BaseSnapshotTest() {
           AuthStartViewImpl(
             modifier = Modifier.fillMaxSize(),
             authViewHelper = authViewHelper,
-            isDismissable = true,
+            isDismissible = true,
             onDismiss = {},
             onAuthComplete = {},
             authStartViewModel = AuthStartViewModel(),

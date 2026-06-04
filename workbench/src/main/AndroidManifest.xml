@@ -19,6 +19,9 @@
             android:name=".UiActivity2"
             android:exported="false" />
 
+        <activity
+            android:name=".UserProfileCloseActivity"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"

@@ -49,11 +49,11 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * @param clerkTheme Optional theme customization for the list UI.
  * @param hidePersonalAccount Hides the personal account row even when personal account selection is
  *   allowed.
- * @param isDismissable Shows a top dismiss affordance and calls [onDismissRequest] after a
+ * @param isDismissible Shows a top dismiss affordance and calls [onDismissRequest] after a
  *   successful selection when possible.
  * @param skipPostCreateInviteFlow Skips the post-create invitation step in the default
  *   create-organization flow.
- * @param onDismissRequest Called when the dismiss affordance is pressed or a dismissable selection
+ * @param onDismissRequest Called when the dismiss affordance is pressed or a dismissible selection
  *   completes.
  * @param onCreateOrganization Optional callback for apps that own create-organization navigation.
  *   When `null`, the list opens Clerk's default create-organization flow.
@@ -66,7 +66,7 @@ fun OrganizationListView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   hidePersonalAccount: Boolean = false,
-  isDismissable: Boolean = true,
+  isDismissible: Boolean = true,
   skipPostCreateInviteFlow: Boolean = false,
   onDismissRequest: (() -> Unit)? = null,
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
@@ -80,7 +80,7 @@ fun OrganizationListView(
             modifier = Modifier.fillMaxSize(),
             clerkTheme = clerkTheme,
             hidePersonalAccount = hidePersonalAccount,
-            isDismissable = isDismissable,
+            isDismissible = isDismissible,
             skipPostCreateInviteFlow = skipPostCreateInviteFlow,
             onDismissRequest = onDismissRequest,
             onCreateOrganization = onCreateOrganization,
@@ -98,7 +98,7 @@ internal fun OrganizationListViewImpl(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   hidePersonalAccount: Boolean = false,
-  isDismissable: Boolean = true,
+  isDismissible: Boolean = true,
   skipPostCreateInviteFlow: Boolean = false,
   onDismissRequest: (() -> Unit)? = null,
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
@@ -125,7 +125,7 @@ internal fun OrganizationListViewImpl(
   val chrome =
     OrganizationListChrome(
       clerkTheme = clerkTheme,
-      isDismissable = isDismissable,
+      isDismissible = isDismissible,
       snackbarHostState = snackbarHostState,
       callbacks = callbacks,
     )
@@ -246,7 +246,7 @@ private fun OrganizationListFullScreenPage(onDismiss: () -> Unit, content: @Comp
 
 private data class OrganizationListChrome(
   val clerkTheme: ClerkTheme?,
-  val isDismissable: Boolean,
+  val isDismissible: Boolean,
   val snackbarHostState: SnackbarHostState,
   val callbacks: OrganizationListCallbacks,
 )
@@ -264,7 +264,7 @@ private fun OrganizationListScaffold(
       ClerkTopAppBar(
         onBackPressed = { chrome.callbacks.onDismissRequest?.invoke() },
         hasLogo = false,
-        hasBackButton = chrome.isDismissable && chrome.callbacks.onDismissRequest != null,
+        hasBackButton = chrome.isDismissible && chrome.callbacks.onDismissRequest != null,
         backgroundColor = ClerkMaterialTheme.colors.background,
         clerkTheme = chrome.clerkTheme,
       )
@@ -319,13 +319,13 @@ private fun organizationListActions(
     onSelectPersonalAccount = {
       viewModel.selectPersonalAccount {
         chrome.callbacks.onAccountSelected?.invoke(null)
-        if (chrome.isDismissable) chrome.callbacks.onDismissRequest?.invoke()
+        if (chrome.isDismissible) chrome.callbacks.onDismissRequest?.invoke()
       }
     },
     onSelectOrganization = { organizationId ->
       viewModel.selectOrganization(organizationId) {
         chrome.callbacks.onAccountSelected?.invoke(organizationId)
-        if (chrome.isDismissable) chrome.callbacks.onDismissRequest?.invoke()
+        if (chrome.isDismissible) chrome.callbacks.onDismissRequest?.invoke()
       }
     },
     onAcceptInvitation = viewModel::acceptInvitation,

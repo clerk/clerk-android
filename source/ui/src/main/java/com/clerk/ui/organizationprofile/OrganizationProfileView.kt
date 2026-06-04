@@ -60,7 +60,7 @@ import kotlinx.serialization.Serializable
  * navigation back stack and survive activity recreation.
  *
  * @param clerkTheme Optional theme customization for the organization profile UI.
- * @param isDismissable Whether to show a top-level back affordance that calls [onDismiss].
+ * @param isDismissible Whether to show a top-level back affordance that calls [onDismiss].
  * @param customRows Custom rows to display on the profile root screen.
  * @param customDestination Composable that renders the destination for a given route key. The route
  *   key matches [OrganizationProfileCustomRow.routeKey] of the tapped row.
@@ -74,7 +74,7 @@ import kotlinx.serialization.Serializable
 fun OrganizationProfileView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
-  isDismissable: Boolean = true,
+  isDismissible: Boolean = true,
   customRows: List<OrganizationProfileCustomRow> = emptyList(),
   customDestination: (@Composable (String) -> Unit)? = null,
   onDismiss: () -> Unit = {},
@@ -102,7 +102,7 @@ fun OrganizationProfileView(
             backStack = backStack,
             organization = organization,
             membership = membership,
-            isDismissable = isDismissable,
+            isDismissible = isDismissible,
             customRows = customRows,
             customDestination = customDestination,
             onDismiss = onDismiss,
@@ -126,7 +126,7 @@ private fun OrganizationProfileNavDisplay(
   backStack: NavBackStack<NavKey>,
   organization: Organization,
   membership: OrganizationMembership?,
-  isDismissable: Boolean,
+  isDismissible: Boolean,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
   modifier: Modifier = Modifier,
@@ -138,7 +138,7 @@ private fun OrganizationProfileNavDisplay(
   NavDisplay(
     modifier = modifier,
     backStack = backStack,
-    onBack = { handleOrganizationProfileBack(backStack, isDismissable, onDismiss) },
+    onBack = { handleOrganizationProfileBack(backStack, isDismissible, onDismiss) },
     transitionSpec = {
       val spec = tween<IntOffset>(durationMillis = 300)
       slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
@@ -159,7 +159,7 @@ private fun OrganizationProfileNavDisplay(
           backStack = backStack,
           organization = organization,
           membership = membership,
-          isDismissable = isDismissable,
+          isDismissible = isDismissible,
           onDismiss = onDismiss,
           membersRefreshKey = membersRefreshKey,
           onInviteMembersComplete = { membersRefreshKey += 1 },
@@ -173,11 +173,11 @@ private fun OrganizationProfileNavDisplay(
 
 private fun handleOrganizationProfileBack(
   backStack: NavBackStack<NavKey>,
-  isDismissable: Boolean,
+  isDismissible: Boolean,
   onDismiss: () -> Unit,
 ) {
   if (backStack.size == 1) {
-    if (isDismissable) onDismiss()
+    if (isDismissible) onDismiss()
   } else {
     backStack.removeLastOrNull()
   }
@@ -204,7 +204,7 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   backStack: NavBackStack<NavKey>,
   organization: Organization,
   membership: OrganizationMembership?,
-  isDismissable: Boolean,
+  isDismissible: Boolean,
   onDismiss: () -> Unit,
   membersRefreshKey: Int,
   onInviteMembersComplete: () -> Unit,
@@ -216,7 +216,7 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
     OrganizationProfileRootView(
       organization = organization,
       membership = membership,
-      isDismissable = isDismissable,
+      isDismissible = isDismissible,
       onBackPressed = onDismiss,
       onUpdateProfile = { backStack.add(OrganizationProfileDestination.UpdateProfile) },
       onAction = { action -> backStack.add(action.destination) },
