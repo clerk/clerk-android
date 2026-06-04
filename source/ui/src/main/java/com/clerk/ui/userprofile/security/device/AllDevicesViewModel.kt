@@ -6,7 +6,6 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.session.Session
-import com.clerk.api.session.isThisDevice
 import com.clerk.api.user.activeSessions
 import com.clerk.ui.core.common.guardUser
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +30,7 @@ internal class AllDevicesViewModel : ViewModel() {
         user
           .activeSessions()
           .onSuccess {
-            val sortedSessions = it.sortedForDisplay()
+            val sortedSessions = it.sortedForDeviceDisplay()
             withContext(Dispatchers.Main) { _state.value = State.Success(sortedSessions) }
           }
           .onFailure {
@@ -40,18 +39,6 @@ internal class AllDevicesViewModel : ViewModel() {
       }
     }
   }
-
-  private fun List<Session>.sortedForDisplay(): List<Session> =
-    this.filter { it.latestActivity != null }
-      .sortedWith(
-        Comparator { a, b ->
-          when {
-            a.isThisDevice && !b.isThisDevice -> -1 // a first
-            !a.isThisDevice && b.isThisDevice -> 1 // b first
-            else -> b.lastActiveAt.compareTo(a.lastActiveAt) // newest first
-          }
-        }
-      )
 
   sealed interface State {
     data object Idle : State

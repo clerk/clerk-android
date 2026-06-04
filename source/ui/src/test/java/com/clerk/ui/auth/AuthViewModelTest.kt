@@ -213,7 +213,7 @@ class AuthViewModelTest {
     val paramsSlot = slot<SignUp.CreateParams>()
     val mockSignUp = mockk<SignUp>(relaxed = true)
     mockkObject(SignUp.Companion)
-    coEvery { SignUp.create(capture(paramsSlot)) } returns ClerkResult.success(mockSignUp)
+    coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
 
     viewModel.startAuth(
       authMode = AuthMode.SignUp,
@@ -223,7 +223,7 @@ class AuthViewModelTest {
       unsafeMetadata = mapOf("test" to "test", "nested" to mapOf("active" to true)),
     )
 
-    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(any<SignUp.CreateParams>()) }
+    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
     testDispatcher.scheduler.advanceUntilIdle()
     val params = paramsSlot.captured as SignUp.CreateParams.Standard
     val unsafeMetadata = requireNotNull(params.unsafeMetadata)
@@ -242,7 +242,7 @@ class AuthViewModelTest {
       ClerkResult.apiFailure(
         ClerkErrorResponse(errors = listOf(ClerkError(code = "form_identifier_not_found")))
       )
-    coEvery { SignUp.create(capture(paramsSlot)) } returns ClerkResult.success(mockSignUp)
+    coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
 
     viewModel.startAuth(
       authMode = AuthMode.SignInOrUp,
@@ -252,7 +252,7 @@ class AuthViewModelTest {
       unsafeMetadata = mapOf("source" to "prebuilt"),
     )
 
-    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(any<SignUp.CreateParams>()) }
+    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
     testDispatcher.scheduler.advanceUntilIdle()
     val params = paramsSlot.captured as SignUp.CreateParams.Standard
     val unsafeMetadata = requireNotNull(params.unsafeMetadata)
@@ -402,7 +402,7 @@ class AuthViewModelTest {
     val paramsSlot = slot<SignUp.AuthenticateWithRedirectParams>()
     val mockSignUp = mockk<SignUp>(relaxed = true)
     mockkObject(SignUp.Companion)
-    coEvery { SignUp.authenticateWithRedirect(capture(paramsSlot)) } returns
+    coEvery { SignUp.authenticateWithRedirect(any()) } returns
       ClerkResult.success(OAuthResult(signUp = mockSignUp))
 
     viewModel.authenticateWithSocialProvider(
@@ -414,7 +414,7 @@ class AuthViewModelTest {
     )
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(exactly = 1) { SignUp.authenticateWithRedirect(any()) }
+    coVerify(exactly = 1) { SignUp.authenticateWithRedirect(capture(paramsSlot)) }
     val params = paramsSlot.captured as SignUp.AuthenticateWithRedirectParams.OAuth
     val unsafeMetadata = requireNotNull(params.unsafeMetadata)
     assertEquals("social", unsafeMetadata.getValue("source"))
