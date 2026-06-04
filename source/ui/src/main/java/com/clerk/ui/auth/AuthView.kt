@@ -71,9 +71,9 @@ import kotlinx.serialization.Serializable
  *   attempt and transfers back to sign-in if the selected account already exists.
  * @param unsafeMetadata Custom metadata to attach to users created by the prebuilt sign-up flow.
  *   This metadata is not validated by Clerk and should not contain sensitive information.
- * @param isDismissable When `true`, the auth start screen may show a close affordance. The close
- *   affordance is shown when [onDismiss] is provided.
- * @param onDismiss Called when the user presses the close affordance.
+ * @param isDismissible When `true`, the auth start screen shows a close affordance.
+ * @param onDismiss Called when the user presses the close affordance. When omitted, the close
+ *   affordance falls back to the system back dispatcher.
  * @param onAuthComplete Called when authentication completes.
  */
 @Composable
@@ -85,7 +85,7 @@ fun AuthView(
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
   unsafeMetadata: Map<String, Any>? = null,
-  isDismissable: Boolean = true,
+  isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit = {},
 ) {
@@ -115,7 +115,7 @@ fun AuthView(
             AuthNavOptions(
               preferGoogleOneTap = preferGoogleOneTap,
               startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-              isDismissable = isDismissable,
+              isDismissible = isDismissible,
               onDismiss = onDismiss,
               onAuthComplete = onAuthComplete,
             ),
@@ -178,7 +178,7 @@ private fun ObservePendingSessionTaskRouting(backStack: NavBackStack<NavKey>) {
 private data class AuthNavOptions(
   val preferGoogleOneTap: Boolean,
   val startSocialOAuthAsSignUp: Boolean,
-  val isDismissable: Boolean,
+  val isDismissible: Boolean,
   val onDismiss: (() -> Unit)?,
   val onAuthComplete: () -> Unit,
 )
@@ -222,7 +222,7 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
       AuthStartView(
         preferGoogleOneTap = options.preferGoogleOneTap,
         startSocialOAuthAsSignUp = options.startSocialOAuthAsSignUp,
-        isDismissable = options.isDismissable,
+        isDismissible = options.isDismissible,
         onDismiss = options.onDismiss,
         onAuthComplete = options.onAuthComplete,
       )

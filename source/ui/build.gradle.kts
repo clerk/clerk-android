@@ -100,6 +100,7 @@ dependencies {
   api(projects.source.telemetry)
 
   implementation(platform(libs.compose.bom))
+  implementation(libs.activity.compose)
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.compose.foundation)
   implementation(libs.androidx.compose.icons)

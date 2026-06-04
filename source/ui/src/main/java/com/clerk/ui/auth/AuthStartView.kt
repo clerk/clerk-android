@@ -42,6 +42,7 @@ import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.navigation.rememberDismissHandler
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
@@ -53,7 +54,7 @@ fun AuthStartView(
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
-  isDismissable: Boolean = true,
+  isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit,
 ) {
@@ -61,7 +62,7 @@ fun AuthStartView(
     modifier = modifier,
     preferGoogleOneTap = preferGoogleOneTap,
     startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-    isDismissable = isDismissable,
+    isDismissible = isDismissible,
     onDismiss = onDismiss,
     onAuthComplete = onAuthComplete,
     clerkTheme = clerkTheme,
@@ -77,7 +78,7 @@ internal fun AuthStartViewImpl(
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
-  isDismissable: Boolean = true,
+  isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   authStartViewModel: AuthStartViewModel = viewModel(),
 ) {
@@ -121,7 +122,8 @@ internal fun AuthStartViewImpl(
     } else {
       socialProviders.filter { it != lastUsedSocialProvider }
     }
-  val showDismissButton = shouldShowAuthDismissButton(isDismissable, onDismiss)
+  val showDismissButton = shouldShowAuthDismissButton(isDismissible)
+  val dismissHandler = rememberDismissHandler(onDismiss)
 
   LaunchedEffect(state) {
     when (val s = state) {
@@ -155,7 +157,7 @@ internal fun AuthStartViewImpl(
     ClerkThemedAuthScaffold(
       modifier = modifier,
       hasBackButton = false,
-      trailingContent = dismissTrailingContent(showDismissButton, onDismiss),
+      trailingContent = dismissTrailingContent(showDismissButton, dismissHandler),
       showSignedInUserButton = false,
       title = authViewHelper.titleString(authState.mode),
       subtitle = authViewHelper.subtitleString(authState.mode),
@@ -271,9 +273,9 @@ internal fun AuthStartViewImpl(
 
 private fun dismissTrailingContent(
   showDismissButton: Boolean,
-  onDismiss: (() -> Unit)?,
+  onDismiss: () -> Unit,
 ): (@Composable () -> Unit)? {
-  if (!showDismissButton || onDismiss == null) return null
+  if (!showDismissButton) return null
 
   return { AuthDismissButton(onDismiss) }
 }
@@ -290,12 +292,7 @@ private fun AuthDismissButton(onDismiss: () -> Unit) {
   }
 }
 
-internal fun shouldShowAuthDismissButton(
-  isDismissable: Boolean,
-  onDismiss: (() -> Unit)?,
-): Boolean {
-  return isDismissable && onDismiss != null
-}
+internal fun shouldShowAuthDismissButton(isDismissible: Boolean): Boolean = isDismissible
 
 @Composable
 @Suppress("LongParameterList")

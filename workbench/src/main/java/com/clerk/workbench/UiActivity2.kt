@@ -40,7 +40,7 @@ class UiActivity2 : ComponentActivity() {
               modifier =
                 Modifier.background(color = backgroundColor).fillMaxSize().statusBarsPadding()
             ) {
-              UserButton()
+
             }
           }
         }
