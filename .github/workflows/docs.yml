@@ -23,6 +23,7 @@ jobs:
       with:
         ref: docs
         path: docs
+        token: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
     - uses: actions/setup-java@v5
       with:
         distribution: zulu
@@ -69,6 +70,7 @@ jobs:
       with:
         ref: docs
         path: docs
+        token: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
     - uses: actions/download-artifact@v8
       with:
         name: docs-zip
