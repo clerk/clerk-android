@@ -11,11 +11,14 @@ import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.session.Session
+import com.clerk.api.session.SessionVerification
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
 import io.mockk.coEvery
@@ -65,7 +68,9 @@ class PasskeyAuthenticationServiceTest {
     // Mock ClerkApi and its nested objects
     mockkObject(ClerkApi)
     val mockSignInApi = mockk<SignInApi>(relaxed = true)
+    val mockSessionApi = mockk<SessionApi>(relaxed = true)
     every { ClerkApi.signIn } returns mockSignInApi
+    every { ClerkApi.session } returns mockSessionApi
 
     // Set up the mock credential manager in the service
     GoogleCredentialAuthenticationService.setCredentialManager(mockCredentialManager)
@@ -235,5 +240,41 @@ class PasskeyAuthenticationServiceTest {
     // Then
     assertTrue(result is ClerkResult.Failure)
     assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, (result as ClerkResult.Failure).errorType)
+  }
+
+  @Test
+  fun `verifySessionWithPasskey returns clear error when prepared verification nonce is missing`() =
+    runTest {
+      val session = testSession()
+      val preparedVerification =
+        SessionVerification(
+          id = "ver_123",
+          status = SessionVerification.Status.NEEDS_FIRST_FACTOR,
+          level = SessionVerification.Level.FIRST_FACTOR,
+        )
+
+      coEvery {
+        ClerkApi.session.prepareFirstFactorVerification("sess_123", mapOf("strategy" to "passkey"))
+      } returns ClerkResult.success(preparedVerification)
+
+      val result = GoogleCredentialAuthenticationService.verifySessionWithPasskey(session)
+
+      assertTrue(result is ClerkResult.Failure)
+      val failure = result as ClerkResult.Failure
+      assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
+      assertTrue(failure.throwable is IllegalStateException)
+      assertEquals("Missing nonce in prepared verification", failure.throwable?.message)
+      coVerify(exactly = 0) { mockCredentialManager.getCredential(any(), any()) }
+    }
+
+  private fun testSession(): Session {
+    return Session(
+      id = "sess_123",
+      status = Session.SessionStatus.ACTIVE,
+      expireAt = 0L,
+      lastActiveAt = 0L,
+      createdAt = 0L,
+      updatedAt = 0L,
+    )
   }
 }

@@ -189,17 +189,40 @@ internal object GoogleCredentialAuthenticationService {
     allowedCredentialIds: List<String>,
   ): ClerkResult<SessionVerification, ClerkErrorResponse> {
     val prepareResult = session.prepareFirstFactorVerification(PasskeyHelper.passkeyStrategy)
-    if (prepareResult is ClerkResult.Failure) {
-      ClerkLog.e("Failed to prepare passkey session reverification: ${prepareResult.error}")
-      return prepareResult
+    return when (prepareResult) {
+      is ClerkResult.Failure -> {
+        ClerkLog.e("Failed to prepare passkey session reverification: ${prepareResult.error}")
+        prepareResult
+      }
+      is ClerkResult.Success -> {
+        val nonce = prepareResult.value.firstFactorVerification?.nonce
+        if (nonce == null) {
+          missingPreparedVerificationNonceFailure()
+        } else {
+          attemptSessionPasskeyVerification(activity, session, allowedCredentialIds, nonce)
+        }
+      }
     }
+  }
 
-    val preparedVerification = (prepareResult as ClerkResult.Success).value
+  private fun missingPreparedVerificationNonceFailure(): ClerkResult.Failure<Nothing> {
+    ClerkLog.e("Missing nonce in preparedVerification.firstFactorVerification")
+    return ClerkResult.unknownFailure(
+      IllegalStateException("Missing nonce in prepared verification")
+    )
+  }
+
+  private suspend fun attemptSessionPasskeyVerification(
+    activity: android.app.Activity,
+    session: Session,
+    allowedCredentialIds: List<String>,
+    nonce: String,
+  ): ClerkResult<SessionVerification, ClerkErrorResponse> {
     return try {
       val credential =
         getCredentialFromManager(
           activity = activity,
-          nonce = preparedVerification.firstFactorVerification?.nonce,
+          nonce = nonce,
           allowedCredentialIds = allowedCredentialIds,
           credentialRequestTypes = listOf(SignIn.CredentialType.PASSKEY),
         )
