@@ -29,6 +29,7 @@ internal object DefaultColors {
       border = Color(0xFF000000),
       ring = Color(0xFF000000),
       muted = Color(0xFFF9F9F9),
+      secondaryButton = Color(0xFFFFFFFF),
       shadow = Color(0xFF000000),
     )
 
@@ -48,6 +49,7 @@ internal object DefaultColors {
       border = Color(0xFFFFFFFF),
       ring = Color(0xFFFFFFFF),
       muted = Color(0xFF1A1A1D),
+      secondaryButton = Color(0xFF131316),
       shadow = Color(0xFFFFFFFF),
     )
 
@@ -68,6 +70,7 @@ internal object DefaultColors {
       shadow = Color(0xFF2B2B34),
       ring = Color(0xFF6C47FF),
       muted = Color(0xFFF9F9F9),
+      secondaryButton = Color(0xFFFFFFFF),
     )
 }
 
@@ -154,6 +157,7 @@ internal fun resolveColors(theme: ClerkTheme?, isDarkMode: Boolean): ClerkColors
     border = resolve { it.border },
     ring = resolve { it.ring },
     muted = resolve { it.muted },
+    secondaryButton = resolve { it.secondaryButton },
     shadow = resolve { it.shadow },
   )
 }

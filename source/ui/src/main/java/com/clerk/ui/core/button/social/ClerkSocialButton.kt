@@ -209,9 +209,9 @@ private fun getButtonColors(isPressedCombined: Boolean) =
   ButtonDefaults.buttonColors(
     containerColor =
       if (isPressedCombined) ClerkMaterialTheme.colors.muted
-      else ClerkMaterialTheme.colors.background,
+      else ClerkMaterialTheme.colors.secondaryButton,
     contentColor = ClerkMaterialTheme.colors.foreground,
-    disabledContainerColor = ClerkMaterialTheme.colors.background,
+    disabledContainerColor = ClerkMaterialTheme.colors.secondaryButton,
     disabledContentColor = ClerkMaterialTheme.colors.foreground.copy(alpha = 0.5f),
   )
 
