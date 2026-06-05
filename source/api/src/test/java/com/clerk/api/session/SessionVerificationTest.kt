@@ -193,8 +193,6 @@ class SessionVerificationTest {
     val sessionApi = mockk<SessionApi>()
     val session = testSession()
     val verification = testVerification(status = SessionVerification.Status.NEEDS_FIRST_FACTOR)
-    val originalApplicationId = Clerk.applicationId
-    Clerk.applicationId = "com.clerk.test"
     val params =
       mapOf(
         "strategy" to "enterprise_sso",
@@ -203,23 +201,18 @@ class SessionVerificationTest {
         "redirect_url" to "clerk://com.clerk.test.callback",
       )
     mockkObject(ClerkApi)
+    mockkObject(Clerk)
     every { ClerkApi.session } returns sessionApi
+    every { Clerk.applicationId } returns "com.clerk.test"
     coEvery { sessionApi.prepareFirstFactorVerification("sess_123", params) } returns
       ClerkResult.success(verification)
 
-    try {
-      val result =
-        session.startEnterpriseSso(
-          emailAddressId = "idn_email",
-          enterpriseConnectionId = "econn_123",
-        )
+    val result =
+      session.startEnterpriseSso(emailAddressId = "idn_email", enterpriseConnectionId = "econn_123")
 
-      assertTrue(result is ClerkResult.Success)
-      assertSame(verification, (result as ClerkResult.Success).value)
-      coVerify(exactly = 1) { sessionApi.prepareFirstFactorVerification("sess_123", params) }
-    } finally {
-      Clerk.applicationId = originalApplicationId
-    }
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.prepareFirstFactorVerification("sess_123", params) }
   }
 
   @Test
