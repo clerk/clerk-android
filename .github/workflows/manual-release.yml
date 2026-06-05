@@ -248,4 +248,4 @@ jobs:
       release_tag: ${{ needs.publish.outputs.tag_name }}
       release_url: ${{ needs.publish.outputs.release_url }}
     secrets:
-      CLERK_JAVASCRIPT_RELEASE_TOKEN: ${{ secrets.CLERK_JAVASCRIPT_RELEASE_TOKEN }}
+      OPEN_EXPO_PR_GH_TOKEN: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
