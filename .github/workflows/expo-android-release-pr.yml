@@ -18,7 +18,7 @@ on:
         required: true
         type: string
     secrets:
-      CLERK_JAVASCRIPT_RELEASE_TOKEN:
+      OPEN_EXPO_PR_GH_TOKEN:
         required: true
 
 permissions:
@@ -103,12 +103,12 @@ jobs:
       - name: Check target repository token
         if: steps.release.outputs.should_open == 'true'
         env:
-          JAVASCRIPT_RELEASE_TOKEN: ${{ secrets.CLERK_JAVASCRIPT_RELEASE_TOKEN }}
+          JAVASCRIPT_RELEASE_TOKEN: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
         run: |
           set -euo pipefail
 
           if [ -z "${JAVASCRIPT_RELEASE_TOKEN:-}" ]; then
-            echo "::error::Set CLERK_JAVASCRIPT_RELEASE_TOKEN with access to push branches and open PRs in clerk/javascript."
+            echo "::error::Set OPEN_EXPO_PR_GH_TOKEN with access to push branches and open PRs in clerk/javascript."
             exit 1
           fi
 
@@ -118,7 +118,7 @@ jobs:
         with:
           repository: clerk/javascript
           ref: main
-          token: ${{ secrets.CLERK_JAVASCRIPT_RELEASE_TOKEN }}
+          token: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
           path: javascript
           fetch-depth: 0
 
@@ -127,6 +127,6 @@ jobs:
         env:
           CLERK_ANDROID_VERSION: ${{ steps.release.outputs.version }}
           CLERK_ANDROID_RELEASE_URL: ${{ steps.release.outputs.release_url }}
-          GH_TOKEN: ${{ secrets.CLERK_JAVASCRIPT_RELEASE_TOKEN }}
+          GH_TOKEN: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
           JAVASCRIPT_DIR: ${{ github.workspace }}/javascript
         run: bash android-release/.github/scripts/open-expo-android-release-pr.sh
