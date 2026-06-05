@@ -1,8 +1,10 @@
 package com.clerk.api.session
 
+import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.passkeys.PasskeyService
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -86,7 +88,79 @@ class SessionVerificationTest {
   }
 
   @Test
-  fun `prepare first factor forwards enterprise sso params to session api`() = runTest {
+  fun `send email code prepares email first factor`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.NEEDS_FIRST_FACTOR)
+    val params = mapOf("strategy" to "email_code", "email_address_id" to "idn_email")
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.prepareFirstFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    val result = session.sendEmailCode(emailAddressId = "idn_email")
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.prepareFirstFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `send phone code prepares phone first factor`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.NEEDS_FIRST_FACTOR)
+    val params = mapOf("strategy" to "phone_code", "phone_number_id" to "idn_phone")
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.prepareFirstFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    val result = session.sendPhoneCode(phoneNumberId = "idn_phone")
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.prepareFirstFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `verify with email code attempts first factor`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.COMPLETE)
+    val params = mapOf("strategy" to "email_code", "code" to "123456")
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.attemptFirstFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    val result = session.verifyWithEmailCode("123456")
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.attemptFirstFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `verify with phone code attempts first factor`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.COMPLETE)
+    val params = mapOf("strategy" to "phone_code", "code" to "123456")
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.attemptFirstFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    val result = session.verifyWithPhoneCode("123456")
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.attemptFirstFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `start enterprise sso prepares first factor`() = runTest {
     val sessionApi = mockk<SessionApi>()
     val session = testSession()
     val verification = testVerification(status = SessionVerification.Status.NEEDS_FIRST_FACTOR)
@@ -103,8 +177,7 @@ class SessionVerificationTest {
       ClerkResult.success(verification)
 
     val result =
-      session.prepareFirstFactorVerification(
-        strategy = "enterprise_sso",
+      session.startEnterpriseSso(
         emailAddressId = "idn_email",
         enterpriseConnectionId = "econn_123",
         redirectUrl = "clerk://callback",
@@ -113,6 +186,40 @@ class SessionVerificationTest {
     assertTrue(result is ClerkResult.Success)
     assertSame(verification, (result as ClerkResult.Success).value)
     coVerify(exactly = 1) { sessionApi.prepareFirstFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `start enterprise sso uses default redirect url`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.NEEDS_FIRST_FACTOR)
+    val originalApplicationId = Clerk.applicationId
+    Clerk.applicationId = "com.clerk.test"
+    val params =
+      mapOf(
+        "strategy" to "enterprise_sso",
+        "email_address_id" to "idn_email",
+        "enterprise_connection_id" to "econn_123",
+        "redirect_url" to "clerk://com.clerk.test.callback",
+      )
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.prepareFirstFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    try {
+      val result =
+        session.startEnterpriseSso(
+          emailAddressId = "idn_email",
+          enterpriseConnectionId = "econn_123",
+        )
+
+      assertTrue(result is ClerkResult.Success)
+      assertSame(verification, (result as ClerkResult.Success).value)
+      coVerify(exactly = 1) { sessionApi.prepareFirstFactorVerification("sess_123", params) }
+    } finally {
+      Clerk.applicationId = originalApplicationId
+    }
   }
 
   @Test
@@ -131,6 +238,58 @@ class SessionVerificationTest {
     assertTrue(result is ClerkResult.Success)
     assertSame(verification, (result as ClerkResult.Success).value)
     coVerify(exactly = 1) { sessionApi.attemptFirstFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `send mfa phone code prepares second factor`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.NEEDS_SECOND_FACTOR)
+    val params = mapOf("strategy" to "phone_code", "phone_number_id" to "idn_phone")
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.prepareSecondFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    val result = session.sendMfaPhoneCode(phoneNumberId = "idn_phone")
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.prepareSecondFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `verify with mfa phone code attempts second factor`() = runTest {
+    val sessionApi = mockk<SessionApi>()
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.COMPLETE)
+    val params = mapOf("strategy" to "phone_code", "code" to "123456")
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    coEvery { sessionApi.attemptSecondFactorVerification("sess_123", params) } returns
+      ClerkResult.success(verification)
+
+    val result = session.verifyWithMfaPhoneCode("123456")
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { sessionApi.attemptSecondFactorVerification("sess_123", params) }
+  }
+
+  @Test
+  fun `verify with passkey delegates to passkey service`() = runTest {
+    val session = testSession()
+    val verification = testVerification(status = SessionVerification.Status.COMPLETE)
+    val allowedCredentialIds = listOf("credential_123")
+    mockkObject(PasskeyService)
+    coEvery { PasskeyService.verifySessionWithPasskey(session, allowedCredentialIds) } returns
+      ClerkResult.success(verification)
+
+    val result = session.verifyWithPasskey(allowedCredentialIds = allowedCredentialIds)
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(verification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { PasskeyService.verifySessionWithPasskey(session, allowedCredentialIds) }
   }
 
   @Test

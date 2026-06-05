@@ -78,12 +78,12 @@ data class Session(
   }
 
   /** Parameters for starting an in-session reverification flow. */
-  @Serializable @AutoMap data class StartVerificationParams(val level: String)
+  @Serializable @AutoMap internal data class StartVerificationParams(val level: String)
 
   /** Parameters for preparing a first factor in an in-session reverification flow. */
   @Serializable
   @AutoMap
-  data class PrepareFirstFactorParams(
+  internal data class PrepareFirstFactorParams(
     val strategy: String,
     @SerialName("email_address_id") val emailAddressId: String? = null,
     @SerialName("phone_number_id") val phoneNumberId: String? = null,
@@ -92,7 +92,7 @@ data class Session(
   )
 
   /** Parameters for attempting a first factor in an in-session reverification flow. */
-  sealed interface AttemptFirstFactorParams {
+  internal sealed interface AttemptFirstFactorParams {
     val strategy: String
 
     @Serializable
@@ -115,7 +115,7 @@ data class Session(
   /** Parameters for preparing a second factor in an in-session reverification flow. */
   @Serializable
   @AutoMap
-  data class PrepareSecondFactorParams(
+  internal data class PrepareSecondFactorParams(
     val strategy: String,
     @SerialName("phone_number_id") val phoneNumberId: String? = null,
   )
@@ -123,7 +123,7 @@ data class Session(
   /** Parameters for attempting a second factor in an in-session reverification flow. */
   @Serializable
   @AutoMap
-  data class AttemptSecondFactorParams(val strategy: String, val code: String)
+  internal data class AttemptSecondFactorParams(val strategy: String, val code: String)
 }
 
 @Serializable data class SessionTask(val key: String)

@@ -15,7 +15,7 @@ suspend fun Session.startVerification(
 }
 
 /** Prepares the first factor of an in-session reverification flow. */
-suspend fun Session.prepareFirstFactorVerification(
+internal suspend fun Session.prepareFirstFactorVerification(
   strategy: String,
   emailAddressId: String? = null,
   phoneNumberId: String? = null,
@@ -34,21 +34,21 @@ suspend fun Session.prepareFirstFactorVerification(
 }
 
 /** Prepares the first factor of an in-session reverification flow. */
-suspend fun Session.prepareFirstFactorVerification(
+internal suspend fun Session.prepareFirstFactorVerification(
   params: Session.PrepareFirstFactorParams
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return ClerkApi.session.prepareFirstFactorVerification(sessionId = id, params = params.toMap())
 }
 
 /** Attempts the first factor of an in-session reverification flow. */
-suspend fun Session.attemptFirstFactorVerification(
+internal suspend fun Session.attemptFirstFactorVerification(
   params: Session.AttemptFirstFactorParams
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return ClerkApi.session.attemptFirstFactorVerification(sessionId = id, params = params.toMap())
 }
 
 /** Attempts the first factor of an in-session reverification flow. */
-suspend fun Session.attemptFirstFactorVerification(
+internal suspend fun Session.attemptFirstFactorVerification(
   strategy: String,
   code: String? = null,
   password: String? = null,
@@ -67,7 +67,7 @@ suspend fun Session.attemptFirstFactorVerification(
 }
 
 /** Prepares the second factor of an in-session reverification flow. */
-suspend fun Session.prepareSecondFactorVerification(
+internal suspend fun Session.prepareSecondFactorVerification(
   strategy: String,
   phoneNumberId: String? = null,
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
@@ -79,7 +79,7 @@ suspend fun Session.prepareSecondFactorVerification(
 }
 
 /** Attempts the second factor of an in-session reverification flow. */
-suspend fun Session.attemptSecondFactorVerification(
+internal suspend fun Session.attemptSecondFactorVerification(
   strategy: String,
   code: String,
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
