@@ -266,6 +266,10 @@ internal class ClerkThemeColors internal constructor(private val colors: ClerkCo
   val muted: Color
     get() = colors.muted!!
 
+  /** Fill color for secondary buttons, including social and SSO buttons. */
+  val secondaryButton: Color
+    get() = colors.secondaryButton!!
+
   /** Shadow color used when drawing elevation overlays. */
   val shadow: Color
     get() = colors.shadow!!
