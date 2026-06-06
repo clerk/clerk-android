@@ -339,12 +339,17 @@ internal fun resumeInProgressAuthAttempt(
   signUp: SignUp?,
   onAuthComplete: () -> Unit,
 ) {
+  if (!authState.shouldResumeInProgressAuthAttempt && !authAttemptIsComplete(signIn, signUp)) return
   if (top != null && top != AuthDestination.AuthStart) return
 
   when {
     signIn != null -> authState.setToStepForStatus(signIn, onAuthComplete = onAuthComplete)
     signUp != null -> authState.setToStepForStatus(signUp, onAuthComplete = onAuthComplete)
   }
+}
+
+private fun authAttemptIsComplete(signIn: SignIn?, signUp: SignUp?): Boolean {
+  return signIn?.status == SignIn.Status.COMPLETE || signUp?.status == SignUp.Status.COMPLETE
 }
 
 @Composable

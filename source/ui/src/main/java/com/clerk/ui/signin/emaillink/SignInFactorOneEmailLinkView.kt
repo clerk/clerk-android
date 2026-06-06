@@ -87,7 +87,7 @@ private fun SignInFactorOneEmailLinkViewImpl(
       Clerk.applicationName?.let { stringResource(R.string.to_continue_to, it) }
         ?: stringResource(R.string.to_continue),
     identifier = factor.safeIdentifier,
-    onClickIdentifier = { authState.clearBackStack() },
+    onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
     snackbarHostState = snackbarHostState,
   ) {
     OpenEmailAppButton(snackbarHostState = snackbarHostState)

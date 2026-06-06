@@ -185,6 +185,7 @@ internal fun AuthStartViewImpl(
                 } else {
                   authState.authStartIdentifier
                 }
+              authState.enableInProgressAuthAttemptResume()
               authStartViewModel.startAuth(
                 authMode = authState.mode,
                 isPhoneNumberFieldActive = phoneActive,
@@ -238,6 +239,7 @@ internal fun AuthStartViewImpl(
                 provider = lastUsedSocialProvider,
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
+                  authState.enableInProgressAuthAttemptResume()
                   authStartViewModel.authenticateWithSocialProvider(
                     provider = it,
                     transferable = authState.mode.transferable,
@@ -255,6 +257,7 @@ internal fun AuthStartViewImpl(
             ClerkSocialRow(
               providers = socialProvidersMinusLastUsed.toImmutableList(),
               onClick = {
+                authState.enableInProgressAuthAttemptResume()
                 authStartViewModel.authenticateWithSocialProvider(
                   provider = it,
                   transferable = authState.mode.transferable,

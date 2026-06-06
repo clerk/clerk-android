@@ -10,6 +10,7 @@ import com.clerk.api.signin.SignIn
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -74,6 +75,48 @@ class AuthViewPendingAuthRoutingTest {
       onAuthComplete = {},
     )
 
+    verify(exactly = 0) { backStack.add(any()) }
+  }
+
+  @Test
+  fun `resumeInProgressAuthAttempt does not reroute after identifier edit returns to root`() {
+    val factor = Factor(strategy = Constants.Strategy.TOTP)
+    val signIn =
+      SignIn(
+        id = "sign_in_123",
+        status = SignIn.Status.NEEDS_SECOND_FACTOR,
+        supportedSecondFactors = listOf(factor),
+      )
+
+    authState.navigateToAuthStartForIdentifierEdit()
+
+    resumeInProgressAuthAttempt(
+      authState = authState,
+      top = AuthDestination.AuthStart,
+      signIn = signIn,
+      signUp = null,
+      onAuthComplete = {},
+    )
+
+    verify(exactly = 0) { backStack.add(any()) }
+  }
+
+  @Test
+  fun `resumeInProgressAuthAttempt completes auth after identifier edit returns to root`() {
+    val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.COMPLETE)
+    var completed = false
+
+    authState.navigateToAuthStartForIdentifierEdit()
+
+    resumeInProgressAuthAttempt(
+      authState = authState,
+      top = AuthDestination.AuthStart,
+      signIn = signIn,
+      signUp = null,
+      onAuthComplete = { completed = true },
+    )
+
+    assertTrue(completed)
     verify(exactly = 0) { backStack.add(any()) }
   }
 
