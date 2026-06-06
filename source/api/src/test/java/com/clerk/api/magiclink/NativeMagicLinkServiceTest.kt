@@ -3,6 +3,7 @@ package com.clerk.api.magiclink
 import android.net.Uri
 import com.clerk.api.Clerk
 import com.clerk.api.auth.Auth
+import com.clerk.api.auth.AuthEvent
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.MagicLinkApi
@@ -26,6 +27,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.runs
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -80,6 +82,50 @@ class NativeMagicLinkServiceTest {
   }
 
   @Test
+  fun `complete response decodes ticket payload`() {
+    val response =
+      ClerkApi.json.decodeFromString<NativeMagicLinkCompleteResponse>(
+        """
+        {
+          "ticket": "ticket_123"
+        }
+        """
+          .trimIndent()
+      )
+
+    assertTrue(response is NativeMagicLinkCompleteResponse.Ticket)
+    assertEquals("ticket_123", (response as NativeMagicLinkCompleteResponse.Ticket).ticket)
+  }
+
+  @Test
+  fun `complete response decodes sign-up payload`() {
+    val response =
+      ClerkApi.json.decodeFromString<NativeMagicLinkCompleteResponse>(
+        """
+        {
+          "id": "sign_up_123",
+          "status": "complete",
+          "required_fields": [],
+          "optional_fields": [],
+          "missing_fields": [],
+          "unverified_fields": [],
+          "verifications": {},
+          "password_enabled": false,
+          "created_session_id": "sess_456",
+          "created_user_id": "user_456"
+        }
+        """
+          .trimIndent()
+      )
+
+    assertTrue(response is NativeMagicLinkCompleteResponse.SignUpResult)
+    val signUp = (response as NativeMagicLinkCompleteResponse.SignUpResult).signUp
+    assertEquals("sign_up_123", signUp.id)
+    assertEquals(SignUp.Status.COMPLETE, signUp.status)
+    assertEquals("sess_456", signUp.createdSessionId)
+  }
+
+  @Test
   fun `end-to-end native magic link flow completes with ticket sign-in`() = runTest {
     val initialSignIn = emailLinkSignIn()
     val preparedSignIn = initialSignIn.copy(status = SignIn.Status.NEEDS_FIRST_FACTOR)
@@ -90,7 +136,7 @@ class NativeMagicLinkServiceTest {
 
     mockEmailLinkPrepare(initialSignIn, preparedSignIn)
     coEvery { magicLinkApi.complete(any()) } returns
-      ClerkResult.success(NativeMagicLinkCompleteResponse(ticket = "ticket_123"))
+      ClerkResult.success(NativeMagicLinkCompleteResponse.Ticket(ticket = "ticket_123"))
     coEvery { auth.signInWithTicket("ticket_123") } returns ClerkResult.success(completedSignIn)
     coEvery { auth.setActive("sess_123", null) } returns ClerkResult.success(activatedSession)
     coEvery { clientApi.get() } returns ClerkResult.success(refreshedClient)
@@ -164,7 +210,7 @@ class NativeMagicLinkServiceTest {
 
       mockEmailLinkPrepare(initialSignIn, preparedSignIn)
       coEvery { magicLinkApi.complete(any()) } returns
-        ClerkResult.success(NativeMagicLinkCompleteResponse(ticket = "ticket_123"))
+        ClerkResult.success(NativeMagicLinkCompleteResponse.Ticket(ticket = "ticket_123"))
       coEvery { auth.signInWithTicket("ticket_123") } returns ClerkResult.success(mfaSignIn)
       coEvery { clientApi.get() } returns ClerkResult.success(refreshedClient)
 
@@ -188,55 +234,93 @@ class NativeMagicLinkServiceTest {
     }
 
   @Test
-  fun `sign-up native email-link prepare stores PKCE verifier for callback completion`() = runTest {
-    val preparedSignUp = mockk<SignUp>(relaxed = true)
-    val completedSignUp = completedSignUp()
-    val refreshedClient = mockk<Client>(relaxed = true)
-    val activatedSession = mockk<Session>(relaxed = true)
-    val strategy =
-      SignUp.PrepareVerificationParams.Strategy.EmailLink(
-        redirectUri = "clerk://com.clerk.test.oauth"
-      )
+  fun `sign-up native email-link prepare stores PKCE verifier and completes from response`() =
+    runTest {
+      val preparedSignUp = mockk<SignUp>(relaxed = true)
+      val completedSignUp = completedSignUp()
+      val strategy =
+        SignUp.PrepareVerificationParams.Strategy.EmailLink(
+          redirectUri = "clerk://com.clerk.test.oauth"
+        )
 
-    coEvery { signUpApi.prepareSignUpVerification("sign_up_123", any()) } returns
-      ClerkResult.success(preparedSignUp)
-    coEvery { magicLinkApi.complete(any()) } returns
-      ClerkResult.success(NativeMagicLinkCompleteResponse(ticket = "ticket_signup"))
-    coEvery { auth.signUpWithTicket("ticket_signup") } returns ClerkResult.success(completedSignUp)
-    coEvery { auth.setActive("sess_456", null) } returns ClerkResult.success(activatedSession)
-    coEvery { clientApi.get() } returns ClerkResult.success(refreshedClient)
+      coEvery { signUpApi.prepareSignUpVerification("sign_up_123", any()) } returns
+        ClerkResult.success(preparedSignUp)
+      coEvery { magicLinkApi.complete(any()) } returns
+        ClerkResult.success(NativeMagicLinkCompleteResponse.SignUpResult(completedSignUp))
 
-    val prepareResult =
-      NativeMagicLinkService.prepareSignUpEmailLink(signUpId = "sign_up_123", strategy = strategy)
-    assertTrue(prepareResult is ClerkResult.Success)
+      val prepareResult =
+        NativeMagicLinkService.prepareSignUpEmailLink(signUpId = "sign_up_123", strategy = strategy)
+      assertTrue(prepareResult is ClerkResult.Success)
 
-    val completeResult = NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri("sign_up_123"))
-    assertSuccessfulSignUpCompletion(completeResult)
+      val completeResult =
+        NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri("sign_up_123"))
+      assertSuccessfulSignUpCompletion(completeResult)
 
-    coVerify(exactly = 1) {
-      signUpApi.prepareSignUpVerification(
-        "sign_up_123",
-        match {
-          it["strategy"] == "email_link" &&
-            it["redirect_uri"] == "clerk://com.clerk.test.oauth" &&
-            it["code_challenge_method"] == "S256" &&
-            it["code_challenge"]?.isNotBlank() == true
-        },
-      )
+      coVerify(exactly = 1) {
+        signUpApi.prepareSignUpVerification(
+          "sign_up_123",
+          match {
+            it["strategy"] == "email_link" &&
+              it["redirect_uri"] == "clerk://com.clerk.test.oauth" &&
+              it["code_challenge_method"] == "S256" &&
+              it["code_challenge"]?.isNotBlank() == true
+          },
+        )
+      }
+      coVerify(exactly = 1) {
+        magicLinkApi.complete(
+          match {
+            it["flow_id"] == "sign_up_123" &&
+              it["approval_token"] == "approval_123" &&
+              it["code_verifier"]?.isNotBlank() == true
+          }
+        )
+      }
+      coVerify(exactly = 0) { auth.signUpWithTicket(any()) }
+      coVerify(exactly = 0) { auth.signInWithTicket(any()) }
+      coVerify(exactly = 0) { auth.setActive(any(), any()) }
+      coVerify(exactly = 0) { clientApi.get() }
+      verify(exactly = 1) { auth.send(AuthEvent.SignUpCompleted(completedSignUp)) }
     }
-    coVerify(exactly = 1) {
-      magicLinkApi.complete(
-        match {
-          it["flow_id"] == "sign_up_123" &&
-            it["approval_token"] == "approval_123" &&
-            it["code_verifier"]?.isNotBlank() == true
-        }
+
+  @Test
+  fun `sign-up native email-link completion does not emit completed event for incomplete sign-up`() =
+    runTest {
+      val preparedSignUp = mockk<SignUp>(relaxed = true)
+      val incompleteSignUp =
+        completedSignUp()
+          .copy(
+            status = SignUp.Status.MISSING_REQUIREMENTS,
+            missingFields = listOf("password"),
+            createdSessionId = null,
+            createdUserId = null,
+          )
+      val strategy =
+        SignUp.PrepareVerificationParams.Strategy.EmailLink(
+          redirectUri = "clerk://com.clerk.test.oauth"
+        )
+
+      coEvery { signUpApi.prepareSignUpVerification("sign_up_123", any()) } returns
+        ClerkResult.success(preparedSignUp)
+      coEvery { magicLinkApi.complete(any()) } returns
+        ClerkResult.success(NativeMagicLinkCompleteResponse.SignUpResult(incompleteSignUp))
+
+      val prepareResult =
+        NativeMagicLinkService.prepareSignUpEmailLink(signUpId = "sign_up_123", strategy = strategy)
+      assertTrue(prepareResult is ClerkResult.Success)
+
+      val completeResult =
+        NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri("sign_up_123"))
+
+      assertTrue(completeResult is ClerkResult.Success)
+      assertEquals(
+        SignUp.Status.MISSING_REQUIREMENTS,
+        ((completeResult as ClerkResult.Success).value as NativeMagicLinkAuthResult.SignUp)
+          .signUp
+          .status,
       )
+      verify(exactly = 0) { auth.send(match { it is AuthEvent.SignUpCompleted }) }
     }
-    coVerify(exactly = 1) { auth.signUpWithTicket("ticket_signup") }
-    coVerify(exactly = 0) { auth.signInWithTicket(any()) }
-    coVerify(exactly = 1) { auth.setActive("sess_456", null) }
-  }
 
   private fun completedSignUp(): SignUp {
     return SignUp(
@@ -339,7 +423,7 @@ class NativeMagicLinkServiceTest {
       coEvery { signInApi.prepareSignInFirstFactor("sign_in_new", any()) } returns
         ClerkResult.success(newerSignIn.copy(status = SignIn.Status.NEEDS_FIRST_FACTOR))
       coEvery { magicLinkApi.complete(any()) } returns
-        ClerkResult.success(NativeMagicLinkCompleteResponse(ticket = "ticket_123"))
+        ClerkResult.success(NativeMagicLinkCompleteResponse.Ticket(ticket = "ticket_123"))
       coEvery { auth.signInWithTicket("ticket_123") } coAnswers
         {
           val newerStartResult = NativeMagicLinkService.startEmailLinkSignIn("new@example.com")
@@ -379,7 +463,7 @@ class NativeMagicLinkServiceTest {
 
     mockEmailLinkPrepare(initialSignIn, preparedSignIn)
     coEvery { magicLinkApi.complete(any()) } returns
-      ClerkResult.success(NativeMagicLinkCompleteResponse(ticket = "ticket_123"))
+      ClerkResult.success(NativeMagicLinkCompleteResponse.Ticket(ticket = "ticket_123"))
     coEvery { auth.signInWithTicket("ticket_123") } returns ClerkResult.success(completedSignIn)
     coEvery { auth.setActive("sess_unactivated", null) } returns ClerkResult.apiFailure(apiError)
     coEvery { clientApi.get() } returns ClerkResult.success(refreshedClient)

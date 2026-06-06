@@ -498,7 +498,6 @@ internal enum class NativeMagicLinkReason(val code: String) {
   PREPARE_FAILED("native_magic_link_prepare_failed"),
   COMPLETE_FAILED("native_magic_link_complete_failed"),
   TICKET_SIGN_IN_FAILED("native_magic_link_ticket_sign_in_failed"),
-  TICKET_SIGN_UP_FAILED("native_magic_link_ticket_sign_up_failed"),
 }
 
 internal val TERMINAL_REASON_CODES =
