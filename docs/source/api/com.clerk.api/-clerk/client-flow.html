@@ -2,8 +2,8 @@
 <html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
-    <title>firstFieldToCollect</title>
-<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <title>clientFlow</title>
+<link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../../";</script>
     <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
       if (storage == null) {
@@ -18,23 +18,23 @@
         }
       }
     </script>
-<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
-<link href="../../../styles/style.css" rel="Stylesheet">
-<link href="../../../styles/main.css" rel="Stylesheet">
-<link href="../../../styles/prism.css" rel="Stylesheet">
-<link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
-<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
-<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
-<script type="text/javascript" src="../../../scripts/main.js" defer></script>
-<script type="text/javascript" src="../../../scripts/prism.js" async></script>
-<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
-<link href="../../../styles/multimodule.css" rel="Stylesheet"></head>
+<script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../../styles/style.css" rel="Stylesheet">
+<link href="../../../../styles/main.css" rel="Stylesheet">
+<link href="../../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../../styles/multimodule.css" rel="Stylesheet"></head>
 <body>
 <div class="root">
     <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
-<a class="library-name--link" href="../../../index.html" tabindex="1">
+<a class="library-name--link" href="../../../../index.html" tabindex="1">
                     Clerk
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
@@ -90,12 +90,12 @@
         </nav>
         <div id="resizer" class="resizer" data-item-type="BAR"></div>
         <div id="main" data-item-type="SECTION" role="main">
-<div class="main-content" data-page-type="member" id="content" pageids="Clerk Android API::com.clerk.api.signup//firstFieldToCollect/com.clerk.api.signup.SignUp#/PointingToDeclaration//-1784893667">
-  <div class="breadcrumbs"><a href="../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="index.html">com.clerk.api.signup</a><span class="delimiter">/</span><span class="current">firstFieldToCollect</span></div>
+<div class="main-content" data-page-type="member" id="content" pageids="Clerk Android API::com.clerk.api/Clerk/clientFlow/#/PointingToDeclaration//-1784893667">
+  <div class="breadcrumbs"><a href="../../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="../index.html">com.clerk.api</a><span class="delimiter">/</span><a href="index.html">Clerk</a><span class="delimiter">/</span><span class="current">clientFlow</span></div>
   <div class="cover ">
-    <h1 class="cover"><span>first</span><wbr><span>Field</span><wbr><span>To</span><wbr><span><span>Collect</span></span></h1>
+    <h1 class="cover"><span>client</span><wbr><span><span>Flow</span></span></h1>
   </div>
-  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="-sign-up/index.html">SignUp</a><span class="token punctuation">.</span><a href="first-field-to-collect.html">firstFieldToCollect</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><p class="paragraph">Helper property to get the first field that needs to be collected.</p><p class="paragraph">This property returns the name of the first required field in the <code class="lang-kotlin">missingFields</code> list, sorted by priority. Optional missing fields are intentionally skipped by mobile sign-up flows. The priority order is defined by <a href="-sign-up/-companion/field-priority.html">SignUp.fieldPriority</a>.</p><span class="kdoc-tag"><h4 class="">Return</h4><p class="paragraph">The name of the first required field to collect, or <code class="lang-kotlin">null</code> if there are no required missing fields.</p></span></div></div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="client-flow.html">clientFlow</a><span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines.flow/StateFlow///PointingToDeclaration/">StateFlow</span><span class="token operator">&lt;</span><a href="../../com.clerk.api.network.model.client/-client/index.html">Client</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><p class="paragraph">Reactive state for the current client.</p><p class="paragraph">Emits <code class="lang-kotlin">null</code> before initialization and after <a href="reset.html">reset</a>. Emits the current <a href="../../com.clerk.api.network.model.client/-client/index.html">Client</a> whenever Clerk receives updated client state, including initialization, sign-in, sign-up, sign-out, session mutations, and piggybacked API responses.</p></div></div>
 </div>
     <div class="footer">
         <div class="footer--container">
