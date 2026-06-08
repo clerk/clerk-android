@@ -75,6 +75,7 @@ import kotlinx.serialization.Serializable
  * @param onDismiss Called when the user presses the close affordance. When omitted, the close
  *   affordance falls back to the system back dispatcher.
  * @param onAuthComplete Called when authentication completes.
+ * @param mode Determines whether the flow starts as sign-in, sign-up, or sign-in-or-up.
  */
 @Composable
 fun AuthView(
@@ -88,6 +89,7 @@ fun AuthView(
   isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit = {},
+  mode: AuthMode = AuthMode.SignInOrUp,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
@@ -100,7 +102,7 @@ fun AuthView(
           unsafeMetadata = unsafeMetadata,
         )
       }
-    AuthStateProvider(backStack = backStack, identifierConfig = identifierConfig) {
+    AuthStateProvider(backStack = backStack, mode = mode, identifierConfig = identifierConfig) {
       ObservePendingSessionTaskRouting(backStack = backStack)
       ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
       TrackScreenLoaded(LocalAuthState.current.mode.name)

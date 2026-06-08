@@ -11,6 +11,7 @@ import com.clerk.ui.signup.collectfield.CollectField
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,6 +34,21 @@ class AuthStateSignUpRoutingTest {
         backStack = backStack,
         sharedPreferences = preferences(),
       )
+  }
+
+  @Test
+  fun authStateDefaultsToSignInOrUpMode() {
+    val defaultAuthState = AuthState(backStack = backStack, sharedPreferences = preferences())
+
+    assertEquals(AuthMode.SignInOrUp, defaultAuthState.mode)
+  }
+
+  @Test
+  fun authStateKeepsExplicitMode() {
+    val signUpAuthState =
+      AuthState(mode = AuthMode.SignUp, backStack = backStack, sharedPreferences = preferences())
+
+    assertEquals(AuthMode.SignUp, signUpAuthState.mode)
   }
 
   @Test
