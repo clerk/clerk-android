@@ -19,6 +19,10 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.session.Session
+import com.clerk.api.session.SessionVerification
+import com.clerk.api.session.attemptFirstFactorVerification
+import com.clerk.api.session.prepareFirstFactorVerification
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
 import com.clerk.api.sso.GoogleCredentialManagerImpl
@@ -48,6 +52,7 @@ import org.json.JSONObject
  * @see PasskeyCredentialManager
  * @see GoogleSignInService
  */
+@Suppress("TooManyFunctions")
 internal object GoogleCredentialAuthenticationService {
 
   /** The credential manager used for passkey operations. */
@@ -131,7 +136,12 @@ internal object GoogleCredentialAuthenticationService {
             val signIn = createResult.value
             try {
               val credential =
-                getCredentialFromManager(activity, signIn, allowedCredentialIds, credentialTypes)
+                getCredentialFromManager(
+                  activity = activity,
+                  nonce = signIn.firstFactorVerification?.nonce,
+                  allowedCredentialIds = allowedCredentialIds,
+                  credentialRequestTypes = credentialTypes,
+                )
               handleCredential(credential, signIn)
             } catch (e: GetCredentialException) {
               ClerkLog.e("Passkey sign-in failed: ${e.message}")
@@ -150,6 +160,97 @@ internal object GoogleCredentialAuthenticationService {
           }
         }
       }
+    }
+  }
+
+  /**
+   * Initiates and completes an in-session passkey reverification flow.
+   *
+   * This uses the session verification nonce as the WebAuthn request challenge, then submits the
+   * selected public key credential to the session verification endpoint.
+   */
+  suspend fun verifySessionWithPasskey(
+    session: Session,
+    allowedCredentialIds: List<String> = emptyList(),
+  ): ClerkResult<SessionVerification, ClerkErrorResponse> {
+    ClerkLog.d("Starting passkey session reverification")
+    val activity =
+      Clerk.credentialActivity()
+        ?: return ClerkResult.unknownFailure(CredentialFlowException.MissingActivity()).also {
+          ClerkLog.e("Passkey session reverification requires an active Activity")
+        }
+
+    return verifySessionWithPasskey(activity, session, allowedCredentialIds)
+  }
+
+  private suspend fun verifySessionWithPasskey(
+    activity: android.app.Activity,
+    session: Session,
+    allowedCredentialIds: List<String>,
+  ): ClerkResult<SessionVerification, ClerkErrorResponse> {
+    val prepareResult = session.prepareFirstFactorVerification(PasskeyHelper.passkeyStrategy)
+    return when (prepareResult) {
+      is ClerkResult.Failure -> {
+        ClerkLog.e("Failed to prepare passkey session reverification: ${prepareResult.error}")
+        prepareResult
+      }
+      is ClerkResult.Success -> {
+        val nonce = prepareResult.value.firstFactorVerification?.nonce
+        if (nonce == null) {
+          missingPreparedVerificationNonceFailure()
+        } else {
+          attemptSessionPasskeyVerification(activity, session, allowedCredentialIds, nonce)
+        }
+      }
+    }
+  }
+
+  private fun missingPreparedVerificationNonceFailure(): ClerkResult.Failure<Nothing> {
+    ClerkLog.e("Missing nonce in preparedVerification.firstFactorVerification")
+    return ClerkResult.unknownFailure(
+      IllegalStateException("Missing nonce in prepared verification")
+    )
+  }
+
+  private suspend fun attemptSessionPasskeyVerification(
+    activity: android.app.Activity,
+    session: Session,
+    allowedCredentialIds: List<String>,
+    nonce: String,
+  ): ClerkResult<SessionVerification, ClerkErrorResponse> {
+    return try {
+      val credential =
+        getCredentialFromManager(
+          activity = activity,
+          nonce = nonce,
+          allowedCredentialIds = allowedCredentialIds,
+          credentialRequestTypes = listOf(SignIn.CredentialType.PASSKEY),
+        )
+
+      if (credential is PublicKeyCredential) {
+        ClerkLog.d("Attempting passkey session reverification")
+        val result =
+          session.attemptFirstFactorVerification(
+            Session.AttemptFirstFactorParams.Passkey(credential.authenticationResponseJson)
+          )
+
+        if (result is ClerkResult.Failure) {
+          ClerkLog.e("Passkey session reverification failed: ${result.error}")
+        }
+
+        result
+      } else {
+        ClerkResult.unknownFailure(IllegalStateException("Unsupported credential type"))
+      }
+    } catch (e: GetCredentialException) {
+      ClerkLog.e("Passkey session reverification failed: ${e.message}")
+      classifyGetCredentialFailure(e, listOf(SignIn.CredentialType.PASSKEY))
+    } catch (e: CredentialFlowException) {
+      ClerkLog.e("Passkey session reverification cannot start: ${e.message}")
+      ClerkResult.unknownFailure(e)
+    } catch (e: Exception) {
+      ClerkLog.e("Passkey session reverification failed: ${e.message}")
+      ClerkResult.unknownFailure(e)
     }
   }
 
@@ -188,8 +289,8 @@ internal object GoogleCredentialAuthenticationService {
    * - Handle user selection and return the chosen credential
    * - Throw appropriate exceptions if no credentials are available or accessible
    *
-   * @param context Android context required for credential manager operations.
-   * @param signIn The sign-in session containing the WebAuthn challenge and authentication data.
+   * @param activity Android activity required for credential manager operations.
+   * @param nonce The JSON-encoded WebAuthn challenge metadata.
    * @param allowedCredentialIds Optional list of allowed credential IDs to filter results. If
    *   empty, all available credentials of the requested types will be presented.
    * @param credentialRequestTypes List of credential types to request from the system.
@@ -200,12 +301,12 @@ internal object GoogleCredentialAuthenticationService {
    */
   private suspend fun getCredentialFromManager(
     activity: android.app.Activity,
-    signIn: SignIn,
+    nonce: String?,
     allowedCredentialIds: List<String> = emptyList(),
     credentialRequestTypes: List<SignIn.CredentialType>,
   ): Credential {
     val credentialRequest =
-      buildCredentialRequest(signIn, allowedCredentialIds, credentialRequestTypes)
+      buildCredentialRequest(nonce, allowedCredentialIds, credentialRequestTypes)
 
     val result =
       try {
@@ -233,8 +334,7 @@ internal object GoogleCredentialAuthenticationService {
    * The credential manager will present all available credentials matching the requested types and
    * allow the user to select their preferred authentication method.
    *
-   * @param signIn The sign-in session containing the WebAuthn challenge and authentication
-   *   metadata.
+   * @param nonce The JSON-encoded WebAuthn challenge metadata.
    * @param allowedCredentialIds Optional list of credential IDs to restrict selection to specific
    *   credentials. If empty, all available credentials of the requested types will be included.
    * @param credentialRequestTypes List of credential types to include in the request. Each type
@@ -243,7 +343,7 @@ internal object GoogleCredentialAuthenticationService {
    *   specified types and restrictions.
    */
   private fun buildCredentialRequest(
-    signIn: SignIn,
+    nonce: String?,
     allowedCredentialIds: List<String> = emptyList(),
     credentialRequestTypes: List<SignIn.CredentialType>,
   ): GetCredentialRequest {
@@ -252,8 +352,7 @@ internal object GoogleCredentialAuthenticationService {
     credentialRequestTypes.forEach {
       when (it) {
         SignIn.CredentialType.PASSKEY -> {
-          val webAuthnRequest =
-            createWebAuthnRequest(signIn.firstFactorVerification?.nonce, allowedCredentialIds)
+          val webAuthnRequest = createWebAuthnRequest(nonce, allowedCredentialIds)
           requestOptions.add(buildPublicKeyCredentialOption(webAuthnRequest))
         }
         SignIn.CredentialType.PASSWORD -> requestOptions.add(GetPasswordOption())

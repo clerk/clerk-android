@@ -7,7 +7,10 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionVerification
 import retrofit2.http.DELETE
+import retrofit2.http.FieldMap
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -23,6 +26,7 @@ import retrofit2.http.Query
  * This is an internal API interface used by the Clerk SDK and should not be used directly by
  * application code.
  */
+@Suppress("TooManyFunctions")
 internal interface SessionApi {
   /**
    * Retrieves all sessions for the current client.
@@ -92,6 +96,46 @@ internal interface SessionApi {
     @Path(ApiParams.ID) userId: String,
     @Path("template") templateType: String,
   ): ClerkResult<TokenResource, ClerkErrorResponse>
+
+  /** Starts an in-session reverification flow. */
+  @FormUrlEncoded
+  @POST(ApiPaths.Client.Sessions.VERIFY)
+  suspend fun startVerification(
+    @Path(ApiParams.ID) sessionId: String,
+    @FieldMap params: Map<String, String>,
+  ): ClerkResult<SessionVerification, ClerkErrorResponse>
+
+  /** Prepares the first factor of an in-session reverification flow. */
+  @FormUrlEncoded
+  @POST(ApiPaths.Client.Sessions.PREPARE_FIRST_FACTOR)
+  suspend fun prepareFirstFactorVerification(
+    @Path(ApiParams.ID) sessionId: String,
+    @FieldMap params: Map<String, String>,
+  ): ClerkResult<SessionVerification, ClerkErrorResponse>
+
+  /** Attempts the first factor of an in-session reverification flow. */
+  @FormUrlEncoded
+  @POST(ApiPaths.Client.Sessions.ATTEMPT_FIRST_FACTOR)
+  suspend fun attemptFirstFactorVerification(
+    @Path(ApiParams.ID) sessionId: String,
+    @FieldMap params: Map<String, String>,
+  ): ClerkResult<SessionVerification, ClerkErrorResponse>
+
+  /** Prepares the second factor of an in-session reverification flow. */
+  @FormUrlEncoded
+  @POST(ApiPaths.Client.Sessions.PREPARE_SECOND_FACTOR)
+  suspend fun prepareSecondFactorVerification(
+    @Path(ApiParams.ID) sessionId: String,
+    @FieldMap params: Map<String, String>,
+  ): ClerkResult<SessionVerification, ClerkErrorResponse>
+
+  /** Attempts the second factor of an in-session reverification flow. */
+  @FormUrlEncoded
+  @POST(ApiPaths.Client.Sessions.ATTEMPT_SECOND_FACTOR)
+  suspend fun attemptSecondFactorVerification(
+    @Path(ApiParams.ID) sessionId: String,
+    @FieldMap params: Map<String, String>,
+  ): ClerkResult<SessionVerification, ClerkErrorResponse>
 
   /**
    * Revokes a specific session.

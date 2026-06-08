@@ -2,6 +2,8 @@ package com.clerk.api.passkeys
 
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.session.Session
+import com.clerk.api.session.SessionVerification
 import com.clerk.api.signin.SignIn
 
 /**
@@ -24,6 +26,23 @@ internal object PasskeyService {
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     return GoogleCredentialAuthenticationService.signInWithGoogleCredential(
       credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+      allowedCredentialIds = allowedCredentialIds,
+    )
+  }
+
+  /**
+   * Completes an in-session reverification flow using passkeys.
+   *
+   * @param session The session that should be reverified.
+   * @param allowedCredentialIds Optional list of credential IDs to filter available passkeys.
+   * @return A [ClerkResult] containing the resulting [SessionVerification] on success, or an error.
+   */
+  suspend fun verifySessionWithPasskey(
+    session: Session,
+    allowedCredentialIds: List<String> = emptyList(),
+  ): ClerkResult<SessionVerification, ClerkErrorResponse> {
+    return GoogleCredentialAuthenticationService.verifySessionWithPasskey(
+      session = session,
       allowedCredentialIds = allowedCredentialIds,
     )
   }
