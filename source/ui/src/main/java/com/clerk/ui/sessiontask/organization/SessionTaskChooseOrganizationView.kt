@@ -64,7 +64,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 @Composable
 internal fun SessionTaskChooseOrganizationView(
   onAuthComplete: () -> Unit,
-  onCreateOrganization: (OrganizationCreationDefaults?) -> Unit,
+  onCreateOrganization: (OrganizationCreationDefaults?, Boolean) -> Unit,
   modifier: Modifier = Modifier,
   viewModel: SessionTaskChooseOrganizationViewModel = viewModel(),
 ) {
@@ -80,6 +80,11 @@ internal fun SessionTaskChooseOrganizationView(
       viewModel.clearCompletedSession()
     }
   }
+  LaunchedEffect(state.canOnlyCreateOrganization, state.creationDefaults) {
+    if (state.canOnlyCreateOrganization) {
+      onCreateOrganization(state.creationDefaults, true)
+    }
+  }
 
   when {
     state.canShowNoOrganizationHelp -> SignInGetHelpView(modifier = modifier)
@@ -89,7 +94,7 @@ internal fun SessionTaskChooseOrganizationView(
         state = state,
         onErrorShown = viewModel::clearError,
         onRetryInitialLoad = viewModel::retryLoad,
-        onCreateOrganization = { onCreateOrganization(state.creationDefaults) },
+        onCreateOrganization = { onCreateOrganization(state.creationDefaults, false) },
         onLoadMoreMemberships = viewModel::loadMoreMemberships,
         onLoadMoreInvitations = viewModel::loadMoreInvitations,
         onLoadMoreSuggestions = viewModel::loadMoreSuggestions,

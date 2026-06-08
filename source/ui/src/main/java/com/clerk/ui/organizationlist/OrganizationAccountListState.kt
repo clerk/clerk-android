@@ -44,6 +44,10 @@ internal data class OrganizationAccountListState(
     get() =
       !isLoading && hasLoadedInitialResources && !hasExistingResources && !canCreateOrganization
 
+  val canOnlyCreateOrganization: Boolean
+    get() =
+      !isLoading && hasLoadedInitialResources && !hasExistingResources && canCreateOrganization
+
   val membershipsHasNextPage: Boolean
     get() = memberships.size < membershipsTotalCount
 

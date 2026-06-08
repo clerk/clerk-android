@@ -38,7 +38,7 @@ class OrganizationSessionTaskUtilsTest {
   }
 
   @Test
-  fun `successful empty initial load with creation enabled stays on chooser`() {
+  fun `successful empty initial load with creation enabled can only create organization`() {
     val state =
       SessionTaskChooseOrganizationState(
         isLoading = false,
@@ -49,6 +49,7 @@ class OrganizationSessionTaskUtilsTest {
 
     assertFalse(state.initialLoadFailed)
     assertFalse(state.canShowNoOrganizationHelp)
+    assertTrue(state.canOnlyCreateOrganization)
   }
 
   @Test
@@ -76,5 +77,6 @@ class OrganizationSessionTaskUtilsTest {
 
     assertTrue(state.hasExistingResources)
     assertFalse(state.canShowNoOrganizationHelp)
+    assertFalse(state.canOnlyCreateOrganization)
   }
 }
