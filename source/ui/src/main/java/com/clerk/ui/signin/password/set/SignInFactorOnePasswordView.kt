@@ -99,7 +99,7 @@ private fun SignInFactorOnePasswordViewImpl(
     onBackPressed = { authState.navigateBack() },
     snackbarHostState = snackbarHostState,
     identifier = factor.safeIdentifier,
-    onClickIdentifier = { authState.clearBackStack() },
+    onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
     modifier = modifier,
     title = stringResource(R.string.enter_password),
     subtitle = stringResource(R.string.enter_the_password_associated_with_your_account),

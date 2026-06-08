@@ -84,7 +84,7 @@ private fun SignUpEmailLinkViewImpl(
       Clerk.applicationName?.let { stringResource(R.string.to_continue_to, it) }
         ?: stringResource(R.string.to_continue),
     identifier = emailAddress,
-    onClickIdentifier = authState::clearBackStack,
+    onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
     hasLogo = false,
     snackbarHostState = snackbarHostState,
   ) {

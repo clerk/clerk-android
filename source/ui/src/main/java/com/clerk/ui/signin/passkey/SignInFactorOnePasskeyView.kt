@@ -13,7 +13,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -81,7 +80,7 @@ private fun SignInFactorOnePasskeyViewImpl(
     onBackPressed = authState::navigateBack,
     title = stringResource(R.string.use_your_passkey),
     subtitle = stringResource(R.string.using_your_passkey),
-    onClickIdentifier = { authState.clearBackStack() },
+    onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
     identifier = factor.safeIdentifier,
     snackbarHostState = snackbarHostState,
   ) {

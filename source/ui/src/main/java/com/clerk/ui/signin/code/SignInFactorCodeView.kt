@@ -118,7 +118,7 @@ private fun SignInFactorCodeViewImpl(
     subtitle = SignInFactorCodeUiHelper.subtitleForStrategy(factor),
     identifier = factor.safeIdentifier,
     snackbarHostState = snackbarHostState,
-    onClickIdentifier = { authState.clearBackStack() },
+    onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
   ) {
     if (isClientTrust) {
       ClientTrustWarningMessage()

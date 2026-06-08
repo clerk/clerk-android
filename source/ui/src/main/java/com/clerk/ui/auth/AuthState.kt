@@ -81,6 +81,9 @@ internal class AuthState(
 
   var lastSubmittedIdentifier by mutableStateOf<String?>(null)
 
+  var shouldResumeInProgressAuthAttempt by mutableStateOf(true)
+    private set
+
   var organizationLogoUrl by mutableStateOf(organizationLogoUrl)
     private set
 
@@ -100,6 +103,7 @@ internal class AuthState(
   var signUpLegalAccepted by mutableStateOf(false)
 
   override fun navigateTo(destination: NavKey) {
+    shouldResumeInProgressAuthAttempt = true
     backStack.add(destination)
   }
 
@@ -109,6 +113,15 @@ internal class AuthState(
 
   override fun clearBackStack() {
     resetToRoot()
+  }
+
+  fun navigateToAuthStartForIdentifierEdit() {
+    shouldResumeInProgressAuthAttempt = false
+    resetToRoot()
+  }
+
+  fun enableInProgressAuthAttemptResume() {
+    shouldResumeInProgressAuthAttempt = true
   }
 
   override fun pop(numberOfScreens: Int) {

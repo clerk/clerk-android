@@ -132,7 +132,7 @@ private fun SignUpCompleteProfileImpl(
     title = stringResource(R.string.profile_details),
     subtitle = stringResource(R.string.complete_your_profile),
     snackbarHostState = snackbarHostState,
-    onClickIdentifier = { authState.clearBackStack() },
+    onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
     onBackPressed = { authState.navigateBack() },
     hasLogo = false,
   ) {
