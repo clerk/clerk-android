@@ -248,15 +248,26 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
       val authState = LocalAuthState.current
       SessionTaskChooseOrganizationView(
         onAuthComplete = options.onAuthComplete,
-        onCreateOrganization = {
-          authState.navigateTo(AuthDestination.SessionTaskCreateOrganization(it))
+        onCreateOrganization = { creationDefaults, replaceChooser ->
+          if (
+            replaceChooser &&
+              backStack.lastOrNull() == AuthDestination.SessionTaskChooseOrganization
+          ) {
+            backStack.removeLastOrNull()
+          }
+          authState.navigateTo(
+            AuthDestination.SessionTaskCreateOrganization(
+              creationDefaults = creationDefaults,
+              showBackButton = !replaceChooser,
+            )
+          )
         },
       )
     }
     entry<AuthDestination.SessionTaskCreateOrganization> {
       SessionTaskCreateOrganizationView(
         creationDefaults = it.creationDefaults,
-        showBackButton = true,
+        showBackButton = it.showBackButton,
         onAuthComplete = options.onAuthComplete,
       )
     }
@@ -388,7 +399,8 @@ internal object AuthDestination {
 
   @Serializable
   data class SessionTaskCreateOrganization(
-    val creationDefaults: OrganizationCreationDefaults? = null
+    val creationDefaults: OrganizationCreationDefaults? = null,
+    val showBackButton: Boolean = true,
   ) : NavKey
 
   @Serializable data class SignInFactorTwoUseAnotherMethod(val currentFactor: Factor) : NavKey
