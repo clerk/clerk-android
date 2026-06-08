@@ -307,6 +307,13 @@ class AuthViewModelTest {
   }
 
   @Test
+  fun authModeTransferabilityShouldMatchFlowMode() {
+    assertEquals(false, AuthMode.SignIn.transferable)
+    assertEquals(true, AuthMode.SignUp.transferable)
+    assertEquals(true, AuthMode.SignInOrUp.transferable)
+  }
+
+  @Test
   fun emailRegexPatternShouldWorkCorrectly() {
     // Test email validation regex pattern (same as used in the ViewModel)
     val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
