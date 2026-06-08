@@ -189,6 +189,7 @@ private fun AuthNavDisplay(
   options: AuthNavOptions,
   modifier: Modifier = Modifier,
 ) {
+  val authState = LocalAuthState.current
   NavDisplay(
     modifier = modifier,
     backStack = backStack,
@@ -206,11 +207,7 @@ private fun AuthNavDisplay(
       slideInHorizontally(initialOffsetX = { -distance }) togetherWith
         slideOutHorizontally(targetOffsetX = { distance })
     },
-    onBack = {
-      if (backStack.size > 1) {
-        backStack.removeLastOrNull()
-      }
-    },
+    onBack = { authState.navigateBack() },
     entryProvider = authEntryProvider(backStack = backStack, options = options),
   )
 }

@@ -108,7 +108,11 @@ internal class AuthState(
   }
 
   override fun navigateBack() {
+    if (backStack.size <= 1) return
     backStack.removeLastOrNull()
+    if (backStack.size == 1) {
+      shouldResumeInProgressAuthAttempt = false
+    }
   }
 
   override fun clearBackStack() {
