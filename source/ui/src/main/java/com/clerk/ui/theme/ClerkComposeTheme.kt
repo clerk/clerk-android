@@ -297,6 +297,14 @@ private fun generateComputedColors(colors: ClerkColors): ComputedColors {
         } ?: Color.Transparent,
       border = colors.border?.copy(alpha = BORDER_ALPHA_SUBTLE) ?: Color.Transparent,
       buttonBorder = colors.border?.copy(alpha = BUTTON_BORDER_ALPHA) ?: Color.Transparent,
+      secondaryButtonForeground =
+        colors.secondaryButton?.let { secondaryButton ->
+          if (secondaryButton.isDark) {
+            DefaultColors.dark.foreground ?: Color.White
+          } else {
+            DefaultColors.light.foreground ?: Color.Black
+          }
+        } ?: Color.Transparent,
       inputBorder = colors.border?.copy(alpha = INPUT_BORDER_ALPHA) ?: Color.Transparent,
       inputBorderFocused =
         colors.ring?.copy(alpha = INPUT_BORDER_FOCUSED_ALPHA) ?: Color.Transparent,
