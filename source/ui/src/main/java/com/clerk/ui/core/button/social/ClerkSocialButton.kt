@@ -210,9 +210,10 @@ private fun getButtonColors(isPressedCombined: Boolean) =
     containerColor =
       if (isPressedCombined) ClerkMaterialTheme.colors.muted
       else ClerkMaterialTheme.colors.secondaryButton,
-    contentColor = ClerkMaterialTheme.colors.foreground,
+    contentColor = ClerkMaterialTheme.computedColors.secondaryButtonForeground,
     disabledContainerColor = ClerkMaterialTheme.colors.secondaryButton,
-    disabledContentColor = ClerkMaterialTheme.colors.foreground.copy(alpha = 0.5f),
+    disabledContentColor =
+      ClerkMaterialTheme.computedColors.secondaryButtonForeground.copy(alpha = 0.5f),
   )
 
 /** Displays the adaptive content of the social button based on available width. */
