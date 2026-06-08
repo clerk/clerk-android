@@ -9,23 +9,62 @@ class UserButtonBehaviorTest {
 
   @Test
   fun `userButtonClickAction routes to auth when session requires forced mfa`() {
-    val action = userButtonClickAction(requiresForcedMfa = true, routeToAuthWhenForcedMfa = true)
+    val action =
+      userButtonClickAction(
+        requiresForcedMfa = true,
+        hasPendingNonMfaTask = false,
+        routeToAuthWhenForcedMfa = true,
+      )
 
     assertEquals(UserButtonClickAction.ROUTE_TO_AUTH, action)
   }
 
   @Test
   fun `userButtonClickAction opens profile when session has no outstanding tasks`() {
-    val action = userButtonClickAction(requiresForcedMfa = false, routeToAuthWhenForcedMfa = true)
+    val action =
+      userButtonClickAction(
+        requiresForcedMfa = false,
+        hasPendingNonMfaTask = false,
+        routeToAuthWhenForcedMfa = true,
+      )
 
     assertEquals(UserButtonClickAction.OPEN_PROFILE, action)
   }
 
   @Test
   fun `userButtonClickAction opens profile when forced mfa routing is disabled`() {
-    val action = userButtonClickAction(requiresForcedMfa = true, routeToAuthWhenForcedMfa = false)
+    val action =
+      userButtonClickAction(
+        requiresForcedMfa = true,
+        hasPendingNonMfaTask = false,
+        routeToAuthWhenForcedMfa = false,
+      )
 
     assertEquals(UserButtonClickAction.OPEN_PROFILE, action)
+  }
+
+  @Test
+  fun `userButtonClickAction opens pending session sheet for non-mfa pending task`() {
+    val action =
+      userButtonClickAction(
+        requiresForcedMfa = false,
+        hasPendingNonMfaTask = true,
+        routeToAuthWhenForcedMfa = true,
+      )
+
+    assertEquals(UserButtonClickAction.OPEN_PENDING_SESSION_SHEET, action)
+  }
+
+  @Test
+  fun `userButtonClickAction routes forced mfa before pending session sheet`() {
+    val action =
+      userButtonClickAction(
+        requiresForcedMfa = true,
+        hasPendingNonMfaTask = true,
+        routeToAuthWhenForcedMfa = true,
+      )
+
+    assertEquals(UserButtonClickAction.ROUTE_TO_AUTH, action)
   }
 
   @Test
