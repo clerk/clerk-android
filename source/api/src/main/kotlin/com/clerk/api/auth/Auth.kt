@@ -391,9 +391,7 @@ class Auth internal constructor() {
     return nativeMagicLink.startEmailLinkSignIn(email)
   }
 
-  /**
-   * Handles a native magic-link deep-link callback and completes sign-in or sign-up using a ticket.
-   */
+  /** Handles a native magic-link deep-link callback and completes the matching auth flow. */
   suspend fun handleMagicLinkDeepLink(
     uri: Uri
   ): ClerkResult<NativeMagicLinkAuthResult, NativeMagicLinkError> {
