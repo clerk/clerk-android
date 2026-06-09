@@ -39,6 +39,8 @@ data class ClerkColors(
   val ring: Color? = null,
   /** Muted background color for minimal emphasis surfaces. */
   val muted: Color? = null,
+  /** Fill color for secondary buttons, including social and SSO buttons. */
+  val secondaryButton: Color? = null,
   /** Shadow color used when drawing elevation overlays. */
   val shadow: Color? = null,
 )

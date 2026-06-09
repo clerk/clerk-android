@@ -85,13 +85,8 @@ private fun generateForeground(config: ClerkButtonConfiguration, isPressed: Bool
       }
 
     ClerkButtonConfiguration.ButtonStyle.Secondary ->
-      when (config.emphasis) {
-        ClerkButtonConfiguration.Emphasis.None ->
-          if (isPressed) ClerkMaterialTheme.colors.foreground
-          else ClerkMaterialTheme.colors.mutedForeground
-        ClerkButtonConfiguration.Emphasis.Low,
-        ClerkButtonConfiguration.Emphasis.High -> ClerkMaterialTheme.colors.foreground
-      }
+      if (isPressed) ClerkMaterialTheme.colors.foreground
+      else ClerkMaterialTheme.computedColors.secondaryButtonForeground
 
     ClerkButtonConfiguration.ButtonStyle.Negative ->
       when (config.emphasis) {
@@ -119,7 +114,8 @@ private fun generateBackground(config: ClerkButtonConfiguration, isPressed: Bool
         ClerkButtonConfiguration.Emphasis.None,
         ClerkButtonConfiguration.Emphasis.Low,
         ClerkButtonConfiguration.Emphasis.High ->
-          if (isPressed) ClerkMaterialTheme.colors.muted else ClerkMaterialTheme.colors.background
+          if (isPressed) ClerkMaterialTheme.colors.muted
+          else ClerkMaterialTheme.colors.secondaryButton
       }
 
     ClerkButtonConfiguration.ButtonStyle.Negative ->

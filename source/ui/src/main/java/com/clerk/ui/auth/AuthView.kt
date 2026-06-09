@@ -108,7 +108,7 @@ fun AuthView(
       TrackScreenLoaded(LocalAuthState.current.mode.name)
       DevelopmentModeWarningBox(
         modifier = fullScreenModifier,
-        background = DevelopmentModeWarningBackground.White,
+        background = DevelopmentModeWarningBackground.Themed,
       ) {
         AuthNavDisplay(
           modifier = Modifier.fillMaxSize(),

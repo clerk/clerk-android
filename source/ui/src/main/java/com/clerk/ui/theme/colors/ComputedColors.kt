@@ -13,6 +13,8 @@ internal data class ComputedColors(
   val border: Color,
   /** Button border color with specific opacity */
   val buttonBorder: Color,
+  /** Foreground color that contrasts with secondary button backgrounds. */
+  val secondaryButtonForeground: Color,
   /** Input field border color */
   val inputBorder: Color,
   /** Focused input field border color */
