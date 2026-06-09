@@ -10,7 +10,7 @@ MAVEN_BASE_URL="https://repo.maven.apache.org/maven2/com/clerk"
 TARGET_REPO="clerk/javascript"
 BUILD_FILE="packages/expo/android/build.gradle"
 BRANCH="sam/expo-android-${CLERK_ANDROID_VERSION}"
-PR_TITLE="fix(expo): Bump clerk-android to ${CLERK_ANDROID_VERSION}"
+PR_TITLE="chore(expo): Bump clerk-android to ${CLERK_ANDROID_VERSION}"
 
 version_slug="${CLERK_ANDROID_VERSION//./-}"
 CHANGESET_FILE=".changeset/expo-bump-clerk-android-${version_slug}.md"
@@ -168,7 +168,7 @@ main() {
   git config user.name "github-actions[bot]"
   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
   git add "$BUILD_FILE" "$CHANGESET_FILE"
-  git commit -m "fix(expo): bump clerk-android to ${CLERK_ANDROID_VERSION}"
+  git commit -m "chore(expo): bump clerk-android to ${CLERK_ANDROID_VERSION}"
   git push --force-with-lease origin "HEAD:${BRANCH}"
 
   local body_file
