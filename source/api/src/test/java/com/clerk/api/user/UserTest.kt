@@ -151,6 +151,52 @@ class UserTest {
   }
 
   @Test
+  fun `UpdateMetadataParams should include unsafe_metadata when provided`() {
+    val payload = """{"preferences":{"theme":"dark"}}"""
+    val params = User.UpdateMetadataParams(unsafeMetadata = payload)
+
+    val paramsMap = params.toMap()
+
+    assertEquals("Map should contain exactly one entry", 1, paramsMap.size)
+    assertEquals("Should include unsafe_metadata", payload, paramsMap["unsafe_metadata"])
+  }
+
+  @Test
+  fun `UpdateMetadataParams should exclude unsafe_metadata when null`() {
+    val params = User.UpdateMetadataParams(unsafeMetadata = null)
+
+    val paramsMap = params.toMap()
+
+    assertTrue("Map should be empty when no fields are provided", paramsMap.isEmpty())
+  }
+
+  @Test
+  fun `UpdateMetadataParams should serialize with snake_case`() {
+    val params = User.UpdateMetadataParams(unsafeMetadata = """{"k":"v"}""")
+
+    val json = Json.encodeToString(params)
+
+    assertTrue("Serialized JSON should contain unsafe_metadata", json.contains("unsafe_metadata"))
+    assertTrue(
+      "Serialized JSON should contain the escaped metadata value",
+      json.contains("""\"k\":\"v\""""),
+    )
+  }
+
+  @Test
+  fun `UpdateMetadataParams should preserve empty-object payload`() {
+    val params = User.UpdateMetadataParams(unsafeMetadata = "{}")
+
+    val paramsMap = params.toMap()
+
+    assertEquals(
+      "Should include unsafe_metadata with empty object",
+      "{}",
+      paramsMap["unsafe_metadata"],
+    )
+  }
+
+  @Test
   fun `phoneNumbersAvailableForMfa excludes last first factor phone`() {
     val user = user(phoneNumbers = listOf(verifiedPhone(id = "phone_1")))
 
