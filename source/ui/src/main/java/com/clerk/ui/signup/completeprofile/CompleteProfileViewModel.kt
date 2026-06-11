@@ -63,5 +63,5 @@ internal fun SignUp.completeProfileUpdateParams(
 }
 
 internal fun SignUp.supportsField(field: String): Boolean {
-  return requiredFields.contains(field) || optionalFields.contains(field)
+  return requiredFields.contains(field)
 }

@@ -77,7 +77,8 @@ class UserSettingsSerializationTest {
         },
         "passkey_settings": null
       }
-      """.trimIndent()
+      """
+        .trimIndent()
     return ClerkApi.json.decodeFromString<UserSettings>(json)
   }
 }

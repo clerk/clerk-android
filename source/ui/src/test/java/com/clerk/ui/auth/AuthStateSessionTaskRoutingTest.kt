@@ -1,9 +1,6 @@
 package com.clerk.ui.auth
 
-import android.content.Context
 import androidx.navigation3.runtime.NavBackStack
-import androidx.test.core.app.ApplicationProvider
-import com.clerk.api.Constants
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTask
 import com.clerk.api.signin.SignIn
@@ -11,18 +8,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class AuthStateSessionTaskRoutingTest {
 
-  private lateinit var context: Context
+  private lateinit var preferences: InMemorySharedPreferences
 
   @Before
   fun setUp() {
-    context = ApplicationProvider.getApplicationContext()
-    preferences().edit().clear().commit()
+    preferences = InMemorySharedPreferences()
   }
 
   @Test
@@ -74,13 +67,7 @@ class AuthStateSessionTaskRoutingTest {
   private fun createAuthState(): AuthState {
     return AuthState(
       backStack = NavBackStack(AuthDestination.AuthStart),
-      sharedPreferences = preferences(),
+      sharedPreferences = preferences,
     )
   }
-
-  private fun preferences() =
-    context.getSharedPreferences(
-      Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
-      Context.MODE_PRIVATE,
-    )
 }

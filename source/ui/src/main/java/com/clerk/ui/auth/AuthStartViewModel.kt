@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
+import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
 import com.clerk.api.credentials.shouldSuppressCredentialFlowError
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -68,6 +69,7 @@ internal class AuthStartViewModel : ViewModel() {
     isPhoneNumberFieldActive: Boolean,
     phoneNumber: String,
     identifier: String,
+    unsafeMetadata: Map<String, Any>? = null,
   ) {
     when (authMode) {
       AuthMode.SignIn ->
@@ -76,12 +78,14 @@ internal class AuthStartViewModel : ViewModel() {
           phoneNumber = phoneNumber,
           identifier = identifier,
           transferable = authMode.transferable,
+          unsafeMetadata = unsafeMetadata,
         )
       AuthMode.SignUp ->
         signUp(
           isPhoneNumberFieldActive = isPhoneNumberFieldActive,
           identifier = identifier,
           phoneNumber = phoneNumber,
+          unsafeMetadata = unsafeMetadata,
         )
       AuthMode.SignInOrUp -> {
         signIn(
@@ -90,6 +94,7 @@ internal class AuthStartViewModel : ViewModel() {
           identifier,
           withSignUp = true,
           transferable = authMode.transferable,
+          unsafeMetadata = unsafeMetadata,
         )
       }
     }
@@ -101,6 +106,7 @@ internal class AuthStartViewModel : ViewModel() {
     identifier: String,
     withSignUp: Boolean = false,
     transferable: Boolean = true,
+    unsafeMetadata: Map<String, Any>? = null,
   ) {
     viewModelScope.launch(Dispatchers.IO) {
       _state.value = AuthState.Loading
@@ -113,7 +119,7 @@ internal class AuthStartViewModel : ViewModel() {
             val matchingCodes = listOf(FORM_IDENTIFIER_NOT_FOUND, INVITATION_ACCOUNT_NOT_EXISTS)
             val hasMatchingError = it.error?.errors?.any { it.code in matchingCodes } ?: false
             if (hasMatchingError) {
-              signUp(isPhoneNumberFieldActive, identifier, phoneNumber)
+              signUp(isPhoneNumberFieldActive, identifier, phoneNumber, unsafeMetadata)
             } else {
               _state.value = AuthState.Error(it.errorMessage)
             }
@@ -122,7 +128,12 @@ internal class AuthStartViewModel : ViewModel() {
     }
   }
 
-  private fun signUp(isPhoneNumberFieldActive: Boolean, identifier: String, phoneNumber: String) {
+  private fun signUp(
+    isPhoneNumberFieldActive: Boolean,
+    identifier: String,
+    phoneNumber: String,
+    unsafeMetadata: Map<String, Any>?,
+  ) {
     _state.value = AuthState.Loading
     viewModelScope.launch(Dispatchers.IO) {
       SignUp.create(
@@ -130,6 +141,7 @@ internal class AuthStartViewModel : ViewModel() {
             isPhoneNumberFieldActive = isPhoneNumberFieldActive,
             identifier = identifier,
             phoneNumber = phoneNumber,
+            unsafeMetadata = unsafeMetadata,
           )
         )
         .onSuccess { signUp ->
@@ -154,22 +166,29 @@ internal class AuthStartViewModel : ViewModel() {
    * @param transferable Whether the flow can transfer between sign-in and sign-up.
    * @param preferGoogleOneTap Whether Google should prefer native One Tap over browser OAuth.
    * @param startOAuthWithSignUp Whether browser OAuth should create a sign-up attempt first.
+   * @param unsafeMetadata Custom metadata to attach when browser OAuth starts from sign-up.
    */
   internal fun authenticateWithSocialProvider(
     provider: OAuthProvider,
     transferable: Boolean = true,
     preferGoogleOneTap: Boolean = true,
     startOAuthWithSignUp: Boolean = false,
+    unsafeMetadata: Map<String, Any>? = null,
   ) {
     _state.value = AuthState.OAuthState.Loading
     if (preferGoogleOneTap && provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
-      handleGoogleOneTap(transferable)
+      handleGoogleOneTap(provider, transferable, startOAuthWithSignUp, unsafeMetadata)
     } else {
-      authenticateWithOAuthProvider(provider, transferable, startOAuthWithSignUp)
+      authenticateWithOAuthProvider(provider, transferable, startOAuthWithSignUp, unsafeMetadata)
     }
   }
 
-  private fun handleGoogleOneTap(transferable: Boolean) {
+  private fun handleGoogleOneTap(
+    provider: OAuthProvider,
+    transferable: Boolean,
+    startOAuthWithSignUp: Boolean,
+    unsafeMetadata: Map<String, Any>?,
+  ) {
     viewModelScope.launch(Dispatchers.IO) {
       SignIn.authenticateWithGoogleOneTap(transferable)
         .onSuccess {
@@ -191,12 +210,17 @@ internal class AuthStartViewModel : ViewModel() {
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            _state.value =
-              if (it.shouldSuppressCredentialFlowError) {
-                AuthState.Idle
-              } else {
-                AuthState.OAuthState.Error(it.resolvedCredentialFlowMessage)
-              }
+            when {
+              it.shouldSuppressCredentialFlowError -> _state.value = AuthState.Idle
+              it.shouldFallbackToOAuthFromGoogleOneTap ->
+                authenticateWithOAuthProvider(
+                  provider = provider,
+                  transferable = transferable,
+                  startOAuthWithSignUp = startOAuthWithSignUp,
+                  unsafeMetadata = unsafeMetadata,
+                )
+              else -> _state.value = AuthState.OAuthState.Error(it.resolvedCredentialFlowMessage)
+            }
           }
         }
     }
@@ -206,12 +230,16 @@ internal class AuthStartViewModel : ViewModel() {
     provider: OAuthProvider,
     transferable: Boolean,
     startOAuthWithSignUp: Boolean,
+    unsafeMetadata: Map<String, Any>?,
   ) {
     viewModelScope.launch {
       val result =
         if (startOAuthWithSignUp) {
           SignUp.authenticateWithRedirect(
-            SignUp.AuthenticateWithRedirectParams.OAuth(provider = provider)
+            SignUp.AuthenticateWithRedirectParams.OAuth(
+              provider = provider,
+              unsafeMetadata = unsafeMetadata,
+            )
           )
         } else {
           SignIn.authenticateWithRedirect(
@@ -244,11 +272,14 @@ internal class AuthStartViewModel : ViewModel() {
     isPhoneNumberFieldActive: Boolean,
     identifier: String,
     phoneNumber: String,
+    unsafeMetadata: Map<String, Any>?,
   ): SignUp.CreateParams.Standard {
     return when {
-      isPhoneNumberFieldActive -> SignUp.CreateParams.Standard(phoneNumber = phoneNumber)
-      identifier.isEmailAddress -> SignUp.CreateParams.Standard(emailAddress = identifier)
-      else -> SignUp.CreateParams.Standard(username = identifier)
+      isPhoneNumberFieldActive ->
+        SignUp.CreateParams.Standard(phoneNumber = phoneNumber, unsafeMetadata = unsafeMetadata)
+      identifier.isEmailAddress ->
+        SignUp.CreateParams.Standard(emailAddress = identifier, unsafeMetadata = unsafeMetadata)
+      else -> SignUp.CreateParams.Standard(username = identifier, unsafeMetadata = unsafeMetadata)
     }
   }
 

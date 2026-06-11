@@ -37,6 +37,10 @@ jobs:
 
       - name: Get versions from gradle.properties
         id: get_version
+        env:
+          PUBLISH_API: ${{ github.event.inputs.publish_api }}
+          PUBLISH_UI: ${{ github.event.inputs.publish_ui }}
+          PUBLISH_TELEMETRY: ${{ github.event.inputs.publish_telemetry }}
         run: |
           CLERK_API_VERSION=$(awk -F= '/^CLERK_API_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
           CLERK_TELEMETRY_VERSION=$(awk -F= '/^CLERK_TELEMETRY_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
@@ -47,10 +51,22 @@ jobs:
             exit 1
           fi
 
-          # Use clerk-api version for the tag
-          TAG_NAME="v$CLERK_API_VERSION"
+          if [ "$PUBLISH_API" != "true" ] && [ "$PUBLISH_UI" != "true" ] && [ "$PUBLISH_TELEMETRY" != "true" ]; then
+            echo "No modules selected for publishing"
+            exit 1
+          fi
 
-          echo "version=$CLERK_API_VERSION" >> $GITHUB_OUTPUT
+          # SDK releases use the API version. Telemetry-only releases use the telemetry version so
+          # they can be published independently without colliding with SDK release tags.
+          if [ "$PUBLISH_API" != "true" ] && [ "$PUBLISH_UI" != "true" ] && [ "$PUBLISH_TELEMETRY" = "true" ]; then
+            TAG_NAME="telemetry-v$CLERK_TELEMETRY_VERSION"
+            RELEASE_VERSION="$CLERK_TELEMETRY_VERSION"
+          else
+            TAG_NAME="v$CLERK_API_VERSION"
+            RELEASE_VERSION="$CLERK_API_VERSION"
+          fi
+
+          echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
           echo "clerk_api_version=$CLERK_API_VERSION" >> $GITHUB_OUTPUT
           echo "clerk_telemetry_version=$CLERK_TELEMETRY_VERSION" >> $GITHUB_OUTPUT
           echo "clerk_ui_version=$CLERK_UI_VERSION" >> $GITHUB_OUTPUT
@@ -60,6 +76,10 @@ jobs:
           echo "  clerk-android-api: $CLERK_API_VERSION"
           echo "  clerk-android-telemetry: $CLERK_TELEMETRY_VERSION"
           echo "  clerk-android-ui: $CLERK_UI_VERSION"
+          echo "Selected modules:"
+          echo "  clerk-android-api: $PUBLISH_API"
+          echo "  clerk-android-telemetry: $PUBLISH_TELEMETRY"
+          echo "  clerk-android-ui: $PUBLISH_UI"
           echo "Tag name: $TAG_NAME"
 
       - name: Create and push tag
@@ -90,6 +110,9 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: create-release
     if: always() && (github.event_name == 'release' || needs.create-release.result == 'success')
+    outputs:
+      tag_name: ${{ steps.release_metadata.outputs.tag_name }}
+      release_url: ${{ steps.release_metadata.outputs.release_url }}
 
     steps:
       - name: Checkout code
@@ -107,6 +130,56 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Get release metadata
+        id: release_metadata
+        env:
+          EVENT_RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
+          EVENT_RELEASE_URL: ${{ github.event.release.html_url }}
+          DISPATCH_RELEASE_TAG_NAME: ${{ needs.create-release.outputs.tag_name }}
+          PUBLISH_API: ${{ github.event.inputs.publish_api }}
+          PUBLISH_UI: ${{ github.event.inputs.publish_ui }}
+          PUBLISH_TELEMETRY: ${{ github.event.inputs.publish_telemetry }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "release" ]; then
+            TAG_NAME="$EVENT_RELEASE_TAG_NAME"
+            RELEASE_URL="$EVENT_RELEASE_URL"
+            TASKS=":source:api:publishAndReleaseToMavenCentral :source:ui:publishAndReleaseToMavenCentral :source:telemetry:publishAndReleaseToMavenCentral"
+          else
+            TAG_NAME="$DISPATCH_RELEASE_TAG_NAME"
+            RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG_NAME"
+            TASKS=""
+
+            if [ "$PUBLISH_API" = "true" ]; then
+              TASKS="$TASKS :source:api:publishMavenPublicationToMavenCentralRepository"
+            fi
+            if [ "$PUBLISH_UI" = "true" ]; then
+              TASKS="$TASKS :source:ui:publishAndReleaseToMavenCentral"
+            fi
+            if [ "$PUBLISH_TELEMETRY" = "true" ]; then
+              TASKS="$TASKS :source:telemetry:publishAndReleaseToMavenCentral"
+            fi
+
+            TASKS="${TASKS# }"
+          fi
+
+          if [ -z "$TAG_NAME" ]; then
+            echo "Failed to determine release tag"
+            exit 1
+          fi
+          if [ -z "$RELEASE_URL" ]; then
+            RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG_NAME"
+          fi
+          if [ -z "$TASKS" ]; then
+            echo "No modules selected for publishing"
+            exit 1
+          fi
+
+          {
+            echo "tag_name=$TAG_NAME"
+            echo "release_url=$RELEASE_URL"
+            echo "tasks=$TASKS"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Publish to Maven Central
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -115,27 +188,64 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
-          TASKS=""
-
-          # For release events, publish all modules. For workflow_dispatch, use the inputs.
-          if [ "${{ github.event_name }}" == "release" ]; then
-            TASKS=":source:api:publishAndReleaseToMavenCentral :source:ui:publishAndReleaseToMavenCentral :source:telemetry:publishAndReleaseToMavenCentral"
-          else
-            if [ "${{ github.event.inputs.publish_api }}" == "true" ]; then
-              TASKS="$TASKS :source:api:publishMavenPublicationToMavenCentralRepository"
-            fi
-            if [ "${{ github.event.inputs.publish_ui }}" == "true" ]; then
-              TASKS="$TASKS :source:ui:publishAndReleaseToMavenCentral"
-            fi
-            if [ "${{ github.event.inputs.publish_telemetry }}" == "true" ]; then
-              TASKS="$TASKS :source:telemetry:publishAndReleaseToMavenCentral"
-            fi
-          fi
-
-          if [ -z "$TASKS" ]; then
-            echo "No modules selected for publishing"
-            exit 1
-          fi
-
+          TASKS="${{ steps.release_metadata.outputs.tasks }}"
           echo "Publishing modules: $TASKS"
           ./gradlew $TASKS
+
+  notify-slack:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    needs: publish
+    if: needs.publish.result == 'success'
+
+    steps:
+      - name: Notify Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RELEASE_TAG: ${{ needs.publish.outputs.tag_name }}
+          RELEASE_URL: ${{ needs.publish.outputs.release_url }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL is not configured; skipping Slack notification"
+            exit 0
+          fi
+
+          PAYLOAD=$(jq -n \
+            --arg tag "$RELEASE_TAG" \
+            --arg release_url "$RELEASE_URL" \
+            '{
+              text: "Clerk Android SDK \($tag) has been released",
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: "*Clerk Android SDK \($tag) has been released*"
+                  }
+                },
+                {
+                  type: "context",
+                  elements: [
+                    {
+                      type: "mrkdwn",
+                      text: "<\($release_url)|View the GitHub release>"
+                    }
+                  ]
+                }
+              ]
+            }')
+
+          curl --fail-with-body \
+            --request POST \
+            --header "Content-type: application/json" \
+            --data "$PAYLOAD" \
+            "$SLACK_WEBHOOK_URL"
+
+  open-expo-android-release-pr:
+    needs: publish
+    if: needs.publish.result == 'success' && (github.event_name == 'release' || (github.event.inputs.publish_api == 'true' && github.event.inputs.publish_ui == 'true'))
+    uses: ./.github/workflows/expo-android-release-pr.yml
+    with:
+      release_tag: ${{ needs.publish.outputs.tag_name }}
+      release_url: ${{ needs.publish.outputs.release_url }}
+    secrets:
+      OPEN_EXPO_PR_GH_TOKEN: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}

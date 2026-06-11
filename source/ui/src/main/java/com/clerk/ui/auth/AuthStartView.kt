@@ -4,7 +4,11 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,8 +20,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,6 +42,7 @@ import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.navigation.rememberDismissHandler
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
@@ -48,12 +54,16 @@ fun AuthStartView(
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
+  isDismissible: Boolean = true,
+  onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit,
 ) {
   AuthStartViewImpl(
     modifier = modifier,
     preferGoogleOneTap = preferGoogleOneTap,
     startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+    isDismissible = isDismissible,
+    onDismiss = onDismiss,
     onAuthComplete = onAuthComplete,
     clerkTheme = clerkTheme,
   )
@@ -68,6 +78,8 @@ internal fun AuthStartViewImpl(
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
+  isDismissible: Boolean = true,
+  onDismiss: (() -> Unit)? = null,
   authStartViewModel: AuthStartViewModel = viewModel(),
 ) {
   val authState = LocalAuthState.current
@@ -110,6 +122,8 @@ internal fun AuthStartViewImpl(
     } else {
       socialProviders.filter { it != lastUsedSocialProvider }
     }
+  val showDismissButton = shouldShowAuthDismissButton(isDismissible)
+  val dismissHandler = rememberDismissHandler(onDismiss)
 
   LaunchedEffect(state) {
     when (val s = state) {
@@ -143,6 +157,7 @@ internal fun AuthStartViewImpl(
     ClerkThemedAuthScaffold(
       modifier = modifier,
       hasBackButton = false,
+      trailingContent = dismissTrailingContent(showDismissButton, dismissHandler),
       showSignedInUserButton = false,
       title = authViewHelper.titleString(authState.mode),
       subtitle = authViewHelper.subtitleString(authState.mode),
@@ -154,6 +169,33 @@ internal fun AuthStartViewImpl(
         verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
       ) {
         if (authViewHelper.showIdentifierField) {
+          val onSubmit: () -> Unit = {
+            if (isContinueEnabled && state !is AuthStartViewModel.AuthState.Loading) {
+              if (authState.mode != AuthMode.SignUp) {
+                storeIdentifierType(
+                  authState = authState,
+                  authViewHelper = authViewHelper,
+                  phoneNumberFieldIsActive = phoneActive,
+                  authStartIdentifier = authState.authStartIdentifier,
+                )
+              }
+              authState.lastSubmittedIdentifier =
+                if (phoneActive && authViewHelper.phoneNumberIsEnabled) {
+                  authState.authStartPhoneNumber
+                } else {
+                  authState.authStartIdentifier
+                }
+              authState.enableInProgressAuthAttemptResume()
+              authStartViewModel.startAuth(
+                authMode = authState.mode,
+                isPhoneNumberFieldActive = phoneActive,
+                identifier = authState.authStartIdentifier,
+                phoneNumber = authState.authStartPhoneNumber,
+                unsafeMetadata = authState.unsafeMetadata,
+              )
+            }
+          }
+
           AuthInputField(
             authViewHelper = authViewHelper,
             phoneNumberFieldIsActive = phoneActive,
@@ -163,6 +205,7 @@ internal fun AuthStartViewImpl(
             onIdentifierChange = { authState.authStartIdentifier = it },
             showPhoneBadge = lastUsedAuth?.showsPhoneBadge == true,
             showEmailUsernameBadge = lastUsedAuth?.showsEmailUsernameBadge == true,
+            onSubmit = onSubmit,
           )
 
           ClerkButton(
@@ -175,22 +218,7 @@ internal fun AuthStartViewImpl(
                 trailingIcon = R.drawable.ic_triangle_right,
                 trailingIconColor = ClerkMaterialTheme.colors.primaryForeground,
               ),
-            onClick = {
-              if (authState.mode != AuthMode.SignUp) {
-                storeIdentifierType(
-                  authState = authState,
-                  authViewHelper = authViewHelper,
-                  phoneNumberFieldIsActive = phoneActive,
-                  authStartIdentifier = authState.authStartIdentifier,
-                )
-              }
-              authStartViewModel.startAuth(
-                authMode = authState.mode,
-                isPhoneNumberFieldActive = phoneActive,
-                identifier = authState.authStartIdentifier,
-                phoneNumber = authState.authStartPhoneNumber,
-              )
-            },
+            onClick = onSubmit,
           )
 
           if (authViewHelper.showIdentifierSwitcher) {
@@ -211,11 +239,13 @@ internal fun AuthStartViewImpl(
                 provider = lastUsedSocialProvider,
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
+                  authState.enableInProgressAuthAttemptResume()
                   authStartViewModel.authenticateWithSocialProvider(
                     provider = it,
                     transferable = authState.mode.transferable,
                     preferGoogleOneTap = preferGoogleOneTap,
                     startOAuthWithSignUp = startSocialOAuthAsSignUp,
+                    unsafeMetadata = authState.unsafeMetadata,
                   )
                 },
                 forceIconOnly = false,
@@ -227,11 +257,13 @@ internal fun AuthStartViewImpl(
             ClerkSocialRow(
               providers = socialProvidersMinusLastUsed.toImmutableList(),
               onClick = {
+                authState.enableInProgressAuthAttemptResume()
                 authStartViewModel.authenticateWithSocialProvider(
                   provider = it,
                   transferable = authState.mode.transferable,
                   preferGoogleOneTap = preferGoogleOneTap,
                   startOAuthWithSignUp = startSocialOAuthAsSignUp,
+                  unsafeMetadata = authState.unsafeMetadata,
                 )
               },
             )
@@ -241,6 +273,29 @@ internal fun AuthStartViewImpl(
     }
   }
 }
+
+private fun dismissTrailingContent(
+  showDismissButton: Boolean,
+  onDismiss: () -> Unit,
+): (@Composable () -> Unit)? {
+  if (!showDismissButton) return null
+
+  return { AuthDismissButton(onDismiss) }
+}
+
+@Composable
+private fun AuthDismissButton(onDismiss: () -> Unit) {
+  IconButton(onClick = onDismiss) {
+    Icon(
+      modifier = Modifier.size(dp24),
+      painter = painterResource(R.drawable.ic_cross),
+      contentDescription = stringResource(R.string.close),
+      tint = ClerkMaterialTheme.colors.foreground,
+    )
+  }
+}
+
+internal fun shouldShowAuthDismissButton(isDismissible: Boolean): Boolean = isDismissible
 
 @Composable
 @Suppress("LongParameterList")
@@ -253,6 +308,7 @@ private fun AuthInputField(
   onIdentifierChange: (String) -> Unit,
   showPhoneBadge: Boolean,
   showEmailUsernameBadge: Boolean,
+  onSubmit: () -> Unit,
 ) {
   if (authViewHelper.phoneNumberIsEnabled && phoneNumberFieldIsActive) {
     LastUsedAuthBadgeOverlay(isVisible = showPhoneBadge) {
@@ -260,17 +316,23 @@ private fun AuthInputField(
         value = authStartPhoneNumber,
         modifier = Modifier.fillMaxWidth(),
         onValueChange = onPhoneNumberChange,
+        imeAction = ImeAction.Go,
+        keyboardActions = KeyboardActions(onGo = { onSubmit() }),
       )
     }
   } else {
     LastUsedAuthBadgeOverlay(isVisible = showEmailUsernameBadge) {
       ClerkTextField(
-        inputContentType = ContentType.EmailAddress,
+        inputContentType = authViewHelper.identifierContentType(),
         value = authStartIdentifier,
         onValueChange = onIdentifierChange,
         label = authViewHelper.emailOrUsernamePlaceholder(),
         keyboardOptions =
-          KeyboardOptions(keyboardType = authViewHelper.getKeyboardType(phoneNumberFieldIsActive)),
+          KeyboardOptions(
+            keyboardType = authViewHelper.getKeyboardType(phoneNumberFieldIsActive),
+            imeAction = ImeAction.Go,
+          ),
+        keyboardActions = KeyboardActions(onGo = { onSubmit() }),
       )
     }
   }

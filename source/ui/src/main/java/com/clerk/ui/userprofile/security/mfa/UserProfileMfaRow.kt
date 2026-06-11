@@ -78,7 +78,13 @@ internal fun UserProfileMfaRow(
       MfaContent(isDefault, title, style)
 
       Spacer(Modifier.weight(1f))
-      MfaMoreMenu(style = style, viewModel = viewModel)
+      MfaMoreMenu(
+        style = style,
+        onDeleteTotp = viewModel::deleteTotp,
+        onDeletePhoneNumber = viewModel::deletePhoneNumber,
+        onMakeDefaultSecondFactor = viewModel::makeDefaultSecondFactor,
+        onRegenerateBackupCodes = viewModel::regenerateBackupCodes,
+      )
     }
   }
 }
@@ -170,7 +176,13 @@ internal sealed interface Style {
 }
 
 @Composable
-private fun MfaMoreMenu(style: Style, viewModel: UserProfileMfaViewModel) {
+private fun MfaMoreMenu(
+  style: Style,
+  onDeleteTotp: () -> Unit,
+  onDeletePhoneNumber: (PhoneNumber) -> Unit,
+  onMakeDefaultSecondFactor: (PhoneNumber?) -> Unit,
+  onRegenerateBackupCodes: () -> Unit,
+) {
   ItemMoreMenu(
     dropDownItems =
       persistentListOf(
@@ -197,15 +209,14 @@ private fun MfaMoreMenu(style: Style, viewModel: UserProfileMfaViewModel) {
       when (action) {
         MfaAction.Remove ->
           when (style) {
-            Style.AuthenticatorApp -> viewModel.deleteTotp()
+            Style.AuthenticatorApp -> onDeleteTotp()
             Style.BackupCodes -> {}
-            is Style.Sms -> viewModel.deletePhoneNumber(style.phoneNumber)
+            is Style.Sms -> onDeletePhoneNumber(style.phoneNumber)
           }
 
-        MfaAction.SetAsDefault ->
-          viewModel.makeDefaultSecondFactor((style as? Style.Sms)?.phoneNumber)
+        MfaAction.SetAsDefault -> onMakeDefaultSecondFactor((style as? Style.Sms)?.phoneNumber)
 
-        MfaAction.Regenerate -> viewModel.regenerateBackupCodes()
+        MfaAction.Regenerate -> onRegenerateBackupCodes()
       }
     },
   )

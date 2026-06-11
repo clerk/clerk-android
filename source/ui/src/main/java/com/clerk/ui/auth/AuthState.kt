@@ -18,6 +18,7 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signin.startingSecondFactor
 import com.clerk.api.signup.SignUp
+import com.clerk.api.signup.emailVerificationStrategy
 import com.clerk.api.signup.firstFieldToCollect
 import com.clerk.api.signup.firstFieldToVerify
 import com.clerk.ui.core.common.NavigableState
@@ -44,11 +45,15 @@ internal class AuthState(
   val backStack: NavBackStack<NavKey>,
   private val sharedPreferences: SharedPreferences,
   identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
+  organizationLogoUrl: String? = null,
 ) : NavigableState<AuthDestination> {
 
   private var appliedIdentifierConfig: AuthIdentifierConfig? = null
 
   var persistIdentifiers by mutableStateOf(identifierConfig.persistIdentifiers)
+    private set
+
+  var unsafeMetadata by mutableStateOf(identifierConfig.unsafeMetadata)
     private set
 
   var identifierConfigVersion by mutableStateOf(0)
@@ -74,6 +79,14 @@ internal class AuthState(
       persistStoredValue(AUTH_START_PHONE_NUMBER_STORAGE_KEY, value)
     }
 
+  var lastSubmittedIdentifier by mutableStateOf<String?>(null)
+
+  var shouldResumeInProgressAuthAttempt by mutableStateOf(true)
+    private set
+
+  var organizationLogoUrl by mutableStateOf(organizationLogoUrl)
+    private set
+
   // Sign In
   var signInPassword by mutableStateOf("")
   var signInNewPassword by mutableStateOf("")
@@ -90,15 +103,29 @@ internal class AuthState(
   var signUpLegalAccepted by mutableStateOf(false)
 
   override fun navigateTo(destination: NavKey) {
+    shouldResumeInProgressAuthAttempt = true
     backStack.add(destination)
   }
 
   override fun navigateBack() {
+    if (backStack.size <= 1) return
     backStack.removeLastOrNull()
+    if (backStack.size == 1) {
+      shouldResumeInProgressAuthAttempt = false
+    }
   }
 
   override fun clearBackStack() {
     resetToRoot()
+  }
+
+  fun navigateToAuthStartForIdentifierEdit() {
+    shouldResumeInProgressAuthAttempt = false
+    resetToRoot()
+  }
+
+  fun enableInProgressAuthAttemptResume() {
+    shouldResumeInProgressAuthAttempt = true
   }
 
   override fun pop(numberOfScreens: Int) {
@@ -189,8 +216,16 @@ internal class AuthState(
   }
 
   private fun routeToFirstFactorOrHelp(signIn: SignIn) {
-    signIn.startingFirstFactor?.let { backStack.add(AuthDestination.SignInFactorOne(factor = it)) }
-      ?: backStack.add(AuthDestination.SignInGetHelp)
+    val resolvedSignIn =
+      if (signIn.identifier.isNullOrBlank() && !lastSubmittedIdentifier.isNullOrBlank()) {
+        signIn.copy(identifier = lastSubmittedIdentifier)
+      } else {
+        signIn
+      }
+
+    resolvedSignIn.startingFirstFactor?.let {
+      backStack.add(AuthDestination.SignInFactorOne(factor = it))
+    } ?: backStack.add(AuthDestination.SignInGetHelp)
   }
 
   private fun routeToSecondFactorOrHelp(signIn: SignIn) {
@@ -227,11 +262,15 @@ internal class AuthState(
   }
 
   private fun handleMissingRequirements(signUp: SignUp) {
+    val firstFieldToCollect = signUp.firstFieldToCollect
+    if (firstFieldToCollect != null) {
+      handleFieldCollection(signUp)
+      return
+    }
+
     val firstFieldToVerify = signUp.firstFieldToVerify
     if (firstFieldToVerify != null) {
       handleFieldVerification(signUp, firstFieldToVerify)
-    } else {
-      handleFieldCollection(signUp)
     }
   }
 
@@ -240,7 +279,13 @@ internal class AuthState(
       EMAIL_ADDRESS -> {
         val emailAddress = signUp.emailAddress
         if (emailAddress != null) {
-          backStack.add(AuthDestination.SignUpCode(field = SignUpCodeField.Email(emailAddress)))
+          val destination =
+            if (signUp.emailVerificationStrategy == Constants.Strategy.EMAIL_LINK) {
+              AuthDestination.SignUpEmailLink(emailAddress = emailAddress)
+            } else {
+              AuthDestination.SignUpCode(field = SignUpCodeField.Email(emailAddress))
+            }
+          backStack.add(destination)
         } else {
           resetToRoot()
         }
@@ -275,10 +320,19 @@ internal class AuthState(
   }
 
   fun applyIdentifierConfig(config: AuthIdentifierConfig) {
-    if (config == appliedIdentifierConfig) return
+    val previousConfig = appliedIdentifierConfig
+    if (config == previousConfig) return
 
     appliedIdentifierConfig = config
     persistIdentifiers = config.persistIdentifiers
+    unsafeMetadata = config.unsafeMetadata
+
+    val identifierFieldsChanged =
+      previousConfig == null ||
+        config.initialIdentifier != previousConfig.initialIdentifier ||
+        config.persistIdentifiers != previousConfig.persistIdentifiers
+    if (!identifierFieldsChanged) return
+
     identifierConfigVersion++
 
     if (!config.persistIdentifiers) {
@@ -301,6 +355,10 @@ internal class AuthState(
         updateAuthStartPhoneNumber("")
       }
     }
+  }
+
+  internal fun updateOrganizationLogoUrl(logoUrl: String?) {
+    organizationLogoUrl = logoUrl
   }
 
   fun storeLastUsedIdentifierType(identifierType: IdentifierType) {
@@ -338,6 +396,7 @@ internal class AuthState(
 internal data class AuthIdentifierConfig(
   val initialIdentifier: String? = null,
   val persistIdentifiers: Boolean = true,
+  val unsafeMetadata: Map<String, Any>? = null,
 )
 
 internal fun authSharedPreferences(context: Context): SharedPreferences {

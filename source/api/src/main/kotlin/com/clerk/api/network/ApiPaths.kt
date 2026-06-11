@@ -42,6 +42,12 @@ internal object ApiPaths {
       internal const val RESET_PASSWORD = "${WITH_ID}/reset_password"
     }
 
+    /** Magic link endpoints */
+    internal object MagicLinks {
+      internal const val BASE = "${Client.BASE}/magic_links"
+      internal const val COMPLETE = "${BASE}/complete"
+    }
+
     /** Sign-up endpoints */
     internal object SignUp {
       internal const val BASE = "${Client.BASE}/sign_ups"

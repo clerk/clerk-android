@@ -31,6 +31,8 @@ import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
+import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.core.navigation.rememberDismissHandler
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountSwitcherSheet
 import com.clerk.ui.userprofile.account.UserProfileAccountView
@@ -79,7 +81,9 @@ internal fun UserProfileStateProvider(
  * @param customDestination Composable that renders the destination for a given route key. The route
  *   key matches [UserProfileCustomRow.routeKey] of the tapped row.
  * @param onAddAccount Optional callback for hosting the add-account auth flow outside the profile.
- * @param onDismiss Callback when the user profile view is dismissed.
+ * @param onDismiss Callback when the user profile view is dismissed. When omitted, top-level
+ *   dismissal falls back to the system back dispatcher.
+ * @param isDismissible Whether to show a top-right close affordance that dismisses the profile.
  */
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("ComposeModifierMissing", "ComposeUnstableReceiver")
@@ -90,13 +94,15 @@ fun UserProfileView(
   customRows: List<UserProfileCustomRow> = emptyList(),
   customDestination: (@Composable (String) -> Unit)? = null,
   onAddAccount: (() -> Unit)? = null,
-  onDismiss: () -> Unit = {},
+  onDismiss: (() -> Unit)? = null,
+  isDismissible: Boolean = true,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
     val user by Clerk.userFlow.collectAsStateWithLifecycle()
     var showAccountSwitcher by rememberSaveable { mutableStateOf(false) }
     var showAuth by rememberSaveable { mutableStateOf(false) }
+    val dismissHandler = rememberDismissHandler(onDismiss)
     UserProfileStateProvider(backStack) {
       val telemetry = LocalTelemetryCollector.current
       val showAddAccountAuth = {
@@ -104,10 +110,13 @@ fun UserProfileView(
         onAddAccount?.invoke() ?: run { showAuth = true }
       }
 
-      LaunchedEffect(Unit) { telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView")) }
-      LaunchedEffect(user?.id, showAuth) {
+      LaunchedEffect(Unit) {
+        telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView"))
+        Clerk.refreshClient()
+      }
+      LaunchedEffect(user?.id, showAuth, dismissHandler) {
         if (user == null && !showAuth) {
-          onDismiss()
+          dismissHandler()
         }
       }
 
@@ -115,51 +124,57 @@ fun UserProfileView(
         AuthView(
           modifier = Modifier.fillMaxSize(),
           preferGoogleOneTap = false,
+          onDismiss = { showAuth = false },
           onAuthComplete = { showAuth = false },
         )
       } else {
-        NavDisplay(
-          backStack = backStack,
-          onBack = {
-            if (backStack.size == 1) {
-              onDismiss()
-            } else {
-              backStack.removeLastOrNull()
-            }
-          },
-          transitionSpec = {
-            val spec = tween<IntOffset>(durationMillis = 300)
-            slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-              slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-          },
-          popTransitionSpec = {
-            val spec = tween<IntOffset>(durationMillis = 300)
-            slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-              slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-          },
-          predictivePopTransitionSpec = { distance ->
-            // Use the provided distance to align with the system back gesture
-            slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-              slideOutHorizontally(targetOffsetX = { distance })
-          },
-          entryProvider =
-            entryProvider {
-              userProfileEntries(
-                backStack = backStack,
-                onDismiss = onDismiss,
-                customRows = customRows,
-                customDestination = customDestination,
-                onSwitchAccount = { showAccountSwitcher = true },
-                onAddAccount = showAddAccountAuth,
+        DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize()) {
+          NavDisplay(
+            modifier = Modifier.fillMaxSize(),
+            backStack = backStack,
+            onBack = {
+              handleUserProfileBack(
+                isAtRoot = backStack.size == 1,
+                isDismissible = isDismissible,
+                onDismiss = dismissHandler,
+                onNavigateBack = { backStack.removeLastOrNull() },
               )
             },
-        )
-
-        if (showAccountSwitcher) {
-          UserProfileAccountSwitcherSheet(
-            onDismissRequest = { showAccountSwitcher = false },
-            onAddAccount = showAddAccountAuth,
+            transitionSpec = {
+              val spec = tween<IntOffset>(durationMillis = 300)
+              slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+                slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+            },
+            popTransitionSpec = {
+              val spec = tween<IntOffset>(durationMillis = 300)
+              slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+                slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+            },
+            predictivePopTransitionSpec = { distance ->
+              // Use the provided distance to align with the system back gesture
+              slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+                slideOutHorizontally(targetOffsetX = { distance })
+            },
+            entryProvider =
+              entryProvider {
+                userProfileEntries(
+                  backStack = backStack,
+                  isDismissible = isDismissible,
+                  onDismiss = dismissHandler,
+                  customRows = customRows,
+                  customDestination = customDestination,
+                  onSwitchAccount = { showAccountSwitcher = true },
+                  onAddAccount = showAddAccountAuth,
+                )
+              },
           )
+
+          if (showAccountSwitcher) {
+            UserProfileAccountSwitcherSheet(
+              onDismissRequest = { showAccountSwitcher = false },
+              onAddAccount = showAddAccountAuth,
+            )
+          }
         }
       }
     }
@@ -169,6 +184,7 @@ fun UserProfileView(
 @Suppress("LongMethod", "LongParameterList")
 private fun EntryProviderScope<NavKey>.userProfileEntries(
   backStack: NavBackStack<NavKey>,
+  isDismissible: Boolean,
   onDismiss: () -> Unit,
   customRows: List<UserProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
@@ -191,12 +207,14 @@ private fun EntryProviderScope<NavKey>.userProfileEntries(
         }
       },
       onBackPressed = {
-        if (backStack.size == 1) {
-          onDismiss()
-        } else {
-          backStack.removeLastOrNull()
-        }
+        handleUserProfileBack(
+          isAtRoot = backStack.size == 1,
+          isDismissible = isDismissible,
+          onDismiss = onDismiss,
+          onNavigateBack = { backStack.removeLastOrNull() },
+        )
       },
+      isDismissible = isDismissible,
       onClickEdit = { backStack.add(UserProfileDestination.UserProfileUpdate) },
       customRows =
         effectiveCustomRows(customRows, hasDestination = customDestination != null)
@@ -243,6 +261,19 @@ private fun EntryProviderScope<NavKey>.userProfileEntries(
     } else {
       LaunchedEffect(Unit) { backStack.removeLastOrNull() }
     }
+  }
+}
+
+internal fun handleUserProfileBack(
+  isAtRoot: Boolean,
+  isDismissible: Boolean,
+  onDismiss: () -> Unit,
+  onNavigateBack: () -> Unit,
+) {
+  if (isAtRoot) {
+    if (isDismissible) onDismiss()
+  } else {
+    onNavigateBack()
   }
 }
 

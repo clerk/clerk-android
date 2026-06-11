@@ -3,6 +3,7 @@ package com.clerk.api.signin
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.BACKUP_CODE
 import com.clerk.api.Constants.Strategy.EMAIL_CODE
+import com.clerk.api.Constants.Strategy.EMAIL_LINK
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
 import com.clerk.api.Constants.Strategy.PASSKEY
 import com.clerk.api.Constants.Strategy.PASSWORD
@@ -14,6 +15,7 @@ import com.clerk.api.Constants.Strategy.TOTP as STRATEGY_TOTP
 import com.clerk.api.Constants.Strategy.TRANSFER
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
@@ -407,6 +409,16 @@ data class SignIn(
 
     @AutoMap
     @Serializable
+    data class EmailLink(
+      @SerialName("email_address_id") val emailAddressId: String,
+      @SerialName("redirect_uri") val redirectUri: String,
+      @SerialName("code_challenge") val codeChallenge: String,
+      @SerialName("code_challenge_method") val codeChallengeMethod: String = "S256",
+      override val strategy: String = EMAIL_LINK,
+    ) : PrepareFirstFactorParams
+
+    @AutoMap
+    @Serializable
     data class ResetPasswordEmailCode(
       @SerialName("email_address_id") val emailAddressId: String,
       override val strategy: String = RESET_PASSWORD_EMAIL_CODE,
@@ -732,8 +744,41 @@ data class SignIn(
 suspend fun SignIn.prepareFirstFactor(
   params: SignIn.PrepareFirstFactorParams
 ): ClerkResult<SignIn, ClerkErrorResponse> {
-  return ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
+  val isResetPasswordStrategy =
+    params.strategy == RESET_PASSWORD_EMAIL_CODE || params.strategy == RESET_PASSWORD_PHONE_CODE
+  val isRedirectStrategy = params.isRedirectStrategy
+  val canPrepareFromStatus =
+    if (isRedirectStrategy) {
+      status == SignIn.Status.NEEDS_IDENTIFIER || status == SignIn.Status.NEEDS_FIRST_FACTOR
+    } else {
+      status == SignIn.Status.NEEDS_FIRST_FACTOR
+    }
+
+  val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategy }.orEmpty()
+  val validationError =
+    when {
+      !isResetPasswordStrategy && !canPrepareFromStatus ->
+        invalidPrepareState(
+          code = "sign_in_status_invalid",
+          longMessage = "Cannot prepare first factor while sign-in status is ${status.name}",
+        )
+      !isResetPasswordStrategy &&
+        !isRedirectStrategy &&
+        params.strategy !in supportedFirstFactorStrategies ->
+        invalidPrepareState(
+          code = "first_factor_strategy_not_supported",
+          longMessage = "${params.strategy} is not supported for this sign-in attempt",
+        )
+      else -> null
+    }
+
+  return validationError ?: ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
 }
+
+private val SignIn.PrepareFirstFactorParams.isRedirectStrategy: Boolean
+  get() =
+    this is SignIn.PrepareFirstFactorParams.OAuth ||
+      this is SignIn.PrepareFirstFactorParams.EnterpriseSSO
 
 /**
  * Sends a verification code to the user's phone number for first factor authentication.
@@ -789,6 +834,13 @@ suspend fun SignIn.prepareSecondFactor(
   phoneNumberId: String? = null,
   emailAddressId: String? = null,
 ): ClerkResult<SignIn, ClerkErrorResponse> {
+  if (status != SignIn.Status.NEEDS_SECOND_FACTOR && status != SignIn.Status.NEEDS_CLIENT_TRUST) {
+    return invalidPrepareState(
+      code = "sign_in_status_invalid",
+      longMessage = "Cannot prepare second factor while sign-in status is ${status.name}",
+    )
+  }
+
   val strategy =
     when {
       supportedSecondFactors?.any { it.strategy == SignIn.PrepareSecondFactorParams.PHONE_CODE } ==
@@ -814,6 +866,17 @@ suspend fun SignIn.prepareSecondFactor(
 
   val params = strategy.toParams()
   return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
+}
+
+private fun invalidPrepareState(
+  code: String,
+  longMessage: String,
+): ClerkResult.Failure<ClerkErrorResponse> {
+  return ClerkResult.apiFailure(
+    ClerkErrorResponse(
+      errors = listOf(Error(message = "is invalid", longMessage = longMessage, code = code))
+    )
+  )
 }
 
 /**

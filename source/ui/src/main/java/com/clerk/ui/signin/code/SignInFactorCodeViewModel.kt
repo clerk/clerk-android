@@ -8,6 +8,7 @@ import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.guardSignIn
 import com.clerk.ui.core.common.StrategyKeys
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 internal class SignInFactorCodeViewModel(
   private val attemptHandler: SignInAttemptHandler = SignInAttemptHandler(),
   private val prepareHandler: SignInPrepareHandler = SignInPrepareHandler(),
+  private val workDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
   private val _verificationUiState = MutableStateFlow<VerificationUiState>(VerificationUiState.Idle)
@@ -29,7 +31,12 @@ internal class SignInFactorCodeViewModel(
     _state.value = AuthenticationViewState.Loading
 
     guardSignIn(_state) { inProgressSignIn ->
-      viewModelScope.launch(Dispatchers.IO) {
+      viewModelScope.launch(workDispatcher) {
+        if (shouldRerouteForUnsupportedFactor(inProgressSignIn, factor, isSecondFactor)) {
+          _state.value = AuthenticationViewState.Success.SignIn(inProgressSignIn)
+          return@launch
+        }
+
         when (factor.strategy) {
           StrategyKeys.EMAIL_CODE -> {
             prepareHandler.prepareForEmailCode(inProgressSignIn, factor, isSecondFactor) {
@@ -72,7 +79,7 @@ internal class SignInFactorCodeViewModel(
         _state.value = AuthenticationViewState.Error(message)
       }
 
-      viewModelScope.launch(Dispatchers.IO) {
+      viewModelScope.launch(workDispatcher) {
         when (factor.strategy) {
           StrategyKeys.EMAIL_CODE ->
             attemptHandler.attemptEmailCode(
@@ -128,5 +135,58 @@ internal class SignInFactorCodeViewModel(
 
   fun resetVerificationState() {
     _verificationUiState.value = VerificationUiState.Idle
+  }
+
+  private fun shouldRerouteForUnsupportedFactor(
+    signIn: SignIn,
+    factor: Factor,
+    isSecondFactor: Boolean,
+  ): Boolean {
+    val supportedFirstFactors = signIn.supportedFirstFactors.orEmpty()
+    val prefersEmailLinkOverEmailCode =
+      factor.strategy == StrategyKeys.EMAIL_CODE &&
+        signIn.firstFactorVerification?.strategy != StrategyKeys.EMAIL_CODE &&
+        signIn.shouldPreferEmailLink(
+          supportedFirstFactors = supportedFirstFactors,
+          fallbackFactor = factor,
+        )
+
+    return if (isSecondFactor) {
+      signIn.supportedSecondFactors?.none { it.matches(factor) } == true
+    } else {
+      supportedFirstFactors.none { it.matches(factor) } || prefersEmailLinkOverEmailCode
+    }
+  }
+
+  private fun SignIn.shouldPreferEmailLink(
+    supportedFirstFactors: List<Factor>,
+    fallbackFactor: Factor,
+  ): Boolean {
+    val hasEmailLink = supportedFirstFactors.any { it.strategy == StrategyKeys.EMAIL_LINK }
+    if (!hasEmailLink) return false
+
+    val isEmailIdentifier =
+      fallbackFactor.emailAddressId != null ||
+        fallbackFactor.safeIdentifier?.contains("@") == true ||
+        identifier?.contains("@") == true ||
+        supportedFirstFactors.any {
+          (it.strategy == StrategyKeys.EMAIL_LINK || it.strategy == StrategyKeys.EMAIL_CODE) &&
+            it.safeIdentifier?.contains("@") == true
+        }
+    return isEmailIdentifier
+  }
+
+  private fun Factor.matches(other: Factor): Boolean {
+    if (strategy != other.strategy) return false
+
+    return when {
+      emailAddressId != null || other.emailAddressId != null ->
+        emailAddressId == other.emailAddressId
+      phoneNumberId != null || other.phoneNumberId != null -> phoneNumberId == other.phoneNumberId
+      web3WalletId != null || other.web3WalletId != null -> web3WalletId == other.web3WalletId
+      safeIdentifier != null || other.safeIdentifier != null ->
+        safeIdentifier == other.safeIdentifier
+      else -> true
+    }
   }
 }

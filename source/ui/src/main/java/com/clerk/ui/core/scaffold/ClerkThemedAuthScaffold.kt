@@ -75,6 +75,7 @@ internal fun ClerkThemedAuthScaffold(
   subtitle: String? = null,
   hasLogo: Boolean = true,
   hasBackButton: Boolean = true,
+  trailingContent: (@Composable () -> Unit)? = null,
   identifier: String? = null,
   onClickIdentifier: () -> Unit = {},
   spacingAfterIdentifier: Dp = dp32,
@@ -83,15 +84,18 @@ internal fun ClerkThemedAuthScaffold(
 ) {
   val user = Clerk.userFlow.collectAsStateWithLifecycle().value
   val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
+  val shouldShowLogo =
+    shouldShowInstanceLogo(hasLogo = hasLogo, organizationLogoUrl = Clerk.organizationLogoUrl)
   var showSignedInAccountSheet by remember { mutableStateOf(false) }
   val displayName = user.displayName()
   val displayIdentifier = session?.publicUserData?.identifier ?: user?.username.orEmpty()
-  val trailingContent =
-    signedInTrailingContent(
-      showSignedInUserButton = showSignedInUserButton,
-      user = user,
-      onClick = { showSignedInAccountSheet = true },
-    )
+  val resolvedTrailingContent =
+    trailingContent
+      ?: signedInTrailingContent(
+        showSignedInUserButton = showSignedInUserButton,
+        user = user,
+        onClick = { showSignedInAccountSheet = true },
+      )
   val scaffoldConfig =
     AuthScaffoldConfig(
       title = title,
@@ -109,9 +113,9 @@ internal fun ClerkThemedAuthScaffold(
         ClerkTopAppBar(
           backgroundColor = ClerkMaterialTheme.colors.background,
           onBackPressed = onBackPressed,
-          hasLogo = hasLogo,
+          hasLogo = shouldShowLogo,
           hasBackButton = hasBackButton,
-          trailingContent = trailingContent,
+          trailingContent = resolvedTrailingContent,
         )
       },
     ) { innerPadding ->

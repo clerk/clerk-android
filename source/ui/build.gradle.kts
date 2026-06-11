@@ -3,7 +3,6 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
 
 plugins {
-  alias(libs.plugins.kotlin.android)
   alias(libs.plugins.android.library)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.dokka)
@@ -47,15 +46,16 @@ tasks.withType<Test>().configureEach {
       languageVersion.set(JavaLanguageVersion.of(21))
     }
   )
+  forkEvery = 1
   reports.html.required.set(false)
 }
 
 // Compose mapping collection can emit hundreds of parser/tokenizer warnings
 // for valid composable signatures on recent Kotlin/Compose toolchains.
 // Disable this non-critical reporting task when AGP creates it.
-tasks.matching { it.name.matches(Regex("report.+ComposeMappingErrors")) }.configureEach {
-  enabled = false
-}
+tasks
+  .matching { it.name.matches(Regex("report.+ComposeMappingErrors")) }
+  .configureEach { enabled = false }
 
 // Configure Maven publishing for this module
 mavenPublishing {
@@ -100,6 +100,7 @@ dependencies {
   api(projects.source.telemetry)
 
   implementation(platform(libs.compose.bom))
+  implementation(libs.activity.compose)
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.compose.foundation)
   implementation(libs.androidx.compose.icons)
@@ -118,9 +119,10 @@ dependencies {
   implementation(libs.material3)
   implementation(libs.materialKolor)
 
-  testImplementation(kotlin("test"))
   testImplementation(libs.androidx.core)
   testImplementation(libs.junit)
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.mockk)
   testImplementation(libs.robolectric)

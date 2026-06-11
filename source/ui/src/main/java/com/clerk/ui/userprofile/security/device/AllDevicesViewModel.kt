@@ -6,8 +6,7 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.session.Session
-import com.clerk.api.session.isThisDevice
-import com.clerk.api.user.allSessions
+import com.clerk.api.user.activeSessions
 import com.clerk.ui.core.common.guardUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,17 +20,17 @@ internal class AllDevicesViewModel : ViewModel() {
   val state = _state.asStateFlow()
 
   init {
-    allSessions()
+    activeSessions()
   }
 
-  fun allSessions() {
+  fun activeSessions() {
     guardUser(userDoesNotExist = { _state.value = State.Error("User does not exist") }) { user ->
       viewModelScope.launch(Dispatchers.IO) {
         _state.value = State.Loading
         user
-          .allSessions()
+          .activeSessions()
           .onSuccess {
-            val sortedSessions = it.sortedForDisplay()
+            val sortedSessions = it.sortedForDeviceDisplay()
             withContext(Dispatchers.Main) { _state.value = State.Success(sortedSessions) }
           }
           .onFailure {
@@ -40,18 +39,6 @@ internal class AllDevicesViewModel : ViewModel() {
       }
     }
   }
-
-  private fun List<Session>.sortedForDisplay(): List<Session> =
-    this.filter { it.latestActivity != null }
-      .sortedWith(
-        Comparator { a, b ->
-          when {
-            a.isThisDevice && !b.isThisDevice -> -1 // a first
-            !a.isThisDevice && b.isThisDevice -> 1 // b first
-            else -> b.lastActiveAt.compareTo(a.lastActiveAt) // newest first
-          }
-        }
-      )
 
   sealed interface State {
     data object Idle : State

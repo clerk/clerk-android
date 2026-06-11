@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.clerk.api.Clerk
@@ -14,6 +15,7 @@ import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
 import com.clerk.ui.organizationswitcher.OrganizationSwitcherAccountListSheetContent
 import com.clerk.ui.organizationswitcher.OrganizationSwitcherButton
+import com.clerk.ui.organizationswitcher.OrganizationSwitcherCustomTrigger
 import com.clerk.ui.organizationswitcher.OrganizationSwitcherDisplayMode
 import com.clerk.ui.organizationswitcher.OrganizationSwitcherOverviewSheetContent
 import com.clerk.ui.organizationswitcher.previewOrganizationMembership
@@ -81,6 +83,18 @@ class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
           isLoading = false,
           onClick = {},
         )
+      }
+    }
+  }
+
+  @Test
+  fun organizationSwitcherCustomTrigger() {
+    Clerk.customTheme = ClerkTheme(DefaultColors.light)
+    paparazzi.snapshot {
+      SwitcherSnapshotSurface {
+        OrganizationSwitcherCustomTrigger(isLoading = false, onClick = {}) {
+          Text(text = "Switch account", color = ClerkMaterialTheme.colors.foreground)
+        }
       }
     }
   }

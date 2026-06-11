@@ -9,10 +9,12 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.clerk.api.Clerk
 import com.clerk.telemetry.ClerkTelemetryEnvironment
 import com.clerk.telemetry.TelemetryCollector
 import com.clerk.telemetry.TelemetryModule
 import com.clerk.ui.auth.AuthIdentifierConfig
+import com.clerk.ui.auth.AuthMode
 import com.clerk.ui.auth.AuthState
 import com.clerk.ui.auth.authSharedPreferences
 
@@ -43,20 +45,26 @@ internal fun TelemetryProvider(
 @Composable
 internal fun AuthStateProvider(
   backStack: NavBackStack<NavKey>,
+  mode: AuthMode = AuthMode.SignInOrUp,
   identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
   content: @Composable () -> Unit,
 ) {
   val context = LocalContext.current.applicationContext
   val sharedPreferences = remember(context) { authSharedPreferences(context) }
   val authState =
-    remember(backStack, sharedPreferences) {
+    remember(backStack, sharedPreferences, mode) {
       AuthState(
+        mode = mode,
         backStack = backStack,
         sharedPreferences = sharedPreferences,
         identifierConfig = identifierConfig,
+        organizationLogoUrl = Clerk.organizationLogoUrlFlow.value,
       )
     }
 
   LaunchedEffect(identifierConfig) { authState.applyIdentifierConfig(identifierConfig) }
+  LaunchedEffect(authState) {
+    Clerk.organizationLogoUrlFlow.collect { authState.updateOrganizationLogoUrl(it) }
+  }
   TelemetryProvider { CompositionLocalProvider(LocalAuthState provides authState) { content() } }
 }

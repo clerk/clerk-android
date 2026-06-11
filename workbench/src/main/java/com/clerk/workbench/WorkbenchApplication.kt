@@ -11,8 +11,13 @@ class WorkbenchApplication : Application() {
     StorageHelper.initialize(this)
 
     val publicKey = StorageHelper.loadValue(StorageKey.PUBLIC_KEY)
+    val proxyUrl = StorageHelper.loadValue(StorageKey.PROXY_URL)
     publicKey?.let { key ->
-      Clerk.initialize(this, key, options = ClerkConfigurationOptions(enableDebugMode = true))
+      Clerk.initialize(
+        this,
+        key,
+        options = ClerkConfigurationOptions(enableDebugMode = true, proxyUrl = proxyUrl),
+      )
     }
   }
 }

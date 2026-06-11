@@ -1,0 +1,218 @@
+- config:
+    id: clerk/e2e/sign-in-profile-sign-out
+    target: clerk-e2e
+    platform: android
+    driver: ANDROID_ONDEVICE_ACCESSIBILITY
+    tags:
+      - e2e
+      - custom-flow
+      - prebuilt-ui
+- tools:
+    - launchApp:
+        appId: com.clerk.e2e
+        launchMode: REINSTALL
+- prompts:
+    - verify: The Clerk Android E2E home screen is visible.
+      recording:
+        tools:
+          - assertVisibleBySelector:
+              reason: Verify the e2e app home screen is loaded.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Clerk Android E2E
+          - assertVisibleBySelector:
+              reason: Verify the custom flow entry point is visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Custom OTP Sign In
+          - assertVisibleBySelector:
+              reason: Verify the prebuilt UI entry point is visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Prebuilt UI Sign In
+    - step: Complete the custom OTP sign-in with phone number 555-555-0100 and code 424242.
+      recording:
+        tools:
+          - tapOnElementBySelector:
+              reason: Start the custom OTP sign-in flow.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Custom OTP Sign In
+          - assertVisibleBySelector:
+              reason: Verify the custom OTP sign-in screen is open.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Custom OTP Sign In
+          - tapOnElementBySelector:
+              reason: Focus the phone number field.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Phone number
+          - inputText:
+              text: 555-555-0100
+              hideKeyboardAfter: false
+          - tapOnPoint:
+              reasoning: Submit the phone number to request an OTP.
+              x: 540
+              y: 1257
+          - assertVisibleBySelector:
+              reason: Verify the verification code field is visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Verification code
+          - tapOnElementBySelector:
+              reason: Focus the verification code field.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Verification code
+          - inputText:
+              text: "424242"
+              hideKeyboardAfter: false
+          - tapOnPoint:
+              reasoning: Verify the custom OTP code.
+              x: 540
+              y: 1257
+          - assertVisibleBySelector:
+              reason: Verify the custom profile is shown after sign-in.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Custom Profile
+    - step: Open the custom profile details, close details, and sign out.
+      recording:
+        tools:
+          - tapOnElementBySelector:
+              reason: Open custom profile details to exercise profile interaction.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Open Profile Details
+          - assertVisibleBySelector:
+              reason: Verify custom profile details are visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Custom Profile Details
+          - tapOnElementBySelector:
+              reason: Close custom profile details.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Close Details
+          - tapOnElementBySelector:
+              reason: Sign out from the custom flow profile screen.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Sign Out
+          - assertVisibleBySelector:
+              reason: Verify sign-out returned to the e2e home screen.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Prebuilt UI Sign In
+    - step: Complete the prebuilt UI sign-in with the same phone number and code 424242.
+      recording:
+        tools:
+          - tapOnElementBySelector:
+              reason: Start the prebuilt UI sign-in flow.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Prebuilt UI Sign In
+          - assertVisibleBySelector:
+              reason: Verify the prebuilt AuthView is showing the phone sign-in screen.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Enter your phone number
+          - tapOnElementBySelector:
+              reason: Submit the prefilled test phone number.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Continue
+          - assertVisibleBySelector:
+              reason: Verify the prebuilt password screen is shown before switching methods.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Enter password
+          - tapOnElementBySelector:
+              reason: Open alternate prebuilt sign-in methods.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Use another method
+          - assertVisibleBySelector:
+              reason: Verify the phone code sign-in method is available.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: .*Send SMS code.*
+          - tapOnElementBySelector:
+              reason: Choose SMS code for the prebuilt sign-in flow.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: .*Send SMS code.*
+          - assertVisibleBySelector:
+              reason: Verify the prebuilt code screen is shown.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Check your phone
+          - inputText:
+              text: "424242"
+              hideKeyboardAfter: false
+          - assertVisibleBySelector:
+              reason: Verify the prebuilt user profile account screen is shown after sign-in.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Account
+    - step: Open manage account in the prebuilt user profile, return to the account screen, and sign out.
+      recording:
+        tools:
+          - tapOnElementBySelector:
+              reason: Open the prebuilt manage account screen.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Manage account
+          - assertVisibleBySelector:
+              reason: Verify the prebuilt manage account screen opened.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Manage account
+          - assertVisibleBySelector:
+              reason: Verify email profile details are visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: EMAIL ADDRESSES
+          - assertVisibleBySelector:
+              reason: Verify phone profile details are visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: PHONE NUMBER
+          - assertVisibleBySelector:
+              reason: Verify connected account profile details are visible.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: CONNECTED ACCOUNTS
+          - pressBack: {}
+          - assertVisibleBySelector:
+              reason: Verify the profile account root is visible again.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Account
+          - tapOnElementBySelector:
+              reason: Open the prebuilt security screen.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Security
+          - assertVisibleBySelector:
+              reason: Verify the prebuilt security screen opened.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Security
+          - pressBack: {}
+          - assertVisibleBySelector:
+              reason: Verify the profile account root is visible after returning from security.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Account
+          - tapOnElementBySelector:
+              reason: Sign out through the prebuilt user profile.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Sign out
+          - assertVisibleBySelector:
+              reason: Verify sign-out returned to the e2e home screen.
+              nodeSelector:
+                androidAccessibility:
+                  textRegex: Clerk Android E2E

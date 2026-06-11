@@ -33,6 +33,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
+import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationView
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileConfirmationAction
 import com.clerk.ui.organizationprofile.custom.LocalOrganizationProfileCustomNavigator
@@ -59,11 +60,13 @@ import kotlinx.serialization.Serializable
  * navigation back stack and survive activity recreation.
  *
  * @param clerkTheme Optional theme customization for the organization profile UI.
- * @param isDismissable Whether to show a top-level back affordance that calls [onDismiss].
+ * @param isDismissible Whether to show a top-level back affordance that calls [onDismiss].
  * @param customRows Custom rows to display on the profile root screen.
  * @param customDestination Composable that renders the destination for a given route key. The route
  *   key matches [OrganizationProfileCustomRow.routeKey] of the tapped row.
  * @param onDismiss Callback when the organization profile view is dismissed.
+ * @param onComplete Callback when a destructive organization action completes and the profile can
+ *   no longer be shown.
  */
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("ComposeUnstableReceiver")
@@ -71,10 +74,11 @@ import kotlinx.serialization.Serializable
 fun OrganizationProfileView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
-  isDismissable: Boolean = true,
+  isDismissible: Boolean = true,
   customRows: List<OrganizationProfileCustomRow> = emptyList(),
   customDestination: (@Composable (String) -> Unit)? = null,
   onDismiss: () -> Unit = {},
+  onComplete: () -> Unit = onDismiss,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     TelemetryProvider {
@@ -84,29 +88,33 @@ fun OrganizationProfileView(
       val membership = Clerk.organizationMembership
       val organization = membership?.organization ?: Clerk.organization
 
+      LaunchedEffect(Unit) { Clerk.refreshClient() }
       OrganizationProfileEffects(
         organizationId = organization?.id,
-        onDismiss = onDismiss,
+        onComplete = onComplete,
         hasOrganization = organization != null,
       )
 
-      if (organization != null) {
-        OrganizationProfileNavDisplay(
-          modifier = modifier,
-          backStack = backStack,
-          organization = organization,
-          membership = membership,
-          isDismissable = isDismissable,
-          customRows = customRows,
-          customDestination = customDestination,
-          onDismiss = onDismiss,
-        )
-      } else {
-        Box(modifier = modifier.fillMaxSize())
+      DevelopmentModeWarningBox(modifier = modifier.fillMaxSize()) {
+        if (organization != null) {
+          OrganizationProfileNavDisplay(
+            modifier = Modifier.fillMaxSize(),
+            backStack = backStack,
+            organization = organization,
+            membership = membership,
+            isDismissible = isDismissible,
+            customRows = customRows,
+            customDestination = customDestination,
+            onDismiss = onDismiss,
+            onComplete = onComplete,
+          )
+        } else {
+          Box(modifier = Modifier.fillMaxSize())
+        }
       }
 
       LaunchedEffect(session?.id, user?.id) {
-        if (Clerk.organizationMembership == null && Clerk.organization == null) onDismiss()
+        if (Clerk.organizationMembership == null && Clerk.organization == null) onComplete()
       }
     }
   }
@@ -118,18 +126,19 @@ private fun OrganizationProfileNavDisplay(
   backStack: NavBackStack<NavKey>,
   organization: Organization,
   membership: OrganizationMembership?,
-  isDismissable: Boolean,
+  isDismissible: Boolean,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
   modifier: Modifier = Modifier,
   onDismiss: () -> Unit,
+  onComplete: () -> Unit,
 ) {
   var membersRefreshKey by remember { mutableIntStateOf(0) }
 
   NavDisplay(
     modifier = modifier,
     backStack = backStack,
-    onBack = { handleOrganizationProfileBack(backStack, isDismissable, onDismiss) },
+    onBack = { handleOrganizationProfileBack(backStack, isDismissible, onDismiss) },
     transitionSpec = {
       val spec = tween<IntOffset>(durationMillis = 300)
       slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
@@ -150,12 +159,13 @@ private fun OrganizationProfileNavDisplay(
           backStack = backStack,
           organization = organization,
           membership = membership,
-          isDismissable = isDismissable,
+          isDismissible = isDismissible,
           onDismiss = onDismiss,
           membersRefreshKey = membersRefreshKey,
           onInviteMembersComplete = { membersRefreshKey += 1 },
           customRows = customRows,
           customDestination = customDestination,
+          onComplete = onComplete,
         )
       },
   )
@@ -163,11 +173,11 @@ private fun OrganizationProfileNavDisplay(
 
 private fun handleOrganizationProfileBack(
   backStack: NavBackStack<NavKey>,
-  isDismissable: Boolean,
+  isDismissible: Boolean,
   onDismiss: () -> Unit,
 ) {
   if (backStack.size == 1) {
-    if (isDismissable) onDismiss()
+    if (isDismissible) onDismiss()
   } else {
     backStack.removeLastOrNull()
   }
@@ -177,14 +187,14 @@ private fun handleOrganizationProfileBack(
 private fun OrganizationProfileEffects(
   organizationId: String?,
   hasOrganization: Boolean,
-  onDismiss: () -> Unit,
+  onComplete: () -> Unit,
 ) {
   val telemetry = LocalTelemetryCollector.current
   LaunchedEffect(organizationId) {
     if (hasOrganization) {
       telemetry.record(TelemetryEvents.viewDidAppear("OrganizationProfileView"))
     } else {
-      onDismiss()
+      onComplete()
     }
   }
 }
@@ -194,18 +204,19 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
   backStack: NavBackStack<NavKey>,
   organization: Organization,
   membership: OrganizationMembership?,
-  isDismissable: Boolean,
+  isDismissible: Boolean,
   onDismiss: () -> Unit,
   membersRefreshKey: Int,
   onInviteMembersComplete: () -> Unit,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
+  onComplete: () -> Unit,
 ) {
   entry<OrganizationProfileDestination.Root> {
     OrganizationProfileRootView(
       organization = organization,
       membership = membership,
-      isDismissable = isDismissable,
+      isDismissible = isDismissible,
       onBackPressed = onDismiss,
       onUpdateProfile = { backStack.add(OrganizationProfileDestination.UpdateProfile) },
       onAction = { action -> backStack.add(action.destination) },
@@ -265,7 +276,7 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
       organization = organization,
       membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
-      onSuccess = onDismiss,
+      onSuccess = onComplete,
     )
   }
 
@@ -275,7 +286,7 @@ private fun EntryProviderScope<NavKey>.organizationProfileEntries(
       organization = organization,
       membership = membership,
       onBackPressed = { backStack.removeLastOrNull() },
-      onSuccess = onDismiss,
+      onSuccess = onComplete,
     )
   }
 

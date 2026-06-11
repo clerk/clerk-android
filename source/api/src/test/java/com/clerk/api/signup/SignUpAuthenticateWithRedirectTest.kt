@@ -11,6 +11,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -57,5 +58,58 @@ class SignUpAuthenticateWithRedirectTest {
         legalAccepted = null,
       )
     }
+  }
+
+  @Test
+  fun `authenticateWithRedirect forwards unsafe metadata`() = runTest {
+    mockkObject(SSOService)
+    val unsafeMetadata = mapOf("test" to "test")
+    val signUp = mockk<SignUp>(relaxed = true)
+    val oauthResult = OAuthResult(signUp = signUp)
+    coEvery {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "oauth_google",
+        redirectUrl = any(),
+        identifier = null,
+        emailAddress = null,
+        legalAccepted = null,
+        unsafeMetadata = unsafeMetadata,
+      )
+    } returns ClerkResult.success(oauthResult)
+
+    val result =
+      SignUp.authenticateWithRedirect(
+        SignUp.AuthenticateWithRedirectParams.OAuth(
+          provider = OAuthProvider.GOOGLE,
+          unsafeMetadata = unsafeMetadata,
+        )
+      )
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(oauthResult, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "oauth_google",
+        redirectUrl = any(),
+        identifier = null,
+        emailAddress = null,
+        legalAccepted = null,
+        unsafeMetadata = unsafeMetadata,
+      )
+    }
+  }
+
+  @Test
+  fun `redirect params map transform unsafe metadata to json`() {
+    val params =
+      SignUp.AuthenticateWithRedirectParams.OAuth(
+        provider = OAuthProvider.GOOGLE,
+        unsafeMetadata = mapOf("test" to "test"),
+      )
+
+    val paramsMap = params.toMap()
+
+    assertEquals("oauth_google", paramsMap["strategy"])
+    assertEquals("""{"test":"test"}""", paramsMap["unsafe_metadata"])
   }
 }

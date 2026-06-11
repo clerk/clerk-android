@@ -51,6 +51,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun UserProfileSecurityView() {
+  LaunchedEffect(Unit) { Clerk.refreshClient() }
   UserProfileSecurityViewImpl(
     isPasswordEnabled = Clerk.passwordIsEnabled,
     isPasskeyEnabled = Clerk.passkeyIsEnabled,

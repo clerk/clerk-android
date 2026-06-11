@@ -1,0 +1,165 @@
+package com.clerk.ui.auth
+
+import android.content.Context
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.test.core.app.ApplicationProvider
+import com.clerk.api.Constants
+import com.clerk.api.network.model.verification.Verification
+import com.clerk.api.signup.SignUp
+import com.clerk.ui.signup.collectfield.CollectField
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+
+@RunWith(RobolectricTestRunner::class)
+class AuthStateSignUpRoutingTest {
+
+  private lateinit var context: Context
+  private val backStack = mockk<NavBackStack<NavKey>>(relaxed = true)
+  private lateinit var authState: AuthState
+
+  @Before
+  fun setUp() {
+    context = ApplicationProvider.getApplicationContext()
+    preferences().edit().clear().commit()
+    authState =
+      AuthState(
+        mode = AuthMode.SignInOrUp,
+        backStack = backStack,
+        sharedPreferences = preferences(),
+      )
+  }
+
+  @Test
+  fun authStateDefaultsToSignInOrUpMode() {
+    val defaultAuthState = AuthState(backStack = backStack, sharedPreferences = preferences())
+
+    assertEquals(AuthMode.SignInOrUp, defaultAuthState.mode)
+  }
+
+  @Test
+  fun authStateKeepsExplicitMode() {
+    val signUpAuthState =
+      AuthState(mode = AuthMode.SignUp, backStack = backStack, sharedPreferences = preferences())
+
+    assertEquals(AuthMode.SignUp, signUpAuthState.mode)
+  }
+
+  @Test
+  fun setToStepForStatusRoutesToSignUpEmailLinkWhenEmailVerificationStrategyIsEmailLink() {
+    val signUp =
+      signUp(
+        verifications =
+          mapOf(
+            "email_address" to
+              Verification(
+                status = Verification.Status.UNVERIFIED,
+                strategy = Constants.Strategy.EMAIL_LINK,
+              )
+          )
+      )
+
+    authState.setToStepForStatus(signUp) {}
+
+    verify(exactly = 1) {
+      backStack.add(AuthDestination.SignUpEmailLink(emailAddress = "sam@clerk.dev"))
+    }
+  }
+
+  @Test
+  fun setToStepForStatusRoutesToSignUpCodeWhenEmailVerificationStrategyIsEmailCode() {
+    val signUp =
+      signUp(
+        verifications =
+          mapOf(
+            "email_address" to
+              Verification(
+                status = Verification.Status.UNVERIFIED,
+                strategy = Constants.Strategy.EMAIL_CODE,
+              )
+          )
+      )
+
+    authState.setToStepForStatus(signUp) {}
+
+    verify(exactly = 1) {
+      backStack.add(
+        AuthDestination.SignUpCode(
+          field = com.clerk.ui.signup.code.SignUpCodeField.Email("sam@clerk.dev")
+        )
+      )
+    }
+  }
+
+  @Test
+  fun setToStepForStatusCollectsRequiredFieldsBeforeStartingEmailLinkVerification() {
+    val signUp =
+      signUp(
+        verifications =
+          mapOf(
+            "email_address" to
+              Verification(
+                status = Verification.Status.UNVERIFIED,
+                strategy = Constants.Strategy.EMAIL_LINK,
+              )
+          ),
+        missingFields = listOf("password"),
+      )
+
+    authState.setToStepForStatus(signUp) {}
+
+    verify(exactly = 1) { backStack.add(AuthDestination.SignUpCollectField(CollectField.Password)) }
+    verify(exactly = 0) {
+      backStack.add(AuthDestination.SignUpEmailLink(emailAddress = "sam@clerk.dev"))
+    }
+  }
+
+  @Test
+  fun setToStepForStatusDoesNotCollectOptionalMissingFields() {
+    val signUp =
+      signUp(
+        verifications = emptyMap(),
+        requiredFields = listOf("email_address"),
+        optionalFields = listOf("first_name", "last_name"),
+        missingFields = listOf("first_name", "last_name"),
+        unverifiedFields = emptyList(),
+      )
+
+    authState.setToStepForStatus(signUp) {}
+
+    verify(exactly = 0) { backStack.add(any()) }
+  }
+
+  private fun signUp(
+    verifications: Map<String, Verification?>,
+    missingFields: List<String> = emptyList(),
+    requiredFields: List<String> = listOf("email_address", "password"),
+    optionalFields: List<String> = emptyList(),
+    unverifiedFields: List<String> = listOf("email_address"),
+  ): SignUp {
+    every { backStack.add(any()) } returns true
+    return SignUp(
+      id = "sign_up_123",
+      status = SignUp.Status.MISSING_REQUIREMENTS,
+      requiredFields = requiredFields,
+      optionalFields = optionalFields,
+      missingFields = missingFields,
+      unverifiedFields = unverifiedFields,
+      verifications = verifications,
+      emailAddress = "sam@clerk.dev",
+      passwordEnabled = false,
+    )
+  }
+
+  private fun preferences() =
+    context.getSharedPreferences(
+      Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
+      Context.MODE_PRIVATE,
+    )
+}

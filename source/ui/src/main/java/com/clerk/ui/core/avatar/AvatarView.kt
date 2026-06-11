@@ -56,7 +56,13 @@ internal fun AvatarView(
   shape: Shape,
   avatarType: AvatarType,
   modifier: Modifier = Modifier,
+  imageModel: Any? = imageUrl,
   hasEditButton: Boolean = false,
+  editContentDescription: Int = R.string.edit_avatar,
+  choosePhotoText: Int = R.string.choose_photo,
+  removePhotoText: Int = R.string.remove_photo,
+  showRemovePhoto: Boolean = true,
+  showPlaceholder: Boolean = true,
   onEditTakePhoto: () -> Unit = {},
   onEditChoosePhoto: () -> Unit = {},
   onEditRemovePhoto: () -> Unit = {},
@@ -69,34 +75,58 @@ internal fun AvatarView(
 
   Box(modifier = Modifier.wrapContentSize().then(modifier), contentAlignment = Alignment.Center) {
     SubcomposeAsyncImage(
-      model = imageUrl,
+      model = imageModel,
       contentDescription = stringResource(R.string.logo),
       modifier = Modifier.size(size.toDp()).clip(shape),
       contentScale = ContentScale.FillBounds,
       loading = { CircularProgressIndicator(modifier = Modifier.size(dp24)) },
       error = {
-        Icon(
-          painter = painterResource(placeholder),
-          contentDescription = null,
-          tint = ClerkMaterialTheme.colors.foreground,
-        )
+        if (showPlaceholder) {
+          Icon(
+            painter = painterResource(placeholder),
+            contentDescription = null,
+            tint = ClerkMaterialTheme.colors.foreground,
+          )
+        }
       },
     )
     if (hasEditButton) {
       EditButton(
-        onEditTakePhoto = onEditTakePhoto,
-        onEditChoosePhoto = onEditChoosePhoto,
-        onEditRemovePhoto = onEditRemovePhoto,
+        configuration =
+          AvatarEditConfiguration(
+            editContentDescription = editContentDescription,
+            choosePhotoText = choosePhotoText,
+            removePhotoText = removePhotoText,
+            showRemovePhoto = showRemovePhoto,
+          ),
+        actions =
+          AvatarEditActions(
+            onTakePhoto = onEditTakePhoto,
+            onChoosePhoto = onEditChoosePhoto,
+            onRemovePhoto = onEditRemovePhoto,
+          ),
       )
     }
   }
 }
 
+private data class AvatarEditConfiguration(
+  val editContentDescription: Int,
+  val choosePhotoText: Int,
+  val removePhotoText: Int,
+  val showRemovePhoto: Boolean,
+)
+
+private data class AvatarEditActions(
+  val onTakePhoto: () -> Unit,
+  val onChoosePhoto: () -> Unit,
+  val onRemovePhoto: () -> Unit,
+)
+
 @Composable
 private fun BoxScope.EditButton(
-  onEditTakePhoto: () -> Unit,
-  onEditChoosePhoto: () -> Unit,
-  onEditRemovePhoto: () -> Unit,
+  configuration: AvatarEditConfiguration,
+  actions: AvatarEditActions,
 ) {
   var expanded by remember { mutableStateOf(false) }
   Box(modifier = Modifier.align(Alignment.BottomEnd)) {
@@ -116,17 +146,16 @@ private fun BoxScope.EditButton(
       Box(contentAlignment = Alignment.Center) {
         Icon(
           painter = painterResource(R.drawable.ic_edit),
-          contentDescription = stringResource(R.string.edit_avatar),
+          contentDescription = stringResource(configuration.editContentDescription),
           tint = ClerkMaterialTheme.colors.mutedForeground,
         )
       }
     }
 
     DropdownMenu(
-      expanded,
-      onEditTakePhoto,
-      onEditChoosePhoto,
-      onEditRemovePhoto,
+      expanded = expanded,
+      configuration = configuration,
+      actions = actions,
       onDismissRequest = { expanded = false },
     )
   }
@@ -135,9 +164,8 @@ private fun BoxScope.EditButton(
 @Composable
 private fun DropdownMenu(
   expanded: Boolean,
-  onEditTakePhoto: () -> Unit,
-  onEditChoosePhoto: () -> Unit,
-  onEditRemovePhoto: () -> Unit,
+  configuration: AvatarEditConfiguration,
+  actions: AvatarEditActions,
   onDismissRequest: () -> Unit,
 ) {
 
@@ -162,34 +190,36 @@ private fun DropdownMenu(
       },
       onClick = {
         onDismissRequest()
-        onEditTakePhoto()
+        actions.onTakePhoto()
       },
     )
     DropdownMenuItem(
       text = {
         Text(
-          text = stringResource(R.string.choose_photo),
+          text = stringResource(configuration.choosePhotoText),
           style = ClerkMaterialTheme.typography.bodyLarge,
         )
       },
       onClick = {
         onDismissRequest()
-        onEditChoosePhoto()
+        actions.onChoosePhoto()
       },
     )
-    DropdownMenuItem(
-      text = {
-        Text(
-          text = stringResource(R.string.remove_photo),
-          color = ClerkMaterialTheme.colors.danger,
-          style = ClerkMaterialTheme.typography.bodyLarge,
-        )
-      },
-      onClick = {
-        onDismissRequest()
-        onEditRemovePhoto()
-      },
-    )
+    if (configuration.showRemovePhoto) {
+      DropdownMenuItem(
+        text = {
+          Text(
+            text = stringResource(configuration.removePhotoText),
+            color = ClerkMaterialTheme.colors.danger,
+            style = ClerkMaterialTheme.typography.bodyLarge,
+          )
+        },
+        onClick = {
+          onDismissRequest()
+          actions.onRemovePhoto()
+        },
+      )
+    }
   }
 }
 
@@ -204,11 +234,11 @@ internal fun OrganizationAvatar(
   shape: Shape? = null,
   size: AvatarSize = AvatarSize.MEDIUM,
   clerkTheme: ClerkTheme? = null,
+  imageUrl: String? = Clerk.organizationLogoUrl,
 ) {
-  val url = Clerk.organizationLogoUrl
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     AvatarView(
-      imageUrl = url,
+      imageUrl = imageUrl,
       size = size,
       shape = shape ?: ClerkMaterialTheme.shape,
       modifier = modifier,

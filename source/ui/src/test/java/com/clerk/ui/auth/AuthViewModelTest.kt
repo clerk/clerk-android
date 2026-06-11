@@ -2,6 +2,8 @@ package com.clerk.ui.auth
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
+import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error as ClerkError
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
@@ -13,6 +15,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -206,6 +209,58 @@ class AuthViewModelTest {
   }
 
   @Test
+  fun startAuthWithSignUpPassesUnsafeMetadataToSignUpCreate() = runTest {
+    val paramsSlot = slot<SignUp.CreateParams>()
+    val mockSignUp = mockk<SignUp>(relaxed = true)
+    mockkObject(SignUp.Companion)
+    coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
+
+    viewModel.startAuth(
+      authMode = AuthMode.SignUp,
+      isPhoneNumberFieldActive = false,
+      phoneNumber = "",
+      identifier = "test@example.com",
+      unsafeMetadata = mapOf("test" to "test", "nested" to mapOf("active" to true)),
+    )
+
+    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
+    testDispatcher.scheduler.advanceUntilIdle()
+    val params = paramsSlot.captured as SignUp.CreateParams.Standard
+    val unsafeMetadata = requireNotNull(params.unsafeMetadata)
+    assertEquals("test@example.com", params.emailAddress)
+    assertEquals("test", unsafeMetadata.getValue("test"))
+    assertEquals(mapOf("active" to true), unsafeMetadata.getValue("nested"))
+  }
+
+  @Test
+  fun signInOrUpFallbackPassesUnsafeMetadataToSignUpCreate() = runTest {
+    val paramsSlot = slot<SignUp.CreateParams>()
+    val mockSignUp = mockk<SignUp>(relaxed = true)
+    mockkObject(SignIn.Companion)
+    mockkObject(SignUp.Companion)
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.apiFailure(
+        ClerkErrorResponse(errors = listOf(ClerkError(code = "form_identifier_not_found")))
+      )
+    coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
+
+    viewModel.startAuth(
+      authMode = AuthMode.SignInOrUp,
+      isPhoneNumberFieldActive = true,
+      phoneNumber = "+1234567890",
+      identifier = "test@example.com",
+      unsafeMetadata = mapOf("source" to "prebuilt"),
+    )
+
+    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
+    testDispatcher.scheduler.advanceUntilIdle()
+    val params = paramsSlot.captured as SignUp.CreateParams.Standard
+    val unsafeMetadata = requireNotNull(params.unsafeMetadata)
+    assertEquals("+1234567890", params.phoneNumber)
+    assertEquals("prebuilt", unsafeMetadata.getValue("source"))
+  }
+
+  @Test
   fun enterpriseSSODetectionShouldWorkCorrectly() {
     // Test the enterprise SSO detection logic directly
     val ssoStrategy = "enterprise_sso"
@@ -249,6 +304,13 @@ class AuthViewModelTest {
     assertEquals("SignIn", signIn.name)
     assertEquals("SignUp", signUp.name)
     assertEquals("SignInOrUp", signInOrUp.name)
+  }
+
+  @Test
+  fun authModeTransferabilityShouldMatchFlowMode() {
+    assertEquals(false, AuthMode.SignIn.transferable)
+    assertEquals(true, AuthMode.SignUp.transferable)
+    assertEquals(true, AuthMode.SignInOrUp.transferable)
   }
 
   @Test
@@ -343,6 +405,29 @@ class AuthViewModelTest {
   }
 
   @Test
+  fun socialOAuthSignUpPassesUnsafeMetadata() = runTest {
+    val paramsSlot = slot<SignUp.AuthenticateWithRedirectParams>()
+    val mockSignUp = mockk<SignUp>(relaxed = true)
+    mockkObject(SignUp.Companion)
+    coEvery { SignUp.authenticateWithRedirect(any()) } returns
+      ClerkResult.success(OAuthResult(signUp = mockSignUp))
+
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GOOGLE,
+      transferable = true,
+      preferGoogleOneTap = false,
+      startOAuthWithSignUp = true,
+      unsafeMetadata = mapOf("source" to "social"),
+    )
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) { SignUp.authenticateWithRedirect(capture(paramsSlot)) }
+    val params = paramsSlot.captured as SignUp.AuthenticateWithRedirectParams.OAuth
+    val unsafeMetadata = requireNotNull(params.unsafeMetadata)
+    assertEquals("social", unsafeMetadata.getValue("source"))
+  }
+
+  @Test
   fun googleSocialAuthUsesOneTapWhenPreferredAndEnabled() = runTest {
     mockkObject(Clerk)
     every { Clerk.isGoogleOneTapEnabled } returns true
@@ -362,5 +447,32 @@ class AuthViewModelTest {
 
     coVerify(timeout = 1_000, exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
     coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
+  }
+
+  @Test
+  fun googleSocialAuthFallsBackToBrowserRedirectWhenOneTapHasNoGoogleAccount() = runTest {
+    mockkObject(Clerk)
+    every { Clerk.isGoogleOneTapEnabled } returns true
+    mockkObject(SignIn.Companion)
+    val mockSignIn = mockk<SignIn>(relaxed = true)
+    val noGoogleAccountException =
+      Class.forName("com.clerk.api.credentials.CredentialFlowException\$NoGoogleAccount")
+        .getDeclaredConstructor()
+        .newInstance() as Throwable
+
+    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns
+      ClerkResult.unknownFailure(noGoogleAccountException)
+    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+      ClerkResult.success(OAuthResult(signIn = mockSignIn))
+
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GOOGLE,
+      transferable = true,
+      preferGoogleOneTap = true,
+    )
+
+    coVerify(timeout = 1_000, exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    testDispatcher.scheduler.advanceUntilIdle()
+    coVerify(timeout = 1_000, exactly = 1) { SignIn.authenticateWithRedirect(any(), true) }
   }
 }

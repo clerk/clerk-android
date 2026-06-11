@@ -1,27 +1,20 @@
 package com.clerk.ui.auth
 
-import android.content.Context
 import android.content.SharedPreferences
 import androidx.navigation3.runtime.NavBackStack
-import androidx.test.core.app.ApplicationProvider
-import com.clerk.api.Constants
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class AuthStateConfigurationTest {
 
-  private lateinit var context: Context
+  private lateinit var prefs: SharedPreferences
 
   @Before
   fun setUp() {
-    context = ApplicationProvider.getApplicationContext()
-    authPreferences().edit().clear().commit()
+    prefs = InMemorySharedPreferences()
   }
 
   @Test
@@ -140,6 +133,37 @@ class AuthStateConfigurationTest {
     assertNull(LastUsedIdentifierStorage.retrieve(prefs))
   }
 
+  @Test
+  fun unsafeMetadataIsAvailableOnAuthState() {
+    val metadata = mapOf("plan" to "pro")
+
+    val authState =
+      createAuthState(identifierConfig = AuthIdentifierConfig(unsafeMetadata = metadata))
+
+    assertEquals(metadata, authState.unsafeMetadata)
+  }
+
+  @Test
+  fun metadataOnlyConfigChangesDoNotResetIdentifierFields() {
+    val authState =
+      createAuthState(
+        identifierConfig = AuthIdentifierConfig(initialIdentifier = "seed@example.com")
+      )
+    val version = authState.identifierConfigVersion
+    authState.authStartIdentifier = "edited@example.com"
+
+    authState.applyIdentifierConfig(
+      AuthIdentifierConfig(
+        initialIdentifier = "seed@example.com",
+        unsafeMetadata = mapOf("plan" to "pro"),
+      )
+    )
+
+    assertEquals("edited@example.com", authState.authStartIdentifier)
+    assertEquals(mapOf("plan" to "pro"), authState.unsafeMetadata)
+    assertEquals(version, authState.identifierConfigVersion)
+  }
+
   private fun createAuthState(
     sharedPreferences: SharedPreferences = authPreferences(),
     identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
@@ -151,10 +175,5 @@ class AuthStateConfigurationTest {
     )
   }
 
-  private fun authPreferences(): SharedPreferences {
-    return context.getSharedPreferences(
-      Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
-      Context.MODE_PRIVATE,
-    )
-  }
+  private fun authPreferences(): SharedPreferences = prefs
 }

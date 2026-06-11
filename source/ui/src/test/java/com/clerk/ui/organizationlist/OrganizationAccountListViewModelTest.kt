@@ -23,7 +23,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.unmockkStatic
-import java.time.Instant
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -298,8 +297,8 @@ class OrganizationAccountListViewModelTest {
       publicMetadata = "{}",
       role = "org:member",
       status = status,
-      createdAt = Instant.EPOCH,
-      updatedAt = Instant.EPOCH,
+      createdAt = 0L,
+      updatedAt = 0L,
     )
   }
 

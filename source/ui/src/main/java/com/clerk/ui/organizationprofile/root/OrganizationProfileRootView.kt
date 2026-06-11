@@ -35,7 +35,7 @@ internal fun OrganizationProfileRootView(
   onUpdateProfile: () -> Unit,
   onAction: (OrganizationProfileAction) -> Unit,
   modifier: Modifier = Modifier,
-  isDismissable: Boolean = true,
+  isDismissible: Boolean = true,
   customRows: ImmutableList<OrganizationProfileCustomRow> = persistentListOf(),
   onCustomRowClick: (String) -> Unit = {},
 ) {
@@ -44,7 +44,7 @@ internal fun OrganizationProfileRootView(
       modifier = modifier,
       title = stringResource(R.string.organization),
       backgroundColor = ClerkMaterialTheme.colors.muted,
-      hasBackButton = isDismissable,
+      hasBackButton = isDismissible,
       horizontalPadding = dp0,
       onBackPressed = onBackPressed,
       content = {

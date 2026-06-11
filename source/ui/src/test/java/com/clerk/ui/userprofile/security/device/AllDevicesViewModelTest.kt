@@ -10,7 +10,7 @@ import com.clerk.api.session.Session.SessionStatus
 import com.clerk.api.session.SessionActivity
 import com.clerk.api.session.isThisDevice
 import com.clerk.api.user.User
-import com.clerk.api.user.allSessions
+import com.clerk.api.user.activeSessions
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
@@ -48,7 +48,7 @@ class AllDevicesViewModelTest {
   }
 
   @Test
-  fun allSessions_success_sortsDevices() = runTest {
+  fun activeSessions_success_sortsDevices() = runTest {
     val user = mockk<User>()
     val currentSession = session(id = "current", lastActiveAt = 100L)
     val otherRecent = session(id = "other", lastActiveAt = 200L)
@@ -59,7 +59,7 @@ class AllDevicesViewModelTest {
     every { currentSession.isThisDevice } returns true
     every { otherRecent.isThisDevice } returns false
     every { older.isThisDevice } returns false
-    coEvery { user.allSessions() } returns
+    coEvery { user.activeSessions() } returns
       ClerkResult.success(listOf(older, otherRecent, currentSession))
 
     val viewModel = AllDevicesViewModel()
@@ -73,11 +73,11 @@ class AllDevicesViewModelTest {
   }
 
   @Test
-  fun allSessions_failure_setsErrorState() = runTest {
+  fun activeSessions_failure_setsErrorState() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
     val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "bad")))
-    coEvery { user.allSessions() } returns ClerkResult.Failure(error)
+    coEvery { user.activeSessions() } returns ClerkResult.Failure(error)
 
     val viewModel = AllDevicesViewModel()
     viewModel.state.test {

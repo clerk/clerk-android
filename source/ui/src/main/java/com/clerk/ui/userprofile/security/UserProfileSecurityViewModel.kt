@@ -6,8 +6,9 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.session.Session
-import com.clerk.api.user.allSessions
+import com.clerk.api.user.activeSessions
 import com.clerk.ui.core.common.guardUser
+import com.clerk.ui.userprofile.security.device.sortedForDeviceDisplay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -26,8 +27,8 @@ internal class UserProfileSecurityViewModel : ViewModel() {
     guardUser({}) { user ->
       viewModelScope.launch {
         user
-          .allSessions()
-          .onSuccess { _state.value = State.Success(it) }
+          .activeSessions()
+          .onSuccess { _state.value = State.Success(it.sortedForDeviceDisplay()) }
           .onFailure { _state.value = State.Error(it.errorMessage) }
       }
     }

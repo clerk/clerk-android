@@ -8,7 +8,7 @@ import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.session.Session
 import com.clerk.api.session.revoke
-import com.clerk.api.user.allSessions
+import com.clerk.api.user.activeSessions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +25,7 @@ internal class DeviceViewModel : ViewModel() {
       session
         .revoke()
         .onSuccess {
-          Clerk.user?.allSessions()
+          Clerk.user?.activeSessions()
           withContext(Dispatchers.Main) { _state.value = State.Success }
         }
         .onFailure { withContext(Dispatchers.Main) { _state.value = State.Error(it.errorMessage) } }

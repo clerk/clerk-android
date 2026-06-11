@@ -68,7 +68,8 @@ private fun UserProfileUpdateProfileViewImpl(
 
   val context = LocalContext.current
 
-  val (takePhotoLauncher, pickPhotoLauncher) = createLaunchers(context, viewModel)
+  val (takePhotoLauncher, pickPhotoLauncher) =
+    createLaunchers(context, onUploadProfileImage = viewModel::uploadProfileImage)
 
   ClerkMaterialTheme {
     ClerkThemedProfileScaffold(
@@ -99,7 +100,7 @@ private fun UserProfileUpdateProfileViewImpl(
         Spacers.Vertical.Spacer32()
         ProfileFields(
           isLoading = state is UpdateProfileViewModel.State.Loading,
-          viewModel = viewModel,
+          onSave = viewModel::save,
         )
       },
     )
@@ -109,7 +110,7 @@ private fun UserProfileUpdateProfileViewImpl(
 @Composable
 private fun createLaunchers(
   context: Context,
-  viewModel: UpdateProfileViewModel,
+  onUploadProfileImage: (File) -> Unit,
 ): Pair<
   ManagedActivityResultLauncher<Void?, Bitmap?>,
   ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
@@ -118,7 +119,7 @@ private fun createLaunchers(
     rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
       if (bitmap != null) {
         val file = createImageFileFromBitmap(context.cacheDir.absolutePath, bitmap)
-        viewModel.uploadProfileImage(file)
+        onUploadProfileImage(file)
       }
     }
 
@@ -126,14 +127,17 @@ private fun createLaunchers(
     rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
       if (uri != null) {
         val file = createImageFileFromUri(context, uri)
-        viewModel.uploadProfileImage(file)
+        onUploadProfileImage(file)
       }
     }
   return Pair(takePhotoLauncher, pickPhotoLauncher)
 }
 
 @Composable
-private fun ProfileFields(isLoading: Boolean, viewModel: UpdateProfileViewModel) {
+private fun ProfileFields(
+  isLoading: Boolean,
+  onSave: (firstName: String?, lastName: String?, username: String?) -> Unit,
+) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   var username by rememberSaveable { mutableStateOf(user?.username) }
   var firstName by rememberSaveable { mutableStateOf(user?.firstName) }
@@ -172,13 +176,7 @@ private fun ProfileFields(isLoading: Boolean, viewModel: UpdateProfileViewModel)
         isLoading = isLoading,
         modifier = Modifier.fillMaxWidth(),
         text = stringResource(R.string.save),
-        onClick = {
-          viewModel.save(
-            firstName = firstName,
-            lastName = lastName,
-            username = if (usernameIsEditable) username else null,
-          )
-        },
+        onClick = { onSave(firstName, lastName, if (usernameIsEditable) username else null) },
       )
     }
   }

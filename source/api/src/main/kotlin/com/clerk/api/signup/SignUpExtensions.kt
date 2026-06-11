@@ -32,12 +32,16 @@ suspend fun SignUp.sendCode(
 
   val strategy =
     if (builder.email != null) {
-      SignUp.PrepareVerificationParams.Strategy.EmailCode()
+      if (isEmailLinkVerificationSupported) {
+        SignUp.PrepareVerificationParams.Strategy.EmailLink()
+      } else {
+        SignUp.PrepareVerificationParams.Strategy.EmailCode()
+      }
     } else {
       SignUp.PrepareVerificationParams.Strategy.PhoneCode()
     }
 
-  return ClerkApi.signUp.prepareSignUpVerification(this.id, strategy.strategy)
+  return prepareVerification(strategy)
 }
 
 /**

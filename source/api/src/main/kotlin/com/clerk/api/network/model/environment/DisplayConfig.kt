@@ -13,6 +13,7 @@ import kotlinx.serialization.Serializable
  * @property instanceEnvironmentType The type of environment (development, staging, production)
  * @property applicationName The display name of the application
  * @property preferredSignInStrategy The preferred sign-in strategy for the application
+ * @property showDevModeWarning Whether development mode warnings should be shown
  * @property branded Whether the application uses Clerk branding
  * @property logoImageUrl URL of the application's logo image
  * @property homeUrl The home URL of the application
@@ -32,6 +33,9 @@ internal data class DisplayConfig(
   /** The preferred sign-in strategy for the application */
   @SerialName("preferred_sign_in_strategy")
   val preferredSignInStrategy: PreferredSignInStrategy = PreferredSignInStrategy.UNKNOWN,
+
+  /** Whether development mode warnings should be shown */
+  @SerialName("show_devmode_warning") val showDevModeWarning: Boolean = false,
 
   /** Whether the application uses Clerk branding */
   @SerialName("branded") val branded: Boolean,

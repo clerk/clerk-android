@@ -45,6 +45,7 @@ internal fun UserProfileAccountView(
   onBackPressed: () -> Unit,
   onClickEdit: () -> Unit,
   modifier: Modifier = Modifier,
+  isDismissible: Boolean = true,
   customRows: ImmutableList<UserProfileCustomRow> = persistentListOf(),
   onCustomRowClick: (routeKey: String) -> Unit = {},
 ) {
@@ -61,6 +62,7 @@ internal fun UserProfileAccountView(
     onClick = onClick,
     onBackPressed = onBackPressed,
     onEditAvatarClick = onClickEdit,
+    isDismissible = isDismissible,
     customRows = customRows,
     onCustomRowClick = onCustomRowClick,
   )
@@ -77,6 +79,7 @@ private fun UserProfileAccountViewImpl(
   onBackPressed: () -> Unit,
   onEditAvatarClick: () -> Unit,
   modifier: Modifier = Modifier,
+  isDismissible: Boolean = true,
   imageUrl: String? = null,
   viewModel: UserProfileAccountViewModel = viewModel(),
   customRows: ImmutableList<UserProfileCustomRow> = persistentListOf(),
@@ -94,9 +97,10 @@ private fun UserProfileAccountViewImpl(
       modifier = modifier,
       title = stringResource(R.string.account),
       backgroundColor = ClerkMaterialTheme.colors.muted,
-      hasBackButton = true,
+      hasBackButton = false,
       horizontalPadding = dp0,
       onBackPressed = onBackPressed,
+      trailingContent = userProfileDismissTrailingContent(isDismissible, onDismiss = onBackPressed),
       content = {
         Spacers.Vertical.Spacer32()
         AvatarHeaderView(

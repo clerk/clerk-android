@@ -152,6 +152,17 @@ object Clerk {
   lateinit var client: Client
     private set
 
+  private val _clientFlow = MutableStateFlow<Client?>(null)
+
+  /**
+   * Reactive state for the current client.
+   *
+   * Emits `null` before initialization and after [reset]. Emits the current [Client] whenever Clerk
+   * receives updated client state, including initialization, sign-in, sign-up, sign-out, session
+   * mutations, and piggybacked API responses.
+   */
+  val clientFlow: StateFlow<Client?> = _clientFlow.asStateFlow()
+
   /** Internal property to check if the client has been initialized. */
   internal val clientInitialized: Boolean
     get() = ::client.isInitialized
@@ -226,6 +237,19 @@ object Clerk {
       if (PublishableKeyHelper().isLive(publishableKey = publishableKey))
         InstanceEnvironmentType.PRODUCTION
       else InstanceEnvironmentType.DEVELOPMENT
+
+  /**
+   * Indicates whether prebuilt UI components should display the development mode warning.
+   *
+   * The warning is shown only when the current environment asks for it and the instance is not a
+   * production instance.
+   */
+  val shouldShowDevelopmentModeWarning: Boolean
+    get() {
+      val displayConfig = environment?.displayConfig ?: return false
+      return displayConfig.showDevModeWarning &&
+        displayConfig.instanceEnvironmentType != InstanceEnvironmentType.PRODUCTION
+    }
 
   /**
    * A list of enabled first factor attributes, sorted by priority.
@@ -316,6 +340,15 @@ object Clerk {
 
   val organizationDefaultRoleKey: String?
     get() = environment?.organizationSettings?.domains?.defaultRole
+
+  private val _organizationLogoUrlFlow = MutableStateFlow<String?>(null)
+
+  /**
+   * Reactive image URL for the application logo used in authentication UI components.
+   *
+   * Emits `null` until the SDK environment is initialized or when no logo URL is configured.
+   */
+  val organizationLogoUrlFlow: StateFlow<String?> = _organizationLogoUrlFlow.asStateFlow()
 
   /**
    * The image URL for the application logo used in authentication UI components.
@@ -706,6 +739,7 @@ object Clerk {
     LocaleProvider.cleanup()
     ClerkApi.reset()
     updateClient(Client())
+    _clientFlow.value = null
     environment = null
     publishableKey = null
     baseUrl = ""
@@ -735,6 +769,17 @@ object Clerk {
   ) {
     reset()
     initialize(context = context, publishableKey = publishableKey, options = options, theme = theme)
+  }
+
+  /** Refreshes the current client and updates Clerk's reactive auth state. */
+  suspend fun refreshClient(): ClerkResult<Client, ClerkErrorResponse> {
+    return when (val result = Client.get()) {
+      is ClerkResult.Success -> {
+        updateClient(result.value)
+        result
+      }
+      is ClerkResult.Failure -> result
+    }
   }
 
   /**
@@ -834,6 +879,7 @@ object Clerk {
    */
   internal fun updateEnvironment(environment: Environment) {
     this.environment = environment
+    _organizationLogoUrlFlow.value = environment.displayConfig.logoImageUrl
     _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
   }
 
@@ -847,7 +893,10 @@ object Clerk {
    * @param client The updated client configuration.
    */
   internal fun updateClient(client: Client) {
-    this.client = client.withResolvedActiveSession(previousSession = _session.value)
+    val updatedClient = client.withResolvedActiveSession(previousSession = _session.value)
+
+    this.client = updatedClient
+    _clientFlow.value = updatedClient
     // Only update state if flows are initialized (not during static initialization)
     try {
       updateSessionAndUserState()

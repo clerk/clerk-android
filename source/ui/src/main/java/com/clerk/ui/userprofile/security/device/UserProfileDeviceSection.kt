@@ -1,7 +1,6 @@
 package com.clerk.ui.userprofile.security.device
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,7 +15,6 @@ import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
-import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -35,28 +33,22 @@ private fun UserProfileDevicesSectionImpl(
   modifier: Modifier = Modifier,
 ) {
   ClerkMaterialTheme {
-    Box(
+    Column(
       modifier =
         Modifier.fillMaxWidth()
           .background(color = ClerkMaterialTheme.colors.background)
-          .padding(dp16)
+          .padding(top = dp16)
           .then(modifier)
     ) {
+      Text(
+        modifier = Modifier.padding(horizontal = dp24),
+        text = stringResource(R.string.active_devices).uppercase(),
+        color = ClerkMaterialTheme.colors.mutedForeground,
+        style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
+      )
       Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-          modifier = Modifier.padding(horizontal = dp24).then(modifier),
-          text = stringResource(R.string.active_devices).uppercase(),
-          color = ClerkMaterialTheme.colors.mutedForeground,
-          style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
-        )
-        Spacers.Vertical.Spacer16()
-        Column(modifier = Modifier.fillMaxWidth()) {
-          devices.forEachIndexed { index, session ->
-            UserProfileDeviceRow(session = session, onError = {})
-            if (index < devices.lastIndex) {
-              Spacers.Vertical.Spacer16()
-            }
-          }
+        devices.forEach { session ->
+          UserProfileDeviceRow(session = session, onError = {})
         }
       }
     }

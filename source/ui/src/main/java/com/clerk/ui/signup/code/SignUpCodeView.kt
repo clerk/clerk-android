@@ -83,6 +83,7 @@ private fun SignUpCodeViewImpl(
     title = title,
     hasLogo = false,
     identifier = field.value.formattedAsPhoneNumberIfPossible,
+    onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
     spacingAfterIdentifier = dp28,
     snackbarHostState = snackbarHostState,
   ) {

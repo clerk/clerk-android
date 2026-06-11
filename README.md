@@ -18,7 +18,7 @@
 
 [![chat on Discord](https://img.shields.io/discord/856971667393609759.svg?logo=discord)](https://clerk.com/discord)
 [![documentation](https://img.shields.io/badge/documentation-clerk-green.svg)](https://clerk.com/docs)
-[![twitter](https://img.shields.io/twitter/follow/ClerkDev?style=social)](https://twitter.com/intent/follow?screen_name=ClerkDev)
+[![Follow on X](https://img.shields.io/twitter/follow/clerk?style=social)](https://x.com/intent/follow?screen_name=clerk)
 
 ---
 
@@ -45,7 +45,7 @@ Use this if you want to build your own custom UI:
 
 ```kotlin
 dependencies {
-    implementation("com.clerk:clerk-android-api:0.1.28")
+    implementation("com.clerk:clerk-android-api:<latest-version>")
 }
 ```
 
@@ -55,7 +55,7 @@ Use this if you want to use the prebuilt Jetpack Compose UI components:
 
 ```kotlin
 dependencies {
-    implementation("com.clerk:clerk-android-ui:0.1.3")
+    implementation("com.clerk:clerk-android-ui:<latest-version>")
 }
 ```
 
@@ -80,7 +80,7 @@ authentication and reset password. See the [README](samples/custom-flows/README.
 and includes Sign in with Google, Passkey authentication, Sign out, and Email Code Authentication. See the [README](samples/linear-clone/README.md) for more info.
 
 #### Prebuilt UI
-`samples/prebuilt-ui`: This is an example that shows how to integrate the Clerk prebuilt UI components. See the [README](samples/prebuilt-ui/README.md) for more info. 
+`samples/prebuilt-ui`: This is an example that shows how to integrate the Clerk prebuilt UI components. See the [README](samples/prebuilt-ui/README.md) for more info.
 
 ## Documentation
 
@@ -88,7 +88,7 @@ and includes Sign in with Google, Passkey authentication, Sign out, and Email Co
 - [Clerk Docs](https://clerk.com/docs)
 - [Android Integration Guide](https://clerk.com/docs/quickstarts/android)
 
-## 📝 License
+## License
 
 This project is licensed under the **MIT license**.
 

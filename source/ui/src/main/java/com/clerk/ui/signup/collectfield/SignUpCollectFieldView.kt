@@ -3,6 +3,8 @@ package com.clerk.ui.signup.collectfield
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -12,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -89,6 +93,18 @@ private fun SignUpCollectFieldViewImpl(
       verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.CenterVertically),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+      val onSubmit: () -> Unit = {
+        if (continueIsEnabled && state !is AuthenticationViewState.Loading) {
+          viewModel.updateSignUp(
+            collectField,
+            email = authState.signUpEmail,
+            password = authState.signUpPassword,
+            phone = authState.signUpPhoneNumber,
+            username = authState.signUpUsername,
+          )
+        }
+      }
+
       InputField(
         collectField = collectField,
         collectFieldHelper = collectFieldHelper,
@@ -100,19 +116,12 @@ private fun SignUpCollectFieldViewImpl(
         onPhoneChange = { authState.signUpPhoneNumber = it },
         username = authState.signUpUsername,
         onUsernameChange = { authState.signUpUsername = it },
+        onSubmit = onSubmit,
       )
 
       ClerkButton(
         text = stringResource(R.string.continue_text),
-        onClick = {
-          viewModel.updateSignUp(
-            collectField,
-            email = authState.signUpEmail,
-            password = authState.signUpPassword,
-            phone = authState.signUpPhoneNumber,
-            username = authState.signUpUsername,
-          )
-        },
+        onClick = onSubmit,
         modifier = Modifier.fillMaxWidth(),
         isEnabled = continueIsEnabled,
         isLoading = state is AuthenticationViewState.Loading,
@@ -145,6 +154,7 @@ private fun InputField(
   onPhoneChange: (String) -> Unit,
   username: String,
   onUsernameChange: (String) -> Unit,
+  onSubmit: () -> Unit,
 ) {
   Column(modifier = Modifier.fillMaxWidth()) {
     when (collectField) {
@@ -154,6 +164,9 @@ private fun InputField(
           onValueChange = onEmailChange,
           label = collectFieldHelper.label(collectField),
           inputContentType = ContentType.EmailAddress,
+          keyboardOptions =
+            KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Go),
+          keyboardActions = KeyboardActions(onGo = { onSubmit() }),
         )
       }
 
@@ -164,11 +177,23 @@ private fun InputField(
           label = collectFieldHelper.label(collectField),
           inputContentType = ContentType.Password,
           visualTransformation = PasswordVisualTransformation(),
+          keyboardOptions =
+            KeyboardOptions(
+              keyboardType = KeyboardType.Password,
+              imeAction = ImeAction.Go,
+              autoCorrectEnabled = false,
+            ),
+          keyboardActions = KeyboardActions(onGo = { onSubmit() }),
         )
       }
 
       CollectField.Phone -> {
-        ClerkPhoneNumberField(value = phone, onValueChange = onPhoneChange)
+        ClerkPhoneNumberField(
+          value = phone,
+          onValueChange = onPhoneChange,
+          imeAction = ImeAction.Go,
+          keyboardActions = KeyboardActions(onGo = { onSubmit() }),
+        )
       }
 
       CollectField.Username -> {
@@ -177,6 +202,8 @@ private fun InputField(
           onValueChange = onUsernameChange,
           label = collectFieldHelper.label(collectField),
           inputContentType = ContentType.Username,
+          keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+          keyboardActions = KeyboardActions(onGo = { onSubmit() }),
         )
       }
     }
