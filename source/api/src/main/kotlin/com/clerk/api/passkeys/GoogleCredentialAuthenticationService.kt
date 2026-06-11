@@ -25,7 +25,10 @@ import com.clerk.api.sso.GoogleCredentialManagerImpl
 import com.clerk.api.sso.GoogleSignInService
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.serialization.json.Json
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Service responsible for authenticating users with Google credentials and passkeys.
@@ -290,12 +293,14 @@ internal object GoogleCredentialAuthenticationService {
    *   Android Credential Manager.
    * @throws IllegalArgumentException If the nonce is null or contains invalid JSON.
    */
-  private fun createWebAuthnRequest(
+  @VisibleForTesting
+  internal fun createWebAuthnRequest(
     nonce: String?,
     allowedCredentialIds: List<String> = emptyList(),
   ): GetPasskeyRequest {
-    val requestJson = JSONObject(requireNotNull(nonce))
-    val challenge = requestJson.get("challenge") as String
+    val requestJson = Json.parseToJsonElement(requireNotNull(nonce)).jsonObject
+    val challenge = requestJson.getValue("challenge").jsonPrimitive.content
+    val rpId = requestJson.passkeyRpId() ?: PasskeyHelper.getDomain()
 
     val allowCredentials =
       allowedCredentialIds.map { credentialId ->
@@ -307,7 +312,7 @@ internal object GoogleCredentialAuthenticationService {
       allowCredentials = allowCredentials,
       timeout = 1800000,
       userVerification = "required",
-      rpId = PasskeyHelper.getDomain(),
+      rpId = rpId,
     )
   }
 
@@ -455,4 +460,17 @@ internal object GoogleCredentialAuthenticationService {
       }
     }
   }
+}
+
+private fun JsonObject.passkeyRpId(): String? {
+  val topLevelRpId =
+    listOf("rpId", "rp_id").firstNotNullOfOrNull { key ->
+      this[key]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+    }
+
+  return topLevelRpId
+    ?: runCatching {
+        this["rp"]?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+      }
+      .getOrNull()
 }
