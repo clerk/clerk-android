@@ -18,7 +18,10 @@ internal const val INTERNAL_HEADER_TRUE = "1"
  *
  * This is never intended to be used directly by the user.
  */
-internal class VersioningUserAgentMiddleware : Interceptor {
+internal class VersioningUserAgentMiddleware(customHeaders: Map<String, String> = emptyMap()) :
+  Interceptor {
+  private val customHeaders = customHeaders.toMap()
+
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val skipClientId = request.header(INTERNAL_HEADER_SKIP_CLIENT_ID) == INTERNAL_HEADER_TRUE
@@ -48,6 +51,8 @@ internal class VersioningUserAgentMiddleware : Interceptor {
     if (request.url.encodedPath.contains(ApiPaths.User.PROFILE_IMAGE)) {
       newRequestBuilder.removeHeader("Content-Type")
     }
+
+    customHeaders.forEach { (name, value) -> newRequestBuilder.addHeader(name, value) }
 
     return chain.proceed(newRequestBuilder.build())
   }

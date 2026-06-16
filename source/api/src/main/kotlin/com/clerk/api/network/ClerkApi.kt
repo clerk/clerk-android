@@ -81,11 +81,20 @@ internal object ClerkApi {
   internal var configuredUrlWithVersion: String? = null
     private set
 
+  internal var configuredCustomHeaders: Map<String, String> = emptyMap()
+    private set
+
   /** Initializes the API client with the given [baseUrl]. */
   @Suppress("UnusedParameter")
-  fun configure(baseUrl: String, context: Context) {
+  fun configure(
+    baseUrl: String,
+    context: Context,
+    customHeaders: Map<String, String> = emptyMap(),
+  ) {
+    val effectiveCustomHeaders = customHeaders.toMap()
     configuredBaseUrl = baseUrl
-    val retrofit = buildRetrofit(baseUrl)
+    configuredCustomHeaders = effectiveCustomHeaders
+    val retrofit = buildRetrofit(baseUrl, effectiveCustomHeaders)
     _client = retrofit.create(ClientApi::class.java)
     _environment = retrofit.create(EnvironmentApi::class.java)
     _session = retrofit.create(SessionApi::class.java)
@@ -109,10 +118,11 @@ internal object ClerkApi {
     _organization = null
     configuredBaseUrl = null
     configuredUrlWithVersion = null
+    configuredCustomHeaders = emptyMap()
   }
 
   /** Builds and configures the Retrofit instance. */
-  private fun buildRetrofit(baseUrl: String): Retrofit {
+  private fun buildRetrofit(baseUrl: String, customHeaders: Map<String, String>): Retrofit {
     val urlWithVersion = "$baseUrl/v1/"
     configuredUrlWithVersion = urlWithVersion
 
@@ -120,7 +130,7 @@ internal object ClerkApi {
       OkHttpClient.Builder()
         .apply {
           addInterceptor(ClientSyncingMiddleware(json = json))
-          addInterceptor(VersioningUserAgentMiddleware())
+          addInterceptor(VersioningUserAgentMiddleware(customHeaders = customHeaders))
           addInterceptor(DeviceTokenSavingMiddleware())
           addInterceptor(UrlAppendingMiddleware())
 
