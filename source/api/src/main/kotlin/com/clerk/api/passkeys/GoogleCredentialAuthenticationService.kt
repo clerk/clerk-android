@@ -27,6 +27,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -301,11 +302,8 @@ internal object GoogleCredentialAuthenticationService {
     val requestJson = Json.parseToJsonElement(requireNotNull(nonce)).jsonObject
     val challenge = requestJson.getValue("challenge").jsonPrimitive.content
     val rpId = requestJson.passkeyRpId() ?: PasskeyHelper.getDomain()
-
     val allowCredentials =
-      allowedCredentialIds.map { credentialId ->
-        mapOf("type" to "public-key", "id" to credentialId)
-      }
+      allowedCredentialIds.toAllowCredentials().ifEmpty { requestJson.passkeyAllowCredentials() }
 
     return GetPasskeyRequest(
       challenge = challenge,
@@ -473,4 +471,26 @@ private fun JsonObject.passkeyRpId(): String? {
         this["rp"]?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
       }
       .getOrNull()
+}
+
+private fun JsonObject.passkeyAllowCredentials(): List<Map<String, String>> {
+  return runCatching {
+      this["allowCredentials"]?.jsonArray?.mapNotNull { credential ->
+        val credentialJson = credential.jsonObject
+        val credentialId =
+          credentialJson["id"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+            ?: return@mapNotNull null
+        val credentialType =
+          credentialJson["type"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+            ?: "public-key"
+
+        mapOf("type" to credentialType, "id" to credentialId)
+      }
+    }
+    .getOrNull()
+    .orEmpty()
+}
+
+private fun List<String>.toAllowCredentials(): List<Map<String, String>> {
+  return map { credentialId -> mapOf("type" to "public-key", "id" to credentialId) }
 }
