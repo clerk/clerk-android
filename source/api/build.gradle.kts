@@ -93,7 +93,6 @@ dependencies {
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.browser)
   implementation(libs.androidx.credentials)
-  implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.process)
   implementation(libs.androidx.lifecycle.runtime)
   implementation(libs.androidx.lifecycle.viewmodel)
