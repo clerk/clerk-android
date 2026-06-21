@@ -105,6 +105,7 @@ dependencies {
   implementation(libs.androidx.compose.foundation)
   implementation(libs.androidx.compose.icons)
   implementation(libs.androidx.compose.runtime)
+  implementation(libs.androidx.lifecycle)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.navigation3.ui)
