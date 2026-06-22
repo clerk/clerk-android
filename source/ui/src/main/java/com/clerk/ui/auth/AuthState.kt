@@ -56,6 +56,9 @@ internal class AuthState(
   var unsafeMetadata by mutableStateOf(identifierConfig.unsafeMetadata)
     private set
 
+  var lockPrefilledFields by mutableStateOf(identifierConfig.lockPrefilledFields)
+    private set
+
   var identifierConfigVersion by mutableStateOf(0)
     private set
 
@@ -63,6 +66,10 @@ internal class AuthState(
     mutableStateOf(sharedPreferences.getString(AUTH_START_IDENTIFIER_STORAGE_KEY, null).orEmpty())
   private var authStartPhoneNumberState by
     mutableStateOf(sharedPreferences.getString(AUTH_START_PHONE_NUMBER_STORAGE_KEY, null).orEmpty())
+  private var initialIdentifierWasPrefilled by mutableStateOf(false)
+  private var initialPhoneNumberWasPrefilled by mutableStateOf(false)
+  private var initialFirstNameWasPrefilled by mutableStateOf(false)
+  private var initialLastNameWasPrefilled by mutableStateOf(false)
 
   // Auth start fields
   var authStartIdentifier: String
@@ -101,6 +108,18 @@ internal class AuthState(
   var signUpEmail by mutableStateOf("")
   var signUpPhoneNumber by mutableStateOf("")
   var signUpLegalAccepted by mutableStateOf(false)
+
+  val authStartIdentifierLocked: Boolean
+    get() = lockPrefilledFields && initialIdentifierWasPrefilled
+
+  val authStartPhoneNumberLocked: Boolean
+    get() = lockPrefilledFields && initialPhoneNumberWasPrefilled
+
+  val signUpFirstNameLocked: Boolean
+    get() = lockPrefilledFields && initialFirstNameWasPrefilled
+
+  val signUpLastNameLocked: Boolean
+    get() = lockPrefilledFields && initialLastNameWasPrefilled
 
   override fun navigateTo(destination: NavKey) {
     shouldResumeInProgressAuthAttempt = true
@@ -326,10 +345,13 @@ internal class AuthState(
     appliedIdentifierConfig = config
     persistIdentifiers = config.persistIdentifiers
     unsafeMetadata = config.unsafeMetadata
+    lockPrefilledFields = config.lockPrefilledFields
 
     val identifierFieldsChanged =
       previousConfig == null ||
         config.initialIdentifier != previousConfig.initialIdentifier ||
+        config.initialFirstName != previousConfig.initialFirstName ||
+        config.initialLastName != previousConfig.initialLastName ||
         config.persistIdentifiers != previousConfig.persistIdentifiers
     if (!identifierFieldsChanged) return
 
@@ -340,7 +362,14 @@ internal class AuthState(
       LastUsedIdentifierStorage.clear(sharedPreferences)
     }
 
+    initialFirstNameWasPrefilled = !config.initialFirstName.isNullOrBlank()
+    initialLastNameWasPrefilled = !config.initialLastName.isNullOrBlank()
+    config.initialFirstName?.let { signUpFirstName = it }
+    config.initialLastName?.let { signUpLastName = it }
+
     val initialIdentifier = config.initialIdentifier
+    initialIdentifierWasPrefilled = !initialIdentifier.isNullOrBlank() && !initialIdentifier.looksLikePhoneNumber()
+    initialPhoneNumberWasPrefilled = !initialIdentifier.isNullOrBlank() && initialIdentifier.looksLikePhoneNumber()
     when {
       initialIdentifier != null && initialIdentifier.looksLikePhoneNumber() -> {
         updateAuthStartPhoneNumber(initialIdentifier)
@@ -351,6 +380,8 @@ internal class AuthState(
         updateAuthStartPhoneNumber("")
       }
       !config.persistIdentifiers -> {
+        initialIdentifierWasPrefilled = false
+        initialPhoneNumberWasPrefilled = false
         updateAuthStartIdentifier("")
         updateAuthStartPhoneNumber("")
       }
@@ -395,6 +426,9 @@ internal class AuthState(
 
 internal data class AuthIdentifierConfig(
   val initialIdentifier: String? = null,
+  val initialFirstName: String? = null,
+  val initialLastName: String? = null,
+  val lockPrefilledFields: Boolean = false,
   val persistIdentifiers: Boolean = true,
   val unsafeMetadata: Map<String, Any>? = null,
 )

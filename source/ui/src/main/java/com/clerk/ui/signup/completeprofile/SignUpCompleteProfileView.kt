@@ -160,6 +160,8 @@ private fun SignUpCompleteProfileImpl(
         onLastChange = { authState.signUpLastName = it },
         onFocusChange = { helper.focusTo(it) },
         onSubmit = onSubmit,
+        firstLocked = authState.signUpFirstNameLocked,
+        lastLocked = authState.signUpLastNameLocked,
       )
 
       if (showLegalConsent) {
@@ -192,6 +194,8 @@ private fun InputRow(
   onLastChange: (String) -> Unit,
   onFocusChange: (CompleteProfileField) -> Unit = {},
   onSubmit: () -> Unit = {},
+  firstLocked: Boolean = false,
+  lastLocked: Boolean = false,
 ) {
   val bothEnabled = firstEnabled && lastEnabled
   val lastNameFocusRequester = remember { FocusRequester() }
@@ -228,6 +232,7 @@ private fun InputRow(
             onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
             keyboardOptions = KeyboardOptions(imeAction = firstNameImeAction),
             keyboardActions = firstNameKeyboardActions,
+            enabled = !firstLocked,
           )
         }
         if (lastEnabled) {
@@ -240,6 +245,7 @@ private fun InputRow(
             onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+            enabled = !lastLocked,
           )
         }
       }
@@ -259,6 +265,7 @@ private fun InputRow(
             onFocusChange = { onFocusChange(CompleteProfileField.FirstName) },
             keyboardOptions = KeyboardOptions(imeAction = firstNameImeAction),
             keyboardActions = firstNameKeyboardActions,
+            enabled = !firstLocked,
           )
         }
         if (lastEnabled) {
@@ -271,6 +278,7 @@ private fun InputRow(
             onFocusChange = { onFocusChange(CompleteProfileField.LastName) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+            enabled = !lastLocked,
           )
         }
       }

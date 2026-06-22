@@ -105,6 +105,7 @@ private const val DROPDOWN_HEIGHT_DIVISOR = 3
  * @param errorText Optional error message to display below the input field
  * @param value The complete phone number including country code (e.g., "+1 5551234567")
  * @param onValueChange Callback when the complete phone number changes
+ * @param enabled Whether the text field is enabled and accepts user input
  */
 @Composable
 @SuppressLint("ComposeParameterOrder")
@@ -115,6 +116,7 @@ fun ClerkPhoneNumberField(
   onValueChange: (String) -> Unit,
   imeAction: ImeAction = ImeAction.Default,
   keyboardActions: KeyboardActions = KeyboardActions.Default,
+  enabled: Boolean = true,
   clerkTheme: ClerkTheme? = null,
 ) {
   ClerkPhoneNumberFieldImpl(
@@ -124,6 +126,7 @@ fun ClerkPhoneNumberField(
     onValueChange = onValueChange,
     imeAction = imeAction,
     keyboardActions = keyboardActions,
+    enabled = enabled,
     clerkTheme = clerkTheme,
   )
 }
@@ -191,6 +194,7 @@ private fun CountryAutoDetectionEffect(
  * @param value The complete phone number (including country prefix) - this is the source of truth
  * @param errorText Optional error message to display below the input field
  * @param onValueChange Callback when the complete phone number changes
+ * @param enabled Whether the text field is enabled and accepts user input
  */
 @Composable
 internal fun ClerkPhoneNumberFieldImpl(
@@ -200,6 +204,7 @@ internal fun ClerkPhoneNumberFieldImpl(
   errorText: String? = null,
   imeAction: ImeAction = ImeAction.Default,
   keyboardActions: KeyboardActions = KeyboardActions.Default,
+  enabled: Boolean = true,
   clerkTheme: ClerkTheme? = null,
 ) {
   val defaultCountry = PhoneInputUtils.getDefaultCountry()
@@ -228,6 +233,7 @@ internal fun ClerkPhoneNumberFieldImpl(
       Column {
         CountrySelector(
           selectedCountry = selectedCountry,
+          enabled = enabled,
           onSelect = { country ->
             // Extract the phone number part without the country prefix
             val prefix = selectedCountry.getPhonePrefix
@@ -262,6 +268,7 @@ internal fun ClerkPhoneNumberFieldImpl(
           countryCode = selectedCountry.countryShortName,
           imeAction = imeAction,
           keyboardActions = keyboardActions,
+          enabled = enabled,
         )
       }
     }
@@ -292,6 +299,7 @@ private fun PhoneNumberInput(
   errorText: String? = null,
   imeAction: ImeAction = ImeAction.Default,
   keyboardActions: KeyboardActions = KeyboardActions.Default,
+  enabled: Boolean = true,
 ) {
 
   val interactionSource = remember { MutableInteractionSource() }
@@ -338,6 +346,7 @@ private fun PhoneNumberInput(
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = imeAction),
       keyboardActions = keyboardActions,
       singleLine = true,
+      enabled = enabled,
     )
     errorText?.let { errorText ->
       Row(
@@ -377,13 +386,16 @@ private fun PhoneNumberInput(
 private fun CountrySelector(
   selectedCountry: CountryInfo,
   modifier: Modifier = Modifier,
+  enabled: Boolean = true,
   onSelect: (CountryInfo) -> Unit,
 ) {
   var isExpanded by remember { mutableStateOf(false) }
 
   Box(
     modifier =
-      Modifier.padding(top = dp8).heightIn(min = dp56).clickable { isExpanded = !isExpanded }
+      Modifier.padding(top = dp8)
+        .heightIn(min = dp56)
+        .clickable(enabled = enabled) { isExpanded = !isExpanded }
   ) {
     TextWithIcon(modifier = modifier, selectedCountry = selectedCountry, isExpanded = isExpanded)
     Text(
