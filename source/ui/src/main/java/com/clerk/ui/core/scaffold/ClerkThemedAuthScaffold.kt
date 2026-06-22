@@ -1,7 +1,9 @@
 package com.clerk.ui.core.scaffold
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -34,6 +37,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -49,6 +53,8 @@ import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.button.standard.buildButtonTokens
+import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
@@ -77,6 +83,7 @@ internal fun ClerkThemedAuthScaffold(
   hasBackButton: Boolean = true,
   trailingContent: (@Composable () -> Unit)? = null,
   identifier: String? = null,
+  identifierEditable: Boolean = true,
   onClickIdentifier: () -> Unit = {},
   spacingAfterIdentifier: Dp = dp32,
   showSignedInUserButton: Boolean = true,
@@ -101,6 +108,7 @@ internal fun ClerkThemedAuthScaffold(
       title = title,
       subtitle = subtitle,
       identifier = identifier,
+      identifierEditable = identifierEditable,
       onClickIdentifier = onClickIdentifier,
       spacingAfterIdentifier = spacingAfterIdentifier,
     )
@@ -153,22 +161,10 @@ private fun AuthScaffoldContent(
     }
     config.identifier?.let {
       Spacers.Vertical.Spacer8()
-      ClerkButton(
-        paddingValues = PaddingValues(horizontal = dp8),
-        modifier = Modifier.defaultMinSize(minWidth = 120.dp),
-        text = it,
+      AuthIdentifierView(
+        identifier = it,
+        editable = config.identifierEditable,
         onClick = config.onClickIdentifier,
-        isEnabled = true,
-        configuration =
-          ClerkButtonDefaults.configuration(
-            style = ClerkButtonConfiguration.ButtonStyle.Secondary,
-            emphasis = ClerkButtonConfiguration.Emphasis.High,
-          ),
-        icons =
-          ClerkButtonDefaults.icons(
-            trailingIcon = R.drawable.ic_edit,
-            trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
-          ),
       )
     }
     Spacer(modifier = Modifier.height(config.spacingAfterIdentifier))
@@ -182,9 +178,57 @@ private data class AuthScaffoldConfig(
   val title: String,
   val subtitle: String?,
   val identifier: String?,
+  val identifierEditable: Boolean,
   val onClickIdentifier: () -> Unit,
   val spacingAfterIdentifier: Dp,
 )
+
+@Composable
+private fun AuthIdentifierView(identifier: String, editable: Boolean, onClick: () -> Unit) {
+  val configuration =
+    ClerkButtonDefaults.configuration(
+      style = ClerkButtonConfiguration.ButtonStyle.Secondary,
+      emphasis = ClerkButtonConfiguration.Emphasis.High,
+    )
+
+  if (editable) {
+    ClerkButton(
+      paddingValues = PaddingValues(horizontal = dp8),
+      modifier = Modifier.defaultMinSize(minWidth = 120.dp),
+      text = identifier,
+      onClick = onClick,
+      isEnabled = true,
+      configuration = configuration,
+      icons =
+        ClerkButtonDefaults.icons(
+          trailingIcon = R.drawable.ic_edit,
+          trailingIconColor = ClerkMaterialTheme.colors.mutedForeground,
+        ),
+    )
+  } else {
+    val tokens = buildButtonTokens(config = configuration, isPressed = false)
+    Surface(
+      modifier = Modifier.defaultMinSize(minWidth = 120.dp).height(tokens.height),
+      shape = ClerkMaterialTheme.shape,
+      color = tokens.backgroundColor,
+      border = BorderStroke(dp1, ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f)),
+    ) {
+      Row(
+        modifier = Modifier.padding(horizontal = dp8),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+      ) {
+        Text(
+          text = identifier,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+          style = tokens.textStyle,
+          color = tokens.foreground,
+        )
+      }
+    }
+  }
+}
 
 private fun signedInTrailingContent(
   showSignedInUserButton: Boolean,

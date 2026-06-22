@@ -13,10 +13,7 @@ import com.clerk.api.session.pendingTaskKey
 import com.clerk.ui.auth.AuthView
 
 @Composable
-internal fun WorkbenchAuthGate(
-  persistIdentifiers: Boolean = true,
-  signedInContent: @Composable () -> Unit,
-) {
+internal fun WorkbenchAuthGate(signedInContent: @Composable () -> Unit) {
   val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
   val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
@@ -30,13 +27,8 @@ internal fun WorkbenchAuthGate(
 
   when {
     !isInitialized -> CircularProgressIndicator()
-    isAuthFlowActive || user == null || pendingTaskKey != null ->
-      AuthView(
-        isDismissible = true,
-        persistIdentifiers = persistIdentifiers,
-        onAuthComplete = { isAuthFlowActive = false },
-        onDismiss = {},
-      )
+    isAuthFlowActive || user == null || pendingTaskKey != null -> AuthView()
+
     else -> signedInContent()
   }
 }

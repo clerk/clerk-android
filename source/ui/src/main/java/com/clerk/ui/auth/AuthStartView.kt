@@ -206,6 +206,8 @@ internal fun AuthStartViewImpl(
             showPhoneBadge = lastUsedAuth?.showsPhoneBadge == true,
             showEmailUsernameBadge = lastUsedAuth?.showsEmailUsernameBadge == true,
             onSubmit = onSubmit,
+            identifierLocked = authState.authStartIdentifierLocked,
+            phoneNumberLocked = authState.authStartPhoneNumberLocked,
           )
 
           ClerkButton(
@@ -309,6 +311,8 @@ private fun AuthInputField(
   showPhoneBadge: Boolean,
   showEmailUsernameBadge: Boolean,
   onSubmit: () -> Unit,
+  identifierLocked: Boolean,
+  phoneNumberLocked: Boolean,
 ) {
   if (authViewHelper.phoneNumberIsEnabled && phoneNumberFieldIsActive) {
     LastUsedAuthBadgeOverlay(isVisible = showPhoneBadge) {
@@ -318,6 +322,7 @@ private fun AuthInputField(
         onValueChange = onPhoneNumberChange,
         imeAction = ImeAction.Go,
         keyboardActions = KeyboardActions(onGo = { onSubmit() }),
+        enabled = !phoneNumberLocked,
       )
     }
   } else {
@@ -333,6 +338,7 @@ private fun AuthInputField(
             imeAction = ImeAction.Go,
           ),
         keyboardActions = KeyboardActions(onGo = { onSubmit() }),
+        enabled = !identifierLocked,
       )
     }
   }

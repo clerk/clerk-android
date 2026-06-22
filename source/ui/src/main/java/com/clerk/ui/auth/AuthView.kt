@@ -63,6 +63,10 @@ import kotlinx.serialization.Serializable
  *
  * @param initialIdentifier Optional initial value for the identifier field. Phone-like values are
  *   routed to the phone number field automatically.
+ * @param initialFirstName Optional initial value for the first name field during sign-up.
+ * @param initialLastName Optional initial value for the last name field during sign-up.
+ * @param lockPrefilledFields When `true`, prefilled identifier and sign-up name fields are
+ *   read-only.
  * @param persistIdentifiers When `false`, stored auth-start identifiers are cleared and future
  *   edits are kept in memory only for the lifetime of the current view.
  * @param preferGoogleOneTap When `true`, Google social auth uses native Google One Tap if
@@ -82,6 +86,9 @@ fun AuthView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   initialIdentifier: String? = null,
+  initialFirstName: String? = null,
+  initialLastName: String? = null,
+  lockPrefilledFields: Boolean = false,
   persistIdentifiers: Boolean = true,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
@@ -95,9 +102,19 @@ fun AuthView(
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
     val identifierConfig =
-      remember(initialIdentifier, persistIdentifiers, unsafeMetadata) {
+      remember(
+        initialIdentifier,
+        initialFirstName,
+        initialLastName,
+        lockPrefilledFields,
+        persistIdentifiers,
+        unsafeMetadata,
+      ) {
         AuthIdentifierConfig(
           initialIdentifier = initialIdentifier,
+          initialFirstName = initialFirstName,
+          initialLastName = initialLastName,
+          lockPrefilledFields = lockPrefilledFields,
           persistIdentifiers = persistIdentifiers,
           unsafeMetadata = unsafeMetadata,
         )
