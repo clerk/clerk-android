@@ -1,6 +1,5 @@
 package com.clerk.ui.core.input
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -101,19 +100,21 @@ private const val DROPDOWN_HEIGHT_DIVISOR = 3
  * }
  * ```
  *
- * @param modifier [Modifier] to be applied to the component
- * @param errorText Optional error message to display below the input field
  * @param value The complete phone number including country code (e.g., "+1 5551234567")
  * @param onValueChange Callback when the complete phone number changes
- * @param enabled Whether the text field is enabled and accepts user input
+ * @param modifier [Modifier] to be applied to the component
+ * @param errorText Optional error message to display below the input field
+ * @param imeAction IME action to show on the keyboard
+ * @param keyboardActions Keyboard action callbacks for IME events
+ * @param enabled Whether the phone input and country selector accept user input
+ * @param clerkTheme Optional Clerk theme override for this component
  */
 @Composable
-@SuppressLint("ComposeParameterOrder")
 fun ClerkPhoneNumberField(
   value: String,
+  onValueChange: (String) -> Unit,
   modifier: Modifier = Modifier,
   errorText: String? = null,
-  onValueChange: (String) -> Unit,
   imeAction: ImeAction = ImeAction.Default,
   keyboardActions: KeyboardActions = KeyboardActions.Default,
   enabled: Boolean = true,
@@ -190,11 +191,14 @@ private fun CountryAutoDetectionEffect(
  * This composable handles the state management for country selection and phone number input,
  * including automatic country detection and formatting.
  *
- * @param modifier [Modifier] to be applied to the component
- * @param value The complete phone number (including country prefix) - this is the source of truth
- * @param errorText Optional error message to display below the input field
  * @param onValueChange Callback when the complete phone number changes
- * @param enabled Whether the text field is enabled and accepts user input
+ * @param value The complete phone number (including country prefix) - this is the source of truth
+ * @param modifier [Modifier] to be applied to the component
+ * @param errorText Optional error message to display below the input field
+ * @param imeAction IME action to show on the keyboard
+ * @param keyboardActions Keyboard action callbacks for IME events
+ * @param enabled Whether the phone input and country selector accept user input
+ * @param clerkTheme Optional Clerk theme override for this component
  */
 @Composable
 internal fun ClerkPhoneNumberFieldImpl(
@@ -235,26 +239,20 @@ internal fun ClerkPhoneNumberFieldImpl(
           selectedCountry = selectedCountry,
           enabled = enabled,
           onSelect = { country ->
-            // Extract the phone number part without the country prefix
             val prefix = selectedCountry.getPhonePrefix
-            val currentNumberWithoutPrefix =
+            val numberWithoutPrefix =
               when {
                 value == prefix -> ""
-                value.startsWith("$prefix ") -> value.substring(prefix.length + 1).trim()
-                value.startsWith(prefix) && value.length > prefix.length ->
-                  value.substring(prefix.length).trim()
-
+                value.startsWith("$prefix ") -> value.drop(prefix.length + 1).trim()
+                value.startsWith(prefix) -> value.drop(prefix.length).trim()
                 else -> value.trim()
               }
-
             selectedCountry = country
-            val newPhoneNumber =
-              if (currentNumberWithoutPrefix.isNotEmpty()) {
-                "${country.getPhonePrefix} $currentNumberWithoutPrefix"
-              } else {
-                country.getPhonePrefix
-              }
-            onValueChange(newPhoneNumber)
+            onValueChange(
+              listOf(country.getPhonePrefix, numberWithoutPrefix)
+                .filter(String::isNotEmpty)
+                .joinToString(" ")
+            )
           },
         )
       }
@@ -289,6 +287,9 @@ internal fun ClerkPhoneNumberFieldImpl(
  * @param onValueChange Callback when phone number changes (receives complete phone number)
  * @param countryCode Selected country code for formatting
  * @param errorText Optional error message to display
+ * @param imeAction IME action to show on the keyboard
+ * @param keyboardActions Keyboard action callbacks for IME events
+ * @param enabled Whether the phone text field accepts user input
  */
 @Composable
 private fun PhoneNumberInput(
@@ -336,8 +337,9 @@ private fun PhoneNumberInput(
             errorText != null -> MaterialTheme.colorScheme.error
             else -> ClerkMaterialTheme.colors.mutedForeground
           }
+
         Text(
-          stringResource(R.string.enter_your_phone_number),
+          text = stringResource(R.string.enter_your_phone_number),
           style = labelStyle,
           color = labelColor,
         )
@@ -348,23 +350,28 @@ private fun PhoneNumberInput(
       singleLine = true,
       enabled = enabled,
     )
-    errorText?.let { errorText ->
-      Row(
-        modifier = Modifier.fillMaxWidth().padding(top = dp8),
-        horizontalArrangement = Arrangement.spacedBy(dp4, alignment = Alignment.Start),
-        verticalAlignment = Alignment.Top,
-      ) {
-        Icon(
-          painter = painterResource(R.drawable.ic_warning),
-          contentDescription = null,
-          tint = ClerkMaterialTheme.colors.danger,
-        )
-        Text(
-          text = errorText,
-          color = ClerkMaterialTheme.colors.danger,
-          style = ClerkMaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Normal),
-        )
-      }
+    PhoneNumberInputError(errorText = errorText)
+  }
+}
+
+@Composable
+private fun PhoneNumberInputError(errorText: String?) {
+  errorText?.let {
+    Row(
+      modifier = Modifier.fillMaxWidth().padding(top = dp8),
+      horizontalArrangement = Arrangement.spacedBy(dp4, alignment = Alignment.Start),
+      verticalAlignment = Alignment.Top,
+    ) {
+      Icon(
+        painter = painterResource(R.drawable.ic_warning),
+        contentDescription = null,
+        tint = ClerkMaterialTheme.colors.danger,
+      )
+      Text(
+        text = it,
+        color = ClerkMaterialTheme.colors.danger,
+        style = ClerkMaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Normal),
+      )
     }
   }
 }
@@ -380,6 +387,7 @@ private fun PhoneNumberInput(
  *
  * @param selectedCountry Currently selected country
  * @param modifier [Modifier] to be applied to the component
+ * @param enabled Whether the selector can be opened and changed
  * @param onSelect Callback when a country is selected
  */
 @Composable
