@@ -29,6 +29,11 @@ internal object ApiPaths {
       internal const val TOKENS = "${WITH_ID}/tokens"
       internal const val TOKEN_TEMPLATE = "${TOKENS}/{template}"
       internal const val SET_ACTIVE = "${WITH_ID}/touch"
+      internal const val VERIFY = "${WITH_ID}/verify"
+      internal const val PREPARE_FIRST_FACTOR = "${VERIFY}/prepare_first_factor"
+      internal const val ATTEMPT_FIRST_FACTOR = "${VERIFY}/attempt_first_factor"
+      internal const val PREPARE_SECOND_FACTOR = "${VERIFY}/prepare_second_factor"
+      internal const val ATTEMPT_SECOND_FACTOR = "${VERIFY}/attempt_second_factor"
     }
 
     /** Sign-in endpoints */
