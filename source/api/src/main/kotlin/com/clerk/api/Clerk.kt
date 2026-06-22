@@ -859,6 +859,19 @@ object Clerk {
     configurationManager.updateDeviceToken(deviceToken)
 
   /**
+   * Clears the stored device token and refreshes the native Clerk state.
+   *
+   * This is the supported way to mirror another Clerk SDK runtime clearing its device token after
+   * [initialize] has already run. The token is removed before forcing a fresh client/environment
+   * fetch, and that refresh intentionally omits the current in-memory client id header so a stale
+   * anonymous client cannot conflict with the cleared token state.
+   *
+   * @return A [ClerkResult] indicating whether the token clear and refresh succeeded.
+   */
+  suspend fun clearDeviceToken(): ClerkResult<Unit, ClerkErrorResponse> =
+    configurationManager.clearDeviceToken()
+
+  /**
    * Returns the current device token from encrypted storage, or null if unavailable.
    *
    * This is used by the Expo bridge to sync the native client token with the JS SDK.
@@ -906,8 +919,9 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId =
-      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
+    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
+      sessions.any { it.id == activeSessionId }
+    }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1012,8 +1026,9 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
-  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
+  it.strategy == strategy && it.safeIdentifier == identifier
+}
 
 val SignIn.resetPasswordFactor: Factor?
   get() =

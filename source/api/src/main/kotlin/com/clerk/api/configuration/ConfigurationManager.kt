@@ -20,6 +20,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.fold
 import com.clerk.api.session.GetTokenOptions
+import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.session.fetchToken
 import com.clerk.api.sso.SSOService
 import com.clerk.api.storage.StorageHelper
@@ -320,6 +321,26 @@ internal class ConfigurationManager {
     )
   }
 
+  suspend fun clearDeviceToken(): ClerkResult<Unit, ClerkErrorResponse> {
+    val validationError = validateDeviceTokenClear()
+    if (validationError != null) return validationError
+
+    ensureStorageInitialized()
+    StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
+    Clerk.updateClient(Client())
+    Clerk.clearSessionAndUserState()
+    SessionTokensCache.clear()
+
+    val result =
+      refreshClientAndEnvironment(
+        attempt = currentRefreshAttempt(),
+        mode = RefreshMode.DEVICE_TOKEN_UPDATE,
+        skipClientId = true,
+      )
+    StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
+    return result
+  }
+
   /**
    * Refreshes client and environment data by making concurrent API requests.
    *
@@ -357,6 +378,16 @@ internal class ConfigurationManager {
       !hasConfigured ->
         ClerkResult.unknownFailure(
           IllegalStateException("Clerk must be initialized before updating the device token")
+        )
+      else -> null
+    }
+  }
+
+  private fun validateDeviceTokenClear(): ClerkResult<Unit, ClerkErrorResponse>? {
+    return when {
+      !hasConfigured ->
+        ClerkResult.unknownFailure(
+          IllegalStateException("Clerk must be initialized before clearing the device token")
         )
       else -> null
     }

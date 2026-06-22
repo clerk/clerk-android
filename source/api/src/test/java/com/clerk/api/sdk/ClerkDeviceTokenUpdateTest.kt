@@ -9,8 +9,10 @@ import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import com.clerk.api.user.User
@@ -27,6 +29,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -78,6 +81,18 @@ class ClerkDeviceTokenUpdateTest {
     assertEquals("Device token must not be blank", result.throwable?.message)
   }
 
+  @Test
+  fun `clearDeviceToken fails when Clerk has not been initialized`() = runTest {
+    val result = Clerk.clearDeviceToken()
+
+    assertTrue(result is ClerkResult.Failure)
+    result as ClerkResult.Failure
+    assertEquals(
+      "Clerk must be initialized before clearing the device token",
+      result.throwable?.message,
+    )
+  }
+
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun `updateDeviceToken persists token and refreshes client state without default client lookup`() =
@@ -115,6 +130,44 @@ class ClerkDeviceTokenUpdateTest {
       assertEquals("client_real", Clerk.client.id)
       assertEquals(refreshedSession, Clerk.session)
       assertEquals(refreshedUser, Clerk.user)
+      assertEquals("After Refresh", Clerk.applicationName)
+      coVerify(exactly = 1) { Client.getSkippingClientId() }
+      coVerify(exactly = 0) { Client.get() }
+    }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun `clearDeviceToken removes token and refreshes client state without default client lookup`() =
+    runTest {
+      configureClerkForDeviceTokenUpdate()
+
+      val staleClient = Client(id = "client_anon")
+      val staleEnvironment = testEnvironment(applicationName = "Before Refresh")
+      val refreshedClient = Client(id = "client_refreshed")
+      val refreshedEnvironment = testEnvironment(applicationName = "After Refresh")
+
+      StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
+      SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
+      Clerk.updateClient(staleClient)
+      Clerk.updateEnvironment(staleEnvironment)
+
+      coEvery { Client.getSkippingClientId() } coAnswers
+        {
+          StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_refreshed")
+          ClerkResult.success(refreshedClient)
+        }
+      coEvery { Client.get() } returns
+        ClerkResult.unknownFailure(IllegalStateException("Client.get() should not be called"))
+      coEvery { Environment.get() } returns ClerkResult.success(refreshedEnvironment)
+
+      val result = Clerk.clearDeviceToken()
+
+      assertTrue(result is ClerkResult.Success)
+      assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+      assertEquals(0, SessionTokensCache.size)
+      assertEquals("client_refreshed", Clerk.client.id)
+      assertNull(Clerk.session)
+      assertNull(Clerk.user)
       assertEquals("After Refresh", Clerk.applicationName)
       coVerify(exactly = 1) { Client.getSkippingClientId() }
       coVerify(exactly = 0) { Client.get() }
