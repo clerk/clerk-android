@@ -15,7 +15,7 @@ android {
   defaultConfig {
     applicationId = "com.clerk.prebuiltui"
     minSdk = libs.versions.minSdk.get().toInt()
-    targetSdk = libs.versions.targetSdk.get().toInt()
+    targetSdk = libs.versions.compileSdk.get().toInt()
 
     val isCI = System.getenv("CI")?.toBoolean() == true
     val clerkPublishableKey = project.findProperty(prebuiltUiKey) as String?
