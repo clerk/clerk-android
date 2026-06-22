@@ -15,6 +15,15 @@ PR_TITLE="chore(expo): Bump clerk-android to ${CLERK_ANDROID_VERSION}"
 version_slug="${CLERK_ANDROID_VERSION//./-}"
 CHANGESET_FILE=".changeset/expo-bump-clerk-android-${version_slug}.md"
 
+write_github_output() {
+  local name="$1"
+  local value="$2"
+
+  if [ -n "${GITHUB_OUTPUT:-}" ]; then
+    echo "${name}=${value}" >>"$GITHUB_OUTPUT"
+  fi
+}
+
 wait_for_maven_artifacts() {
   local version="$1"
   local urls=(
@@ -77,6 +86,7 @@ write_changeset() {
 open_or_update_pr() {
   local body_file="$1"
   local existing_pr
+  local pr_url
 
   existing_pr=$(
     gh pr list \
@@ -94,15 +104,19 @@ open_or_update_pr() {
       --title "$PR_TITLE" \
       --body-file "$body_file"
     echo "Updated existing PR: ${existing_pr}"
+    write_github_output "pr_url" "$existing_pr"
     return 0
   fi
 
-  gh pr create \
+  pr_url=$(gh pr create \
     --repo "$TARGET_REPO" \
     --base main \
     --head "$BRANCH" \
     --title "$PR_TITLE" \
-    --body-file "$body_file"
+    --body-file "$body_file")
+
+  echo "$pr_url"
+  write_github_output "pr_url" "$pr_url"
 }
 
 main() {
