@@ -63,6 +63,20 @@ class ProxyUrlConfigurationTest {
   }
 
   @Test
+  fun `customHeaders are passed from options and used for api configuration`() {
+    // Given
+    val proxyUrl = "https://proxy.example.com/__clerk"
+    val customHeaders = mapOf("x-clerk-host-sdk" to "expo", "x-clerk-host-sdk-version" to "3.4.3")
+    val options = ClerkConfigurationOptions(proxyUrl = proxyUrl).withCustomHeaders(customHeaders)
+
+    // When: configure using a fresh ConfigurationManager
+    configure("pk_test_dummy", options)
+
+    // Then
+    assertEquals(customHeaders, ClerkApi.configuredCustomHeaders)
+  }
+
+  @Test
   fun `fallback to publishableKey extraction when proxyUrl is not provided`() {
     // Given
     val domain = "clerk.example.com"

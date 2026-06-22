@@ -214,7 +214,11 @@ internal class ConfigurationManager {
     Clerk.applicationId = context.applicationContext.packageName
 
     ensureStorageInitialized()
-    ClerkApi.configure(Clerk.baseUrl, context.applicationContext)
+    ClerkApi.configure(
+      baseUrl = Clerk.baseUrl,
+      context = context.applicationContext,
+      customHeaders = options?.customHeaders.orEmpty(),
+    )
     hasConfigured = true
     configureConnectivityMonitor(context.applicationContext)
     return configuredVersion

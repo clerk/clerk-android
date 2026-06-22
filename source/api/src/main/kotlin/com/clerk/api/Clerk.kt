@@ -1004,12 +1004,23 @@ object Clerk {
  * @property proxyUrl Optional proxy URL for network requests Your Clerk app's proxy URL. Required
  *   for applications that run behind a reverse proxy. Must be a full URL (for example,
  *   https://proxy.example.com/__clerk).
+ * @property telemetryEnabled Whether to enable telemetry for this SDK instance.
  */
 data class ClerkConfigurationOptions(
   val enableDebugMode: Boolean = false,
   val proxyUrl: String? = null,
   val telemetryEnabled: Boolean = true,
-)
+) {
+  private var _customHeaders: Map<String, String> = emptyMap()
+
+  /** Additional headers to append to outgoing Clerk API requests. */
+  val customHeaders: Map<String, String>
+    get() = _customHeaders
+
+  /** Returns a copy of these options with additional outgoing request headers configured. */
+  fun withCustomHeaders(customHeaders: Map<String, String>): ClerkConfigurationOptions =
+    copy().also { it._customHeaders = customHeaders.toMap() }
+}
 
 /**
  * Extension function to convert a map of social provider configurations into a list of

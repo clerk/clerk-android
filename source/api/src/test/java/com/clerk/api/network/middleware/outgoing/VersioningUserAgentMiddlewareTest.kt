@@ -73,13 +73,42 @@ class VersioningUserAgentMiddlewareTest {
     assertEquals("device_token_123", capturedRequest.header("Authorization"))
   }
 
-  private fun captureRequest(request: Request): Request {
+  @Test
+  fun `intercept sets custom headers`() {
+    val capturedRequest =
+      captureRequest(
+        request = Request.Builder().url(TEST_URL).get().build(),
+        customHeaders = mapOf("x-clerk-host-sdk" to "expo", "x-clerk-host-sdk-version" to "3.4.3"),
+      )
+
+    assertEquals("expo", capturedRequest.header("x-clerk-host-sdk"))
+    assertEquals("3.4.3", capturedRequest.header("x-clerk-host-sdk-version"))
+  }
+
+  @Test
+  fun `intercept custom headers replace existing header values`() {
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
+    val capturedRequest =
+      captureRequest(
+        request = Request.Builder().url(TEST_URL).get().build(),
+        customHeaders =
+          mapOf("authorization" to "custom_token_123", "X-Clerk-Client-Id" to "custom_client_123"),
+      )
+
+    assertEquals(listOf("custom_token_123"), capturedRequest.headers("Authorization"))
+    assertEquals(listOf("custom_client_123"), capturedRequest.headers("x-clerk-client-id"))
+  }
+
+  private fun captureRequest(
+    request: Request,
+    customHeaders: Map<String, String> = emptyMap(),
+  ): Request {
     val chain = mockk<Interceptor.Chain>()
     val requestSlot = slot<Request>()
     every { chain.request() } returns request
     every { chain.proceed(capture(requestSlot)) } answers { buildResponse(requestSlot.captured) }
 
-    VersioningUserAgentMiddleware().intercept(chain)
+    VersioningUserAgentMiddleware(customHeaders = customHeaders).intercept(chain)
 
     return requestSlot.captured
   }
