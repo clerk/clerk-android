@@ -52,7 +52,7 @@ internal class VersioningUserAgentMiddleware(customHeaders: Map<String, String> 
       newRequestBuilder.removeHeader("Content-Type")
     }
 
-    customHeaders.forEach { (name, value) -> newRequestBuilder.addHeader(name, value) }
+    customHeaders.forEach { (name, value) -> newRequestBuilder.header(name, value) }
 
     return chain.proceed(newRequestBuilder.build())
   }

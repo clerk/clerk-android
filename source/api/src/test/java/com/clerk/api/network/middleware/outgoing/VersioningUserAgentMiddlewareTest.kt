@@ -74,7 +74,7 @@ class VersioningUserAgentMiddlewareTest {
   }
 
   @Test
-  fun `intercept appends custom headers`() {
+  fun `intercept sets custom headers`() {
     val capturedRequest =
       captureRequest(
         request = Request.Builder().url(TEST_URL).get().build(),
@@ -83,6 +83,20 @@ class VersioningUserAgentMiddlewareTest {
 
     assertEquals("expo", capturedRequest.header("x-clerk-host-sdk"))
     assertEquals("3.4.3", capturedRequest.header("x-clerk-host-sdk-version"))
+  }
+
+  @Test
+  fun `intercept custom headers replace existing header values`() {
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
+    val capturedRequest =
+      captureRequest(
+        request = Request.Builder().url(TEST_URL).get().build(),
+        customHeaders =
+          mapOf("authorization" to "custom_token_123", "X-Clerk-Client-Id" to "custom_client_123"),
+      )
+
+    assertEquals(listOf("custom_token_123"), capturedRequest.headers("Authorization"))
+    assertEquals(listOf("custom_client_123"), capturedRequest.headers("x-clerk-client-id"))
   }
 
   private fun captureRequest(
