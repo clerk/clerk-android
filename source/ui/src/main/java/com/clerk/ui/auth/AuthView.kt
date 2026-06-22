@@ -65,7 +65,8 @@ import kotlinx.serialization.Serializable
  *   routed to the phone number field automatically.
  * @param initialFirstName Optional initial value for the first name field during sign-up.
  * @param initialLastName Optional initial value for the last name field during sign-up.
- * @param lockPrefilledFields When `true`, prefilled identifier and sign-up name fields are read-only.
+ * @param lockPrefilledFields When `true`, prefilled identifier and sign-up name fields are
+ *   read-only.
  * @param persistIdentifiers When `false`, stored auth-start identifiers are cleared and future
  *   edits are kept in memory only for the lifetime of the current view.
  * @param preferGoogleOneTap When `true`, Google social auth uses native Google One Tap if

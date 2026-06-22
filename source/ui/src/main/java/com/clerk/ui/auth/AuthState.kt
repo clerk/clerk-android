@@ -368,8 +368,10 @@ internal class AuthState(
     config.initialLastName?.let { signUpLastName = it }
 
     val initialIdentifier = config.initialIdentifier
-    initialIdentifierWasPrefilled = !initialIdentifier.isNullOrBlank() && !initialIdentifier.looksLikePhoneNumber()
-    initialPhoneNumberWasPrefilled = !initialIdentifier.isNullOrBlank() && initialIdentifier.looksLikePhoneNumber()
+    initialIdentifierWasPrefilled =
+      !initialIdentifier.isNullOrBlank() && !initialIdentifier.looksLikePhoneNumber()
+    initialPhoneNumberWasPrefilled =
+      !initialIdentifier.isNullOrBlank() && initialIdentifier.looksLikePhoneNumber()
     when {
       initialIdentifier != null && initialIdentifier.looksLikePhoneNumber() -> {
         updateAuthStartPhoneNumber(initialIdentifier)

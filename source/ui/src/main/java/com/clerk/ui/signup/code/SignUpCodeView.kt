@@ -77,12 +77,18 @@ private fun SignUpCodeViewImpl(
       is SignUpCodeField.Phone -> stringResource(R.string.check_your_phone)
       is SignUpCodeField.Email -> stringResource(R.string.check_your_email)
     }
+  val identifierEditable =
+    when (field) {
+      is SignUpCodeField.Phone -> !authState.authStartPhoneNumberLocked
+      is SignUpCodeField.Email -> !authState.authStartIdentifierLocked
+    }
 
   ClerkThemedAuthScaffold(
     modifier = modifier,
     title = title,
     hasLogo = false,
     identifier = field.value.formattedAsPhoneNumberIfPossible,
+    identifierEditable = identifierEditable,
     onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
     spacingAfterIdentifier = dp28,
     snackbarHostState = snackbarHostState,

@@ -111,12 +111,20 @@ private fun SignInFactorCodeViewImpl(
       viewModel.resetVerificationState()
     },
   )
+  val identifierEditable =
+    isSecondFactor ||
+      when (factor.strategy) {
+        StrategyKeys.PHONE_CODE -> !authState.authStartPhoneNumberLocked
+        StrategyKeys.EMAIL_CODE -> !authState.authStartIdentifierLocked
+        else -> true
+      }
   ClerkThemedAuthScaffold(
     modifier = modifier,
     onBackPressed = { authState.navigateBack() },
     title = SignInFactorCodeUiHelper.titleForStrategy(factor),
     subtitle = SignInFactorCodeUiHelper.subtitleForStrategy(factor),
     identifier = factor.safeIdentifier,
+    identifierEditable = identifierEditable,
     snackbarHostState = snackbarHostState,
     onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
   ) {

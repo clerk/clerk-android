@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
 import com.clerk.api.session.pendingTaskKey
+import com.clerk.ui.auth.AuthMode
 import com.clerk.ui.auth.AuthView
 
 @Composable
@@ -22,6 +23,8 @@ internal fun WorkbenchAuthGate(
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   val pendingTaskKey = session?.pendingTaskKey
   var isAuthFlowActive by rememberSaveable { mutableStateOf(false) }
+  val manualTestIdentifier =
+    rememberSaveable { "sam+clerk_test@example.com" }
 
   LaunchedEffect(isInitialized, user?.id, session?.id, pendingTaskKey) {
     if (!isInitialized) return@LaunchedEffect
@@ -33,7 +36,13 @@ internal fun WorkbenchAuthGate(
     isAuthFlowActive || user == null || pendingTaskKey != null ->
       AuthView(
         isDismissible = true,
+        initialIdentifier = manualTestIdentifier,
+        initialFirstName = "Sam",
+        initialLastName = "Wolfand",
+        lockPrefilledFields = true,
         persistIdentifiers = persistIdentifiers,
+        preferGoogleOneTap = false,
+        mode = AuthMode.SignUp,
         onAuthComplete = { isAuthFlowActive = false },
         onDismiss = {},
       )

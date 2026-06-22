@@ -393,9 +393,9 @@ private fun CountrySelector(
 
   Box(
     modifier =
-      Modifier.padding(top = dp8)
-        .heightIn(min = dp56)
-        .clickable(enabled = enabled) { isExpanded = !isExpanded }
+      Modifier.padding(top = dp8).heightIn(min = dp56).clickable(enabled = enabled) {
+        isExpanded = !isExpanded
+      }
   ) {
     TextWithIcon(modifier = modifier, selectedCountry = selectedCountry, isExpanded = isExpanded)
     Text(
