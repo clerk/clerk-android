@@ -20,6 +20,10 @@ on:
     secrets:
       OPEN_EXPO_PR_GH_TOKEN:
         required: true
+    outputs:
+      pr_url:
+        description: "URL of the opened or updated clerk/javascript Expo PR."
+        value: ${{ jobs.open-pr.outputs.pr_url }}
 
 permissions:
   contents: read
@@ -32,6 +36,8 @@ jobs:
   open-pr:
     name: Open clerk/javascript PR
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    outputs:
+      pr_url: ${{ steps.open_expo_pr.outputs.pr_url }}
 
     steps:
       - name: Checkout release source
@@ -123,6 +129,7 @@ jobs:
           fetch-depth: 0
 
       - name: Open or update Expo Android release PR
+        id: open_expo_pr
         if: steps.release.outputs.should_open == 'true'
         env:
           CLERK_ANDROID_VERSION: ${{ steps.release.outputs.version }}

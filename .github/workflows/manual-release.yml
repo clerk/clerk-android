@@ -196,23 +196,26 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: publish
     if: needs.publish.result == 'success'
+    outputs:
+      channel_id: ${{ steps.post_release_message.outputs.channel_id }}
+      thread_ts: ${{ steps.post_release_message.outputs.thread_ts }}
 
     steps:
       - name: Notify Slack
+        id: post_release_message
         env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           RELEASE_TAG: ${{ needs.publish.outputs.tag_name }}
           RELEASE_URL: ${{ needs.publish.outputs.release_url }}
         run: |
-          if [ -z "$SLACK_WEBHOOK_URL" ]; then
-            echo "::warning::SLACK_WEBHOOK_URL is not configured; skipping Slack notification"
-            exit 0
-          fi
-
           PAYLOAD=$(jq -n \
+            --arg channel "$SLACK_CHANNEL_ID" \
             --arg tag "$RELEASE_TAG" \
             --arg release_url "$RELEASE_URL" \
             '{
+              channel: $channel,
               text: "Clerk Android SDK \($tag) has been released",
               blocks: [
                 {
@@ -234,11 +237,54 @@ jobs:
               ]
             }')
 
-          curl --fail-with-body \
-            --request POST \
-            --header "Content-type: application/json" \
-            --data "$PAYLOAD" \
-            "$SLACK_WEBHOOK_URL"
+          if [ -n "$SLACK_BOT_TOKEN" ] && [ -n "$SLACK_CHANNEL_ID" ]; then
+            response=$(
+              curl --silent --show-error --fail-with-body \
+                --request POST \
+                --header "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
+                --header "Content-type: application/json" \
+                --data "$PAYLOAD" \
+                "https://slack.com/api/chat.postMessage"
+            ) || {
+              echo "::warning::Failed to post Slack release notification; skipping threaded Expo PR notification"
+              exit 0
+            }
+
+            if [ "$(jq -r '.ok' <<<"$response")" != "true" ]; then
+              echo "::warning::Slack rejected release notification: $(jq -r '.error // "unknown_error"' <<<"$response")"
+              exit 0
+            fi
+
+            thread_ts=$(jq -r '.ts // ""' <<<"$response")
+            channel_id=$(jq -r --arg fallback "$SLACK_CHANNEL_ID" '.channel // $fallback' <<<"$response")
+
+            if [ -z "$thread_ts" ]; then
+              echo "::warning::Slack release notification did not return a thread timestamp"
+              exit 0
+            fi
+
+            {
+              echo "channel_id=$channel_id"
+              echo "thread_ts=$thread_ts"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_BOT_TOKEN and SLACK_CHANNEL_ID are required for threaded Expo PR notifications; falling back to webhook release notification"
+            webhook_payload=$(jq 'del(.channel)' <<<"$PAYLOAD")
+            curl --silent --show-error --fail-with-body \
+              --request POST \
+              --header "Content-type: application/json" \
+              --data "$webhook_payload" \
+              "$SLACK_WEBHOOK_URL" || {
+                echo "::warning::Failed to post Slack release notification with webhook"
+                exit 0
+              }
+            exit 0
+          fi
+
+          echo "::warning::Slack notification secrets are not configured; skipping Slack notification"
 
   open-expo-android-release-pr:
     needs: publish
@@ -249,3 +295,62 @@ jobs:
       release_url: ${{ needs.publish.outputs.release_url }}
     secrets:
       OPEN_EXPO_PR_GH_TOKEN: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
+
+  notify-expo-android-release-pr:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    needs:
+      - publish
+      - notify-slack
+      - open-expo-android-release-pr
+    if: always() && needs.publish.result == 'success' && needs.notify-slack.result == 'success' && needs.open-expo-android-release-pr.result == 'success' && needs.notify-slack.outputs.thread_ts != '' && needs.open-expo-android-release-pr.outputs.pr_url != ''
+
+    steps:
+      - name: Notify Slack about Expo PR
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ needs.notify-slack.outputs.channel_id }}
+          SLACK_THREAD_TS: ${{ needs.notify-slack.outputs.thread_ts }}
+          EXPO_PR_URL: ${{ needs.open-expo-android-release-pr.outputs.pr_url }}
+          RELEASE_TAG: ${{ needs.publish.outputs.tag_name }}
+        run: |
+          if [ -z "$SLACK_BOT_TOKEN" ] || [ -z "$SLACK_CHANNEL_ID" ] || [ -z "$SLACK_THREAD_TS" ]; then
+            echo "::warning::Slack thread details are not configured; skipping Expo PR Slack notification"
+            exit 0
+          fi
+
+          PAYLOAD=$(jq -n \
+            --arg channel "$SLACK_CHANNEL_ID" \
+            --arg thread_ts "$SLACK_THREAD_TS" \
+            --arg pr_url "$EXPO_PR_URL" \
+            --arg tag "$RELEASE_TAG" \
+            '{
+              channel: $channel,
+              thread_ts: $thread_ts,
+              reply_broadcast: true,
+              text: "Expo Android SDK update PR for \($tag): \($pr_url)",
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: "*Expo Android SDK update PR for \($tag)*\n<\($pr_url)|View the clerk/javascript PR>"
+                  }
+                }
+              ]
+            }')
+
+          response=$(
+            curl --silent --show-error --fail-with-body \
+              --request POST \
+              --header "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
+              --header "Content-type: application/json" \
+              --data "$PAYLOAD" \
+              "https://slack.com/api/chat.postMessage"
+          ) || {
+            echo "::warning::Failed to post Expo PR Slack notification"
+            exit 0
+          }
+
+          if [ "$(jq -r '.ok' <<<"$response")" != "true" ]; then
+            echo "::warning::Slack rejected Expo PR notification: $(jq -r '.error // "unknown_error"' <<<"$response")"
+          fi
