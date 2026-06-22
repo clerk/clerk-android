@@ -9,8 +9,10 @@ import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import com.clerk.api.user.User
@@ -145,10 +147,15 @@ class ClerkDeviceTokenUpdateTest {
       val refreshedEnvironment = testEnvironment(applicationName = "After Refresh")
 
       StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
+      SessionTokensCache.setToken("sess_123", TokenResource(jwt = "jwt_123"))
       Clerk.updateClient(staleClient)
       Clerk.updateEnvironment(staleEnvironment)
 
-      coEvery { Client.getSkippingClientId() } returns ClerkResult.success(refreshedClient)
+      coEvery { Client.getSkippingClientId() } coAnswers
+        {
+          StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_refreshed")
+          ClerkResult.success(refreshedClient)
+        }
       coEvery { Client.get() } returns
         ClerkResult.unknownFailure(IllegalStateException("Client.get() should not be called"))
       coEvery { Environment.get() } returns ClerkResult.success(refreshedEnvironment)
@@ -157,6 +164,7 @@ class ClerkDeviceTokenUpdateTest {
 
       assertTrue(result is ClerkResult.Success)
       assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+      assertEquals(0, SessionTokensCache.size)
       assertEquals("client_refreshed", Clerk.client.id)
       assertNull(Clerk.session)
       assertNull(Clerk.user)
