@@ -108,38 +108,62 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
     return if (missingReason != null) {
       ClerkResult.apiFailure(NativeMagicLinkError(reasonCode = missingReason.code))
     } else {
-      val requiredEmailAddressId = checkNotNull(emailAddressId)
-      val requiredRedirectUri = checkNotNull(redirectUri)
-      val pkcePair = PkceUtil.generatePair()
-      val prepareRequest =
-        NativeMagicLinkPrepareRequest(
-          emailAddressId = requiredEmailAddressId,
-          redirectUri = requiredRedirectUri,
-          codeChallenge = pkcePair.challenge,
-        )
       when (
         val prepareResult =
-          ClerkApi.signIn.prepareSignInFirstFactor(signIn.id, prepareRequest.toFields())
+          prepareSignInEmailLink(signIn, checkNotNull(emailAddressId), checkNotNull(redirectUri))
       ) {
         is ClerkResult.Failure ->
           ClerkResult.apiFailure(
             prepareResult.toNativeMagicLinkError(NativeMagicLinkReason.PREPARE_FAILED)
           )
 
-        is ClerkResult.Success -> {
-          NativeMagicLinkLogger.prepareSuccess(
+        is ClerkResult.Success -> ClerkResult.success(prepareResult.value)
+      }
+    }
+  }
+
+  internal suspend fun prepareSignInEmailLink(
+    signIn: SignIn,
+    emailAddressId: String,
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    val redirectUri =
+      resolveNativeEmailLinkRedirectUri()
+        ?: return ClerkResult.apiFailure(nativeRedirectUriRequiredError())
+
+    return prepareSignInEmailLink(signIn, emailAddressId, redirectUri)
+  }
+
+  private suspend fun prepareSignInEmailLink(
+    signIn: SignIn,
+    emailAddressId: String,
+    redirectUri: String,
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    val pkcePair = PkceUtil.generatePair()
+    val prepareRequest =
+      NativeMagicLinkPrepareRequest(
+        emailAddressId = emailAddressId,
+        redirectUri = redirectUri,
+        codeChallenge = pkcePair.challenge,
+      )
+
+    return when (
+      val prepareResult =
+        ClerkApi.signIn.prepareSignInFirstFactor(signIn.id, prepareRequest.toFields())
+    ) {
+      is ClerkResult.Failure -> prepareResult
+      is ClerkResult.Success -> {
+        NativeMagicLinkLogger.prepareSuccess(
+          state = PendingNativeMagicLinkState.SIGN_IN,
+          flowId = signIn.id,
+        )
+        persistPendingFlow(
+          createPendingFlow(
+            codeVerifier = pkcePair.verifier,
             state = PendingNativeMagicLinkState.SIGN_IN,
             flowId = signIn.id,
           )
-          persistPendingFlow(
-            createPendingFlow(
-              codeVerifier = pkcePair.verifier,
-              state = PendingNativeMagicLinkState.SIGN_IN,
-              flowId = signIn.id,
-            )
-          )
-          ClerkResult.success(prepareResult.value)
-        }
+        )
+        prepareResult
       }
     }
   }
@@ -161,18 +185,7 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
         }
 
     if (redirectUri.isNullOrBlank()) {
-      return ClerkResult.apiFailure(
-        ClerkErrorResponse(
-          errors =
-            listOf(
-              Error(
-                message = "is invalid",
-                longMessage = "redirect_uri is required for native email-link verification",
-                code = "native_redirect_uri_required",
-              )
-            )
-        )
-      )
+      return ClerkResult.apiFailure(nativeRedirectUriRequiredError())
     }
 
     val pkcePair = PkceUtil.generatePair()
@@ -319,6 +332,19 @@ internal object NativeMagicLinkService : NativeMagicLinkManager {
       }
     }
   }
+}
+
+private fun nativeRedirectUriRequiredError(): ClerkErrorResponse {
+  return ClerkErrorResponse(
+    errors =
+      listOf(
+        Error(
+          message = "is invalid",
+          longMessage = "redirect_uri is required for native email-link verification",
+          code = "native_redirect_uri_required",
+        )
+      )
+  )
 }
 
 public fun interface NativeMagicLinkAttestationProvider {
