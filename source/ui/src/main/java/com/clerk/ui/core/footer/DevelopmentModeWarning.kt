@@ -1,5 +1,6 @@
 package com.clerk.ui.core.footer
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -18,8 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.paint
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -86,19 +89,13 @@ private fun DevelopmentModeWarningContent(
   modifier: Modifier = Modifier,
 ) {
   ClerkMaterialTheme {
-    Box(
-      modifier =
-        modifier
-          .fillMaxWidth()
-          .height(metrics.height)
-          .paint(
-            painter = painterResource(background.drawableResId),
-            contentScale = ContentScale.FillBounds,
-          )
-          .padding(bottom = metrics.labelBottomPadding),
-      contentAlignment = Alignment.BottomCenter,
-    ) {
-      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Box(modifier = modifier.fillMaxWidth().height(metrics.height)) {
+      DevelopmentModePattern(background = background, modifier = Modifier.matchParentSize())
+      Column(
+        modifier =
+          Modifier.align(Alignment.BottomCenter).padding(bottom = metrics.labelBottomPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+      ) {
         if (showBranding) {
           DevelopmentModeBranding()
           Spacer(modifier = Modifier.height(DEVELOPMENT_MODE_BRANDING_LABEL_GAP))
@@ -112,6 +109,105 @@ private fun DevelopmentModeWarningContent(
     }
   }
 }
+
+@Composable
+private fun DevelopmentModePattern(
+  background: DevelopmentModeWarningBackground,
+  modifier: Modifier = Modifier,
+) {
+  val baseColor =
+    when (background) {
+      DevelopmentModeWarningBackground.Grey -> ClerkMaterialTheme.colors.muted
+      DevelopmentModeWarningBackground.White -> ClerkMaterialTheme.colors.background
+    }
+  val warningColor = ClerkMaterialTheme.colors.warning
+
+  Canvas(modifier = modifier) {
+    drawRect(
+      brush =
+        Brush.verticalGradient(
+          colorStops =
+            arrayOf(
+              0f to baseColor.copy(alpha = 0f),
+              DEVELOPMENT_MODE_PATTERN_BACKGROUND_STOP to baseColor.copy(alpha = 0f),
+              1f to baseColor,
+            )
+        )
+    )
+
+    drawDevelopmentModeDots(warningColor = warningColor)
+
+    drawRect(
+      brush =
+        Brush.verticalGradient(
+          colorStops =
+            arrayOf(
+              0f to Color.Transparent,
+              DEVELOPMENT_MODE_PATTERN_FADE_STOP to
+                baseColor.copy(alpha = DEVELOPMENT_MODE_PATTERN_FADE_ALPHA),
+              1f to baseColor,
+            )
+        )
+    )
+  }
+}
+
+private fun DrawScope.drawDevelopmentModeDots(warningColor: Color) {
+  val dotSpacing = DEVELOPMENT_MODE_PATTERN_DOT_SPACING.toPx()
+  val dotRadius = DEVELOPMENT_MODE_PATTERN_DOT_RADIUS.toPx()
+  val patternTop = size.height * DEVELOPMENT_MODE_PATTERN_TOP_RATIO
+  val centerX = size.width / 2f
+  var y = patternTop
+  var row = 0
+  while (y < size.height) {
+    val verticalProgress = ((y - patternTop) / (size.height - patternTop)).coerceIn(0f, 1f)
+    val rowWidth =
+      size.width *
+        (DEVELOPMENT_MODE_PATTERN_MIN_WIDTH_RATIO +
+          verticalProgress * DEVELOPMENT_MODE_PATTERN_WIDTH_GROWTH_RATIO)
+    val startX = centerX - rowWidth / 2f + if (row % 2 == 0) 0f else dotSpacing / 2f
+    drawDevelopmentModeDotRow(
+      DotRowParams(
+        warningColor = warningColor,
+        dotRadius = dotRadius,
+        dotSpacing = dotSpacing,
+        centerX = centerX,
+        rowWidth = rowWidth,
+        startX = startX,
+        y = y,
+        verticalProgress = verticalProgress,
+      )
+    )
+    y += dotSpacing
+    row += 1
+  }
+}
+
+private fun DrawScope.drawDevelopmentModeDotRow(params: DotRowParams) {
+  var x = params.startX
+  while (x <= params.centerX + params.rowWidth / 2f) {
+    val horizontalProgress =
+      1f - (kotlin.math.abs(x - params.centerX) / (params.rowWidth / 2f)).coerceIn(0f, 1f)
+    val alpha = params.verticalProgress * horizontalProgress * DEVELOPMENT_MODE_PATTERN_MAX_ALPHA
+    drawCircle(
+      color = params.warningColor.copy(alpha = alpha),
+      radius = params.dotRadius,
+      center = Offset(x, params.y),
+    )
+    x += params.dotSpacing
+  }
+}
+
+private data class DotRowParams(
+  val warningColor: Color,
+  val dotRadius: Float,
+  val dotSpacing: Float,
+  val centerX: Float,
+  val rowWidth: Float,
+  val startX: Float,
+  val y: Float,
+  val verticalProgress: Float,
+)
 
 @Composable
 private fun DevelopmentModeBranding(modifier: Modifier = Modifier) {
@@ -163,17 +259,26 @@ private fun developmentModeWarningMetrics(showBranding: Boolean): DevelopmentMod
 
 private data class DevelopmentModeWarningMetrics(val height: Dp, val labelBottomPadding: Dp)
 
-private val DEVELOPMENT_MODE_BRANDED_BACKGROUND_HEIGHT = 100.dp
-private val DEVELOPMENT_MODE_LABEL_ONLY_BACKGROUND_HEIGHT = 125.dp
+private val DEVELOPMENT_MODE_BRANDED_BACKGROUND_HEIGHT = 118.dp
+private val DEVELOPMENT_MODE_LABEL_ONLY_BACKGROUND_HEIGHT = 118.dp
 private val DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT = 26.dp
 private val DEVELOPMENT_MODE_LABEL_BOTTOM_GAP = 13.dp
 private val DEVELOPMENT_MODE_BRANDING_LABEL_GAP = 9.dp
 private val DEVELOPMENT_MODE_BRANDING_LOGO_GAP = 8.dp
+private val DEVELOPMENT_MODE_PATTERN_DOT_SPACING = 6.dp
+private val DEVELOPMENT_MODE_PATTERN_DOT_RADIUS = 1.15.dp
+private const val DEVELOPMENT_MODE_PATTERN_BACKGROUND_STOP = 0.52f
+private const val DEVELOPMENT_MODE_PATTERN_TOP_RATIO = 0.18f
+private const val DEVELOPMENT_MODE_PATTERN_MIN_WIDTH_RATIO = 0.18f
+private const val DEVELOPMENT_MODE_PATTERN_WIDTH_GROWTH_RATIO = 0.92f
+private const val DEVELOPMENT_MODE_PATTERN_FADE_STOP = 0.45f
+private const val DEVELOPMENT_MODE_PATTERN_FADE_ALPHA = 0.34f
+private const val DEVELOPMENT_MODE_PATTERN_MAX_ALPHA = 0.48f
 private val DEVELOPMENT_MODE_TEXT_STYLE =
   TextStyle(
-    fontSize = 12.sp,
-    lineHeight = 13.sp,
-    fontWeight = FontWeight(590),
+    fontSize = 17.sp,
+    lineHeight = 24.sp,
+    fontWeight = FontWeight.Medium,
     letterSpacing = 0.sp,
   )
 private val DEVELOPMENT_MODE_BRANDING_TEXT_STYLE =
