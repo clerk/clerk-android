@@ -40,7 +40,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 internal fun DevelopmentModeWarningBox(
   modifier: Modifier = Modifier,
   background: DevelopmentModeWarningBackground = DevelopmentModeWarningBackground.Grey,
-  showBranding: Boolean = true,
+  showBranding: Boolean = false,
   showWarning: Boolean = true,
   content: @Composable BoxScope.() -> Unit,
 ) {
@@ -69,7 +69,7 @@ internal fun DevelopmentModeWarningBox(
 internal fun DevelopmentModeWarning(
   modifier: Modifier = Modifier,
   background: DevelopmentModeWarningBackground = DevelopmentModeWarningBackground.Grey,
-  showBranding: Boolean = true,
+  showBranding: Boolean = false,
 ) {
   if (!shouldShowDevelopmentModeWarning()) return
 
@@ -92,8 +92,7 @@ private fun DevelopmentModeWarningContent(
     Box(modifier = modifier.fillMaxWidth().height(metrics.height)) {
       DevelopmentModePattern(background = background, modifier = Modifier.matchParentSize())
       Column(
-        modifier =
-          Modifier.align(Alignment.BottomCenter).padding(bottom = metrics.labelBottomPadding),
+        modifier = Modifier.align(Alignment.TopCenter).padding(top = metrics.labelTopPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
         if (showBranding) {
@@ -123,17 +122,7 @@ private fun DevelopmentModePattern(
   val warningColor = ClerkMaterialTheme.colors.warning
 
   Canvas(modifier = modifier) {
-    drawRect(
-      brush =
-        Brush.verticalGradient(
-          colorStops =
-            arrayOf(
-              0f to baseColor.copy(alpha = 0f),
-              DEVELOPMENT_MODE_PATTERN_BACKGROUND_STOP to baseColor.copy(alpha = 0f),
-              1f to baseColor,
-            )
-        )
-    )
+    drawRect(color = baseColor)
 
     drawDevelopmentModeDots(warningColor = warningColor)
 
@@ -148,6 +137,13 @@ private fun DevelopmentModePattern(
               1f to baseColor,
             )
         )
+    )
+    val bottomStrokeWidth = DEVELOPMENT_MODE_PATTERN_BOTTOM_STROKE_WIDTH.toPx()
+    drawLine(
+      color = warningColor.copy(alpha = DEVELOPMENT_MODE_PATTERN_BOTTOM_STROKE_ALPHA),
+      start = Offset(0f, size.height - bottomStrokeWidth / 2f),
+      end = Offset(size.width, size.height - bottomStrokeWidth / 2f),
+      strokeWidth = bottomStrokeWidth,
     )
   }
 }
@@ -188,7 +184,9 @@ private fun DrawScope.drawDevelopmentModeDotRow(params: DotRowParams) {
   while (x <= params.centerX + params.rowWidth / 2f) {
     val horizontalProgress =
       1f - (kotlin.math.abs(x - params.centerX) / (params.rowWidth / 2f)).coerceIn(0f, 1f)
-    val alpha = params.verticalProgress * horizontalProgress * DEVELOPMENT_MODE_PATTERN_MAX_ALPHA
+    val verticalAlpha = 1f - params.verticalProgress * DEVELOPMENT_MODE_PATTERN_VERTICAL_FADE_FACTOR
+    val alpha =
+      verticalAlpha.coerceIn(0f, 1f) * horizontalProgress * DEVELOPMENT_MODE_PATTERN_MAX_ALPHA
     drawCircle(
       color = params.warningColor.copy(alpha = alpha),
       radius = params.dotRadius,
@@ -242,7 +240,6 @@ private fun shouldShowDevelopmentModeWarning(): Boolean {
 private fun developmentModeWarningMetrics(showBranding: Boolean): DevelopmentModeWarningMetrics {
   val density = LocalDensity.current
   val reportedBottomInset = with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
-  val bottomInset = maxOf(reportedBottomInset, DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT)
   val designHeight =
     if (showBranding) {
       DEVELOPMENT_MODE_BRANDED_BACKGROUND_HEIGHT
@@ -253,27 +250,29 @@ private fun developmentModeWarningMetrics(showBranding: Boolean): DevelopmentMod
     designHeight + maxOf(reportedBottomInset - DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT, 0.dp)
   return DevelopmentModeWarningMetrics(
     height = height,
-    labelBottomPadding = bottomInset + DEVELOPMENT_MODE_LABEL_BOTTOM_GAP,
+    labelTopPadding = DEVELOPMENT_MODE_LABEL_TOP_GAP,
   )
 }
 
-private data class DevelopmentModeWarningMetrics(val height: Dp, val labelBottomPadding: Dp)
+private data class DevelopmentModeWarningMetrics(val height: Dp, val labelTopPadding: Dp)
 
 private val DEVELOPMENT_MODE_BRANDED_BACKGROUND_HEIGHT = 118.dp
 private val DEVELOPMENT_MODE_LABEL_ONLY_BACKGROUND_HEIGHT = 118.dp
 private val DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT = 26.dp
-private val DEVELOPMENT_MODE_LABEL_BOTTOM_GAP = 13.dp
+private val DEVELOPMENT_MODE_LABEL_TOP_GAP = 17.dp
 private val DEVELOPMENT_MODE_BRANDING_LABEL_GAP = 9.dp
 private val DEVELOPMENT_MODE_BRANDING_LOGO_GAP = 8.dp
-private val DEVELOPMENT_MODE_PATTERN_DOT_SPACING = 6.dp
+private val DEVELOPMENT_MODE_PATTERN_DOT_SPACING = 5.dp
 private val DEVELOPMENT_MODE_PATTERN_DOT_RADIUS = 1.15.dp
-private const val DEVELOPMENT_MODE_PATTERN_BACKGROUND_STOP = 0.52f
-private const val DEVELOPMENT_MODE_PATTERN_TOP_RATIO = 0.18f
-private const val DEVELOPMENT_MODE_PATTERN_MIN_WIDTH_RATIO = 0.18f
-private const val DEVELOPMENT_MODE_PATTERN_WIDTH_GROWTH_RATIO = 0.92f
-private const val DEVELOPMENT_MODE_PATTERN_FADE_STOP = 0.45f
-private const val DEVELOPMENT_MODE_PATTERN_FADE_ALPHA = 0.34f
-private const val DEVELOPMENT_MODE_PATTERN_MAX_ALPHA = 0.48f
+private val DEVELOPMENT_MODE_PATTERN_BOTTOM_STROKE_WIDTH = 1.dp
+private const val DEVELOPMENT_MODE_PATTERN_TOP_RATIO = 0f
+private const val DEVELOPMENT_MODE_PATTERN_MIN_WIDTH_RATIO = 0.72f
+private const val DEVELOPMENT_MODE_PATTERN_WIDTH_GROWTH_RATIO = 0.22f
+private const val DEVELOPMENT_MODE_PATTERN_FADE_STOP = 0.62f
+private const val DEVELOPMENT_MODE_PATTERN_FADE_ALPHA = 0.58f
+private const val DEVELOPMENT_MODE_PATTERN_MAX_ALPHA = 0.24f
+private const val DEVELOPMENT_MODE_PATTERN_VERTICAL_FADE_FACTOR = 0.86f
+private const val DEVELOPMENT_MODE_PATTERN_BOTTOM_STROKE_ALPHA = 0.22f
 private val DEVELOPMENT_MODE_TEXT_STYLE =
   TextStyle(
     fontSize = 17.sp,
