@@ -266,9 +266,13 @@ internal class ClerkThemeColors internal constructor(private val colors: ClerkCo
   val muted: Color
     get() = colors.muted!!
 
-  /** Fill color for secondary buttons, including social and SSO buttons. */
-  val secondaryButton: Color
-    get() = colors.secondaryButton!!
+  /** Background color for secondary buttons, including social and SSO buttons. */
+  val secondaryButtonBackground: Color
+    get() = colors.secondaryButtonBackground!!
+
+  /** Foreground color for text and tintable icons on secondary buttons. */
+  val secondaryButtonForeground: Color
+    get() = colors.secondaryButtonForeground!!
 
   /** Shadow color used when drawing elevation overlays. */
   val shadow: Color
@@ -297,14 +301,6 @@ private fun generateComputedColors(colors: ClerkColors): ComputedColors {
         } ?: Color.Transparent,
       border = colors.border?.copy(alpha = BORDER_ALPHA_SUBTLE) ?: Color.Transparent,
       buttonBorder = colors.border?.copy(alpha = BUTTON_BORDER_ALPHA) ?: Color.Transparent,
-      secondaryButtonForeground =
-        colors.secondaryButton?.let { secondaryButton ->
-          if (secondaryButton.isDark) {
-            DefaultColors.dark.foreground ?: Color.White
-          } else {
-            DefaultColors.light.foreground ?: Color.Black
-          }
-        } ?: Color.Transparent,
       inputBorder = colors.border?.copy(alpha = INPUT_BORDER_ALPHA) ?: Color.Transparent,
       inputBorderFocused =
         colors.ring?.copy(alpha = INPUT_BORDER_FOCUSED_ALPHA) ?: Color.Transparent,

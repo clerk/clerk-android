@@ -1,6 +1,5 @@
 package com.clerk.ui.core.footer
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -87,20 +86,15 @@ private fun DevelopmentModeWarningContent(
   modifier: Modifier = Modifier,
 ) {
   ClerkMaterialTheme {
-    val backgroundModifier =
-      background.drawableResId?.let { drawableResId ->
-        Modifier.paint(
-          painter = painterResource(drawableResId),
-          contentScale = ContentScale.FillBounds,
-        )
-      } ?: Modifier.background(ClerkMaterialTheme.colors.background)
-
     Box(
       modifier =
         modifier
           .fillMaxWidth()
           .height(metrics.height)
-          .then(backgroundModifier)
+          .paint(
+            painter = painterResource(background.drawableResId),
+            contentScale = ContentScale.FillBounds,
+          )
           .padding(bottom = metrics.labelBottomPadding),
       contentAlignment = Alignment.BottomCenter,
     ) {

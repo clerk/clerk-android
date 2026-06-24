@@ -24,7 +24,9 @@ class ClerkThemeProviderTest {
           ClerkColors(
             primary = Color(0xFFFF00FF),
             background = Color(0xFF112233),
-            secondaryButton = Color(0xFF445566),
+            foreground = Color(0xFFAABBCC),
+            secondaryButtonBackground = Color(0xFF445566),
+            secondaryButtonForeground = Color(0xFFDDEEFF),
           )
       )
 
@@ -35,8 +37,10 @@ class ClerkThemeProviderTest {
     assertEquals(Color(0xFFFF00FF), darkResolved.primary)
     assertEquals(Color(0xFF112233), lightResolved.background)
     assertEquals(Color(0xFF112233), darkResolved.background)
-    assertEquals(Color(0xFF445566), lightResolved.secondaryButton)
-    assertEquals(Color(0xFF445566), darkResolved.secondaryButton)
+    assertEquals(Color(0xFF445566), lightResolved.secondaryButtonBackground)
+    assertEquals(Color(0xFF445566), darkResolved.secondaryButtonBackground)
+    assertEquals(Color(0xFFDDEEFF), lightResolved.secondaryButtonForeground)
+    assertEquals(Color(0xFFDDEEFF), darkResolved.secondaryButtonForeground)
   }
 
   @Test
@@ -71,7 +75,7 @@ class ClerkThemeProviderTest {
   }
 
   @Test
-  fun resolveColors_usesDefaultSecondaryButtonWhenOnlyBackgroundIsCustomized() {
+  fun resolveColors_usesDefaultSecondaryButtonBackgroundWhenOnlyBackgroundIsCustomized() {
     val theme = ClerkTheme(colors = ClerkColors(background = Color(0xFF6C47FF)))
 
     val lightResolved = resolveColors(theme = theme, isDarkMode = false)
@@ -79,7 +83,51 @@ class ClerkThemeProviderTest {
 
     assertEquals(Color(0xFF6C47FF), lightResolved.background)
     assertEquals(Color(0xFF6C47FF), darkResolved.background)
-    assertEquals(DefaultColors.light.secondaryButton, lightResolved.secondaryButton)
-    assertEquals(DefaultColors.dark.secondaryButton, darkResolved.secondaryButton)
+    assertEquals(
+      DefaultColors.light.secondaryButtonBackground,
+      lightResolved.secondaryButtonBackground,
+    )
+    assertEquals(
+      DefaultColors.dark.secondaryButtonBackground,
+      darkResolved.secondaryButtonBackground,
+    )
+  }
+
+  @Test
+  fun resolveColors_usesResolvedForegroundForSecondaryButtonForegroundFallback() {
+    val theme =
+      ClerkTheme(
+        colors =
+          ClerkColors(
+            foreground = Color(0xFF111111),
+            secondaryButtonBackground = Color(0xFFEEEEEE),
+          ),
+        darkColors = ClerkColors(foreground = Color(0xFFFDFDFD)),
+      )
+
+    val lightResolved = resolveColors(theme = theme, isDarkMode = false)
+    val darkResolved = resolveColors(theme = theme, isDarkMode = true)
+
+    assertEquals(Color(0xFF111111), lightResolved.secondaryButtonForeground)
+    assertEquals(Color(0xFFFDFDFD), darkResolved.secondaryButtonForeground)
+  }
+
+  @Test
+  fun resolveColors_prefersExplicitModeSecondaryButtonForeground() {
+    val theme =
+      ClerkTheme(
+        colors =
+          ClerkColors(
+            foreground = Color(0xFF111111),
+            secondaryButtonForeground = Color(0xFF222222),
+          ),
+        darkColors = ClerkColors(secondaryButtonForeground = Color(0xFF333333)),
+      )
+
+    val lightResolved = resolveColors(theme = theme, isDarkMode = false)
+    val darkResolved = resolveColors(theme = theme, isDarkMode = true)
+
+    assertEquals(Color(0xFF222222), lightResolved.secondaryButtonForeground)
+    assertEquals(Color(0xFF333333), darkResolved.secondaryButtonForeground)
   }
 }

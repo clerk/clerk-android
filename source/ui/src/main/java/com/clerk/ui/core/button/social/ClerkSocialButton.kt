@@ -209,11 +209,10 @@ private fun getButtonColors(isPressedCombined: Boolean) =
   ButtonDefaults.buttonColors(
     containerColor =
       if (isPressedCombined) ClerkMaterialTheme.colors.muted
-      else ClerkMaterialTheme.colors.secondaryButton,
-    contentColor = ClerkMaterialTheme.computedColors.secondaryButtonForeground,
-    disabledContainerColor = ClerkMaterialTheme.colors.secondaryButton,
-    disabledContentColor =
-      ClerkMaterialTheme.computedColors.secondaryButtonForeground.copy(alpha = 0.5f),
+      else ClerkMaterialTheme.colors.secondaryButtonBackground,
+    contentColor = ClerkMaterialTheme.colors.secondaryButtonForeground,
+    disabledContainerColor = ClerkMaterialTheme.colors.secondaryButtonBackground,
+    disabledContentColor = ClerkMaterialTheme.colors.secondaryButtonForeground.copy(alpha = 0.5f),
   )
 
 /** Displays the adaptive content of the social button based on available width. */
@@ -287,7 +286,7 @@ private fun SocialButtonIcon(
       Text(
         text = provider.providerName,
         style = ClerkMaterialTheme.typography.labelSmall,
-        color = ClerkMaterialTheme.colors.mutedForeground.copy(alpha = iconAlpha),
+        color = ClerkMaterialTheme.colors.secondaryButtonForeground.copy(alpha = iconAlpha),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
