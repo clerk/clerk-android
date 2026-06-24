@@ -10,9 +10,11 @@ import com.clerk.api.Constants.Strategy.RESET_PASSWORD_EMAIL_CODE
 import com.clerk.api.Constants.Strategy.RESET_PASSWORD_PHONE_CODE
 import com.clerk.api.auth.builders.SendCodeBuilder
 import com.clerk.api.auth.types.MfaType
+import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.environment.PreferredSignInStrategy
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.FactorComparators
 import com.clerk.api.network.model.factor.isResetFactor
@@ -252,6 +254,55 @@ suspend fun SignIn.sendCode(
     }
 
   return ClerkApi.signIn.prepareSignInFirstFactor(this.id, params.toMap())
+}
+
+/**
+ * Sends a verification link to the user's email address for first factor authentication.
+ *
+ * This is a convenience method that prepares the email link verification strategy. The link will be
+ * sent to the email address associated with the sign-in. After the user opens the link, handle the
+ * deep link callback with [com.clerk.api.auth.Auth.handle].
+ *
+ * @param emailAddressId Optional ID of the email address to send the link to. If not provided, the
+ *   email address ID will be automatically retrieved from the supported first factors.
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignIn.sendEmailLink(
+  emailAddressId: String? = null
+): ClerkResult<SignIn, ClerkErrorResponse> {
+  val emailId =
+    emailAddressId
+      ?: supportedFirstFactors?.find { it.strategy == EMAIL_LINK }?.emailAddressId
+      ?: error("No email address found for email_link strategy")
+  val supportedFirstFactorStrategies = supportedFirstFactors?.map { it.strategy }.orEmpty()
+  val validationError =
+    when {
+      status != SignIn.Status.NEEDS_FIRST_FACTOR ->
+        invalidEmailLinkPrepareState(
+          code = "sign_in_status_invalid",
+          longMessage = "Cannot prepare first factor while sign-in status is ${status.name}",
+        )
+      EMAIL_LINK !in supportedFirstFactorStrategies ->
+        invalidEmailLinkPrepareState(
+          code = "first_factor_strategy_not_supported",
+          longMessage = "$EMAIL_LINK is not supported for this sign-in attempt",
+        )
+      else -> null
+    }
+
+  return validationError ?: NativeMagicLinkService.prepareSignInEmailLink(this, emailId)
+}
+
+private fun invalidEmailLinkPrepareState(
+  code: String,
+  longMessage: String,
+): ClerkResult.Failure<ClerkErrorResponse> {
+  return ClerkResult.apiFailure(
+    ClerkErrorResponse(
+      errors = listOf(Error(message = "is invalid", longMessage = longMessage, code = code))
+    )
+  )
 }
 
 /**

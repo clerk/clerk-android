@@ -17,6 +17,7 @@ import com.clerk.api.network.model.magiclink.NativeMagicLinkCompleteResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
+import com.clerk.api.signin.sendEmailLink
 import com.clerk.api.signup.SignUp
 import com.clerk.api.storage.StorageHelper
 import io.mockk.coEvery
@@ -26,6 +27,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.runs
+import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -156,6 +158,33 @@ class NativeMagicLinkServiceTest {
     )
 
     verifyEndToEndRequests()
+  }
+
+  @Test
+  fun `send email link prepares existing sign-in and stores pending flow`() = runTest {
+    val prepareFields = slot<Map<String, String>>()
+    val signIn = emailLinkSignIn().copy(status = SignIn.Status.NEEDS_FIRST_FACTOR)
+    val preparedSignIn = signIn.copy(firstFactorVerification = mockk(relaxed = true))
+
+    coEvery { signInApi.prepareSignInFirstFactor(signIn.id, capture(prepareFields)) } returns
+      ClerkResult.success(preparedSignIn)
+
+    val result = signIn.sendEmailLink()
+
+    assertTrue(result is ClerkResult.Success)
+    assertEquals(preparedSignIn, (result as ClerkResult.Success).value)
+    assertEquals("email_link", prepareFields.captured["strategy"])
+    assertEquals("email_123", prepareFields.captured["email_address_id"])
+    assertEquals("clerk://com.clerk.test.callback", prepareFields.captured["redirect_uri"])
+    assertEquals("S256", prepareFields.captured["code_challenge_method"])
+    assertTrue(prepareFields.captured["code_challenge"]?.isNotBlank() == true)
+    assertTrue(!prepareFields.captured.containsKey("code_verifier"))
+
+    val pendingFlow = PersistentPendingNativeMagicLinkStore().load()
+    assertEquals("sign_in_123", pendingFlow?.flowId)
+    assertEquals(PendingNativeMagicLinkState.SIGN_IN, pendingFlow?.state)
+    assertTrue(pendingFlow?.codeVerifier?.isNotBlank() == true)
+    coVerify(exactly = 0) { signInApi.createSignIn(any()) }
   }
 
   private fun verifyEndToEndRequests() {
