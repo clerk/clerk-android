@@ -93,7 +93,8 @@ private fun DevelopmentModeWarningContent(
           .height(metrics.height)
           .paint(
             painter = painterResource(background.drawableResId),
-            contentScale = ContentScale.FillBounds,
+            alignment = Alignment.TopCenter,
+            contentScale = ContentScale.Crop,
           )
           .padding(bottom = metrics.labelBottomPadding),
       contentAlignment = Alignment.BottomCenter,

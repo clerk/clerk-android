@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -55,6 +56,7 @@ import com.clerk.ui.signup.collectfield.CollectField
 import com.clerk.ui.signup.collectfield.SignUpCollectFieldView
 import com.clerk.ui.signup.completeprofile.SignUpCompleteProfileView
 import com.clerk.ui.signup.emaillink.SignUpEmailLinkView
+import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.serialization.Serializable
 
@@ -99,7 +101,6 @@ fun AuthView(
   mode: AuthMode = AuthMode.SignInOrUp,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
-    val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
     val identifierConfig =
       remember(
@@ -120,25 +121,29 @@ fun AuthView(
         )
       }
     AuthStateProvider(backStack = backStack, mode = mode, identifierConfig = identifierConfig) {
-      ObservePendingSessionTaskRouting(backStack = backStack)
-      ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
-      TrackScreenLoaded(LocalAuthState.current.mode.name)
-      DevelopmentModeWarningBox(
-        modifier = fullScreenModifier,
-        background = DevelopmentModeWarningBackground.White,
-      ) {
-        AuthNavDisplay(
-          modifier = Modifier.fillMaxSize(),
-          backStack = backStack,
-          options =
-            AuthNavOptions(
-              preferGoogleOneTap = preferGoogleOneTap,
-              startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-              isDismissible = isDismissible,
-              onDismiss = onDismiss,
-              onAuthComplete = onAuthComplete,
-            ),
-        )
+      ClerkMaterialTheme {
+        val fullScreenModifier =
+          Modifier.fillMaxSize().background(ClerkMaterialTheme.colors.background).then(modifier)
+        ObservePendingSessionTaskRouting(backStack = backStack)
+        ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
+        TrackScreenLoaded(LocalAuthState.current.mode.name)
+        DevelopmentModeWarningBox(
+          modifier = fullScreenModifier,
+          background = DevelopmentModeWarningBackground.White,
+        ) {
+          AuthNavDisplay(
+            modifier = Modifier.fillMaxSize(),
+            backStack = backStack,
+            options =
+              AuthNavOptions(
+                preferGoogleOneTap = preferGoogleOneTap,
+                startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+                isDismissible = isDismissible,
+                onDismiss = onDismiss,
+                onAuthComplete = onAuthComplete,
+              ),
+          )
+        }
       }
     }
   }

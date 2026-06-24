@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="dev_mode_background_grey_start">#FFF9F9F9</color>
-    <color name="dev_mode_background_white_start">#FFFFFFFF</color>
+    <color name="dev_mode_background_white_start">#00FFFFFF</color>
+    <color name="dev_mode_background_white_end">#00FFF6ED</color>
+    <color name="dev_mode_background_white_stripe">#18FFEBD5</color>
     <color name="dev_mode_warning_background">#FFFFF6ED</color>
     <color name="dev_mode_warning_gradient_end">#99FFF6ED</color>
     <color name="dev_mode_warning_stripe">#FFFFEBD5</color>
