@@ -1,8 +1,11 @@
 package com.clerk.workbench
 
 import android.app.Application
+import androidx.compose.ui.graphics.Color
 import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
+import com.clerk.api.ui.ClerkColors
+import com.clerk.api.ui.ClerkTheme
 
 class WorkbenchApplication : Application() {
 

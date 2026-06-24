@@ -33,7 +33,7 @@ class UiActivity2 : ComponentActivity() {
       val backgroundColor = if (isSystemInDarkTheme()) BackgroundDark else Background
       WorkbenchTheme {
         Column(modifier = Modifier.fillMaxSize().background(color = Color(0xFFF9F9F9))) {
-          WorkbenchAuthGate(persistIdentifiers = false) {
+          WorkbenchAuthGate() {
             Column(
               modifier =
                 Modifier.background(color = backgroundColor).fillMaxSize().statusBarsPadding()
