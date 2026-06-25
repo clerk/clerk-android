@@ -125,7 +125,6 @@ private fun CreateOrganizationFormContent(
 ) {
   val defaultName = creationDefaults?.form?.name.orEmpty()
   val defaultSlug = creationDefaults?.form?.slug ?: createOrganizationSlug(defaultName)
-  val defaultLogoUrl = creationDefaults?.form?.logo
 
   LazyColumn(
     modifier = modifier.fillMaxSize(),
@@ -139,8 +138,6 @@ private fun CreateOrganizationFormContent(
       OrganizationProfileFormView(
         initialName = defaultName,
         initialSlug = defaultSlug,
-        initialLogoUrl = defaultLogoUrl,
-        preloadInitialLogo = true,
         slugEnabled = Clerk.organizationSlugIsEnabled,
         autoGenerateSlug = true,
         useAvatarLogoUpload = true,
