@@ -128,7 +128,20 @@ private fun DevelopmentModePattern(
   Canvas(modifier = modifier) {
     drawRect(color = baseColor)
     drawDevModeGrid(warningColor = warningColor)
-    drawDevModeBottomLine(warningColor = warningColor)
+    val lineHeight = DEV_MODE_GRID_LINE_HEIGHT.toPx()
+    drawRect(
+      brush =
+        Brush.horizontalGradient(
+          colorStops =
+            arrayOf(
+              DEV_MODE_GRID_LINE_START_STOP to warningColor.copy(alpha = 0f),
+              DEV_MODE_GRID_LINE_CENTER_STOP to warningColor,
+              DEV_MODE_GRID_LINE_END_STOP to warningColor.copy(alpha = 0f),
+            )
+        ),
+      topLeft = Offset(0f, size.height - lineHeight),
+      size = Size(size.width, lineHeight),
+    )
   }
 }
 
@@ -151,7 +164,7 @@ private fun DrawScope.drawDevModeGrid(warningColor: Color) {
       val randomOpacity =
         DEV_MODE_GRID_MIN_OPACITY +
           (DEV_MODE_GRID_MAX_OPACITY - DEV_MODE_GRID_MIN_OPACITY) *
-            cellRandom(column, row).pow(DEV_MODE_GRID_CONTRAST)
+            Math.pow(cellRandom(column, row), DEV_MODE_GRID_CONTRAST.toDouble())
       val alpha = randomOpacity.toFloat() * maskAlpha
       drawRect(
         color = warningColor.copy(alpha = alpha),
@@ -180,31 +193,15 @@ private fun DrawScope.devModeGridMaskAlpha(
     .coerceIn(edgeOpacity, DEV_MODE_GRID_FADE_CENTER)
 }
 
-private fun DrawScope.drawDevModeBottomLine(warningColor: Color) {
-  val lineHeight = DEV_MODE_GRID_LINE_HEIGHT.toPx()
-  drawRect(
-    brush =
-      Brush.horizontalGradient(
-        colorStops =
-          arrayOf(
-            DEV_MODE_GRID_LINE_START_STOP to warningColor.copy(alpha = 0f),
-            DEV_MODE_GRID_LINE_CENTER_STOP to warningColor,
-            DEV_MODE_GRID_LINE_END_STOP to warningColor.copy(alpha = 0f),
-          )
-      ),
-    topLeft = Offset(0f, size.height - lineHeight),
-    size = Size(size.width, lineHeight),
-  )
-}
-
 private fun cellRandom(cellX: Int, cellY: Int): Double {
-  var hash = cellX.toUInt() * 374761393u + cellY.toUInt() * 668265263u + 2246822519u
-  hash = (hash xor (hash shr 13)) * 1274126177u
-  hash = hash xor (hash shr 16)
+  var hash =
+    cellX.toUInt() * DEV_MODE_GRID_HASH_X_MULTIPLIER +
+      cellY.toUInt() * DEV_MODE_GRID_HASH_Y_MULTIPLIER +
+      DEV_MODE_GRID_HASH_SEED
+  hash = (hash xor (hash shr DEV_MODE_GRID_HASH_FIRST_SHIFT)) * DEV_MODE_GRID_HASH_MIX_MULTIPLIER
+  hash = hash xor (hash shr DEV_MODE_GRID_HASH_FINAL_SHIFT)
   return hash.toDouble() / UINT_RANGE
 }
-
-private fun Double.pow(exponent: Int): Double = Math.pow(this, exponent.toDouble())
 
 @Composable
 private fun DevelopmentModeBranding(modifier: Modifier = Modifier) {
@@ -277,6 +274,12 @@ private const val DEV_MODE_GRID_FADE_CENTER = 0.82f
 private const val DEV_MODE_GRID_LINE_START_STOP = 0.02f
 private const val DEV_MODE_GRID_LINE_CENTER_STOP = 0.5f
 private const val DEV_MODE_GRID_LINE_END_STOP = 0.98f
+private const val DEV_MODE_GRID_HASH_X_MULTIPLIER = 374761393u
+private const val DEV_MODE_GRID_HASH_Y_MULTIPLIER = 668265263u
+private const val DEV_MODE_GRID_HASH_SEED = 2246822519u
+private const val DEV_MODE_GRID_HASH_FIRST_SHIFT = 13
+private const val DEV_MODE_GRID_HASH_MIX_MULTIPLIER = 1274126177u
+private const val DEV_MODE_GRID_HASH_FINAL_SHIFT = 16
 private const val UINT_RANGE = 4294967296.0
 private val DEVELOPMENT_MODE_TEXT_STYLE =
   TextStyle(
