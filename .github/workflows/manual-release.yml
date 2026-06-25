@@ -196,13 +196,9 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: publish
     if: needs.publish.result == 'success'
-    outputs:
-      channel_id: ${{ steps.post_release_message.outputs.channel_id }}
-      thread_ts: ${{ steps.post_release_message.outputs.thread_ts }}
 
     steps:
       - name: Notify Slack
-        id: post_release_message
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
@@ -246,7 +242,7 @@ jobs:
                 --data "$PAYLOAD" \
                 "https://slack.com/api/chat.postMessage"
             ) || {
-              echo "::warning::Failed to post Slack release notification; skipping threaded Expo PR notification"
+              echo "::warning::Failed to post Slack release notification"
               exit 0
             }
 
@@ -255,23 +251,11 @@ jobs:
               exit 0
             fi
 
-            thread_ts=$(jq -r '.ts // ""' <<<"$response")
-            channel_id=$(jq -r --arg fallback "$SLACK_CHANNEL_ID" '.channel // $fallback' <<<"$response")
-
-            if [ -z "$thread_ts" ]; then
-              echo "::warning::Slack release notification did not return a thread timestamp"
-              exit 0
-            fi
-
-            {
-              echo "channel_id=$channel_id"
-              echo "thread_ts=$thread_ts"
-            } >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           if [ -n "$SLACK_WEBHOOK_URL" ]; then
-            echo "::warning::SLACK_BOT_TOKEN and SLACK_CHANNEL_ID are required for threaded Expo PR notifications; falling back to webhook release notification"
+            echo "::warning::SLACK_BOT_TOKEN and SLACK_CHANNEL_ID are not configured; falling back to webhook release notification"
             webhook_payload=$(jq 'del(.channel)' <<<"$PAYLOAD")
             curl --silent --show-error --fail-with-body \
               --request POST \
@@ -287,70 +271,328 @@ jobs:
           echo "::warning::Slack notification secrets are not configured; skipping Slack notification"
 
   open-expo-android-release-pr:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     needs: publish
     if: needs.publish.result == 'success' && (github.event_name == 'release' || (github.event.inputs.publish_api == 'true' && github.event.inputs.publish_ui == 'true'))
-    uses: ./.github/workflows/expo-android-release-pr.yml
-    with:
-      release_tag: ${{ needs.publish.outputs.tag_name }}
-      release_url: ${{ needs.publish.outputs.release_url }}
-    secrets:
-      OPEN_EXPO_PR_GH_TOKEN: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
-
-  notify-expo-android-release-pr:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    needs:
-      - publish
-      - notify-slack
-      - open-expo-android-release-pr
-    if: always() && needs.publish.result == 'success' && needs.notify-slack.result == 'success' && needs.open-expo-android-release-pr.result == 'success' && needs.notify-slack.outputs.thread_ts != '' && needs.open-expo-android-release-pr.outputs.pr_url != ''
+    outputs:
+      pr_url: ${{ steps.pull_request.outputs.pr_url }}
+    env:
+      JAVASCRIPT_REPO: clerk/javascript
+      RAW_ANDROID_VERSION: ${{ needs.publish.outputs.tag_name }}
+      RELEASE_URL: ${{ needs.publish.outputs.release_url }}
 
     steps:
-      - name: Notify Slack about Expo PR
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_CHANNEL_ID: ${{ needs.notify-slack.outputs.channel_id }}
-          SLACK_THREAD_TS: ${{ needs.notify-slack.outputs.thread_ts }}
-          EXPO_PR_URL: ${{ needs.open-expo-android-release-pr.outputs.pr_url }}
-          RELEASE_TAG: ${{ needs.publish.outputs.tag_name }}
+      - name: Checkout release source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.publish.outputs.tag_name }}
+          path: android-release
+
+      - name: Prepare version metadata
+        id: version
+        working-directory: android-release
         run: |
-          if [ -z "$SLACK_BOT_TOKEN" ] || [ -z "$SLACK_CHANNEL_ID" ] || [ -z "$SLACK_THREAD_TS" ]; then
-            echo "::warning::Slack thread details are not configured; skipping Expo PR Slack notification"
+          set -euo pipefail
+
+          raw_version="$RAW_ANDROID_VERSION"
+
+          if [[ ! "$raw_version" =~ ^v ]]; then
+            echo "::notice::Skipping Expo PR because release ${raw_version} is not a clerk-android SDK release."
+            echo "should_open=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          android_version="${raw_version#v}"
+
+          if [[ ! "$android_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$ ]]; then
+            echo "Invalid version: '$raw_version'. Expected SemVer prefixed with v."
+            exit 1
+          fi
+
+          clerk_api_version=$(awk -F= '/^CLERK_API_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
+          clerk_ui_version=$(awk -F= '/^CLERK_UI_VERSION=/{print $2}' gradle.properties | tr -d '[:space:]')
+
+          if [ -z "$clerk_api_version" ] || [ -z "$clerk_ui_version" ]; then
+            echo "::error::Failed to read CLERK_API_VERSION or CLERK_UI_VERSION from gradle.properties."
+            exit 1
+          fi
+
+          if [ "$clerk_api_version" != "$android_version" ] || [ "$clerk_ui_version" != "$android_version" ]; then
+            echo "::notice::Skipping Expo PR because release ${raw_version} does not match CLERK_API_VERSION (${clerk_api_version}) and CLERK_UI_VERSION (${clerk_ui_version})."
+            echo "should_open=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -z "$RELEASE_URL" ]; then
+            RELEASE_URL="https://github.com/clerk/clerk-android/releases/tag/$raw_version"
+          fi
+
+          safe_version="$(printf '%s' "$android_version" | tr '.' '-' | tr -cs 'A-Za-z0-9_-' '-')"
+
+          echo "should_open=true" >> "$GITHUB_OUTPUT"
+          echo "android_version=$android_version" >> "$GITHUB_OUTPUT"
+          echo "release_url=$RELEASE_URL" >> "$GITHUB_OUTPUT"
+          echo "branch_name=automation/expo-android-sdk-$safe_version" >> "$GITHUB_OUTPUT"
+          echo "changeset_file=expo-bump-clerk-android-$safe_version.md" >> "$GITHUB_OUTPUT"
+
+      - name: Verify JavaScript repo token
+        if: steps.version.outputs.should_open == 'true'
+        env:
+          OPEN_EXPO_PR_GH_TOKEN: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$OPEN_EXPO_PR_GH_TOKEN" ]; then
+            echo "OPEN_EXPO_PR_GH_TOKEN must be configured with clerk/javascript contents and pull request write access."
+            echo "Use a token that authenticates as clerk-cookie so the generated PR author is clerk-cookie."
+            exit 1
+          fi
+
+      - name: Checkout clerk/javascript
+        if: steps.version.outputs.should_open == 'true'
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.JAVASCRIPT_REPO }}
+          ref: main
+          path: javascript
+          token: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
+
+      - name: Wait for Maven Central artifacts
+        if: steps.version.outputs.should_open == 'true'
+        env:
+          ANDROID_VERSION: ${{ steps.version.outputs.android_version }}
+        run: |
+          set -euo pipefail
+
+          urls=(
+            "https://repo.maven.apache.org/maven2/com/clerk/clerk-android-api/${ANDROID_VERSION}/clerk-android-api-${ANDROID_VERSION}.pom"
+            "https://repo.maven.apache.org/maven2/com/clerk/clerk-android-ui/${ANDROID_VERSION}/clerk-android-ui-${ANDROID_VERSION}.pom"
+          )
+
+          for attempt in $(seq 1 60); do
+            missing=0
+
+            for url in "${urls[@]}"; do
+              if ! curl --fail --silent --head --location "$url" >/dev/null; then
+                missing=$((missing + 1))
+              fi
+            done
+
+            if [ "$missing" -eq 0 ]; then
+              echo "Maven Central has clerk-android-api and clerk-android-ui ${ANDROID_VERSION}."
+              exit 0
+            fi
+
+            if [ "$attempt" -eq 60 ]; then
+              echo "::error::Timed out waiting for clerk-android ${ANDROID_VERSION} on Maven Central."
+              exit 1
+            fi
+
+            echo "::notice::Waiting for ${missing} Maven Central artifact(s), attempt ${attempt}/60."
+            sleep 30
+          done
+
+      - name: Update @clerk/expo Android SDK pin
+        id: update
+        if: steps.version.outputs.should_open == 'true'
+        working-directory: javascript
+        env:
+          ANDROID_VERSION: ${{ steps.version.outputs.android_version }}
+          RELEASE_URL: ${{ steps.version.outputs.release_url }}
+          CHANGESET_FILE: ${{ steps.version.outputs.changeset_file }}
+        run: |
+          set -euo pipefail
+
+          build_file="packages/expo/android/build.gradle"
+          current_api_version="$(sed -nE 's/^[[:space:]]*clerkAndroidApiVersion[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$build_file" | head -n 1)"
+          current_ui_version="$(sed -nE 's/^[[:space:]]*clerkAndroidUiVersion[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$build_file" | head -n 1)"
+
+          if [ -z "$current_api_version" ] || [ -z "$current_ui_version" ]; then
+            echo "Could not read clerk-android versions from $build_file"
+            exit 1
+          fi
+
+          echo "current_api_version=$current_api_version" >> "$GITHUB_OUTPUT"
+          echo "current_ui_version=$current_ui_version" >> "$GITHUB_OUTPUT"
+
+          if [ "$current_api_version" = "$ANDROID_VERSION" ] && [ "$current_ui_version" = "$ANDROID_VERSION" ]; then
+            echo "@clerk/expo already pins clerk-android $ANDROID_VERSION; no PR needed."
+            echo "should_open=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          node <<'NODE'
+          const fs = require('fs');
+
+          const buildFile = 'packages/expo/android/build.gradle';
+          const androidVersion = process.env.ANDROID_VERSION;
+          const source = fs.readFileSync(buildFile, 'utf8');
+          const updated = source
+            .replace(
+              /(clerkAndroidApiVersion\s*=\s*")([^"]+)(")/,
+              `$1${androidVersion}$3`,
+            )
+            .replace(
+              /(clerkAndroidUiVersion\s*=\s*")([^"]+)(")/,
+              `$1${androidVersion}$3`,
+            );
+
+          if (updated === source) {
+            throw new Error(`Failed to update clerk-android versions in ${buildFile}`);
+          }
+
+          fs.writeFileSync(buildFile, updated);
+          NODE
+
+          if ! grep -q "clerkAndroidApiVersion = \"${ANDROID_VERSION}\"" "$build_file" ||
+            ! grep -q "clerkAndroidUiVersion = \"${ANDROID_VERSION}\"" "$build_file"; then
+            echo "Failed to update clerk-android Gradle pins."
+            exit 1
+          fi
+
+          if [ "$current_api_version" = "$current_ui_version" ]; then
+            previous_version="$current_api_version"
+          else
+            previous_version="${current_api_version} / ${current_ui_version}"
+          fi
+
+          mkdir -p .changeset
+          cat > ".changeset/$CHANGESET_FILE" <<EOF
+          ---
+          '@clerk/expo': patch
+          ---
+
+          Bump the bundled \`clerk-android\` SDK (\`clerk-android-api\` and \`clerk-android-ui\`) from \`$previous_version\` to \`$ANDROID_VERSION\`. See the Clerk Android release: $RELEASE_URL.
+          EOF
+
+          echo "should_open=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request
+        id: pull_request
+        if: steps.update.outputs.should_open == 'true'
+        working-directory: javascript
+        env:
+          GH_TOKEN: ${{ secrets.OPEN_EXPO_PR_GH_TOKEN }}
+          BRANCH_NAME: ${{ steps.version.outputs.branch_name }}
+          ANDROID_VERSION: ${{ steps.version.outputs.android_version }}
+          RELEASE_URL: ${{ steps.version.outputs.release_url }}
+          CHANGESET_FILE: ${{ steps.version.outputs.changeset_file }}
+          CURRENT_API_VERSION: ${{ steps.update.outputs.current_api_version }}
+          CURRENT_UI_VERSION: ${{ steps.update.outputs.current_ui_version }}
+          JAVASCRIPT_REPO: ${{ env.JAVASCRIPT_REPO }}
+        run: |
+          set -euo pipefail
+
+          if [ "$CURRENT_API_VERSION" = "$CURRENT_UI_VERSION" ]; then
+            previous_version="$CURRENT_API_VERSION"
+          else
+            previous_version="${CURRENT_API_VERSION} / ${CURRENT_UI_VERSION}"
+          fi
+
+          git config user.name "clerk-cookie"
+          git config user.email "cookie@clerk.dev"
+          git checkout -B "$BRANCH_NAME"
+          git add packages/expo/android/build.gradle ".changeset/$CHANGESET_FILE"
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit; no PR needed."
+            exit 0
+          fi
+
+          git commit -m "chore(expo): bump clerk-android to $ANDROID_VERSION"
+          git push --force-with-lease origin "$BRANCH_NAME"
+
+          pr_title="chore(expo): bump clerk-android to $ANDROID_VERSION"
+          pr_body="$(mktemp)"
+          cat > "$pr_body" <<EOF
+          ## Description
+
+          Bumps the bundled \`clerk-android\` SDK in \`@clerk/expo\` from \`$previous_version\` to \`$ANDROID_VERSION\`.
+
+          Release: $RELEASE_URL
+
+          ## Checklist
+
+          - JavaScript repo CI will run on the PR.
+          - Not applicable: JSDoc comments or documentation updates.
+
+          ## Type of change
+
+          Refactoring / dependency upgrade / documentation
+          EOF
+
+          existing_pr="$(gh pr list \
+            --repo "$JAVASCRIPT_REPO" \
+            --head "$BRANCH_NAME" \
+            --state open \
+            --json url \
+            --jq '.[0].url // ""')"
+
+          if [ -n "$existing_pr" ]; then
+            gh pr edit "$existing_pr" --title "$pr_title" --body-file "$pr_body"
+            echo "Updated existing PR: $existing_pr"
+            pr_url="$existing_pr"
+          else
+            pr_url="$(gh pr create \
+              --repo "$JAVASCRIPT_REPO" \
+              --base main \
+              --head "$BRANCH_NAME" \
+              --title "$pr_title" \
+              --body-file "$pr_body")"
+          fi
+
+          gh pr edit "$pr_url" --add-reviewer clerk/team-sdk
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+
+      - name: Notify Slack
+        if: steps.update.outputs.should_open == 'true' && steps.pull_request.outputs.pr_url != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          ANDROID_VERSION: ${{ steps.version.outputs.android_version }}
+          RELEASE_URL: ${{ steps.version.outputs.release_url }}
+          PR_URL: ${{ steps.pull_request.outputs.pr_url }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL is not configured; skipping Slack notification"
             exit 0
           fi
 
           PAYLOAD=$(jq -n \
-            --arg channel "$SLACK_CHANNEL_ID" \
-            --arg thread_ts "$SLACK_THREAD_TS" \
-            --arg pr_url "$EXPO_PR_URL" \
-            --arg tag "$RELEASE_TAG" \
+            --arg version "$ANDROID_VERSION" \
+            --arg release_url "$RELEASE_URL" \
+            --arg pr_url "$PR_URL" \
             '{
-              channel: $channel,
-              thread_ts: $thread_ts,
-              reply_broadcast: true,
-              text: "Expo Android SDK update PR for \($tag): \($pr_url)",
+              text: "Clerk Android SDK \($version) Expo bump PR is ready",
               blocks: [
                 {
                   type: "section",
                   text: {
                     type: "mrkdwn",
-                    text: "*Expo Android SDK update PR for \($tag)*\n<\($pr_url)|View the clerk/javascript PR>"
+                    text: "*Clerk Android SDK \($version) Expo bump PR is ready*"
                   }
+                },
+                {
+                  type: "context",
+                  elements: [
+                    {
+                      type: "mrkdwn",
+                      text: "<\($pr_url)|View the JavaScript PR> · <\($release_url)|View the Android release>"
+                    }
+                  ]
                 }
               ]
             }')
 
-          response=$(
-            curl --silent --show-error --fail-with-body \
-              --request POST \
-              --header "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
-              --header "Content-type: application/json" \
-              --data "$PAYLOAD" \
-              "https://slack.com/api/chat.postMessage"
-          ) || {
-            echo "::warning::Failed to post Expo PR Slack notification"
-            exit 0
-          }
-
-          if [ "$(jq -r '.ok' <<<"$response")" != "true" ]; then
-            echo "::warning::Slack rejected Expo PR notification: $(jq -r '.error // "unknown_error"' <<<"$response")"
-          fi
+          curl --fail-with-body \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            --retry-max-time 60 \
+            --retry-all-errors \
+            --request POST \
+            --header "Content-type: application/json" \
+            --data "$PAYLOAD" \
+            "$SLACK_WEBHOOK_URL"
