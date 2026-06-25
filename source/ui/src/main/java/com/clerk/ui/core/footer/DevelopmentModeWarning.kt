@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -40,7 +41,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 internal fun DevelopmentModeWarningBox(
   modifier: Modifier = Modifier,
   background: DevelopmentModeWarningBackground = DevelopmentModeWarningBackground.Grey,
-  showBranding: Boolean = false,
+  showBranding: Boolean = true,
   showWarning: Boolean = true,
   content: @Composable BoxScope.() -> Unit,
 ) {
@@ -69,7 +70,7 @@ internal fun DevelopmentModeWarningBox(
 internal fun DevelopmentModeWarning(
   modifier: Modifier = Modifier,
   background: DevelopmentModeWarningBackground = DevelopmentModeWarningBackground.Grey,
-  showBranding: Boolean = false,
+  showBranding: Boolean = true,
 ) {
   if (!shouldShowDevelopmentModeWarning()) return
 
@@ -89,10 +90,13 @@ private fun DevelopmentModeWarningContent(
   modifier: Modifier = Modifier,
 ) {
   ClerkMaterialTheme {
-    Box(modifier = modifier.fillMaxWidth().height(metrics.height)) {
+    Box(
+      modifier = modifier.fillMaxWidth().height(metrics.height),
+      contentAlignment = Alignment.BottomCenter,
+    ) {
       DevelopmentModePattern(background = background, modifier = Modifier.matchParentSize())
       Column(
-        modifier = Modifier.align(Alignment.TopCenter).padding(top = metrics.labelTopPadding),
+        modifier = Modifier.padding(bottom = metrics.labelBottomPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
         if (showBranding) {
@@ -123,89 +127,84 @@ private fun DevelopmentModePattern(
 
   Canvas(modifier = modifier) {
     drawRect(color = baseColor)
-
-    drawDevelopmentModeDots(warningColor = warningColor)
-
-    drawRect(
-      brush =
-        Brush.verticalGradient(
-          colorStops =
-            arrayOf(
-              0f to Color.Transparent,
-              DEVELOPMENT_MODE_PATTERN_FADE_STOP to
-                baseColor.copy(alpha = DEVELOPMENT_MODE_PATTERN_FADE_ALPHA),
-              1f to baseColor,
-            )
-        )
-    )
-    val bottomStrokeWidth = DEVELOPMENT_MODE_PATTERN_BOTTOM_STROKE_WIDTH.toPx()
-    drawLine(
-      color = warningColor.copy(alpha = DEVELOPMENT_MODE_PATTERN_BOTTOM_STROKE_ALPHA),
-      start = Offset(0f, size.height - bottomStrokeWidth / 2f),
-      end = Offset(size.width, size.height - bottomStrokeWidth / 2f),
-      strokeWidth = bottomStrokeWidth,
-    )
+    drawDevModeGrid(warningColor = warningColor)
+    drawDevModeBottomLine(warningColor = warningColor)
   }
 }
 
-private fun DrawScope.drawDevelopmentModeDots(warningColor: Color) {
-  val dotSpacing = DEVELOPMENT_MODE_PATTERN_DOT_SPACING.toPx()
-  val dotRadius = DEVELOPMENT_MODE_PATTERN_DOT_RADIUS.toPx()
-  val patternTop = size.height * DEVELOPMENT_MODE_PATTERN_TOP_RATIO
-  val centerX = size.width / 2f
-  var y = patternTop
-  var row = 0
-  while (y < size.height) {
-    val verticalProgress = ((y - patternTop) / (size.height - patternTop)).coerceIn(0f, 1f)
-    val rowWidth =
-      size.width *
-        (DEVELOPMENT_MODE_PATTERN_MIN_WIDTH_RATIO +
-          verticalProgress * DEVELOPMENT_MODE_PATTERN_WIDTH_GROWTH_RATIO)
-    val startX = centerX - rowWidth / 2f + if (row % 2 == 0) 0f else dotSpacing / 2f
-    drawDevelopmentModeDotRow(
-      DotRowParams(
-        warningColor = warningColor,
-        dotRadius = dotRadius,
-        dotSpacing = dotSpacing,
-        centerX = centerX,
-        rowWidth = rowWidth,
-        startX = startX,
-        y = y,
-        verticalProgress = verticalProgress,
+private fun DrawScope.drawDevModeGrid(warningColor: Color) {
+  val squareSize = DEV_MODE_GRID_SQUARE_SIZE.toPx()
+  val step = squareSize + DEV_MODE_GRID_GAP.toPx()
+  val lineHeight = DEV_MODE_GRID_LINE_HEIGHT.toPx()
+  val gridHeight = DEV_MODE_GRID_HEIGHT.toPx() - lineHeight
+  val gridTop = size.height - lineHeight - gridHeight
+  val columns = kotlin.math.ceil(size.width / step).toInt() + 1
+  val rows = kotlin.math.ceil(gridHeight / step).toInt() + 1
+
+  for (row in 0 until rows) {
+    val y = gridTop + row * step
+    for (column in 0 until columns) {
+      val x = column * step
+      val maskAlpha = devModeGridMaskAlpha(x = x, y = y, gridTop = gridTop, gridHeight = gridHeight)
+      if (maskAlpha <= 0f) continue
+
+      val randomOpacity =
+        DEV_MODE_GRID_MIN_OPACITY +
+          (DEV_MODE_GRID_MAX_OPACITY - DEV_MODE_GRID_MIN_OPACITY) *
+            cellRandom(column, row).pow(DEV_MODE_GRID_CONTRAST)
+      val alpha = randomOpacity.toFloat() * maskAlpha
+      drawRect(
+        color = warningColor.copy(alpha = alpha),
+        topLeft = Offset(x, y),
+        size = Size(squareSize, squareSize),
       )
-    )
-    y += dotSpacing
-    row += 1
+    }
   }
 }
 
-private fun DrawScope.drawDevelopmentModeDotRow(params: DotRowParams) {
-  var x = params.startX
-  while (x <= params.centerX + params.rowWidth / 2f) {
-    val horizontalProgress =
-      1f - (kotlin.math.abs(x - params.centerX) / (params.rowWidth / 2f)).coerceIn(0f, 1f)
-    val verticalAlpha = 1f - params.verticalProgress * DEVELOPMENT_MODE_PATTERN_VERTICAL_FADE_FACTOR
-    val alpha =
-      verticalAlpha.coerceIn(0f, 1f) * horizontalProgress * DEVELOPMENT_MODE_PATTERN_MAX_ALPHA
-    drawCircle(
-      color = params.warningColor.copy(alpha = alpha),
-      radius = params.dotRadius,
-      center = Offset(x, params.y),
-    )
-    x += params.dotSpacing
-  }
+private fun DrawScope.devModeGridMaskAlpha(
+  x: Float,
+  y: Float,
+  gridTop: Float,
+  gridHeight: Float,
+): Float {
+  val centerX = size.width / 2f
+  val centerY = gridTop + gridHeight * DEV_MODE_GRID_FADE_CENTER_Y_RATIO
+  val radiusX = size.width * DEV_MODE_GRID_FADE_WIDTH_RATIO
+  val radiusY = DEV_MODE_GRID_FADE_HEIGHT.toPx()
+  val normalizedX = (x - centerX) / radiusX
+  val normalizedY = (y - centerY) / radiusY
+  val distance = kotlin.math.sqrt(normalizedX * normalizedX + normalizedY * normalizedY)
+  val edgeOpacity = 1f - DEV_MODE_GRID_FADE_STRENGTH
+  return (DEV_MODE_GRID_FADE_CENTER - (DEV_MODE_GRID_FADE_CENTER - edgeOpacity) * distance)
+    .coerceIn(edgeOpacity, DEV_MODE_GRID_FADE_CENTER)
 }
 
-private data class DotRowParams(
-  val warningColor: Color,
-  val dotRadius: Float,
-  val dotSpacing: Float,
-  val centerX: Float,
-  val rowWidth: Float,
-  val startX: Float,
-  val y: Float,
-  val verticalProgress: Float,
-)
+private fun DrawScope.drawDevModeBottomLine(warningColor: Color) {
+  val lineHeight = DEV_MODE_GRID_LINE_HEIGHT.toPx()
+  drawRect(
+    brush =
+      Brush.horizontalGradient(
+        colorStops =
+          arrayOf(
+            DEV_MODE_GRID_LINE_START_STOP to warningColor.copy(alpha = 0f),
+            DEV_MODE_GRID_LINE_CENTER_STOP to warningColor,
+            DEV_MODE_GRID_LINE_END_STOP to warningColor.copy(alpha = 0f),
+          )
+      ),
+    topLeft = Offset(0f, size.height - lineHeight),
+    size = Size(size.width, lineHeight),
+  )
+}
+
+private fun cellRandom(cellX: Int, cellY: Int): Double {
+  var hash = cellX.toUInt() * 374761393u + cellY.toUInt() * 668265263u + 2246822519u
+  hash = (hash xor (hash shr 13)) * 1274126177u
+  hash = hash xor (hash shr 16)
+  return hash.toDouble() / UINT_RANGE
+}
+
+private fun Double.pow(exponent: Int): Double = Math.pow(this, exponent.toDouble())
 
 @Composable
 private fun DevelopmentModeBranding(modifier: Modifier = Modifier) {
@@ -240,6 +239,7 @@ private fun shouldShowDevelopmentModeWarning(): Boolean {
 private fun developmentModeWarningMetrics(showBranding: Boolean): DevelopmentModeWarningMetrics {
   val density = LocalDensity.current
   val reportedBottomInset = with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
+  val bottomInset = maxOf(reportedBottomInset, DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT)
   val designHeight =
     if (showBranding) {
       DEVELOPMENT_MODE_BRANDED_BACKGROUND_HEIGHT
@@ -250,29 +250,34 @@ private fun developmentModeWarningMetrics(showBranding: Boolean): DevelopmentMod
     designHeight + maxOf(reportedBottomInset - DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT, 0.dp)
   return DevelopmentModeWarningMetrics(
     height = height,
-    labelTopPadding = DEVELOPMENT_MODE_LABEL_TOP_GAP,
+    labelBottomPadding = bottomInset + DEVELOPMENT_MODE_LABEL_BOTTOM_GAP,
   )
 }
 
-private data class DevelopmentModeWarningMetrics(val height: Dp, val labelTopPadding: Dp)
+private data class DevelopmentModeWarningMetrics(val height: Dp, val labelBottomPadding: Dp)
 
 private val DEVELOPMENT_MODE_BRANDED_BACKGROUND_HEIGHT = 118.dp
 private val DEVELOPMENT_MODE_LABEL_ONLY_BACKGROUND_HEIGHT = 118.dp
 private val DEVELOPMENT_MODE_HOME_INDICATOR_HEIGHT = 26.dp
-private val DEVELOPMENT_MODE_LABEL_TOP_GAP = 17.dp
+private val DEVELOPMENT_MODE_LABEL_BOTTOM_GAP = 13.dp
 private val DEVELOPMENT_MODE_BRANDING_LABEL_GAP = 9.dp
 private val DEVELOPMENT_MODE_BRANDING_LOGO_GAP = 8.dp
-private val DEVELOPMENT_MODE_PATTERN_DOT_SPACING = 5.dp
-private val DEVELOPMENT_MODE_PATTERN_DOT_RADIUS = 1.15.dp
-private val DEVELOPMENT_MODE_PATTERN_BOTTOM_STROKE_WIDTH = 1.dp
-private const val DEVELOPMENT_MODE_PATTERN_TOP_RATIO = 0f
-private const val DEVELOPMENT_MODE_PATTERN_MIN_WIDTH_RATIO = 0.72f
-private const val DEVELOPMENT_MODE_PATTERN_WIDTH_GROWTH_RATIO = 0.22f
-private const val DEVELOPMENT_MODE_PATTERN_FADE_STOP = 0.62f
-private const val DEVELOPMENT_MODE_PATTERN_FADE_ALPHA = 0.58f
-private const val DEVELOPMENT_MODE_PATTERN_MAX_ALPHA = 0.24f
-private const val DEVELOPMENT_MODE_PATTERN_VERTICAL_FADE_FACTOR = 0.86f
-private const val DEVELOPMENT_MODE_PATTERN_BOTTOM_STROKE_ALPHA = 0.22f
+private val DEV_MODE_GRID_HEIGHT = 60.dp
+private val DEV_MODE_GRID_SQUARE_SIZE = 1.5.dp
+private val DEV_MODE_GRID_GAP = 2.dp
+private val DEV_MODE_GRID_FADE_HEIGHT = 20.dp
+private val DEV_MODE_GRID_LINE_HEIGHT = 1.dp
+private const val DEV_MODE_GRID_MIN_OPACITY = 0.1
+private const val DEV_MODE_GRID_MAX_OPACITY = 0.7
+private const val DEV_MODE_GRID_CONTRAST = 2
+private const val DEV_MODE_GRID_FADE_WIDTH_RATIO = 0.45f
+private const val DEV_MODE_GRID_FADE_CENTER_Y_RATIO = 0.85f
+private const val DEV_MODE_GRID_FADE_STRENGTH = 0.98f
+private const val DEV_MODE_GRID_FADE_CENTER = 0.82f
+private const val DEV_MODE_GRID_LINE_START_STOP = 0.02f
+private const val DEV_MODE_GRID_LINE_CENTER_STOP = 0.5f
+private const val DEV_MODE_GRID_LINE_END_STOP = 0.98f
+private const val UINT_RANGE = 4294967296.0
 private val DEVELOPMENT_MODE_TEXT_STYLE =
   TextStyle(
     fontSize = 17.sp,
