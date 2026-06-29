@@ -125,6 +125,26 @@ class AuthViewModelTest {
   }
 
   @Test
+  fun automaticPasskeySignInSuppressesUserCancelledError() = runTest {
+    val userCancelledException =
+      Class.forName("com.clerk.api.credentials.CredentialFlowException\$UserCancelled")
+        .getDeclaredConstructor()
+        .newInstance() as Throwable
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.unknownFailure(userCancelledException)
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAutomaticPasskeySignIn()
+
+      coVerify(timeout = 1_000, exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy>()) }
+      expectNoEvents()
+    }
+  }
+
+  @Test
   fun automaticPasskeySignInSurfacesApiErrors() = runTest {
     mockkObject(SignIn.Companion)
     coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns

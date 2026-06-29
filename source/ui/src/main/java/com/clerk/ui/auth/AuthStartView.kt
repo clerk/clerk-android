@@ -135,17 +135,30 @@ internal fun AuthStartViewImpl(
       lockedInitialIdentifierIsActive = lockedInitialIdentifierIsActive,
       passkeySignInConfigIsEnabled = passkeySignInConfigIsEnabled,
     )
-  var automaticPasskeySignInHasStarted by
-    rememberSaveable(authState.identifierConfigVersion, authState.mode) { mutableStateOf(false) }
+  var automaticPasskeySignInHasStarted by rememberSaveable { mutableStateOf(false) }
 
-  LaunchedEffect(automaticPasskeySignInIsEnabled, automaticPasskeySignInHasStarted) {
+  LaunchedEffect(
+    automaticPasskeySignInIsEnabled,
+    automaticPasskeySignInHasStarted,
+    authState.mode,
+    lockedInitialIdentifierIsActive,
+    passkeySignInConfigIsEnabled,
+  ) {
     ClerkLog.d(
       "AuthStart automatic passkey gate: enabled=$automaticPasskeySignInIsEnabled, " +
         "hasStarted=$automaticPasskeySignInHasStarted, mode=${authState.mode}, " +
         "lockedInitialIdentifierIsActive=$lockedInitialIdentifierIsActive, " +
         "passkeySignInConfigIsEnabled=$passkeySignInConfigIsEnabled"
     )
-    if (automaticPasskeySignInIsEnabled && !automaticPasskeySignInHasStarted) {
+    if (!automaticPasskeySignInIsEnabled) {
+      if (automaticPasskeySignInHasStarted) {
+        authStartViewModel.cancelAutomaticPasskeySignIn()
+        automaticPasskeySignInHasStarted = false
+      }
+      return@LaunchedEffect
+    }
+
+    if (!automaticPasskeySignInHasStarted) {
       automaticPasskeySignInHasStarted = true
       authStartViewModel.startAutomaticPasskeySignIn()
     }

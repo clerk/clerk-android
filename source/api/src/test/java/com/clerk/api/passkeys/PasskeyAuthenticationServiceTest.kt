@@ -11,6 +11,7 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
 import com.clerk.api.credentials.CredentialFlowException
+import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
@@ -32,6 +33,7 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
@@ -227,6 +229,27 @@ class PasskeyAuthenticationServiceTest {
 
     assertTrue(result is ClerkResult.Failure)
     assertTrue((result as ClerkResult.Failure).throwable is CredentialFlowException.UserCancelled)
+  }
+
+  @Test
+  fun `automatic credential flow suppresses user cancellation`() {
+    val result = ClerkResult.unknownFailure(CredentialFlowException.UserCancelled())
+
+    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
+  }
+
+  @Test
+  fun `automatic credential flow suppresses no saved credential`() {
+    val result = ClerkResult.unknownFailure(CredentialFlowException.NoSavedCredential())
+
+    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
+  }
+
+  @Test
+  fun `automatic credential flow does not suppress provider unavailable`() {
+    val result = ClerkResult.unknownFailure(CredentialFlowException.ProviderUnavailable())
+
+    assertFalse(result.shouldSuppressAutomaticCredentialFlowError)
   }
 
   @Test

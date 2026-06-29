@@ -20,6 +20,8 @@ import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
+import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,8 +70,8 @@ internal class AuthStartViewModel : ViewModel() {
     }
 
     ClerkLog.d("Starting automatic passkey sign-in")
-    automaticPasskeySignInJob =
-      viewModelScope.launch(Dispatchers.IO) {
+    val job =
+      viewModelScope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) {
         try {
           when (
             val result =
@@ -99,14 +101,19 @@ internal class AuthStartViewModel : ViewModel() {
             }
           }
         } finally {
-          automaticPasskeySignInJob = null
+          if (automaticPasskeySignInJob === coroutineContext[Job]) {
+            automaticPasskeySignInJob = null
+          }
         }
       }
+    automaticPasskeySignInJob = job
+    job.start()
   }
 
   internal fun cancelAutomaticPasskeySignIn() {
-    automaticPasskeySignInJob?.cancel()
+    val job = automaticPasskeySignInJob ?: return
     automaticPasskeySignInJob = null
+    job.cancel()
   }
 
   /**
