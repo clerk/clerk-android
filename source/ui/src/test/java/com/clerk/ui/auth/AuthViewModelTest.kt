@@ -82,6 +82,66 @@ class AuthViewModelTest {
   }
 
   @Test
+  fun automaticPasskeySignInUsesPasskeyStrategy() = runTest {
+    val signIn = SignIn(id = "sign_in_123")
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.success(signIn)
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAutomaticPasskeySignIn()
+
+      assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), awaitItem())
+      coVerify(exactly = 1) {
+        SignIn.create(
+          match<SignIn.CreateParams.Strategy> {
+            it is SignIn.CreateParams.Strategy.Passkey && it.preferImmediatelyAvailableCredentials
+          }
+        )
+      }
+    }
+  }
+
+  @Test
+  fun automaticPasskeySignInSuppressesNoSavedCredentialError() = runTest {
+    val noSavedCredentialException =
+      Class.forName("com.clerk.api.credentials.CredentialFlowException\$NoSavedCredential")
+        .getDeclaredConstructor()
+        .newInstance() as Throwable
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.unknownFailure(noSavedCredentialException)
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAutomaticPasskeySignIn()
+
+      coVerify(timeout = 1_000, exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy>()) }
+      expectNoEvents()
+    }
+  }
+
+  @Test
+  fun automaticPasskeySignInSurfacesApiErrors() = runTest {
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.apiFailure(
+        ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "Passkey failed")))
+      )
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAutomaticPasskeySignIn()
+
+      assertEquals(AuthStartViewModel.AuthState.Error("Passkey failed"), awaitItem())
+    }
+  }
+
+  @Test
   fun oauthResultWithSignInResultTypeShouldSetCorrectSuccessState() {
     // Test the OAuth result processing logic
     val mockSignIn = mockk<SignIn>(relaxed = true)

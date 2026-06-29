@@ -90,6 +90,29 @@ class PasskeyServiceTest {
     }
 
   @Test
+  fun `signInWithPasskey can prefer immediately available credentials`() = runTest {
+    coEvery {
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        allowedCredentialIds = emptyList(),
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    } returns ClerkResult.success(mockSignIn)
+
+    val result = PasskeyService.signInWithPasskey(preferImmediatelyAvailableCredentials = true)
+
+    assertTrue(result is ClerkResult.Success)
+    assertEquals(mockSignIn, (result as ClerkResult.Success).value)
+    coVerify {
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        allowedCredentialIds = emptyList(),
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    }
+  }
+
+  @Test
   fun `signInWithPasskey returns error when PasskeyAuthenticationService fails`() = runTest {
     // Given
     val error =

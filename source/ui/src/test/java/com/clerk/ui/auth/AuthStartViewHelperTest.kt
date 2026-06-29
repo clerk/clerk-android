@@ -84,4 +84,64 @@ class AuthStartViewHelperTest {
     assertFalse(contentType == ContentType.EmailAddress)
     assertFalse(contentType == ContentType.Username)
   }
+
+  @Test
+  fun automaticPasskeySignInIsEnabledForUnlockedSignInWhenPasskeyAutofillIsEnabled() {
+    val helper = AuthStartViewHelper()
+    helper.setTestValues(passkeyIsEnabled = true, passkeyAutofillIsEnabled = true)
+
+    val result =
+      shouldStartAutomaticPasskeySignIn(
+        authMode = AuthMode.SignIn,
+        lockedInitialIdentifierIsActive = false,
+        passkeySignInConfigIsEnabled = helper.passkeySignInConfigIsEnabled,
+      )
+
+    assertTrue(result)
+  }
+
+  @Test
+  fun automaticPasskeySignInIsDisabledForSignUp() {
+    val helper = AuthStartViewHelper()
+    helper.setTestValues(passkeyIsEnabled = true, passkeyAutofillIsEnabled = true)
+
+    val result =
+      shouldStartAutomaticPasskeySignIn(
+        authMode = AuthMode.SignUp,
+        lockedInitialIdentifierIsActive = false,
+        passkeySignInConfigIsEnabled = helper.passkeySignInConfigIsEnabled,
+      )
+
+    assertFalse(result)
+  }
+
+  @Test
+  fun automaticPasskeySignInIsDisabledWhenInitialIdentifierIsLocked() {
+    val helper = AuthStartViewHelper()
+    helper.setTestValues(passkeyIsEnabled = true, passkeyAutofillIsEnabled = true)
+
+    val result =
+      shouldStartAutomaticPasskeySignIn(
+        authMode = AuthMode.SignInOrUp,
+        lockedInitialIdentifierIsActive = true,
+        passkeySignInConfigIsEnabled = helper.passkeySignInConfigIsEnabled,
+      )
+
+    assertFalse(result)
+  }
+
+  @Test
+  fun automaticPasskeySignInIsDisabledWhenPasskeyAutofillIsDisabled() {
+    val helper = AuthStartViewHelper()
+    helper.setTestValues(passkeyIsEnabled = true, passkeyAutofillIsEnabled = false)
+
+    val result =
+      shouldStartAutomaticPasskeySignIn(
+        authMode = AuthMode.SignIn,
+        lockedInitialIdentifierIsActive = false,
+        passkeySignInConfigIsEnabled = helper.passkeySignInConfigIsEnabled,
+      )
+
+    assertFalse(result)
+  }
 }

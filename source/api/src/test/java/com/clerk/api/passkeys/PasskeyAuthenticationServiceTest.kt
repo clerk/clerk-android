@@ -3,6 +3,7 @@ package com.clerk.api.passkeys
 import android.app.Activity
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
@@ -26,6 +27,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -132,6 +134,29 @@ class PasskeyAuthenticationServiceTest {
     // Then
     assertTrue(result is ClerkResult.Success)
     assertEquals(mockSignIn, (result as ClerkResult.Success).value)
+  }
+
+  @Test
+  fun `signInWithPasskey can prefer immediately available credentials`() = runTest {
+    val nonce = """{"challenge":"test-challenge"}"""
+    val requestSlot = slot<GetCredentialRequest>()
+
+    every { mockSignIn.firstFactorVerification } returns mockVerification
+    every { mockVerification.nonce } returns nonce
+    every { mockGetCredentialResponse.credential } returns mockPasswordCredential
+
+    coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockCredentialManager.getCredential(any(), capture(requestSlot)) } returns
+      mockGetCredentialResponse
+
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+        preferImmediatelyAvailableCredentials = true,
+      )
+
+    assertTrue(result is ClerkResult.Success)
+    assertTrue(requestSlot.captured.preferImmediatelyAvailableCredentials)
   }
 
   @Test

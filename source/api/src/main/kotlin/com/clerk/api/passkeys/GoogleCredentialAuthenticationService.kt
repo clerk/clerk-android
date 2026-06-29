@@ -121,8 +121,12 @@ internal object GoogleCredentialAuthenticationService {
   suspend fun signInWithGoogleCredential(
     credentialTypes: List<SignIn.CredentialType>,
     allowedCredentialIds: List<String> = emptyList(),
+    preferImmediatelyAvailableCredentials: Boolean = false,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    ClerkLog.d("Starting passkey sign-in")
+    ClerkLog.d(
+      "Starting passkey sign-in; preferImmediatelyAvailableCredentials=" +
+        preferImmediatelyAvailableCredentials
+    )
     return when {
       credentialTypes.isEmpty() -> {
         ClerkResult.unknownFailure(IllegalStateException("No credential types specified"))
@@ -145,6 +149,7 @@ internal object GoogleCredentialAuthenticationService {
                   nonce = signIn.firstFactorVerification?.nonce,
                   allowedCredentialIds = allowedCredentialIds,
                   credentialRequestTypes = credentialTypes,
+                  preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
                 )
               handleCredential(credential, signIn)
             } catch (e: GetCredentialException) {
@@ -308,9 +313,15 @@ internal object GoogleCredentialAuthenticationService {
     nonce: String?,
     allowedCredentialIds: List<String> = emptyList(),
     credentialRequestTypes: List<SignIn.CredentialType>,
+    preferImmediatelyAvailableCredentials: Boolean = false,
   ): Credential {
     val credentialRequest =
-      buildCredentialRequest(nonce, allowedCredentialIds, credentialRequestTypes)
+      buildCredentialRequest(
+        nonce = nonce,
+        allowedCredentialIds = allowedCredentialIds,
+        credentialRequestTypes = credentialRequestTypes,
+        preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
+      )
 
     val result =
       try {
@@ -350,6 +361,7 @@ internal object GoogleCredentialAuthenticationService {
     nonce: String?,
     allowedCredentialIds: List<String> = emptyList(),
     credentialRequestTypes: List<SignIn.CredentialType>,
+    preferImmediatelyAvailableCredentials: Boolean = false,
   ): GetCredentialRequest {
     val requestOptions = mutableListOf<CredentialOption>()
 
@@ -368,7 +380,16 @@ internal object GoogleCredentialAuthenticationService {
       }
     }
 
-    return GetCredentialRequest(requestOptions)
+    return GetCredentialRequest(
+        credentialOptions = requestOptions,
+        preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
+      )
+      .also {
+        ClerkLog.d(
+          "Built credential request; preferImmediatelyAvailableCredentials=" +
+            it.preferImmediatelyAvailableCredentials
+        )
+      }
   }
 
   /**
@@ -403,6 +424,9 @@ internal object GoogleCredentialAuthenticationService {
     val rpId = requestJson.passkeyRpId() ?: PasskeyHelper.getDomain()
     val allowCredentials =
       allowedCredentialIds.toAllowCredentials().ifEmpty { requestJson.passkeyAllowCredentials() }
+    ClerkLog.d(
+      "Created passkey request; rpId=$rpId, allowCredentialsCount=${allowCredentials.size}"
+    )
 
     return GetPasskeyRequest(
       challenge = challenge,

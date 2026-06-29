@@ -20,7 +20,6 @@ class WorkbenchApplication : Application() {
         this,
         key,
         options = ClerkConfigurationOptions(enableDebugMode = true, proxyUrl = proxyUrl),
-        theme = ClerkTheme(colors = ClerkColors(background = Color.Green))
       )
     }
   }

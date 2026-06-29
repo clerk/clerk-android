@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
+import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
 import com.clerk.api.credentials.shouldSuppressCredentialFlowError
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
@@ -19,9 +21,11 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -45,6 +49,8 @@ internal class AuthStartViewModel : ViewModel() {
    */
   val state: StateFlow<AuthState> = _state.asStateFlow()
 
+  private var automaticPasskeySignInJob: Job? = null
+
   /**
    * Resets the current state back to [AuthState.Idle].
    *
@@ -53,6 +59,54 @@ internal class AuthStartViewModel : ViewModel() {
    */
   internal fun resetState() {
     _state.value = AuthState.Idle
+  }
+
+  internal fun startAutomaticPasskeySignIn() {
+    if (automaticPasskeySignInJob?.isActive == true) {
+      ClerkLog.d("Automatic passkey sign-in already running; skipping duplicate start")
+      return
+    }
+
+    ClerkLog.d("Starting automatic passkey sign-in")
+    automaticPasskeySignInJob =
+      viewModelScope.launch(Dispatchers.IO) {
+        try {
+          when (
+            val result =
+              SignIn.create(
+                SignIn.CreateParams.Strategy.Passkey(preferImmediatelyAvailableCredentials = true)
+              )
+          ) {
+            is ClerkResult.Success -> {
+              ClerkLog.d("Automatic passkey sign-in succeeded with status ${result.value.status}")
+              if (isActive) handleSignInSuccess(result.value)
+            }
+            is ClerkResult.Failure -> {
+              if (!isActive) return@launch
+              if (result.shouldSuppressAutomaticCredentialFlowError) {
+                ClerkLog.d(
+                  "Automatic passkey sign-in finished without UI: " +
+                    "${result.throwable?.javaClass?.simpleName}"
+                )
+                return@launch
+              }
+              ClerkLog.e(
+                "Automatic passkey sign-in failed: ${result.resolvedCredentialFlowMessage}"
+              )
+              withContext(Dispatchers.Main) {
+                _state.value = AuthState.Error(result.resolvedCredentialFlowMessage)
+              }
+            }
+          }
+        } finally {
+          automaticPasskeySignInJob = null
+        }
+      }
+  }
+
+  internal fun cancelAutomaticPasskeySignIn() {
+    automaticPasskeySignInJob?.cancel()
+    automaticPasskeySignInJob = null
   }
 
   /**
@@ -71,6 +125,7 @@ internal class AuthStartViewModel : ViewModel() {
     identifier: String,
     unsafeMetadata: Map<String, Any>? = null,
   ) {
+    cancelAutomaticPasskeySignIn()
     when (authMode) {
       AuthMode.SignIn ->
         signIn(
@@ -175,6 +230,7 @@ internal class AuthStartViewModel : ViewModel() {
     startOAuthWithSignUp: Boolean = false,
     unsafeMetadata: Map<String, Any>? = null,
   ) {
+    cancelAutomaticPasskeySignIn()
     _state.value = AuthState.OAuthState.Loading
     if (preferGoogleOneTap && provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
       handleGoogleOneTap(provider, transferable, startOAuthWithSignUp, unsafeMetadata)

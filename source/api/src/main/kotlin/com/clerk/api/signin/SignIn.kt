@@ -600,7 +600,10 @@ data class SignIn(
       data class Ticket(val ticket: String, override val strategy: String = TICKET) : Strategy
 
       /** Passkey strategy for authentication using a passkey. */
-      data class Passkey(override val strategy: String = PASSKEY) : Strategy
+      data class Passkey(
+        override val strategy: String = PASSKEY,
+        val preferImmediatelyAvailableCredentials: Boolean = false,
+      ) : Strategy
 
       @AutoMap
       @Serializable
@@ -640,7 +643,10 @@ data class SignIn(
      */
     suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
-        is CreateParams.Strategy.Passkey -> PasskeyService.signInWithPasskey()
+        is CreateParams.Strategy.Passkey ->
+          PasskeyService.signInWithPasskey(
+            preferImmediatelyAvailableCredentials = params.preferImmediatelyAvailableCredentials
+          )
         else -> {
           val baseMap =
             if (params is CreateParams.Strategy.Transfer) {

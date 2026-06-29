@@ -299,6 +299,9 @@ object Clerk {
   val passkeyIsEnabled: Boolean
     get() = environment?.passkeyIsEnabled ?: false
 
+  val passkeyAutofillIsEnabled: Boolean
+    get() = environment?.userSettings?.passkeySettings?.allowAutofill ?: false
+
   val isEmailEnabled: Boolean
     get() = environment?.emailIsEnabled ?: false
 
