@@ -78,6 +78,8 @@ class AuthViewModelTest {
       )
 
       assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
+      coVerify(timeout = 1_000, exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy>()) }
+      cancelAndIgnoreRemainingEvents()
     }
   }
 
