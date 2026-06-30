@@ -325,16 +325,22 @@ class AuthViewModelTest {
     mockkObject(SignUp.Companion)
     coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
 
-    viewModel.startAuth(
-      authMode = AuthMode.SignUp,
-      isPhoneNumberFieldActive = false,
-      phoneNumber = "",
-      identifier = "test@example.com",
-      unsafeMetadata = mapOf("test" to "test", "nested" to mapOf("active" to true)),
-    )
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAuth(
+        authMode = AuthMode.SignUp,
+        isPhoneNumberFieldActive = false,
+        phoneNumber = "",
+        identifier = "test@example.com",
+        unsafeMetadata = mapOf("test" to "test", "nested" to mapOf("active" to true)),
+      )
+
+      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
+      assertEquals(AuthStartViewModel.AuthState.Success.SignUpSuccess(mockSignUp), awaitItem())
+    }
 
     coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
-    testDispatcher.scheduler.advanceUntilIdle()
     val params = paramsSlot.captured as SignUp.CreateParams.Standard
     val unsafeMetadata = requireNotNull(params.unsafeMetadata)
     assertEquals("test@example.com", params.emailAddress)
@@ -354,16 +360,22 @@ class AuthViewModelTest {
       )
     coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
 
-    viewModel.startAuth(
-      authMode = AuthMode.SignInOrUp,
-      isPhoneNumberFieldActive = true,
-      phoneNumber = "+1234567890",
-      identifier = "test@example.com",
-      unsafeMetadata = mapOf("source" to "prebuilt"),
-    )
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAuth(
+        authMode = AuthMode.SignInOrUp,
+        isPhoneNumberFieldActive = true,
+        phoneNumber = "+1234567890",
+        identifier = "test@example.com",
+        unsafeMetadata = mapOf("source" to "prebuilt"),
+      )
+
+      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
+      assertEquals(AuthStartViewModel.AuthState.Success.SignUpSuccess(mockSignUp), awaitItem())
+    }
 
     coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
-    testDispatcher.scheduler.advanceUntilIdle()
     val params = paramsSlot.captured as SignUp.CreateParams.Standard
     val unsafeMetadata = requireNotNull(params.unsafeMetadata)
     assertEquals("+1234567890", params.phoneNumber)
