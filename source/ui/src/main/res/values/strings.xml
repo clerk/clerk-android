@@ -48,7 +48,11 @@
     <string name="organization_name">Organization name</string>
     <string name="slug">Slug</string>
     <string name="upload_logo">Upload logo</string>
+    <string name="change_logo" tools:ignore="MissingTranslation">Change logo</string>
+    <string name="choose_file" tools:ignore="MissingTranslation">Choose file</string>
+    <string name="photo_library" tools:ignore="MissingTranslation">Photo library</string>
     <string name="remove_logo">Remove logo</string>
+    <string name="remove_current_logo" tools:ignore="MissingTranslation">Remove current logo</string>
     <string name="recommended_logo_size">Recommended size 1:1, up to 10MB.</string>
     <string name="invite">Invite</string>
     <string name="invite_new_members">Invite new members</string>
