@@ -32,7 +32,8 @@ class SignInCreateTest {
 
     val result =
       SignIn.create(
-        SignIn.CreateParams.Strategy.Passkey(preferImmediatelyAvailableCredentials = true)
+        SignIn.CreateParams.Strategy.Passkey(),
+        preferImmediatelyAvailableCredentials = true,
       )
 
     assertTrue(result is ClerkResult.Success)
@@ -43,5 +44,13 @@ class SignInCreateTest {
         preferImmediatelyAvailableCredentials = true,
       )
     }
+  }
+
+  @Test
+  fun `passkey strategy preserves legacy jvm constructor and copy signatures`() {
+    val passkeyClass = SignIn.CreateParams.Strategy.Passkey::class.java
+
+    passkeyClass.getDeclaredConstructor(String::class.java)
+    passkeyClass.getDeclaredMethod("copy", String::class.java)
   }
 }

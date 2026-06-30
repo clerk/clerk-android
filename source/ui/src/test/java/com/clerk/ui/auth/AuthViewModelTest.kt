@@ -87,8 +87,12 @@ class AuthViewModelTest {
   fun automaticPasskeySignInUsesPasskeyStrategy() = runTest {
     val signIn = SignIn(id = "sign_in_123")
     mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.success(signIn)
+    coEvery {
+      SignIn.create(
+        any<SignIn.CreateParams.Strategy.Passkey>(),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    } returns ClerkResult.success(signIn)
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
@@ -98,9 +102,8 @@ class AuthViewModelTest {
       assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), awaitItem())
       coVerify(exactly = 1) {
         SignIn.create(
-          match<SignIn.CreateParams.Strategy> {
-            it is SignIn.CreateParams.Strategy.Passkey && it.preferImmediatelyAvailableCredentials
-          }
+          any<SignIn.CreateParams.Strategy.Passkey>(),
+          preferImmediatelyAvailableCredentials = true,
         )
       }
     }
@@ -113,15 +116,25 @@ class AuthViewModelTest {
         .getDeclaredConstructor()
         .newInstance() as Throwable
     mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.unknownFailure(noSavedCredentialException)
+    coEvery {
+      SignIn.create(
+        any<SignIn.CreateParams.Strategy.Passkey>(),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    } returns ClerkResult.unknownFailure(noSavedCredentialException)
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
 
       viewModel.startAutomaticPasskeySignIn()
 
-      coVerify(timeout = 1_000, exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy>()) }
+      coVerify(timeout = 1_000, exactly = 1) {
+        SignIn.create(
+          any<SignIn.CreateParams.Strategy.Passkey>(),
+          preferImmediatelyAvailableCredentials = true,
+        )
+      }
+      testDispatcher.scheduler.advanceUntilIdle()
       expectNoEvents()
     }
   }
@@ -133,15 +146,25 @@ class AuthViewModelTest {
         .getDeclaredConstructor()
         .newInstance() as Throwable
     mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.unknownFailure(userCancelledException)
+    coEvery {
+      SignIn.create(
+        any<SignIn.CreateParams.Strategy.Passkey>(),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    } returns ClerkResult.unknownFailure(userCancelledException)
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
 
       viewModel.startAutomaticPasskeySignIn()
 
-      coVerify(timeout = 1_000, exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy>()) }
+      coVerify(timeout = 1_000, exactly = 1) {
+        SignIn.create(
+          any<SignIn.CreateParams.Strategy.Passkey>(),
+          preferImmediatelyAvailableCredentials = true,
+        )
+      }
+      testDispatcher.scheduler.advanceUntilIdle()
       expectNoEvents()
     }
   }
@@ -149,7 +172,12 @@ class AuthViewModelTest {
   @Test
   fun automaticPasskeySignInSurfacesApiErrors() = runTest {
     mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+    coEvery {
+      SignIn.create(
+        any<SignIn.CreateParams.Strategy.Passkey>(),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    } returns
       ClerkResult.apiFailure(
         ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "Passkey failed")))
       )

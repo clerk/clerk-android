@@ -15,6 +15,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.Constants.Fields.STRATEGY
 import com.clerk.api.credentials.CredentialFlowException
 import com.clerk.api.credentials.classifyGetCredentialFailure
+import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -154,10 +155,22 @@ internal object GoogleCredentialAuthenticationService {
               handleCredential(credential, signIn)
             } catch (e: GetCredentialException) {
               ClerkLog.e("Passkey sign-in failed: ${e.message}")
-              classifyGetCredentialFailure(e, credentialTypes)
+              classifyGetCredentialFailure(e, credentialTypes).also { failure ->
+                clearSuppressedAutomaticSignInAttempt(
+                  preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
+                  signIn = signIn,
+                  failure = failure,
+                )
+              }
             } catch (e: CredentialFlowException) {
               ClerkLog.e("Passkey sign-in cannot start: ${e.message}")
-              ClerkResult.unknownFailure(e)
+              ClerkResult.unknownFailure(e).also { failure ->
+                clearSuppressedAutomaticSignInAttempt(
+                  preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
+                  signIn = signIn,
+                  failure = failure,
+                )
+              }
             } catch (e: Exception) {
               ClerkLog.e("Passkey sign-in failed: ${e.message}")
               ClerkResult.unknownFailure(e)
@@ -170,6 +183,22 @@ internal object GoogleCredentialAuthenticationService {
         }
       }
     }
+  }
+
+  private fun clearSuppressedAutomaticSignInAttempt(
+    preferImmediatelyAvailableCredentials: Boolean,
+    signIn: SignIn,
+    failure: ClerkResult.Failure<ClerkErrorResponse>,
+  ) {
+    if (
+      !preferImmediatelyAvailableCredentials || !failure.shouldSuppressAutomaticCredentialFlowError
+    ) {
+      return
+    }
+    if (!Clerk.clientInitialized || Clerk.client.signIn?.id != signIn.id) return
+
+    ClerkLog.d("Clearing suppressed automatic passkey sign-in attempt ${signIn.id}")
+    Clerk.updateClient(Clerk.client.copy(signIn = null))
   }
 
   /**

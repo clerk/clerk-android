@@ -76,7 +76,8 @@ internal class AuthStartViewModel : ViewModel() {
           when (
             val result =
               SignIn.create(
-                SignIn.CreateParams.Strategy.Passkey(preferImmediatelyAvailableCredentials = true)
+                SignIn.CreateParams.Strategy.Passkey(),
+                preferImmediatelyAvailableCredentials = true,
               )
           ) {
             is ClerkResult.Success -> {

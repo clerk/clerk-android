@@ -15,6 +15,7 @@ import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
@@ -26,10 +27,13 @@ import com.clerk.api.signin.attemptFirstFactor
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -209,6 +213,35 @@ class PasskeyAuthenticationServiceTest {
     val failure = result as ClerkResult.Failure
     assertEquals(ClerkResult.Failure.ErrorType.UNKNOWN, failure.errorType)
     assertTrue(failure.throwable is CredentialFlowException.NoSavedCredential)
+  }
+
+  @Test
+  fun `automatic signInWithPasskey clears suppressed current sign in`() = runTest {
+    val nonce = """{"challenge":"test-challenge"}"""
+    val client = Client(id = "client_123", signIn = mockSignIn)
+
+    every { mockSignIn.id } returns "sign_in_123"
+    every { mockSignIn.firstFactorVerification } returns mockVerification
+    every { mockVerification.nonce } returns nonce
+    every { Clerk.clientInitialized } returns true
+    every { Clerk.client } returns client
+    every { Clerk.updateClient(any()) } just runs
+
+    coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockCredentialManager.getCredential(any(), any()) } throws
+      NoCredentialException("No credentials available")
+
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+        preferImmediatelyAvailableCredentials = true,
+      )
+
+    assertTrue(result is ClerkResult.Failure)
+    assertTrue(
+      (result as ClerkResult.Failure).throwable is CredentialFlowException.NoSavedCredential
+    )
+    verify(exactly = 1) { Clerk.updateClient(client.copy(signIn = null)) }
   }
 
   @Test
