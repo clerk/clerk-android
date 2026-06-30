@@ -11,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -27,6 +28,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -124,6 +126,47 @@ internal fun AuthStartViewImpl(
     }
   val showDismissButton = shouldShowAuthDismissButton(isDismissible)
   val dismissHandler = rememberDismissHandler(onDismiss)
+  val lockedInitialIdentifierIsActive =
+    authState.authStartIdentifierLocked || authState.authStartPhoneNumberLocked
+  val passkeySignInConfigIsEnabled = authViewHelper.passkeySignInConfigIsEnabled
+  val automaticPasskeySignInIsEnabled =
+    shouldStartAutomaticPasskeySignIn(
+      authMode = authState.mode,
+      lockedInitialIdentifierIsActive = lockedInitialIdentifierIsActive,
+      passkeySignInConfigIsEnabled = passkeySignInConfigIsEnabled,
+    )
+  var automaticPasskeySignInHasStarted by rememberSaveable { mutableStateOf(false) }
+
+  LaunchedEffect(
+    automaticPasskeySignInIsEnabled,
+    automaticPasskeySignInHasStarted,
+    authState.mode,
+    lockedInitialIdentifierIsActive,
+    passkeySignInConfigIsEnabled,
+  ) {
+    ClerkLog.d(
+      "AuthStart automatic passkey gate: enabled=$automaticPasskeySignInIsEnabled, " +
+        "hasStarted=$automaticPasskeySignInHasStarted, mode=${authState.mode}, " +
+        "lockedInitialIdentifierIsActive=$lockedInitialIdentifierIsActive, " +
+        "passkeySignInConfigIsEnabled=$passkeySignInConfigIsEnabled"
+    )
+    if (!automaticPasskeySignInIsEnabled) {
+      if (automaticPasskeySignInHasStarted) {
+        authStartViewModel.cancelAutomaticPasskeySignIn()
+        automaticPasskeySignInHasStarted = false
+      }
+      return@LaunchedEffect
+    }
+
+    if (!automaticPasskeySignInHasStarted) {
+      automaticPasskeySignInHasStarted = true
+      authStartViewModel.startAutomaticPasskeySignIn()
+    }
+  }
+
+  DisposableEffect(authStartViewModel) {
+    onDispose { authStartViewModel.cancelAutomaticPasskeySignIn() }
+  }
 
   LaunchedEffect(state) {
     when (val s = state) {

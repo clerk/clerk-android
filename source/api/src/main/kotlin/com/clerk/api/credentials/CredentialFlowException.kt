@@ -28,7 +28,8 @@ internal sealed class CredentialFlowException(
   internal class NoSavedCredential :
     CredentialFlowException(
       message = "No saved credentials are available on this device.",
-      userMessage = "No saved credentials are available on this device. Try another sign-in method.",
+      userMessage =
+        "No saved credentials are available on this device. Try another sign-in method.",
     )
 
   internal class UserCancelled :
@@ -94,6 +95,11 @@ private val ClerkResult.Failure<ClerkErrorResponse>.credentialFlowUiMessage: Str
 
 val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressCredentialFlowError: Boolean
   get() = (throwable as? CredentialFlowException)?.suppressUserFacingError == true
+
+val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressAutomaticCredentialFlowError: Boolean
+  get() =
+    throwable is CredentialFlowException.UserCancelled ||
+      throwable is CredentialFlowException.NoSavedCredential
 
 val ClerkResult.Failure<ClerkErrorResponse>.shouldFallbackToOAuthFromGoogleOneTap: Boolean
   get() = throwable is CredentialFlowException.NoGoogleAccount

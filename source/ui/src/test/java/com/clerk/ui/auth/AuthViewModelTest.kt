@@ -78,6 +78,116 @@ class AuthViewModelTest {
       )
 
       assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
+      coVerify(timeout = 1_000, exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy>()) }
+      cancelAndIgnoreRemainingEvents()
+    }
+  }
+
+  @Test
+  fun automaticPasskeySignInUsesPasskeyStrategy() = runTest {
+    val signIn = SignIn(id = "sign_in_123")
+    mockkObject(SignIn.Companion)
+    coEvery {
+      SignIn.create(
+        any<SignIn.CreateParams.Strategy.Passkey>(),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    } returns ClerkResult.success(signIn)
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAutomaticPasskeySignIn()
+
+      assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), awaitItem())
+      coVerify(exactly = 1) {
+        SignIn.create(
+          any<SignIn.CreateParams.Strategy.Passkey>(),
+          preferImmediatelyAvailableCredentials = true,
+        )
+      }
+    }
+  }
+
+  @Test
+  fun automaticPasskeySignInSuppressesNoSavedCredentialError() = runTest {
+    val noSavedCredentialException =
+      Class.forName("com.clerk.api.credentials.CredentialFlowException\$NoSavedCredential")
+        .getDeclaredConstructor()
+        .newInstance() as Throwable
+    mockkObject(SignIn.Companion)
+    coEvery {
+      SignIn.create(
+        any<SignIn.CreateParams.Strategy.Passkey>(),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    } returns ClerkResult.unknownFailure(noSavedCredentialException)
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAutomaticPasskeySignIn()
+
+      coVerify(timeout = 1_000, exactly = 1) {
+        SignIn.create(
+          any<SignIn.CreateParams.Strategy.Passkey>(),
+          preferImmediatelyAvailableCredentials = true,
+        )
+      }
+      testDispatcher.scheduler.advanceUntilIdle()
+      expectNoEvents()
+    }
+  }
+
+  @Test
+  fun automaticPasskeySignInSuppressesUserCancelledError() = runTest {
+    val userCancelledException =
+      Class.forName("com.clerk.api.credentials.CredentialFlowException\$UserCancelled")
+        .getDeclaredConstructor()
+        .newInstance() as Throwable
+    mockkObject(SignIn.Companion)
+    coEvery {
+      SignIn.create(
+        any<SignIn.CreateParams.Strategy.Passkey>(),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    } returns ClerkResult.unknownFailure(userCancelledException)
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAutomaticPasskeySignIn()
+
+      coVerify(timeout = 1_000, exactly = 1) {
+        SignIn.create(
+          any<SignIn.CreateParams.Strategy.Passkey>(),
+          preferImmediatelyAvailableCredentials = true,
+        )
+      }
+      testDispatcher.scheduler.advanceUntilIdle()
+      expectNoEvents()
+    }
+  }
+
+  @Test
+  fun automaticPasskeySignInSurfacesApiErrors() = runTest {
+    mockkObject(SignIn.Companion)
+    coEvery {
+      SignIn.create(
+        any<SignIn.CreateParams.Strategy.Passkey>(),
+        preferImmediatelyAvailableCredentials = true,
+      )
+    } returns
+      ClerkResult.apiFailure(
+        ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "Passkey failed")))
+      )
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAutomaticPasskeySignIn()
+
+      assertEquals(AuthStartViewModel.AuthState.Error("Passkey failed"), awaitItem())
     }
   }
 
@@ -215,16 +325,22 @@ class AuthViewModelTest {
     mockkObject(SignUp.Companion)
     coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
 
-    viewModel.startAuth(
-      authMode = AuthMode.SignUp,
-      isPhoneNumberFieldActive = false,
-      phoneNumber = "",
-      identifier = "test@example.com",
-      unsafeMetadata = mapOf("test" to "test", "nested" to mapOf("active" to true)),
-    )
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAuth(
+        authMode = AuthMode.SignUp,
+        isPhoneNumberFieldActive = false,
+        phoneNumber = "",
+        identifier = "test@example.com",
+        unsafeMetadata = mapOf("test" to "test", "nested" to mapOf("active" to true)),
+      )
+
+      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
+      assertEquals(AuthStartViewModel.AuthState.Success.SignUpSuccess(mockSignUp), awaitItem())
+    }
 
     coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
-    testDispatcher.scheduler.advanceUntilIdle()
     val params = paramsSlot.captured as SignUp.CreateParams.Standard
     val unsafeMetadata = requireNotNull(params.unsafeMetadata)
     assertEquals("test@example.com", params.emailAddress)
@@ -244,16 +360,22 @@ class AuthViewModelTest {
       )
     coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
 
-    viewModel.startAuth(
-      authMode = AuthMode.SignInOrUp,
-      isPhoneNumberFieldActive = true,
-      phoneNumber = "+1234567890",
-      identifier = "test@example.com",
-      unsafeMetadata = mapOf("source" to "prebuilt"),
-    )
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAuth(
+        authMode = AuthMode.SignInOrUp,
+        isPhoneNumberFieldActive = true,
+        phoneNumber = "+1234567890",
+        identifier = "test@example.com",
+        unsafeMetadata = mapOf("source" to "prebuilt"),
+      )
+
+      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
+      assertEquals(AuthStartViewModel.AuthState.Success.SignUpSuccess(mockSignUp), awaitItem())
+    }
 
     coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
-    testDispatcher.scheduler.advanceUntilIdle()
     val params = paramsSlot.captured as SignUp.CreateParams.Standard
     val unsafeMetadata = requireNotNull(params.unsafeMetadata)
     assertEquals("+1234567890", params.phoneNumber)

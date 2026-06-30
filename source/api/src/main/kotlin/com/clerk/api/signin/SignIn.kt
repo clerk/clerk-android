@@ -640,7 +640,7 @@ data class SignIn(
      */
     suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
-        is CreateParams.Strategy.Passkey -> PasskeyService.signInWithPasskey()
+        is CreateParams.Strategy.Passkey -> create(params)
         else -> {
           val baseMap =
             if (params is CreateParams.Strategy.Transfer) {
@@ -652,6 +652,25 @@ data class SignIn(
           ClerkApi.signIn.createSignIn(paramMap)
         }
       }
+    }
+
+    /**
+     * Starts the sign in process with a passkey.
+     *
+     * @param params The passkey strategy to authenticate with.
+     * @param preferImmediatelyAvailableCredentials Whether the credential provider should only
+     *   return credentials available without extra provider UI.
+     * @return A [ClerkResult] containing the created [SignIn] object on success, or a
+     *   [ClerkErrorResponse] on failure.
+     */
+    @Suppress("UnusedParameter")
+    suspend fun create(
+      params: CreateParams.Strategy.Passkey,
+      preferImmediatelyAvailableCredentials: Boolean = false,
+    ): ClerkResult<SignIn, ClerkErrorResponse> {
+      return PasskeyService.signInWithPasskey(
+        preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials
+      )
     }
 
     /**

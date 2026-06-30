@@ -22,11 +22,13 @@ internal object PasskeyService {
    * @return A [ClerkResult] containing either a successful [SignIn] or an error response.
    */
   suspend fun signInWithPasskey(
-    allowedCredentialIds: List<String> = emptyList()
+    allowedCredentialIds: List<String> = emptyList(),
+    preferImmediatelyAvailableCredentials: Boolean = false,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     return GoogleCredentialAuthenticationService.signInWithGoogleCredential(
       credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
       allowedCredentialIds = allowedCredentialIds,
+      preferImmediatelyAvailableCredentials = preferImmediatelyAvailableCredentials,
     )
   }
 
