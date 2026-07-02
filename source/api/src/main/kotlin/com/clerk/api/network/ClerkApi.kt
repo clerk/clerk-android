@@ -3,6 +3,7 @@ package com.clerk.api.network
 import android.content.Context
 import com.clerk.api.Clerk
 import com.clerk.api.network.api.ClientApi
+import com.clerk.api.network.api.CommerceApi
 import com.clerk.api.network.api.DeviceAttestationApi
 import com.clerk.api.network.api.EnvironmentApi
 import com.clerk.api.network.api.MagicLinkApi
@@ -75,6 +76,10 @@ internal object ClerkApi {
   val magicLink: MagicLinkApi
     get() = _magicLink ?: error("ClerkApi is not configured.")
 
+  private var _commerce: CommerceApi? = null
+  val commerce: CommerceApi
+    get() = _commerce ?: error("ClerkApi is not configured.")
+
   // Exposed for internal testing/verification
   internal var configuredBaseUrl: String? = null
     private set
@@ -105,6 +110,7 @@ internal object ClerkApi {
     _deviceAttestation = retrofit.create(DeviceAttestationApi::class.java)
     _organization = retrofit.create(OrganizationApi::class.java)
     _magicLink = retrofit.create(MagicLinkApi::class.java)
+    _commerce = retrofit.create(CommerceApi::class.java)
   }
 
   /** Clears all configured Retrofit services. */
@@ -117,6 +123,8 @@ internal object ClerkApi {
     _user = null
     _deviceAttestation = null
     _organization = null
+    _magicLink = null
+    _commerce = null
     configuredBaseUrl = null
     configuredUrlWithVersion = null
     configuredCustomHeaders = emptyMap()

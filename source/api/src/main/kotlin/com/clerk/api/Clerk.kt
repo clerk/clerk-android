@@ -12,6 +12,7 @@ import com.clerk.api.Clerk.session
 import com.clerk.api.Clerk.user
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.auth.Auth
+import com.clerk.api.billing.Billing
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
 import com.clerk.api.externalaccount.ExternalAccountService
@@ -650,6 +651,30 @@ object Clerk {
    * @see Auth for all available authentication methods.
    */
   val auth: Auth = Auth()
+
+  // endregion
+
+  // region Billing Namespace
+
+  /**
+   * The Billing namespace providing Clerk Billing in-app purchase entry points.
+   *
+   * Use this property to fetch the plan catalog, launch Google Play purchases, and restore existing
+   * subscriptions.
+   *
+   * ### Example usage:
+   * ```kotlin
+   * // Fetch plans and purchase one through Google Play
+   * val plans = Clerk.billing.fetchPlans()
+   * Clerk.billing.purchase(activity, plan, BillingPlanPeriod.MONTH)
+   *
+   * // Restore purchases on a new device or reinstall
+   * Clerk.billing.restorePurchases()
+   * ```
+   *
+   * @see Billing for all available billing methods.
+   */
+  val billing: Billing = Billing()
 
   // endregion
 

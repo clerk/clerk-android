@@ -70,6 +70,18 @@ internal object ApiPaths {
   /** Environment configuration endpoint */
   internal const val ENVIRONMENT = "environment"
 
+  /** Commerce (billing) endpoints */
+  internal object Commerce {
+    internal const val PLANS = "commerce/plans"
+
+    /** Commerce endpoints scoped to the current user */
+    internal object User {
+      internal const val BASE = "me/commerce"
+      internal const val SUBSCRIPTION_ITEMS = "${BASE}/subscription_items"
+      internal const val STORE_PURCHASES = "${BASE}/store_purchases"
+    }
+  }
+
   /** User-related endpoints */
   internal object User {
     internal const val BASE = "me"
