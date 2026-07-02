@@ -13,6 +13,7 @@ internal data class Environment(
   @SerialName("user_settings") val userSettings: UserSettings,
   @SerialName("organization_settings")
   val organizationSettings: OrganizationSettings = OrganizationSettings(),
+  @SerialName("feature_flags") val featureFlags: FeatureFlags = FeatureFlags(),
 ) {
   val passkeyIsEnabled: Boolean
     get() = userSettings.attributes.any { (key, value) -> key == "passkey" && value.enabled }
