@@ -64,7 +64,7 @@ class CommerceApiRequestTest {
 
       val request = capturedRequests.single()
       assertEquals("POST", request.method)
-      assertEquals("/v1/me/commerce/store_purchases", request.url.encodedPath)
+      assertEquals("/v1/me/billing/store_purchases", request.url.encodedPath)
 
       val buffer = Buffer()
       requireNotNull(request.body).writeTo(buffer)
@@ -80,7 +80,7 @@ class CommerceApiRequestTest {
 
     val request = capturedRequests.single()
     assertEquals("GET", request.method)
-    assertEquals("/v1/commerce/plans", request.url.encodedPath)
+    assertEquals("/v1/billing/plans", request.url.encodedPath)
     assertEquals("user", request.url.queryParameter("payer_type"))
 
     assertTrue(result is ClerkResult.Success)
@@ -95,7 +95,7 @@ class CommerceApiRequestTest {
 
     val request = capturedRequests.single()
     assertEquals("GET", request.method)
-    assertEquals("/v1/me/commerce/subscription_items", request.url.encodedPath)
+    assertEquals("/v1/me/billing/subscription_items", request.url.encodedPath)
 
     assertTrue(result is ClerkResult.Success)
     assertEquals("sub_item_123", (result as ClerkResult.Success).value.data.single().id)

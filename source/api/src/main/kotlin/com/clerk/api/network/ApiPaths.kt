@@ -72,11 +72,11 @@ internal object ApiPaths {
 
   /** Commerce (billing) endpoints */
   internal object Commerce {
-    internal const val PLANS = "commerce/plans"
+    internal const val PLANS = "billing/plans"
 
     /** Commerce endpoints scoped to the current user */
     internal object User {
-      internal const val BASE = "me/commerce"
+      internal const val BASE = "me/billing"
       internal const val SUBSCRIPTION_ITEMS = "${BASE}/subscription_items"
       internal const val STORE_PURCHASES = "${BASE}/store_purchases"
     }

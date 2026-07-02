@@ -108,15 +108,14 @@ internal const val ERROR_CODE_ALREADY_SUBSCRIBED = "already_subscribed"
 internal const val META_KEY_ALREADY_SUBSCRIBED_VIA = "already_subscribed_via"
 
 /**
- * Maps a failed `POST /me/commerce/store_purchases` result to a [BillingError].
+ * Maps a failed `POST /me/billing/store_purchases` result to a [BillingError].
  *
  * An `already_subscribed` error code becomes [BillingError.AlreadySubscribedVia] (reading the
  * managing processor from the response meta when present); everything else becomes
  * [BillingError.ServerRejected].
  */
 internal fun ClerkResult.Failure<ClerkErrorResponse>.toBillingError(): BillingError {
-  val alreadySubscribed =
-    error?.errors.orEmpty().any { it.code == ERROR_CODE_ALREADY_SUBSCRIBED }
+  val alreadySubscribed = error?.errors.orEmpty().any { it.code == ERROR_CODE_ALREADY_SUBSCRIBED }
   if (alreadySubscribed) {
     val processor =
       runCatching { error?.meta?.get(META_KEY_ALREADY_SUBSCRIBED_VIA)?.jsonPrimitive?.content }

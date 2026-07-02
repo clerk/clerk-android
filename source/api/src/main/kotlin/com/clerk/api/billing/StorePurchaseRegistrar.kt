@@ -11,11 +11,11 @@ import com.clerk.api.session.fetchToken
 /**
  * Internal service that registers Google Play purchases with Clerk.
  *
- * Registration posts the purchase token to `POST /me/commerce/store_purchases`, where Clerk
- * verifies it against the Play Developer API, binds it to the current payer, activates the
- * subscription item, and acknowledges the purchase. The SDK intentionally never acknowledges
- * purchases client-side — server-side acknowledgment is the source of truth, and unverified
- * purchases must be left unacknowledged so Google auto-refunds them.
+ * Registration posts the purchase token to `POST /me/billing/store_purchases`, where Clerk verifies
+ * it against the Play Developer API, binds it to the current payer, activates the subscription
+ * item, and acknowledges the purchase. The SDK intentionally never acknowledges purchases
+ * client-side — server-side acknowledgment is the source of truth, and unverified purchases must be
+ * left unacknowledged so Google auto-refunds them.
  *
  * The endpoint is idempotent per store transaction lineage, so restore flows and out-of-band
  * purchase events can safely re-register the same purchase.
