@@ -48,7 +48,6 @@ import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp3
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
@@ -169,6 +168,7 @@ internal fun ClerkSocialButtonImpl(
             onClick = { onClick(provider) },
             shape = ClerkMaterialTheme.shape,
             interactionSource = interactionSource,
+            elevation = null,
             colors = getButtonColors(isPressedCombined),
             contentPadding =
               if (expandIconWidth) {
@@ -196,7 +196,7 @@ internal fun ClerkSocialButtonImpl(
           onClick = { onClick(provider) },
           shape = ClerkMaterialTheme.shape,
           interactionSource = interactionSource,
-          elevation = ButtonDefaults.buttonElevation(defaultElevation = dp3),
+          elevation = null,
           colors = getButtonColors(isPressedCombined),
           border = BorderStroke(dp1, ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f)),
           contentPadding = ButtonDefaults.ContentPadding,
@@ -252,7 +252,7 @@ private fun SocialButtonWithText(provider: OAuthProvider, isEnabled: Boolean) {
   ) {
     SocialButtonIcon(provider = provider, isEnabled = isEnabled, contentDescription = null)
     Text(
-      text = stringResource(R.string.sign_in_with, provider.providerName),
+      text = stringResource(R.string.continue_with, provider.providerName),
       style = ClerkMaterialTheme.typography.titleMedium,
     )
   }
@@ -264,7 +264,7 @@ private fun SocialButtonIconOnly(provider: OAuthProvider, isEnabled: Boolean) {
   SocialButtonIcon(
     provider = provider,
     isEnabled = isEnabled,
-    contentDescription = stringResource(R.string.sign_in_with, provider.providerName),
+    contentDescription = stringResource(R.string.continue_with, provider.providerName),
   )
 }
 
