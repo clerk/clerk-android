@@ -120,6 +120,18 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
   }
 
   @Test
+  fun socialRowSnapshotTestLightTwoProviders() {
+    Clerk.customTheme = ClerkTheme(colors = DefaultColors.light)
+    val provider = OAuthProvider.GOOGLE
+    provider.setLogoUrl(null)
+    paparazzi.snapshot {
+      ClerkMaterialTheme {
+        ClerkSocialRow(providers = persistentListOf(provider, provider))
+      }
+    }
+  }
+
+  @Test
   fun socialRowSnapshotTestLightThreeProviders() {
     Clerk.customTheme = ClerkTheme(colors = DefaultColors.light)
     val provider = OAuthProvider.GOOGLE
