@@ -33,14 +33,12 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.LastUsedAuthBadgeOverlay
-import com.clerk.ui.core.button.social.ClerkSocialButton
 import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp24
-import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
@@ -118,12 +116,6 @@ internal fun AuthStartViewImpl(
       storedIdentifierType = authState.storedIdentifierType,
     )
   val lastUsedSocialProvider = lastUsedAuth?.socialProvider
-  val socialProvidersMinusLastUsed =
-    if (lastUsedSocialProvider == null) {
-      socialProviders
-    } else {
-      socialProviders.filter { it != lastUsedSocialProvider }
-    }
   val showDismissButton = shouldShowAuthDismissButton(isDismissible)
   val dismissHandler = rememberDismissHandler(onDismiss)
   val lockedInitialIdentifierIsActive =
@@ -277,30 +269,14 @@ internal fun AuthStartViewImpl(
         if (authViewHelper.showOrDivider) {
           TextDivider(stringResource(R.string.or))
         }
-        Column(verticalArrangement = Arrangement.spacedBy(dp8)) {
-          if (lastUsedSocialProvider != null) {
-            LastUsedAuthBadgeOverlay(isVisible = true, modifier = Modifier.fillMaxWidth()) {
-              ClerkSocialButton(
-                provider = lastUsedSocialProvider,
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                  authState.enableInProgressAuthAttemptResume()
-                  authStartViewModel.authenticateWithSocialProvider(
-                    provider = it,
-                    transferable = authState.mode.transferable,
-                    preferGoogleOneTap = preferGoogleOneTap,
-                    startOAuthWithSignUp = startSocialOAuthAsSignUp,
-                    unsafeMetadata = authState.unsafeMetadata,
-                  )
-                },
-                forceIconOnly = false,
-              )
-            }
-          }
-
-          if (socialProvidersMinusLastUsed.isNotEmpty()) {
+        if (socialProviders.isNotEmpty()) {
+          LastUsedAuthBadgeOverlay(
+            isVisible = lastUsedSocialProvider != null,
+            modifier = Modifier.fillMaxWidth(),
+          ) {
             ClerkSocialRow(
-              providers = socialProvidersMinusLastUsed.toImmutableList(),
+              providers = socialProviders.toImmutableList(),
+              lastUsedProvider = lastUsedSocialProvider,
               onClick = {
                 authState.enableInProgressAuthAttemptResume()
                 authStartViewModel.authenticateWithSocialProvider(

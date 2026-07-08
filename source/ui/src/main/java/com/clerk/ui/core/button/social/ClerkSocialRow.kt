@@ -1,7 +1,6 @@
 package com.clerk.ui.core.button.social
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,17 +14,12 @@ import com.clerk.ui.core.dimens.dp8
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-private const val MAX_BUTTONS_PER_ROW = 3
-
 /**
  * A composable row layout for displaying multiple social authentication buttons.
  *
- * This component arranges social login buttons in rows of exactly 3 buttons each. When there are
- * more than 3 buttons, they wrap to additional rows. Each button takes equal width within its row
- * and is displayed in icon-only mode for consistent, compact sizing.
- *
- * For the last row, if there's an odd number of buttons remaining, they are offset in a brick
- * pattern with the first button centered and any additional buttons spread evenly.
+ * This component uses the same layout rules as Clerk's web components: social providers are evenly
+ * distributed into rows of up to five buttons, a last-used provider can be separated into its own
+ * first row, and one/two-provider rows render as full-width block buttons on mobile.
  *
  * @param providers List of [OAuthProvider]s to display as social login buttons.
  * @param modifier Optional [Modifier] for theming and styling.
@@ -34,6 +28,7 @@ private const val MAX_BUTTONS_PER_ROW = 3
  *   [OAuthProvider].
  * @param allowSingleProviderFullWidth Whether a single provider should render as a full-width
  *   button with text. Defaults to `true`.
+ * @param lastUsedProvider Optional provider to separate into its own first row.
  */
 @Composable
 fun ClerkSocialRow(
@@ -42,65 +37,43 @@ fun ClerkSocialRow(
   clerkTheme: ClerkTheme? = null,
   onClick: (OAuthProvider) -> Unit = {},
   allowSingleProviderFullWidth: Boolean = true,
+  lastUsedProvider: OAuthProvider? = null,
 ) {
-  val isSingleProvider = providers.size == 1 && allowSingleProviderFullWidth
+  val socialButtonRows =
+    distributeSocialButtonsIntoRows(providers = providers, lastUsedProvider = lastUsedProvider)
 
   Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp8)) {
-    val chunks = providers.chunked(MAX_BUTTONS_PER_ROW)
+    socialButtonRows.rows.forEach { rowProviders ->
+      val shouldUseBlockButtons =
+        allowSingleProviderFullWidth &&
+          (rowProviders.size == 1 ||
+            (!socialButtonRows.lastUsedProviderPresent && providers.size == 2))
 
-    // Special-case: single provider gets a full-width button with text
-    if (isSingleProvider) {
-      Row(modifier = Modifier.fillMaxWidth()) {
-        ClerkSocialButton(
-          provider = providers.first(),
-          isEnabled = true,
-          onClick = onClick,
-          forceIconOnly = false,
-          modifier = Modifier.fillMaxWidth(),
-          clerkTheme = clerkTheme,
-        )
-      }
-      return@Column
-    }
-
-    chunks.forEachIndexed { rowIndex, rowProviders ->
-      val isLastRow = rowIndex == chunks.size - 1
-
-      // Build exactly 3 equal-width slots for every row. For the last row, use a brick pattern
-      // so that 1 item is centered and 2 items sit at the edges.
-      val rowSlots: List<OAuthProvider?> =
-        when {
-          // Full rows: fill left-to-right, pad trailing with nulls (placeholders)
-          !isLastRow || rowProviders.size == MAX_BUTTONS_PER_ROW ->
-            rowProviders + List(MAX_BUTTONS_PER_ROW - rowProviders.size) { null }
-          // Last row with 1 item: center
-          rowProviders.size == 1 -> listOf(null, rowProviders[0], null)
-          // Last row with 2 items: no middle spacer, buttons take full width
-          rowProviders.size == 2 -> rowProviders
-          else -> rowProviders
+      if (shouldUseBlockButtons) {
+        rowProviders.forEach { provider ->
+          ClerkSocialButton(
+            provider = provider,
+            isEnabled = true,
+            onClick = onClick,
+            forceIconOnly = false,
+            modifier = Modifier.fillMaxWidth(),
+            clerkTheme = clerkTheme,
+          )
         }
-
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement =
-          when {
-            isLastRow && rowProviders.size == 2 -> Arrangement.spacedBy(dp8)
-            else -> Arrangement.spacedBy(dp8, Alignment.CenterHorizontally)
-          },
-      ) {
-        rowSlots.forEach { slotProvider ->
-          Box(modifier = Modifier.weight(1f)) {
-            if (slotProvider != null) {
-              ClerkSocialButton(
-                provider = slotProvider,
-                isEnabled = true,
-                onClick = onClick,
-                forceIconOnly = true,
-                modifier = Modifier.fillMaxWidth(),
-                clerkTheme = clerkTheme,
-                expandIconWidth = isLastRow && rowProviders.size == 2,
-              )
-            }
+      } else {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.spacedBy(dp8, Alignment.CenterHorizontally),
+        ) {
+          rowProviders.forEach { provider ->
+            ClerkSocialButton(
+              provider = provider,
+              isEnabled = true,
+              onClick = onClick,
+              forceIconOnly = true,
+              modifier = Modifier.weight(1f),
+              clerkTheme = clerkTheme,
+            )
           }
         }
       }
