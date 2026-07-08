@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -169,7 +170,12 @@ internal fun ClerkSocialButtonImpl(
             shape = ClerkMaterialTheme.shape,
             interactionSource = interactionSource,
             colors = getButtonColors(isPressedCombined),
-            contentPadding = ButtonDefaults.ContentPadding,
+            contentPadding =
+              if (expandIconWidth) {
+                PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+              } else {
+                ButtonDefaults.ContentPadding
+              },
             border =
               BorderStroke(dp1, color = ClerkMaterialTheme.colors.shadow.copy(alpha = 0.08f)),
             modifier =
@@ -179,7 +185,7 @@ internal fun ClerkSocialButtonImpl(
                   Modifier.width(120.dp)
                 })
                 .height(dp48)
-                .defaultMinSize(minWidth = 100.dp),
+                .defaultMinSize(minWidth = if (expandIconWidth) dp48 else 100.dp),
           ) {
             SocialButtonContent(provider = provider, isEnabled = isEnabled, forceIconOnly = true)
           }

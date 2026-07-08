@@ -2,9 +2,11 @@ package com.clerk.ui.core.button.social
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,17 +17,14 @@ import com.clerk.ui.core.dimens.dp8
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-private const val MAX_BUTTONS_PER_ROW = 3
+private const val SOCIAL_BUTTON_BLOCK_THRESHOLD = 2
 
 /**
  * A composable row layout for displaying multiple social authentication buttons.
  *
- * This component arranges social login buttons in rows of exactly 3 buttons each. When there are
- * more than 3 buttons, they wrap to additional rows. Each button takes equal width within its row
- * and is displayed in icon-only mode for consistent, compact sizing.
- *
- * For the last row, if there's an odd number of buttons remaining, they are offset in a brick
- * pattern with the first button centered and any additional buttons spread evenly.
+ * This component follows the Clerk web social button layout: one or two providers render as
+ * full-width buttons with text, while larger provider sets render as balanced icon-only rows with
+ * up to five providers per row. Four providers are shown as a 2x2 grid.
  *
  * @param providers List of [OAuthProvider]s to display as social login buttons.
  * @param modifier Optional [Modifier] for theming and styling.
@@ -43,16 +42,15 @@ fun ClerkSocialRow(
   onClick: (OAuthProvider) -> Unit = {},
   allowSingleProviderFullWidth: Boolean = true,
 ) {
-  val isSingleProvider = providers.size == 1 && allowSingleProviderFullWidth
+  val showBlockButtons =
+    providers.size in 1..SOCIAL_BUTTON_BLOCK_THRESHOLD &&
+      (providers.size > 1 || allowSingleProviderFullWidth)
 
   Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(dp8)) {
-    val chunks = providers.chunked(MAX_BUTTONS_PER_ROW)
-
-    // Special-case: single provider gets a full-width button with text
-    if (isSingleProvider) {
-      Row(modifier = Modifier.fillMaxWidth()) {
+    if (showBlockButtons) {
+      providers.forEach { provider ->
         ClerkSocialButton(
-          provider = providers.first(),
+          provider = provider,
           isEnabled = true,
           onClick = onClick,
           forceIconOnly = false,
@@ -63,43 +61,37 @@ fun ClerkSocialRow(
       return@Column
     }
 
-    chunks.forEachIndexed { rowIndex, rowProviders ->
-      val isLastRow = rowIndex == chunks.size - 1
+    val providerRows = distributeSocialProvidersIntoRows(providers)
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+      val firstRowProviderCount = providerRows.firstOrNull()?.size ?: 1
+      val firstRowButtonWidth =
+        (maxWidth - (dp8 * (firstRowProviderCount - 1))) / firstRowProviderCount
 
-      // Build exactly 3 equal-width slots for every row. For the last row, use a brick pattern
-      // so that 1 item is centered and 2 items sit at the edges.
-      val rowSlots: List<OAuthProvider?> =
-        when {
-          // Full rows: fill left-to-right, pad trailing with nulls (placeholders)
-          !isLastRow || rowProviders.size == MAX_BUTTONS_PER_ROW ->
-            rowProviders + List(MAX_BUTTONS_PER_ROW - rowProviders.size) { null }
-          // Last row with 1 item: center
-          rowProviders.size == 1 -> listOf(null, rowProviders[0], null)
-          // Last row with 2 items: no middle spacer, buttons take full width
-          rowProviders.size == 2 -> rowProviders
-          else -> rowProviders
-        }
-
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement =
-          when {
-            isLastRow && rowProviders.size == 2 -> Arrangement.spacedBy(dp8)
-            else -> Arrangement.spacedBy(dp8, Alignment.CenterHorizontally)
-          },
-      ) {
-        rowSlots.forEach { slotProvider ->
-          Box(modifier = Modifier.weight(1f)) {
-            if (slotProvider != null) {
-              ClerkSocialButton(
-                provider = slotProvider,
-                isEnabled = true,
-                onClick = onClick,
-                forceIconOnly = true,
-                modifier = Modifier.fillMaxWidth(),
-                clerkTheme = clerkTheme,
-                expandIconWidth = isLastRow && rowProviders.size == 2,
-              )
+      Column(verticalArrangement = Arrangement.spacedBy(dp8)) {
+        providerRows.forEachIndexed { rowIndex, rowProviders ->
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(dp8, Alignment.CenterHorizontally),
+          ) {
+            rowProviders.forEach { provider ->
+              Box(
+                modifier =
+                  if (rowIndex == 0) {
+                    Modifier.weight(1f)
+                  } else {
+                    Modifier.width(firstRowButtonWidth)
+                  }
+              ) {
+                ClerkSocialButton(
+                  provider = provider,
+                  isEnabled = true,
+                  onClick = onClick,
+                  forceIconOnly = true,
+                  modifier = Modifier.fillMaxWidth(),
+                  clerkTheme = clerkTheme,
+                  expandIconWidth = true,
+                )
+              }
             }
           }
         }
@@ -117,5 +109,16 @@ private fun Preview() {
 
     // Multiple providers: icon-only layout
     ClerkSocialRow(providers = persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK))
+
+    // Four providers: 2x2 icon grid
+    ClerkSocialRow(
+      providers =
+        persistentListOf(
+          OAuthProvider.GOOGLE,
+          OAuthProvider.APPLE,
+          OAuthProvider.FACEBOOK,
+          OAuthProvider.GITHUB,
+        )
+    )
   }
 }
