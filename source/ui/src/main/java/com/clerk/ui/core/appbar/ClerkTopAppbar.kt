@@ -34,6 +34,7 @@ import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp68
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.navigation.LocalClerkHostedNavigation
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
@@ -49,6 +50,9 @@ internal fun ClerkTopAppBar(
   contentPadding: PaddingValues = PaddingValues(),
   trailingContent: (@Composable () -> Unit)? = null,
 ) {
+  // Hosted navigation means the host renders all header chrome, including back affordances.
+  if (LocalClerkHostedNavigation.current != null) return
+
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val resolvedBackgroundColor = backgroundColor ?: ClerkMaterialTheme.colors.muted
     Box(modifier = Modifier.fillMaxWidth().then(modifier).background(resolvedBackgroundColor)) {
