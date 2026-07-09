@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -38,6 +39,9 @@ import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.footer.DevelopmentModeWarningBackground
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.navigation.ClerkHostedNavigation
+import com.clerk.ui.navigation.HostedNavigationEffects
+import com.clerk.ui.navigation.LocalClerkHostedNavigation
 import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
 import com.clerk.ui.sessiontask.organization.SessionTaskChooseOrganizationView
 import com.clerk.ui.sessiontask.organization.SessionTaskCreateOrganizationView
@@ -80,6 +84,10 @@ import kotlinx.serialization.Serializable
  *   affordance falls back to the system back dispatcher.
  * @param onAuthComplete Called when authentication completes.
  * @param mode Determines whether the flow starts as sign-in, sign-up, or sign-in-or-up.
+ * @param hostedNavigation Optional hosted-navigation handle for embedding the auth flow inside the
+ *   host's own navigation chrome. When provided, Clerk's top app bars are hidden and the host
+ *   observes and drives the flow's internal back stack through the handle. See
+ *   [ClerkHostedNavigation].
  */
 @Composable
 fun AuthView(
@@ -97,6 +105,7 @@ fun AuthView(
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit = {},
   mode: AuthMode = AuthMode.SignInOrUp,
+  hostedNavigation: ClerkHostedNavigation? = null,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
@@ -123,22 +132,25 @@ fun AuthView(
       ObservePendingSessionTaskRouting(backStack = backStack)
       ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
-      DevelopmentModeWarningBox(
-        modifier = fullScreenModifier,
-        background = DevelopmentModeWarningBackground.White,
-      ) {
-        AuthNavDisplay(
-          modifier = Modifier.fillMaxSize(),
-          backStack = backStack,
-          options =
-            AuthNavOptions(
-              preferGoogleOneTap = preferGoogleOneTap,
-              startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-              isDismissible = isDismissible,
-              onDismiss = onDismiss,
-              onAuthComplete = onAuthComplete,
-            ),
-        )
+      HostedNavigationEffects(hostedNavigation = hostedNavigation, backStack = backStack)
+      CompositionLocalProvider(LocalClerkHostedNavigation provides hostedNavigation) {
+        DevelopmentModeWarningBox(
+          modifier = fullScreenModifier,
+          background = DevelopmentModeWarningBackground.White,
+        ) {
+          AuthNavDisplay(
+            modifier = Modifier.fillMaxSize(),
+            backStack = backStack,
+            options =
+              AuthNavOptions(
+                preferGoogleOneTap = preferGoogleOneTap,
+                startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+                isDismissible = isDismissible,
+                onDismiss = onDismiss,
+                onAuthComplete = onAuthComplete,
+              ),
+          )
+        }
       }
     }
   }
