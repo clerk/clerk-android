@@ -463,7 +463,10 @@ jobs:
               --body-file "$pr_body")"
           fi
 
-          gh pr edit "$pr_url" --add-reviewer clerk/team-sdk
+          if ! gh pr edit "$pr_url" --add-reviewer wobsoriano; then
+            echo "::warning::Could not request review from wobsoriano; continuing without a reviewer."
+          fi
+
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
 
   notify-slack:
@@ -483,22 +486,19 @@ jobs:
         run: |
           set -euo pipefail
 
+          context_links="<${RELEASE_URL}|View the GitHub release>"
+          if [ -n "$PR_URL" ]; then
+            context_links="$context_links · <$PR_URL|View the Expo bump PR>"
+          fi
+
           PAYLOAD=$(jq -n \
             --arg channel "$SLACK_CHANNEL_ID" \
             --arg tag "$RELEASE_TAG" \
-            --arg release_url "$RELEASE_URL" \
-            --arg pr_url "$PR_URL" \
+            --arg context_links "$context_links" \
             '
-            def expo_text:
-              if $pr_url != "" then
-                "<\($pr_url)|View the JavaScript PR>"
-              else
-                "No @clerk/expo bump PR was opened"
-              end;
-
             {
               channel: $channel,
-              text: ("Clerk Android SDK \($tag) has been released" + (if $pr_url != "" then " and the Expo bump PR is ready" else "" end)),
+              text: "Clerk Android SDK \($tag) has been released",
               blocks: [
                 {
                   type: "section",
@@ -512,7 +512,7 @@ jobs:
                   elements: [
                     {
                       type: "mrkdwn",
-                      text: ("<\($release_url)|View the GitHub release> · " + expo_text)
+                      text: $context_links
                     }
                   ]
                 }
