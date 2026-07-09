@@ -2,6 +2,7 @@ package com.clerk.ui.userprofile.security.delete
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
@@ -21,15 +22,29 @@ internal class DeleteAccountViewModel : ViewModel() {
     guardUser({}) { user ->
       _state.value = State.Loading
       viewModelScope.launch {
+        val deletedUserId = user.id
         user
           .delete()
           .onFailure {
             ClerkLog.e("Failed to delete account: ${it.errorMessage}")
             _state.value = State.Error(it.errorMessage)
           }
-          .onSuccess { _state.value = State.Success }
+          .onSuccess {
+            forgetTrustedDeviceLocalCredentials(deletedUserId)
+            _state.value = State.Success
+          }
       }
     }
+  }
+
+  private fun forgetTrustedDeviceLocalCredentials(deletedUserId: String) {
+    runCatching { Clerk.trustedDevices.forgetLocalCredentials(deletedUserId) }
+      .onFailure {
+        ClerkLog.e(
+          "Failed to delete trusted-device local credentials after account deletion. " +
+            "This is non-critical."
+        )
+      }
   }
 
   sealed interface State {

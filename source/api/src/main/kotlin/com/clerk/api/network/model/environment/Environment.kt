@@ -64,6 +64,20 @@ internal data class Environment(
         key == "backup_code" && value.enabled && value.usedForSecondFactor
       }
 
+  val trustedDeviceSignInIsEnabled: Boolean
+    get() =
+      authConfig.nativeSettings.apiEnabled && authConfig.nativeSettings.trustedDeviceSignInEnabled
+
+  val trustedDevicePromptAfterSignInIsEnabled: Boolean
+    get() =
+      trustedDeviceSignInIsEnabled &&
+        authConfig.nativeSettings.trustedDevicePromptAfterSignInEnabled
+
+  val trustedDevicePromptAfterSignUpIsEnabled: Boolean
+    get() =
+      trustedDeviceSignInIsEnabled &&
+        authConfig.nativeSettings.trustedDevicePromptAfterSignUpEnabled
+
   companion object {
 
     /** Fetches the environment configuration from the Clerk API. */

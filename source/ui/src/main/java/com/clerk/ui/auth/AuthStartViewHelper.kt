@@ -26,6 +26,7 @@ internal class AuthStartViewHelper {
   internal var testApplicationName: String? = null
   internal var testPasskeyIsEnabled: Boolean? = null
   internal var testPasskeyAutofillIsEnabled: Boolean? = null
+  internal var testTrustedDeviceSignInIsEnabled: Boolean? = null
 
   val authenticatableSocialProviders: List<OAuthProvider>
     get() {
@@ -77,6 +78,9 @@ internal class AuthStartViewHelper {
     get() =
       (testPasskeyIsEnabled ?: Clerk.passkeyIsEnabled) &&
         (testPasskeyAutofillIsEnabled ?: Clerk.passkeyAutofillIsEnabled)
+
+  val trustedDeviceSignInConfigIsEnabled: Boolean
+    get() = testTrustedDeviceSignInIsEnabled ?: Clerk.trustedDeviceSignInIsEnabled
 
   fun getKeyboardType(isPhoneNumberFieldActive: Boolean): KeyboardType {
     return if (isPhoneNumberFieldActive) {
@@ -180,12 +184,14 @@ internal class AuthStartViewHelper {
     applicationName: String? = null,
     passkeyIsEnabled: Boolean? = null,
     passkeyAutofillIsEnabled: Boolean? = null,
+    trustedDeviceSignInIsEnabled: Boolean? = null,
   ) {
     testEnabledFirstFactorAttributes = enabledFirstFactorAttributes
     testSocialProviders = socialProviders
     testApplicationName = applicationName
     testPasskeyIsEnabled = passkeyIsEnabled
     testPasskeyAutofillIsEnabled = passkeyAutofillIsEnabled
+    testTrustedDeviceSignInIsEnabled = trustedDeviceSignInIsEnabled
   }
 
   @VisibleForTesting
@@ -195,6 +201,7 @@ internal class AuthStartViewHelper {
     testApplicationName = null
     testPasskeyIsEnabled = null
     testPasskeyAutofillIsEnabled = null
+    testTrustedDeviceSignInIsEnabled = null
   }
 }
 

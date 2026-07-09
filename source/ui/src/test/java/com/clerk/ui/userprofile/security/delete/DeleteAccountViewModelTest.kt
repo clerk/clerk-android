@@ -43,6 +43,7 @@ class DeleteAccountViewModelTest {
   @Test
   fun deleteAccount_success_setsSuccessState() = runTest {
     val user = mockk<User>()
+    every { user.id } returns "user_1"
     every { Clerk.user } returns user
     coEvery { user.delete() } returns ClerkResult.success(mockk())
 
@@ -58,6 +59,7 @@ class DeleteAccountViewModelTest {
   @Test
   fun deleteAccount_failure_setsErrorState() = runTest {
     val user = mockk<User>()
+    every { user.id } returns "user_1"
     every { Clerk.user } returns user
     val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     coEvery { user.delete() } returns ClerkResult.Failure(error)

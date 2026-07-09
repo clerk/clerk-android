@@ -21,6 +21,11 @@ internal object ApiPaths {
       internal const val VERIFY = "${Client.BASE}/verify"
     }
 
+    /** Trusted-device sign-in endpoints */
+    internal object TrustedDevice {
+      internal const val VALIDATE = "${Client.BASE}/trusted_devices/validate"
+    }
+
     /** Session management endpoints */
     internal object Sessions {
       internal const val BASE = "${Client.BASE}/sessions"
@@ -118,6 +123,14 @@ internal object ApiPaths {
       internal const val BASE = "${User.BASE}/passkeys"
       internal const val WITH_ID = "${BASE}/{passkey_id}"
       internal const val ATTEMPT_VERIFICATION = "${WITH_ID}/attempt_verification"
+    }
+
+    /** Trusted-device management */
+    internal object TrustedDevice {
+      internal const val BASE = "${User.BASE}/trusted_devices"
+      internal const val WITH_ID = "${BASE}/{trusted_device_id}"
+      internal const val PREPARE = "${BASE}/prepare"
+      internal const val ATTEMPT = "${BASE}/attempt"
     }
 
     /** External account management */

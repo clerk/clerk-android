@@ -29,13 +29,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.session.Session
 import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.trusteddevice.TrustedDeviceValidationResult
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.LastUsedAuthBadgeOverlay
 import com.clerk.ui.core.button.social.ClerkSocialButton
 import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.composition.LocalAuthState
@@ -108,6 +111,15 @@ internal fun AuthStartViewImpl(
       }
     }
   val socialProviders = authViewHelper.authenticatableSocialProviders
+  val trustedDeviceSignInConfigIsEnabled =
+    authViewHelper.trustedDeviceSignInConfigIsEnabled && authState.mode != AuthMode.SignUp
+  var trustedDeviceSignInIsAvailable by remember { mutableStateOf(false) }
+
+  LaunchedEffect(trustedDeviceSignInConfigIsEnabled) {
+    trustedDeviceSignInIsAvailable =
+      trustedDeviceSignInConfigIsEnabled && resolveTrustedDeviceSignInAvailability()
+  }
+
   val lastAuthenticationStrategy =
     runCatching { Clerk.client.lastAuthenticationStrategy }.getOrNull()
   val lastUsedAuth =
@@ -116,6 +128,7 @@ internal fun AuthStartViewImpl(
       enabledFirstFactorAttributes = Clerk.enabledFirstFactorAttributes,
       authenticatableSocialProviders = socialProviders,
       storedIdentifierType = authState.storedIdentifierType,
+      trustedDeviceSignInIsVisible = trustedDeviceSignInIsAvailable,
     )
   val lastUsedSocialProvider = lastUsedAuth?.socialProvider
   val socialProvidersMinusLastUsed =
@@ -167,6 +180,11 @@ internal fun AuthStartViewImpl(
   DisposableEffect(authStartViewModel) {
     onDispose { authStartViewModel.cancelAutomaticPasskeySignIn() }
   }
+
+  val signInWithBiometricsTitle = stringResource(R.string.sign_in_with_biometrics)
+  val biometricPromptSubtitle =
+    Clerk.applicationName?.let { stringResource(R.string.app_uses_biometrics_to_sign_you_in, it) }
+      ?: stringResource(R.string.use_biometrics_to_sign_in)
 
   LaunchedEffect(state) {
     when (val s = state) {
@@ -274,10 +292,27 @@ internal fun AuthStartViewImpl(
           }
         }
 
-        if (authViewHelper.showOrDivider) {
+        if (
+          authViewHelper.showOrDivider ||
+            (trustedDeviceSignInIsAvailable && authViewHelper.showIdentifierField)
+        ) {
           TextDivider(stringResource(R.string.or))
         }
         Column(verticalArrangement = Arrangement.spacedBy(dp8)) {
+          if (trustedDeviceSignInIsAvailable) {
+            TrustedDeviceSignInButton(
+              isLoading = state is AuthStartViewModel.AuthState.TrustedDeviceState.Loading,
+              showsLastUsedBadge = lastUsedAuth?.showsTrustedDeviceBadge == true,
+              onClick = {
+                authState.enableInProgressAuthAttemptResume()
+                authStartViewModel.signInWithTrustedDevice(
+                  promptTitle = signInWithBiometricsTitle,
+                  promptSubtitle = biometricPromptSubtitle,
+                )
+              },
+            )
+          }
+
           if (lastUsedSocialProvider != null) {
             LastUsedAuthBadgeOverlay(isVisible = true, modifier = Modifier.fillMaxWidth()) {
               ClerkSocialButton(
@@ -326,6 +361,47 @@ private fun dismissTrailingContent(
   if (!showDismissButton) return null
 
   return { AuthDismissButton(onDismiss) }
+}
+
+/**
+ * Resolves whether trusted-device sign-in can be offered on the auth start screen.
+ *
+ * Starts from fast local availability and then validates the local credential against the server,
+ * cleaning up stale local state when the server no longer recognizes it.
+ */
+@Suppress("ReturnCount")
+private suspend fun resolveTrustedDeviceSignInAvailability(): Boolean {
+  if (Clerk.session?.status == Session.SessionStatus.ACTIVE) return false
+  if (!Clerk.trustedDevices.localAvailability().isAvailable) return false
+
+  return when (Clerk.trustedDevices.validateLocalCredentialIfPossible()) {
+    is TrustedDeviceValidationResult.Invalid -> false
+    TrustedDeviceValidationResult.Valid,
+    TrustedDeviceValidationResult.Inconclusive -> true
+  }
+}
+
+@Composable
+private fun TrustedDeviceSignInButton(
+  isLoading: Boolean,
+  showsLastUsedBadge: Boolean,
+  onClick: () -> Unit,
+) {
+  LastUsedAuthBadgeOverlay(isVisible = showsLastUsedBadge, modifier = Modifier.fillMaxWidth()) {
+    ClerkButton(
+      modifier = Modifier.fillMaxWidth(),
+      text = stringResource(R.string.continue_with_biometrics),
+      isLoading = isLoading,
+      configuration =
+        ClerkButtonDefaults.configuration(style = ClerkButtonConfiguration.ButtonStyle.Secondary),
+      icons =
+        ClerkButtonDefaults.icons(
+          leadingIcon = R.drawable.ic_fingerprint,
+          leadingIconColor = ClerkMaterialTheme.colors.foreground,
+        ),
+      onClick = onClick,
+    )
+  }
 }
 
 @Composable

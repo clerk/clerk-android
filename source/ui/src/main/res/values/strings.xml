@@ -289,4 +289,15 @@
     <string name="and_connector">and</string>
     <string name="set_up_two_step_verification" tools:ignore="MissingTranslation">Set up two-step verification</string>
     <string name="choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security" tools:ignore="MissingTranslation">Choose which method you prefer to protect your account with an extra layer of security.</string>
+    <string name="continue_with_biometrics" tools:ignore="MissingTranslation">Continue with biometrics</string>
+    <string name="sign_in_with_biometrics" tools:ignore="MissingTranslation">Sign in with biometrics</string>
+    <string name="biometric_sign_in" tools:ignore="MissingTranslation">Biometric sign-in</string>
+    <string name="enable_biometric_sign_in" tools:ignore="MissingTranslation">Enable biometric sign-in</string>
+    <string name="enable_biometric_sign_in_for_faster_access_to" tools:ignore="MissingTranslation">Enable biometric sign-in for faster access to %1$s</string>
+    <string name="enable_biometric_sign_in_for_faster_access" tools:ignore="MissingTranslation">Enable biometric sign-in for faster access</string>
+    <string name="allow" tools:ignore="MissingTranslation">Allow</string>
+    <string name="not_now" tools:ignore="MissingTranslation">Not now</string>
+    <string name="app_uses_biometrics_to_sign_you_in" tools:ignore="MissingTranslation">%1$s uses biometrics to sign you in.</string>
+    <string name="use_biometrics_to_sign_in" tools:ignore="MissingTranslation">Use biometrics to sign in.</string>
+    <string name="enroll_this_device" tools:ignore="MissingTranslation">Enroll this device</string>
 </resources>

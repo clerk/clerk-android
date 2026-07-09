@@ -33,6 +33,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
+import com.clerk.ui.auth.trusteddevice.TrustedDeviceEnrollmentView
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalTelemetryCollector
@@ -320,6 +321,9 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
     entry<AuthDestination.SignUpCompleteProfile> {
       SignUpCompleteProfileView(onAuthComplete = options.onAuthComplete)
     }
+    entry<AuthDestination.TrustedDeviceEnrollment> {
+      TrustedDeviceEnrollmentView(onAuthComplete = options.onAuthComplete)
+    }
   }
 
 internal fun shouldRouteToSessionTaskMfa(requiresForcedMfa: Boolean, top: NavKey?): Boolean {
@@ -437,4 +441,6 @@ internal object AuthDestination {
   @Serializable data class SignUpEmailLink(val emailAddress: String) : NavKey
 
   @Serializable data class SignUpCompleteProfile(val progress: Int) : NavKey
+
+  @Serializable data object TrustedDeviceEnrollment : NavKey
 }

@@ -19,6 +19,7 @@ object Constants {
     const val TICKET = "ticket"
     const val TRANSFER = "transfer"
     const val ENTERPRISE_SSO = "enterprise_sso"
+    const val TRUSTED_DEVICE = "trusted_device"
   }
 
   /** HTTP and API related constants */
