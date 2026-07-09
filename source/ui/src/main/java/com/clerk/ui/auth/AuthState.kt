@@ -21,6 +21,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.emailVerificationStrategy
 import com.clerk.api.signup.firstFieldToCollect
 import com.clerk.api.signup.firstFieldToVerify
+import com.clerk.ui.auth.trusteddevice.TrustedDeviceEnrollmentPrompt
 import com.clerk.ui.core.common.NavigableState
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.navigation.pop
@@ -87,6 +88,11 @@ internal class AuthState(
     }
 
   var lastSubmittedIdentifier by mutableStateOf<String?>(null)
+
+  private var trustedDeviceEnrollmentWasOffered by mutableStateOf(false)
+
+  var shouldResumeInProgressAuthAttempt by mutableStateOf(true)
+    private set
 
   var organizationLogoUrl by mutableStateOf(organizationLogoUrl)
     private set
@@ -184,6 +190,7 @@ internal class AuthState(
           hasUnresolvedCreatedSession = signIn.createdSessionId != null && session == null,
           shouldChooseOrganizationForCreatedSession =
             signIn.createdSessionId != null && Clerk.organizationSelectionIsForced,
+          completedWithSignUp = false,
           onAuthComplete = onAuthComplete,
         )
       }
@@ -200,6 +207,7 @@ internal class AuthState(
     taskKey: SessionTaskKey?,
     hasUnresolvedCreatedSession: Boolean,
     shouldChooseOrganizationForCreatedSession: Boolean,
+    completedWithSignUp: Boolean,
     onAuthComplete: () -> Unit,
   ) {
     when (
@@ -213,8 +221,34 @@ internal class AuthState(
       PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD -> routeToSessionTaskResetPassword()
       PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION -> routeToChooseOrganization()
       PostAuthCompletionAction.ROUTE_TO_HELP -> backStack.add(AuthDestination.SignInGetHelp)
-      PostAuthCompletionAction.COMPLETE_AUTH -> onAuthComplete()
+      PostAuthCompletionAction.COMPLETE_AUTH -> {
+        if (offerTrustedDeviceEnrollmentIfNeeded(completedWithSignUp)) return
+        onAuthComplete()
+      }
     }
+  }
+
+  /**
+   * Routes to the trusted-device enrollment prompt when it should be offered after a completed auth
+   * flow. Returns `true` when the prompt was routed to.
+   */
+  @Suppress("ReturnCount")
+  private fun offerTrustedDeviceEnrollmentIfNeeded(completedWithSignUp: Boolean): Boolean {
+    if (trustedDeviceEnrollmentWasOffered) return false
+    if (backStack.lastOrNull() == AuthDestination.TrustedDeviceEnrollment) return false
+    if (
+      !TrustedDeviceEnrollmentPrompt.shouldOffer(
+        afterSignUp = completedWithSignUp,
+        sharedPreferences = sharedPreferences,
+      )
+    ) {
+      return false
+    }
+
+    trustedDeviceEnrollmentWasOffered = true
+    TrustedDeviceEnrollmentPrompt.markPromptSeen(sharedPreferences)
+    backStack.add(AuthDestination.TrustedDeviceEnrollment)
+    return true
   }
 
   private fun routeToSessionTaskMfa() {
@@ -273,6 +307,7 @@ internal class AuthState(
           hasUnresolvedCreatedSession = signUp.createdSessionId != null && session == null,
           shouldChooseOrganizationForCreatedSession =
             signUp.createdSessionId != null && Clerk.organizationSelectionIsForced,
+          completedWithSignUp = true,
           onAuthComplete = onAuthComplete,
         )
         return
@@ -339,6 +374,7 @@ internal class AuthState(
     applyIdentifierConfig(identifierConfig)
   }
 
+  @Suppress("CyclomaticComplexMethod")
   fun applyIdentifierConfig(config: AuthIdentifierConfig) {
     val previousConfig = appliedIdentifierConfig
     if (config == previousConfig) return

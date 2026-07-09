@@ -11,4 +11,6 @@ internal object StrategyKeys {
   internal const val TOTP = "totp"
 
   internal const val BACKUP_CODE = "backup_code"
+
+  internal const val TRUSTED_DEVICE = "trusted_device"
 }

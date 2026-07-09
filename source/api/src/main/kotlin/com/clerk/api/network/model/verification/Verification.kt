@@ -1,6 +1,7 @@
 package com.clerk.api.network.model.verification
 
 import com.clerk.api.network.model.error.Error
+import com.clerk.api.trusteddevice.TrustedDeviceChallenge
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -21,6 +22,8 @@ data class Verification(
   val externalVerificationRedirectUrl: String? = null,
   /** The nonce pertaining to the verification. */
   val nonce: String? = null,
+  /** The challenge payload for trusted-device sign-in verifications. */
+  @SerialName("trusted_device_challenge") val trustedDeviceChallenge: TrustedDeviceChallenge? = null,
 ) {
   /** The state of the verification. */
   @Serializable

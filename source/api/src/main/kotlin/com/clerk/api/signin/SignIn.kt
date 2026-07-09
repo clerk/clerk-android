@@ -13,6 +13,7 @@ import com.clerk.api.Constants.Strategy.RESET_PASSWORD_PHONE_CODE
 import com.clerk.api.Constants.Strategy.TICKET
 import com.clerk.api.Constants.Strategy.TOTP as STRATEGY_TOTP
 import com.clerk.api.Constants.Strategy.TRANSFER
+import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -26,6 +27,7 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
+import com.clerk.api.trusteddevice.TrustedDevices
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
 import kotlinx.serialization.SerialName
@@ -602,6 +604,20 @@ data class SignIn(
       /** Passkey strategy for authentication using a passkey. */
       data class Passkey(override val strategy: String = PASSKEY) : Strategy
 
+      /**
+       * Trusted-device strategy for authentication using a locally enrolled biometric credential.
+       *
+       * @property id The trusted-device credential ID to use. When omitted, the available local
+       *   credential is used.
+       * @property identifierHint A local-only user identifier hint used to choose a matching
+       *   credential.
+       */
+      data class TrustedDevice(
+        val id: String? = null,
+        val identifierHint: String? = null,
+        override val strategy: String = TRUSTED_DEVICE,
+      ) : Strategy
+
       @AutoMap
       @Serializable
       data class Identifier(
@@ -641,6 +657,8 @@ data class SignIn(
     suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
         is CreateParams.Strategy.Passkey -> create(params)
+        is CreateParams.Strategy.TrustedDevice ->
+          TrustedDevices.signIn(id = params.id, identifierHint = params.identifierHint)
         else -> {
           val baseMap =
             if (params is CreateParams.Strategy.Transfer) {

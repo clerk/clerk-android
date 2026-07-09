@@ -41,6 +41,7 @@ compileSdk = "36"
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-arch-test = "androidx.arch.core:core-testing:2.2.0"
+androidx-biometric = "androidx.biometric:biometric:1.1.0"
 androidx-browser = "androidx.browser:browser:1.10.0"
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 androidx-compose-icons = "org.jetbrains.compose.material:material-icons-core:1.7.3"

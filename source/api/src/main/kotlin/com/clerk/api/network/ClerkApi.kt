@@ -10,6 +10,7 @@ import com.clerk.api.network.api.OrganizationApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.api.SignUpApi
+import com.clerk.api.network.api.TrustedDeviceApi
 import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
@@ -75,6 +76,10 @@ internal object ClerkApi {
   val magicLink: MagicLinkApi
     get() = _magicLink ?: error("ClerkApi is not configured.")
 
+  private var _trustedDevice: TrustedDeviceApi? = null
+  val trustedDevice: TrustedDeviceApi
+    get() = _trustedDevice ?: error("ClerkApi is not configured.")
+
   // Exposed for internal testing/verification
   internal var configuredBaseUrl: String? = null
     private set
@@ -105,6 +110,7 @@ internal object ClerkApi {
     _deviceAttestation = retrofit.create(DeviceAttestationApi::class.java)
     _organization = retrofit.create(OrganizationApi::class.java)
     _magicLink = retrofit.create(MagicLinkApi::class.java)
+    _trustedDevice = retrofit.create(TrustedDeviceApi::class.java)
   }
 
   /** Clears all configured Retrofit services. */
@@ -117,6 +123,8 @@ internal object ClerkApi {
     _user = null
     _deviceAttestation = null
     _organization = null
+    _magicLink = null
+    _trustedDevice = null
     configuredBaseUrl = null
     configuredUrlWithVersion = null
     configuredCustomHeaders = emptyMap()

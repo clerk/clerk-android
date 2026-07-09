@@ -20,6 +20,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
 import com.clerk.api.sso.SSOCancellationException
+import com.clerk.api.trusteddevice.TrustedDeviceKeyManagerException
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
@@ -117,6 +118,38 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
     val job = automaticPasskeySignInJob ?: return
     automaticPasskeySignInJob = null
     job.cancel()
+  }
+
+  /**
+   * Signs in with the locally enrolled trusted-device (biometric) credential.
+   *
+   * User-canceled biometric prompts reset the state silently instead of surfacing an error.
+   */
+  internal fun signInWithTrustedDevice(
+    promptTitle: String? = null,
+    promptSubtitle: String? = null,
+  ) {
+    cancelAutomaticPasskeySignIn()
+    _state.value = AuthState.TrustedDeviceState.Loading
+    viewModelScope.launch(Dispatchers.IO) {
+      Clerk.trustedDevices
+        .signIn(promptTitle = promptTitle, promptSubtitle = promptSubtitle)
+        .onSuccess { signIn ->
+          withContext(Dispatchers.Main) {
+            _state.value = AuthState.Success.SignInSuccess(signIn = signIn)
+          }
+        }
+        .onFailure { failure ->
+          withContext(Dispatchers.Main) {
+            _state.value =
+              if (failure.isTrustedDeviceCancellation) {
+                AuthState.Idle
+              } else {
+                AuthState.Error(failure.errorMessage)
+              }
+          }
+        }
+    }
   }
 
   /**
@@ -425,6 +458,11 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       data class SignUpSuccess(val signUp: SignUp?) : Success
     }
 
+    /** States specific to trusted-device (biometric) sign-in. */
+    sealed interface TrustedDeviceState : AuthState {
+      data object Loading : TrustedDeviceState
+    }
+
     /**
      * Indicates that an authentication attempt failed.
      *
@@ -453,6 +491,11 @@ private fun SignIn.requiresEnterpriseSSO(): Boolean =
 
 private val ClerkResult.Failure<*>.isSSOCancellation: Boolean
   get() = throwable is SSOCancellationException
+
+internal val ClerkResult.Failure<*>.isTrustedDeviceCancellation: Boolean
+  get() =
+    (throwable as? TrustedDeviceKeyManagerException)?.code ==
+      TrustedDeviceKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_CANCELED
 
 private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
 
