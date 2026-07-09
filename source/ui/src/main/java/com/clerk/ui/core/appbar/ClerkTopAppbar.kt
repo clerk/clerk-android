@@ -38,6 +38,7 @@ import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp68
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.navigation.LocalClerkEmbeddedNavigation
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
@@ -53,6 +54,9 @@ internal fun ClerkTopAppBar(
   contentPadding: PaddingValues = PaddingValues(),
   trailingContent: (@Composable () -> Unit)? = null,
 ) {
+  // Embedded navigation means the host renders all header chrome, including back affordances.
+  if (LocalClerkEmbeddedNavigation.current != null) return
+
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val resolvedBackgroundColor = backgroundColor ?: ClerkMaterialTheme.colors.muted
     Box(modifier = Modifier.fillMaxWidth().then(modifier).background(resolvedBackgroundColor)) {
