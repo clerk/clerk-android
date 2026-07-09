@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -39,6 +40,9 @@ import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.footer.DevelopmentModeWarningBackground
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.navigation.ClerkEmbeddedNavigation
+import com.clerk.ui.navigation.EmbeddedNavigationEffects
+import com.clerk.ui.navigation.LocalClerkEmbeddedNavigation
 import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
 import com.clerk.ui.sessiontask.organization.SessionTaskChooseOrganizationView
 import com.clerk.ui.sessiontask.organization.SessionTaskCreateOrganizationView
@@ -86,6 +90,10 @@ import kotlinx.serialization.Serializable
  *   sizing or spacing, so you are responsible for its layout and accessibility. To only change the
  *   size of the dashboard-configured logo, set [com.clerk.api.ui.ClerkDesign.logoMaxHeight]
  *   instead.
+ * @param embeddedNavigation Optional embedded-navigation handle for embedding the auth flow inside
+ *   the host's own navigation chrome. When provided, Clerk's top app bars are hidden and the host
+ *   observes and drives the flow's internal back stack through the handle. See
+ *   [ClerkEmbeddedNavigation].
  */
 @Composable
 fun AuthView(
@@ -104,6 +112,7 @@ fun AuthView(
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit = {},
   mode: AuthMode = AuthMode.SignInOrUp,
+  embeddedNavigation: ClerkEmbeddedNavigation? = null,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
@@ -130,23 +139,26 @@ fun AuthView(
       ObservePendingSessionTaskRouting(backStack = backStack)
       ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
-      ClerkLogoProvider(logo) {
-        DevelopmentModeWarningBox(
-          modifier = fullScreenModifier,
-          background = DevelopmentModeWarningBackground.White,
-        ) {
-          AuthNavDisplay(
-            modifier = Modifier.fillMaxSize(),
-            backStack = backStack,
-            options =
-              AuthNavOptions(
-                preferGoogleOneTap = preferGoogleOneTap,
-                startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-                isDismissible = isDismissible,
-                onDismiss = onDismiss,
-                onAuthComplete = onAuthComplete,
-              ),
-          )
+      EmbeddedNavigationEffects(embeddedNavigation = embeddedNavigation, backStack = backStack)
+      CompositionLocalProvider(LocalClerkEmbeddedNavigation provides embeddedNavigation) {
+        ClerkLogoProvider(logo) {
+          DevelopmentModeWarningBox(
+            modifier = fullScreenModifier,
+            background = DevelopmentModeWarningBackground.White,
+          ) {
+            AuthNavDisplay(
+              modifier = Modifier.fillMaxSize(),
+              backStack = backStack,
+              options =
+                AuthNavOptions(
+                  preferGoogleOneTap = preferGoogleOneTap,
+                  startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+                  isDismissible = isDismissible,
+                  onDismiss = onDismiss,
+                  onAuthComplete = onAuthComplete,
+                ),
+            )
+          }
         }
       }
     }
