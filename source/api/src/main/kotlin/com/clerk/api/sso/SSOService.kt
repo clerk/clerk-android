@@ -8,6 +8,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
+import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -98,6 +99,9 @@ internal object SSOService {
         Exception("New authentication started, cancelling previous attempt")
       )
     )
+    HostedAuthService.cancelPendingAuthentication(
+      "New authentication started, cancelling previous hosted auth attempt"
+    )
     clearCurrentAuth()
     val resolvedStrategy =
       strategy
@@ -175,6 +179,9 @@ internal object SSOService {
         Exception("New authentication started, cancelling previous attempt")
       )
     )
+    HostedAuthService.cancelPendingAuthentication(
+      "New authentication started, cancelling previous hosted auth attempt"
+    )
     clearCurrentAuth()
 
     val initialResult =
@@ -232,6 +239,9 @@ internal object SSOService {
       ClerkResult.unknownFailure(
         Exception("New authentication started, cancelling previous attempt")
       )
+    )
+    HostedAuthService.cancelPendingAuthentication(
+      "New authentication started, cancelling previous hosted auth attempt"
     )
     clearCurrentAuth()
 

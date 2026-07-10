@@ -10,9 +10,12 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED
+import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.log.SafeUriLog
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.magiclink.canHandleNativeMagicLink
+import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.coroutines.launch
 
 /**
@@ -31,6 +34,8 @@ import kotlinx.coroutines.launch
 internal class SSOManagerActivity : AppCompatActivity() {
   private var authorizationStarted = false
   private var completionStarted = false
+  private var hostedAuthCompletionStarted = false
+  private var completionObserverAttached = false
   private lateinit var desiredUri: Uri
   private var pendingCallbackUri: Uri? = null
 
@@ -45,29 +50,19 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
   override fun onResume() {
     super.onResume()
-    val callbackUri = pendingCallbackUri ?: intent.data?.takeIf(::isCallbackUri)
-    if (callbackUri != null) {
-      if (!completionStarted) {
-        completionStarted = true
-        authorizationStarted = true
-        pendingCallbackUri = callbackUri
-        intent = Intent(intent).apply { data = null }
-        authorizationComplete(callbackUri)
-      }
-      return
-    }
+    if (resumeCallbackIfPresent()) return
 
     // on first run, launch the intent to start the OAuth/SSO flow in the browser
     if (!authorizationStarted) {
       try {
-        ClerkLog.d("Launching custom tab with uri: $desiredUri")
+        ClerkLog.d("Launching custom tab with uri: ${SafeUriLog.describe(desiredUri)}")
         CustomTabsIntent.Builder().build().launchUrl(this, desiredUri)
         authorizationStarted = true
       } catch (_: UninitializedPropertyAccessException) {
-        noUriFound()
+        authorizationFailed()
         finish()
       } catch (_: ActivityNotFoundException) {
-        noBrowserFound()
+        authorizationFailed()
         finish()
       }
       return
@@ -85,13 +80,39 @@ internal class SSOManagerActivity : AppCompatActivity() {
       // Do not call finish() here; authorizationComplete will finish when done
     }
       ?: run {
-        authorizationCanceled()
+        authorizationFailed()
         finish()
       }
   }
 
+  private fun resumeCallbackIfPresent(): Boolean {
+    val callbackUri = pendingCallbackUri ?: intent.data?.takeIf(::isCallbackUri)
+    val shouldAttachObserver =
+      !completionObserverAttached && (!completionStarted || hostedAuthCompletionStarted)
+    if (callbackUri != null && shouldAttachObserver) {
+      if (!completionStarted) {
+        completionStarted = true
+        authorizationStarted = true
+        hostedAuthCompletionStarted = HostedAuthService.canHandle(callbackUri)
+        pendingCallbackUri = callbackUri
+        intent = Intent(intent).apply { data = null }
+      }
+      completionObserverAttached = true
+      authorizationComplete(callbackUri)
+    }
+    return callbackUri != null
+  }
+
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
+    if (intent.data?.let(::isCallbackUri) != true) {
+      authorizationStarted = false
+      completionStarted = false
+      hostedAuthCompletionStarted = false
+      completionObserverAttached = false
+      pendingCallbackUri = null
+      hydrateState(intent.extras)
+    }
     setIntent(intent)
   }
 
@@ -99,6 +120,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
     super.onSaveInstanceState(outState)
     outState.putBoolean(KEY_AUTHORIZATION_STARTED, authorizationStarted)
     outState.putBoolean(KEY_COMPLETION_STARTED, completionStarted)
+    outState.putBoolean(KEY_HOSTED_AUTH_COMPLETION_STARTED, hostedAuthCompletionStarted)
     outState.putString(KEY_PENDING_CALLBACK_URI, pendingCallbackUri?.toString())
     if (::desiredUri.isInitialized) {
       outState.putString(URI_KEY, desiredUri.toString())
@@ -115,6 +137,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
     if (state == null) return finish()
     authorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false)
     completionStarted = state.getBoolean(KEY_COMPLETION_STARTED, false)
+    hostedAuthCompletionStarted = state.getBoolean(KEY_HOSTED_AUTH_COMPLETION_STARTED, false)
     state.getString(URI_KEY)?.let { desiredUri = it.toUri() }
     pendingCallbackUri = state.getString(KEY_PENDING_CALLBACK_URI)?.toUri()
   }
@@ -142,6 +165,17 @@ internal class SSOManagerActivity : AppCompatActivity() {
           }
           return@launch
         }
+        val hostedAuthResult = HostedAuthService.complete(uri)
+        if (hostedAuthCompletionStarted || hostedAuthResult != null) {
+          ClerkLog.d("authorizationComplete called with hosted auth redirect")
+          pendingCallbackUri = null
+          when (hostedAuthResult) {
+            is ClerkResult.Success -> setResult(RESULT_OK, Intent())
+            is ClerkResult.Failure,
+            null -> setResult(RESULT_CANCELED, Intent())
+          }
+          return@launch
+        }
         if (SSOService.hasPendingExternalAccountConnection()) {
           ClerkLog.d("authorizationComplete called with external connection")
           SSOService.completeExternalConnection()
@@ -161,25 +195,15 @@ internal class SSOManagerActivity : AppCompatActivity() {
   }
 
   private fun isCallbackUri(uri: Uri): Boolean {
-    return uri.scheme?.startsWith("clerk") == true ||
+    return HostedAuthService.canHandle(uri) ||
+      uri.scheme?.startsWith("clerk") == true ||
       canHandleNativeMagicLink(uri) ||
       uri.getQueryParameter("rotating_token_nonce") != null
   }
 
-  /** Handles authentication cancellation by the user. */
-  private fun authorizationCanceled() {
-    val response = Intent()
-    setResult(RESULT_CANCELED, response)
-  }
-
-  /** Handles the case where no compatible browser is found to handle the authentication. */
-  private fun noBrowserFound() {
-    val response = Intent()
-    setResult(RESULT_CANCELED, response)
-  }
-
-  /** Handles the case where no authentication URI is found in the activity's state. */
-  private fun noUriFound() {
+  /** Finishes an authentication attempt that could not be completed. */
+  private fun authorizationFailed() {
+    HostedAuthService.cancelPendingAuthentication()
     val response = Intent()
     setResult(RESULT_CANCELED, response)
   }
@@ -200,6 +224,9 @@ internal class SSOManagerActivity : AppCompatActivity() {
       return intent
     }
 
+    internal fun createAuthorizationIntent(context: Context, authorizationUri: Uri): Intent =
+      createBaseIntent(context).apply { putExtra(URI_KEY, authorizationUri.toString()) }
+
     /**
      * Creates a base intent for the SSO manager activity.
      *
@@ -211,6 +238,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
     internal const val URI_KEY = "uri"
     internal const val KEY_COMPLETION_STARTED = "completion_started"
+    internal const val KEY_HOSTED_AUTH_COMPLETION_STARTED = "hosted_auth_completion_started"
     internal const val KEY_PENDING_CALLBACK_URI = "pending_callback_uri"
   }
 }

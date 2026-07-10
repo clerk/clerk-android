@@ -1,6 +1,8 @@
 package com.clerk.api.network.api
 
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
+import com.clerk.api.network.middleware.SensitiveRequest
 import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
 import com.clerk.api.network.serialization.ClerkApiResultConverterFactory
 import com.clerk.api.network.serialization.ClerkResult
@@ -15,12 +17,89 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 class ClientApiTest {
+
+  @Test
+  fun `createHostedAuth posts PKCE state redirect and mode as form fields`() = runTest {
+    val interceptor = CapturingInterceptor(HOSTED_AUTH_RESPONSE)
+    val api = clientApi(interceptor)
+
+    val result =
+      api.createHostedAuth(
+        redirectUrl = "clerk://com.example.app.callback",
+        codeChallenge = "challenge_123",
+        state = "state_123",
+        mode = "sign-up",
+      )
+
+    assertTrue(result is ClerkResult.Success)
+    val hostedAuth = (result as ClerkResult.Success).value
+    assertEquals("hosted_auth", hostedAuth.objectType)
+    assertEquals("https://example.accounts.dev/sign-in", hostedAuth.url)
+    assertEquals("POST", interceptor.method)
+    assertEquals("/v1/client/hosted_auth", interceptor.path)
+    assertTrue(interceptor.sensitiveRequest)
+    assertEquals(
+      mapOf(
+        "redirect_url" to "clerk://com.example.app.callback",
+        "code_challenge" to "challenge_123",
+        "state" to "state_123",
+        "mode" to "sign-up",
+      ),
+      interceptor.formBody,
+    )
+  }
+
+  @Test
+  fun `createHostedAuth omits optional mode`() = runTest {
+    val interceptor = CapturingInterceptor(HOSTED_AUTH_RESPONSE)
+    val api = clientApi(interceptor)
+
+    val result =
+      api.createHostedAuth(
+        redirectUrl = "clerk://com.example.app.callback",
+        codeChallenge = "challenge_123",
+        state = "state_123",
+      )
+
+    assertTrue(result is ClerkResult.Success)
+    assertFalse(interceptor.formBody.containsKey("mode"))
+    assertFalse(interceptor.formBody.containsKey("initial_page"))
+  }
+
+  @Test
+  fun `redeemHostedAuth posts verifier and nonce in form body`() = runTest {
+    val interceptor = CapturingInterceptor(CLIENT_RESPONSE)
+    val api = clientApi(interceptor)
+
+    val result =
+      api.redeemHostedAuth(
+        rotatingTokenNonce = "nonce_123",
+        codeVerifier = "verifier_123",
+      )
+
+    assertTrue(result is ClerkResult.Success)
+    assertEquals("client_123", (result as ClerkResult.Success).value.id)
+    assertEquals("POST", interceptor.method)
+    assertEquals("/v1/client", interceptor.path)
+    assertEquals(null, interceptor.query)
+    assertTrue(interceptor.manualClientSyncRequest)
+    assertTrue(interceptor.sensitiveRequest)
+    assertEquals(
+      mapOf(
+        "_method" to "GET",
+        "rotating_token_nonce" to "nonce_123",
+        "code_verifier" to "verifier_123",
+      ),
+      interceptor.formBody,
+    )
+  }
 
   @Test
   fun `setActive request includes select org intent and organization id`() = runTest {
@@ -72,15 +151,22 @@ class ClientApiTest {
       .create(ClientApi::class.java)
   }
 
-  private class CapturingInterceptor : Interceptor {
+  private class CapturingInterceptor(private val responseBody: String = SESSION_RESPONSE) :
+    Interceptor {
     lateinit var method: String
     lateinit var path: String
     lateinit var formBody: Map<String, String>
+    var query: String? = null
+    var manualClientSyncRequest: Boolean = false
+    var sensitiveRequest: Boolean = false
 
     override fun intercept(chain: Interceptor.Chain): Response {
       val request = chain.request()
       method = request.method
       path = request.url.encodedPath
+      query = request.url.encodedQuery
+      manualClientSyncRequest = request.tag(ManualClientSyncRequest::class.java) != null
+      sensitiveRequest = request.tag(SensitiveRequest::class.java) != null
       formBody = request.body.readFormBody()
 
       return Response.Builder()
@@ -88,7 +174,7 @@ class ClientApiTest {
         .protocol(Protocol.HTTP_1_1)
         .code(200)
         .message("OK")
-        .body(SESSION_RESPONSE.toResponseBody("application/json".toMediaType()))
+        .body(responseBody.toResponseBody("application/json".toMediaType()))
         .build()
     }
 
@@ -112,6 +198,31 @@ class ClientApiTest {
   }
 
   private companion object {
+    const val HOSTED_AUTH_RESPONSE =
+      """
+      {
+        "response": {
+          "object": "hosted_auth",
+          "url": "https://example.accounts.dev/sign-in"
+        },
+        "client": {
+          "id": "client_123",
+          "sessions": []
+        }
+      }
+      """
+
+    const val CLIENT_RESPONSE =
+      """
+      {
+        "response": {
+          "id": "client_123",
+          "sessions": []
+        },
+        "client": null
+      }
+      """
+
     const val SESSION_RESPONSE =
       """
       {

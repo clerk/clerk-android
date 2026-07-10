@@ -4,6 +4,8 @@ import com.clerk.api.Clerk
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.middleware.ManualClientSyncRequest
+import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
@@ -39,6 +41,15 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     val request = chain.request()
     val response = chain.proceed(request)
 
+    return if (request.tag(ManualClientSyncRequest::class.java) != null) {
+      response
+    } else {
+      syncClientFromResponse(request, response)
+    }
+  }
+
+  @Suppress("NestedBlockDepth")
+  private fun syncClientFromResponse(request: Request, response: Response): Response {
     // Only process JSON responses
     val body = response.body
     if (response.isSuccessful && body.contentType()?.subtype == "json") {
@@ -55,7 +66,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
                   ClerkLog.d("Client sync skipped null piggyback client")
                 } else {
                   ClerkLog.d("Client sync cleared by explicit null client")
-                  Clerk.updateClient(Client())
+                  syncClient(request) { Clerk.updateClient(Client()) }
                 }
               }
               null -> Unit
@@ -63,7 +74,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
                 // Extract and set the client
                 val client = json.decodeFromJsonElement<Client>(clientJson)
                 ClerkLog.d("Client synced: ${client.id}")
-                Clerk.updateClient(client)
+                syncClient(request) { Clerk.updateClient(client) }
               }
             }
           }
@@ -86,6 +97,10 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     }
 
     return response
+  }
+
+  private fun syncClient(request: Request, sync: () -> Unit) {
+    request.tag(ResponseGuard::class.java)?.runIfAllowed(sync) ?: sync()
   }
 
   private fun emitAuthEvents(request: Request, jsonObject: JsonObject) {

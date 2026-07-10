@@ -1,6 +1,7 @@
 package com.clerk.api.network.middleware.incoming
 
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
+import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import okhttp3.Interceptor
@@ -20,11 +21,15 @@ internal class DeviceTokenSavingMiddleware : Interceptor {
    * @return The unmodified response after saving any device token found.
    */
   override fun intercept(chain: Interceptor.Chain): Response {
-    val response = chain.proceed(chain.request())
+    val request = chain.request()
+    val response = chain.proceed(request)
     val deviceToken = response.header(AUTHORIZATION_HEADER)
 
     // Save the device token to storage whenever it's present in the response
-    deviceToken?.let { token -> StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, token) }
+    deviceToken?.let { token ->
+      val saveToken = { StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, token) }
+      request.tag(ResponseGuard::class.java)?.runIfAllowed(saveToken) ?: saveToken()
+    }
 
     return response
   }
