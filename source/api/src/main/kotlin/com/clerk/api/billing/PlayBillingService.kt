@@ -403,8 +403,9 @@ internal fun resolveStoreProduct(
  * Resolves the subscription offer to purchase for the given Google Play base plan.
  *
  * Google Play returns only the offers the user is eligible for. Among the offers belonging to
- * [basePlanId], prefers the base offer (no offer ID), falling back to the first eligible offer.
- * Returns `null` when the product has no offer for the base plan.
+ * [basePlanId], applies automatic selection (matching the Clerk Expo SDK): the offer with the
+ * longest free trial, then the cheapest introductory price, then the base offer (no offer ID), then
+ * the first eligible offer. Returns `null` when the product has no offer for the base plan.
  */
 internal fun resolveSubscriptionOffer(
   productDetails: ProductDetails,
@@ -412,5 +413,45 @@ internal fun resolveSubscriptionOffer(
 ): ProductDetails.SubscriptionOfferDetails? {
   val eligible =
     productDetails.subscriptionOfferDetails.orEmpty().filter { it.basePlanId == basePlanId }
-  return eligible.firstOrNull { it.offerId == null } ?: eligible.firstOrNull()
+  val trial = eligible.filter { it.freeTrialDays > 0 }.maxByOrNull { it.freeTrialDays }
+  val introductory =
+    eligible
+      .mapNotNull { offer -> offer.introductoryPriceMicros?.let { price -> offer to price } }
+      .minByOrNull { it.second }
+      ?.first
+  return trial
+    ?: introductory
+    ?: eligible.firstOrNull { it.offerId == null }
+    ?: eligible.firstOrNull()
+}
+
+/** The total number of days of free (zero-price) pricing phases in this offer. */
+private val ProductDetails.SubscriptionOfferDetails.freeTrialDays: Int
+  get() =
+    pricingPhases.pricingPhaseList
+      .filter { it.priceAmountMicros == 0L }
+      .sumOf { isoPeriodDays(it.billingPeriod) * maxOf(it.billingCycleCount, 1) }
+
+/**
+ * The price of the offer's introductory (first) pricing phase, or `null` when the offer has no
+ * discounted lead-in phase.
+ */
+private val ProductDetails.SubscriptionOfferDetails.introductoryPriceMicros: Long?
+  get() = pricingPhases.pricingPhaseList.takeIf { it.size > 1 }?.firstOrNull()?.priceAmountMicros
+
+private val ISO_PERIOD_REGEX =
+  Regex("""^P(?:(?<days>\d+)D)?(?:(?<weeks>\d+)W)?(?:(?<months>\d+)M)?(?:(?<years>\d+)Y)?$""")
+
+private const val DAYS_PER_WEEK = 7
+private const val DAYS_PER_MONTH = 30
+private const val DAYS_PER_YEAR = 365
+
+/** The approximate number of days in an ISO 8601 [period] (e.g. `P1M` -> 30). */
+private fun isoPeriodDays(period: String): Int {
+  val match = ISO_PERIOD_REGEX.matchEntire(period) ?: return 0
+  fun component(name: String) = match.groups[name]?.value?.toIntOrNull() ?: 0
+  return component("days") +
+    component("weeks") * DAYS_PER_WEEK +
+    component("months") * DAYS_PER_MONTH +
+    component("years") * DAYS_PER_YEAR
 }
