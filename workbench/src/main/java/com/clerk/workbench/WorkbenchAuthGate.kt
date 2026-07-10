@@ -20,14 +20,20 @@ internal fun WorkbenchAuthGate(signedInContent: @Composable () -> Unit) {
   val pendingTaskKey = session?.pendingTaskKey
   var isAuthFlowActive by rememberSaveable { mutableStateOf(false) }
 
-  LaunchedEffect(isInitialized, user?.id, session?.id, pendingTaskKey) {
+  // AuthView owns post-auth steps (session tasks, trusted-device enrollment), so once the flow is
+  // active it stays visible until onAuthComplete fires instead of being swapped out the moment a
+  // session becomes active.
+  LaunchedEffect(isInitialized, user?.id, pendingTaskKey) {
     if (!isInitialized) return@LaunchedEffect
-    isAuthFlowActive = user == null || pendingTaskKey != null
+    if (user == null || pendingTaskKey != null) {
+      isAuthFlowActive = true
+    }
   }
 
   when {
     !isInitialized -> CircularProgressIndicator()
-    isAuthFlowActive || user == null || pendingTaskKey != null -> AuthView()
+    isAuthFlowActive || user == null || pendingTaskKey != null ->
+      AuthView(onAuthComplete = { isAuthFlowActive = false })
 
     else -> signedInContent()
   }
