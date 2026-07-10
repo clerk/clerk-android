@@ -62,6 +62,11 @@ import kotlinx.serialization.Serializable
 /**
  * Prebuilt Clerk authentication flow.
  *
+ * Keep this view visible until [onAuthComplete] fires rather than swapping it out as soon as
+ * [Clerk.sessionFlow] or [Clerk.userFlow] emit a signed-in state. A session can become active while
+ * post-auth steps — session tasks or the trusted-device (biometric) enrollment prompt — still need
+ * to be shown; removing the view early skips them.
+ *
  * @param initialIdentifier Optional initial value for the identifier field. Phone-like values are
  *   routed to the phone number field automatically.
  * @param initialFirstName Optional initial value for the first name field during sign-up.

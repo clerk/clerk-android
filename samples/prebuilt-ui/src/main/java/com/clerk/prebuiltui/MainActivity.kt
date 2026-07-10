@@ -12,13 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -48,6 +51,7 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
+      val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
       val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
       val user by Clerk.userFlow.collectAsStateWithLifecycle()
       ClerkTheme {
@@ -56,12 +60,26 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier.fillMaxSize().padding(innerPadding),
             contentAlignment = Alignment.Center,
           ) {
-            if (user != null && session?.pendingTaskKey == null) {
-              SignedInPrebuiltHome(
-                hasActiveOrganization = session?.lastActiveOrganizationId != null
-              )
+            if (isInitialized) {
+              // AuthView owns post-auth steps (session tasks, trusted-device enrollment), so it
+              // stays visible until onAuthComplete fires instead of being swapped out the moment
+              // a session becomes active.
+              var authFlowIsActive by rememberSaveable { mutableStateOf(user == null) }
+              LaunchedEffect(user, session?.pendingTaskKey) {
+                if (user == null || session?.pendingTaskKey != null) {
+                  authFlowIsActive = true
+                }
+              }
+
+              if (authFlowIsActive) {
+                AuthView(onAuthComplete = { authFlowIsActive = false })
+              } else {
+                SignedInPrebuiltHome(
+                  hasActiveOrganization = session?.lastActiveOrganizationId != null
+                )
+              }
             } else {
-              AuthView()
+              CircularProgressIndicator()
             }
           }
         }
