@@ -38,6 +38,7 @@ import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
+import com.clerk.ui.core.composition.ClerkLogoProvider
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
@@ -54,21 +55,24 @@ import kotlinx.collections.immutable.toImmutableList
 fun AuthStartView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
+  logo: (@Composable () -> Unit)? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
   isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit,
 ) {
-  AuthStartViewImpl(
-    modifier = modifier,
-    preferGoogleOneTap = preferGoogleOneTap,
-    startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-    isDismissible = isDismissible,
-    onDismiss = onDismiss,
-    onAuthComplete = onAuthComplete,
-    clerkTheme = clerkTheme,
-  )
+  ClerkLogoProvider(logo) {
+    AuthStartViewImpl(
+      modifier = modifier,
+      preferGoogleOneTap = preferGoogleOneTap,
+      startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+      isDismissible = isDismissible,
+      onDismiss = onDismiss,
+      onAuthComplete = onAuthComplete,
+      clerkTheme = clerkTheme,
+    )
+  }
 }
 
 @Composable

@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package com.clerk.ui.core.scaffold
 
 import androidx.compose.foundation.BorderStroke
@@ -54,6 +56,7 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.buildButtonTokens
+import com.clerk.ui.core.composition.LocalClerkLogoContent
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
@@ -92,7 +95,11 @@ internal fun ClerkThemedAuthScaffold(
   val user = Clerk.userFlow.collectAsStateWithLifecycle().value
   val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
   val shouldShowLogo =
-    shouldShowInstanceLogo(hasLogo = hasLogo, organizationLogoUrl = Clerk.organizationLogoUrl)
+    shouldShowInstanceLogo(
+      hasLogo = hasLogo,
+      organizationLogoUrl = Clerk.organizationLogoUrl,
+      hasCustomLogo = LocalClerkLogoContent.current != null,
+    )
   var showSignedInAccountSheet by remember { mutableStateOf(false) }
   val displayName = user.displayName()
   val displayIdentifier = session?.publicUserData?.identifier ?: user?.username.orEmpty()
