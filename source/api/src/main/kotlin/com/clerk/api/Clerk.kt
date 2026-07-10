@@ -666,7 +666,7 @@ object Clerk {
    * ```kotlin
    * // Fetch plans and purchase one through Google Play
    * val plans = Clerk.billing.fetchPlans()
-   * Clerk.billing.purchase(activity, plan, BillingPlanPeriod.MONTH)
+   * Clerk.billing.purchase(activity, plan)
    *
    * // Restore purchases on a new device or reinstall
    * Clerk.billing.restorePurchases()

@@ -16,7 +16,6 @@ import com.android.billingclient.api.queryPurchasesAsync
 import com.clerk.api.Clerk
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.billing.BillingPlan
-import com.clerk.api.network.model.billing.BillingPlanPeriod
 import com.clerk.api.network.model.billing.BillingStore
 import com.clerk.api.network.model.billing.BillingStoreProduct
 import com.clerk.api.network.model.billing.BillingSubscriptionItem
@@ -109,23 +108,32 @@ internal class PlayBillingService(
   }
 
   /**
-   * Launches the Google Play purchase flow for the store product mapped to [plan] and [period],
-   * then registers the resulting purchase with Clerk.
+   * Launches the Google Play purchase flow for the store product mapped to [plan] (selected by the
+   * optional [productId] and [purchaseOptionId]), then registers the resulting purchase with Clerk.
    */
   @Suppress("ReturnCount")
   suspend fun purchase(
     activity: Activity,
     plan: BillingPlan,
-    period: BillingPlanPeriod,
+    productId: String? = null,
+    purchaseOptionId: String? = null,
   ): ClerkResult<BillingSubscriptionItem, BillingError> {
     val userId = Clerk.user?.id ?: return ClerkResult.apiFailure(BillingError.NotSignedIn)
     val storeProduct =
-      plan.storeProducts.firstOrNull { it.store == BillingStore.GOOGLE && it.period == period }
-        ?: return ClerkResult.apiFailure(BillingError.ProductNotMapped(plan.id, period))
+      when (val resolution = resolveStoreProduct(plan, productId, purchaseOptionId)) {
+        is ClerkResult.Failure -> return resolution
+        is ClerkResult.Success -> resolution.value
+      }
+    val basePlanId =
+      storeProduct.purchaseOptionId
+        ?: return ClerkResult.apiFailure(
+          BillingError.ProductNotMapped(plan.id, storeProduct.productId)
+        )
 
     return when (val connection = connect()) {
       is Connection.Unavailable -> ClerkResult.apiFailure(connection.error)
-      is Connection.Ready -> launchPurchase(connection.client, activity, storeProduct, userId)
+      is Connection.Ready ->
+        launchPurchase(connection.client, activity, storeProduct.productId, basePlanId, userId)
     }
   }
 
@@ -173,19 +181,20 @@ internal class PlayBillingService(
   private suspend fun launchPurchase(
     client: BillingClient,
     activity: Activity,
-    storeProduct: BillingStoreProduct,
+    productId: String,
+    basePlanId: String,
     userId: String,
   ): ClerkResult<BillingSubscriptionItem, BillingError> {
     val productDetails =
-      when (val products = queryProducts(client, listOf(storeProduct.productId))) {
+      when (val products = queryProducts(client, listOf(productId))) {
         is ClerkResult.Failure -> return ClerkResult.apiFailure(products.error)
         is ClerkResult.Success ->
-          products.value.firstOrNull { it.productId == storeProduct.productId }
-            ?: return ClerkResult.apiFailure(BillingError.ProductNotFound(storeProduct.productId))
+          products.value.firstOrNull { it.productId == productId }
+            ?: return ClerkResult.apiFailure(BillingError.ProductNotFound(productId))
       }
     val offer =
-      resolveSubscriptionOffer(productDetails, storeProduct.period)
-        ?: return ClerkResult.apiFailure(BillingError.ProductNotFound(storeProduct.productId))
+      resolveSubscriptionOffer(productDetails, basePlanId)
+        ?: return ClerkResult.apiFailure(BillingError.ProductNotFound(productId))
 
     val waiter = CompletableDeferred<PurchasesUpdate>()
     if (!pendingPurchase.compareAndSet(null, waiter)) {
@@ -212,7 +221,7 @@ internal class PlayBillingService(
       return ClerkResult.apiFailure(launchResult.toBillingError())
     }
 
-    return handlePurchasesUpdate(waiter.await(), storeProduct.productId)
+    return handlePurchasesUpdate(waiter.await(), productId)
   }
 
   private suspend fun handlePurchasesUpdate(
@@ -360,29 +369,48 @@ internal class PlayBillingService(
 }
 
 /**
- * Resolves the subscription offer to purchase for the given [period].
+ * Resolves the Google Play store product to purchase for [plan].
  *
- * Prefers the first offer whose base pricing phase (the last phase in the list) renews on the
- * requested period, falling back to the product's first offer. Returns `null` when the product has
- * no subscription offers.
+ * A plan can map any number of Google Play purchase identities (product + base plan): with exactly
+ * one mapping no selector is needed; with several, [productId] (and [purchaseOptionId] when one
+ * product maps multiple base plans) identify the mapping to buy. Selectors, when provided, must
+ * match a mapping exactly.
+ */
+internal fun resolveStoreProduct(
+  plan: BillingPlan,
+  productId: String? = null,
+  purchaseOptionId: String? = null,
+): ClerkResult<BillingStoreProduct, BillingError> {
+  val candidates = plan.storeProducts.filter { it.store == BillingStore.GOOGLE }
+  val matches =
+    if (productId == null && purchaseOptionId == null) {
+      candidates
+    } else {
+      candidates.filter {
+        (productId == null || it.productId == productId) &&
+          (purchaseOptionId == null || it.purchaseOptionId == purchaseOptionId)
+      }
+    }
+  return when {
+    matches.isEmpty() ->
+      ClerkResult.apiFailure(BillingError.ProductNotMapped(plan.id, productId, purchaseOptionId))
+    matches.size > 1 -> ClerkResult.apiFailure(BillingError.AmbiguousStoreProduct(plan.id, matches))
+    else -> ClerkResult.success(matches.single())
+  }
+}
+
+/**
+ * Resolves the subscription offer to purchase for the given Google Play base plan.
+ *
+ * Google Play returns only the offers the user is eligible for. Among the offers belonging to
+ * [basePlanId], prefers the base offer (no offer ID), falling back to the first eligible offer.
+ * Returns `null` when the product has no offer for the base plan.
  */
 internal fun resolveSubscriptionOffer(
   productDetails: ProductDetails,
-  period: BillingPlanPeriod,
+  basePlanId: String,
 ): ProductDetails.SubscriptionOfferDetails? {
-  val offers = productDetails.subscriptionOfferDetails ?: return null
-  val isoBillingPeriod = period.isoBillingPeriod
-  return offers.firstOrNull { offer ->
-    isoBillingPeriod != null &&
-      offer.pricingPhases.pricingPhaseList.lastOrNull()?.billingPeriod == isoBillingPeriod
-  } ?: offers.firstOrNull()
+  val eligible =
+    productDetails.subscriptionOfferDetails.orEmpty().filter { it.basePlanId == basePlanId }
+  return eligible.firstOrNull { it.offerId == null } ?: eligible.firstOrNull()
 }
-
-/** The ISO 8601 billing period Google Play uses for this plan period, or `null` if unknown. */
-internal val BillingPlanPeriod.isoBillingPeriod: String?
-  get() =
-    when (this) {
-      BillingPlanPeriod.MONTH -> "P1M"
-      BillingPlanPeriod.ANNUAL -> "P1Y"
-      BillingPlanPeriod.UNKNOWN -> null
-    }

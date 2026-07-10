@@ -106,17 +106,26 @@ data class BillingFeature(
   @SerialName("avatar_url") val avatarUrl: String? = null,
 )
 
-/** An app-store product mapped to a [BillingPlan] for a specific billing period. */
+/**
+ * An app-store purchase identity mapped to a [BillingPlan].
+ *
+ * A plan can map any number of store products per store; the store's own product configuration
+ * (purchase option and renewal term) governs billing. On Google Play a mapping identifies both the
+ * subscription product and the exact base plan to buy via [purchaseOptionId].
+ */
 @Serializable
 data class BillingStoreProduct(
   /** The store the product is sold through. */
   val store: BillingStore = BillingStore.UNKNOWN,
 
-  /** The store-specific product identifier (e.g. `com.acme.pro.monthly`). */
+  /** The store-specific product identifier (e.g. `com.acme.pro`). */
   @SerialName("product_id") val productId: String,
 
-  /** The billing period the store product renews on. */
-  val period: BillingPlanPeriod = BillingPlanPeriod.UNKNOWN,
+  /**
+   * The store-specific purchase option identifier — on Google Play, the ID of the base plan to buy
+   * (e.g. `monthly`). `null` when the store does not model purchase options.
+   */
+  @SerialName("purchase_option_id") val purchaseOptionId: String? = null,
 )
 
 /** The app store a [BillingStoreProduct] is sold through. */

@@ -86,7 +86,9 @@ class CommerceApiRequestTest {
     assertTrue(result is ClerkResult.Success)
     val plans = (result as ClerkResult.Success).value.data
     assertEquals(listOf("cplan_123"), plans.map { it.id })
-    assertEquals("com.acme.pro.monthly", plans.single().storeProducts.single().productId)
+    val storeProduct = plans.single().storeProducts.single()
+    assertEquals("com.acme.pro", storeProduct.productId)
+    assertEquals("monthly", storeProduct.purchaseOptionId)
   }
 
   @Test
@@ -133,7 +135,7 @@ class CommerceApiRequestTest {
               "slug": "pro",
               "is_recurring": true,
               "store_products": [
-                { "store": "google", "product_id": "com.acme.pro.monthly", "period": "month" }
+                { "store": "google", "product_id": "com.acme.pro", "purchase_option_id": "monthly" }
               ]
             }
           ],

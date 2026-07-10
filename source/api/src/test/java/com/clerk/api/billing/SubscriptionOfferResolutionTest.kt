@@ -1,7 +1,6 @@
 package com.clerk.api.billing
 
 import com.android.billingclient.api.ProductDetails
-import com.clerk.api.network.model.billing.BillingPlanPeriod
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
@@ -11,54 +10,56 @@ import org.junit.Test
 class SubscriptionOfferResolutionTest {
 
   @Test
-  fun `resolves the offer whose base phase matches the requested period`() {
-    val monthly = offer(basePeriod = "P1M")
-    val annual = offer(basePeriod = "P1Y")
+  fun `resolves the offer belonging to the requested base plan`() {
+    val monthly = offer(basePlan = "monthly")
+    val annual = offer(basePlan = "annual")
     val details = productDetails(monthly, annual)
 
-    assertEquals(monthly, resolveSubscriptionOffer(details, BillingPlanPeriod.MONTH))
-    assertEquals(annual, resolveSubscriptionOffer(details, BillingPlanPeriod.ANNUAL))
+    assertEquals(monthly, resolveSubscriptionOffer(details, "monthly"))
+    assertEquals(annual, resolveSubscriptionOffer(details, "annual"))
   }
 
   @Test
-  fun `falls back to the first offer when no base phase matches`() {
-    val monthly = offer(basePeriod = "P1M")
-    val details = productDetails(monthly)
+  fun `prefers the base offer over discounted offers`() {
+    val discounted = offer(basePlan = "monthly", offer = "intro")
+    val base = offer(basePlan = "monthly")
+    val details = productDetails(discounted, base)
 
-    assertEquals(monthly, resolveSubscriptionOffer(details, BillingPlanPeriod.ANNUAL))
+    assertEquals(base, resolveSubscriptionOffer(details, "monthly"))
   }
 
   @Test
-  fun `falls back to the first offer for an unknown period`() {
-    val monthly = offer(basePeriod = "P1M")
-    val details = productDetails(monthly)
+  fun `falls back to the first eligible offer when the base offer is absent`() {
+    val first = offer(basePlan = "monthly", offer = "intro")
+    val second = offer(basePlan = "monthly", offer = "winback")
+    val details = productDetails(first, second)
 
-    assertEquals(monthly, resolveSubscriptionOffer(details, BillingPlanPeriod.UNKNOWN))
+    assertEquals(first, resolveSubscriptionOffer(details, "monthly"))
+  }
+
+  @Test
+  fun `returns null when no offer belongs to the base plan`() {
+    val details = productDetails(offer(basePlan = "annual"))
+
+    assertNull(resolveSubscriptionOffer(details, "monthly"))
   }
 
   @Test
   fun `returns null when the product has no subscription offers`() {
     val details = mockk<ProductDetails> { every { subscriptionOfferDetails } returns null }
 
-    assertNull(resolveSubscriptionOffer(details, BillingPlanPeriod.MONTH))
-  }
-
-  @Test
-  fun `plan periods map to Google Play ISO billing periods`() {
-    assertEquals("P1M", BillingPlanPeriod.MONTH.isoBillingPeriod)
-    assertEquals("P1Y", BillingPlanPeriod.ANNUAL.isoBillingPeriod)
-    assertNull(BillingPlanPeriod.UNKNOWN.isoBillingPeriod)
+    assertNull(resolveSubscriptionOffer(details, "monthly"))
   }
 
   private fun productDetails(
     vararg offers: ProductDetails.SubscriptionOfferDetails
   ): ProductDetails = mockk { every { subscriptionOfferDetails } returns offers.toList() }
 
-  private fun offer(basePeriod: String): ProductDetails.SubscriptionOfferDetails {
-    val basePhase =
-      mockk<ProductDetails.PricingPhase> { every { billingPeriod } returns basePeriod }
-    val phases =
-      mockk<ProductDetails.PricingPhases> { every { pricingPhaseList } returns listOf(basePhase) }
-    return mockk { every { pricingPhases } returns phases }
+  private fun offer(
+    basePlan: String,
+    offer: String? = null,
+  ): ProductDetails.SubscriptionOfferDetails = mockk {
+    every { basePlanId } returns basePlan
+    every { offerId } returns offer
   }
 }

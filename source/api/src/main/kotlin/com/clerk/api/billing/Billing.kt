@@ -4,7 +4,6 @@ import android.app.Activity
 import com.android.billingclient.api.ProductDetails
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.billing.BillingPlan
-import com.clerk.api.network.model.billing.BillingPlanPeriod
 import com.clerk.api.network.model.billing.BillingSubscriptionItem
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -33,7 +32,7 @@ import com.clerk.api.network.serialization.ClerkResult
  * val plans = Clerk.billing.fetchPlans().successOrNull().orEmpty()
  * val plan = plans.first { it.slug == "pro" }
  *
- * when (val result = Clerk.billing.purchase(activity, plan, BillingPlanPeriod.MONTH)) {
+ * when (val result = Clerk.billing.purchase(activity, plan)) {
  *     is ClerkResult.Success -> // Subscription active, entitlements refreshed
  *     is ClerkResult.Failure -> // Inspect result.error (a BillingError)
  * }
@@ -87,26 +86,37 @@ class Billing internal constructor() {
   ): ClerkResult<List<ProductDetails>, BillingError> = service.loadProducts(plans)
 
   /**
-   * Purchases the given [plan] for the given billing [period] through Google Play.
+   * Purchases the given [plan] through Google Play.
    *
-   * Launches the Google Play purchase flow for the store product mapped to the plan and period,
-   * stamped with a deterministic obfuscated account identifier (the SHA-256 hex digest of the Clerk
-   * user ID, truncated to 64 characters) so Clerk can bind the transaction to the user. The
-   * completed purchase is posted to Clerk, which verifies and acknowledges it server-side and
-   * activates the subscription; the session token is then refreshed so new feature entitlements are
-   * live immediately.
+   * A plan can map any number of Google Play products, each mapping naming the exact base plan
+   * (purchase option) to buy — see [BillingPlan.storeProducts]. With exactly one mapping no
+   * selectors are needed; with several, pass [productId] (and [purchaseOptionId] when one product
+   * maps multiple base plans) to choose. When no mapping matches, the call fails with
+   * [BillingError.ProductNotMapped]; when several match, it fails with
+   * [BillingError.AmbiguousStoreProduct] carrying the candidates to choose from.
+   *
+   * Launches the Google Play purchase flow for the resolved product and base plan, stamped with a
+   * deterministic obfuscated account identifier (the SHA-256 hex digest of the Clerk user ID,
+   * truncated to 64 characters) so Clerk can bind the transaction to the user. The completed
+   * purchase is posted to Clerk, which verifies and acknowledges it server-side and activates the
+   * subscription; the session token is then refreshed so new feature entitlements are live
+   * immediately.
    *
    * @param activity The foreground activity used to launch the Google Play purchase dialog.
    * @param plan The plan to purchase, as returned by [fetchPlans].
-   * @param period The billing period to purchase the plan on.
+   * @param productId Selects a product when the plan has more than one Google Play mapping.
+   * @param purchaseOptionId Selects the exact Google Play base plan when one product maps multiple
+   *   base plans.
    * @return A [ClerkResult] containing the activated [BillingSubscriptionItem] on success, or a
    *   [BillingError] on failure.
    */
   suspend fun purchase(
     activity: Activity,
     plan: BillingPlan,
-    period: BillingPlanPeriod,
-  ): ClerkResult<BillingSubscriptionItem, BillingError> = service.purchase(activity, plan, period)
+    productId: String? = null,
+    purchaseOptionId: String? = null,
+  ): ClerkResult<BillingSubscriptionItem, BillingError> =
+    service.purchase(activity, plan, productId, purchaseOptionId)
 
   /**
    * Restores the user's Google Play subscriptions.

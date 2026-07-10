@@ -1,6 +1,6 @@
 package com.clerk.api.billing
 
-import com.clerk.api.network.model.billing.BillingPlanPeriod
+import com.clerk.api.network.model.billing.BillingStoreProduct
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import kotlinx.serialization.json.jsonPrimitive
@@ -11,7 +11,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * Billing operations return `ClerkResult<T, BillingError>`; pattern match on the failure's error to
  * render the appropriate UI:
  * ```kotlin
- * when (val result = Clerk.billing.purchase(activity, plan, period)) {
+ * when (val result = Clerk.billing.purchase(activity, plan)) {
  *     is ClerkResult.Success -> showSubscription(result.value)
  *     is ClerkResult.Failure ->
  *         when (val error = result.error) {
@@ -64,13 +64,34 @@ sealed interface BillingError {
   data class PlayStoreError(val responseCode: Int, val debugMessage: String? = null) : BillingError
 
   /**
-   * The plan has no Google Play product mapped for the requested billing period. Map a store
-   * product to the plan in the Clerk Dashboard.
+   * The plan has no Google Play product mapped that matches the request. When [productId] or
+   * [purchaseOptionId] were passed to [Billing.purchase], no mapping matched them exactly;
+   * otherwise the plan has no Google Play mapping at all. Map the store product (and its base plan)
+   * to the plan in the Clerk Dashboard.
    *
    * @property planId The identifier of the plan.
-   * @property period The billing period that has no mapped product.
+   * @property productId The requested store product identifier, when one was passed.
+   * @property purchaseOptionId The requested purchase option (base plan) identifier, when one was
+   *   passed.
    */
-  data class ProductNotMapped(val planId: String, val period: BillingPlanPeriod) : BillingError
+  data class ProductNotMapped(
+    val planId: String,
+    val productId: String? = null,
+    val purchaseOptionId: String? = null,
+  ) : BillingError
+
+  /**
+   * The request matches more than one Google Play product mapped to the plan, so the SDK cannot
+   * choose one automatically. Pass `productId` (and `purchaseOptionId` when one product maps
+   * multiple base plans) to [Billing.purchase] to select among [candidates].
+   *
+   * @property planId The identifier of the plan.
+   * @property candidates The Google Play mappings that matched the request.
+   */
+  data class AmbiguousStoreProduct(
+    val planId: String,
+    val candidates: List<BillingStoreProduct>,
+  ) : BillingError
 
   /**
    * The mapped Google Play product could not be loaded from the Play Store. Verify the product

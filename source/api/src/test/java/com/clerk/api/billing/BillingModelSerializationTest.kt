@@ -33,9 +33,13 @@ class BillingModelSerializationTest {
 
     val googleMonthly =
       plan.storeProducts.single {
-        it.store == BillingStore.GOOGLE && it.period == BillingPlanPeriod.MONTH
+        it.store == BillingStore.GOOGLE && it.purchaseOptionId == "monthly"
       }
-    assertEquals("com.acme.pro.monthly", googleMonthly.productId)
+    assertEquals("com.acme.pro", googleMonthly.productId)
+
+    val apple = plan.storeProducts.single { it.store == BillingStore.APPLE }
+    assertEquals("com.acme.pro.ios", apple.productId)
+    assertNull(apple.purchaseOptionId)
   }
 
   @Test
@@ -167,9 +171,9 @@ class BillingModelSerializationTest {
           }
         ],
         "store_products": [
-          { "store": "google", "product_id": "com.acme.pro.monthly", "period": "month" },
-          { "store": "google", "product_id": "com.acme.pro.annual", "period": "annual" },
-          { "store": "apple", "product_id": "com.acme.pro.monthly.ios", "period": "month" }
+          { "store": "google", "product_id": "com.acme.pro", "purchase_option_id": "monthly" },
+          { "store": "google", "product_id": "com.acme.pro", "purchase_option_id": "annual" },
+          { "store": "apple", "product_id": "com.acme.pro.ios", "purchase_option_id": null }
         ]
       }
       """
