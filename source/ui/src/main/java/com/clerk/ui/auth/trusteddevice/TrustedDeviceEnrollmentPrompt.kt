@@ -3,6 +3,7 @@ package com.clerk.ui.auth.trusteddevice
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.clerk.api.Clerk
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.session.Session
 import com.clerk.api.trusteddevice.TrustedDeviceAvailability
 import com.clerk.api.user.User
@@ -19,13 +20,13 @@ internal object TrustedDeviceEnrollmentPrompt {
    */
   @Suppress("ReturnCount")
   fun shouldOffer(afterSignUp: Boolean, sharedPreferences: SharedPreferences): Boolean {
-    val userId = Clerk.user?.id ?: return false
-    val sessionStatus = Clerk.session?.status ?: return false
+    val userId = Clerk.user?.id ?: return skip("no signed-in user")
+    val sessionStatus = Clerk.session?.status ?: return skip("no session")
     if (
       sessionStatus != Session.SessionStatus.ACTIVE &&
         sessionStatus != Session.SessionStatus.PENDING
     ) {
-      return false
+      return skip("session status is $sessionStatus")
     }
 
     val promptSettingIsEnabled =
@@ -34,12 +35,33 @@ internal object TrustedDeviceEnrollmentPrompt {
       } else {
         Clerk.trustedDevicePromptAfterSignInIsEnabled && !hasSeenPrompt(sharedPreferences, userId)
       }
-    if (!promptSettingIsEnabled) return false
+    if (!promptSettingIsEnabled) {
+      return skip(
+        "prompt setting disabled or already seen " +
+          "(afterSignUp=$afterSignUp, " +
+          "promptAfterSignIn=${Clerk.trustedDevicePromptAfterSignInIsEnabled}, " +
+          "promptAfterSignUp=${Clerk.trustedDevicePromptAfterSignUpIsEnabled}, " +
+          "seen=${hasSeenPrompt(sharedPreferences, userId)})"
+      )
+    }
 
-    if (!Clerk.trustedDevices.deviceSupportsBiometricAuthentication) return false
+    if (!Clerk.trustedDevices.deviceSupportsBiometricAuthentication) {
+      return skip("device does not support biometric authentication")
+    }
 
     val availability = Clerk.trustedDevices.currentUserLocalAvailability()
-    return !availability.isAvailable && availability.canPromptForEnrollment
+    if (availability.isAvailable) {
+      return skip("device already enrolled")
+    }
+    if (!availability.canPromptForEnrollment) {
+      return skip("unavailable for reason ${availability.unavailableReason}")
+    }
+    return true
+  }
+
+  private fun skip(reason: String): Boolean {
+    ClerkLog.d("Trusted-device enrollment prompt not offered: $reason")
+    return false
   }
 
   fun markPromptSeen(sharedPreferences: SharedPreferences) {
