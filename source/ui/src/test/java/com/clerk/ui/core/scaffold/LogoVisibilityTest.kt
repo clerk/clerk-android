@@ -29,4 +29,18 @@ class LogoVisibilityTest {
       shouldShowInstanceLogo(hasLogo = true, organizationLogoUrl = "https://example.com/logo.png")
     )
   }
+
+  @Test
+  fun shouldShowInstanceLogoReturnsTrueWithCustomLogoAndNoUrl() {
+    assertTrue(
+      shouldShowInstanceLogo(hasLogo = true, organizationLogoUrl = null, hasCustomLogo = true)
+    )
+  }
+
+  @Test
+  fun shouldShowInstanceLogoReturnsFalseWithCustomLogoWhenHasLogoIsFalse() {
+    assertFalse(
+      shouldShowInstanceLogo(hasLogo = false, organizationLogoUrl = null, hasCustomLogo = true)
+    )
+  }
 }

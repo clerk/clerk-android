@@ -250,16 +250,18 @@ internal fun OrganizationAvatar(
 @Composable
 internal fun OrganizationLogo(
   modifier: Modifier = Modifier,
-  maxWidth: Dp = dp96,
-  height: Dp = dp24,
+  maxWidth: Dp? = null,
+  height: Dp? = null,
   clerkTheme: ClerkTheme? = null,
   imageUrl: String? = Clerk.organizationLogoUrl,
 ) {
   val url = imageUrl
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
+    val resolvedHeight = height ?: ClerkMaterialTheme.design.logoMaxHeight
+    val resolvedMaxWidth = maxWidth ?: (resolvedHeight * LOGO_MAX_WIDTH_TO_HEIGHT_RATIO)
     if (url.isNullOrBlank()) {
       Icon(
-        modifier = Modifier.size(height).then(modifier),
+        modifier = Modifier.size(resolvedHeight).then(modifier),
         painter = painterResource(R.drawable.ic_organization),
         contentDescription = stringResource(R.string.logo),
         tint = ClerkMaterialTheme.colors.foreground,
@@ -267,9 +269,9 @@ internal fun OrganizationLogo(
     } else {
       Box(
         modifier =
-          Modifier.defaultMinSize(minWidth = height)
-            .height(height)
-            .widthIn(max = maxWidth)
+          Modifier.defaultMinSize(minWidth = resolvedHeight)
+            .height(resolvedHeight)
+            .widthIn(max = resolvedMaxWidth)
             .then(modifier),
         contentAlignment = Alignment.Center,
       ) {
@@ -278,7 +280,7 @@ internal fun OrganizationLogo(
           contentDescription = stringResource(R.string.logo),
           modifier = Modifier.fillMaxSize(),
           contentScale = ContentScale.Fit,
-          loading = { CircularProgressIndicator(modifier = Modifier.size(height / 2)) },
+          loading = { CircularProgressIndicator(modifier = Modifier.size(resolvedHeight / 2)) },
           error = {
             Icon(
               painter = painterResource(R.drawable.ic_organization),
@@ -291,6 +293,9 @@ internal fun OrganizationLogo(
     }
   }
 }
+
+/** Width cap relative to logo height, so wide logos stay bounded as the height scales. */
+private const val LOGO_MAX_WIDTH_TO_HEIGHT_RATIO = 4
 
 enum class AvatarSize {
   SMALL,

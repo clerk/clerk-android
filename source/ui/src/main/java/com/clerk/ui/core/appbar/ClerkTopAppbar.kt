@@ -20,16 +20,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkDesign
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.OrganizationLogo
+import com.clerk.ui.core.composition.LocalClerkLogoContent
 import com.clerk.ui.core.dimens.dp12
+import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp68
 import com.clerk.ui.core.dimens.dp8
@@ -66,9 +70,10 @@ internal fun ClerkTopAppBar(
             .padding(vertical = dp8),
         verticalAlignment = Alignment.CenterVertically,
       ) {
+        val customLogo = LocalClerkLogoContent.current
         val logoContent: (@Composable () -> Unit)? =
           if (hasLogo) {
-            { OrganizationLogo(clerkTheme = clerkTheme, imageUrl = logoUrl) }
+            customLogo ?: { OrganizationLogo(clerkTheme = clerkTheme, imageUrl = logoUrl) }
           } else {
             null
           }
@@ -175,6 +180,41 @@ private fun Preview() {
   ClerkMaterialTheme {
     Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
       ClerkTopAppBar(onBackPressed = {}, hasBackButton = false)
+    }
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewLogoMaxHeightOverride() {
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
+      ClerkTopAppBar(
+        onBackPressed = {},
+        hasBackButton = false,
+        clerkTheme = ClerkTheme(design = ClerkDesign(logoMaxHeight = dp24)),
+      )
+    }
+  }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewCustomLogo() {
+  ClerkMaterialTheme {
+    Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
+      CompositionLocalProvider(
+        LocalClerkLogoContent provides
+          {
+            Text(
+              text = "Custom logo",
+              style = ClerkMaterialTheme.typography.titleLarge.withMediumWeight(),
+              color = ClerkMaterialTheme.colors.foreground,
+            )
+          }
+      ) {
+        ClerkTopAppBar(onBackPressed = {}, hasBackButton = false)
+      }
     }
   }
 }

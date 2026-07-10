@@ -34,6 +34,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
 import com.clerk.ui.core.composition.AuthStateProvider
+import com.clerk.ui.core.composition.ClerkLogoProvider
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.footer.DevelopmentModeWarningBackground
@@ -80,11 +81,17 @@ import kotlinx.serialization.Serializable
  *   affordance falls back to the system back dispatcher.
  * @param onAuthComplete Called when authentication completes.
  * @param mode Determines whether the flow starts as sign-in, sign-up, or sign-in-or-up.
+ * @param logo Replaces the logo shown by authentication screens. When provided, it takes precedence
+ *   over the dashboard-configured logo and the [ClerkTheme.design] logo sizing — the SDK applies no
+ *   sizing or spacing, so you are responsible for its layout and accessibility. To only change the
+ *   size of the dashboard-configured logo, set [com.clerk.api.ui.ClerkDesign.logoMaxHeight]
+ *   instead.
  */
 @Composable
 fun AuthView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
+  logo: (@Composable () -> Unit)? = null,
   initialIdentifier: String? = null,
   initialFirstName: String? = null,
   initialLastName: String? = null,
@@ -123,22 +130,24 @@ fun AuthView(
       ObservePendingSessionTaskRouting(backStack = backStack)
       ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
-      DevelopmentModeWarningBox(
-        modifier = fullScreenModifier,
-        background = DevelopmentModeWarningBackground.White,
-      ) {
-        AuthNavDisplay(
-          modifier = Modifier.fillMaxSize(),
-          backStack = backStack,
-          options =
-            AuthNavOptions(
-              preferGoogleOneTap = preferGoogleOneTap,
-              startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
-              isDismissible = isDismissible,
-              onDismiss = onDismiss,
-              onAuthComplete = onAuthComplete,
-            ),
-        )
+      ClerkLogoProvider(logo) {
+        DevelopmentModeWarningBox(
+          modifier = fullScreenModifier,
+          background = DevelopmentModeWarningBackground.White,
+        ) {
+          AuthNavDisplay(
+            modifier = Modifier.fillMaxSize(),
+            backStack = backStack,
+            options =
+              AuthNavOptions(
+                preferGoogleOneTap = preferGoogleOneTap,
+                startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
+                isDismissible = isDismissible,
+                onDismiss = onDismiss,
+                onAuthComplete = onAuthComplete,
+              ),
+          )
+        }
       }
     }
   }

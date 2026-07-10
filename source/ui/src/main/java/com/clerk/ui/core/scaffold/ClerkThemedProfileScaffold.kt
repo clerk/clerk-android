@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.Dp
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerkLogoContent
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.SecuredByClerkView
@@ -45,7 +46,11 @@ internal fun ClerkThemedProfileScaffold(
   val snackbarHostState = remember { SnackbarHostState() }
   val organizationLogoUrl = if (hasLogo) LocalAuthState.current.organizationLogoUrl else null
   val shouldShowLogo =
-    shouldShowInstanceLogo(hasLogo = hasLogo, organizationLogoUrl = organizationLogoUrl)
+    shouldShowInstanceLogo(
+      hasLogo = hasLogo,
+      organizationLogoUrl = organizationLogoUrl,
+      hasCustomLogo = LocalClerkLogoContent.current != null,
+    )
   LaunchedEffect(errorMessage) {
     if (errorMessage != null) {
       snackbarHostState.showSnackbar(errorMessage)
@@ -99,9 +104,7 @@ private fun Preview() {
     ClerkThemedProfileScaffold(
       title = "Security",
       backgroundColor = ClerkMaterialTheme.colors.muted,
-      content = {
-        /* Content goes here */
-      },
+      content = { /* Content goes here */ },
     )
   }
 }
