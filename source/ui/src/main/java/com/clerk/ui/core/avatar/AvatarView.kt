@@ -253,8 +253,9 @@ internal fun OrganizationLogo(
   maxWidth: Dp = dp96,
   height: Dp = dp24,
   clerkTheme: ClerkTheme? = null,
+  imageUrl: String? = Clerk.organizationLogoUrl,
 ) {
-  val url = Clerk.organizationLogoUrl
+  val url = imageUrl
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     if (url.isNullOrBlank()) {
       Icon(

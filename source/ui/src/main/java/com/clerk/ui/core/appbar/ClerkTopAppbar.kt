@@ -28,7 +28,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
-import com.clerk.ui.core.avatar.OrganizationAvatar
+import com.clerk.ui.core.avatar.OrganizationLogo
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp68
@@ -68,7 +68,7 @@ internal fun ClerkTopAppBar(
       ) {
         val logoContent: (@Composable () -> Unit)? =
           if (hasLogo) {
-            { OrganizationAvatar(clerkTheme = clerkTheme, imageUrl = logoUrl) }
+            { OrganizationLogo(clerkTheme = clerkTheme, imageUrl = logoUrl) }
           } else {
             null
           }
