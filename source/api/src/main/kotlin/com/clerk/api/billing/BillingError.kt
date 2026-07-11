@@ -102,12 +102,16 @@ sealed interface BillingError {
   data class ProductNotFound(val productId: String) : BillingError
 
   /**
-   * The user already holds an active subscription for this plan through another payment processor
-   * (e.g. a Stripe subscription purchased on the web). Suppress the purchase and surface the
-   * existing subscription instead — users must cancel it where it was purchased.
+   * The user already holds an active paid subscription managed by a different payment processor
+   * (e.g. a Stripe subscription purchased on the web, or an Apple App Store subscription). Suppress
+   * the purchase and surface the existing subscription instead — users must cancel it where it was
+   * purchased.
    *
-   * @property processor The processor that manages the existing subscription (e.g. `stripe`), when
-   *   reported by the API.
+   * An active subscription managed by Google Play is not an error: purchasing another plan through
+   * [Billing.purchase] performs an in-app plan change that supersedes it.
+   *
+   * @property processor The processor that manages the existing subscription (e.g. `stripe` or
+   *   `apple`), when reported by the API.
    */
   data class AlreadySubscribedVia(val processor: String? = null) : BillingError
 
@@ -129,19 +133,61 @@ internal const val ERROR_CODE_ALREADY_SUBSCRIBED = "already_subscribed"
 internal const val META_KEY_ALREADY_SUBSCRIBED_VIA = "already_subscribed_via"
 
 /**
+ * Preflight rejection codes the backend states definitively: proceeding would charge the user for a
+ * purchase that registration is certain to reject.
+ */
+private val DEFINITIVE_PREFLIGHT_REJECTION_CODES =
+  setOf(
+    "product_not_mapped",
+    "store_connection_not_configured",
+    "form_param_missing",
+    "form_param_value_invalid",
+  )
+
+/** The lower bound of the HTTP server-error status range. */
+private const val HTTP_INTERNAL_SERVER_ERROR = 500
+
+/**
  * Maps a failed `POST /me/billing/store_purchases` result to a [BillingError].
  *
  * An `already_subscribed` error code becomes [BillingError.AlreadySubscribedVia] (reading the
  * managing processor from the response meta when present); everything else becomes
  * [BillingError.ServerRejected].
  */
-internal fun ClerkResult.Failure<ClerkErrorResponse>.toBillingError(): BillingError {
+internal fun ClerkResult.Failure<ClerkErrorResponse>.toBillingError(): BillingError =
+  alreadySubscribedViaOrNull() ?: BillingError.ServerRejected(error = error, code = code)
+
+/**
+ * Maps a failed `POST /me/billing/store_purchases/preflight` result to the [BillingError] that
+ * should block the purchase, or `null` when the purchase should proceed anyway.
+ *
+ * Only verdicts the backend states definitively block the flow: `already_subscribed` (the payer's
+ * active subscription is managed by a different processor) becomes
+ * [BillingError.AlreadySubscribedVia], and 4xx rejections that registration is certain to repeat
+ * (unmapped product, unconfigured store connection, invalid parameters) become
+ * [BillingError.ServerRejected]. Everything else — network failures, 5xx responses, FAPI
+ * deployments that predate the preflight endpoint — returns `null`: registration after the store
+ * transaction remains the authoritative guard, the preflight is an optimization.
+ */
+internal fun ClerkResult.Failure<ClerkErrorResponse>.toPreflightBlockOrNull(): BillingError? {
+  val status = code
+  if (status != null && status >= HTTP_INTERNAL_SERVER_ERROR) return null
+  val definitive = error?.errors.orEmpty().any { it.code in DEFINITIVE_PREFLIGHT_REJECTION_CODES }
+  return alreadySubscribedViaOrNull()
+    ?: BillingError.ServerRejected(error = error, code = status).takeIf { definitive }
+}
+
+/**
+ * Returns [BillingError.AlreadySubscribedVia] when the failure carries an `already_subscribed`
+ * error code (reading the managing processor from the response meta when present), or `null`
+ * otherwise.
+ */
+private fun ClerkResult.Failure<ClerkErrorResponse>.alreadySubscribedViaOrNull():
+  BillingError.AlreadySubscribedVia? {
   val alreadySubscribed = error?.errors.orEmpty().any { it.code == ERROR_CODE_ALREADY_SUBSCRIBED }
-  if (alreadySubscribed) {
-    val processor =
-      runCatching { error?.meta?.get(META_KEY_ALREADY_SUBSCRIBED_VIA)?.jsonPrimitive?.content }
-        .getOrNull()
-    return BillingError.AlreadySubscribedVia(processor)
-  }
-  return BillingError.ServerRejected(error = error, code = code)
+  if (!alreadySubscribed) return null
+  val processor =
+    runCatching { error?.meta?.get(META_KEY_ALREADY_SUBSCRIBED_VIA)?.jsonPrimitive?.content }
+      .getOrNull()
+  return BillingError.AlreadySubscribedVia(processor)
 }

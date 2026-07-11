@@ -5,6 +5,7 @@ import com.clerk.api.network.ApiPaths
 import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.billing.BillingPlan
 import com.clerk.api.network.model.billing.BillingSubscriptionItem
+import com.clerk.api.network.model.billing.StorePurchasePreflight
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import retrofit2.http.Field
@@ -55,6 +56,30 @@ internal interface CommerceApi {
     @Query(ApiParams.LIMIT) limit: Int? = null,
     @Query(ApiParams.OFFSET) offset: Int? = null,
   ): ClerkResult<ClerkPaginatedResponse<BillingSubscriptionItem>, ClerkErrorResponse>
+
+  /**
+   * Asks Clerk whether a store purchase may proceed, immediately before the payment sheet opens.
+   *
+   * Checks every Clerk-owned precondition that would reject the purchase at registration time: the
+   * instance's store connection, the product-to-plan mapping, and payer conflicts (an active paid
+   * subscription managed by a different processor). An active subscription managed by the same
+   * store is not a conflict — the purchase proceeds as an in-app plan change. Registration remains
+   * the authoritative check; the preflight only prevents charging the user for a purchase that
+   * registration is certain to reject.
+   *
+   * @param store The store the purchase will be made through (e.g. `google`)
+   * @param productId The store product identifier about to be purchased
+   * @param purchaseOptionId The purchase option (Google Play base plan) about to be purchased
+   * @return A [ClerkResult] containing the preflight verdict (always `allowed` on success), or a
+   *   [ClerkErrorResponse] describing why the purchase would be rejected
+   */
+  @FormUrlEncoded
+  @POST(ApiPaths.Commerce.User.STORE_PURCHASE_PREFLIGHT)
+  suspend fun preflightStorePurchase(
+    @Field("store") store: String,
+    @Field("product_id") productId: String,
+    @Field("purchase_option_id") purchaseOptionId: String? = null,
+  ): ClerkResult<StorePurchasePreflight, ClerkErrorResponse>
 
   /**
    * Registers an app-store purchase with Clerk.

@@ -79,6 +79,7 @@ internal object ApiPaths {
       internal const val BASE = "me/billing"
       internal const val SUBSCRIPTION_ITEMS = "${BASE}/subscription_items"
       internal const val STORE_PURCHASES = "${BASE}/store_purchases"
+      internal const val STORE_PURCHASE_PREFLIGHT = "${STORE_PURCHASES}/preflight"
     }
   }
 

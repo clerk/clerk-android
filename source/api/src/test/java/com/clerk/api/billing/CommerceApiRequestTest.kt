@@ -75,6 +75,32 @@ class CommerceApiRequestTest {
     }
 
   @Test
+  fun `preflight posts the purchase selectors to the store_purchases preflight endpoint`() =
+    runTest {
+      val result =
+        api(PREFLIGHT_RESPONSE)
+          .preflightStorePurchase(
+            store = "google",
+            productId = "com.acme.pro",
+            purchaseOptionId = "monthly",
+          )
+
+      val request = capturedRequests.single()
+      assertEquals("POST", request.method)
+      assertEquals("/v1/me/billing/store_purchases/preflight", request.url.encodedPath)
+
+      val buffer = Buffer()
+      requireNotNull(request.body).writeTo(buffer)
+      assertEquals(
+        "store=google&product_id=com.acme.pro&purchase_option_id=monthly",
+        buffer.readUtf8(),
+      )
+
+      assertTrue(result is ClerkResult.Success)
+      assertTrue((result as ClerkResult.Success).value.allowed)
+    }
+
+  @Test
   fun `plans requests the commerce plans endpoint with the payer type filter`() = runTest {
     val result = api(PLANS_RESPONSE).plans(payerType = "user")
 
@@ -122,6 +148,15 @@ class CommerceApiRequestTest {
         .trimIndent()
 
     val STORE_PURCHASE_RESPONSE = """{ "response": $SUBSCRIPTION_ITEM_JSON, "client": null }"""
+
+    val PREFLIGHT_RESPONSE =
+      """
+      {
+        "response": { "object": "commerce_store_purchase_preflight", "allowed": true },
+        "client": null
+      }
+      """
+        .trimIndent()
 
     val PLANS_RESPONSE =
       """

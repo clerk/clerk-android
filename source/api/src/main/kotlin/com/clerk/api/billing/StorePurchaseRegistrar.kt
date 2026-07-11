@@ -9,7 +9,8 @@ import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.fetchToken
 
 /**
- * Internal service that registers Google Play purchases with Clerk.
+ * Internal service for the Clerk side of a Google Play purchase: the pre-purchase preflight check
+ * and the post-purchase registration.
  *
  * Registration posts the purchase token to `POST /me/billing/store_purchases`, where Clerk verifies
  * it against the Play Developer API, binds it to the current payer, activates the subscription
@@ -21,6 +22,35 @@ import com.clerk.api.session.fetchToken
  * purchase events can safely re-register the same purchase.
  */
 internal class StorePurchaseRegistrar {
+  /**
+   * Asks Clerk whether a purchase of [productId] under [purchaseOptionId] may proceed, immediately
+   * before the payment sheet opens.
+   *
+   * Returns the [BillingError] that blocks the purchase, or `null` to proceed. Only definitive
+   * rejections block — most notably an active subscription managed by a different processor (Stripe
+   * or Apple), which registration would reject only after Google Play had charged the user; an
+   * active Google Play-managed subscription is allowed through as a plan change. Anything
+   * non-definitive (network failures, 5xx responses, FAPI deployments without the endpoint) fails
+   * open: registration remains the authoritative guard.
+   */
+  suspend fun preflight(productId: String, purchaseOptionId: String): BillingError? =
+    when (
+      val result =
+        ClerkApi.commerce.preflightStorePurchase(
+          store = STORE_GOOGLE,
+          productId = productId,
+          purchaseOptionId = purchaseOptionId,
+        )
+    ) {
+      is ClerkResult.Success -> null
+      is ClerkResult.Failure ->
+        result.toPreflightBlockOrNull().also { block ->
+          if (block == null) {
+            ClerkLog.w("Store purchase preflight failed non-definitively; proceeding.")
+          }
+        }
+    }
+
   /**
    * Registers the given Google Play [purchaseToken] with Clerk.
    *

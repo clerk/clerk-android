@@ -1,6 +1,8 @@
 package com.clerk.api.billing
 
 import android.app.Activity
+import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingFlowParams.SubscriptionUpdateParams.ReplacementMode
 import com.android.billingclient.api.ProductDetails
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.billing.BillingPlan
@@ -86,7 +88,7 @@ class Billing internal constructor() {
   ): ClerkResult<List<ProductDetails>, BillingError> = service.loadProducts(plans)
 
   /**
-   * Purchases the given [plan] through Google Play.
+   * Purchases the given [plan] through Google Play, as a fresh purchase or as a plan change.
    *
    * A plan can map any number of Google Play products, each mapping naming the exact base plan
    * (purchase option) to buy — see [BillingPlan.storeProducts]. With exactly one mapping no
@@ -102,11 +104,31 @@ class Billing internal constructor() {
    * subscription; the session token is then refreshed so new feature entitlements are live
    * immediately.
    *
+   * ### Plan changes
+   *
+   * When the user already holds an active subscription managed by Google Play, purchasing another
+   * plan (or another base plan of the same product) is an in-app plan change: the purchase flow is
+   * launched as a Google Play subscription update that supersedes the current purchase, and Clerk
+   * swaps the subscription item when the new purchase is registered. How Google Play charges the
+   * switch is controlled by [replacementMode].
+   *
+   * [BillingError.AlreadySubscribedVia] is returned only when the existing active subscription is
+   * managed by a *different* processor (e.g. a Stripe subscription purchased on the web, or an
+   * Apple App Store subscription); such purchases are blocked before the payment sheet opens, and
+   * users must manage that subscription where it was purchased.
+   *
    * @param activity The foreground activity used to launch the Google Play purchase dialog.
    * @param plan The plan to purchase, as returned by [fetchPlans].
    * @param productId Selects a product when the plan has more than one Google Play mapping.
    * @param purchaseOptionId Selects the exact Google Play base plan when one product maps multiple
    *   base plans.
+   * @param replacementMode How Google Play charges a plan change, as a
+   *   [BillingFlowParams.SubscriptionUpdateParams.ReplacementMode] constant; ignored for fresh
+   *   purchases. Defaults to [ReplacementMode.CHARGE_PRORATED_PRICE], Google's recommended mode for
+   *   upgrades (the price difference is charged immediately, prorated for the remaining period).
+   *   For downgrades prefer [ReplacementMode.DEFERRED] (the change takes effect at the next
+   *   renewal) or [ReplacementMode.WITHOUT_PRORATION] (the new price is charged at the next
+   *   renewal, the plan changes immediately).
    * @return A [ClerkResult] containing the activated [BillingSubscriptionItem] on success, or a
    *   [BillingError] on failure.
    */
@@ -115,8 +137,9 @@ class Billing internal constructor() {
     plan: BillingPlan,
     productId: String? = null,
     purchaseOptionId: String? = null,
+    replacementMode: Int = ReplacementMode.CHARGE_PRORATED_PRICE,
   ): ClerkResult<BillingSubscriptionItem, BillingError> =
-    service.purchase(activity, plan, productId, purchaseOptionId)
+    service.purchase(activity, plan, productId, purchaseOptionId, replacementMode)
 
   /**
    * Restores the user's Google Play subscriptions.

@@ -74,4 +74,67 @@ class BillingErrorMappingTest {
     assertNull((error as BillingError.ServerRejected).error)
     assertEquals(500, error.code)
   }
+
+  @Test
+  fun `preflight blocks a subscription managed by stripe with AlreadySubscribedVia`() {
+    val failure = alreadySubscribedFailure(via = "stripe")
+
+    assertEquals(BillingError.AlreadySubscribedVia("stripe"), failure.toPreflightBlockOrNull())
+  }
+
+  @Test
+  fun `preflight blocks a subscription managed by apple with AlreadySubscribedVia`() {
+    val failure = alreadySubscribedFailure(via = "apple")
+
+    assertEquals(BillingError.AlreadySubscribedVia("apple"), failure.toPreflightBlockOrNull())
+  }
+
+  @Test
+  fun `preflight blocks definitive rejections with ServerRejected`() {
+    val response =
+      ClerkErrorResponse(
+        errors = listOf(Error(message = "Product not mapped", code = "product_not_mapped"))
+      )
+    val failure = ClerkResult.httpFailure(code = 404, error = response)
+
+    val error = failure.toPreflightBlockOrNull()
+
+    assertTrue(error is BillingError.ServerRejected)
+    assertEquals(response, (error as BillingError.ServerRejected).error)
+    assertEquals(404, error.code)
+  }
+
+  @Test
+  fun `preflight fails open on server errors`() {
+    val failure = ClerkResult.httpFailure<ClerkErrorResponse>(code = 500)
+
+    assertNull(failure.toPreflightBlockOrNull())
+  }
+
+  @Test
+  fun `preflight fails open on network failures`() {
+    val failure = ClerkResult.unknownFailure(RuntimeException("no network"))
+
+    assertNull(failure.toPreflightBlockOrNull())
+  }
+
+  @Test
+  fun `preflight fails open on unrecognized rejections`() {
+    val response =
+      ClerkErrorResponse(errors = listOf(Error(message = "Not found", code = "resource_not_found")))
+    val failure = ClerkResult.httpFailure(code = 404, error = response)
+
+    assertNull(failure.toPreflightBlockOrNull())
+  }
+
+  private fun alreadySubscribedFailure(via: String): ClerkResult.Failure<ClerkErrorResponse> =
+    ClerkResult.httpFailure(
+      code = 422,
+      error =
+        ClerkErrorResponse(
+          errors =
+            listOf(Error(message = "Already subscribed", code = ERROR_CODE_ALREADY_SUBSCRIBED)),
+          meta = buildJsonObject { put(META_KEY_ALREADY_SUBSCRIBED_VIA, via) },
+        ),
+    )
 }
