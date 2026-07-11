@@ -515,8 +515,10 @@ private val ProductDetails.SubscriptionOfferDetails.freeTrialDays: Int
 private val ProductDetails.SubscriptionOfferDetails.introductoryPriceMicros: Long?
   get() = pricingPhases.pricingPhaseList.takeIf { it.size > 1 }?.firstOrNull()?.priceAmountMicros
 
-private val ISO_PERIOD_REGEX =
-  Regex("""^P(?:(?<days>\d+)D)?(?:(?<weeks>\d+)W)?(?:(?<months>\d+)M)?(?:(?<years>\d+)Y)?$""")
+// Components in ISO 8601 order (years first). Indexed groups on purpose:
+// named-group access (MatchGroupCollection.get(name)) requires API 26 and
+// minSdk is 24.
+private val ISO_PERIOD_REGEX = Regex("""^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$""")
 
 private const val DAYS_PER_WEEK = 7
 private const val DAYS_PER_MONTH = 30
@@ -525,9 +527,9 @@ private const val DAYS_PER_YEAR = 365
 /** The approximate number of days in an ISO 8601 [period] (e.g. `P1M` -> 30). */
 private fun isoPeriodDays(period: String): Int {
   val match = ISO_PERIOD_REGEX.matchEntire(period) ?: return 0
-  fun component(name: String) = match.groups[name]?.value?.toIntOrNull() ?: 0
-  return component("days") +
-    component("weeks") * DAYS_PER_WEEK +
-    component("months") * DAYS_PER_MONTH +
-    component("years") * DAYS_PER_YEAR
+  fun component(index: Int) = match.groupValues[index].toIntOrNull() ?: 0
+  return component(1) * DAYS_PER_YEAR +
+    component(2) * DAYS_PER_MONTH +
+    component(3) * DAYS_PER_WEEK +
+    component(4)
 }
