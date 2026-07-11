@@ -33,6 +33,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
+import com.clerk.ui.auth.trusteddevice.TrustedDeviceEnrollmentView
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.composition.ClerkLogoProvider
 import com.clerk.ui.core.composition.LocalAuthState
@@ -61,6 +62,11 @@ import kotlinx.serialization.Serializable
 
 /**
  * Prebuilt Clerk authentication flow.
+ *
+ * Keep this view visible until [onAuthComplete] fires rather than swapping it out as soon as
+ * [Clerk.sessionFlow] or [Clerk.userFlow] emit a signed-in state. A session can become active while
+ * post-auth steps — session tasks or the trusted-device (biometric) enrollment prompt — still need
+ * to be shown; removing the view early skips them.
  *
  * @param initialIdentifier Optional initial value for the identifier field. Phone-like values are
  *   routed to the phone number field automatically.
@@ -329,6 +335,9 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
     entry<AuthDestination.SignUpCompleteProfile> {
       SignUpCompleteProfileView(onAuthComplete = options.onAuthComplete)
     }
+    entry<AuthDestination.TrustedDeviceEnrollment> {
+      TrustedDeviceEnrollmentView(onAuthComplete = options.onAuthComplete)
+    }
   }
 
 internal fun shouldRouteToSessionTaskMfa(requiresForcedMfa: Boolean, top: NavKey?): Boolean {
@@ -446,4 +455,6 @@ internal object AuthDestination {
   @Serializable data class SignUpEmailLink(val emailAddress: String) : NavKey
 
   @Serializable data class SignUpCompleteProfile(val progress: Int) : NavKey
+
+  @Serializable data object TrustedDeviceEnrollment : NavKey
 }

@@ -91,6 +91,7 @@ dependencies {
 
   implementation(platform(libs.compose.bom))
   implementation(libs.androidx.appcompat)
+  implementation(libs.androidx.biometric)
   implementation(libs.androidx.browser)
   implementation(libs.androidx.credentials)
   implementation(libs.androidx.lifecycle.process)

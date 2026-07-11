@@ -36,6 +36,7 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.SSOService
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
+import com.clerk.api.trusteddevice.TrustedDevices
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import com.clerk.sdk.BuildConfig
@@ -301,6 +302,36 @@ object Clerk {
 
   val passkeyAutofillIsEnabled: Boolean
     get() = environment?.userSettings?.passkeySettings?.allowAutofill ?: false
+
+  /**
+   * Indicates whether trusted-device (biometric) sign-in is enabled for this instance.
+   *
+   * Requires both the Clerk Native API and the trusted-device feature to be enabled for your Clerk
+   * instance.
+   *
+   * @return `true` if trusted-device sign-in is enabled, `false` otherwise. Returns `false` if the
+   *   SDK is not yet initialized.
+   */
+  val trustedDeviceSignInIsEnabled: Boolean
+    get() = environment?.trustedDeviceSignInIsEnabled ?: false
+
+  /**
+   * Indicates whether the trusted-device enrollment prompt should be offered after sign-in.
+   *
+   * @return `true` if the prompt is enabled, `false` otherwise. Returns `false` if the SDK is not
+   *   yet initialized.
+   */
+  val trustedDevicePromptAfterSignInIsEnabled: Boolean
+    get() = environment?.trustedDevicePromptAfterSignInIsEnabled ?: false
+
+  /**
+   * Indicates whether the trusted-device enrollment prompt should be offered after sign-up.
+   *
+   * @return `true` if the prompt is enabled, `false` otherwise. Returns `false` if the SDK is not
+   *   yet initialized.
+   */
+  val trustedDevicePromptAfterSignUpIsEnabled: Boolean
+    get() = environment?.trustedDevicePromptAfterSignUpIsEnabled ?: false
 
   val isEmailEnabled: Boolean
     get() = environment?.emailIsEnabled ?: false
@@ -640,6 +671,22 @@ object Clerk {
    */
   val auth: Auth = Auth()
 
+  /**
+   * The main entry point for trusted-device (biometric sign-in) credential operations.
+   *
+   * ### Example usage:
+   * ```kotlin
+   * // Enroll this device for biometric sign-in
+   * Clerk.trustedDevices.enroll()
+   *
+   * // Sign in with the enrolled credential
+   * Clerk.trustedDevices.signIn()
+   * ```
+   *
+   * @see TrustedDevices for all available trusted-device methods.
+   */
+  val trustedDevices: TrustedDevices = TrustedDevices
+
   // endregion
 
   // region Public Methods
@@ -922,9 +969,8 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
-      sessions.any { it.id == activeSessionId }
-    }
+    val currentActiveSessionId =
+      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1040,9 +1086,8 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
-  it.strategy == strategy && it.safeIdentifier == identifier
-}
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
+  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
 
 val SignIn.resetPasswordFactor: Factor?
   get() =

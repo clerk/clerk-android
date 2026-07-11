@@ -189,4 +189,62 @@ class LastUsedAuthTest {
     field.isAccessible = true
     return field.get(null) as String
   }
+
+  @Test
+  fun fromReturnsTrustedDeviceWhenVisibleAndLastUsed() {
+    val result =
+      LastUsedAuth.from(
+        lastAuthenticationStrategy = "trusted_device",
+        enabledFirstFactorAttributes = listOf("email_address"),
+        authenticatableSocialProviders = emptyList(),
+        storedIdentifierType = null,
+        trustedDeviceSignInIsVisible = true,
+      )
+
+    assertEquals(LastUsedAuth.TrustedDevice, result)
+  }
+
+  @Test
+  fun fromIgnoresTrustedDeviceWhenNotVisible() {
+    val result =
+      LastUsedAuth.from(
+        lastAuthenticationStrategy = "trusted_device",
+        enabledFirstFactorAttributes = listOf("email_address", "phone_number"),
+        authenticatableSocialProviders = emptyList(),
+        storedIdentifierType = null,
+        trustedDeviceSignInIsVisible = false,
+      )
+
+    assertNull(result)
+  }
+
+  @Test
+  fun trustedDeviceCountsTowardVisibleMethodCount() {
+    // Only one identifier attribute is enabled, so the badge is normally hidden; the visible
+    // trusted-device button makes it two methods.
+    val result =
+      LastUsedAuth.from(
+        lastAuthenticationStrategy = "trusted_device",
+        enabledFirstFactorAttributes = listOf("email_address"),
+        authenticatableSocialProviders = emptyList(),
+        storedIdentifierType = null,
+        trustedDeviceSignInIsVisible = true,
+      )
+
+    assertEquals(LastUsedAuth.TrustedDevice, result)
+  }
+
+  @Test
+  fun fromReturnsNullForTrustedDeviceWithSingleVisibleMethod() {
+    val result =
+      LastUsedAuth.from(
+        lastAuthenticationStrategy = "trusted_device",
+        enabledFirstFactorAttributes = emptyList(),
+        authenticatableSocialProviders = emptyList(),
+        storedIdentifierType = null,
+        trustedDeviceSignInIsVisible = true,
+      )
+
+    assertNull(result)
+  }
 }

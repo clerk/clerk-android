@@ -21,6 +21,9 @@ data class Factor(
   /** The ID of the Web3 wallet that will be used to sign a message. */
   val web3WalletId: String? = null,
 
+  /** The ID of the trusted-device credential that will be used to sign a challenge. */
+  @SerialName("trusted_device_id") val trustedDeviceId: String? = null,
+
   /** The ID of the enterprise connection that will be used for SSO. */
   @SerialName("enterprise_connection_id") val enterpriseConnectionId: String? = null,
 
