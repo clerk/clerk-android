@@ -186,6 +186,10 @@ class Auth internal constructor() {
   /**
    * Opens Account Portal in a system browser and activates the session created there.
    *
+   * The pending flow state lives only in this process: if the system kills the app process while
+   * the browser is in the foreground, the flow is lost and its callback is ignored, matching the
+   * behavior of the SDK's OAuth/SSO redirect flows.
+   *
    * @param mode The Account Portal screen to open first. Defaults to sign-in.
    * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK.
    *   Custom values require a matching intent filter in the application manifest and must be
@@ -884,6 +888,10 @@ class Auth internal constructor() {
    *
    * Call this method from your Activity when receiving a deep link callback from Clerk
    * authentication flows.
+   *
+   * For hosted auth callbacks this method suspends until callback validation and session redemption
+   * have finished. It returns before the redeemed session is activated, so [Clerk.session] may not
+   * yet reflect the new session when this method returns `true`.
    *
    * @param uri The deep link URI received from the callback.
    * @return true if the URI was handled, false otherwise.
