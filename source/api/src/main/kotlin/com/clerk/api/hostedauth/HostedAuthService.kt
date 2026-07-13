@@ -104,51 +104,55 @@ internal object HostedAuthService {
     }
   }
 
-  @Suppress("TooGenericExceptionCaught")
   suspend fun complete(uri: Uri): ClerkResult<Session, ClerkErrorResponse>? {
     val pendingAuth = pendingAuthStore.current()
-    return when {
-      pendingAuth == null -> null
-      !uri.matchesHostedAuthRedirectUrl(pendingAuth.redirectUrl) -> null
-      pendingAuth.completionStarted.compareAndSet(false, true) -> {
-        val completionJob =
-          completionScope.launch(start = CoroutineStart.LAZY) {
-            try {
-              completePendingAuth(uri, pendingAuth)
-            } catch (error: Exception) {
-              finishPendingAuth(pendingAuth, ClerkResult.unknownFailure(error))
-            }
-          }
-        pendingAuth.completionJob.set(completionJob)
-        if (pendingAuthStore.isCurrent(pendingAuth)) {
-          completionJob.start()
-        } else {
-          completionJob.cancel()
-        }
-        pendingAuth.deferred.await()
-      }
-      else -> pendingAuth.deferred.await()
+    if (pendingAuth == null || !uri.matchesHostedAuthRedirectUrl(pendingAuth.redirectUrl)) {
+      return null
     }
+    val callbackResult =
+      validateHostedAuthCallback(
+        uri = uri,
+        redirectUrl = pendingAuth.redirectUrl,
+        expectedState = pendingAuth.state,
+      )
+    return when (callbackResult) {
+      // An invalid callback (e.g. a forged state fired by another app) must not consume the
+      // single completion slot or fail the pending flow. Report the failure to this caller and
+      // keep waiting so the legitimate callback can still complete the authentication.
+      is ClerkResult.Failure -> callbackResult
+      is ClerkResult.Success ->
+        if (pendingAuth.completionStarted.compareAndSet(false, true)) {
+          startClaimedCompletion(pendingAuth, callbackResult.value)
+        } else {
+          pendingAuth.deferred.await()
+        }
+    }
+  }
+
+  @Suppress("TooGenericExceptionCaught")
+  private suspend fun startClaimedCompletion(
+    pendingAuth: PendingHostedAuth,
+    callback: HostedAuthCallback,
+  ): ClerkResult<Session, ClerkErrorResponse> {
+    val completionJob =
+      completionScope.launch(start = CoroutineStart.LAZY) {
+        try {
+          redeemAndComplete(pendingAuth, callback)
+        } catch (error: Exception) {
+          finishPendingAuth(pendingAuth, ClerkResult.unknownFailure(error))
+        }
+      }
+    pendingAuth.completionJob.set(completionJob)
+    if (pendingAuthStore.isCurrent(pendingAuth)) {
+      completionJob.start()
+    } else {
+      completionJob.cancel()
+    }
+    return pendingAuth.deferred.await()
   }
 
   fun canHandle(uri: Uri): Boolean =
     pendingAuthStore.current()?.let { uri.matchesHostedAuthRedirectUrl(it.redirectUrl) } == true
-
-  private suspend fun completePendingAuth(
-    uri: Uri,
-    pendingAuth: PendingHostedAuth,
-  ): ClerkResult<Session, ClerkErrorResponse> =
-    when (
-      val callbackResult =
-        validateHostedAuthCallback(
-          uri = uri,
-          redirectUrl = pendingAuth.redirectUrl,
-          expectedState = pendingAuth.state,
-        )
-    ) {
-      is ClerkResult.Failure -> finishPendingAuth(pendingAuth, callbackResult)
-      is ClerkResult.Success -> redeemAndComplete(pendingAuth, callbackResult.value)
-    }
 
   private suspend fun redeemAndComplete(
     pendingAuth: PendingHostedAuth,
