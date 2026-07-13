@@ -21,6 +21,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
 import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -42,7 +43,8 @@ private const val INVITATION_ACCOUNT_NOT_EXISTS = "invitation_account_not_exists
  * Clerk SDK to perform operations like creating sign-in/sign-up attempts, and handling social
  * provider authentication.
  */
-internal class AuthStartViewModel : ViewModel() {
+internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO) :
+  ViewModel() {
 
   private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
   /**
@@ -71,7 +73,7 @@ internal class AuthStartViewModel : ViewModel() {
 
     ClerkLog.d("Starting automatic passkey sign-in")
     val job =
-      viewModelScope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) {
+      viewModelScope.launch(ioDispatcher, start = CoroutineStart.LAZY) {
         try {
           when (
             val result =
@@ -171,7 +173,7 @@ internal class AuthStartViewModel : ViewModel() {
     transferable: Boolean = true,
     unsafeMetadata: Map<String, Any>? = null,
   ) {
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch(ioDispatcher) {
       _state.value = AuthState.Loading
       val resolvedIdentifier = if (isPhoneNumberFieldActive) phoneNumber else identifier
 
@@ -198,7 +200,7 @@ internal class AuthStartViewModel : ViewModel() {
     unsafeMetadata: Map<String, Any>?,
   ) {
     _state.value = AuthState.Loading
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch(ioDispatcher) {
       SignUp.create(
           signUpParams(
             isPhoneNumberFieldActive = isPhoneNumberFieldActive,
@@ -253,7 +255,7 @@ internal class AuthStartViewModel : ViewModel() {
     startOAuthWithSignUp: Boolean,
     unsafeMetadata: Map<String, Any>?,
   ) {
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch(ioDispatcher) {
       SignIn.authenticateWithGoogleOneTap(transferable)
         .onSuccess {
           withContext(Dispatchers.Main) {
