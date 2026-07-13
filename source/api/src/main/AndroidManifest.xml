@@ -1,10 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <queries>
+        <intent>
+            <action android:name="com.clerk.api.action.SHARED_SESSION_SYNC" />
+        </intent>
+    </queries>
+
     <application android:supportsRtl="true">
+
+        <!--
+          Reads are restricted at runtime to callers signed with the same certificate. A fixed
+          manifest permission cannot be used here because permission names are global across every
+          app that embeds the Clerk library.
+        -->
+        <provider
+            android:name="com.clerk.api.sharedsession.SharedSessionSyncProvider"
+            android:authorities="${applicationId}.clerk.shared-session-sync"
+            android:exported="true"
+            android:grantUriPermissions="false"
+            tools:ignore="ExportedContentProvider">
+            <intent-filter>
+                <action android:name="com.clerk.api.action.SHARED_SESSION_SYNC" />
+            </intent-filter>
+        </provider>
 
         <activity
             android:name="com.clerk.api.sso.SSOManagerActivity"

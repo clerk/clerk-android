@@ -127,6 +127,9 @@ internal class ConfigurationManager {
   /** Monotonic token used to ignore stale refreshes from an older configuration. */
   @Volatile private var configurationVersion = 0
 
+  /** Monotonic fence used to discard responses started with an older shared device token. */
+  @Volatile private var sharedDeviceTokenFenceGeneration = 0
+
   private enum class RefreshMode {
     INITIALIZATION,
     DEVICE_TOKEN_UPDATE,
@@ -214,6 +217,11 @@ internal class ConfigurationManager {
     Clerk.applicationId = context.applicationContext.packageName
 
     ensureStorageInitialized()
+    Clerk.configureSharedSessionSync(
+      context = context.applicationContext,
+      publishableKey = publishableKey,
+      config = options?.sharedSessionSync,
+    )
     ClerkApi.configure(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
@@ -227,37 +235,40 @@ internal class ConfigurationManager {
   private fun launchInitialization(
     options: ClerkConfigurationOptions?,
     configuredVersion: Int,
-  ): Job =
-    scope.launch {
-      val attempt =
-        RefreshAttempt(
-          options = options,
-          retryCount = 0,
-          expectedConfigurationVersion = configuredVersion,
-        )
-      val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
-      val dataRefreshJob = async {
-        refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
-      }
+  ): Job = scope.launch {
+    val attempt =
+      RefreshAttempt(
+        options = options,
+        retryCount = 0,
+        expectedConfigurationVersion = configuredVersion,
+      )
+    Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage(force = true)
+    val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
+    val dataRefreshJob = async {
+      refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+    }
 
-      deviceIdInitJob.await()
-      AppLifecycleListener.configure {
-        if (hasConfigured) {
-          scope.launch {
-            deferForegroundRefreshDuringPendingSso()
-            refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
-            startTokenRefresh()
-          }
+    deviceIdInitJob.await()
+    AppLifecycleListener.configure {
+      if (hasConfigured) {
+        scope.launch {
+          Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage(force = false)
+          deferForegroundRefreshDuringPendingSso()
+          refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+          startTokenRefresh()
         }
       }
-      dataRefreshJob.await()
     }
+    dataRefreshJob.await()
+  }
 
   fun isConfigured(): Boolean = hasConfigured
 
   @Synchronized
   fun reset() {
     configurationVersion += 1
+    sharedDeviceTokenFenceGeneration += 1
+    Clerk.stopSharedSessionSync()
     scope.coroutineContext.cancelChildren()
     initializationJob?.cancel()
     refreshJob?.cancel()
@@ -274,6 +285,10 @@ internal class ConfigurationManager {
     AppLifecycleListener.stop()
   }
 
+  fun fenceClientResponsesAfterSharedDeviceTokenChange() {
+    sharedDeviceTokenFenceGeneration += 1
+  }
+
   private fun startTokenRefresh() {
     ClerkLog.d(
       "startTokenRefresh() called - debugMode: ${Clerk.debugMode}, hasConfigured: $hasConfigured"
@@ -286,29 +301,28 @@ internal class ConfigurationManager {
 
     // Cancel any ongoing jobs
     refreshJob?.cancel()
-    refreshJob =
-      scope.launch {
-        while (isActive) {
-          try {
-            val session = Clerk.session
-            if (session != null) {
-              if (Clerk.debugMode) {
-                ClerkLog.d("Refreshing token for session: ${session.id}")
-              }
-              // Use async to avoid blocking the refresh loop
-              async { session.fetchToken(GetTokenOptions(skipCache = false)) }
-            } else {
-              if (Clerk.debugMode) {
-                ClerkLog.d("No session available for token refresh")
-              }
+    refreshJob = scope.launch {
+      while (isActive) {
+        try {
+          val session = Clerk.session
+          if (session != null) {
+            if (Clerk.debugMode) {
+              ClerkLog.d("Refreshing token for session: ${session.id}")
             }
-          } catch (e: Exception) {
-            ClerkLog.w("Token refresh failed: ${e.message}")
+            // Use async to avoid blocking the refresh loop
+            async { session.fetchToken(GetTokenOptions(skipCache = false)) }
+          } else {
+            if (Clerk.debugMode) {
+              ClerkLog.d("No session available for token refresh")
+            }
           }
-
-          delay(REFRESH_TOKEN_INTERVAL.seconds)
+        } catch (e: Exception) {
+          ClerkLog.w("Token refresh failed: ${e.message}")
         }
+
+        delay(REFRESH_TOKEN_INTERVAL.seconds)
       }
+    }
   }
 
   suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> {
@@ -477,10 +491,23 @@ internal class ConfigurationManager {
     skipClientId: Boolean,
   ): ClerkResult<Unit, ClerkErrorResponse> {
     return withTimeout((API_TIMEOUT_SECONDS * TIMEOUT_MULTIPLIER)) {
+      val expectedDeviceTokenFenceGeneration = sharedDeviceTokenFenceGeneration
       val (clientResult, environmentResult) = fetchRefreshData(skipClientId)
 
       if (attempt.expectedConfigurationVersion != configurationVersion || !hasConfigured) {
         return@withTimeout staleConfigurationFailure()
+      }
+
+      if (expectedDeviceTokenFenceGeneration != sharedDeviceTokenFenceGeneration) {
+        ClerkLog.d("Discarding refresh started before a shared device-token change")
+        scope.launch {
+          refreshClientAndEnvironment(
+            attempt = currentRefreshAttempt(),
+            mode = RefreshMode.DEVICE_TOKEN_UPDATE,
+            skipClientId = true,
+          )
+        }
+        return@withTimeout ClerkResult.success(Unit)
       }
 
       handleClientResult(clientResult)

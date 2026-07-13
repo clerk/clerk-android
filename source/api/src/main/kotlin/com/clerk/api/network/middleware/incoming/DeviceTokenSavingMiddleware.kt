@@ -1,6 +1,7 @@
 package com.clerk.api.network.middleware.incoming
 
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import okhttp3.Interceptor
@@ -22,9 +23,15 @@ internal class DeviceTokenSavingMiddleware : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val response = chain.proceed(chain.request())
     val deviceToken = response.header(AUTHORIZATION_HEADER)
+    val requestDeviceToken = response.request.header(AUTHORIZATION_HEADER)
+    val currentDeviceToken = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)
 
-    // Save the device token to storage whenever it's present in the response
-    deviceToken?.let { token -> StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, token) }
+    // Do not let a response that started with an older shared token overwrite the newer token.
+    if (deviceToken != null && currentDeviceToken == requestDeviceToken) {
+      StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, deviceToken)
+    } else if (deviceToken != null) {
+      ClerkLog.d("Device token update skipped for a stale shared-session response")
+    }
 
     return response
   }
