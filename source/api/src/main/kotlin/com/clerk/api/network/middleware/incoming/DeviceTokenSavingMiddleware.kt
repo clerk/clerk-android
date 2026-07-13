@@ -1,7 +1,6 @@
 package com.clerk.api.network.middleware.incoming
 
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
-import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import okhttp3.Interceptor
@@ -12,6 +11,11 @@ import okhttp3.Response
  *
  * This middleware intercepts network responses and checks for the presence of an Authorization
  * header. If found, the token is automatically saved to the device's local storage for future use.
+ *
+ * Saving is deliberately unconditional and ignores any
+ * [com.clerk.api.network.middleware.ResponseGuard] on the request: the header always carries the
+ * server's current token for this client (hosted auth redemption rotates it), so discarding it
+ * because the local flow was cancelled would desync the stored token from the server.
  */
 internal class DeviceTokenSavingMiddleware : Interceptor {
   /**
@@ -21,14 +25,11 @@ internal class DeviceTokenSavingMiddleware : Interceptor {
    * @return The unmodified response after saving any device token found.
    */
   override fun intercept(chain: Interceptor.Chain): Response {
-    val request = chain.request()
-    val response = chain.proceed(request)
-    val deviceToken = response.header(AUTHORIZATION_HEADER)
+    val response = chain.proceed(chain.request())
 
     // Save the device token to storage whenever it's present in the response
-    deviceToken?.let { token ->
-      val saveToken = { StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, token) }
-      request.tag(ResponseGuard::class.java)?.runIfAllowed(saveToken) ?: saveToken()
+    response.header(AUTHORIZATION_HEADER)?.let { token ->
+      StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, token)
     }
 
     return response

@@ -24,7 +24,7 @@ class DeviceTokenSavingMiddlewareTest {
   }
 
   @Test
-  fun `intercept does not save device token when request no longer owns the flow`() {
+  fun `intercept saves device token even when request no longer owns the flow`() {
     mockkObject(StorageHelper)
     justRun { StorageHelper.saveValue(any<StorageKey>(), any<String>()) }
     val request =
@@ -38,7 +38,28 @@ class DeviceTokenSavingMiddlewareTest {
         .protocol(Protocol.HTTP_1_1)
         .code(200)
         .message("OK")
-        .header(AUTHORIZATION_HEADER, "device_token_cancelled")
+        .header(AUTHORIZATION_HEADER, "device_token_rotated")
+        .build()
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns request
+    every { chain.proceed(request) } returns response
+
+    DeviceTokenSavingMiddleware().intercept(chain)
+
+    verify(exactly = 1) { StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_rotated") }
+  }
+
+  @Test
+  fun `intercept does not save when response has no authorization header`() {
+    mockkObject(StorageHelper)
+    justRun { StorageHelper.saveValue(any<StorageKey>(), any<String>()) }
+    val request = Request.Builder().url("https://api.clerk.com/v1/client").build()
+    val response =
+      Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
         .build()
     val chain = mockk<Interceptor.Chain>()
     every { chain.request() } returns request

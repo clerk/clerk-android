@@ -158,11 +158,13 @@ internal object HostedAuthService {
       ClerkApi.client.redeemHostedAuth(
         rotatingTokenNonce = callback.rotatingTokenNonce,
         codeVerifier = pendingAuth.codeVerifier,
-        responseGuard =
-          ResponseGuard { sideEffect ->
-            pendingAuthStore.runIfCurrent(pendingAuth, sideEffect)
-          },
       )
+    // A successful redemption consumed the single-use nonce and rotated this client's token on
+    // the server, so the redeemed client is authoritative local state regardless of how the rest
+    // of the flow ends (cancellation, activation failure, etc.).
+    if (clientResult is ClerkResult.Success) {
+      Clerk.updateClient(clientResult.value)
+    }
     return if (pendingAuthStore.isCurrent(pendingAuth)) {
       when (clientResult) {
         is ClerkResult.Failure -> finishPendingAuth(pendingAuth, clientResult)
@@ -178,6 +180,7 @@ internal object HostedAuthService {
     callback: HostedAuthCallback,
     client: Client,
   ): ClerkResult<Session, ClerkErrorResponse> {
+    // The redeemed client has already been applied locally; this only resolves the flow result.
     val createdSession = client.sessions.firstOrNull { it.id == callback.createdSessionId }
     return if (createdSession == null) {
       finishPendingAuth(

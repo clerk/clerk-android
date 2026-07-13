@@ -51,7 +51,6 @@ internal interface ClientApi {
     @Field("code_verifier") codeVerifier: String,
     @Tag manualClientSyncRequest: ManualClientSyncRequest = ManualClientSyncRequest,
     @Tag sensitiveRequest: SensitiveRequest = SensitiveRequest,
-    @Tag responseGuard: ResponseGuard = ResponseGuard.always,
   ): ClerkResult<Client, ClerkErrorResponse>
 
   /**
