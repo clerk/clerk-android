@@ -32,6 +32,7 @@ import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.sharedsession.SharedSessionSyncCoordinator
+import com.clerk.api.sharedsession.SharedSessionSyncProvider
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.SSOService
@@ -963,7 +964,10 @@ object Clerk {
     config: SharedSessionSyncConfig?,
   ) {
     stopSharedSessionSync()
-    if (config == null) return
+    if (config == null) {
+      SharedSessionSyncProvider.setEnabled(context, false)
+      return
+    }
 
     sharedSessionSyncCoordinator =
       SharedSessionSyncCoordinator(context = context, publishableKey = publishableKey).also {

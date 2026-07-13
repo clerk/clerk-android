@@ -1,7 +1,9 @@
 package com.clerk.api.sharedsession
 
+import android.content.ComponentName
 import android.content.ContentProvider
 import android.content.ContentValues
+import android.content.Context
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.database.MatrixCursor
@@ -72,6 +74,20 @@ internal class SharedSessionSyncProvider : ContentProvider() {
 
   private fun <T> readOnly(): T {
     throw UnsupportedOperationException("Shared Clerk session state is read-only")
+  }
+
+  companion object {
+    internal fun setEnabled(context: Context, enabled: Boolean) {
+      context.applicationContext.packageManager.setComponentEnabledSetting(
+        ComponentName(context.applicationContext, SharedSessionSyncProvider::class.java),
+        if (enabled) {
+          PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+        } else {
+          PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        },
+        PackageManager.DONT_KILL_APP,
+      )
+    }
   }
 }
 

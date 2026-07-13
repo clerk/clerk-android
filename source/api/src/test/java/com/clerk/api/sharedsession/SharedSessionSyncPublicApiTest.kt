@@ -9,6 +9,7 @@ import com.clerk.api.storage.StorageKey
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -63,6 +64,16 @@ class SharedSessionSyncPublicApiTest {
     assertTrue(changed)
     assertEquals(sharedClient, Clerk.client)
     assertEquals(200L, Clerk.lastClientServerFetchAtMillis)
+  }
+
+  @Test
+  fun `enabled config exposes a companion getter to published aar consumers`() {
+    val getter = SharedSessionSyncConfig.Companion::class.java.getMethod("getEnabled")
+
+    assertSame(
+      SharedSessionSyncConfig.enabled,
+      getter.invoke(SharedSessionSyncConfig.Companion),
+    )
   }
 
   private companion object {

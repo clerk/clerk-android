@@ -21,6 +21,7 @@
         <provider
             android:name="com.clerk.api.sharedsession.SharedSessionSyncProvider"
             android:authorities="${applicationId}.clerk.shared-session-sync"
+            android:enabled="false"
             android:exported="true"
             android:grantUriPermissions="false"
             tools:ignore="ExportedContentProvider">

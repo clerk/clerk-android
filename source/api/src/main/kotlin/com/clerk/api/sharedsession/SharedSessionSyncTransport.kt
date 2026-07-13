@@ -55,6 +55,7 @@ internal class ContentProviderSharedSessionSyncTransport(context: Context) :
   }
 
   override fun start(onPeerChange: () -> Unit) {
+    SharedSessionSyncProvider.setEnabled(context, true)
     peerChangeHandler = onPeerChange
     registerObservers(discoverPeerUris())
   }
@@ -63,6 +64,7 @@ internal class ContentProviderSharedSessionSyncTransport(context: Context) :
     observers.values.forEach { observer -> resolver.unregisterContentObserver(observer) }
     observers.clear()
     peerChangeHandler = null
+    SharedSessionSyncProvider.setEnabled(context, false)
   }
 
   private fun discoverPeerUris(): List<Uri> {

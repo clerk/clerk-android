@@ -6,6 +6,7 @@ import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -26,17 +27,29 @@ class SharedSessionSyncProviderTest {
 
   @After
   fun tearDown() {
+    SharedSessionSyncProvider.setEnabled(context, false)
     StorageHelper.reset(context)
   }
 
   @Test
-  fun `merged manifest exposes discoverable read-only snapshot provider`() {
-    val providers =
-      context.packageManager.queryIntentContentProviders(
-        Intent(SharedSessionSyncContract.DISCOVERY_ACTION),
-        0,
-      )
-    val expectedAuthority = context.packageName + SharedSessionSyncContract.AUTHORITY_SUFFIX
+  fun `provider is discoverable only while shared session sync is enabled`() {
+    assertFalse(discoveredProviders().any { it.providerInfo.authority == expectedAuthority() })
+
+    SharedSessionSyncProvider.setEnabled(context, true)
+
+    val providers = discoveredProviders()
+    val expectedAuthority = expectedAuthority()
+    val provider = providers.firstOrNull { it.providerInfo.authority == expectedAuthority }
+
+    assertNotNull(provider)
+    assertTrue(provider!!.providerInfo.exported)
+  }
+
+  @Test
+  fun `enabled provider exposes read-only snapshot`() {
+    SharedSessionSyncProvider.setEnabled(context, true)
+    val providers = discoveredProviders()
+    val expectedAuthority = expectedAuthority()
     val provider = providers.firstOrNull { it.providerInfo.authority == expectedAuthority }
 
     assertNotNull(provider)
@@ -60,4 +73,13 @@ class SharedSessionSyncProviderTest {
       )
     }
   }
+
+  private fun discoveredProviders() =
+    context.packageManager.queryIntentContentProviders(
+      Intent(SharedSessionSyncContract.DISCOVERY_ACTION),
+      0,
+    )
+
+  private fun expectedAuthority(): String =
+    context.packageName + SharedSessionSyncContract.AUTHORITY_SUFFIX
 }

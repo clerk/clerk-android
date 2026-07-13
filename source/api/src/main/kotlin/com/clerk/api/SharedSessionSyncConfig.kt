@@ -20,6 +20,6 @@ package com.clerk.api
 class SharedSessionSyncConfig private constructor() {
   companion object {
     /** Enables shared-session synchronization for this Clerk instance. */
-    @JvmField val enabled = SharedSessionSyncConfig()
+    val enabled = SharedSessionSyncConfig()
   }
 }
