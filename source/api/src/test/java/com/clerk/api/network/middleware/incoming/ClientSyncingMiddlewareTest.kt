@@ -180,6 +180,40 @@ class ClientSyncingMiddlewareTest {
     assertEquals(listOf(session), Clerk.sessionsFlow.value)
   }
 
+  @Test
+  fun `intercept hydrates direct client response with server date`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val request = Request.Builder().url("https://api.clerk.com/v1/client").build()
+    val response =
+      Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .header("Date", "Mon, 13 Jul 2026 18:00:00 GMT")
+        .body(
+          """
+          {
+            "object": "client",
+            "id": "client_server",
+            "sessions": []
+          }
+          """
+            .trimIndent()
+            .toResponseBody("application/json".toMediaType())
+        )
+        .build()
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns request
+    every { chain.proceed(request) } returns response
+
+    middleware.intercept(chain)
+    Clerk.updateClient(Clerk.client)
+
+    assertEquals("client_server", Clerk.client.id)
+    assertEquals(1_783_965_600_000L, Clerk.lastClientServerFetchAtMillis)
+  }
+
   private fun testSession(id: String): Session =
     Session(
       id = id,
