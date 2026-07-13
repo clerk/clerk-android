@@ -15,7 +15,7 @@ class WorkbenchApplication : Application() {
     publicKey?.let { key ->
       Clerk.initialize(
         this,
-        key,
+        "pk_test_bG92aW5nLW1vdGgtMjIuY2xlcmsuYWNjb3VudHMuZGV2JA",
         options = ClerkConfigurationOptions(enableDebugMode = true, proxyUrl = proxyUrl),
       )
     }
