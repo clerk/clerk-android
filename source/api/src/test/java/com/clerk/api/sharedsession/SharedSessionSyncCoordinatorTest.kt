@@ -47,7 +47,7 @@ class SharedSessionSyncCoordinatorTest {
       val coordinator = coordinator(transport)
       coordinator.start()
 
-      val changed = coordinator.reloadFromSharedStorage(force = true)
+      val changed = coordinator.reloadFromSharedStorage()
 
       assertTrue(changed)
       assertEquals("shared", Clerk.client.id)
@@ -65,7 +65,7 @@ class SharedSessionSyncCoordinatorTest {
     val coordinator = coordinator(transport)
     coordinator.start()
 
-    val changed = coordinator.reloadFromSharedStorage(force = true)
+    val changed = coordinator.reloadFromSharedStorage()
 
     assertTrue(changed)
     assertEquals(Client(), Clerk.client)
@@ -86,7 +86,7 @@ class SharedSessionSyncCoordinatorTest {
     val coordinator = coordinator(transport)
     coordinator.start()
 
-    val changed = coordinator.reloadFromSharedStorage(force = false)
+    val changed = coordinator.reloadFromSharedStorage()
 
     assertFalse(changed)
     assertEquals("local", Clerk.client.id)
@@ -134,7 +134,7 @@ class SharedSessionSyncCoordinatorTest {
     val coordinator = coordinator(transport)
     coordinator.start()
 
-    val changed = coordinator.reloadFromSharedStorage(force = false)
+    val changed = coordinator.reloadFromSharedStorage()
 
     assertTrue(changed)
     assertEquals("shared-token", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))

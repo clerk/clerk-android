@@ -242,7 +242,7 @@ internal class ConfigurationManager {
         retryCount = 0,
         expectedConfigurationVersion = configuredVersion,
       )
-    Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage(force = true)
+    Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
     val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
     val dataRefreshJob = async {
       refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
@@ -252,7 +252,7 @@ internal class ConfigurationManager {
     AppLifecycleListener.configure {
       if (hasConfigured) {
         scope.launch {
-          Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage(force = false)
+          Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
           deferForegroundRefreshDuringPendingSso()
           refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
           startTokenRefresh()

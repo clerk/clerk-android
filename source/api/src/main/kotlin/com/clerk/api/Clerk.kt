@@ -805,7 +805,7 @@ object Clerk {
    * changed.
    */
   suspend fun reloadFromSharedStorage(): Boolean =
-    sharedSessionSyncCoordinator?.reloadFromSharedStorage(force = true) ?: false
+    sharedSessionSyncCoordinator?.reloadFromSharedStorage() ?: false
 
   /**
    * Provides the current foreground [Activity] to Clerk explicitly.

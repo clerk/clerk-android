@@ -42,7 +42,7 @@ internal constructor(
 
   fun start() {
     StorageHelper.valueChangeListener = storageListener
-    transport.start { scope.launch { reloadFromSharedStorage(force = false) } }
+    transport.start { scope.launch { reloadFromSharedStorage() } }
   }
 
   fun close() {
@@ -53,8 +53,7 @@ internal constructor(
     scope.cancel()
   }
 
-  suspend fun reloadFromSharedStorage(force: Boolean): Boolean =
-    withContext(Dispatchers.IO) { reloadBlocking(force) }
+  suspend fun reloadFromSharedStorage(): Boolean = withContext(Dispatchers.IO) { reloadBlocking() }
 
   fun handleClientChange(client: Client, serverFetchAtMillis: Long) {
     synchronized(stateLock) {
@@ -89,8 +88,7 @@ internal constructor(
     }
   }
 
-  @Suppress("UNUSED_PARAMETER")
-  private fun reloadBlocking(force: Boolean): Boolean {
+  private fun reloadBlocking(): Boolean {
     val storedLocalSnapshot = transport.loadLocalSnapshot()?.takeIf(::isCompatible)
     val peerSnapshots = transport.loadPeerSnapshots().filter(::isCompatible)
 
