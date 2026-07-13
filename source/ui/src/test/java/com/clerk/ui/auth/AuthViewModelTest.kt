@@ -45,7 +45,7 @@ class AuthViewModelTest {
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
-    viewModel = AuthStartViewModel()
+    viewModel = AuthStartViewModel(ioDispatcher = testDispatcher)
   }
 
   @After
@@ -128,13 +128,13 @@ class AuthViewModelTest {
 
       viewModel.startAutomaticPasskeySignIn()
 
-      coVerify(timeout = 1_000, exactly = 1) {
+      testDispatcher.scheduler.advanceUntilIdle()
+      coVerify(exactly = 1) {
         SignIn.create(
           any<SignIn.CreateParams.Strategy.Passkey>(),
           preferImmediatelyAvailableCredentials = true,
         )
       }
-      testDispatcher.scheduler.advanceUntilIdle()
       expectNoEvents()
     }
   }
@@ -158,13 +158,13 @@ class AuthViewModelTest {
 
       viewModel.startAutomaticPasskeySignIn()
 
-      coVerify(timeout = 1_000, exactly = 1) {
+      testDispatcher.scheduler.advanceUntilIdle()
+      coVerify(exactly = 1) {
         SignIn.create(
           any<SignIn.CreateParams.Strategy.Passkey>(),
           preferImmediatelyAvailableCredentials = true,
         )
       }
-      testDispatcher.scheduler.advanceUntilIdle()
       expectNoEvents()
     }
   }
@@ -566,8 +566,9 @@ class AuthViewModelTest {
       transferable = true,
       preferGoogleOneTap = true,
     )
+    testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(timeout = 1_000, exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
     coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
   }
 
@@ -592,9 +593,9 @@ class AuthViewModelTest {
       transferable = true,
       preferGoogleOneTap = true,
     )
-
-    coVerify(timeout = 1_000, exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
     testDispatcher.scheduler.advanceUntilIdle()
-    coVerify(timeout = 1_000, exactly = 1) { SignIn.authenticateWithRedirect(any(), true) }
+
+    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+    coVerify(exactly = 1) { SignIn.authenticateWithRedirect(any(), true) }
   }
 }
