@@ -64,15 +64,13 @@ internal fun Uri.matchesHostedAuthRedirectUrl(redirectUrl: String): Boolean {
   val expectedUri = runCatching { Uri.parse(redirectUrl) }.getOrNull()
   return expectedUri?.let { expected ->
     runCatching {
+        // Comparing the encoded authority and path subsumes their decoded counterparts
+        // (authority, host, port, and path), so only the encoded forms are compared.
         scheme.isNullOrBlank().not() &&
           expected.scheme.isNullOrBlank().not() &&
           scheme == expected.scheme &&
           encodedAuthority == expected.encodedAuthority &&
-          authority == expected.authority &&
-          host == expected.host &&
-          port == expected.port &&
-          encodedPath == expected.encodedPath &&
-          path == expected.path
+          encodedPath == expected.encodedPath
       }
       .getOrDefault(false)
   } ?: false

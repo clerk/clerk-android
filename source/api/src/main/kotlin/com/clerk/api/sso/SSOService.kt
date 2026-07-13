@@ -8,6 +8,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
+import com.clerk.api.hostedauth.HOSTED_AUTH_CANCELLED_BY_NEW_FLOW
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -99,9 +100,7 @@ internal object SSOService {
         Exception("New authentication started, cancelling previous attempt")
       )
     )
-    HostedAuthService.cancelPendingAuthentication(
-      "New authentication started, cancelling previous hosted auth attempt"
-    )
+    HostedAuthService.cancelPendingAuthentication(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW)
     clearCurrentAuth()
     val resolvedStrategy =
       strategy
@@ -179,9 +178,7 @@ internal object SSOService {
         Exception("New authentication started, cancelling previous attempt")
       )
     )
-    HostedAuthService.cancelPendingAuthentication(
-      "New authentication started, cancelling previous hosted auth attempt"
-    )
+    HostedAuthService.cancelPendingAuthentication(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW)
     clearCurrentAuth()
 
     val initialResult =
@@ -240,9 +237,7 @@ internal object SSOService {
         Exception("New authentication started, cancelling previous attempt")
       )
     )
-    HostedAuthService.cancelPendingAuthentication(
-      "New authentication started, cancelling previous hosted auth attempt"
-    )
+    HostedAuthService.cancelPendingAuthentication(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW)
     clearCurrentAuth()
 
     val completableDeferred = CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>()

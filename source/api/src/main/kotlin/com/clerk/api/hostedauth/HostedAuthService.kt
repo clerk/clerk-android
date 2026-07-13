@@ -352,3 +352,7 @@ private suspend fun createHostedAuth(
 private data class HostedAuthRequest(val state: String, val pkce: HostedAuthPkce)
 
 private const val AUTHENTICATION_CANCELLED = "Authentication cancelled"
+
+/** Cancellation reason used when a newly started flow supersedes a pending hosted auth attempt. */
+internal const val HOSTED_AUTH_CANCELLED_BY_NEW_FLOW =
+  "New authentication started, cancelling previous hosted auth attempt"
