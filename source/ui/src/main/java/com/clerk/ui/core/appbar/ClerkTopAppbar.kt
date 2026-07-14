@@ -50,6 +50,7 @@ internal fun ClerkTopAppBar(
   backgroundColor: Color? = null, // sensible default
   clerkTheme: ClerkTheme? = null,
   logoUrl: String? = Clerk.organizationLogoUrl,
+  statusBarInsets: WindowInsets = WindowInsets.statusBars,
   contentPadding: PaddingValues = PaddingValues(),
   trailingContent: (@Composable () -> Unit)? = null,
 ) {
@@ -59,13 +60,13 @@ internal fun ClerkTopAppBar(
       Spacer(
         Modifier.fillMaxWidth()
           .background(resolvedBackgroundColor)
-          .windowInsetsTopHeight(WindowInsets.statusBars)
+          .windowInsetsTopHeight(statusBarInsets)
       )
 
       Row(
         modifier =
           Modifier.fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.statusBars)
+            .windowInsetsPadding(statusBarInsets)
             .padding(contentPadding)
             .padding(vertical = dp8),
         verticalAlignment = Alignment.CenterVertically,

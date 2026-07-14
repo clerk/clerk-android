@@ -6,12 +6,16 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fitInside
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.RectRulers
+import androidx.compose.ui.layout.WindowInsetsRulers
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -90,6 +96,7 @@ internal fun ClerkThemedAuthScaffold(
   onClickIdentifier: () -> Unit = {},
   spacingAfterIdentifier: Dp = dp32,
   showSignedInUserButton: Boolean = true,
+  statusBarRulers: RectRulers = WindowInsetsRulers.StatusBars.current,
   content: @Composable () -> Unit,
 ) {
   val user = Clerk.userFlow.collectAsStateWithLifecycle().value
@@ -121,20 +128,27 @@ internal fun ClerkThemedAuthScaffold(
     )
 
   ClerkMaterialTheme {
-    Scaffold(
-      modifier = Modifier.then(modifier),
-      snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
-      topBar = {
-        ClerkTopAppBar(
-          backgroundColor = ClerkMaterialTheme.colors.background,
-          onBackPressed = onBackPressed,
-          hasLogo = shouldShowLogo,
-          hasBackButton = hasBackButton,
-          trailingContent = resolvedTrailingContent,
-        )
-      },
-    ) { innerPadding ->
-      AuthScaffoldContent(innerPadding = innerPadding, config = scaffoldConfig, content = content)
+    Box(
+      modifier = Modifier.then(modifier).background(color = ClerkMaterialTheme.colors.background)
+    ) {
+      // Rulers report the inset relative to these bounds, so embedded auth views do not receive
+      // status-bar padding that they already sit below.
+      Scaffold(
+        modifier = Modifier.fillMaxSize().fitInside(statusBarRulers),
+        snackbarHost = { ClerkErrorSnackbar(snackbarHostState) },
+        topBar = {
+          ClerkTopAppBar(
+            backgroundColor = ClerkMaterialTheme.colors.background,
+            onBackPressed = onBackPressed,
+            hasLogo = shouldShowLogo,
+            hasBackButton = hasBackButton,
+            statusBarInsets = WindowInsets(),
+            trailingContent = resolvedTrailingContent,
+          )
+        },
+      ) { innerPadding ->
+        AuthScaffoldContent(innerPadding = innerPadding, config = scaffoldConfig, content = content)
+      }
     }
 
     AuthSignedInAccountSheetHost(
