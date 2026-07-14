@@ -127,6 +127,9 @@ internal class ConfigurationManager {
   /** Monotonic token used to ignore stale refreshes from an older configuration. */
   @Volatile private var configurationVersion = 0
 
+  /** Monotonic fence used to discard responses started with an older shared device token. */
+  @Volatile private var sharedDeviceTokenFenceGeneration = 0
+
   private enum class RefreshMode {
     INITIALIZATION,
     DEVICE_TOKEN_UPDATE,
@@ -214,6 +217,11 @@ internal class ConfigurationManager {
     Clerk.applicationId = context.applicationContext.packageName
 
     ensureStorageInitialized()
+    Clerk.configureSharedSessionSync(
+      context = context.applicationContext,
+      publishableKey = publishableKey,
+      config = options?.sharedSessionSync,
+    )
     ClerkApi.configure(
       baseUrl = Clerk.baseUrl,
       context = context.applicationContext,
@@ -235,6 +243,7 @@ internal class ConfigurationManager {
           retryCount = 0,
           expectedConfigurationVersion = configuredVersion,
         )
+      Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
       val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
       val dataRefreshJob = async {
         refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
@@ -244,6 +253,7 @@ internal class ConfigurationManager {
       AppLifecycleListener.configure {
         if (hasConfigured) {
           scope.launch {
+            Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
             deferForegroundRefreshDuringPendingSso()
             refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
             startTokenRefresh()
@@ -258,6 +268,8 @@ internal class ConfigurationManager {
   @Synchronized
   fun reset() {
     configurationVersion += 1
+    sharedDeviceTokenFenceGeneration += 1
+    Clerk.stopSharedSessionSync()
     scope.coroutineContext.cancelChildren()
     initializationJob?.cancel()
     refreshJob?.cancel()
@@ -272,6 +284,10 @@ internal class ConfigurationManager {
     _initializationError.value = null
     NetworkConnectivityMonitor.stop()
     AppLifecycleListener.stop()
+  }
+
+  fun fenceClientResponsesAfterSharedDeviceTokenChange() {
+    sharedDeviceTokenFenceGeneration += 1
   }
 
   private fun startTokenRefresh() {
@@ -477,10 +493,23 @@ internal class ConfigurationManager {
     skipClientId: Boolean,
   ): ClerkResult<Unit, ClerkErrorResponse> {
     return withTimeout((API_TIMEOUT_SECONDS * TIMEOUT_MULTIPLIER)) {
+      val expectedDeviceTokenFenceGeneration = sharedDeviceTokenFenceGeneration
       val (clientResult, environmentResult) = fetchRefreshData(skipClientId)
 
       if (attempt.expectedConfigurationVersion != configurationVersion || !hasConfigured) {
         return@withTimeout staleConfigurationFailure()
+      }
+
+      if (expectedDeviceTokenFenceGeneration != sharedDeviceTokenFenceGeneration) {
+        ClerkLog.d("Discarding refresh started before a shared device-token change")
+        scope.launch {
+          refreshClientAndEnvironment(
+            attempt = currentRefreshAttempt(),
+            mode = RefreshMode.DEVICE_TOKEN_UPDATE,
+            skipClientId = true,
+          )
+        }
+        return@withTimeout ClerkResult.success(Unit)
       }
 
       handleClientResult(clientResult)

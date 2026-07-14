@@ -32,6 +32,8 @@ import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokensCache
+import com.clerk.api.sharedsession.SharedSessionSyncCoordinator
+import com.clerk.api.sharedsession.SharedSessionSyncProvider
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.SSOService
@@ -58,6 +60,10 @@ object Clerk {
 
   /** Internal configuration manager responsible for SDK initialization and API client setup. */
   private val configurationManager = ConfigurationManager()
+
+  /** Coordinates persisted Clerk state between same-signed sibling apps when enabled. */
+  internal var sharedSessionSyncCoordinator: SharedSessionSyncCoordinator? = null
+    private set
 
   /**
    * Enable for additional debugging signals and logging.
@@ -143,6 +149,10 @@ object Clerk {
 
   /** Internal environment configuration containing display settings and authentication options. */
   internal var environment: Environment? = null
+
+  /** Receipt time for the latest authoritative client response used to reject stale snapshots. */
+  internal var lastClientServerFetchAtMillis: Long? = null
+    private set
 
   /**
    * The Client object representing the current device and its authentication state.
@@ -736,6 +746,7 @@ object Clerk {
     HostedAuthService.cancelPendingAuthentication()
     configurationManager.reset()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
+    StorageHelper.deleteValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT)
     clearSessionAndUserState()
     SessionTokensCache.clear()
     SSOService.cancelPendingAuthentication()
@@ -745,6 +756,7 @@ object Clerk {
     ClerkApi.reset()
     updateClient(Client())
     _clientFlow.value = null
+    lastClientServerFetchAtMillis = null
     environment = null
     publishableKey = null
     baseUrl = ""
@@ -786,6 +798,16 @@ object Clerk {
       is ClerkResult.Failure -> result
     }
   }
+
+  /**
+   * Reloads Clerk authentication state persisted by a same-signed sibling app.
+   *
+   * Shared-session sync must be enabled through [ClerkConfigurationOptions.sharedSessionSync]. The
+   * method returns `true` when the in-memory client, environment, or device-token generation
+   * changed.
+   */
+  suspend fun reloadFromSharedStorage(): Boolean =
+    sharedSessionSyncCoordinator?.reloadFromSharedStorage() ?: false
 
   /**
    * Provides the current foreground [Activity] to Clerk explicitly.
@@ -896,9 +918,11 @@ object Clerk {
    * @param environment The updated environment configuration.
    */
   internal fun updateEnvironment(environment: Environment) {
+    val previousEnvironment = this.environment
     this.environment = environment
     _organizationLogoUrlFlow.value = environment.displayConfig.logoImageUrl
     _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
+    sharedSessionSyncCoordinator?.handleEnvironmentChange(previousEnvironment, environment)
   }
 
   internal fun credentialActivity(): Activity? = currentActivity?.get()
@@ -911,9 +935,21 @@ object Clerk {
    * @param client The updated client configuration.
    */
   internal fun updateClient(client: Client) {
+    val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
+    val serverFetchAtMillis =
+      if (_clientFlow.value == resolvedClient) {
+        lastClientServerFetchAtMillis ?: System.currentTimeMillis()
+      } else {
+        System.currentTimeMillis()
+      }
+    updateClient(client = client, serverFetchAtMillis = serverFetchAtMillis)
+  }
+
+  internal fun updateClient(client: Client, serverFetchAtMillis: Long) {
     val updatedClient = client.withResolvedActiveSession(previousSession = _session.value)
 
     this.client = updatedClient
+    lastClientServerFetchAtMillis = serverFetchAtMillis
     _clientFlow.value = updatedClient
     // Only update state if flows are initialized (not during static initialization)
     try {
@@ -921,12 +957,47 @@ object Clerk {
     } catch (e: Exception) {
       ClerkLog.e("${e.message}")
     }
+    sharedSessionSyncCoordinator?.handleClientChange(updatedClient, serverFetchAtMillis)
+  }
+
+  internal fun configureSharedSessionSync(
+    context: Context,
+    publishableKey: String,
+    config: SharedSessionSyncConfig?,
+  ) {
+    stopSharedSessionSync()
+    if (config == null) {
+      SharedSessionSyncProvider.setEnabled(context, false)
+      return
+    }
+
+    sharedSessionSyncCoordinator =
+      SharedSessionSyncCoordinator(context = context, publishableKey = publishableKey).also {
+        coordinator ->
+        coordinator.start()
+      }
+  }
+
+  internal fun stopSharedSessionSync() {
+    sharedSessionSyncCoordinator?.close()
+    sharedSessionSyncCoordinator = null
+  }
+
+  internal fun fenceClientResponsesAfterSharedDeviceTokenChange() {
+    configurationManager.fenceClientResponsesAfterSharedDeviceTokenChange()
+  }
+
+  internal fun isClientResponseCurrent(
+    requestDeviceToken: String?,
+    responseDeviceToken: String?,
+  ): Boolean {
+    val currentDeviceToken = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)
+    return currentDeviceToken == (responseDeviceToken ?: requestDeviceToken)
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
-      sessions.any { it.id == activeSessionId }
-    }
+    val currentActiveSessionId =
+      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1010,11 +1081,14 @@ object Clerk {
  *   for applications that run behind a reverse proxy. Must be a full URL (for example,
  *   https://proxy.example.com/__clerk).
  * @property telemetryEnabled Whether to enable telemetry for this SDK instance.
+ * @property sharedSessionSync Optional configuration for synchronizing Clerk state between
+ *   same-signed sibling apps that use the same publishable key.
  */
 data class ClerkConfigurationOptions(
   val enableDebugMode: Boolean = false,
   val proxyUrl: String? = null,
   val telemetryEnabled: Boolean = true,
+  val sharedSessionSync: SharedSessionSyncConfig? = null,
 ) {
   private var _customHeaders: Map<String, String> = emptyMap()
 
@@ -1042,9 +1116,8 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
-  it.strategy == strategy && it.safeIdentifier == identifier
-}
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
+  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
 
 val SignIn.resetPasswordFactor: Factor?
   get() =

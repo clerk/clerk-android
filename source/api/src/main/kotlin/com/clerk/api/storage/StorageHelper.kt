@@ -19,6 +19,12 @@ internal object StorageHelper {
 
   @VisibleForTesting internal var storageCipherFactoryOverride: (() -> StorageCipher)? = null
 
+  /** Receives encrypted-storage changes that affect coordinated SDK state. */
+  @Volatile
+  internal var valueChangeListener:
+    ((key: StorageKey, previous: String?, value: String?) -> Unit)? =
+    null
+
   /**
    * Synchronously initializes the secure storage. We do this synchronously because we need to
    * ensure that the storage is initialized before we generate a device ID.
@@ -46,6 +52,7 @@ internal object StorageHelper {
   internal fun saveValue(key: StorageKey, value: String) {
     val prefs = secureStorage
     val cipher = storageCipher
+    val previousValue = if (key == StorageKey.DEVICE_TOKEN) loadValue(key) else null
 
     when {
       prefs == null -> {
@@ -61,6 +68,9 @@ internal object StorageHelper {
         runCatching { ENCRYPTED_VALUE_PREFIX + cipher.encrypt(value) }
           .onSuccess { encryptedValue ->
             prefs.edit(commit = true) { putString(key.name, encryptedValue) }
+            if (key == StorageKey.DEVICE_TOKEN && previousValue != value) {
+              valueChangeListener?.invoke(key, previousValue, value)
+            }
           }
           .onFailure { error ->
             ClerkLog.w("Failed to encrypt value for key ${key.name}: ${error.message}")
@@ -111,7 +121,11 @@ internal object StorageHelper {
       )
       return
     }
+    val previousValue = if (key == StorageKey.DEVICE_TOKEN) loadValue(key) else null
     prefs.edit(commit = true) { remove(key.name) }
+    if (key == StorageKey.DEVICE_TOKEN && previousValue != null) {
+      valueChangeListener?.invoke(key, previousValue, null)
+    }
   }
 
   /**
@@ -121,6 +135,7 @@ internal object StorageHelper {
    */
   @VisibleForTesting
   internal fun reset(context: Context? = null) {
+    valueChangeListener = null
     val prefs = secureStorage
     if (prefs != null) {
       prefs.edit().clear().commit()
@@ -155,4 +170,5 @@ internal enum class StorageKey {
   DEVICE_TOKEN,
   DEVICE_ID,
   PENDING_NATIVE_MAGIC_LINK_FLOW,
+  SHARED_SESSION_SYNC_SNAPSHOT,
 }

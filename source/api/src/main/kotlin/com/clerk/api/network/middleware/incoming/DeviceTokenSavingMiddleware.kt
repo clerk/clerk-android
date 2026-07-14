@@ -1,6 +1,7 @@
 package com.clerk.api.network.middleware.incoming
 
 import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
+import com.clerk.api.log.ClerkLog
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import okhttp3.Interceptor
@@ -12,10 +13,10 @@ import okhttp3.Response
  * This middleware intercepts network responses and checks for the presence of an Authorization
  * header. If found, the token is automatically saved to the device's local storage for future use.
  *
- * Saving is deliberately unconditional and ignores any
- * [com.clerk.api.network.middleware.ResponseGuard] on the request: the header always carries the
- * server's current token for this client (hosted auth redemption rotates it), so discarding it
- * because the local flow was cancelled would desync the stored token from the server.
+ * Saving deliberately ignores any [com.clerk.api.network.middleware.ResponseGuard] on the request:
+ * the header carries the server's current token for this client even if the local flow was
+ * cancelled. A response is still rejected when its request started with an older shared-session
+ * token, because it must not overwrite a newer token written by a sibling app.
  */
 internal class DeviceTokenSavingMiddleware : Interceptor {
   /**
@@ -26,10 +27,15 @@ internal class DeviceTokenSavingMiddleware : Interceptor {
    */
   override fun intercept(chain: Interceptor.Chain): Response {
     val response = chain.proceed(chain.request())
+    val deviceToken = response.header(AUTHORIZATION_HEADER)
+    val requestDeviceToken = response.request.header(AUTHORIZATION_HEADER)
+    val currentDeviceToken = StorageHelper.loadValue(StorageKey.DEVICE_TOKEN)
 
-    // Save the device token to storage whenever it's present in the response
-    response.header(AUTHORIZATION_HEADER)?.let { token ->
-      StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, token)
+    // Do not let a response that started with an older shared token overwrite the newer token.
+    if (deviceToken != null && currentDeviceToken == requestDeviceToken) {
+      StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, deviceToken)
+    } else if (deviceToken != null) {
+      ClerkLog.d("Device token update skipped for a stale shared-session response")
     }
 
     return response

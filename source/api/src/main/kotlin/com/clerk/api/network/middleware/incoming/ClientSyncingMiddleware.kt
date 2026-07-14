@@ -1,6 +1,7 @@
 package com.clerk.api.network.middleware.incoming
 
 import com.clerk.api.Clerk
+import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ApiPaths
@@ -10,6 +11,9 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -21,12 +25,15 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 
+private const val SERVER_DATE_HEADER = "Date"
+private const val SERVER_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz"
+
 /**
  * Network middleware that automatically syncs the Clerk client state from API responses.
  *
- * This middleware intercepts successful JSON responses and checks for a "client" field in the
- * response body. If found, it deserializes the client data and updates the global [Clerk.client]
- * state.
+ * This middleware intercepts successful JSON responses and checks for either a direct client
+ * response or a piggybacked "client" field. If found, it deserializes the client data and updates
+ * the global [Clerk.client] state.
  *
  * @property json The JSON serializer used for deserializing the client data.
  */
@@ -41,15 +48,21 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     val request = chain.request()
     val response = chain.proceed(request)
 
-    return if (request.tag(ManualClientSyncRequest::class.java) != null) {
-      response
-    } else {
-      syncClientFromResponse(request, response)
+    return when {
+      !Clerk.isClientResponseCurrent(
+        requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
+        responseDeviceToken = response.header(AUTHORIZATION_HEADER),
+      ) -> {
+        ClerkLog.d("Client sync skipped for a response using a stale shared device token")
+        response
+      }
+      request.tag(ManualClientSyncRequest::class.java) != null -> response
+      else -> syncResponse(request = request, response = response)
     }
   }
 
   @Suppress("NestedBlockDepth")
-  private fun syncClientFromResponse(request: Request, response: Response): Response {
+  private fun syncResponse(request: Request, response: Response): Response {
     // Only process JSON responses
     val body = response.body
     if (response.isSuccessful && body.contentType()?.subtype == "json") {
@@ -58,26 +71,11 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
         try {
           // Parse the response to extract client if present
           val jsonElement = json.parseToJsonElement(it)
-          if (jsonElement is JsonObject && jsonElement.containsKey("client")) {
-            val clientJson = jsonElement["client"]
-            when (clientJson) {
-              is JsonNull -> {
-                if (jsonElement.containsKey("response")) {
-                  ClerkLog.d("Client sync skipped null piggyback client")
-                } else {
-                  ClerkLog.d("Client sync cleared by explicit null client")
-                  syncClient(request) { Clerk.updateClient(Client()) }
-                }
-              }
-              null -> Unit
-              else -> {
-                // Extract and set the client
-                val client = json.decodeFromJsonElement<Client>(clientJson)
-                ClerkLog.d("Client synced: ${client.id}")
-                syncClient(request) { Clerk.updateClient(client) }
-              }
-            }
-          }
+          syncClientFromResponse(
+            request = request,
+            jsonElement = jsonElement,
+            serverFetchAtMillis = response.serverFetchAtMillis(),
+          )
 
           if (jsonElement is JsonObject) {
             emitAuthEvents(request = request, jsonObject = jsonElement)
@@ -99,8 +97,38 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     return response
   }
 
-  private fun syncClient(request: Request, sync: () -> Unit) {
-    request.tag(ResponseGuard::class.java)?.runIfAllowed(sync) ?: sync()
+  private fun syncClientFromResponse(
+    request: Request,
+    jsonElement: JsonElement,
+    serverFetchAtMillis: Long,
+  ) {
+    if (jsonElement !is JsonObject) return
+
+    if (jsonElement.containsKey("client")) {
+      val clientJson = jsonElement["client"]
+      when (clientJson) {
+        is JsonNull -> {
+          if (jsonElement.containsKey("response")) {
+            ClerkLog.d("Client sync skipped null piggyback client")
+          } else {
+            ClerkLog.d("Client sync cleared by explicit null client")
+            request.syncClient { Clerk.updateClient(Client(), serverFetchAtMillis) }
+          }
+        }
+        null -> Unit
+        else ->
+          request.syncClient {
+            syncClerkClient(json.decodeFromJsonElement(clientJson), serverFetchAtMillis)
+          }
+      }
+      return
+    }
+
+    if (request.method == "GET" && request.url.encodedPath.endsWith("/${ApiPaths.Client.BASE}")) {
+      request.syncClient {
+        syncClerkClient(json.decodeFromJsonElement(jsonElement), serverFetchAtMillis)
+      }
+    }
   }
 
   private fun emitAuthEvents(request: Request, jsonObject: JsonObject) {
@@ -170,4 +198,24 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   private fun isSignUpCreationRequest(path: String, method: String): Boolean {
     return method == "POST" && path.endsWith("/${ApiPaths.Client.SignUp.BASE}")
   }
+}
+
+private fun Request.syncClient(sync: () -> Unit) {
+  tag(ResponseGuard::class.java)?.runIfAllowed(sync) ?: sync()
+}
+
+private fun syncClerkClient(client: Client, serverFetchAtMillis: Long) {
+  ClerkLog.d("Client synced: ${client.id}")
+  Clerk.updateClient(client, serverFetchAtMillis)
+}
+
+private fun Response.serverFetchAtMillis(): Long {
+  val serverDate = header(SERVER_DATE_HEADER) ?: return System.currentTimeMillis()
+  return runCatching {
+      SimpleDateFormat(SERVER_DATE_FORMAT, Locale.US)
+        .apply { timeZone = TimeZone.getTimeZone("GMT") }
+        .parse(serverDate)
+        ?.time
+    }
+    .getOrNull() ?: System.currentTimeMillis()
 }
