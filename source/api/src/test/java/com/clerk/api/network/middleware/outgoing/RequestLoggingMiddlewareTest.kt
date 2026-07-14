@@ -17,9 +17,7 @@ class RequestLoggingMiddlewareTest {
     val logs = mutableListOf<String>()
     val loggingInterceptor =
       HttpLoggingInterceptor { message -> logs += message }
-        .apply {
-          level = HttpLoggingInterceptor.Level.BODY
-        }
+        .apply { level = HttpLoggingInterceptor.Level.BODY }
     val client =
       OkHttpClient.Builder()
         .addInterceptor(RequestLoggingMiddleware(loggingInterceptor))
@@ -43,5 +41,35 @@ class RequestLoggingMiddlewareTest {
     client.newCall(request).execute().close()
 
     assertTrue(logs.isEmpty())
+  }
+
+  @Test
+  fun `ordinary request uses body logging`() {
+    val logs = mutableListOf<String>()
+    val loggingInterceptor =
+      HttpLoggingInterceptor { message -> logs += message }
+        .apply { level = HttpLoggingInterceptor.Level.BODY }
+    val client =
+      OkHttpClient.Builder()
+        .addInterceptor(RequestLoggingMiddleware(loggingInterceptor))
+        .addInterceptor { chain ->
+          Response.Builder()
+            .request(chain.request())
+            .protocol(Protocol.HTTP_1_1)
+            .code(200)
+            .message("OK")
+            .body("{}".toResponseBody())
+            .build()
+        }
+        .build()
+    val request =
+      Request.Builder()
+        .url("https://example.com/v1/client")
+        .post(FormBody.Builder().add("ordinary_field", "ordinary_value").build())
+        .build()
+
+    client.newCall(request).execute().close()
+
+    assertTrue(logs.isNotEmpty())
   }
 }

@@ -7,6 +7,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.auth.HostedAuthMode
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -17,6 +18,7 @@ import com.clerk.api.sso.SSOService
 import java.security.SecureRandom
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -85,11 +87,9 @@ internal object HostedAuthService {
     pendingAuth: PendingHostedAuth,
   ): ClerkResult<Session, ClerkErrorResponse> {
     val intent =
-      SSOManagerActivity.createAuthorizationIntent(
-          context,
-          hostedAuthUri,
-        )
-        .apply { addFlags(FLAG_ACTIVITY_NEW_TASK) }
+      SSOManagerActivity.createAuthorizationIntent(context, hostedAuthUri).apply {
+        addFlags(FLAG_ACTIVITY_NEW_TASK)
+      }
     val launchFailure =
       try {
         context.startActivity(intent)
@@ -138,6 +138,8 @@ internal object HostedAuthService {
       completionScope.launch(start = CoroutineStart.LAZY) {
         try {
           redeemAndComplete(pendingAuth, callback)
+        } catch (cancellation: CancellationException) {
+          throw cancellation
         } catch (error: Exception) {
           finishPendingAuth(pendingAuth, ClerkResult.unknownFailure(error))
         }
@@ -154,20 +156,43 @@ internal object HostedAuthService {
   fun canHandle(uri: Uri): Boolean =
     pendingAuthStore.current()?.let { uri.matchesHostedAuthRedirectUrl(it.redirectUrl) } == true
 
+  fun isValidCallback(uri: Uri): Boolean {
+    val pendingAuth = pendingAuthStore.current() ?: return false
+    return validateHostedAuthCallback(
+      uri = uri,
+      redirectUrl = pendingAuth.redirectUrl,
+      expectedState = pendingAuth.state,
+    ) is
+      ClerkResult.Success
+  }
+
   private suspend fun redeemAndComplete(
     pendingAuth: PendingHostedAuth,
     callback: HostedAuthCallback,
   ): ClerkResult<Session, ClerkErrorResponse> {
+    val manualClientSyncRequest = ManualClientSyncRequest()
     val clientResult =
       ClerkApi.client.redeemHostedAuth(
         rotatingTokenNonce = callback.rotatingTokenNonce,
         codeVerifier = pendingAuth.codeVerifier,
+        manualClientSyncRequest = manualClientSyncRequest,
       )
-    // A successful redemption consumed the single-use nonce and rotated this client's token on
-    // the server, so the redeemed client is authoritative local state regardless of how the rest
-    // of the flow ends (cancellation, activation failure, etc.).
     if (clientResult is ClerkResult.Success) {
-      Clerk.updateClient(clientResult.value)
+      var clientApplied = false
+      manualClientSyncRequest.runIfResponseCurrent {
+        pendingAuthStore.runIfCurrent(pendingAuth) {
+          Clerk.updateClient(clientResult.value)
+          clientApplied = true
+        }
+      }
+      if (!clientApplied) {
+        return finishPendingAuth(
+          pendingAuth,
+          ClerkResult.unknownFailure(
+            IllegalStateException("Hosted auth redemption response is no longer current.")
+          ),
+        )
+      }
     }
     return if (pendingAuthStore.isCurrent(pendingAuth)) {
       when (clientResult) {
@@ -281,9 +306,7 @@ private class HostedAuthPendingStore {
 
   fun cancel(reason: String) {
     val pendingAuth =
-      synchronized(lock) {
-        currentPendingAuth.also { currentPendingAuth = null }
-      } ?: return
+      synchronized(lock) { currentPendingAuth.also { currentPendingAuth = null } } ?: return
     pendingAuth.completionJob.get()?.cancel()
     pendingAuth.deferred.complete(ClerkResult.unknownFailure(Exception(reason)))
   }
@@ -310,11 +333,7 @@ private fun prepareHostedAuth(
   return request.fold(
     onSuccess = {
       ClerkResult.success(
-        PreparedHostedAuth(
-          context = context,
-          redirectUrl = redirectUrl,
-          request = it,
-        )
+        PreparedHostedAuth(context = context, redirectUrl = redirectUrl, request = it)
       )
     },
     onFailure = { ClerkResult.unknownFailure(it) },

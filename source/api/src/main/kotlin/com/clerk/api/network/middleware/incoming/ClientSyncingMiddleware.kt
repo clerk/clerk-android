@@ -47,6 +47,11 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val response = chain.proceed(request)
+    val manualClientSyncRequest = request.tag(ManualClientSyncRequest::class.java)
+    manualClientSyncRequest?.recordResponse(
+      requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
+      responseDeviceToken = response.header(AUTHORIZATION_HEADER),
+    )
 
     return when {
       !Clerk.isClientResponseCurrent(
@@ -56,7 +61,7 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
         ClerkLog.d("Client sync skipped for a response using a stale shared device token")
         response
       }
-      request.tag(ManualClientSyncRequest::class.java) != null -> response
+      manualClientSyncRequest != null -> response
       else -> syncResponse(request = request, response = response)
     }
   }

@@ -9,6 +9,7 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.session.Session
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.filterIsInstance
@@ -26,6 +27,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -273,11 +275,14 @@ class ClientSyncingMiddlewareTest {
     val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
     val originalClient = Client(id = "client_original")
     Clerk.updateClient(originalClient)
+    mockkObject(Clerk)
+    every { Clerk.isClientResponseCurrent(any(), any()) } returns true
+    val manualClientSyncRequest = ManualClientSyncRequest()
 
     val request =
       Request.Builder()
         .url("https://api.clerk.com/v1/client")
-        .tag(ManualClientSyncRequest::class.java, ManualClientSyncRequest)
+        .tag(ManualClientSyncRequest::class.java, manualClientSyncRequest)
         .post("".toRequestBody("application/x-www-form-urlencoded".toMediaType()))
         .build()
     val responseBody =
@@ -310,6 +315,9 @@ class ClientSyncingMiddlewareTest {
     middleware.intercept(chain)
 
     assertEquals(originalClient, Clerk.client)
+    var callerAppliedClient = false
+    assertTrue(manualClientSyncRequest.runIfResponseCurrent { callerAppliedClient = true })
+    assertTrue(callerAppliedClient)
   }
 
   @Test

@@ -49,7 +49,7 @@ internal interface ClientApi {
     @Field("_method") method: String = "GET",
     @Field("rotating_token_nonce") rotatingTokenNonce: String,
     @Field("code_verifier") codeVerifier: String,
-    @Tag manualClientSyncRequest: ManualClientSyncRequest = ManualClientSyncRequest,
+    @Tag manualClientSyncRequest: ManualClientSyncRequest = ManualClientSyncRequest(),
     @Tag sensitiveRequest: SensitiveRequest = SensitiveRequest,
   ): ClerkResult<Client, ClerkErrorResponse>
 

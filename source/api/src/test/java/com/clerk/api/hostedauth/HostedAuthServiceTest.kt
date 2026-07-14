@@ -6,6 +6,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.ClientApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.hostedauth.HostedAuthResource
@@ -47,6 +48,7 @@ class HostedAuthServiceTest {
   fun setup() {
     mockkObject(Clerk)
     every { Clerk.applicationContext } returns WeakReference(mockk<Context>(relaxed = true))
+    every { Clerk.isClientResponseCurrent(any(), any()) } returns true
     justRun { Clerk.updateClient(any()) }
     mockkObject(ClerkApi)
     every { ClerkApi.client } returns clientApi
@@ -100,6 +102,7 @@ class HostedAuthServiceTest {
       {
         redeemCalls.incrementAndGet()
         redeemGate.await()
+        arg<ManualClientSyncRequest>(3).recordResponse(null, null)
         ClerkResult.success(redeemedClient())
       }
     val start = startInBackground()
@@ -135,6 +138,8 @@ class HostedAuthServiceTest {
       Uri.parse(
         "$REDIRECT_URL?state=forged&rotating_token_nonce=nonce_forged&created_session_id=sess_forged"
       )
+    assertFalse(HostedAuthService.isValidCallback(forgedUri))
+    assertTrue(HostedAuthService.isValidCallback(legitimateCallback(state)))
     val forgedResult = HostedAuthService.complete(forgedUri)
 
     assertTrue(forgedResult is ClerkResult.Failure)
@@ -183,6 +188,24 @@ class HostedAuthServiceTest {
     assertTrue(withTimeout(TIMEOUT_MS) { start.await() } is ClerkResult.Failure)
   }
 
+  @Test
+  fun completeRejectsStaleRedeemedClient() = runBlocking {
+    val capturedState = stubCreateHostedAuth()
+    val client = redeemedClient()
+    every { Clerk.isClientResponseCurrent(any(), any()) } returns false
+    stubRedeemHostedAuth(client)
+    val start = startInBackground()
+    val callbackUri = legitimateCallback(withTimeout(TIMEOUT_MS) { capturedState.await() })
+
+    val result = withTimeout(TIMEOUT_MS) { HostedAuthService.complete(callbackUri) }
+
+    assertTrue(result is ClerkResult.Failure)
+    val message = (result as ClerkResult.Failure).throwable?.message.orEmpty()
+    assertTrue(message.contains("no longer current"))
+    verify(exactly = 0) { Clerk.updateClient(client) }
+    assertTrue(withTimeout(TIMEOUT_MS) { start.await() } is ClerkResult.Failure)
+  }
+
   private fun stubCreateHostedAuth(): CompletableDeferred<String> {
     val capturedState = CompletableDeferred<String>()
     coEvery { clientApi.createHostedAuth(any(), any(), any(), any(), any(), any()) } answers
@@ -196,8 +219,11 @@ class HostedAuthServiceTest {
   }
 
   private fun stubRedeemHostedAuth(client: Client) {
-    coEvery { clientApi.redeemHostedAuth(any(), any(), any(), any(), any()) } returns
-      ClerkResult.success(client)
+    coEvery { clientApi.redeemHostedAuth(any(), any(), any(), any(), any()) } coAnswers
+      {
+        arg<ManualClientSyncRequest>(3).recordResponse(null, null)
+        ClerkResult.success(client)
+      }
   }
 
   private fun CoroutineScope.startInBackground():
