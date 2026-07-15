@@ -181,6 +181,62 @@ class ClientSyncingMiddlewareTest {
   }
 
   @Test
+  fun `ticket sign in syncs session with active organization`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val request =
+      Request.Builder()
+        .url("https://api.clerk.com/v1/client/sign_ins")
+        .post(
+          "strategy=ticket&ticket=ticket_123"
+            .toRequestBody("application/x-www-form-urlencoded".toMediaType())
+        )
+        .build()
+    val response =
+      Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .body(
+          """
+          {
+            "response": {
+              "id": "sign_in_123",
+              "status": "complete",
+              "created_session_id": "sess_123"
+            },
+            "client": {
+              "id": "client_123",
+              "sessions": [
+                {
+                  "id": "sess_123",
+                  "status": "active",
+                  "expire_at": 10000,
+                  "last_active_at": 1000,
+                  "last_active_organization_id": "org_123",
+                  "created_at": 1000,
+                  "updated_at": 1000
+                }
+              ],
+              "last_active_session_id": "sess_123"
+            }
+          }
+          """
+            .trimIndent()
+            .toResponseBody("application/json".toMediaType())
+        )
+        .build()
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns request
+    every { chain.proceed(request) } returns response
+
+    middleware.intercept(chain)
+
+    assertEquals("sess_123", Clerk.sessionFlow.value?.id)
+    assertEquals("org_123", Clerk.sessionFlow.value?.lastActiveOrganizationId)
+  }
+
+  @Test
   fun `intercept hydrates direct client response with server date`() {
     val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
     val request = Request.Builder().url("https://api.clerk.com/v1/client").build()

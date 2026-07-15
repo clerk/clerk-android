@@ -215,6 +215,26 @@ class AuthTest {
     }
 
   @Test
+  fun `signInWithTicket creates sign in with ticket strategy`() = runTest {
+    val signInApi = mockk<SignInApi>()
+    val createdSignIn = SignIn(id = "sign_in_123")
+    val createParams = slot<Map<String, String>>()
+    mockkObject(ClerkApi)
+    every { ClerkApi.signIn } returns signInApi
+    coEvery { signInApi.createSignIn(capture(createParams)) } returns
+      ClerkResult.success(createdSignIn)
+
+    val result = Auth().signInWithTicket("ticket_123")
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(createdSignIn, (result as ClerkResult.Success).value)
+    assertEquals("ticket", createParams.captured["strategy"])
+    assertEquals("ticket_123", createParams.captured["ticket"])
+    assertTrue(createParams.captured.containsKey("locale"))
+    coVerify(exactly = 1) { signInApi.createSignIn(any()) }
+  }
+
+  @Test
   fun `sessions exposes all sessions on the current client`() {
     val firstSession = testSession("sess_1")
     val secondSession = testSession("sess_2")
