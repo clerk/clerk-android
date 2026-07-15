@@ -9,6 +9,7 @@ import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.middleware.ManualClientSyncRequest
 import com.clerk.api.network.middleware.ResponseGuard
+import com.clerk.api.network.middleware.outgoing.INTERNAL_HEADER_TRUE
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -345,14 +346,11 @@ private suspend fun createHostedAuth(
   mode: HostedAuthMode?,
   responseGuard: ResponseGuard,
 ): ClerkResult<Uri, ClerkErrorResponse> {
-  val result =
-    ClerkApi.client.createHostedAuth(
-      redirectUrl = preparation.redirectUrl,
-      codeChallenge = preparation.request.pkce.codeChallenge,
-      state = preparation.request.state,
-      mode = mode?.value,
-      responseGuard = responseGuard,
-    )
+  var result = requestHostedAuth(preparation, mode, responseGuard, skipClientId = false)
+  if (result is ClerkResult.Failure && result.isSignedOutFailure()) {
+    // DeviceTokenSavingMiddleware has already persisted any replacement token from the 401.
+    result = requestHostedAuth(preparation, mode, responseGuard, skipClientId = true)
+  }
   return when (result) {
     is ClerkResult.Failure -> result
     is ClerkResult.Success -> {
@@ -368,8 +366,30 @@ private suspend fun createHostedAuth(
   }
 }
 
+private suspend fun requestHostedAuth(
+  preparation: PreparedHostedAuth,
+  mode: HostedAuthMode?,
+  responseGuard: ResponseGuard,
+  skipClientId: Boolean,
+) =
+  ClerkApi.client.createHostedAuth(
+    redirectUrl = preparation.redirectUrl,
+    codeChallenge = preparation.request.pkce.codeChallenge,
+    state = preparation.request.state,
+    mode = mode?.value,
+    skipClientId = if (skipClientId) INTERNAL_HEADER_TRUE else null,
+    responseGuard = responseGuard,
+  )
+
+private fun ClerkResult.Failure<ClerkErrorResponse>.isSignedOutFailure(): Boolean =
+  errorType == ClerkResult.Failure.ErrorType.HTTP &&
+    code == HTTP_UNAUTHORIZED &&
+    error?.errors?.any { it.code == SIGNED_OUT_ERROR_CODE } == true
+
 private data class HostedAuthRequest(val state: String, val pkce: HostedAuthPkce)
 
+private const val HTTP_UNAUTHORIZED = 401
+private const val SIGNED_OUT_ERROR_CODE = "signed_out"
 private const val AUTHENTICATION_CANCELLED = "Authentication cancelled"
 
 /** Cancellation reason used when a newly started flow supersedes a pending hosted auth attempt. */

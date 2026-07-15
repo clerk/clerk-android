@@ -39,6 +39,7 @@ internal interface ClientApi {
     @Field("code_challenge") codeChallenge: String,
     @Field("state") state: String,
     @Field("mode") mode: String? = null,
+    @Header(INTERNAL_HEADER_SKIP_CLIENT_ID) skipClientId: String? = null,
     @Tag sensitiveRequest: SensitiveRequest = SensitiveRequest,
     @Tag responseGuard: ResponseGuard = ResponseGuard.always,
   ): ClerkResult<HostedAuthResource, ClerkErrorResponse>

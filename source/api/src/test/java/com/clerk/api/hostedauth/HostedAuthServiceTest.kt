@@ -3,17 +3,22 @@ package com.clerk.api.hostedauth
 import android.content.Context
 import android.net.Uri
 import com.clerk.api.Clerk
+import com.clerk.api.auth.HostedAuthMode
 import com.clerk.api.externalaccount.ExternalAccountService
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.middleware.ManualClientSyncRequest
+import com.clerk.api.network.middleware.ResponseGuard
+import com.clerk.api.network.middleware.outgoing.INTERNAL_HEADER_TRUE
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error as ClerkError
 import com.clerk.api.network.model.hostedauth.HostedAuthResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.sso.SSOService
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -21,6 +26,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.lang.ref.WeakReference
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +40,7 @@ import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -91,6 +98,121 @@ class HostedAuthServiceTest {
     val result = withTimeout(TIMEOUT_MS) { start.await() }
     assertTrue(result is ClerkResult.Failure)
     assertFalse(HostedAuthService.hasPendingAuthentication())
+  }
+
+  @Test
+  fun startRetriesCreateOnceAfterUnauthorizedWithSameRequest() = runBlocking {
+    val requests = CopyOnWriteArrayList<HostedAuthCreateRequest>()
+    val secondRequestStarted = CompletableDeferred<Unit>()
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } coAnswers
+      {
+        requests +=
+          HostedAuthCreateRequest(
+            redirectUrl = firstArg(),
+            codeChallenge = secondArg(),
+            state = thirdArg(),
+            mode = arg(3),
+            skipClientId = arg(4),
+            responseGuard = arg(6),
+          )
+        if (requests.size == 1) {
+          signedOutFailure()
+        } else {
+          secondRequestStarted.complete(Unit)
+          ClerkResult.success(
+            HostedAuthResource(objectType = "hosted_auth", url = "https://portal.dev/start")
+          )
+        }
+      }
+
+    val start = startInBackground(mode = HostedAuthMode.SIGN_UP)
+    withTimeout(TIMEOUT_MS) { secondRequestStarted.await() }
+
+    assertEquals(2, requests.size)
+    assertEquals(requests.first().redirectUrl, requests.last().redirectUrl)
+    assertEquals(requests.first().codeChallenge, requests.last().codeChallenge)
+    assertEquals(requests.first().state, requests.last().state)
+    assertEquals(requests.first().mode, requests.last().mode)
+    assertEquals(null, requests.first().skipClientId)
+    assertEquals(INTERNAL_HEADER_TRUE, requests.last().skipClientId)
+    assertSame(requests.first().responseGuard, requests.last().responseGuard)
+
+    HostedAuthService.cancelPendingAuthentication()
+    assertTrue(withTimeout(TIMEOUT_MS) { start.await() } is ClerkResult.Failure)
+  }
+
+  @Test
+  fun startRetriesCreateAtMostOnce() = runBlocking {
+    val secondFailure = signedOutFailure()
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } returnsMany
+      listOf(
+        signedOutFailure(),
+        secondFailure,
+      )
+
+    val result = HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL)
+
+    assertSame(secondFailure, result)
+    coVerify(exactly = 2) {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    }
+  }
+
+  @Test
+  fun startDoesNotRetryCreateAfterNonUnauthorizedFailure() = runBlocking {
+    val failure =
+      ClerkResult.httpFailure<ClerkErrorResponse>(
+        code = 409,
+        error = ClerkErrorResponse(errors = emptyList()),
+      )
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } returns failure
+
+    val result = HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL)
+
+    assertSame(failure, result)
+    coVerify(exactly = 1) {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    }
+  }
+
+  @Test
+  fun startDoesNotRetryCreateAfterUnrelatedUnauthorizedFailure() = runBlocking {
+    val failure =
+      ClerkResult.httpFailure(
+        code = 401,
+        error = ClerkErrorResponse(errors = listOf(ClerkError(code = "authentication_invalid"))),
+      )
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } returns failure
+
+    val result = HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL)
+
+    assertSame(failure, result)
+    coVerify(exactly = 1) {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    }
+  }
+
+  @Test
+  fun completeDoesNotRetryRedemptionAfterUnauthorized() = runBlocking {
+    val capturedState = stubCreateHostedAuth()
+    coEvery { clientApi.redeemHostedAuth(any(), any(), any(), any(), any()) } returns
+      ClerkResult.httpFailure(code = 401, error = ClerkErrorResponse(errors = emptyList()))
+    val start = startInBackground()
+    val callbackUri = legitimateCallback(withTimeout(TIMEOUT_MS) { capturedState.await() })
+
+    val result = withTimeout(TIMEOUT_MS) { HostedAuthService.complete(callbackUri) }
+
+    assertTrue(result is ClerkResult.Failure)
+    coVerify(exactly = 1) { clientApi.redeemHostedAuth(any(), any(), any(), any(), any()) }
+    assertTrue(withTimeout(TIMEOUT_MS) { start.await() } is ClerkResult.Failure)
   }
 
   @Test
@@ -208,7 +330,9 @@ class HostedAuthServiceTest {
 
   private fun stubCreateHostedAuth(): CompletableDeferred<String> {
     val capturedState = CompletableDeferred<String>()
-    coEvery { clientApi.createHostedAuth(any(), any(), any(), any(), any(), any()) } answers
+    coEvery {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    } answers
       {
         capturedState.complete(thirdArg())
         ClerkResult.success(
@@ -218,6 +342,12 @@ class HostedAuthServiceTest {
     return capturedState
   }
 
+  private fun signedOutFailure(): ClerkResult.Failure<ClerkErrorResponse> =
+    ClerkResult.httpFailure(
+      code = 401,
+      error = ClerkErrorResponse(errors = listOf(ClerkError(code = "signed_out"))),
+    )
+
   private fun stubRedeemHostedAuth(client: Client) {
     coEvery { clientApi.redeemHostedAuth(any(), any(), any(), any(), any()) } coAnswers
       {
@@ -226,9 +356,10 @@ class HostedAuthServiceTest {
       }
   }
 
-  private fun CoroutineScope.startInBackground():
-    Deferred<ClerkResult<Session, ClerkErrorResponse>> =
-    async(Dispatchers.Default) { HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL) }
+  private fun CoroutineScope.startInBackground(
+    mode: HostedAuthMode? = null
+  ): Deferred<ClerkResult<Session, ClerkErrorResponse>> =
+    async(Dispatchers.Default) { HostedAuthService.start(mode = mode, redirectUrl = REDIRECT_URL) }
 
   private fun legitimateCallback(state: String): Uri =
     Uri.parse(
@@ -250,6 +381,15 @@ class HostedAuthServiceTest {
       createdAt = 1_000L,
       updatedAt = 1_000L,
     )
+
+  private data class HostedAuthCreateRequest(
+    val redirectUrl: String,
+    val codeChallenge: String,
+    val state: String,
+    val mode: String?,
+    val skipClientId: String?,
+    val responseGuard: ResponseGuard,
+  )
 
   private suspend fun waitUntil(condition: () -> Boolean) {
     withTimeout(TIMEOUT_MS) {
