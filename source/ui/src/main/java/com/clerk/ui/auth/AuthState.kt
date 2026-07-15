@@ -91,9 +91,6 @@ internal class AuthState(
 
   private var trustedDeviceEnrollmentWasOffered by mutableStateOf(false)
 
-  var shouldResumeInProgressAuthAttempt by mutableStateOf(true)
-    private set
-
   var organizationLogoUrl by mutableStateOf(organizationLogoUrl)
     private set
 

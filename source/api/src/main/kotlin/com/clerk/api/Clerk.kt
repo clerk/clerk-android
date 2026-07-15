@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.ContextWrapper
+import androidx.annotation.RestrictTo
 import com.clerk.api.Clerk.activeSession
 import com.clerk.api.Clerk.activeUser
 import com.clerk.api.Clerk.initialize
@@ -12,6 +13,7 @@ import com.clerk.api.Clerk.session
 import com.clerk.api.Clerk.user
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.auth.Auth
+import com.clerk.api.auth.AuthEvent
 import com.clerk.api.configuration.CachedClerkState
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
@@ -45,6 +47,7 @@ import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import com.clerk.sdk.BuildConfig
 import java.lang.ref.WeakReference
+import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -601,6 +604,33 @@ object Clerk {
   val activeUser: User?
     get() = activeSession?.user
 
+  private var authFlowRegistrationId: UUID? = null
+
+  private val _isAuthFlowPending = MutableStateFlow(false)
+
+  private val _isAuthFlowCompleteFlow = MutableStateFlow(false)
+
+  /**
+   * Reactive state indicating whether authentication and Clerk-owned post-authentication steps are
+   * complete.
+   *
+   * Use this flow when choosing between a root `AuthView` and authenticated content. It emits
+   * `true` when there is a current user, the current session is active, and a non-dismissible auth
+   * view is no longer completing session tasks or trusted-device enrollment.
+   */
+  val isAuthFlowCompleteFlow: StateFlow<Boolean> = _isAuthFlowCompleteFlow.asStateFlow()
+
+  /**
+   * Whether authentication and Clerk-owned post-authentication steps are currently complete.
+   *
+   * For reactive UI, observe [isAuthFlowCompleteFlow].
+   */
+  val isAuthFlowComplete: Boolean
+    get() = isAuthFlowCompleteFlow.value
+
+  internal var pendingAuthFlowCompletion: AuthEvent? = null
+    private set
+
   /**
    * The current user's membership in the active organization.
    *
@@ -800,6 +830,7 @@ object Clerk {
     StorageHelper.deleteValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT)
     StorageHelper.deleteValue(StorageKey.CACHED_CLERK_STATE)
     clearSessionAndUserState()
+    resetAuthFlowState()
     SessionTokensCache.clear()
     SSOService.cancelPendingAuthentication()
     ExternalAccountService.cancelPendingExternalAccountConnection()
@@ -987,14 +1018,14 @@ object Clerk {
   private fun cacheStateIfReady() {
     val cachedEnvironment = environment
     val cachedClient = _clientFlow.value
-    val cachedResources =
-      cachedClient?.let { client ->
-        cachedEnvironment?.let { environment -> client to environment }
-      }
+    val cachedResources = cachedClient?.let { client ->
+      cachedEnvironment?.let { environment -> client to environment }
+    }
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration =
-      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
+    val cachedConfiguration = cachedPublishableKey?.let { key ->
+      cachedBaseUrl?.let { url -> key to url }
+    }
     val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
     val state =
       if (
@@ -1026,7 +1057,7 @@ object Clerk {
    *
    * @param client The updated client configuration.
    */
-  internal fun updateClient(client: Client) {
+  internal fun updateClient(client: Client, completedAuthFlow: AuthEvent? = null) {
     val resolvedClient = client.withResolvedActiveSession(previousSession = _session.value)
     val serverFetchAtMillis =
       if (_clientFlow.value == resolvedClient) {
@@ -1034,10 +1065,21 @@ object Clerk {
       } else {
         System.currentTimeMillis()
       }
-    updateClient(client = client, serverFetchAtMillis = serverFetchAtMillis)
+    updateClient(
+      client = client,
+      serverFetchAtMillis = serverFetchAtMillis,
+      completedAuthFlow = completedAuthFlow,
+    )
   }
 
-  internal fun updateClient(client: Client, serverFetchAtMillis: Long) {
+  internal fun updateClient(
+    client: Client,
+    serverFetchAtMillis: Long,
+    completedAuthFlow: AuthEvent? = null,
+  ) {
+    if (completedAuthFlow != null) {
+      holdAuthFlowCompletion(completedAuthFlow)
+    }
     val updatedClient = client.withResolvedActiveSession(previousSession = _session.value)
 
     this.client = updatedClient
@@ -1089,8 +1131,9 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId =
-      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
+    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
+      sessions.any { it.id == activeSessionId }
+    }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1129,6 +1172,7 @@ object Clerk {
     _sessions.value = currentSessions
     _session.value = currentSession
     _userFlow.value = currentSession?.user
+    updateIsAuthFlowComplete()
 
     if (previousSession != currentSession) {
       auth.send(com.clerk.api.auth.AuthEvent.SessionChanged(currentSession))
@@ -1155,11 +1199,74 @@ object Clerk {
     _sessions.value = emptyList()
     _session.value = null
     _userFlow.value = null
+    updateIsAuthFlowComplete()
 
     if (previousSession != null) {
       auth.send(com.clerk.api.auth.AuthEvent.SessionChanged(null))
       auth.send(com.clerk.api.auth.AuthEvent.SignedOut)
     }
+  }
+
+  @Synchronized
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  fun registerAuthFlow(): AuthFlowRegistration? {
+    if (hasActiveUserSession()) return null
+
+    val registrationId = UUID.randomUUID()
+    authFlowRegistrationId = registrationId
+    setAuthFlowPending(session?.status == Session.SessionStatus.PENDING)
+    return AuthFlowRegistration { unregisterAuthFlow(registrationId) }
+  }
+
+  @Synchronized
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  fun markAuthFlowPending() {
+    if (authFlowRegistrationId == null) return
+    setAuthFlowPending(true)
+  }
+
+  @Synchronized
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  fun markAuthFlowComplete() {
+    if (authFlowRegistrationId == null) return
+    pendingAuthFlowCompletion = null
+    setAuthFlowPending(false)
+  }
+
+  @Synchronized
+  private fun holdAuthFlowCompletion(completion: AuthEvent) {
+    if (authFlowRegistrationId == null) return
+    if (completion !is AuthEvent.SignInCompleted && completion !is AuthEvent.SignUpCompleted) return
+
+    pendingAuthFlowCompletion = completion
+    setAuthFlowPending(true)
+  }
+
+  @Synchronized
+  private fun unregisterAuthFlow(registrationId: UUID) {
+    if (authFlowRegistrationId != registrationId) return
+    authFlowRegistrationId = null
+    pendingAuthFlowCompletion = null
+    setAuthFlowPending(false)
+  }
+
+  @Synchronized
+  private fun resetAuthFlowState() {
+    pendingAuthFlowCompletion = null
+    setAuthFlowPending(false)
+  }
+
+  private fun setAuthFlowPending(isPending: Boolean) {
+    _isAuthFlowPending.value = isPending
+    updateIsAuthFlowComplete()
+  }
+
+  private fun updateIsAuthFlowComplete() {
+    _isAuthFlowCompleteFlow.value = hasActiveUserSession() && !_isAuthFlowPending.value
+  }
+
+  private fun hasActiveUserSession(): Boolean {
+    return user != null && session?.status == Session.SessionStatus.ACTIVE
   }
 
   // endregion
@@ -1209,8 +1316,9 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
-  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
+  it.strategy == strategy && it.safeIdentifier == identifier
+}
 
 val SignIn.resetPasswordFactor: Factor?
   get() =

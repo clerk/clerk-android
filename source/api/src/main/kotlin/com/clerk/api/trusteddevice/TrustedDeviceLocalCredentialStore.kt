@@ -105,10 +105,9 @@ internal object DefaultTrustedDeviceLocalCredentialStore : TrustedDeviceLocalCre
       return
     }
 
-    val elements =
-      credentials.map {
-        ClerkApi.json.encodeToJsonElement(TrustedDeviceLocalCredential.serializer(), it)
-      }
+    val elements = credentials.map {
+      ClerkApi.json.encodeToJsonElement(TrustedDeviceLocalCredential.serializer(), it)
+    }
     StorageHelper.saveValue(
       StorageKey.TRUSTED_DEVICE_CREDENTIALS,
       ClerkApi.json.encodeToString(JsonArray.serializer(), JsonArray(elements)),

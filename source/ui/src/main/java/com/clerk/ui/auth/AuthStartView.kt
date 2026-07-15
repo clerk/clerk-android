@@ -308,7 +308,6 @@ internal fun AuthStartViewImpl(
               isLoading = state is AuthStartViewModel.AuthState.TrustedDeviceState.Loading,
               showsLastUsedBadge = lastUsedAuth?.showsTrustedDeviceBadge == true,
               onClick = {
-                authState.enableInProgressAuthAttemptResume()
                 authStartViewModel.signInWithTrustedDevice(
                   promptTitle = signInWithBiometricsTitle,
                   promptSubtitle = biometricPromptSubtitle,

@@ -23,7 +23,8 @@ data class Verification(
   /** The nonce pertaining to the verification. */
   val nonce: String? = null,
   /** The challenge payload for trusted-device sign-in verifications. */
-  @SerialName("trusted_device_challenge") val trustedDeviceChallenge: TrustedDeviceChallenge? = null,
+  @SerialName("trusted_device_challenge")
+  val trustedDeviceChallenge: TrustedDeviceChallenge? = null,
 ) {
   /** The state of the verification. */
   @Serializable

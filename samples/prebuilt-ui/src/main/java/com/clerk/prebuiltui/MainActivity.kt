@@ -19,9 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -33,7 +31,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.api.session.pendingTaskKey
 import com.clerk.prebuiltui.ui.theme.ClerkTheme
 import com.clerk.ui.R as ClerkUiR
 import com.clerk.ui.auth.AuthView
@@ -52,8 +49,8 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
     setContent {
       val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
+      val isAuthFlowComplete by Clerk.isAuthFlowCompleteFlow.collectAsStateWithLifecycle()
       val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-      val user by Clerk.userFlow.collectAsStateWithLifecycle()
       ClerkTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
           Box(
@@ -61,18 +58,8 @@ class MainActivity : ComponentActivity() {
             contentAlignment = Alignment.Center,
           ) {
             if (isInitialized) {
-              // AuthView owns post-auth steps (session tasks, trusted-device enrollment), so it
-              // stays visible until onAuthComplete fires instead of being swapped out the moment
-              // a session becomes active.
-              var authFlowIsActive by rememberSaveable { mutableStateOf(user == null) }
-              LaunchedEffect(user, session?.pendingTaskKey) {
-                if (user == null || session?.pendingTaskKey != null) {
-                  authFlowIsActive = true
-                }
-              }
-
-              if (authFlowIsActive) {
-                AuthView(onAuthComplete = { authFlowIsActive = false })
+              if (!isAuthFlowComplete) {
+                AuthView(isDismissible = false)
               } else {
                 SignedInPrebuiltHome(
                   hasActiveOrganization = session?.lastActiveOrganizationId != null
