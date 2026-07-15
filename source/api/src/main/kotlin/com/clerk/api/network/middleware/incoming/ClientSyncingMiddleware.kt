@@ -13,6 +13,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -47,30 +49,21 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
         try {
           // Parse the response to extract client if present
           val jsonElement = json.parseToJsonElement(it)
-          if (jsonElement is JsonObject && jsonElement.containsKey("client")) {
-            val clientJson = jsonElement["client"]
-            when (clientJson) {
-              is JsonNull -> {
-                if (jsonElement.containsKey("response")) {
-                  ClerkLog.d("Client sync skipped null piggyback client")
-                } else {
-                  ClerkLog.d("Client sync cleared by explicit null client")
-                  Clerk.updateClient(Client())
-                }
-              }
-              null -> Unit
-              else -> {
-                // Extract and set the client
-                val client = json.decodeFromJsonElement<Client>(clientJson)
-                ClerkLog.d("Client synced: ${client.id}")
-                Clerk.updateClient(client)
-              }
+          val authEvents =
+            if (jsonElement is JsonObject) {
+              decodeAuthEvents(request = request, jsonObject = jsonElement)
+            } else {
+              emptyList()
             }
+          val completedAuthFlow =
+            authEvents.firstOrNull { event ->
+              event is AuthEvent.SignInCompleted || event is AuthEvent.SignUpCompleted
+            }
+          if (jsonElement is JsonObject) {
+            syncClient(jsonObject = jsonElement, completedAuthFlow = completedAuthFlow)
           }
 
-          if (jsonElement is JsonObject) {
-            emitAuthEvents(request = request, jsonObject = jsonElement)
-          }
+          authEvents.forEach(Clerk.auth::send)
 
           // Return the original response with its body
           val newBody = it.toResponseBody(body.contentType())
@@ -88,55 +81,90 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
     return response
   }
 
-  private fun emitAuthEvents(request: Request, jsonObject: JsonObject) {
-    val responseElement = jsonObject["response"]
-    if (responseElement == null) {
-      return
-    }
-    val requestPath = request.url.encodedPath
+  private fun syncClient(jsonObject: JsonObject, completedAuthFlow: AuthEvent?) {
+    if (!jsonObject.containsKey("client")) return
 
-    if (requestPath.contains("/${ApiPaths.Client.SignIn.BASE}")) {
-      emitSignInEvents(
-        requestPath = requestPath,
-        method = request.method,
-        responseElement = responseElement,
-      )
-    }
-
-    if (requestPath.contains("/${ApiPaths.Client.SignUp.BASE}")) {
-      emitSignUpEvents(
-        requestPath = requestPath,
-        method = request.method,
-        responseElement = responseElement,
-      )
+    when (val clientJson = jsonObject["client"]) {
+      is JsonNull -> {
+        if (jsonObject.containsKey("response")) {
+          ClerkLog.d("Client sync skipped null piggyback client")
+        } else {
+          ClerkLog.d("Client sync cleared by explicit null client")
+          Clerk.updateClient(Client())
+        }
+      }
+      null -> Unit
+      else -> {
+        val client = json.decodeFromJsonElement<Client>(clientJson)
+        ClerkLog.d("Client synced: ${client.id}")
+        Clerk.updateClient(client, completedAuthFlow = completedAuthFlow)
+      }
     }
   }
 
-  private fun emitSignInEvents(requestPath: String, method: String, responseElement: JsonElement) {
-    val signIn = decodeSignIn(responseElement) ?: return
+  private fun decodeAuthEvents(request: Request, jsonObject: JsonObject): List<AuthEvent> {
+    val responseElement = jsonObject["response"]
+    if (responseElement == null) {
+      return emptyList()
+    }
+    val requestPath = request.url.encodedPath
+    val responseObject =
+      ((responseElement as? JsonObject)?.get("object") as? JsonPrimitive)?.contentOrNull
 
-    if (
+    return when {
+      responseObject == "sign_in_attempt" ||
+        requestPath.contains("/${ApiPaths.Client.SignIn.BASE}") ->
+        decodeSignInEvents(
+          requestPath = requestPath,
+          method = request.method,
+          responseElement = responseElement,
+        )
+      responseObject == "sign_up_attempt" ||
+        requestPath.contains("/${ApiPaths.Client.SignUp.BASE}") ->
+        decodeSignUpEvents(
+          requestPath = requestPath,
+          method = request.method,
+          responseElement = responseElement,
+        )
+      else -> emptyList()
+    }
+  }
+
+  private fun decodeSignInEvents(
+    requestPath: String,
+    method: String,
+    responseElement: JsonElement,
+  ): List<AuthEvent> {
+    val signIn = decodeSignIn(responseElement) ?: return emptyList()
+
+    return if (
       isSignInCreationRequest(path = requestPath, method = method) &&
         signIn.status != SignIn.Status.COMPLETE
     ) {
-      Clerk.auth.send(AuthEvent.SignInStarted(signIn))
-    }
-    if (signIn.status == SignIn.Status.COMPLETE) {
-      Clerk.auth.send(AuthEvent.SignInCompleted(signIn))
+      listOf(AuthEvent.SignInStarted(signIn))
+    } else if (signIn.status == SignIn.Status.COMPLETE) {
+      listOf(AuthEvent.SignInCompleted(signIn))
+    } else {
+      emptyList()
     }
   }
 
-  private fun emitSignUpEvents(requestPath: String, method: String, responseElement: JsonElement) {
-    val signUp = decodeSignUp(responseElement) ?: return
+  private fun decodeSignUpEvents(
+    requestPath: String,
+    method: String,
+    responseElement: JsonElement,
+  ): List<AuthEvent> {
+    val signUp = decodeSignUp(responseElement) ?: return emptyList()
 
-    if (
+    return if (
       isSignUpCreationRequest(path = requestPath, method = method) &&
         signUp.status != SignUp.Status.COMPLETE
     ) {
-      Clerk.auth.send(AuthEvent.SignUpStarted(signUp))
-    }
-    if (signUp.status == SignUp.Status.COMPLETE) {
-      Clerk.auth.send(AuthEvent.SignUpCompleted(signUp))
+      listOf(AuthEvent.SignUpStarted(signUp))
+    } else if (signUp.status == SignUp.Status.COMPLETE) {
+      listOf(AuthEvent.SignUpCompleted(signUp))
+    } else {
+      emptyList()
     }
   }
 

@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
@@ -62,10 +63,10 @@ import kotlinx.serialization.Serializable
 /**
  * Prebuilt Clerk authentication flow.
  *
- * Keep this view visible until [onAuthComplete] fires rather than swapping it out as soon as
- * [Clerk.sessionFlow] or [Clerk.userFlow] emit a signed-in state. A session can become active while
- * post-auth steps — session tasks or the trusted-device (biometric) enrollment prompt — still need
- * to be shown; removing the view early skips them.
+ * When using this as a non-dismissible root authentication view, observe
+ * [Clerk.isAuthFlowCompleteFlow] to choose between this view and authenticated content. A session
+ * can become active while post-auth steps — session tasks or the trusted-device (biometric)
+ * enrollment prompt — still need to be shown.
  *
  * @param initialIdentifier Optional initial value for the identifier field. Phone-like values are
  *   routed to the phone number field automatically.
@@ -107,6 +108,7 @@ fun AuthView(
   ClerkThemeOverrideProvider(clerkTheme) {
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
+    val completeAuthFlow = rememberAuthFlowCompletion(isDismissible, onAuthComplete)
     val identifierConfig =
       remember(
         initialIdentifier,
@@ -126,8 +128,8 @@ fun AuthView(
         )
       }
     AuthStateProvider(backStack = backStack, mode = mode, identifierConfig = identifierConfig) {
-      ObservePendingSessionTaskRouting(backStack = backStack)
-      ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
+      ObservePendingSessionTaskRouting(backStack = backStack, isDismissible = isDismissible)
+      ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = completeAuthFlow)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
       DevelopmentModeWarningBox(
         modifier = fullScreenModifier,
@@ -142,10 +144,30 @@ fun AuthView(
               startSocialOAuthAsSignUp = startSocialOAuthAsSignUp,
               isDismissible = isDismissible,
               onDismiss = onDismiss,
-              onAuthComplete = onAuthComplete,
+              onAuthComplete = completeAuthFlow,
             ),
         )
       }
+    }
+  }
+}
+
+@Composable
+private fun rememberAuthFlowCompletion(
+  isDismissible: Boolean,
+  onAuthComplete: () -> Unit,
+): () -> Unit {
+  val currentOnAuthComplete = rememberUpdatedState(onAuthComplete)
+  DisposableEffect(isDismissible) {
+    val registration = if (isDismissible) null else Clerk.registerAuthFlow()
+    onDispose { registration?.close() }
+  }
+  return remember(isDismissible) {
+    {
+      if (!isDismissible) {
+        Clerk.markAuthFlowComplete()
+      }
+      currentOnAuthComplete.value()
     }
   }
 }
@@ -182,19 +204,28 @@ private fun ObserveInProgressAuthRouting(
 }
 
 @Composable
-private fun ObservePendingSessionTaskRouting(backStack: NavBackStack<NavKey>) {
+private fun ObservePendingSessionTaskRouting(
+  backStack: NavBackStack<NavKey>,
+  isDismissible: Boolean,
+) {
   val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
   val pendingTaskKey = session?.pendingTaskKey
   LaunchedEffect(session?.id, pendingTaskKey, backStack.lastOrNull()) {
     val top = backStack.lastOrNull()
     when {
-      session == null && top.isSessionTaskDestination() -> {
+      session == null &&
+        (top.isSessionTaskDestination() || top == AuthDestination.TrustedDeviceEnrollment) -> {
         while (backStack.size > 1) {
           backStack.removeLastOrNull()
         }
       }
       shouldRouteToPendingSessionTask(pendingTaskKey, top) -> {
-        pendingSessionTaskDestination(pendingTaskKey)?.let { backStack.add(it) }
+        pendingSessionTaskDestination(pendingTaskKey)?.let {
+          backStack.add(it)
+          if (!isDismissible) {
+            Clerk.markAuthFlowPending()
+          }
+        }
       }
     }
   }
