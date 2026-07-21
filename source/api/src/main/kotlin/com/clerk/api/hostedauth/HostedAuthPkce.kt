@@ -26,16 +26,11 @@ internal fun hostedAuthCodeChallenge(codeVerifier: String): String {
 private fun SecureRandom.nextHex(byteCount: Int): String {
   val bytes = ByteArray(byteCount)
   nextBytes(bytes)
-  return buildString(capacity = byteCount * 2) {
-    bytes.forEach { byte ->
-      val value = byte.toInt() and BYTE_MASK
-      append(HEX_DIGITS[value ushr HEX_DIGIT_SHIFT])
-      append(HEX_DIGITS[value and HEX_DIGIT_MASK])
-    }
+  return bytes.joinToString(separator = "") { byte ->
+    (byte.toInt() and BYTE_MASK).toString(radix = HEX_RADIX).padStart(HEX_CHARS_PER_BYTE, '0')
   }
 }
 
-private const val HEX_DIGITS = "0123456789abcdef"
 private const val BYTE_MASK = 0xff
-private const val HEX_DIGIT_MASK = 0x0f
-private const val HEX_DIGIT_SHIFT = 4
+private const val HEX_RADIX = 16
+private const val HEX_CHARS_PER_BYTE = 2

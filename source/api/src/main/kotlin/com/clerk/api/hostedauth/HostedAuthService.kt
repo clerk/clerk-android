@@ -91,6 +91,8 @@ internal object HostedAuthService {
       SSOManagerActivity.createAuthorizationIntent(context, hostedAuthUri).apply {
         addFlags(FLAG_ACTIVITY_NEW_TASK)
       }
+    // await() stays outside the catch so its CancellationException propagates instead of being
+    // swallowed as a launch failure.
     val launchFailure =
       try {
         context.startActivity(intent)
@@ -353,16 +355,11 @@ private suspend fun createHostedAuth(
   }
   return when (result) {
     is ClerkResult.Failure -> result
-    is ClerkResult.Success -> {
-      val hostedAuthUri = result.value.authenticationUri()
-      if (hostedAuthUri == null) {
-        ClerkResult.unknownFailure(
+    is ClerkResult.Success ->
+      result.value.authenticationUri()?.let { ClerkResult.success(it) }
+        ?: ClerkResult.unknownFailure(
           IllegalStateException("Hosted auth creation returned an invalid response.")
         )
-      } else {
-        ClerkResult.success(hostedAuthUri)
-      }
-    }
   }
 }
 
