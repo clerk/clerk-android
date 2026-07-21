@@ -67,8 +67,8 @@ internal fun Uri.matchesHostedAuthRedirectUrl(redirectUrl: String): Boolean =
       val expected = redirectUrl.toUri()
       !scheme.isNullOrBlank() &&
         !expected.scheme.isNullOrBlank() &&
-        scheme == expected.scheme &&
-        encodedAuthority == expected.encodedAuthority &&
+        scheme.equals(expected.scheme, ignoreCase = true) &&
+        encodedAuthority.equals(expected.encodedAuthority, ignoreCase = true) &&
         encodedPath == expected.encodedPath
     }
     .getOrDefault(false)

@@ -17,6 +17,13 @@ class HostedAuthRedirectUrlTest {
   }
 
   @Test
+  fun callbackUriMatchesCaseInsensitiveSchemeAndAuthority() {
+    val callbackUri = Uri.parse("CLERK://Com.Example.App.Callback?state=abc")
+
+    assertTrue(callbackUri.matchesHostedAuthRedirectUrl("clerk://com.example.app.callback"))
+  }
+
+  @Test
   fun callbackUriRejectsDifferentScheme() {
     val callbackUri = Uri.parse("other://com.example.app.callback?state=abc")
 
