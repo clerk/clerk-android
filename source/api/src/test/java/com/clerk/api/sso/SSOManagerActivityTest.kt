@@ -3,14 +3,20 @@ package com.clerk.api.sso
 import android.app.Activity
 import android.app.Application
 import android.net.Uri
+import android.os.Bundle
 import androidx.test.core.app.ApplicationProvider
+import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.magiclink.NativeMagicLinkService
+import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.session.Session
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -75,7 +81,31 @@ class SSOManagerActivityTest {
   }
 
   @Test
+  fun newAuthorizationIntent_restartsManagerWithNewUrl() {
+    val app = ApplicationProvider.getApplicationContext<Application>()
+    val firstUri = Uri.parse("https://accounts.example.com/first")
+    val secondUri = Uri.parse("https://accounts.example.com/second")
+    val controller =
+      Robolectric.buildActivity(
+        SSOManagerActivity::class.java,
+        SSOManagerActivity.createAuthorizationIntent(app, firstUri),
+      )
+    val activity = controller.create().resume().get()
+    val shadow = Shadows.shadowOf(activity)
+
+    assertEquals(firstUri, shadow.nextStartedActivity.data)
+
+    controller.pause()
+    controller.newIntent(SSOManagerActivity.createAuthorizationIntent(app, secondUri))
+    controller.resume()
+
+    assertEquals(secondUri, shadow.nextStartedActivity.data)
+  }
+
+  @Test
   fun authorizationCanceled_setsResultCanceled_whenNoData() {
+    mockkObject(HostedAuthService)
+    justRun { HostedAuthService.cancelPendingAuthentication(any()) }
     val app = ApplicationProvider.getApplicationContext<Application>()
     val intent =
       SSOManagerActivity.createBaseIntent(app).apply {
@@ -87,6 +117,80 @@ class SSOManagerActivityTest {
 
     val shadow = Shadows.shadowOf(activity)
     assertEquals(Activity.RESULT_CANCELED, shadow.resultCode)
+    verify(exactly = 1) { HostedAuthService.cancelPendingAuthentication(any()) }
+  }
+
+  @Test
+  fun hostedAuthCallback_callsOnlyHostedAuthService() {
+    mockkObject(HostedAuthService)
+    mockkObject(SSOService)
+    val session =
+      Session(
+        id = "sess_123",
+        status = Session.SessionStatus.ACTIVE,
+        expireAt = 10_000,
+        lastActiveAt = 1_000,
+        createdAt = 1_000,
+        updatedAt = 1_000,
+      )
+    every { HostedAuthService.canHandle(any()) } returns true
+    coEvery { HostedAuthService.complete(any()) } returns ClerkResult.success(session)
+    coJustRun { SSOService.completeAuthenticateWithRedirect(any()) }
+
+    val app = ApplicationProvider.getApplicationContext<Application>()
+    val responseUri =
+      Uri.parse(
+        "clerk://com.example.app.callback" + "?state=state_123&rotating_token_nonce=nonce_123"
+      )
+    val intent = SSOManagerActivity.createResponseHandlingIntent(app, responseUri)
+
+    val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
+    val activity = controller.create().resume().get()
+
+    coVerify(exactly = 1) { HostedAuthService.complete(responseUri) }
+    coVerify(exactly = 0) { SSOService.completeAuthenticateWithRedirect(any()) }
+    assertEquals(Activity.RESULT_OK, Shadows.shadowOf(activity).resultCode)
+  }
+
+  @Test
+  fun hostedAuthCallback_reattachesAfterConfigurationChange() {
+    mockkObject(HostedAuthService)
+    mockkObject(SSOService)
+    val gate = CompletableDeferred<Unit>()
+    val session =
+      Session(
+        id = "sess_123",
+        status = Session.SessionStatus.ACTIVE,
+        expireAt = 10_000,
+        lastActiveAt = 1_000,
+        createdAt = 1_000,
+        updatedAt = 1_000,
+      )
+    every { HostedAuthService.canHandle(any()) } returns true
+    coEvery { HostedAuthService.complete(any()) } coAnswers
+      {
+        gate.await()
+        ClerkResult.success(session)
+      }
+    coJustRun { SSOService.completeAuthenticateWithRedirect(any()) }
+
+    val app = ApplicationProvider.getApplicationContext<Application>()
+    val responseUri =
+      Uri.parse(
+        "clerk://com.example.app.callback" + "?state=state_123&rotating_token_nonce=nonce_123"
+      )
+    val intent = SSOManagerActivity.createResponseHandlingIntent(app, responseUri)
+    val controller = Robolectric.buildActivity(SSOManagerActivity::class.java, intent)
+
+    controller.create().resume()
+    coVerify(exactly = 1) { HostedAuthService.complete(responseUri) }
+
+    val savedState = Bundle()
+    controller.saveInstanceState(savedState).pause().stop().destroy()
+    Robolectric.buildActivity(SSOManagerActivity::class.java, intent).create(savedState).resume()
+    coVerify(exactly = 2) { HostedAuthService.complete(responseUri) }
+
+    gate.complete(Unit)
   }
 
   @Test

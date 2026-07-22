@@ -12,6 +12,11 @@ import okhttp3.Response
  *
  * This middleware intercepts network responses and checks for the presence of an Authorization
  * header. If found, the token is automatically saved to the device's local storage for future use.
+ *
+ * Saving deliberately ignores any [com.clerk.api.network.middleware.ResponseGuard] on the request:
+ * the header carries the server's current token for this client even if the local flow was
+ * cancelled. A response is still rejected when its request started with an older shared-session
+ * token, because it must not overwrite a newer token written by a sibling app.
  */
 internal class DeviceTokenSavingMiddleware : Interceptor {
   /**

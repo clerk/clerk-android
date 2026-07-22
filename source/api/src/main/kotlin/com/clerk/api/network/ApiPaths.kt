@@ -47,6 +47,11 @@ internal object ApiPaths {
       internal const val RESET_PASSWORD = "${WITH_ID}/reset_password"
     }
 
+    /** Hosted Account Portal auth endpoints */
+    internal object HostedAuth {
+      internal const val BASE = "${Client.BASE}/hosted_auth"
+    }
+
     /** Magic link endpoints */
     internal object MagicLinks {
       internal const val BASE = "${Client.BASE}/magic_links"

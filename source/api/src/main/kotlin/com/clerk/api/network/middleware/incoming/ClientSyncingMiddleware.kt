@@ -5,6 +5,8 @@ import com.clerk.api.Constants.Http.AUTHORIZATION_HEADER
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.middleware.ManualClientSyncRequest
+import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
@@ -45,18 +47,23 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val request = chain.request()
     val response = chain.proceed(request)
+    val manualClientSyncRequest = request.tag(ManualClientSyncRequest::class.java)
+    manualClientSyncRequest?.recordResponse(
+      requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
+      responseDeviceToken = response.header(AUTHORIZATION_HEADER),
+    )
 
-    if (
+    return when {
       !Clerk.isClientResponseCurrent(
         requestDeviceToken = response.request.header(AUTHORIZATION_HEADER),
         responseDeviceToken = response.header(AUTHORIZATION_HEADER),
-      )
-    ) {
-      ClerkLog.d("Client sync skipped for a response using a stale shared device token")
-      return response
+      ) -> {
+        ClerkLog.d("Client sync skipped for a response using a stale shared device token")
+        response
+      }
+      manualClientSyncRequest != null -> response
+      else -> syncResponse(request = request, response = response)
     }
-
-    return syncResponse(request = request, response = response)
   }
 
   @Suppress("NestedBlockDepth")
@@ -110,17 +117,22 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
             ClerkLog.d("Client sync skipped null piggyback client")
           } else {
             ClerkLog.d("Client sync cleared by explicit null client")
-            Clerk.updateClient(Client(), serverFetchAtMillis)
+            request.syncClient { Clerk.updateClient(Client(), serverFetchAtMillis) }
           }
         }
         null -> Unit
-        else -> syncClerkClient(json.decodeFromJsonElement(clientJson), serverFetchAtMillis)
+        else ->
+          request.syncClient {
+            syncClerkClient(json.decodeFromJsonElement(clientJson), serverFetchAtMillis)
+          }
       }
       return
     }
 
     if (request.method == "GET" && request.url.encodedPath.endsWith("/${ApiPaths.Client.BASE}")) {
-      syncClerkClient(json.decodeFromJsonElement(jsonElement), serverFetchAtMillis)
+      request.syncClient {
+        syncClerkClient(json.decodeFromJsonElement(jsonElement), serverFetchAtMillis)
+      }
     }
   }
 
@@ -191,6 +203,10 @@ internal class ClientSyncingMiddleware(private val json: Json) : Interceptor {
   private fun isSignUpCreationRequest(path: String, method: String): Boolean {
     return method == "POST" && path.endsWith("/${ApiPaths.Client.SignUp.BASE}")
   }
+}
+
+private fun Request.syncClient(sync: () -> Unit) {
+  tag(ResponseGuard::class.java)?.runIfAllowed(sync) ?: sync()
 }
 
 private fun syncClerkClient(client: Client, serverFetchAtMillis: Long) {

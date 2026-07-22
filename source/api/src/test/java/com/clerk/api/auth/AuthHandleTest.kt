@@ -1,10 +1,12 @@
 package com.clerk.api.auth
 
 import android.net.Uri
+import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.magiclink.NativeMagicLinkAuthResult
 import com.clerk.api.magiclink.NativeMagicLinkService
 import com.clerk.api.magiclink.canHandleNativeMagicLink
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.SSOService
 import io.mockk.coEvery
@@ -30,6 +32,7 @@ class AuthHandleTest {
     auth = Auth()
     mockkObject(NativeMagicLinkService)
     mockkStatic(::canHandleNativeMagicLink)
+    mockkObject(HostedAuthService)
     mockkObject(SSOService)
   }
 
@@ -59,6 +62,7 @@ class AuthHandleTest {
 
     every { canHandleNativeMagicLink(callbackUri) } returns false
     every { callbackUri.scheme } returns "clerk"
+    coEvery { HostedAuthService.complete(callbackUri) } returns null
     coJustRun { SSOService.completeAuthenticateWithRedirect(callbackUri) }
 
     val handled = auth.handle(callbackUri)
@@ -69,11 +73,28 @@ class AuthHandleTest {
   }
 
   @Test
+  fun `handle completes hosted auth callback before SSO fallback`() = runTest {
+    val callbackUri = mockk<Uri>(relaxed = true)
+    val session = mockk<Session>(relaxed = true)
+
+    every { canHandleNativeMagicLink(callbackUri) } returns false
+    every { callbackUri.scheme } returns "myapp"
+    coEvery { HostedAuthService.complete(callbackUri) } returns ClerkResult.success(session)
+
+    val handled = auth.handle(callbackUri)
+
+    assertTrue(handled)
+    coVerify(exactly = 1) { HostedAuthService.complete(callbackUri) }
+    coVerify(exactly = 0) { SSOService.completeAuthenticateWithRedirect(any()) }
+  }
+
+  @Test
   fun `handle returns false for non Clerk URIs`() = runTest {
     val callbackUri = mockk<Uri>(relaxed = true)
 
     every { canHandleNativeMagicLink(callbackUri) } returns false
     every { callbackUri.scheme } returns "https"
+    coEvery { HostedAuthService.complete(callbackUri) } returns null
 
     val handled = auth.handle(callbackUri)
 

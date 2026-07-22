@@ -4,6 +4,8 @@ import android.content.Intent
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccountService.connectExternalAccount
+import com.clerk.api.hostedauth.HOSTED_AUTH_CANCELLED_BY_NEW_FLOW
+import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
@@ -70,6 +72,7 @@ internal object ExternalAccountService {
   suspend fun connectExternalAccount(
     params: User.CreateExternalAccountParams
   ): ClerkResult<ExternalAccount, ClerkErrorResponse> {
+    HostedAuthService.cancelPendingAuthentication(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW)
     // Clear any existing pending external account connections
     currentPendingExternalAccountConnection = null
     val initialResult = ClerkApi.user.createExternalAccount(params.toMap())
