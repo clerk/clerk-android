@@ -30,22 +30,20 @@ class SSOReceiverActivityTest {
   fun invalidHostedAuthCallbackIsNotForwarded() {
     val callbackUri = Uri.parse("clerk://example.callback?state=forged")
     mockkObject(HostedAuthService)
-    every { HostedAuthService.canHandle(callbackUri) } returns true
-    every { HostedAuthService.isValidCallback(callbackUri) } returns false
+    every { HostedAuthService.isForgedCallback(callbackUri) } returns true
 
     val activity = createReceiver(callbackUri)
 
     assertNull(Shadows.shadowOf(activity).nextStartedActivity)
     assertTrue(activity.isFinishing)
-    verify(exactly = 1) { HostedAuthService.isValidCallback(callbackUri) }
+    verify(exactly = 1) { HostedAuthService.isForgedCallback(callbackUri) }
   }
 
   @Test
   fun validHostedAuthCallbackIsForwardedToManager() {
     val callbackUri = Uri.parse("clerk://example.callback?state=expected")
     mockkObject(HostedAuthService)
-    every { HostedAuthService.canHandle(callbackUri) } returns true
-    every { HostedAuthService.isValidCallback(callbackUri) } returns true
+    every { HostedAuthService.isForgedCallback(callbackUri) } returns false
 
     val activity = createReceiver(callbackUri)
 

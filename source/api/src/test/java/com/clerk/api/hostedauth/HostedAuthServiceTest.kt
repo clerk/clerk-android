@@ -97,7 +97,20 @@ class HostedAuthServiceTest {
 
     val result = withTimeout(TIMEOUT_MS) { start.await() }
     assertTrue(result is ClerkResult.Failure)
+    assertTrue((result as ClerkResult.Failure).throwable is HostedAuthCancellationException)
     assertFalse(HostedAuthService.hasPendingAuthentication())
+  }
+
+  @Test
+  fun startRejectsHttpRedirectUrlsBeforeCreatingHostedAuth() = runBlocking {
+    val result = HostedAuthService.start(mode = null, redirectUrl = "https://example.com/callback")
+
+    assertTrue(result is ClerkResult.Failure)
+    val message = (result as ClerkResult.Failure).throwable?.message.orEmpty()
+    assertTrue(message.contains("custom-scheme"))
+    coVerify(exactly = 0) {
+      clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any())
+    }
   }
 
   @Test
@@ -260,8 +273,8 @@ class HostedAuthServiceTest {
       Uri.parse(
         "$REDIRECT_URL?state=forged&rotating_token_nonce=nonce_forged&created_session_id=sess_forged"
       )
-    assertFalse(HostedAuthService.isValidCallback(forgedUri))
-    assertTrue(HostedAuthService.isValidCallback(legitimateCallback(state)))
+    assertTrue(HostedAuthService.isForgedCallback(forgedUri))
+    assertFalse(HostedAuthService.isForgedCallback(legitimateCallback(state)))
     val forgedResult = HostedAuthService.complete(forgedUri)
 
     assertTrue(forgedResult is ClerkResult.Failure)

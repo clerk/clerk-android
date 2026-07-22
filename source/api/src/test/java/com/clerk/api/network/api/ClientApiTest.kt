@@ -82,6 +82,7 @@ class ClientApiTest {
       api.redeemHostedAuth(
         rotatingTokenNonce = "nonce_123",
         codeVerifier = "verifier_123",
+        manualClientSyncRequest = ManualClientSyncRequest(),
       )
 
     assertTrue(result is ClerkResult.Success)

@@ -13,6 +13,7 @@ import com.clerk.api.auth.builders.SignInWithPasswordBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
+import com.clerk.api.hostedauth.HostedAuthCancellationException
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.magiclink.NativeMagicLinkAuthResult
@@ -195,7 +196,8 @@ class Auth internal constructor() {
    *   Custom values require a matching intent filter in the application manifest and must be
    *   forwarded to [handle].
    * @return The activated session, or a failure when creation, callback validation, redemption, or
-   *   activation fails.
+   *   activation fails. When the user dismisses the browser or another flow supersedes this one,
+   *   the failure's throwable is a [HostedAuthCancellationException].
    */
   suspend fun startHostedAuth(
     mode: HostedAuthMode? = null,
@@ -911,8 +913,7 @@ class Auth internal constructor() {
       NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri)
     }
 
-    val handledByHostedAuth =
-      if (handledByMagicLink) false else HostedAuthService.complete(callbackUri) != null
+    val handledByHostedAuth = !handledByMagicLink && HostedAuthService.complete(callbackUri) != null
     val isClerkCallback = callbackUri.scheme?.startsWith("clerk") == true
     if (!handledByMagicLink && !handledByHostedAuth && isClerkCallback) {
       SSOService.completeAuthenticateWithRedirect(callbackUri)

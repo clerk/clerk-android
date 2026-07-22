@@ -24,12 +24,10 @@ internal class SSOReceiverActivity : Activity() {
     ClerkLog.d("OAuthReceiverActivity started with uri: ${SafeUriLog.describe(intent?.data)}")
     super.onCreate(savedInstanceState)
     val callbackUri = intent?.data
-    if (callbackUri != null && HostedAuthService.canHandle(callbackUri)) {
-      if (!HostedAuthService.isValidCallback(callbackUri)) {
-        ClerkLog.w("Ignoring invalid hosted auth callback")
-        finish()
-        return
-      }
+    if (callbackUri != null && HostedAuthService.isForgedCallback(callbackUri)) {
+      ClerkLog.w("Ignoring invalid hosted auth callback")
+      finish()
+      return
     }
     startActivity(SSOManagerActivity.createResponseHandlingIntent(this, callbackUri))
     finish()

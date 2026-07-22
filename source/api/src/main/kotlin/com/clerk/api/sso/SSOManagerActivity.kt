@@ -32,9 +32,15 @@ import kotlinx.coroutines.launch
  * authentication state throughout the flow.
  */
 internal class SSOManagerActivity : AppCompatActivity() {
+  /** Which completion, if any, has claimed the pending callback. Survives process death. */
+  private enum class Completion {
+    NONE,
+    SSO,
+    HOSTED_AUTH,
+  }
+
   private var authorizationStarted = false
-  private var completionStarted = false
-  private var hostedAuthCompletionStarted = false
+  private var completion = Completion.NONE
   private var completionObserverAttached = false
   private lateinit var desiredUri: Uri
   private var pendingCallbackUri: Uri? = null
@@ -71,8 +77,8 @@ internal class SSOManagerActivity : AppCompatActivity() {
     // cancelled. If we have a response, complete the flow and only finish after completion to
     // avoid cancelling the in-flight network request.
     intent.data?.let {
-      if (!completionStarted) {
-        completionStarted = true
+      if (completion == Completion.NONE) {
+        completion = Completion.SSO
         pendingCallbackUri = it
         intent = Intent(intent).apply { data = null }
         authorizationComplete(it)
@@ -87,13 +93,15 @@ internal class SSOManagerActivity : AppCompatActivity() {
 
   private fun resumeCallbackIfPresent(): Boolean {
     val callbackUri = pendingCallbackUri ?: intent.data?.takeIf(::isCallbackUri)
-    val shouldAttachObserver =
-      !completionObserverAttached && (!completionStarted || hostedAuthCompletionStarted)
+    // Hosted auth completion re-attaches after activity recreation because
+    // HostedAuthService.complete() idempotently re-joins the pending flow; SSO completion is a
+    // one-shot network call that must never re-run.
+    val shouldAttachObserver = !completionObserverAttached && completion != Completion.SSO
     if (callbackUri != null && shouldAttachObserver) {
-      if (!completionStarted) {
-        completionStarted = true
+      if (completion == Completion.NONE) {
         authorizationStarted = true
-        hostedAuthCompletionStarted = HostedAuthService.canHandle(callbackUri)
+        completion =
+          if (HostedAuthService.canHandle(callbackUri)) Completion.HOSTED_AUTH else Completion.SSO
         pendingCallbackUri = callbackUri
         intent = Intent(intent).apply { data = null }
       }
@@ -107,8 +115,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
     super.onNewIntent(intent)
     if (intent.data?.let(::isCallbackUri) != true) {
       authorizationStarted = false
-      completionStarted = false
-      hostedAuthCompletionStarted = false
+      completion = Completion.NONE
       completionObserverAttached = false
       pendingCallbackUri = null
       hydrateState(intent.extras)
@@ -119,8 +126,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
     outState.putBoolean(KEY_AUTHORIZATION_STARTED, authorizationStarted)
-    outState.putBoolean(KEY_COMPLETION_STARTED, completionStarted)
-    outState.putBoolean(KEY_HOSTED_AUTH_COMPLETION_STARTED, hostedAuthCompletionStarted)
+    outState.putString(KEY_COMPLETION_KIND, completion.name)
     outState.putString(KEY_PENDING_CALLBACK_URI, pendingCallbackUri?.toString())
     if (::desiredUri.isInitialized) {
       outState.putString(URI_KEY, desiredUri.toString())
@@ -136,8 +142,10 @@ internal class SSOManagerActivity : AppCompatActivity() {
   private fun hydrateState(state: Bundle?) {
     if (state == null) return finish()
     authorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false)
-    completionStarted = state.getBoolean(KEY_COMPLETION_STARTED, false)
-    hostedAuthCompletionStarted = state.getBoolean(KEY_HOSTED_AUTH_COMPLETION_STARTED, false)
+    completion =
+      state.getString(KEY_COMPLETION_KIND)?.let { name ->
+        Completion.entries.firstOrNull { it.name == name }
+      } ?: Completion.NONE
     state.getString(URI_KEY)?.let { desiredUri = it.toUri() }
     pendingCallbackUri = state.getString(KEY_PENDING_CALLBACK_URI)?.toUri()
   }
@@ -166,7 +174,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
           return@launch
         }
         val hostedAuthResult = HostedAuthService.complete(uri)
-        if (hostedAuthCompletionStarted || hostedAuthResult != null) {
+        if (completion == Completion.HOSTED_AUTH || hostedAuthResult != null) {
           ClerkLog.d("authorizationComplete called with hosted auth redirect")
           pendingCallbackUri = null
           when (hostedAuthResult) {
@@ -237,8 +245,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
       Intent(context, SSOManagerActivity::class.java)
 
     internal const val URI_KEY = "uri"
-    internal const val KEY_COMPLETION_STARTED = "completion_started"
-    internal const val KEY_HOSTED_AUTH_COMPLETION_STARTED = "hosted_auth_completion_started"
+    internal const val KEY_COMPLETION_KIND = "completion_kind"
     internal const val KEY_PENDING_CALLBACK_URI = "pending_callback_uri"
   }
 }

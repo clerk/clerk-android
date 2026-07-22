@@ -3,6 +3,7 @@ package com.clerk.api.hostedauth
 import android.content.Context
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
+import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.auth.HostedAuthMode
 import com.clerk.api.externalaccount.ExternalAccountService
@@ -49,8 +50,8 @@ internal object HostedAuthService {
     val pendingAuth =
       PendingHostedAuth(
         redirectUrl = preparation.redirectUrl,
-        state = preparation.request.state,
-        codeVerifier = preparation.request.pkce.codeVerifier,
+        state = preparation.state,
+        codeVerifier = preparation.codeVerifier,
         deferred = CompletableDeferred(),
       )
     if (!pendingAuthStore.add(pendingAuth)) {
@@ -159,14 +160,16 @@ internal object HostedAuthService {
   fun canHandle(uri: Uri): Boolean =
     pendingAuthStore.current()?.let { uri.matchesHostedAuthRedirectUrl(it.redirectUrl) } == true
 
-  fun isValidCallback(uri: Uri): Boolean {
+  /** True when the URI targets the pending flow's callback but fails validation. */
+  fun isForgedCallback(uri: Uri): Boolean {
     val pendingAuth = pendingAuthStore.current() ?: return false
-    return validateHostedAuthCallback(
-      uri = uri,
-      redirectUrl = pendingAuth.redirectUrl,
-      expectedState = pendingAuth.state,
-    ) is
-      ClerkResult.Success
+    return uri.matchesHostedAuthRedirectUrl(pendingAuth.redirectUrl) &&
+      validateHostedAuthCallback(
+        uri = uri,
+        redirectUrl = pendingAuth.redirectUrl,
+        expectedState = pendingAuth.state,
+      ) is
+        ClerkResult.Failure
   }
 
   private suspend fun redeemAndComplete(
@@ -197,13 +200,9 @@ internal object HostedAuthService {
         )
       }
     }
-    return if (pendingAuthStore.isCurrent(pendingAuth)) {
-      when (clientResult) {
-        is ClerkResult.Failure -> finishPendingAuth(pendingAuth, clientResult)
-        is ClerkResult.Success -> completeRedeemedClient(pendingAuth, callback, clientResult.value)
-      }
-    } else {
-      ClerkResult.unknownFailure(Exception(AUTHENTICATION_CANCELLED))
+    return when (clientResult) {
+      is ClerkResult.Failure -> finishPendingAuth(pendingAuth, clientResult)
+      is ClerkResult.Success -> completeRedeemedClient(pendingAuth, callback, clientResult.value)
     }
   }
 
@@ -237,7 +236,7 @@ internal object HostedAuthService {
     result: ClerkResult<Session, ClerkErrorResponse>,
   ): ClerkResult<Session, ClerkErrorResponse> {
     if (!pendingAuthStore.completeIfCurrent(pendingAuth, result)) {
-      return ClerkResult.unknownFailure(Exception(AUTHENTICATION_CANCELLED))
+      return ClerkResult.unknownFailure(HostedAuthCancellationException(AUTHENTICATION_CANCELLED))
     }
     return result
   }
@@ -246,7 +245,9 @@ internal object HostedAuthService {
 private data class PreparedHostedAuth(
   val context: Context,
   val redirectUrl: String,
-  val request: HostedAuthRequest,
+  val state: String,
+  val codeVerifier: String,
+  val codeChallenge: String,
 )
 
 private data class PendingHostedAuth(
@@ -311,7 +312,9 @@ private class HostedAuthPendingStore {
     val pendingAuth =
       synchronized(lock) { currentPendingAuth.also { currentPendingAuth = null } } ?: return
     pendingAuth.completionJob.get()?.cancel()
-    pendingAuth.deferred.complete(ClerkResult.unknownFailure(Exception(reason)))
+    pendingAuth.deferred.complete(
+      ClerkResult.unknownFailure(HostedAuthCancellationException(reason))
+    )
   }
 
   fun hasPending(): Boolean = synchronized(lock) { currentPendingAuth != null }
@@ -321,26 +324,30 @@ private fun prepareHostedAuth(
   redirectUrl: String
 ): ClerkResult<PreparedHostedAuth, ClerkErrorResponse> {
   val context = Clerk.applicationContext?.get()
-  if (context == null) {
-    return ClerkResult.unknownFailure(
-      IllegalStateException("Clerk must be initialized before starting hosted auth.")
-    )
-  }
-  val request = runCatching {
-    val random = SecureRandom()
-    HostedAuthRequest(
-      state = generateHostedAuthState(random),
-      pkce = generateHostedAuthPkce(random),
-    )
-  }
-  return request.fold(
-    onSuccess = {
-      ClerkResult.success(
-        PreparedHostedAuth(context = context, redirectUrl = redirectUrl, request = it)
+  val scheme = redirectUrl.toUri().scheme
+  return when {
+    context == null ->
+      ClerkResult.unknownFailure(
+        IllegalStateException("Clerk must be initialized before starting hosted auth.")
       )
-    },
-    onFailure = { ClerkResult.unknownFailure(it) },
-  )
+    scheme.equals("http", ignoreCase = true) || scheme.equals("https", ignoreCase = true) ->
+      ClerkResult.unknownFailure(
+        IllegalArgumentException("Hosted auth requires a custom-scheme redirect URL.")
+      )
+    else -> {
+      val random = SecureRandom()
+      val pkce = generateHostedAuthPkce(random)
+      ClerkResult.success(
+        PreparedHostedAuth(
+          context = context,
+          redirectUrl = redirectUrl,
+          state = generateHostedAuthState(random),
+          codeVerifier = pkce.codeVerifier,
+          codeChallenge = pkce.codeChallenge,
+        )
+      )
+    }
+  }
 }
 
 private suspend fun createHostedAuth(
@@ -371,8 +378,8 @@ private suspend fun requestHostedAuth(
 ) =
   ClerkApi.client.createHostedAuth(
     redirectUrl = preparation.redirectUrl,
-    codeChallenge = preparation.request.pkce.codeChallenge,
-    state = preparation.request.state,
+    codeChallenge = preparation.codeChallenge,
+    state = preparation.state,
     mode = mode?.value,
     skipClientId = if (skipClientId) INTERNAL_HEADER_TRUE else null,
     responseGuard = responseGuard,
@@ -382,8 +389,6 @@ private fun ClerkResult.Failure<ClerkErrorResponse>.isSignedOutFailure(): Boolea
   errorType == ClerkResult.Failure.ErrorType.HTTP &&
     code == HTTP_UNAUTHORIZED &&
     error?.errors?.any { it.code == SIGNED_OUT_ERROR_CODE } == true
-
-private data class HostedAuthRequest(val state: String, val pkce: HostedAuthPkce)
 
 private const val HTTP_UNAUTHORIZED = 401
 private const val SIGNED_OUT_ERROR_CODE = "signed_out"
