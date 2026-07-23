@@ -96,10 +96,13 @@ private val ClerkResult.Failure<ClerkErrorResponse>.credentialFlowUiMessage: Str
 val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressCredentialFlowError: Boolean
   get() = (throwable as? CredentialFlowException)?.suppressUserFacingError == true
 
+/**
+ * Automatic credential flows start without user intent, so failures from the credential ceremony
+ * itself are logged instead of presented. Server rejections of a credential the user selected
+ * arrive as API failures and remain presentable.
+ */
 val ClerkResult.Failure<ClerkErrorResponse>.shouldSuppressAutomaticCredentialFlowError: Boolean
-  get() =
-    throwable is CredentialFlowException.UserCancelled ||
-      throwable is CredentialFlowException.NoSavedCredential
+  get() = throwable is CredentialFlowException || throwable is GetCredentialException
 
 val ClerkResult.Failure<ClerkErrorResponse>.shouldFallbackToOAuthFromGoogleOneTap: Boolean
   get() = throwable is CredentialFlowException.NoGoogleAccount

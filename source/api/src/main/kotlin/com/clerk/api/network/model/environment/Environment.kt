@@ -17,6 +17,17 @@ internal data class Environment(
   val passkeyIsEnabled: Boolean
     get() = userSettings.attributes.any { (key, value) -> key == "passkey" && value.enabled }
 
+  /**
+   * Whether the instance accepts a passkey as a first factor when signing in. An instance can
+   * enable passkeys for registration and verification while leaving them out of the sign-in
+   * factors, so this is narrower than [passkeyIsEnabled].
+   */
+  val passkeyFirstFactorIsEnabled: Boolean
+    get() =
+      userSettings.attributes.any { (key, value) ->
+        key == "passkey" && value.enabled && value.usedForFirstFactor
+      }
+
   val mfaIsEnabled: Boolean
     get() = userSettings.attributes.any { (_, value) -> value.enabled && value.usedForSecondFactor }
 
