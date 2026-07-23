@@ -8,6 +8,7 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
 import com.clerk.api.credentials.CredentialFlowException
@@ -279,8 +280,29 @@ class PasskeyAuthenticationServiceTest {
   }
 
   @Test
-  fun `automatic credential flow does not suppress provider unavailable`() {
+  fun `automatic credential flow suppresses provider unavailable`() {
     val result = ClerkResult.unknownFailure(CredentialFlowException.ProviderUnavailable())
+
+    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
+  }
+
+  @Test
+  fun `automatic credential flow suppresses missing activity`() {
+    val result = ClerkResult.unknownFailure(CredentialFlowException.MissingActivity())
+
+    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
+  }
+
+  @Test
+  fun `automatic credential flow suppresses unclassified credential ceremony failures`() {
+    val result = ClerkResult.unknownFailure(GetCredentialUnknownException("asset links mismatch"))
+
+    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
+  }
+
+  @Test
+  fun `automatic credential flow does not suppress non-credential failures`() {
+    val result = ClerkResult.unknownFailure(IllegalStateException("serialization failed"))
 
     assertFalse(result.shouldSuppressAutomaticCredentialFlowError)
   }
