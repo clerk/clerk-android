@@ -102,6 +102,25 @@ class HostedAuthServiceTest {
   }
 
   @Test
+  fun cancelBeforeLaunchSkipsTheBrowser() = runBlocking {
+    val appContext = mockk<Context>(relaxed = true)
+    every { Clerk.applicationContext } returns WeakReference(appContext)
+    coEvery { clientApi.createHostedAuth(any(), any(), any(), any(), any(), any(), any()) } answers
+      {
+        HostedAuthService.cancelPendingAuthentication()
+        ClerkResult.success(
+          HostedAuthResource(objectType = "hosted_auth", url = "https://portal.dev/start")
+        )
+      }
+
+    val result = HostedAuthService.start(mode = null, redirectUrl = REDIRECT_URL)
+
+    assertTrue(result is ClerkResult.Failure)
+    assertTrue((result as ClerkResult.Failure).throwable is HostedAuthCancellationException)
+    verify(exactly = 0) { appContext.startActivity(any()) }
+  }
+
+  @Test
   fun startRejectsHttpRedirectUrlsBeforeCreatingHostedAuth() = runBlocking {
     val result = HostedAuthService.start(mode = null, redirectUrl = "https://example.com/callback")
 

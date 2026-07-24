@@ -68,12 +68,7 @@ internal object HostedAuthService {
       }
       when (val result = createHostedAuth(preparation, mode, responseGuard)) {
         is ClerkResult.Failure -> finishPendingAuth(pendingAuth, result)
-        is ClerkResult.Success ->
-          if (pendingAuthStore.isCurrent(pendingAuth)) {
-            launchAndAwait(preparation.context, result.value, pendingAuth)
-          } else {
-            pendingAuth.deferred.await()
-          }
+        is ClerkResult.Success -> launchAndAwait(preparation.context, result.value, pendingAuth)
       }
     } finally {
       val removed = pendingAuthStore.remove(pendingAuth)
@@ -92,11 +87,14 @@ internal object HostedAuthService {
       SSOManagerActivity.createAuthorizationIntent(context, hostedAuthUri).apply {
         addFlags(FLAG_ACTIVITY_NEW_TASK)
       }
+    // The launch holds the pending-store lock so a concurrent cancellation cannot slip in
+    // between the ownership check and the activity start; when the attempt is no longer
+    // current, nothing launches and the deferred already carries the cancellation result.
     // await() stays outside the catch so its CancellationException propagates instead of being
     // swallowed as a launch failure.
     val launchFailure =
       try {
-        context.startActivity(intent)
+        pendingAuthStore.runIfCurrent(pendingAuth) { context.startActivity(intent) }
         null
       } catch (exception: RuntimeException) {
         exception
