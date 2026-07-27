@@ -10,6 +10,7 @@ com.clerk.api.credentials
 com.clerk.api.emailaddress
 com.clerk.api.extensions
 com.clerk.api.externalaccount
+com.clerk.api.hostedauth
 com.clerk.api.log
 com.clerk.api.magiclink
 com.clerk.api.network

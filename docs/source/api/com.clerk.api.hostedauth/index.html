@@ -2,8 +2,8 @@
 <html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
-    <title>handle</title>
-<link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../../";</script>
+    <title>com.clerk.api.hostedauth</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
     <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
       if (storage == null) {
@@ -18,23 +18,23 @@
         }
       }
     </script>
-<script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
-<link href="../../../../styles/style.css" rel="Stylesheet">
-<link href="../../../../styles/main.css" rel="Stylesheet">
-<link href="../../../../styles/prism.css" rel="Stylesheet">
-<link href="../../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../../scripts/safe-local-storage_blocking.js"></script>
-<script type="text/javascript" src="../../../../scripts/navigation-loader.js" async></script>
-<script type="text/javascript" src="../../../../scripts/platform-content-handler.js" async></script>
-<script type="text/javascript" src="../../../../scripts/main.js" defer></script>
-<script type="text/javascript" src="../../../../scripts/prism.js" async></script>
-<script type="text/javascript" src="../../../../ui-kit/ui-kit.min.js" defer></script>
-<link href="../../../../styles/multimodule.css" rel="Stylesheet"></head>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../styles/multimodule.css" rel="Stylesheet"></head>
 <body>
 <div class="root">
     <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
-<a class="library-name--link" href="../../../../index.html" tabindex="1">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
                     Clerk
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
@@ -90,12 +90,35 @@
         </nav>
         <div id="resizer" class="resizer" data-item-type="BAR"></div>
         <div id="main" data-item-type="SECTION" role="main">
-<div class="main-content" data-page-type="member" id="content" pageids="Clerk Android API::com.clerk.api.auth/Auth/handle/#android.net.Uri?/PointingToDeclaration//-1784893667">
-  <div class="breadcrumbs"><a href="../../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="../index.html">com.clerk.api.auth</a><span class="delimiter">/</span><a href="index.html">Auth</a><span class="delimiter">/</span><span class="current">handle</span></div>
+<div class="main-content" data-page-type="package" id="content" pageids="Clerk Android API::com.clerk.api.hostedauth////PointingToDeclaration//-1784893667">
+  <div class="breadcrumbs"><a href="../index.html">Clerk Android API</a><span class="delimiter">/</span><span class="current">com.clerk.api.hostedauth</span></div>
   <div class="cover ">
-    <h1 class="cover"><span><span>handle</span></span></h1>
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
   </div>
-  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="handle.html"><span class="token function">handle</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">uri<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/net/Uri.html">Uri</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><p class="paragraph">Handles hosted auth, OAuth/SSO, and native magic-link deep link callbacks.</p><p class="paragraph">Call this method from your Activity when receiving a deep link callback from Clerk authentication flows.</p><p class="paragraph">For hosted auth callbacks this method suspends until callback validation and session redemption have finished. It returns before the redeemed session is activated, so <a href="../../com.clerk.api/-clerk/session.html">Clerk.session</a> may not yet reflect the new session when this method returns <code class="lang-kotlin">true</code>.</p><span class="kdoc-tag"><h4 class="">Return</h4><p class="paragraph">true if the URI was handled, false otherwise.</p><h3 class="">Example usage:</h3><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">// In your Activity's onCreate or onNewIntent<br>lifecycleScope.launch {<br>  clerk.auth.handle(intent.data)<br>}</code></pre><span class="copy-tooltip"><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div><span class="copy-icon"></span></span></div></span><h4 class="tableheader">Parameters</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>uri</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The deep link URI received from the callback.</p></div></div></div></div></div></div></div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="905584954%2FClasslikes%2F-1784893667" anchor-label="HostedAuthCancellationException" id="905584954%2FClasslikes%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-hosted-auth-cancellation-exception/index.html"><span>Hosted</span><wbr><span>Auth</span><wbr><span>Cancellation</span><wbr><span><span>Exception</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="905584954%2FClasslikes%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-hosted-auth-cancellation-exception/index.html">HostedAuthCancellationException</a> : <a href="https://developer.android.com/reference/kotlin/java/lang/Exception.html">Exception</a></div><div class="brief "><p class="paragraph">Signals that a hosted authentication attempt ended without completing, either because the user dismissed the system browser or because another authentication flow superseded it.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
     <div class="footer">
         <div class="footer--container">
