@@ -13,6 +13,8 @@ import com.clerk.api.auth.builders.SignInWithPasswordBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
+import com.clerk.api.hostedauth.HostedAuthCancellationException
+import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.magiclink.NativeMagicLinkAuthResult
 import com.clerk.api.magiclink.NativeMagicLinkError
@@ -180,6 +182,38 @@ class Auth internal constructor() {
     val result = ClerkApi.signIn.createSignIn(params)
     result.onFailure { emitAuthError(it) }
     return result
+  }
+
+  /**
+   * Opens Account Portal in a system browser and activates the session created there.
+   *
+   * The pending flow state lives only in this process: if the system kills the app process while
+   * the browser is in the foreground, the flow is lost and its callback is ignored, matching the
+   * behavior of the SDK's OAuth/SSO redirect flows.
+   *
+   * @param mode The Account Portal screen to open first. Defaults to sign-in.
+   * @param redirectUrl The native callback URL. Defaults to the callback registered by the SDK.
+   *   Custom values require a matching intent filter in the application manifest and must be
+   *   forwarded to [handle].
+   * @return The activated session, or a failure when creation, callback validation, redemption, or
+   *   activation fails. When the user dismisses the browser or another flow supersedes this one,
+   *   the failure's throwable is a [HostedAuthCancellationException].
+   */
+  suspend fun startHostedAuth(
+    mode: HostedAuthMode? = null,
+    redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
+  ): ClerkResult<Session, ClerkErrorResponse> {
+    return when (val result = HostedAuthService.start(mode = mode, redirectUrl = redirectUrl)) {
+      is ClerkResult.Failure -> {
+        emitAuthError(result)
+        result
+      }
+      is ClerkResult.Success ->
+        setActive(
+          sessionId = result.value.id,
+          organizationId = result.value.lastActiveOrganizationId,
+        )
+    }
   }
 
   /**
@@ -680,10 +714,9 @@ class Auth internal constructor() {
       // Fetched client is missing the target session entirely (e.g. cleared sessions list);
       // splice it back in from the fallback and force it active.
       !targetInFetchedSessions && targetInFallbackSessions -> {
-        val missingFallbackSessions =
-          fallbackSessions.filterNot { fallbackSession ->
-            sessions.any { it.id == fallbackSession.id }
-          }
+        val missingFallbackSessions = fallbackSessions.filterNot { fallbackSession ->
+          sessions.any { it.id == fallbackSession.id }
+        }
         copy(
           sessions = sessions + missingFallbackSessions,
           lastActiveSessionId = activeSessionFallbackId,
@@ -853,10 +886,14 @@ class Auth internal constructor() {
   // region Deep Link Handling
 
   /**
-   * Handles OAuth/SSO and native magic-link deep link callbacks.
+   * Handles hosted auth, OAuth/SSO, and native magic-link deep link callbacks.
    *
    * Call this method from your Activity when receiving a deep link callback from Clerk
    * authentication flows.
+   *
+   * For hosted auth callbacks this method suspends until callback validation and session redemption
+   * have finished. It returns before the redeemed session is activated, so [Clerk.session] may not
+   * yet reflect the new session when this method returns `true`.
    *
    * @param uri The deep link URI received from the callback.
    * @return true if the URI was handled, false otherwise.
@@ -876,12 +913,13 @@ class Auth internal constructor() {
       NativeMagicLinkService.handleMagicLinkDeepLink(callbackUri)
     }
 
+    val handledByHostedAuth = !handledByMagicLink && HostedAuthService.complete(callbackUri) != null
     val isClerkCallback = callbackUri.scheme?.startsWith("clerk") == true
-    if (!handledByMagicLink && isClerkCallback) {
+    if (!handledByMagicLink && !handledByHostedAuth && isClerkCallback) {
       SSOService.completeAuthenticateWithRedirect(callbackUri)
     }
 
-    return handledByMagicLink || isClerkCallback
+    return handledByMagicLink || handledByHostedAuth || isClerkCallback
   }
 
   // endregion

@@ -3,10 +3,13 @@ package com.clerk.api.network.middleware.incoming
 import com.clerk.api.Clerk
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.middleware.ManualClientSyncRequest
+import com.clerk.api.network.middleware.ResponseGuard
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.session.Session
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.filterIsInstance
@@ -24,6 +27,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -178,6 +182,142 @@ class ClientSyncingMiddlewareTest {
 
     assertEquals(client, Clerk.client)
     assertEquals(listOf(session), Clerk.sessionsFlow.value)
+  }
+
+  @Test
+  fun `intercept syncs piggybacked client from hosted auth creation`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    Clerk.updateClient(Client(id = "client_original"))
+
+    val request =
+      Request.Builder()
+        .url("https://api.clerk.com/v1/client/hosted_auth")
+        .post("".toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+        .build()
+    val responseBody =
+      """
+      {
+        "response": {
+          "object": "hosted_auth",
+          "url": "https://example.accounts.dev/sign-in"
+        },
+        "client": {
+          "id": "client_reserved",
+          "sessions": []
+        }
+      }
+      """
+        .trimIndent()
+        .toResponseBody("application/json".toMediaType())
+    val response =
+      Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .body(responseBody)
+        .build()
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns request
+    every { chain.proceed(request) } returns response
+
+    middleware.intercept(chain)
+
+    assertEquals("client_reserved", Clerk.client.id)
+  }
+
+  @Test
+  fun `intercept does not sync piggybacked client when request no longer owns the flow`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val originalClient = Client(id = "client_original")
+    Clerk.updateClient(originalClient)
+
+    val request =
+      Request.Builder()
+        .url("https://api.clerk.com/v1/client/hosted_auth")
+        .tag(ResponseGuard::class.java, ResponseGuard { _ -> })
+        .post("".toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+        .build()
+    val responseBody =
+      """
+      {
+        "response": {
+          "object": "hosted_auth",
+          "url": "https://example.accounts.dev/sign-in"
+        },
+        "client": {
+          "id": "client_cancelled",
+          "sessions": []
+        }
+      }
+      """
+        .trimIndent()
+        .toResponseBody("application/json".toMediaType())
+    val response =
+      Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .body(responseBody)
+        .build()
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns request
+    every { chain.proceed(request) } returns response
+
+    middleware.intercept(chain)
+
+    assertEquals(originalClient, Clerk.client)
+  }
+
+  @Test
+  fun `intercept leaves manually synced client response unapplied`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val originalClient = Client(id = "client_original")
+    Clerk.updateClient(originalClient)
+    mockkObject(Clerk)
+    every { Clerk.isClientResponseCurrent(any(), any()) } returns true
+    val manualClientSyncRequest = ManualClientSyncRequest()
+
+    val request =
+      Request.Builder()
+        .url("https://api.clerk.com/v1/client")
+        .tag(ManualClientSyncRequest::class.java, manualClientSyncRequest)
+        .post("".toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+        .build()
+    val responseBody =
+      """
+      {
+        "response": {
+          "id": "client_redeemed",
+          "sessions": []
+        },
+        "client": {
+          "id": "client_redeemed",
+          "sessions": []
+        }
+      }
+      """
+        .trimIndent()
+        .toResponseBody("application/json".toMediaType())
+    val response =
+      Response.Builder()
+        .request(request)
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .body(responseBody)
+        .build()
+    val chain = mockk<Interceptor.Chain>()
+    every { chain.request() } returns request
+    every { chain.proceed(request) } returns response
+
+    middleware.intercept(chain)
+
+    assertEquals(originalClient, Clerk.client)
+    var callerAppliedClient = false
+    assertTrue(manualClientSyncRequest.runIfResponseCurrent { callerAppliedClient = true })
+    assertTrue(callerAppliedClient)
   }
 
   @Test

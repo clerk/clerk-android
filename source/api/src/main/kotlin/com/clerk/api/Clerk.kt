@@ -15,6 +15,7 @@ import com.clerk.api.auth.Auth
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
 import com.clerk.api.externalaccount.ExternalAccountService
+import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
@@ -742,6 +743,7 @@ object Clerk {
    * After reset completes, call [initialize] again to configure a new publishable key or proxy URL.
    */
   fun reset() {
+    HostedAuthService.cancelPendingAuthentication()
     configurationManager.reset()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
     StorageHelper.deleteValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT)

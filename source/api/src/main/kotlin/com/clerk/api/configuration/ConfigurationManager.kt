@@ -11,6 +11,7 @@ import com.clerk.api.Constants.Config.REFRESH_TOKEN_INTERVAL
 import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.configuration.lifecycle.AppLifecycleListener
+import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
@@ -253,7 +254,7 @@ internal class ConfigurationManager {
       if (hasConfigured) {
         scope.launch {
           Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-          deferForegroundRefreshDuringPendingSso()
+          deferForegroundRefreshDuringPendingAuth()
           refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
           startTokenRefresh()
         }
@@ -411,19 +412,29 @@ internal class ConfigurationManager {
     }
   }
 
-  private suspend fun deferForegroundRefreshDuringPendingSso() {
+  /**
+   * Waits (up to [LIFECYCLE_REFRESH_MAX_DEFER_MS]) for any in-flight browser-based auth flow to
+   * finish before the foreground refresh runs.
+   *
+   * Returning from a Custom Tab foregrounds the app, which would otherwise immediately refresh the
+   * client and rotate the device token out from under the redemption request that is still in
+   * flight, failing its response-freshness check.
+   */
+  private suspend fun deferForegroundRefreshDuringPendingAuth() {
     var waitedMs = 0L
-    while (hasPendingSsoFlow() && waitedMs < LIFECYCLE_REFRESH_MAX_DEFER_MS) {
+    while (hasPendingAuthFlow() && waitedMs < LIFECYCLE_REFRESH_MAX_DEFER_MS) {
       if (waitedMs == 0L) {
-        ClerkLog.d("Deferring lifecycle refresh while SSO completion is in progress")
+        ClerkLog.d("Deferring lifecycle refresh while auth completion is in progress")
       }
       delay(LIFECYCLE_REFRESH_DEFER_STEP_MS)
       waitedMs += LIFECYCLE_REFRESH_DEFER_STEP_MS
     }
   }
 
-  internal fun hasPendingSsoFlow(): Boolean {
-    return SSOService.hasPendingAuthentication() || SSOService.hasPendingExternalAccountConnection()
+  internal fun hasPendingAuthFlow(): Boolean {
+    return SSOService.hasPendingAuthentication() ||
+      SSOService.hasPendingExternalAccountConnection() ||
+      HostedAuthService.hasPendingAuthentication()
   }
 
   private suspend fun refreshClientAndEnvironment(

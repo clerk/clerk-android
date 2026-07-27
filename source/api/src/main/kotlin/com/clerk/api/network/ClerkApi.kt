@@ -13,6 +13,7 @@ import com.clerk.api.network.api.SignUpApi
 import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
+import com.clerk.api.network.middleware.outgoing.RequestLoggingMiddleware
 import com.clerk.api.network.middleware.outgoing.UrlAppendingMiddleware
 import com.clerk.api.network.middleware.outgoing.VersioningUserAgentMiddleware
 import com.clerk.api.network.serialization.ClerkApiResultCallAdapterFactory
@@ -136,7 +137,9 @@ internal object ClerkApi {
 
           if (Clerk.debugMode) {
             addInterceptor(
-              HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+              RequestLoggingMiddleware(
+                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+              )
             )
           }
         }

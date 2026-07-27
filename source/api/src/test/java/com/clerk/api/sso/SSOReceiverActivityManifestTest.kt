@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
+import com.clerk.api.Clerk
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -12,18 +13,25 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class SSOReceiverActivityManifestTest {
   @Test
-  fun callbackHostResolvesToSsoReceiverActivity() {
-    assertIntentResolvesToReceiver("callback")
+  fun canonicalHostedAuthCallbackResolvesToSsoReceiverActivity() {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val originalApplicationId = Clerk.applicationId
+    try {
+      Clerk.applicationId = context.packageName
+      assertIntentResolvesToReceiver(Uri.parse(RedirectConfiguration.DEFAULT_REDIRECT_URL))
+    } finally {
+      Clerk.applicationId = originalApplicationId
+    }
   }
 
   @Test
   fun legacyOauthHostResolvesToSsoReceiverActivity() {
-    assertIntentResolvesToReceiver("oauth")
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    assertIntentResolvesToReceiver(Uri.parse("clerk://${context.packageName}.oauth"))
   }
 
-  private fun assertIntentResolvesToReceiver(hostSuffix: String) {
+  private fun assertIntentResolvesToReceiver(redirectUri: Uri) {
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-    val redirectUri = Uri.parse("clerk://${context.packageName}.$hostSuffix")
     val intent =
       Intent(Intent.ACTION_VIEW, redirectUri)
         .addCategory(Intent.CATEGORY_DEFAULT)

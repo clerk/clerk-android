@@ -70,10 +70,7 @@ class SharedSessionSyncPublicApiTest {
   fun `enabled config exposes a companion getter to published aar consumers`() {
     val getter = SharedSessionSyncConfig.Companion::class.java.getMethod("getEnabled")
 
-    assertSame(
-      SharedSessionSyncConfig.enabled,
-      getter.invoke(SharedSessionSyncConfig.Companion),
-    )
+    assertSame(SharedSessionSyncConfig.enabled, getter.invoke(SharedSessionSyncConfig.Companion))
   }
 
   private companion object {

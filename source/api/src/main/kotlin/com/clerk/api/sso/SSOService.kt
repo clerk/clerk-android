@@ -8,6 +8,8 @@ import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
+import com.clerk.api.hostedauth.HOSTED_AUTH_CANCELLED_BY_NEW_FLOW
+import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -92,13 +94,7 @@ internal object SSOService {
     legalAccepted: Boolean? = null,
     transferable: Boolean = true,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    // Clear any existing pending auth to prevent conflicts
-    currentPendingAuth?.complete(
-      ClerkResult.unknownFailure(
-        Exception("New authentication started, cancelling previous attempt")
-      )
-    )
-    clearCurrentAuth()
+    cancelCompetingAuthenticationFlows()
     val resolvedStrategy =
       strategy
         ?: return ClerkResult.unknownFailure(
@@ -170,12 +166,7 @@ internal object SSOService {
     legalAccepted: Boolean? = null,
     unsafeMetadata: Map<String, Any>? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    currentPendingAuth?.complete(
-      ClerkResult.unknownFailure(
-        Exception("New authentication started, cancelling previous attempt")
-      )
-    )
-    clearCurrentAuth()
+    cancelCompetingAuthenticationFlows()
 
     val initialResult =
       SignUp.create(
@@ -228,12 +219,7 @@ internal object SSOService {
     redirectFlow: RedirectFlow = RedirectFlow.SIGN_IN,
     signUp: SignUp? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
-    currentPendingAuth?.complete(
-      ClerkResult.unknownFailure(
-        Exception("New authentication started, cancelling previous attempt")
-      )
-    )
-    clearCurrentAuth()
+    cancelCompetingAuthenticationFlows()
 
     val completableDeferred = CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>()
 
@@ -400,6 +386,16 @@ internal object SSOService {
     currentTransferable = true
     currentRedirectFlow = RedirectFlow.SIGN_IN
     currentSignUp = null
+  }
+
+  private fun cancelCompetingAuthenticationFlows() {
+    currentPendingAuth?.complete(
+      ClerkResult.unknownFailure(
+        Exception("New authentication started, cancelling previous attempt")
+      )
+    )
+    HostedAuthService.cancelPendingAuthentication(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW)
+    clearCurrentAuth()
   }
 
   /**
