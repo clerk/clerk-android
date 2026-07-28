@@ -47,7 +47,7 @@ jobs:
 
       - name: Install Trailblaze
         run: |
-          curl -fsSL https://raw.githubusercontent.com/block/trailblaze/main/install.sh | bash
+          curl -fsSL https://raw.githubusercontent.com/block/trailblaze/a022ca69b7fecd0ba7659f2c000fb459213c87d6/install.sh | bash
           echo "$HOME/.trailblaze/bin" >> "$GITHUB_PATH"
 
       - name: Run Trailblaze E2E
