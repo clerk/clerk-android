@@ -8,6 +8,8 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
+import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.credentials.exceptions.NoCredentialException
 import com.clerk.api.Clerk
 import com.clerk.api.credentials.CredentialFlowException
@@ -245,6 +247,87 @@ class PasskeyAuthenticationServiceTest {
   }
 
   @Test
+  fun `automatic signInWithPasskey clears sign in on ProviderUnavailable`() = runTest {
+    val nonce = """{"challenge":"test-challenge"}"""
+    val client = Client(id = "client_123", signIn = mockSignIn)
+
+    every { mockSignIn.id } returns "sign_in_123"
+    every { mockSignIn.firstFactorVerification } returns mockVerification
+    every { mockVerification.nonce } returns nonce
+    every { Clerk.clientInitialized } returns true
+    every { Clerk.client } returns client
+    every { Clerk.updateClient(any()) } just runs
+
+    coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockCredentialManager.getCredential(any(), any()) } throws
+      GetCredentialProviderConfigurationException("Provider not configured")
+
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+        preferImmediatelyAvailableCredentials = true,
+      )
+
+    assertTrue(result is ClerkResult.Failure)
+    assertTrue((result as ClerkResult.Failure).throwable is CredentialFlowException.ProviderUnavailable)
+    verify(exactly = 1) { Clerk.updateClient(client.copy(signIn = null)) }
+  }
+
+  @Test
+  fun `automatic signInWithPasskey clears sign in on MissingActivity`() = runTest {
+    val nonce = """{"challenge":"test-challenge"}"""
+    val client = Client(id = "client_123", signIn = mockSignIn)
+
+    every { mockSignIn.id } returns "sign_in_123"
+    every { mockSignIn.firstFactorVerification } returns mockVerification
+    every { mockVerification.nonce } returns nonce
+    every { Clerk.clientInitialized } returns true
+    every { Clerk.client } returns client
+    every { Clerk.updateClient(any()) } just runs
+
+    coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockCredentialManager.getCredential(any(), any()) } throws
+      GetCredentialUnknownException("Activity-based context is required")
+
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+        preferImmediatelyAvailableCredentials = true,
+      )
+
+    assertTrue(result is ClerkResult.Failure)
+    assertTrue((result as ClerkResult.Failure).throwable is CredentialFlowException.MissingActivity)
+    verify(exactly = 1) { Clerk.updateClient(client.copy(signIn = null)) }
+  }
+
+  @Test
+  fun `automatic signInWithPasskey clears sign in on GetCredentialUnknownException`() = runTest {
+    val nonce = """{"challenge":"test-challenge"}"""
+    val client = Client(id = "client_123", signIn = mockSignIn)
+
+    every { mockSignIn.id } returns "sign_in_123"
+    every { mockSignIn.firstFactorVerification } returns mockVerification
+    every { mockVerification.nonce } returns nonce
+    every { Clerk.clientInitialized } returns true
+    every { Clerk.client } returns client
+    every { Clerk.updateClient(any()) } just runs
+
+    coEvery { ClerkApi.signIn.createSignIn(any()) } returns ClerkResult.success(mockSignIn)
+    coEvery { mockCredentialManager.getCredential(any(), any()) } throws
+      GetCredentialUnknownException("asset links mismatch")
+
+    val result =
+      GoogleCredentialAuthenticationService.signInWithGoogleCredential(
+        credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+        preferImmediatelyAvailableCredentials = true,
+      )
+
+    assertTrue(result is ClerkResult.Failure)
+    assertTrue((result as ClerkResult.Failure).throwable is GetCredentialUnknownException)
+    verify(exactly = 1) { Clerk.updateClient(client.copy(signIn = null)) }
+  }
+
+  @Test
   fun `signInWithPasskey handles cancellation without generic failure`() = runTest {
     val nonce = """{"challenge":"test-challenge"}"""
 
@@ -279,8 +362,29 @@ class PasskeyAuthenticationServiceTest {
   }
 
   @Test
-  fun `automatic credential flow does not suppress provider unavailable`() {
+  fun `automatic credential flow suppresses provider unavailable`() {
     val result = ClerkResult.unknownFailure(CredentialFlowException.ProviderUnavailable())
+
+    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
+  }
+
+  @Test
+  fun `automatic credential flow suppresses missing activity`() {
+    val result = ClerkResult.unknownFailure(CredentialFlowException.MissingActivity())
+
+    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
+  }
+
+  @Test
+  fun `automatic credential flow suppresses unclassified credential ceremony failures`() {
+    val result = ClerkResult.unknownFailure(GetCredentialUnknownException("asset links mismatch"))
+
+    assertTrue(result.shouldSuppressAutomaticCredentialFlowError)
+  }
+
+  @Test
+  fun `automatic credential flow does not suppress non-credential failures`() {
+    val result = ClerkResult.unknownFailure(IllegalStateException("serialization failed"))
 
     assertFalse(result.shouldSuppressAutomaticCredentialFlowError)
   }

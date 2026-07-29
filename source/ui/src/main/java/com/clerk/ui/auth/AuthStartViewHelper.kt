@@ -75,7 +75,7 @@ internal class AuthStartViewHelper {
 
   val passkeySignInConfigIsEnabled: Boolean
     get() =
-      (testPasskeyIsEnabled ?: Clerk.passkeyIsEnabled) &&
+      (testPasskeyIsEnabled ?: Clerk.passkeyFirstFactorIsEnabled) &&
         (testPasskeyAutofillIsEnabled ?: Clerk.passkeyAutofillIsEnabled)
 
   fun getKeyboardType(isPhoneNumberFieldActive: Boolean): KeyboardType {

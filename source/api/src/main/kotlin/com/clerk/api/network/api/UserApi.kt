@@ -441,6 +441,7 @@ internal interface UserApi {
    * @param passkeyId The ID of the passkey to verify
    * @param strategy The verification strategy (defaults to "passkey")
    * @param publicKeyCredential The WebAuthn public key credential data
+   * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]
    * @return [ClerkResult] containing the verified [Passkey] on success or [ClerkErrorResponse] on
    *   failure
    */
@@ -450,6 +451,7 @@ internal interface UserApi {
     @Path(ApiParams.PASSKEY_ID) passkeyId: String,
     @Field(ApiParams.STRATEGY) strategy: String = "passkey",
     @Field("public_key_credential") publicKeyCredential: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<Passkey, ClerkErrorResponse>
 
   /**
