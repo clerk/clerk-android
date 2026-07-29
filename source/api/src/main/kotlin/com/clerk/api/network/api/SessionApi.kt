@@ -9,6 +9,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionVerification
 import retrofit2.http.DELETE
+import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -76,8 +77,12 @@ internal interface SessionApi {
    *   failure
    */
   @POST(ApiPaths.Client.Sessions.TOKENS)
+  @FormUrlEncoded
   suspend fun tokens(
-    @Path(ApiParams.ID) sessionId: String
+    @Path(ApiParams.ID) sessionId: String,
+    @Field("organization_id") organizationId: String = "",
+    @Field("token") token: String? = null,
+    @Field("force_origin") forceOrigin: String? = null,
   ): ClerkResult<TokenResource, ClerkErrorResponse>
 
   /**
