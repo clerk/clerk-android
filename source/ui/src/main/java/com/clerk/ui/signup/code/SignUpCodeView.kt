@@ -92,6 +92,7 @@ private fun SignUpCodeViewImpl(
     onClickIdentifier = authState::navigateToAuthStartForIdentifierEdit,
     spacingAfterIdentifier = dp28,
     snackbarHostState = snackbarHostState,
+    onBackPressed = authState::navigateBack,
   ) {
     Spacers.Vertical.Spacer32()
     ClerkCodeInputField(

@@ -87,6 +87,7 @@ private fun SignUpCollectFieldViewImpl(
     subtitle = collectFieldHelper.subtitle(collectField),
     hasLogo = false,
     snackbarHostState = snackbarHostState,
+    onBackPressed = { authState.navigateBack() },
   ) {
     Column(
       modifier = Modifier.fillMaxWidth(),
