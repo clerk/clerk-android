@@ -26,8 +26,10 @@ import kotlinx.coroutines.Deferred
  * @param jwtManager The JWT manager used for token parsing and validation
  */
 internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManagerImpl()) {
-  private companion object {
-    val sessionInvalidationErrorCodes =
+  internal companion object {
+    internal val shared: SessionTokenFetcher by lazy { SessionTokenFetcher() }
+
+    private val sessionInvalidationErrorCodes =
       setOf(
         "session_revoked",
         "session_expired",
@@ -40,8 +42,22 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       )
   }
 
+  private data class FetchContext(
+    val session: Session,
+    val cacheKey: String,
+    val sessionMinterEnabled: Boolean,
+  )
+
   /** Map of cache keys to deferred token fetch tasks for request deduplication */
   private val tokenTasks = ConcurrentHashMap<String, Deferred<TokenResource?>>()
+
+  /**
+   * Releases deduplicated waiters and removes requests registered by the previous Clerk runtime.
+   */
+  internal fun reset() {
+    tokenTasks.values.forEach { it.cancel() }
+    tokenTasks.clear()
+  }
 
   /**
    * Retrieves a token for the specified session with the given options.
@@ -76,19 +92,24 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     session: Session,
     options: GetTokenOptions,
   ): TokenResource? {
-    val cacheKey = session.tokenCacheKey(options.template)
+    val context = makeFetchContext(session, options.template)
     ClerkLog.d(
-      "Fetching token for session ${session.id} with options: $options and cache key: $cacheKey"
+      "Fetching token for session ${context.session.id} with options: $options and cache key: " +
+        context.cacheKey
     )
 
-    return tokenTasks[cacheKey]?.await()
+    if (options.skipCache) {
+      return fetchToken(context, options)
+    }
+
+    return tokenTasks[context.cacheKey]?.await()
       ?: run {
         val deferred = CompletableDeferred<TokenResource?>()
-        val existingTask = tokenTasks.putIfAbsent(cacheKey, deferred)
+        val existingTask = tokenTasks.putIfAbsent(context.cacheKey, deferred)
 
         existingTask?.await()
           ?: try {
-            fetchToken(session, options).also { deferred.complete(it) }
+            fetchToken(context, options).also { deferred.complete(it) }
           } catch (e: CancellationException) {
             deferred.cancel(e)
             throw e
@@ -96,9 +117,19 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
             deferred.completeExceptionally(t)
             throw t
           } finally {
-            tokenTasks.remove(cacheKey, deferred)
+            tokenTasks.remove(context.cacheKey, deferred)
           }
       }
+  }
+
+  private fun makeFetchContext(session: Session, template: String?): FetchContext {
+    val currentSession =
+      Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id } ?: session
+    return FetchContext(
+      session = currentSession,
+      cacheKey = currentSession.tokenCacheKey(template),
+      sessionMinterEnabled = Clerk.environment?.authConfig?.sessionMinter == true,
+    )
   }
 
   /**
@@ -112,8 +143,17 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
    * @param options Options controlling the fetch behavior
    * @return The token resource, or null if the fetch failed
    */
-  private suspend fun fetchToken(session: Session, options: GetTokenOptions): TokenResource? {
-    val cacheKey = session.tokenCacheKey(options.template)
+  private suspend fun fetchToken(context: FetchContext, options: GetTokenOptions): TokenResource? {
+    val session = context.session
+    val cacheKey = context.cacheKey
+
+    if (options.template == null) {
+      session.lastActiveToken
+        ?.takeIf {
+          TokenFreshness.matches(it, session.id, session.lastActiveOrganizationId)
+        }
+        ?.let { SessionTokensCache.hydrate(cacheKey, it) }
+    }
 
     // Check cache first (unless skipped)
     if (!options.skipCache) {
@@ -134,12 +174,25 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         if (options.template != null) {
           ClerkApi.session.tokens(session.id, options.template)
         } else {
-          ClerkApi.session.tokens(session.id)
+          val cachedToken = SessionTokensCache.getToken(cacheKey)
+          val previousToken =
+            cachedToken?.let {
+              TokenFreshness.pickFreshest(
+                existing = session.lastActiveToken,
+                incoming = it,
+              )
+            } ?: session.lastActiveToken
+          ClerkApi.session.tokens(
+            sessionId = session.id,
+            organizationId = session.lastActiveOrganizationId.orEmpty(),
+            token = previousToken?.jwt.takeIf { context.sessionMinterEnabled },
+            forceOrigin = "true".takeIf { context.sessionMinterEnabled && options.skipCache },
+          )
         }
 
       when (tokensRequest) {
         is ClerkResult.Success -> {
-          SessionTokensCache.setToken(cacheKey, tokensRequest.value)
+          SessionTokensCache.storeIfFresher(cacheKey, tokensRequest.value)
           tokensRequest.value
         }
         is ClerkResult.Failure -> {
@@ -228,10 +281,11 @@ data class GetTokenOptions(
 /**
  * Extension function to generate a cache key for session tokens.
  *
- * This function creates a unique cache key based on the session ID and optional template name. This
- * ensures that tokens for different templates are cached separately.
+ * This function creates a unique cache key based on the session ID and either its active
+ * organization or the optional template name.
  *
  * @param template Optional template name to include in the cache key
  * @return A unique cache key string for the session and template combination
  */
-internal fun Session.tokenCacheKey(template: String?): String = template?.let { "$id-$it" } ?: id
+internal fun Session.tokenCacheKey(template: String?): String =
+  template?.let { "$id-template-$it" } ?: "$id-organization-${lastActiveOrganizationId.orEmpty()}"

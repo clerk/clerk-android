@@ -213,7 +213,7 @@ suspend fun Session.delete(): ClerkResult<Client, ClerkErrorResponse> {
 suspend fun Session.fetchToken(
   options: GetTokenOptions = GetTokenOptions()
 ): ClerkResult<TokenResource, ClerkErrorResponse> {
-  val token = SessionTokenFetcher().getToken(this, options)
+  val token = SessionTokenFetcher.shared.getToken(this, options)
   return if (token != null) {
     ClerkResult.success(token)
   } else {
