@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.api.sso.OAuthProvider
@@ -44,6 +47,14 @@ private fun UserProfileAddConnectedAccountViewImpl(
   viewModel: AddConnectedAccountViewModel = viewModel(),
   onClosePressed: () -> Unit,
 ) {
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  LaunchedEffect(state) {
+    handleAddConnectedAccountState(
+      state = state,
+      resetState = viewModel::resetState,
+      onClosePressed = onClosePressed,
+    )
+  }
   Column(modifier = Modifier.then(modifier)) {
     BottomSheetTopBar(
       title = stringResource(R.string.connect_account),
@@ -63,6 +74,17 @@ private fun UserProfileAddConnectedAccountViewImpl(
         onClick = { viewModel.connectExternalAccount(it) },
       )
     }
+  }
+}
+
+internal fun handleAddConnectedAccountState(
+  state: AddConnectedAccountViewModel.State,
+  resetState: () -> Unit,
+  onClosePressed: () -> Unit,
+) {
+  if (state == AddConnectedAccountViewModel.State.Success) {
+    resetState()
+    onClosePressed()
   }
 }
 
