@@ -26,6 +26,18 @@ class UserApiTest {
     }
   }
 
+  @Test
+  fun `external account linking endpoints include clerk session id query`() {
+    val linkingMethods = listOf("createExternalAccount", "reauthorizeExternalAccount")
+
+    linkingMethods.forEach { methodName ->
+      assertTrue(
+        method(methodName).hasQuery(ApiParams.CLERK_SESSION_ID),
+        "$methodName should include _clerk_session_id",
+      )
+    }
+  }
+
   private fun method(name: String): java.lang.reflect.Method {
     return UserApi::class.java.methods.single { it.name == name }
   }
