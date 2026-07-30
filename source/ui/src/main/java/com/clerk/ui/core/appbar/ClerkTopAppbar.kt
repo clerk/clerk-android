@@ -47,6 +47,7 @@ internal fun ClerkTopAppBar(
   modifier: Modifier = Modifier,
   hasLogo: Boolean = true,
   hasBackButton: Boolean = true,
+  usesHostBackAction: Boolean = false,
   title: String? = null,
   backgroundColor: Color? = null, // sensible default
   clerkTheme: ClerkTheme? = null,
@@ -54,12 +55,14 @@ internal fun ClerkTopAppBar(
   contentPadding: PaddingValues = PaddingValues(),
   trailingContent: (@Composable () -> Unit)? = null,
 ) {
-  // When embedded, the component's root screen has nothing of its own to go back
-  // to, so the host supplies the back affordance there.
-  val hostBackAction = LocalClerkHostBackAction.current
-  val showsBackButton = hasBackButton || hostBackAction != null
-  val handleBackPressed: () -> Unit =
-    if (hasBackButton) onBackPressed else hostBackAction ?: onBackPressed
+  val handleBackPressed =
+    resolveBackAction(
+      hasBackButton = hasBackButton,
+      usesHostBackAction = usesHostBackAction,
+      onBackPressed = onBackPressed,
+      hostBackAction = LocalClerkHostBackAction.current,
+    )
+  val showsBackButton = handleBackPressed != null
 
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val resolvedBackgroundColor = backgroundColor ?: ClerkMaterialTheme.colors.muted
@@ -88,7 +91,7 @@ internal fun ClerkTopAppBar(
         if (trailingContent != null) {
           TopBarWithTrailingContent(
             hasBackButton = showsBackButton,
-            onBackPressed = handleBackPressed,
+            onBackPressed = handleBackPressed ?: onBackPressed,
             title = title,
             logoContent = logoContent,
             trailingContent = trailingContent,
@@ -96,7 +99,7 @@ internal fun ClerkTopAppBar(
         } else {
           TopBarWithLogo(
             hasBackButton = showsBackButton,
-            onBackPressed = handleBackPressed,
+            onBackPressed = handleBackPressed ?: onBackPressed,
             title = title,
             logoContent = logoContent,
           )
