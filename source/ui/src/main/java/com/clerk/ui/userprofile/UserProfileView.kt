@@ -32,6 +32,7 @@ import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.core.navigation.pop
 import com.clerk.ui.core.navigation.rememberDismissHandler
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountSwitcherSheet
@@ -43,13 +44,12 @@ import com.clerk.ui.userprofile.custom.UserProfileCustomNavigator
 import com.clerk.ui.userprofile.custom.UserProfileCustomRow
 import com.clerk.ui.userprofile.custom.effectiveCustomRows
 import com.clerk.ui.userprofile.detail.UserProfileDetailView
+import com.clerk.ui.userprofile.security.BackupCodesView
 import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.Origin
 import com.clerk.ui.userprofile.security.UserProfileSecurityView
 import com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameView
 import com.clerk.ui.userprofile.update.UserProfileUpdateProfileView
-import com.clerk.ui.userprofile.verify.Mode
-import com.clerk.ui.userprofile.verify.UserProfileVerifyView
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
 
@@ -182,7 +182,7 @@ fun UserProfileView(
 }
 
 @Suppress("LongMethod", "LongParameterList")
-private fun EntryProviderScope<NavKey>.userProfileEntries(
+internal fun EntryProviderScope<NavKey>.userProfileEntries(
   backStack: NavBackStack<NavKey>,
   isDismissible: Boolean,
   onDismiss: () -> Unit,
@@ -235,7 +235,13 @@ private fun EntryProviderScope<NavKey>.userProfileEntries(
     UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
   }
 
-  entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
+  entry<UserProfileDestination.BackupCodeView> { key ->
+    BackupCodesView(
+      codes = key.codes.toImmutableList(),
+      mfaType = key.mfaType,
+      onDismiss = { dismissBackupCodes(backStack = backStack, origin = key.origin) },
+    )
+  }
 
   entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
 
@@ -277,6 +283,13 @@ internal fun handleUserProfileBack(
   }
 }
 
+internal fun dismissBackupCodes(backStack: NavBackStack<NavKey>, origin: Origin) {
+  when (origin) {
+    Origin.AuthenticatorApp -> backStack.pop(2)
+    Origin.BackupCodes -> backStack.removeLastOrNull()
+  }
+}
+
 internal object UserProfileDestination {
   @Serializable data object UserProfileAccount : NavKey
 
@@ -286,8 +299,6 @@ internal object UserProfileDestination {
 
   @Serializable
   data class RenamePasskeyView(val passkeyId: String, val passkeyName: String) : NavKey
-
-  @Serializable data class VerifyView(val mode: Mode) : NavKey
 
   @Serializable
   data class BackupCodeView(
