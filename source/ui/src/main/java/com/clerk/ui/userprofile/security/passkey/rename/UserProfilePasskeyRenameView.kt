@@ -44,14 +44,20 @@ private fun UserProfilePasskeyRenameViewImpl(
   viewModel: UserProfilePasskeyRenameViewModel = viewModel(),
 ) {
   val userProfileState = LocalUserProfileState.current
-  var passkeyNameInput by rememberSaveable { mutableStateOf(passkeyName) }
-  var originalPasskeyName by rememberSaveable { mutableStateOf(passkeyName) }
+  var passkeyNameInput by rememberSaveable(passkeyId) { mutableStateOf(passkeyName) }
+  val originalPasskeyName = rememberSaveable(passkeyId) { passkeyName }
+  val updatedPasskeyName =
+    updatedPasskeyNameOrNull(
+      passkeyNameInput = passkeyNameInput,
+      originalPasskeyName = originalPasskeyName,
+    )
   val state by viewModel.state.collectAsStateWithLifecycle()
   val errorMessage = (state as? UserProfilePasskeyRenameViewModel.State.Error)?.message
 
   LaunchedEffect(state) {
     if (state is UserProfilePasskeyRenameViewModel.State.Success) {
       userProfileState.navigateBack()
+      viewModel.resetState()
     }
   }
 
@@ -77,10 +83,21 @@ private fun UserProfilePasskeyRenameViewImpl(
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.save),
-      isEnabled = passkeyName.isNotBlank() && passkeyName != originalPasskeyName,
+      isEnabled = updatedPasskeyName != null,
       isLoading = state is UserProfilePasskeyRenameViewModel.State.Loading,
-      onClick = { viewModel.renamePasskey(passkeyId = passkeyId, newName = passkeyName) },
+      onClick = {
+        updatedPasskeyName?.let { viewModel.renamePasskey(passkeyId = passkeyId, newName = it) }
+      },
     )
+  }
+}
+
+internal fun updatedPasskeyNameOrNull(
+  passkeyNameInput: String,
+  originalPasskeyName: String,
+): String? {
+  return passkeyNameInput.takeIf {
+    passkeyNameInput.isNotBlank() && passkeyNameInput != originalPasskeyName
   }
 }
 
