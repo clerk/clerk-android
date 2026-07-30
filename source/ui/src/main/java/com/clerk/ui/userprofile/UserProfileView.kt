@@ -33,6 +33,7 @@ import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.core.navigation.rememberDismissHandler
+import com.clerk.ui.navigation.LocalClerkHostBackAction
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountSwitcherSheet
 import com.clerk.ui.userprofile.account.UserProfileAccountView
@@ -121,15 +122,17 @@ fun UserProfileView(
       }
 
       if (showAuth) {
-        // The add-account flow replaces the profile entirely, so it keeps Clerk's own
-        // navigation chrome even when the profile itself is embedded. Hosts that want to own
-        // this flow can pass onAddAccount instead.
-        AuthView(
-          modifier = Modifier.fillMaxSize(),
-          preferGoogleOneTap = false,
-          onDismiss = { showAuth = false },
-          onAuthComplete = { showAuth = false },
-        )
+        // The add-account flow replaces the profile entirely, so it dismisses itself rather
+        // than showing the host's back button, which would pop the host's own navigation.
+        // Hosts that want to own this flow can pass onAddAccount instead.
+        CompositionLocalProvider(LocalClerkHostBackAction provides null) {
+          AuthView(
+            modifier = Modifier.fillMaxSize(),
+            preferGoogleOneTap = false,
+            onDismiss = { showAuth = false },
+            onAuthComplete = { showAuth = false },
+          )
+        }
       } else {
         DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize()) {
           NavDisplay(
