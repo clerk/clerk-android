@@ -9,8 +9,10 @@ import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import com.clerk.api.user.User
@@ -27,6 +29,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -93,6 +96,7 @@ class SignOutServiceTest {
     Dispatchers.resetMain()
     unmockkAll()
     StorageHelper.reset(context)
+    SessionTokensCache.clear()
   }
 
   private fun setupActiveSession() {
@@ -109,6 +113,31 @@ class SignOutServiceTest {
 
     Clerk.updateClient(mockClient)
     Clerk.environment = mockEnvironment
+  }
+
+  @Test
+  fun `signOut clears every cached session token`() = runTest {
+    setupActiveSession()
+    SessionTokensCache.setToken("test_session_id", TokenResource(jwt = "cached.jwt.token"))
+    SessionTokensCache.setToken("other_session_id", TokenResource(jwt = "other.jwt.token"))
+    coEvery { mockSessionApi.deleteSessions() } returns ClerkResult.success(Client())
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    SignOutService.signOut()
+
+    assertEquals(0, SessionTokensCache.size)
+  }
+
+  @Test
+  fun `signOut clears cached session tokens even when server sign-out fails`() = runTest {
+    setupActiveSession()
+    SessionTokensCache.setToken("test_session_id", TokenResource(jwt = "cached.jwt.token"))
+    coEvery { mockSessionApi.deleteSessions() } throws Exception("Network error")
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    SignOutService.signOut()
+
+    assertEquals(0, SessionTokensCache.size)
   }
 
   @Test

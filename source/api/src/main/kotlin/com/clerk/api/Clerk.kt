@@ -31,6 +31,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.sharedsession.SharedSessionSyncCoordinator
 import com.clerk.api.sharedsession.SharedSessionSyncProvider
@@ -333,6 +334,14 @@ object Clerk {
 
   val deleteSelfIsEnabled: Boolean
     get() = environment?.userSettings?.actions?.deleteSelf ?: false
+
+  /**
+   * Whether the current environment reports that this instance is served by the session minter.
+   *
+   * Session token requests only carry the previous session token while this is true.
+   */
+  internal val sessionMinterIsEnabled: Boolean
+    get() = environment?.authConfig?.sessionMinter ?: false
 
   val organizationCreationDefaultsIsEnabled: Boolean
     get() = environment?.organizationSettings?.organizationCreationDefaults?.enabled ?: false
@@ -757,6 +766,10 @@ object Clerk {
     DeviceAttestationHelper.clearCache()
     LocaleProvider.cleanup()
     ClerkApi.reset()
+    // Bump the configuration epoch and tear down the fetch scope last, after the Retrofit service
+    // is reset, so any in-flight token request that could still reach the old service captured the
+    // old epoch and has its result discarded instead of caching an old-configuration token.
+    SessionTokenFetcher.resetForNewConfiguration()
     updateClient(Client())
     _clientFlow.value = null
     lastClientServerFetchAtMillis = null

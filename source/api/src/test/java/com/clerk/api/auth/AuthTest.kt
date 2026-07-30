@@ -15,8 +15,10 @@ import com.clerk.api.network.model.environment.OrganizationSettings
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
+import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
@@ -41,6 +43,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -52,6 +56,7 @@ class AuthTest {
   fun setup() {
     Clerk.updateClient(Client())
     setForceOrganizationSelection(false)
+    SessionTokensCache.clear()
   }
 
   @After
@@ -59,6 +64,7 @@ class AuthTest {
     unmockkAll()
     Clerk.updateClient(Client())
     setForceOrganizationSelection(false)
+    SessionTokensCache.clear()
   }
 
   @Test
@@ -438,6 +444,106 @@ class AuthTest {
       assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
       assertEquals(secondSession, Clerk.sessionFlow.value)
     }
+
+  @Test
+  fun `signOut with session ID drops that session's cached tokens`() = runTest {
+    val firstSession = testSession("sess_1")
+    val secondSession = testSession("sess_2")
+    val sessionApi = mockk<SessionApi>()
+    val clientApi = mockk<ClientApi>()
+    mockkObject(ClerkApi)
+    every { ClerkApi.session } returns sessionApi
+    every { ClerkApi.client } returns clientApi
+    coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
+    coEvery { clientApi.get() } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
+    Clerk.updateClient(
+      Client(
+        id = "client_123",
+        sessions = listOf(firstSession, secondSession),
+        lastActiveSessionId = firstSession.id,
+      )
+    )
+    cacheTokensFor(firstSession.id)
+    cacheTokensFor(secondSession.id)
+
+    val result = Auth().signOut(sessionId = firstSession.id)
+
+    assertTrue(result is ClerkResult.Success)
+    assertFalse(SessionTokensCache.containsKey("sess_1"))
+    assertFalse(SessionTokensCache.containsKey("sess_1-custom_template"))
+    assertTrue(SessionTokensCache.containsKey("sess_2"))
+  }
+
+  @Test
+  fun `setActive drops the activated session's cached tokens`() = runTest {
+    val firstSession = testSession("sess_1")
+    val secondSession = testSession("sess_2")
+    val clientApi = mockk<ClientApi>()
+    mockkObject(ClerkApi)
+    every { ClerkApi.client } returns clientApi
+    coEvery { clientApi.setActive(secondSession.id, "", SET_ACTIVE_INTENT_SELECT_ORG) } returns
+      ClerkResult.success(secondSession)
+    coEvery { clientApi.get() } returns
+      ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
+    Clerk.updateClient(
+      Client(
+        id = "client_123",
+        sessions = listOf(firstSession, secondSession),
+        lastActiveSessionId = firstSession.id,
+      )
+    )
+    cacheTokensFor(firstSession.id)
+    cacheTokensFor(secondSession.id)
+
+    val result = Auth().setActive(sessionId = secondSession.id)
+
+    assertTrue(result is ClerkResult.Success)
+    assertFalse(SessionTokensCache.containsKey("sess_2"))
+    assertFalse(SessionTokensCache.containsKey("sess_2-custom_template"))
+    assertTrue(SessionTokensCache.containsKey("sess_1"))
+  }
+
+  @Test
+  fun `setActive clears the activated session's persisted token`() = runTest {
+    val staleToken = TokenResource(jwt = "token.for.the.previous.org")
+    val firstSession = testSession("sess_1")
+    val secondSession = testSession("sess_2").copy(lastActiveToken = staleToken)
+    val clientApi = mockk<ClientApi>()
+    mockkObject(ClerkApi)
+    every { ClerkApi.client } returns clientApi
+    coEvery { clientApi.setActive(secondSession.id, "org_2", SET_ACTIVE_INTENT_SELECT_ORG) } returns
+      ClerkResult.success(secondSession)
+    // The refresh echoes the pre-switch token back, which the merge would otherwise keep.
+    coEvery { clientApi.get() } returns
+      ClerkResult.success(
+        Client(
+          id = "client_123",
+          sessions = listOf(firstSession, secondSession),
+          lastActiveSessionId = secondSession.id,
+        )
+      )
+    Clerk.updateClient(
+      Client(
+        id = "client_123",
+        sessions = listOf(firstSession, secondSession),
+        lastActiveSessionId = firstSession.id,
+      )
+    )
+
+    val result = Auth().setActive(sessionId = secondSession.id, organizationId = "org_2")
+
+    assertTrue(result is ClerkResult.Success)
+    assertNull(Clerk.client.sessions.single { it.id == "sess_2" }.lastActiveToken)
+  }
+
+  private fun cacheTokensFor(sessionId: String) {
+    SessionTokensCache.setToken(sessionId, TokenResource(jwt = "$sessionId.cached.jwt"))
+    SessionTokensCache.setToken(
+      "$sessionId-custom_template",
+      TokenResource(jwt = "$sessionId.templated.jwt"),
+    )
+  }
 
   private fun setForceOrganizationSelection(enabled: Boolean) {
     Clerk.updateEnvironment(

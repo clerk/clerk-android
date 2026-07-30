@@ -42,6 +42,8 @@ object Constants {
     const val EXPONENTIAL_BACKOFF_SHIFT = 1
     const val DEFAULT_EXPIRATION_BUFFER = 1000L
     const val COMPRESSION_PERCENTAGE = 75
+    const val TOKEN_FETCH_BACKOFF_BASE_MS = 5_000L
+    const val TOKEN_FETCH_BACKOFF_MAX_MS = 60_000L
   }
 
   /** URL and key prefixes */
