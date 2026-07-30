@@ -34,6 +34,7 @@ import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.core.navigation.rememberDismissHandler
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationView
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileConfirmationAction
 import com.clerk.ui.organizationprofile.custom.LocalOrganizationProfileCustomNavigator
@@ -64,9 +65,10 @@ import kotlinx.serialization.Serializable
  * @param customRows Custom rows to display on the profile root screen.
  * @param customDestination Composable that renders the destination for a given route key. The route
  *   key matches [OrganizationProfileCustomRow.routeKey] of the tapped row.
- * @param onDismiss Callback when the organization profile view is dismissed.
+ * @param onDismiss Callback when the organization profile view is dismissed. When omitted,
+ *   top-level dismissal falls back to the system back dispatcher.
  * @param onComplete Callback when a destructive organization action completes and the profile can
- *   no longer be shown.
+ *   no longer be shown. When omitted, the resolved [onDismiss] handler is used.
  */
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("ComposeUnstableReceiver")
@@ -77,8 +79,8 @@ fun OrganizationProfileView(
   isDismissible: Boolean = true,
   customRows: List<OrganizationProfileCustomRow> = emptyList(),
   customDestination: (@Composable (String) -> Unit)? = null,
-  onDismiss: () -> Unit = {},
-  onComplete: () -> Unit = onDismiss,
+  onDismiss: (() -> Unit)? = null,
+  onComplete: (() -> Unit)? = null,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     TelemetryProvider {
@@ -87,11 +89,13 @@ fun OrganizationProfileView(
       val user by Clerk.userFlow.collectAsStateWithLifecycle()
       val membership = Clerk.organizationMembership
       val organization = membership?.organization ?: Clerk.organization
+      val dismissHandler = rememberDismissHandler(onDismiss)
+      val completeHandler = onComplete ?: dismissHandler
 
       LaunchedEffect(Unit) { Clerk.refreshClient() }
       OrganizationProfileEffects(
         organizationId = organization?.id,
-        onComplete = onComplete,
+        onComplete = completeHandler,
         hasOrganization = organization != null,
       )
 
@@ -105,8 +109,8 @@ fun OrganizationProfileView(
             isDismissible = isDismissible,
             customRows = customRows,
             customDestination = customDestination,
-            onDismiss = onDismiss,
-            onComplete = onComplete,
+            onDismiss = dismissHandler,
+            onComplete = completeHandler,
           )
         } else {
           Box(modifier = Modifier.fillMaxSize())
@@ -114,7 +118,7 @@ fun OrganizationProfileView(
       }
 
       LaunchedEffect(session?.id, user?.id) {
-        if (Clerk.organizationMembership == null && Clerk.organization == null) onComplete()
+        if (Clerk.organizationMembership == null && Clerk.organization == null) completeHandler()
       }
     }
   }
@@ -129,16 +133,23 @@ private fun OrganizationProfileNavDisplay(
   isDismissible: Boolean,
   customRows: List<OrganizationProfileCustomRow>,
   customDestination: (@Composable (String) -> Unit)?,
-  modifier: Modifier = Modifier,
   onDismiss: () -> Unit,
   onComplete: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   var membersRefreshKey by remember { mutableIntStateOf(0) }
 
   NavDisplay(
     modifier = modifier,
     backStack = backStack,
-    onBack = { handleOrganizationProfileBack(backStack, isDismissible, onDismiss) },
+    onBack = {
+      handleOrganizationProfileBack(
+        isAtRoot = backStack.size == 1,
+        isDismissible = isDismissible,
+        onDismiss = onDismiss,
+        onNavigateBack = { backStack.removeLastOrNull() },
+      )
+    },
     transitionSpec = {
       val spec = tween<IntOffset>(durationMillis = 300)
       slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
@@ -171,15 +182,16 @@ private fun OrganizationProfileNavDisplay(
   )
 }
 
-private fun handleOrganizationProfileBack(
-  backStack: NavBackStack<NavKey>,
+internal fun handleOrganizationProfileBack(
+  isAtRoot: Boolean,
   isDismissible: Boolean,
   onDismiss: () -> Unit,
+  onNavigateBack: () -> Unit,
 ) {
-  if (backStack.size == 1) {
+  if (isAtRoot) {
     if (isDismissible) onDismiss()
   } else {
-    backStack.removeLastOrNull()
+    onNavigateBack()
   }
 }
 
