@@ -4,7 +4,6 @@ import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.PASSKEY
 import com.clerk.api.Constants.Strategy.PASSWORD
 import com.clerk.api.network.ClerkApi
-import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.model.userdata.PublicUserData
@@ -198,8 +197,8 @@ data class SessionActivity(
 )
 
 /** Deletes the current session. */
-suspend fun Session.delete(): ClerkResult<Client, ClerkErrorResponse> {
-  return ClerkApi.session.deleteSessions()
+suspend fun Session.delete(): ClerkResult<Session, ClerkErrorResponse> {
+  return ClerkApi.session.removeSession(id)
 }
 
 /**
