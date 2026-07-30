@@ -28,6 +28,10 @@ internal class UserProfilePasskeyRenameViewModel : ViewModel() {
     }
   }
 
+  fun resetState() {
+    _state.value = State.Idle
+  }
+
   sealed interface State {
     data object Idle : State
 

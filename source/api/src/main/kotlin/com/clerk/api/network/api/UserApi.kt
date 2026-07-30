@@ -402,22 +402,26 @@ internal interface UserApi {
    * Retrieves a specific passkey by its ID.
    *
    * @param passkeyId The ID of the passkey to retrieve
+   * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]
    * @return [ClerkResult] containing the [Passkey] on success or [ClerkErrorResponse] on failure
    */
   @GET(ApiPaths.User.Passkey.WITH_ID)
   suspend fun getPasskey(
-    @Path(ApiParams.PASSKEY_ID) passkeyId: String
+    @Path(ApiParams.PASSKEY_ID) passkeyId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<Passkey, ClerkErrorResponse>
 
   /**
    * Deletes a specific passkey.
    *
    * @param passkeyId The ID of the passkey to delete
+   * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]
    * @return [ClerkResult] containing [DeletedObject] on success or [ClerkErrorResponse] on failure
    */
   @DELETE(ApiPaths.User.Passkey.WITH_ID)
   suspend fun deletePasskey(
-    @Path(ApiParams.PASSKEY_ID) passkeyId: String
+    @Path(ApiParams.PASSKEY_ID) passkeyId: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   /**
@@ -425,6 +429,7 @@ internal interface UserApi {
    *
    * @param passkeyId The ID of the passkey to update
    * @param name Optional: New name for the passkey
+   * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]
    * @return [ClerkResult] containing the updated [Passkey] on success or [ClerkErrorResponse] on
    *   failure
    */
@@ -433,6 +438,7 @@ internal interface UserApi {
   suspend fun updatePasskey(
     @Path(ApiParams.PASSKEY_ID) passkeyId: String,
     @Field("name") name: String? = null,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<Passkey, ClerkErrorResponse>
 
   /**
