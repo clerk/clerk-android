@@ -38,7 +38,7 @@ import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp68
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
-import com.clerk.ui.navigation.LocalClerkEmbeddedNavigation
+import com.clerk.ui.navigation.LocalClerkHostBackAction
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
@@ -54,8 +54,12 @@ internal fun ClerkTopAppBar(
   contentPadding: PaddingValues = PaddingValues(),
   trailingContent: (@Composable () -> Unit)? = null,
 ) {
-  // Embedded navigation means the host renders all header chrome, including back affordances.
-  if (LocalClerkEmbeddedNavigation.current != null) return
+  // When embedded, the component's root screen has nothing of its own to go back
+  // to, so the host supplies the back affordance there.
+  val hostBackAction = LocalClerkHostBackAction.current
+  val showsBackButton = hasBackButton || hostBackAction != null
+  val handleBackPressed: () -> Unit =
+    if (hasBackButton) onBackPressed else hostBackAction ?: onBackPressed
 
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val resolvedBackgroundColor = backgroundColor ?: ClerkMaterialTheme.colors.muted
@@ -83,16 +87,16 @@ internal fun ClerkTopAppBar(
           }
         if (trailingContent != null) {
           TopBarWithTrailingContent(
-            hasBackButton = hasBackButton,
-            onBackPressed = onBackPressed,
+            hasBackButton = showsBackButton,
+            onBackPressed = handleBackPressed,
             title = title,
             logoContent = logoContent,
             trailingContent = trailingContent,
           )
         } else {
           TopBarWithLogo(
-            hasBackButton = hasBackButton,
-            onBackPressed = onBackPressed,
+            hasBackButton = showsBackButton,
+            onBackPressed = handleBackPressed,
             title = title,
             logoContent = logoContent,
           )

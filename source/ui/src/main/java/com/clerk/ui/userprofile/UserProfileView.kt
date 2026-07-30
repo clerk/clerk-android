@@ -33,9 +33,6 @@ import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.core.navigation.rememberDismissHandler
-import com.clerk.ui.navigation.ClerkEmbeddedNavigation
-import com.clerk.ui.navigation.EmbeddedNavigationEffects
-import com.clerk.ui.navigation.LocalClerkEmbeddedNavigation
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountSwitcherSheet
 import com.clerk.ui.userprofile.account.UserProfileAccountView
@@ -87,10 +84,6 @@ internal fun UserProfileStateProvider(
  * @param onDismiss Callback when the user profile view is dismissed. When omitted, top-level
  *   dismissal falls back to the system back dispatcher.
  * @param isDismissible Whether to show a top-right close affordance that dismisses the profile.
- * @param embeddedNavigation Optional embedded-navigation handle for embedding the profile inside
- *   the host's own navigation chrome. When provided, Clerk's top app bars are hidden and the host
- *   observes and drives the profile's internal back stack through the handle. See
- *   [ClerkEmbeddedNavigation].
  */
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("ComposeModifierMissing", "ComposeUnstableReceiver")
@@ -103,7 +96,6 @@ fun UserProfileView(
   onAddAccount: (() -> Unit)? = null,
   onDismiss: (() -> Unit)? = null,
   isDismissible: Boolean = true,
-  embeddedNavigation: ClerkEmbeddedNavigation? = null,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
@@ -139,55 +131,52 @@ fun UserProfileView(
           onAuthComplete = { showAuth = false },
         )
       } else {
-        EmbeddedNavigationEffects(embeddedNavigation = embeddedNavigation, backStack = backStack)
-        CompositionLocalProvider(LocalClerkEmbeddedNavigation provides embeddedNavigation) {
-          DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize()) {
-            NavDisplay(
-              modifier = Modifier.fillMaxSize(),
-              backStack = backStack,
-              onBack = {
-                handleUserProfileBack(
-                  isAtRoot = backStack.size == 1,
+        DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize()) {
+          NavDisplay(
+            modifier = Modifier.fillMaxSize(),
+            backStack = backStack,
+            onBack = {
+              handleUserProfileBack(
+                isAtRoot = backStack.size == 1,
+                isDismissible = isDismissible,
+                onDismiss = dismissHandler,
+                onNavigateBack = { backStack.removeLastOrNull() },
+              )
+            },
+            transitionSpec = {
+              val spec = tween<IntOffset>(durationMillis = 300)
+              slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+                slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+            },
+            popTransitionSpec = {
+              val spec = tween<IntOffset>(durationMillis = 300)
+              slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+                slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+            },
+            predictivePopTransitionSpec = { distance ->
+              // Use the provided distance to align with the system back gesture
+              slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+                slideOutHorizontally(targetOffsetX = { distance })
+            },
+            entryProvider =
+              entryProvider {
+                userProfileEntries(
+                  backStack = backStack,
                   isDismissible = isDismissible,
                   onDismiss = dismissHandler,
-                  onNavigateBack = { backStack.removeLastOrNull() },
+                  customRows = customRows,
+                  customDestination = customDestination,
+                  onSwitchAccount = { showAccountSwitcher = true },
+                  onAddAccount = showAddAccountAuth,
                 )
               },
-              transitionSpec = {
-                val spec = tween<IntOffset>(durationMillis = 300)
-                slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-                  slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-              },
-              popTransitionSpec = {
-                val spec = tween<IntOffset>(durationMillis = 300)
-                slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-                  slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-              },
-              predictivePopTransitionSpec = { distance ->
-                // Use the provided distance to align with the system back gesture
-                slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-                  slideOutHorizontally(targetOffsetX = { distance })
-              },
-              entryProvider =
-                entryProvider {
-                  userProfileEntries(
-                    backStack = backStack,
-                    isDismissible = isDismissible,
-                    onDismiss = dismissHandler,
-                    customRows = customRows,
-                    customDestination = customDestination,
-                    onSwitchAccount = { showAccountSwitcher = true },
-                    onAddAccount = showAddAccountAuth,
-                  )
-                },
-            )
+          )
 
-            if (showAccountSwitcher) {
-              UserProfileAccountSwitcherSheet(
-                onDismissRequest = { showAccountSwitcher = false },
-                onAddAccount = showAddAccountAuth,
-              )
-            }
+          if (showAccountSwitcher) {
+            UserProfileAccountSwitcherSheet(
+              onDismissRequest = { showAccountSwitcher = false },
+              onAddAccount = showAddAccountAuth,
+            )
           }
         }
       }
