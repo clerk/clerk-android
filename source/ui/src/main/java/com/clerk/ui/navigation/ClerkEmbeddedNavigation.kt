@@ -75,11 +75,16 @@ internal val LocalClerkEmbeddedNavigation =
 /**
  * Connects [embeddedNavigation] to a component's [backStack]: publishes depth changes and executes
  * pop commands. No-op when [embeddedNavigation] is `null`.
+ *
+ * [pop] and [popToRoot] override how commands mutate the stack for components whose navigation
+ * state carries extra bookkeeping beyond the raw back stack.
  */
 @Composable
 internal fun EmbeddedNavigationEffects(
   embeddedNavigation: ClerkEmbeddedNavigation?,
   backStack: NavBackStack<NavKey>,
+  pop: (() -> Unit)? = null,
+  popToRoot: (() -> Unit)? = null,
 ) {
   if (embeddedNavigation == null) return
 
@@ -91,11 +96,14 @@ internal fun EmbeddedNavigationEffects(
   DisposableEffect(embeddedNavigation, backStack) {
     val handler: (toRoot: Boolean) -> Unit = { toRoot ->
       if (toRoot) {
-        while (backStack.size > 1) {
-          backStack.removeLastOrNull()
-        }
+        popToRoot?.invoke()
+          ?: run {
+            while (backStack.size > 1) {
+              backStack.removeLastOrNull()
+            }
+          }
       } else if (backStack.size > 1) {
-        backStack.removeLastOrNull()
+        pop?.invoke() ?: backStack.removeLastOrNull()
       }
     }
     embeddedNavigation.popHandler = handler

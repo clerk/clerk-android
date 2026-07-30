@@ -139,7 +139,16 @@ fun AuthView(
       ObservePendingSessionTaskRouting(backStack = backStack)
       ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
-      EmbeddedNavigationEffects(embeddedNavigation = embeddedNavigation, backStack = backStack)
+      val authState = LocalAuthState.current
+      // Route embedded pops through AuthState so back navigation also suppresses the
+      // in-progress attempt resume; raw stack pops would bounce straight back to the
+      // factor screen the user just left.
+      EmbeddedNavigationEffects(
+        embeddedNavigation = embeddedNavigation,
+        backStack = backStack,
+        pop = { authState.navigateBack() },
+        popToRoot = { authState.navigateToAuthStartForIdentifierEdit() },
+      )
       CompositionLocalProvider(LocalClerkEmbeddedNavigation provides embeddedNavigation) {
         ClerkLogoProvider(logo) {
           DevelopmentModeWarningBox(
