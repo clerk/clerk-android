@@ -467,7 +467,7 @@ private fun CountryDropdownContent(
     if (detectedCountry != null) {
       Text(
         modifier = Modifier.padding(start = dp12),
-        text = "Default",
+        text = stringResource(R.string.default_text),
         style = ClerkMaterialTheme.typography.labelSmall,
         color = ClerkMaterialTheme.colors.mutedForeground,
       )
