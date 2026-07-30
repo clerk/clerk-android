@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -115,6 +116,7 @@ fun ClerkTextField(
           trailingIcon,
           isError,
           visualTransformation,
+          isPasswordVisible = isVisible,
           onClick = {
             if (visualTransformation is PasswordVisualTransformation) {
               isVisible = !isVisible
@@ -146,45 +148,44 @@ private fun textFieldLabel(
   isFocused: Boolean,
   value: String,
   isError: Boolean,
-): (@Composable () -> Unit)? =
-  label?.let { text ->
-    {
-      val labelStyle =
-        if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
-        else MaterialTheme.typography.bodyLarge
-      val labelColor =
-        when {
-          isError -> ClerkMaterialTheme.colors.danger
-          isFocused -> ClerkMaterialTheme.colors.primary
-          else -> ClerkMaterialTheme.colors.mutedForeground
-        }
-      Text(text = text, style = labelStyle, color = labelColor)
-    }
+): (@Composable () -> Unit)? = label?.let { text ->
+  {
+    val labelStyle =
+      if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
+      else MaterialTheme.typography.bodyLarge
+    val labelColor =
+      when {
+        isError -> ClerkMaterialTheme.colors.danger
+        isFocused -> ClerkMaterialTheme.colors.primary
+        else -> ClerkMaterialTheme.colors.mutedForeground
+      }
+    Text(text = text, style = labelStyle, color = labelColor)
   }
+}
 
 @Composable
 private fun supportingTextContent(
   supportingText: String?,
   isError: Boolean,
-): (@Composable () -> Unit)? =
-  supportingText?.let { support ->
-    {
-      Text(
-        modifier = Modifier.padding(top = dp4),
-        text = support,
-        style = ClerkMaterialTheme.typography.bodySmall,
-        color =
-          if (isError) ClerkMaterialTheme.colors.danger
-          else ClerkMaterialTheme.colors.mutedForeground,
-      )
-    }
+): (@Composable () -> Unit)? = supportingText?.let { support ->
+  {
+    Text(
+      modifier = Modifier.padding(top = dp4),
+      text = support,
+      style = ClerkMaterialTheme.typography.bodySmall,
+      color =
+        if (isError) ClerkMaterialTheme.colors.danger
+        else ClerkMaterialTheme.colors.mutedForeground,
+    )
   }
+}
 
 @Composable
 private fun TrailingIcon(
   trailingIcon: Int?,
   isError: Boolean,
   visualTransformation: VisualTransformation,
+  isPasswordVisible: Boolean,
   onClick: () -> Unit,
 ) {
 
@@ -192,12 +193,24 @@ private fun TrailingIcon(
     val resId =
       when {
         isError -> R.drawable.ic_warning
-        visualTransformation is PasswordVisualTransformation -> R.drawable.ic_show
+        visualTransformation is PasswordVisualTransformation ->
+          if (isPasswordVisible) R.drawable.ic_hide else R.drawable.ic_show
         else -> trailingIcon!!
+      }
+    val contentDescription =
+      if (visualTransformation is PasswordVisualTransformation && !isError) {
+        stringResource(if (isPasswordVisible) R.string.hide_password else R.string.show_password)
+      } else {
+        null
       }
     val tint =
       if (isError) ClerkMaterialTheme.colors.danger else ClerkMaterialTheme.colors.mutedForeground
-    ClickableIcon(resId = resId, onClick = onClick, tint = tint, contentDescription = null)
+    ClickableIcon(
+      resId = resId,
+      onClick = onClick,
+      tint = tint,
+      contentDescription = contentDescription,
+    )
   }
 }
 
