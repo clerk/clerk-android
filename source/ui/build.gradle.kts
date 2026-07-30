@@ -61,7 +61,11 @@ tasks
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-ui", property("CLERK_UI_VERSION") as String)
   publishToMavenCentral()
-  signAllPublications()
+  // Skip signing for local publishing: ./gradlew publishToMavenLocal
+  // -PRELEASE_SIGNING_ENABLED=false
+  if (providers.gradleProperty("RELEASE_SIGNING_ENABLED").orNull != "false") {
+    signAllPublications()
+  }
   pom {
     name.set("Clerk Android UI")
     description.set("UI components for Clerk Android SDK")
