@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,9 +47,8 @@ internal fun UserProfileEmailRow(
 
   val isPreview = LocalInspectionMode.current
   val state by viewModel.state.collectAsStateWithLifecycle()
-  if (state is EmailViewModel.State.Failure) {
-    onError((state as EmailViewModel.State.Failure).message)
-  }
+  ReportEmailRowError(state, onError)
+
   ClerkMaterialTheme {
     Row(
       modifier =
@@ -97,6 +97,16 @@ internal fun UserProfileEmailRow(
           },
         )
       }
+    }
+  }
+}
+
+@Composable
+internal fun ReportEmailRowError(state: EmailViewModel.State, onError: (String) -> Unit) {
+  val errorMessage = (state as? EmailViewModel.State.Failure)?.message
+  LaunchedEffect(errorMessage) {
+    if (errorMessage != null) {
+      onError(errorMessage)
     }
   }
 }
