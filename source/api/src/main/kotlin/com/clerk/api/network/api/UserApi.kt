@@ -470,7 +470,8 @@ internal interface UserApi {
   @FormUrlEncoded
   @POST(ApiPaths.User.ExternalAccount.BASE)
   suspend fun createExternalAccount(
-    @FieldMap params: Map<String, String>
+    @FieldMap params: Map<String, String>,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<ExternalAccount, ClerkErrorResponse>
 
   /**
@@ -486,6 +487,7 @@ internal interface UserApi {
   suspend fun reauthorizeExternalAccount(
     @Path(ApiParams.EXTERNAL_ACCOUNT_ID) externalAccountId: String,
     @Field("redirect_url") redirectUrl: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<ExternalAccount, ClerkErrorResponse>
 
   /**
