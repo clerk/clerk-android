@@ -9,4 +9,7 @@
     <string name="support_destination_title">Support settings</string>
     <string name="custom_destination_body">This is an app-owned destination inside the Clerk organization profile flow.</string>
     <string name="done">Done</string>
+  <string name="open_host_stack_profile">Open profile in host back stack</string>
+  <string name="host_stack_home_title">Host app screen</string>
+  <string name="open_clerk_profile">Open Clerk profile</string>
 </resources>

@@ -63,10 +63,12 @@ internal val LocalUserProfileState =
 @Composable
 internal fun UserProfileStateProvider(
   backStack: NavBackStack<NavKey>,
+  onClearBackStack: (() -> Unit)? = null,
   content: @Composable () -> Unit,
 ) {
   TelemetryProvider {
-    val userProfileState = UserProfileState(backStack = backStack)
+    val userProfileState =
+      UserProfileState(backStack = backStack, onClearBackStack = onClearBackStack)
     CompositionLocalProvider(LocalUserProfileState provides userProfileState) { content() }
   }
 }
@@ -241,39 +243,67 @@ private fun EntryProviderScope<NavKey>.userProfileEntries(
         },
     )
   }
-  entry<UserProfileDestination.UserProfileSecurity> { UserProfileSecurityView() }
+  userProfileChildEntries(
+    backStack = backStack,
+    customDestination = customDestination,
+    popToRoot = {
+      while (backStack.size > 1) {
+        backStack.removeLastOrNull()
+      }
+    },
+    navigateBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
+    decorate = { content -> content() },
+  )
+}
 
-  entry<UserProfileDestination.UserProfileUpdate> { UserProfileUpdateProfileView() }
+/**
+ * Registers the destinations pushed above the profile root. Shared between the self-contained
+ * [UserProfileView] and host-owned back stacks ([clerkUserProfileEntries]); [decorate] lets the
+ * host-owned variant wrap each entry with the providers that the self-contained variant applies
+ * once around its own NavDisplay.
+ */
+internal fun EntryProviderScope<NavKey>.userProfileChildEntries(
+  backStack: NavBackStack<NavKey>,
+  customDestination: (@Composable (String) -> Unit)?,
+  popToRoot: () -> Unit,
+  navigateBack: () -> Unit,
+  decorate: @Composable (@Composable () -> Unit) -> Unit,
+) {
+  entry<UserProfileDestination.UserProfileSecurity> { decorate { UserProfileSecurityView() } }
+
+  entry<UserProfileDestination.UserProfileUpdate> { decorate { UserProfileUpdateProfileView() } }
 
   entry<UserProfileDestination.RenamePasskeyView> { key ->
-    UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
+    decorate {
+      UserProfilePasskeyRenameView(passkeyId = key.passkeyId, passkeyName = key.passkeyName)
+    }
   }
 
-  entry<UserProfileDestination.VerifyView> { key -> UserProfileVerifyView(mode = key.mode) }
+  entry<UserProfileDestination.VerifyView> { key ->
+    decorate { UserProfileVerifyView(mode = key.mode) }
+  }
 
-  entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
+  entry<UserProfileDestination.UserProfileDetail> { decorate { UserProfileDetailView() } }
 
   // Always register the entry so that a restored CustomRouteNavKey does not crash the graph.
   // If no destination is provided, pop back to the profile root.
   entry<CustomRouteNavKey> { key ->
-    if (customDestination != null) {
-      val navigator =
-        remember(backStack) {
-          UserProfileCustomNavigator(
-            pushAction = { routeKey -> backStack.add(CustomRouteNavKey(routeKey)) },
-            popToRootAction = {
-              while (backStack.size > 1) {
-                backStack.removeLastOrNull()
-              }
-            },
-            navigateBackAction = { if (backStack.size > 1) backStack.removeLastOrNull() },
-          )
+    decorate {
+      if (customDestination != null) {
+        val navigator =
+          remember(backStack) {
+            UserProfileCustomNavigator(
+              pushAction = { routeKey -> backStack.add(CustomRouteNavKey(routeKey)) },
+              popToRootAction = popToRoot,
+              navigateBackAction = navigateBack,
+            )
+          }
+        CompositionLocalProvider(LocalUserProfileCustomNavigator provides navigator) {
+          customDestination(key.routeKey)
         }
-      CompositionLocalProvider(LocalUserProfileCustomNavigator provides navigator) {
-        customDestination(key.routeKey)
+      } else {
+        LaunchedEffect(Unit) { backStack.removeLastOrNull() }
       }
-    } else {
-      LaunchedEffect(Unit) { backStack.removeLastOrNull() }
     }
   }
 }

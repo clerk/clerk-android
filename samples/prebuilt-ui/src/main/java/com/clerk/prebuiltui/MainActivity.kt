@@ -29,6 +29,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
 import com.clerk.api.session.pendingTaskKey
 import com.clerk.prebuiltui.ui.theme.ClerkTheme
@@ -42,6 +46,9 @@ import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRowPlace
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileRow
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileRowIcon
 import com.clerk.ui.organizationswitcher.OrganizationSwitcher
+import com.clerk.ui.userprofile.ClerkUserProfileRoute
+import com.clerk.ui.userprofile.clerkUserProfileEntries
+import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,6 +81,7 @@ class MainActivity : ComponentActivity() {
 private fun SignedInPrebuiltHome(hasActiveOrganization: Boolean) {
   var showOrganizationList by rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
   var showOrganizationProfile by rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+  var showHostStackProfile by rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
   val customRows = rememberOrganizationSampleCustomRows()
 
   OrganizationSampleLauncherContent(
@@ -81,6 +89,7 @@ private fun SignedInPrebuiltHome(hasActiveOrganization: Boolean) {
     customRows = customRows,
     onShowOrganizationList = { showOrganizationList = true },
     onShowOrganizationProfile = { showOrganizationProfile = true },
+    onShowHostStackProfile = { showHostStackProfile = true },
   )
 
   OrganizationSampleDialogs(
@@ -90,6 +99,12 @@ private fun SignedInPrebuiltHome(hasActiveOrganization: Boolean) {
     onDismissOrganizationList = { showOrganizationList = false },
     onDismissOrganizationProfile = { showOrganizationProfile = false },
   )
+
+  if (showHostStackProfile) {
+    FullScreenPrebuiltDialog(onDismissRequest = { showHostStackProfile = false }) {
+      HostStackProfileSample(onClose = { showHostStackProfile = false })
+    }
+  }
 }
 
 @Composable
@@ -121,6 +136,7 @@ private fun OrganizationSampleLauncherContent(
   customRows: List<OrganizationProfileCustomRow>,
   onShowOrganizationList: () -> Unit,
   onShowOrganizationProfile: () -> Unit,
+  onShowHostStackProfile: () -> Unit,
 ) {
   Column(
     modifier = Modifier.fillMaxSize().statusBarsPadding().padding(24.dp),
@@ -145,6 +161,9 @@ private fun OrganizationSampleLauncherContent(
       onClick = onShowOrganizationProfile,
     ) {
       Text(text = stringResource(R.string.open_organization_profile))
+    }
+    OutlinedButton(modifier = Modifier.fillMaxWidth(), onClick = onShowHostStackProfile) {
+      Text(text = stringResource(R.string.open_host_stack_profile))
     }
   }
 }
@@ -214,6 +233,44 @@ private fun SampleOrganizationProfileDestination(routeKey: String) {
     Button(onClick = navigator::navigateBack) { Text(text = stringResource(R.string.done)) }
   }
 }
+
+/**
+ * Demonstrates hosting Clerk's user profile inside the app's own NavDisplay: the app owns the back
+ * stack and transitions, and Clerk's screens are ordinary destinations on it.
+ */
+@Composable
+private fun HostStackProfileSample(onClose: () -> Unit) {
+  val backStack = rememberNavBackStack(HostHomeRoute)
+
+  NavDisplay(
+    modifier = Modifier.fillMaxSize(),
+    backStack = backStack,
+    onBack = { if (backStack.size > 1) backStack.removeLastOrNull() else onClose() },
+    entryProvider =
+      entryProvider {
+        entry<HostHomeRoute> {
+          Column(
+            modifier = Modifier.fillMaxSize().padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
+          ) {
+            Text(
+              text = stringResource(R.string.host_stack_home_title),
+              style = MaterialTheme.typography.headlineSmall,
+            )
+            Button(onClick = { backStack.add(ClerkUserProfileRoute) }) {
+              Text(text = stringResource(R.string.open_clerk_profile))
+            }
+            OutlinedButton(onClick = onClose) { Text(text = stringResource(R.string.done)) }
+          }
+        }
+
+        clerkUserProfileEntries(backStack)
+      },
+  )
+}
+
+@Serializable private data object HostHomeRoute : NavKey
 
 private const val BILLING_ROUTE = "billing"
 private const val SUPPORT_ROUTE = "support"

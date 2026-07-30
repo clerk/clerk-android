@@ -52,6 +52,8 @@ dependencies {
   implementation(libs.coil.okhttp)
   implementation(libs.core.ktx)
   implementation(libs.kotlinx.serialization)
+  implementation(libs.androidx.navigation3.runtime)
+  implementation(libs.androidx.navigation3.ui)
   implementation(libs.material3)
   implementation(libs.navigation.compose)
   implementation(projects.source.api)

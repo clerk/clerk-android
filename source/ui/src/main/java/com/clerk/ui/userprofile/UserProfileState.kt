@@ -9,8 +9,10 @@ import com.clerk.ui.core.common.NavigableState
 import com.clerk.ui.core.navigation.pop
 
 @Stable
-internal class UserProfileState(val backStack: NavBackStack<NavKey>) :
-  NavigableState<UserProfileDestination> {
+internal class UserProfileState(
+  val backStack: NavBackStack<NavKey>,
+  private val onClearBackStack: (() -> Unit)? = null,
+) : NavigableState<UserProfileDestination> {
   override fun navigateTo(destination: NavKey) {
     backStack.add(destination)
   }
@@ -20,7 +22,8 @@ internal class UserProfileState(val backStack: NavBackStack<NavKey>) :
   }
 
   override fun clearBackStack() {
-    backStack.clear()
+    // In a host-owned back stack only the profile's own segment may be cleared.
+    onClearBackStack?.invoke() ?: backStack.clear()
   }
 
   override fun pop(numberOfScreens: Int) {
