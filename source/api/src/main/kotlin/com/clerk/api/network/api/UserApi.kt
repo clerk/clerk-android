@@ -515,41 +515,52 @@ internal interface UserApi {
   /**
    * Creates a new TOTP (Time-based One-Time Password) authenticator for the user.
    *
+   * @param sessionId Optional session ID. Defaults to the current session ID from [Clerk.session].
    * @return [ClerkResult] containing the created [TOTPResource] on success or [ClerkErrorResponse]
    *   on failure
    */
   @POST(ApiPaths.User.TOTP.BASE)
-  suspend fun createTOTP(): ClerkResult<TOTPResource, ClerkErrorResponse>
+  suspend fun createTOTP(
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
+  ): ClerkResult<TOTPResource, ClerkErrorResponse>
 
   /**
    * Deletes the user's TOTP authenticator.
    *
+   * @param sessionId Optional session ID. Defaults to the current session ID from [Clerk.session].
    * @return [ClerkResult] containing [DeletedObject] on success or [ClerkErrorResponse] on failure
    */
   @DELETE(ApiPaths.User.TOTP.BASE)
-  suspend fun deleteTOTP(): ClerkResult<DeletedObject, ClerkErrorResponse>
+  suspend fun deleteTOTP(
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
+  ): ClerkResult<DeletedObject, ClerkErrorResponse>
 
   /**
    * Attempts to verify a TOTP code.
    *
    * @param code The TOTP code to verify
+   * @param sessionId Optional session ID. Defaults to the current session ID from [Clerk.session].
    * @return [ClerkResult] containing the verified [TOTPResource] on success or [ClerkErrorResponse]
    *   on failure
    */
   @FormUrlEncoded
   @POST(ApiPaths.User.TOTP.ATTEMPT_VERIFICATION)
   suspend fun attemptTOTPVerification(
-    @Field(ApiParams.CODE) code: String
+    @Field(ApiParams.CODE) code: String,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<TOTPResource, ClerkErrorResponse>
 
   /**
    * Creates backup codes for the user's account recovery.
    *
+   * @param sessionId Optional session ID. Defaults to the current session ID from [Clerk.session].
    * @return [ClerkResult] containing the created [BackupCodeResource] on success or
    *   [ClerkErrorResponse] on failure
    */
   @POST(ApiPaths.User.BACKUP_CODES)
-  suspend fun createBackupCodes(): ClerkResult<BackupCodeResource, ClerkErrorResponse>
+  suspend fun createBackupCodes(
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id
+  ): ClerkResult<BackupCodeResource, ClerkErrorResponse>
 
   /**
    * Accepts a user organization invitation.

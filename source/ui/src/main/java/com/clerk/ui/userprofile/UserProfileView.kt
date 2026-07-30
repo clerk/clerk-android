@@ -34,6 +34,7 @@ import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.core.navigation.pop
 import com.clerk.ui.core.navigation.rememberDismissHandler
+import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountSwitcherSheet
 import com.clerk.ui.userprofile.account.UserProfileAccountView
@@ -236,11 +237,13 @@ internal fun EntryProviderScope<NavKey>.userProfileEntries(
   }
 
   entry<UserProfileDestination.BackupCodeView> { key ->
-    BackupCodesView(
-      codes = key.codes.toImmutableList(),
-      mfaType = key.mfaType,
-      onDismiss = { dismissBackupCodes(backStack = backStack, origin = key.origin) },
-    )
+    ClerkMaterialTheme {
+      BackupCodesView(
+        codes = key.codes.toImmutableList(),
+        mfaType = key.mfaType,
+        onDismiss = { dismissBackupCodes(backStack = backStack, origin = key.origin) },
+      )
+    }
   }
 
   entry<UserProfileDestination.UserProfileDetail> { UserProfileDetailView() }
