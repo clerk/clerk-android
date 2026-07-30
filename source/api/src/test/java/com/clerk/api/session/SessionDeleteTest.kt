@@ -42,5 +42,11 @@ class SessionDeleteTest {
   }
 
   private fun session(id: String): Session =
-    Session(id = id, expireAt = 0L, lastActiveAt = 0L, createdAt = 0L, updatedAt = 0L)
+    Session(
+      id = id,
+      expireAt = 0L,
+      lastActiveAt = 0L,
+      createdAt = 0L,
+      updatedAt = 0L,
+    )
 }
