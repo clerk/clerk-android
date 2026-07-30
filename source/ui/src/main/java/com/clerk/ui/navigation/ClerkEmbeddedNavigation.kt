@@ -89,7 +89,7 @@ internal fun EmbeddedNavigationEffects(
   }
 
   DisposableEffect(embeddedNavigation, backStack) {
-    embeddedNavigation.popHandler = { toRoot ->
+    val handler: (toRoot: Boolean) -> Unit = { toRoot ->
       if (toRoot) {
         while (backStack.size > 1) {
           backStack.removeLastOrNull()
@@ -98,9 +98,14 @@ internal fun EmbeddedNavigationEffects(
         backStack.removeLastOrNull()
       }
     }
+    embeddedNavigation.popHandler = handler
     onDispose {
-      if (embeddedNavigation.popHandler != null) {
+      // Only tear down our own registration: a component leaving composition after
+      // a successor has registered must not clear the successor's handler. Reset
+      // depth so the handle doesn't advertise canGoBack with a no-op pop.
+      if (embeddedNavigation.popHandler === handler) {
         embeddedNavigation.popHandler = null
+        embeddedNavigation.depth = 0
       }
     }
   }
