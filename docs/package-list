@@ -44,6 +44,7 @@ com.clerk.ui.core.badge
 com.clerk.ui.core.button.social
 com.clerk.ui.core.button.standard
 com.clerk.ui.core.input
+com.clerk.ui.navigation
 com.clerk.ui.organizationlist
 com.clerk.ui.organizationprofile
 com.clerk.ui.organizationprofile.custom
