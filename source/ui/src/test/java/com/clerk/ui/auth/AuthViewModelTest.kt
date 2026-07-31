@@ -84,6 +84,53 @@ class AuthViewModelTest {
   }
 
   @Test
+  fun startAuthWithSignInModeShouldSurfaceApiFailure() = runTest {
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.apiFailure(
+        ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "Couldn't find your account.")))
+      )
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAuth(
+        authMode = AuthMode.SignIn,
+        isPhoneNumberFieldActive = false,
+        phoneNumber = "",
+        identifier = "test@example.com",
+      )
+
+      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
+      assertEquals(AuthStartViewModel.AuthState.Error("Couldn't find your account."), awaitItem())
+    }
+  }
+
+  @Test
+  fun startAuthWithSignInModeShouldSurfaceUnknownFailure() = runTest {
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.unknownFailure(IllegalStateException("Network unavailable"))
+
+    viewModel.state.test {
+      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+
+      viewModel.startAuth(
+        authMode = AuthMode.SignIn,
+        isPhoneNumberFieldActive = false,
+        phoneNumber = "",
+        identifier = "test@example.com",
+      )
+
+      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
+      assertEquals(
+        AuthStartViewModel.AuthState.Error("Error occurred with unknown message."),
+        awaitItem(),
+      )
+    }
+  }
+
+  @Test
   fun automaticPasskeySignInUsesPasskeyStrategy() = runTest {
     val signIn = SignIn(id = "sign_in_123")
     mockkObject(SignIn.Companion)

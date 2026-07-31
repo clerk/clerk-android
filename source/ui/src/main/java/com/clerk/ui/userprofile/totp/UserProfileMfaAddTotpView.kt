@@ -76,15 +76,25 @@ internal fun UserProfileMfaAddTotpViewImpl(
       title = stringResource(R.string.add_authenticator_application),
       onClosePressed = onDismiss,
     )
-    if (state is UserProfileMfaTotpViewModel.State.Loading) {
-      Box(
-        modifier = Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.background),
-        contentAlignment = Alignment.Center,
-      ) {
-        CircularProgressIndicator(color = ClerkMaterialTheme.colors.foreground)
-      }
-    } else {
-      UserProfileMfaAddTotpContent(state = state, onVerify = onVerify)
+    when (state) {
+      UserProfileMfaTotpViewModel.State.Idle -> Unit
+      UserProfileMfaTotpViewModel.State.Loading ->
+        Box(
+          modifier =
+            Modifier.fillMaxWidth()
+              .background(color = ClerkMaterialTheme.colors.background)
+              .padding(vertical = dp24),
+          contentAlignment = Alignment.Center,
+        ) {
+          CircularProgressIndicator(color = ClerkMaterialTheme.colors.foreground)
+        }
+      is UserProfileMfaTotpViewModel.State.Error ->
+        UserProfileMfaAddTotpError(
+          message = state.message ?: stringResource(R.string.something_went_wrong_please_try_again),
+          onRetry = viewModel::createTOTPResource,
+        )
+      is UserProfileMfaTotpViewModel.State.Success ->
+        UserProfileMfaAddTotpContent(state = state, onVerify = onVerify)
     }
   }
 }
@@ -134,6 +144,26 @@ private fun UserProfileMfaAddTotpContent(
       )
       Spacers.Vertical.Spacer24()
     }
+  }
+}
+
+@Composable
+private fun UserProfileMfaAddTotpError(message: String, onRetry: () -> Unit) {
+  Column(
+    modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).padding(vertical = dp24),
+    verticalArrangement = Arrangement.spacedBy(dp24),
+  ) {
+    Text(
+      text = message,
+      style = ClerkMaterialTheme.typography.bodyMedium,
+      color = ClerkMaterialTheme.colors.mutedForeground,
+    )
+    ClerkButton(
+      modifier = Modifier.fillMaxWidth(),
+      text = stringResource(R.string.try_again),
+      onClick = onRetry,
+    )
+    Spacers.Vertical.Spacer24()
   }
 }
 

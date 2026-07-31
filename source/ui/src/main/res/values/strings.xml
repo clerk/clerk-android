@@ -35,6 +35,7 @@
     <string name="reset_password">Reset password</string>
     <string name="confirm_password">Confirm password</string>
     <string name="new_password">New password</string>
+    <string name="passwords_dont_match">Passwords don\'t match</string>
     <string name="account_requires_new_password_before_continue" tools:ignore="MissingTranslation">Your account requires a new password before you can continue</string>
     <string name="sign_out_of_all_other_devices">Sign out of all other devices</string>
     <string name="choose_an_organization">Choose an organization</string>
@@ -267,6 +268,8 @@
     <string name="saved_to_downloads">Saved to Downloads: %1$s</string>
     <string name="failed_to_save_file">Failed to save file: %1$s</string>
     <string name="close">Close</string>
+    <string name="show_password" tools:ignore="MissingTranslation">Show password</string>
+    <string name="hide_password" tools:ignore="MissingTranslation">Hide password</string>
     <string name="type_delete_to_continue">Type \"DELETE\" to continue</string>
     <string name="are_you_sure_you_want_to_delete_your_account">Are you sure you want to delete your account? This action is permanent and irreversible.</string>
     <string name="email_addresses">Email Addresses</string>

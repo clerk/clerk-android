@@ -8,7 +8,6 @@ import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
 import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
 import com.clerk.api.credentials.shouldSuppressCredentialFlowError
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
@@ -180,14 +179,13 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       SignIn.create(SignIn.CreateParams.Strategy.Identifier(identifier = resolvedIdentifier))
         .onSuccess { signIn -> handleSignInSuccess(signIn, transferable) }
         .onFailure {
-          if (withSignUp && it.error is ClerkErrorResponse) {
-            val matchingCodes = listOf(FORM_IDENTIFIER_NOT_FOUND, INVITATION_ACCOUNT_NOT_EXISTS)
-            val hasMatchingError = it.error?.errors?.any { it.code in matchingCodes } ?: false
-            if (hasMatchingError) {
-              signUp(isPhoneNumberFieldActive, identifier, phoneNumber, unsafeMetadata)
-            } else {
-              _state.value = AuthState.Error(it.errorMessage)
-            }
+          val matchingCodes = listOf(FORM_IDENTIFIER_NOT_FOUND, INVITATION_ACCOUNT_NOT_EXISTS)
+          val shouldSignUp =
+            withSignUp && it.error?.errors?.any { error -> error.code in matchingCodes } == true
+          if (shouldSignUp) {
+            signUp(isPhoneNumberFieldActive, identifier, phoneNumber, unsafeMetadata)
+          } else {
+            _state.value = AuthState.Error(it.errorMessage)
           }
         }
     }
