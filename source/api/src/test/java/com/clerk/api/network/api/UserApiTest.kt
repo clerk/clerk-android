@@ -27,6 +27,19 @@ class UserApiTest {
   }
 
   @Test
+  fun `mfa endpoints include clerk session id query`() {
+    val mfaMethods =
+      listOf("createTOTP", "deleteTOTP", "attemptTOTPVerification", "createBackupCodes")
+
+    mfaMethods.forEach { methodName ->
+      assertTrue(
+        method(methodName).hasQuery(ApiParams.CLERK_SESSION_ID),
+        "$methodName should include _clerk_session_id",
+      )
+    }
+  }
+
+  @Test
   fun `external account linking endpoints include clerk session id query`() {
     val linkingMethods = listOf("createExternalAccount", "reauthorizeExternalAccount")
 
