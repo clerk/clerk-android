@@ -204,6 +204,7 @@ internal fun AuthStartViewImpl(
     ClerkThemedAuthScaffold(
       modifier = modifier,
       hasBackButton = false,
+      usesHostBackAction = true,
       trailingContent = dismissTrailingContent(showDismissButton, dismissHandler),
       showSignedInUserButton = false,
       title = authViewHelper.titleString(authState.mode),

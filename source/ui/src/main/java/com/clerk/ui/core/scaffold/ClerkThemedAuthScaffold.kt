@@ -84,6 +84,7 @@ internal fun ClerkThemedAuthScaffold(
   subtitle: String? = null,
   hasLogo: Boolean = true,
   hasBackButton: Boolean = true,
+  usesHostBackAction: Boolean = false,
   trailingContent: (@Composable () -> Unit)? = null,
   identifier: String? = null,
   identifierEditable: Boolean = true,
@@ -130,6 +131,7 @@ internal fun ClerkThemedAuthScaffold(
           onBackPressed = onBackPressed,
           hasLogo = shouldShowLogo,
           hasBackButton = hasBackButton,
+          usesHostBackAction = usesHostBackAction,
           trailingContent = resolvedTrailingContent,
         )
       },

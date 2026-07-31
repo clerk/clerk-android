@@ -38,6 +38,7 @@ import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp68
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.navigation.LocalClerkHostBackAction
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
@@ -46,6 +47,7 @@ internal fun ClerkTopAppBar(
   modifier: Modifier = Modifier,
   hasLogo: Boolean = true,
   hasBackButton: Boolean = true,
+  usesHostBackAction: Boolean = false,
   title: String? = null,
   backgroundColor: Color? = null, // sensible default
   clerkTheme: ClerkTheme? = null,
@@ -53,6 +55,15 @@ internal fun ClerkTopAppBar(
   contentPadding: PaddingValues = PaddingValues(),
   trailingContent: (@Composable () -> Unit)? = null,
 ) {
+  val handleBackPressed =
+    resolveBackAction(
+      hasBackButton = hasBackButton,
+      usesHostBackAction = usesHostBackAction,
+      onBackPressed = onBackPressed,
+      hostBackAction = LocalClerkHostBackAction.current,
+    )
+  val showsBackButton = handleBackPressed != null
+
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val resolvedBackgroundColor = backgroundColor ?: ClerkMaterialTheme.colors.muted
     Box(modifier = Modifier.fillMaxWidth().then(modifier).background(resolvedBackgroundColor)) {
@@ -79,16 +90,16 @@ internal fun ClerkTopAppBar(
           }
         if (trailingContent != null) {
           TopBarWithTrailingContent(
-            hasBackButton = hasBackButton,
-            onBackPressed = onBackPressed,
+            hasBackButton = showsBackButton,
+            onBackPressed = handleBackPressed ?: onBackPressed,
             title = title,
             logoContent = logoContent,
             trailingContent = trailingContent,
           )
         } else {
           TopBarWithLogo(
-            hasBackButton = hasBackButton,
-            onBackPressed = onBackPressed,
+            hasBackButton = showsBackButton,
+            onBackPressed = handleBackPressed ?: onBackPressed,
             title = title,
             logoContent = logoContent,
           )

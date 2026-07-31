@@ -148,37 +148,39 @@ private fun textFieldLabel(
   isFocused: Boolean,
   value: String,
   isError: Boolean,
-): (@Composable () -> Unit)? = label?.let { text ->
-  {
-    val labelStyle =
-      if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
-      else MaterialTheme.typography.bodyLarge
-    val labelColor =
-      when {
-        isError -> ClerkMaterialTheme.colors.danger
-        isFocused -> ClerkMaterialTheme.colors.primary
-        else -> ClerkMaterialTheme.colors.mutedForeground
-      }
-    Text(text = text, style = labelStyle, color = labelColor)
+): (@Composable () -> Unit)? =
+  label?.let { text ->
+    {
+      val labelStyle =
+        if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
+        else MaterialTheme.typography.bodyLarge
+      val labelColor =
+        when {
+          isError -> ClerkMaterialTheme.colors.danger
+          isFocused -> ClerkMaterialTheme.colors.primary
+          else -> ClerkMaterialTheme.colors.mutedForeground
+        }
+      Text(text = text, style = labelStyle, color = labelColor)
+    }
   }
-}
 
 @Composable
 private fun supportingTextContent(
   supportingText: String?,
   isError: Boolean,
-): (@Composable () -> Unit)? = supportingText?.let { support ->
-  {
-    Text(
-      modifier = Modifier.padding(top = dp4),
-      text = support,
-      style = ClerkMaterialTheme.typography.bodySmall,
-      color =
-        if (isError) ClerkMaterialTheme.colors.danger
-        else ClerkMaterialTheme.colors.mutedForeground,
-    )
+): (@Composable () -> Unit)? =
+  supportingText?.let { support ->
+    {
+      Text(
+        modifier = Modifier.padding(top = dp4),
+        text = support,
+        style = ClerkMaterialTheme.typography.bodySmall,
+        color =
+          if (isError) ClerkMaterialTheme.colors.danger
+          else ClerkMaterialTheme.colors.mutedForeground,
+      )
+    }
   }
-}
 
 @Composable
 private fun TrailingIcon(

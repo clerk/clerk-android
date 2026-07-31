@@ -98,6 +98,7 @@ private fun UserProfileAccountViewImpl(
       title = stringResource(R.string.account),
       backgroundColor = ClerkMaterialTheme.colors.muted,
       hasBackButton = false,
+      usesHostBackAction = true,
       horizontalPadding = dp0,
       onBackPressed = onBackPressed,
       trailingContent = userProfileDismissTrailingContent(isDismissible, onDismiss = onBackPressed),
