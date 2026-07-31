@@ -186,7 +186,8 @@ private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean, onSubm
     visualTransformation = PasswordVisualTransformation(),
     inputContentType = ContentType.Password,
     isError = showPasswordMismatchError,
-    supportingText = if (showPasswordMismatchError) "Passwords don't match" else null,
+    supportingText =
+      if (showPasswordMismatchError) stringResource(R.string.passwords_dont_match) else null,
     keyboardOptions =
       KeyboardOptions(
         keyboardType = KeyboardType.Password,
