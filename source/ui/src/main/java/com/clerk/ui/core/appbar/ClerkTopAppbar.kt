@@ -106,8 +106,10 @@ private fun RowScope.TopBarWithTrailingContent(
   logoContent: (@Composable () -> Unit)?,
   trailingContent: @Composable () -> Unit,
 ) {
-  Spacer(Modifier.width(dp12))
-  Box(modifier = Modifier.size(width = dp68, height = dp48), contentAlignment = Alignment.Center) {
+  Box(
+    modifier = Modifier.size(width = dp68 + dp12, height = dp48),
+    contentAlignment = Alignment.CenterStart,
+  ) {
     BackButton(hasBackButton = hasBackButton, onBackPressed = onBackPressed)
   }
   Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {

@@ -12,10 +12,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.ui.userprofile.UserProfileView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.clerk.api.Clerk
+import com.clerk.ui.organizationlist.OrganizationListView
+import com.clerk.ui.organizationprofile.OrganizationProfileView
 import com.clerk.workbench.ui.theme.Background
 import com.clerk.workbench.ui.theme.BackgroundDark
 import com.clerk.workbench.ui.theme.WorkbenchTheme
@@ -38,7 +42,16 @@ class UiActivity2 : ComponentActivity() {
               modifier =
                 Modifier.background(color = backgroundColor).fillMaxSize().statusBarsPadding()
             ) {
-              UserProfileView(isDismissible = true, onDismiss = {})
+              val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
+              if (session?.lastActiveOrganizationId == null || Clerk.organization == null) {
+                OrganizationListView(
+                  modifier = Modifier.fillMaxSize(),
+                  hidePersonalAccount = true,
+                  isDismissible = false,
+                )
+              } else {
+                OrganizationProfileView(isDismissible = true)
+              }
             }
           }
         }
