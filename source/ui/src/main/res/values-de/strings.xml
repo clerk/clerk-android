@@ -17,7 +17,7 @@
     <string name="to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app">Um fortzufahren, geben Sie bitte den von Ihrer Authentifizierungs-App generierten Bestätigungscode ein</string>
     <string name="to_continue_to">Um fortzufahren zu %1$s</string>
     <string name="to_continue">Um fortzufahren</string>
-    <string name="resend_with_pararm">Erneut senden (%1$d)</string>
+    <string name="resend_with_param">Erneut senden (%1$d)</string>
     <string name="resend">Erneut senden</string>
     <string name="didn_t_receive_a_code">"Keinen Code erhalten? "</string>
     <string name="verifying">Wird überprüft…</string>
@@ -64,7 +64,7 @@
     <string name="use_phone_number">Telefonnummer verwenden</string>
     <string name="enter_your_email">Geben Sie Ihre E-Mail ein</string>
     <string name="enter_your_username">Geben Sie Ihren Benutzernamen ein</string>
-    <string name="enter_you_email_or_username">Geben Sie Ihre E-Mail oder Ihren Benutzernamen ein</string>
+    <string name="enter_your_email_or_username">Geben Sie Ihre E-Mail oder Ihren Benutzernamen ein</string>
     <string name="sign_in_with">Anmelden mit %1$s</string>
     <string name="something_went_wrong_please_try_again">Etwas ist schief gelaufen, bitte versuchen Sie es erneut</string>
     <string name="check_your_phone">Überprüfen Sie Ihr Telefon</string>

@@ -17,7 +17,7 @@
     <string name="to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app">Για να συνεχίσετε, εισάγετε τον κωδικό επαλήθευσης που δημιουργήθηκε από την εφαρμογή επαλήθευσης σας</string>
     <string name="to_continue_to">Για να συνεχίσετε στο %1$s</string>
     <string name="to_continue">Για να συνεχίσετε</string>
-    <string name="resend_with_pararm">Επανάληψη (%1$d)</string>
+    <string name="resend_with_param">Επανάληψη (%1$d)</string>
     <string name="resend">Επανάληψη</string>
     <string name="didn_t_receive_a_code">"Δεν λάβατε κωδικό; "</string>
     <string name="verifying">Επαλήθευση…</string>
@@ -64,7 +64,7 @@
     <string name="use_phone_number">Χρήση αριθμού τηλεφώνου</string>
     <string name="enter_your_email">Εισάγετε το email σας</string>
     <string name="enter_your_username">Εισάγετε το όνομά χρήστη σας</string>
-    <string name="enter_you_email_or_username">Εισάγετε το email ή το όνομά χρήστη σας</string>
+    <string name="enter_your_email_or_username">Εισάγετε το email ή το όνομά χρήστη σας</string>
     <string name="sign_in_with">Σύνδεση με %1$s</string>
     <string name="something_went_wrong_please_try_again">Κάτι πήγε στραβά, δοκιμάστε ξανά</string>
     <string name="check_your_phone">Ελέγξτε το τηλέφωνό σας</string>

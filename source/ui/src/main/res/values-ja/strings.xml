@@ -17,7 +17,7 @@
     <string name="to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app">続けるには、認証アプリで生成された確認コードを入力してください</string>
     <string name="to_continue_to">%1$s に続ける</string>
     <string name="to_continue">続ける</string>
-    <string name="resend_with_pararm">再送信 (%1$d)</string>
+    <string name="resend_with_param">再送信 (%1$d)</string>
     <string name="resend">再送信</string>
     <string name="didn_t_receive_a_code">"コードを受信しませんでしたか？ "</string>
     <string name="verifying">確認中…</string>
@@ -64,7 +64,7 @@
     <string name="use_phone_number">電話番号を使用</string>
     <string name="enter_your_email">メールアドレスを入力</string>
     <string name="enter_your_username">ユーザー名を入力</string>
-    <string name="enter_you_email_or_username">メールアドレスまたはユーザー名を入力</string>
+    <string name="enter_your_email_or_username">メールアドレスまたはユーザー名を入力</string>
     <string name="sign_in_with">%1$s でサインイン</string>
     <string name="something_went_wrong_please_try_again">問題が発生しました。もう一度お試しください</string>
     <string name="check_your_phone">電話を確認</string>

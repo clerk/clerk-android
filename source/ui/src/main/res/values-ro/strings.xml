@@ -17,7 +17,7 @@
     <string name="to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app">Pentru a continua, introdu codul de verificare generat de aplicația de autentificare</string>
     <string name="to_continue_to">Pentru a continua la %1$s</string>
     <string name="to_continue">Pentru a continua</string>
-    <string name="resend_with_pararm">Retrimite (%1$d)</string>
+    <string name="resend_with_param">Retrimite (%1$d)</string>
     <string name="resend">Retrimite</string>
     <string name="didn_t_receive_a_code">"Nu ai primit un cod? "</string>
     <string name="verifying">Se verifică…</string>
@@ -117,7 +117,7 @@
     <string name="use_phone_number">Folosește numărul de telefon</string>
     <string name="enter_your_email">Introdu emailul</string>
     <string name="enter_your_username">Introdu numele de utilizator</string>
-    <string name="enter_you_email_or_username">Introdu emailul sau numele de utilizator</string>
+    <string name="enter_your_email_or_username">Introdu emailul sau numele de utilizator</string>
     <string name="sign_in_with">Autentifică-te cu %1$s</string>
     <string name="something_went_wrong_please_try_again">Ceva nu a mers bine, încearcă din nou</string>
     <string name="check_your_phone">Verifică telefonul</string>

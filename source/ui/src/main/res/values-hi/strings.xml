@@ -17,7 +17,7 @@
     <string name="to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app">जारी रखने के लिए, कृपया अपने प्रमाणक ऐप द्वारा उत्पन्न सत्यापन कोड दर्ज करें</string>
     <string name="to_continue_to">%1$s पर जारी रखने के लिए</string>
     <string name="to_continue">जारी रखने के लिए</string>
-    <string name="resend_with_pararm">पुनः भेजें (%1$d)</string>
+    <string name="resend_with_param">पुनः भेजें (%1$d)</string>
     <string name="resend">पुनः भेजें</string>
     <string name="didn_t_receive_a_code">"कोड नहीं मिला? "</string>
     <string name="verifying">सत्यापन हो रहा है…</string>
@@ -64,7 +64,7 @@
     <string name="use_phone_number">फ़ोन नंबर का उपयोग करें</string>
     <string name="enter_your_email">अपना ईमेल दर्ज करें</string>
     <string name="enter_your_username">अपना उपयोगकर्ता नाम दर्ज करें</string>
-    <string name="enter_you_email_or_username">अपना ईमेल या उपयोगकर्ता नाम दर्ज करें</string>
+    <string name="enter_your_email_or_username">अपना ईमेल या उपयोगकर्ता नाम दर्ज करें</string>
     <string name="sign_in_with">%1$s के साथ साइन इन करें</string>
     <string name="something_went_wrong_please_try_again">कुछ गलत हो गया, कृपया पुनः प्रयास करें</string>
     <string name="check_your_phone">अपना फ़ोन जांचें</string>
