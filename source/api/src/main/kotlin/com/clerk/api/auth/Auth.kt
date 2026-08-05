@@ -31,6 +31,7 @@ import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.session.fetchToken
 import com.clerk.api.session.revoke
 import com.clerk.api.signin.SignIn
@@ -639,6 +640,7 @@ class Auth internal constructor() {
       if (sessionId != null) {
         when (val result = ClerkApi.session.removeSession(sessionId)) {
           is ClerkResult.Success -> {
+            SessionTokensCache.removeTokensForSession(sessionId)
             removeSessionLocally(sessionId)
             refreshClientAfterSessionMutation()
             ClerkResult.success(Unit)
@@ -673,18 +675,36 @@ class Auth internal constructor() {
   private suspend fun refreshClientAfterSessionMutation(
     activeSessionFallbackId: String? = null,
     fallbackClient: Client? = null,
+    droppedTokenSessionId: String? = null,
   ) {
     when (val clientResult = Client.get()) {
       is ClerkResult.Success ->
         Clerk.updateClient(
-          clientResult.value.withActiveSessionFallback(
-            activeSessionFallbackId = activeSessionFallbackId,
-            fallbackClient = fallbackClient,
-          )
+          clientResult.value
+            .withActiveSessionFallback(
+              activeSessionFallbackId = activeSessionFallbackId,
+              fallbackClient = fallbackClient,
+            )
+            .withoutLastActiveToken(droppedTokenSessionId)
         )
       is ClerkResult.Failure ->
         ClerkLog.w("Client refresh after session mutation failed: ${clientResult.errorMessage}")
     }
+  }
+
+  /**
+   * Drops the persisted token of one session.
+   *
+   * Both merge paths above carry `lastActiveToken` forward from the pre-mutation session, and the
+   * token fetcher falls back to it when the cache is empty. Left in place after an org switch it
+   * would seed the next mint with the old organization scope, undoing the cache invalidation.
+   */
+  private fun Client.withoutLastActiveToken(sessionId: String?): Client {
+    if (sessionId == null) return this
+
+    val updatedSessions =
+      sessions.map { if (it.id == sessionId) it.copy(lastActiveToken = null) else it }
+    return if (updatedSessions == sessions) this else copy(sessions = updatedSessions)
   }
 
   private fun Client.withActiveSessionFallback(
@@ -773,6 +793,9 @@ class Auth internal constructor() {
       )
     when (result) {
       is ClerkResult.Success -> {
+        // The cached token still carries the previous organization scope, and it seeds the next
+        // mint, so a stale entry would outlive the switch.
+        SessionTokensCache.removeTokensForSession(sessionId)
         setActiveSessionLocally(
           sessionId,
           activeSession = result.value,
@@ -782,6 +805,7 @@ class Auth internal constructor() {
         refreshClientAfterSessionMutation(
           activeSessionFallbackId = sessionId,
           fallbackClient = if (Clerk.clientInitialized) Clerk.client else previousClient,
+          droppedTokenSessionId = sessionId,
         )
       }
       is ClerkResult.Failure -> emitAuthError(result)
@@ -799,7 +823,11 @@ class Auth internal constructor() {
     val sessions = client.sessions.withUpdatedSession(activeSession, activeOrganizationId)
     if (sessions.none { it.id == sessionId }) return
 
-    Clerk.updateClient(client.copy(sessions = sessions, lastActiveSessionId = sessionId))
+    Clerk.updateClient(
+      client
+        .copy(sessions = sessions, lastActiveSessionId = sessionId)
+        .withoutLastActiveToken(sessionId)
+    )
   }
 
   private fun List<Session>.withUpdatedSession(

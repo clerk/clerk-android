@@ -2,6 +2,7 @@ package com.clerk.api.network.api
 
 import com.clerk.api.network.ApiParams
 import com.clerk.api.network.ApiPaths
+import com.clerk.api.network.middleware.SensitiveRequest
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
@@ -9,12 +10,14 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionVerification
 import retrofit2.http.DELETE
+import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Tag
 
 /**
  * Internal API interface for session management operations.
@@ -81,10 +84,36 @@ internal interface SessionApi {
   ): ClerkResult<TokenResource, ClerkErrorResponse>
 
   /**
+   * Retrieves tokens for a specific session, carrying the session minter's form fields.
+   *
+   * Same route as [tokens], but form-encoded so the minter at the edge can read the seed. Only used
+   * when at least one field is actually populated, so a request with nothing to send stays byte for
+   * byte the request [tokens] has always made.
+   *
+   * @param sessionId The unique identifier of the session to get tokens for
+   * @param previousSessionToken The JWT this session last held, which the next token is minted
+   *   from. Omitted rather than sent empty when there is no seed.
+   * @param forceOrigin Set to true when the caller asked to skip the cache, telling the minter to
+   *   fall through to the origin.
+   * @return A [ClerkResult] containing the [TokenResource] on success, or a [ClerkErrorResponse] on
+   *   failure
+   */
+  @FormUrlEncoded
+  @POST(ApiPaths.Client.Sessions.TOKENS)
+  suspend fun mintTokens(
+    @Path(ApiParams.ID) sessionId: String,
+    @Field("token") previousSessionToken: String? = null,
+    @Field("force_origin") forceOrigin: Boolean? = null,
+    @Tag sensitiveRequest: SensitiveRequest = SensitiveRequest,
+  ): ClerkResult<TokenResource, ClerkErrorResponse>
+
+  /**
    * Retrieves tokens for a specific user and template type.
    *
    * This method fetches authentication tokens for a specific user using a template type, which
    * allows for customized token generation based on the template configuration.
+   *
+   * Templated tokens are never minted at the edge, so this route never carries minter fields.
    *
    * @param userId The unique identifier of the user
    * @param templateType The type of template to use for token generation
