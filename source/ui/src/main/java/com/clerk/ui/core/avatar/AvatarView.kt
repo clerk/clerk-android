@@ -76,7 +76,13 @@ internal fun AvatarView(
   Box(modifier = Modifier.wrapContentSize().then(modifier), contentAlignment = Alignment.Center) {
     SubcomposeAsyncImage(
       model = imageModel,
-      contentDescription = stringResource(R.string.logo),
+      contentDescription =
+        stringResource(
+          when (avatarType) {
+            AvatarType.USER -> R.string.user_avatar
+            AvatarType.ORGANIZATION -> R.string.logo
+          }
+        ),
       modifier = Modifier.size(size.toDp()).clip(shape),
       contentScale = ContentScale.FillBounds,
       loading = { CircularProgressIndicator(modifier = Modifier.size(dp24)) },
