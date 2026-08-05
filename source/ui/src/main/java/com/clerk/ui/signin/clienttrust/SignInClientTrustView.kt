@@ -19,7 +19,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 /**
- * A composable that displays the client trust verification view.
+ * A composable that displays the device trust verification view.
  *
  * This view is shown when the user is signing in from a new or untrusted device and needs to
  * complete an additional verification step. It displays a warning message explaining why
@@ -29,7 +29,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  * [SignInFactorCodeView] for phone code or email code verification, or [SignInGetHelpView] for
  * unsupported strategies.
  *
- * @param factor The factor to be verified for client trust.
+ * @param factor The factor to be verified for device trust.
  * @param modifier The [Modifier] to be applied to the view.
  * @param clerkTheme Optional theme override for customization.
  * @param onAuthComplete Callback invoked when authentication is complete.
@@ -58,7 +58,7 @@ fun SignInClientTrustView(
 }
 
 /**
- * A composable that displays a warning message for client trust verification.
+ * A composable that displays a warning message for device trust verification.
  *
  * This message informs the user that they are signing in from a new device and explains why
  * additional verification is being requested.
