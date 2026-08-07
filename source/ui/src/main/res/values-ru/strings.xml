@@ -17,7 +17,7 @@
     <string name="to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app">Чтобы продолжить, введите код подтверждения, созданный приложением-аутентификатором</string>
     <string name="to_continue_to">Чтобы продолжить в %1$s</string>
     <string name="to_continue">Чтобы продолжить</string>
-    <string name="resend_with_pararm">Отправить повторно (%1$d)</string>
+    <string name="resend_with_param">Отправить повторно (%1$d)</string>
     <string name="resend">Отправить повторно</string>
     <string name="didn_t_receive_a_code">"Не получили код? "</string>
     <string name="verifying">Проверка…</string>
@@ -117,7 +117,7 @@
     <string name="use_phone_number">Использовать номер телефона</string>
     <string name="enter_your_email">Введите адрес электронной почты</string>
     <string name="enter_your_username">Введите имя пользователя</string>
-    <string name="enter_you_email_or_username">Введите адрес электронной почты или имя пользователя</string>
+    <string name="enter_your_email_or_username">Введите адрес электронной почты или имя пользователя</string>
     <string name="sign_in_with">Войти через %1$s</string>
     <string name="something_went_wrong_please_try_again">Что-то пошло не так, попробуйте еще раз</string>
     <string name="check_your_phone">Проверьте телефон</string>

@@ -17,7 +17,7 @@
     <string name="to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app">계속하려면 인증 앱에서 생성한 인증 코드를 입력하세요</string>
     <string name="to_continue_to">%1$s(으)로 계속</string>
     <string name="to_continue">계속</string>
-    <string name="resend_with_pararm">다시 보내기 (%1$d)</string>
+    <string name="resend_with_param">다시 보내기 (%1$d)</string>
     <string name="resend">다시 보내기</string>
     <string name="didn_t_receive_a_code">"코드를 받지 못하셨나요? "</string>
     <string name="verifying">확인 중…</string>
@@ -64,7 +64,7 @@
     <string name="use_phone_number">전화번호 사용</string>
     <string name="enter_your_email">이메일을 입력하세요</string>
     <string name="enter_your_username">사용자 이름을 입력하세요</string>
-    <string name="enter_you_email_or_username">이메일 또는 사용자 이름을 입력하세요</string>
+    <string name="enter_your_email_or_username">이메일 또는 사용자 이름을 입력하세요</string>
     <string name="sign_in_with">%1$s(으)로 로그인</string>
     <string name="something_went_wrong_please_try_again">문제가 발생했습니다. 다시 시도하세요</string>
     <string name="check_your_phone">휴대폰을 확인하세요</string>
