@@ -21,6 +21,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.fold
 import com.clerk.api.session.GetTokenOptions
+import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.session.fetchToken
 import com.clerk.api.sso.SSOService
@@ -348,6 +349,7 @@ internal class ConfigurationManager {
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
     Clerk.updateClient(Client())
     Clerk.clearSessionAndUserState()
+    SessionTokenFetcher.shared.reset()
     SessionTokensCache.clear()
 
     val result =
