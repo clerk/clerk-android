@@ -169,7 +169,7 @@ internal class AuthStartViewHelper {
     return when {
       (emailIsEnabled && !usernameIsEnabled) -> stringResource(R.string.enter_your_email)
       (!emailIsEnabled && usernameIsEnabled) -> stringResource(R.string.enter_your_username)
-      else -> stringResource(R.string.enter_you_email_or_username)
+      else -> stringResource(R.string.enter_your_email_or_username)
     }
   }
 

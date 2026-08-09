@@ -17,7 +17,7 @@
     <string name="to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app">Aby kontynuować, wprowadź kod weryfikacyjny wygenerowany przez aplikację uwierzytelniającą</string>
     <string name="to_continue_to">Aby kontynuować do %1$s</string>
     <string name="to_continue">Aby kontynuować</string>
-    <string name="resend_with_pararm">Wyślij ponownie (%1$d)</string>
+    <string name="resend_with_param">Wyślij ponownie (%1$d)</string>
     <string name="resend">Wyślij ponownie</string>
     <string name="didn_t_receive_a_code">"Nie otrzymałeś kodu? "</string>
     <string name="verifying">Weryfikowanie…</string>
@@ -117,7 +117,7 @@
     <string name="use_phone_number">Użyj numeru telefonu</string>
     <string name="enter_your_email">Wprowadź adres e-mail</string>
     <string name="enter_your_username">Wprowadź nazwę użytkownika</string>
-    <string name="enter_you_email_or_username">Wprowadź adres e-mail lub nazwę użytkownika</string>
+    <string name="enter_your_email_or_username">Wprowadź adres e-mail lub nazwę użytkownika</string>
     <string name="sign_in_with">Zaloguj się przez %1$s</string>
     <string name="something_went_wrong_please_try_again">Coś poszło nie tak, spróbuj ponownie</string>
     <string name="check_your_phone">Sprawdź telefon</string>

@@ -17,7 +17,7 @@
     <string name="to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app">للمتابعة، يرجى إدخال رمز التحقق الذي تم إنشاؤه بواسطة تطبيق المصادقة الخاص بك</string>
     <string name="to_continue_to">للمتابعة إلى %1$s</string>
     <string name="to_continue">للمتابعة</string>
-    <string name="resend_with_pararm">أعد الإرسال (%1$d)</string>
+    <string name="resend_with_param">أعد الإرسال (%1$d)</string>
     <string name="resend">أعد الإرسال</string>
     <string name="didn_t_receive_a_code">"لم تستلم رمزاً؟ "</string>
     <string name="verifying">جارٍ التحقق…</string>
@@ -64,7 +64,7 @@
     <string name="use_phone_number">استخدم رقم الهاتف</string>
     <string name="enter_your_email">أدخل بريدك الإلكتروني</string>
     <string name="enter_your_username">أدخل اسم المستخدم الخاص بك</string>
-    <string name="enter_you_email_or_username">أدخل بريدك الإلكتروني أو اسم المستخدم</string>
+    <string name="enter_your_email_or_username">أدخل بريدك الإلكتروني أو اسم المستخدم</string>
     <string name="sign_in_with">تسجيل الدخول باستخدام %1$s</string>
     <string name="something_went_wrong_please_try_again">حدث خطأ ما، يرجى المحاولة مرة أخرى</string>
     <string name="check_your_phone">تحقق من هاتفك</string>
