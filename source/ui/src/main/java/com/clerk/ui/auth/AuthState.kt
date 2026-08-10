@@ -46,6 +46,7 @@ internal class AuthState(
   private val sharedPreferences: SharedPreferences,
   identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
   organizationLogoUrl: String? = null,
+  resumeInProgressAuthAttempt: Boolean = true,
 ) : NavigableState<AuthDestination> {
 
   private var appliedIdentifierConfig: AuthIdentifierConfig? = null
@@ -88,7 +89,7 @@ internal class AuthState(
 
   var lastSubmittedIdentifier by mutableStateOf<String?>(null)
 
-  var shouldResumeInProgressAuthAttempt by mutableStateOf(true)
+  var shouldResumeInProgressAuthAttempt by mutableStateOf(resumeInProgressAuthAttempt)
     private set
 
   var organizationLogoUrl by mutableStateOf(organizationLogoUrl)

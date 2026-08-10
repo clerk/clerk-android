@@ -418,9 +418,103 @@ class SignInFactorCodeViewModelTest {
   }
 
   @Test
+  fun prepareShouldReuseActiveFirstFactorVerification() = runTest {
+    every { mockSignIn.firstFactorVerification } returns
+      Verification(
+        status = Verification.Status.UNVERIFIED,
+        strategy = StrategyKeys.EMAIL_CODE,
+        expireAt = Long.MAX_VALUE,
+      )
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+
+    viewModel.prepare(factor, isSecondFactor = false)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 0) { mockPrepareHandler.prepareForEmailCode(any(), any(), any(), any()) }
+    viewModel.state.test { assertEquals(AuthenticationViewState.Idle, awaitItem()) }
+  }
+
+  @Test
+  fun prepareShouldReuseActiveSecondFactorVerification() = runTest {
+    every { mockSignIn.secondFactorVerification } returns
+      Verification(
+        status = Verification.Status.UNVERIFIED,
+        strategy = StrategyKeys.PHONE_CODE,
+        expireAt = Long.MAX_VALUE,
+      )
+    val factor = Factor(strategy = StrategyKeys.PHONE_CODE, phoneNumberId = "phone_456")
+
+    viewModel.prepare(factor, isSecondFactor = true)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 0) { mockPrepareHandler.prepareForPhoneCode(any(), any(), any(), any()) }
+  }
+
+  @Test
+  fun prepareShouldSendNewCodeWhenVerificationIsExpired() = runTest {
+    every { mockSignIn.firstFactorVerification } returns
+      Verification(
+        status = Verification.Status.UNVERIFIED,
+        strategy = StrategyKeys.EMAIL_CODE,
+        expireAt = 0L,
+      )
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+
+    viewModel.prepare(factor, isSecondFactor = false)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) {
+      mockPrepareHandler.prepareForEmailCode(mockSignIn, factor, false, any())
+    }
+  }
+
+  @Test
+  fun prepareShouldSendNewCodeWhenResendIsExplicit() = runTest {
+    every { mockSignIn.firstFactorVerification } returns
+      Verification(
+        status = Verification.Status.UNVERIFIED,
+        strategy = StrategyKeys.EMAIL_CODE,
+        expireAt = Long.MAX_VALUE,
+      )
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+
+    viewModel.prepare(factor, isSecondFactor = false, forcePrepare = true)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) {
+      mockPrepareHandler.prepareForEmailCode(mockSignIn, factor, false, any())
+    }
+  }
+
+  @Test
   fun prepareShouldRerouteWhenRequestedFactorIsNoLongerSupported() = runTest {
     every { mockSignIn.identifier } returns null
     every { mockSignIn.supportedFirstFactors } returns listOf(Factor(strategy = "ticket"))
+    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+
+    viewModel.state.test {
+      assertEquals(AuthenticationViewState.Idle, awaitItem())
+
+      viewModel.prepare(factor, isSecondFactor = false)
+      testDispatcher.scheduler.advanceUntilIdle()
+
+      assertEquals(AuthenticationViewState.Loading, awaitItem())
+      assertEquals(AuthenticationViewState.Success.SignIn(mockSignIn), awaitItem())
+    }
+
+    coVerify(exactly = 0) { mockPrepareHandler.prepareForEmailCode(any(), any(), any(), any()) }
+  }
+
+  @Test
+  fun prepareShouldRerouteActiveVerificationWhenFactorIsNoLongerSupported() = runTest {
+    every { mockSignIn.identifier } returns null
+    every { mockSignIn.supportedFirstFactors } returns listOf(Factor(strategy = "ticket"))
+    every { mockSignIn.firstFactorVerification } returns
+      Verification(
+        status = Verification.Status.UNVERIFIED,
+        strategy = StrategyKeys.EMAIL_CODE,
+        expireAt = Long.MAX_VALUE,
+      )
     val factor = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
 
     viewModel.state.test {

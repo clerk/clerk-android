@@ -61,6 +61,75 @@ class AuthViewPendingAuthRoutingTest {
   }
 
   @Test
+  fun `resumeInProgressAuthAttempt respects host opt out`() {
+    val factor = Factor(strategy = Constants.Strategy.TOTP)
+    val optedOutAuthState =
+      AuthState(
+        mode = AuthMode.SignInOrUp,
+        backStack = backStack,
+        sharedPreferences = preferences(),
+        resumeInProgressAuthAttempt = false,
+      )
+    val signIn =
+      SignIn(
+        id = "sign_in_123",
+        status = SignIn.Status.NEEDS_SECOND_FACTOR,
+        supportedSecondFactors = listOf(factor),
+      )
+
+    resumeInProgressAuthAttempt(
+      authState = optedOutAuthState,
+      top = AuthDestination.AuthStart,
+      signIn = signIn,
+      signUp = null,
+      onAuthComplete = {},
+    )
+
+    verify(exactly = 0) { backStack.add(any()) }
+  }
+
+  @Test
+  fun `resumeInProgressAuthAttempt does not restore reset password code screen`() {
+    val resetFactor = Factor(strategy = Constants.Strategy.RESET_PASSWORD_EMAIL_CODE)
+    val signIn =
+      SignIn(
+        id = "sign_in_123",
+        status = SignIn.Status.NEEDS_FIRST_FACTOR,
+        supportedFirstFactors = listOf(resetFactor),
+        firstFactorVerification =
+          Verification(
+            status = Verification.Status.UNVERIFIED,
+            strategy = Constants.Strategy.RESET_PASSWORD_EMAIL_CODE,
+          ),
+      )
+
+    resumeInProgressAuthAttempt(
+      authState = authState,
+      top = AuthDestination.AuthStart,
+      signIn = signIn,
+      signUp = null,
+      onAuthComplete = {},
+    )
+
+    verify(exactly = 0) { backStack.add(any()) }
+  }
+
+  @Test
+  fun `resumeInProgressAuthAttempt does not restore new password screen`() {
+    val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.NEEDS_NEW_PASSWORD)
+
+    resumeInProgressAuthAttempt(
+      authState = authState,
+      top = AuthDestination.AuthStart,
+      signIn = signIn,
+      signUp = null,
+      onAuthComplete = {},
+    )
+
+    verify(exactly = 0) { backStack.add(any()) }
+  }
+
+  @Test
   fun `resumeInProgressAuthAttempt does not reroute when auth stack is already past root`() {
     val factor = Factor(strategy = Constants.Strategy.TOTP)
     val signIn =
@@ -121,6 +190,38 @@ class AuthViewPendingAuthRoutingTest {
 
     assertTrue(completed)
     verify(exactly = 0) { backStack.add(any()) }
+  }
+
+  @Test
+  fun `resumeInProgressAuthAttempt completes reset auth after host opt out`() {
+    val optedOutAuthState =
+      AuthState(
+        mode = AuthMode.SignInOrUp,
+        backStack = backStack,
+        sharedPreferences = preferences(),
+        resumeInProgressAuthAttempt = false,
+      )
+    val signIn =
+      SignIn(
+        id = "sign_in_123",
+        status = SignIn.Status.COMPLETE,
+        firstFactorVerification =
+          Verification(
+            status = Verification.Status.VERIFIED,
+            strategy = Constants.Strategy.RESET_PASSWORD_EMAIL_CODE,
+          ),
+      )
+    var completed = false
+
+    resumeInProgressAuthAttempt(
+      authState = optedOutAuthState,
+      top = AuthDestination.AuthStart,
+      signIn = signIn,
+      signUp = null,
+      onAuthComplete = { completed = true },
+    )
+
+    assertTrue(completed)
   }
 
   @Test

@@ -24,6 +24,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
+import com.clerk.api.Constants
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.session.SessionTaskKey
@@ -81,6 +82,9 @@ import kotlinx.serialization.Serializable
  *   affordance falls back to the system back dispatcher.
  * @param onAuthComplete Called when authentication completes.
  * @param mode Determines whether the flow starts as sign-in, sign-up, or sign-in-or-up.
+ * @param resumeInProgressAuthAttempt When `false`, an auth attempt restored while this view is at
+ *   its start screen is not resumed. Completed attempts are still handled. Password-reset attempts
+ *   are never resumed from the start screen.
  * @param logo Replaces the logo shown by authentication screens. When provided, it takes precedence
  *   over the dashboard-configured logo and the [ClerkTheme.design] logo sizing — the SDK applies no
  *   sizing or spacing, so you are responsible for its layout and accessibility. To only change the
@@ -104,6 +108,7 @@ fun AuthView(
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit = {},
   mode: AuthMode = AuthMode.SignInOrUp,
+  resumeInProgressAuthAttempt: Boolean = true,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
@@ -126,7 +131,12 @@ fun AuthView(
           unsafeMetadata = unsafeMetadata,
         )
       }
-    AuthStateProvider(backStack = backStack, mode = mode, identifierConfig = identifierConfig) {
+    AuthStateProvider(
+      backStack = backStack,
+      mode = mode,
+      identifierConfig = identifierConfig,
+      resumeInProgressAuthAttempt = resumeInProgressAuthAttempt,
+    ) {
       ObservePendingSessionTaskRouting(backStack = backStack)
       ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
@@ -376,12 +386,24 @@ internal fun resumeInProgressAuthAttempt(
   onAuthComplete: () -> Unit,
 ) {
   if (!authState.shouldResumeInProgressAuthAttempt && !authAttemptIsComplete(signIn, signUp)) return
-  if (top != null && top != AuthDestination.AuthStart) return
+  if (
+    (top != null && top != AuthDestination.AuthStart) || signIn?.isPasswordResetInProgress() == true
+  ) {
+    return
+  }
 
   when {
     signIn != null -> authState.setToStepForStatus(signIn, onAuthComplete = onAuthComplete)
     signUp != null -> authState.setToStepForStatus(signUp, onAuthComplete = onAuthComplete)
   }
+}
+
+private fun SignIn.isPasswordResetInProgress(): Boolean {
+  val verificationStrategy = firstFactorVerification?.strategy
+  return status == SignIn.Status.NEEDS_NEW_PASSWORD ||
+    (status == SignIn.Status.NEEDS_FIRST_FACTOR &&
+      (verificationStrategy == Constants.Strategy.RESET_PASSWORD_EMAIL_CODE ||
+        verificationStrategy == Constants.Strategy.RESET_PASSWORD_PHONE_CODE))
 }
 
 private fun authAttemptIsComplete(signIn: SignIn?, signUp: SignUp?): Boolean {

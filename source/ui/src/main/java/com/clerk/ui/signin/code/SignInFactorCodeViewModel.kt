@@ -3,6 +3,7 @@ package com.clerk.ui.signin.code
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.VerificationUiState
@@ -27,12 +28,21 @@ internal class SignInFactorCodeViewModel(
     MutableStateFlow(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun prepare(factor: Factor, isSecondFactor: Boolean) {
-    _state.value = AuthenticationViewState.Loading
-
+  fun prepare(factor: Factor, isSecondFactor: Boolean, forcePrepare: Boolean = false) {
     guardSignIn(_state) { inProgressSignIn ->
+      val shouldReroute =
+        shouldRerouteForUnsupportedFactor(inProgressSignIn, factor, isSecondFactor)
+      if (
+        !forcePrepare &&
+          !shouldReroute &&
+          inProgressSignIn.hasActiveVerification(factor, isSecondFactor)
+      ) {
+        return@guardSignIn
+      }
+
+      _state.value = AuthenticationViewState.Loading
       viewModelScope.launch(workDispatcher) {
-        if (shouldRerouteForUnsupportedFactor(inProgressSignIn, factor, isSecondFactor)) {
+        if (shouldReroute) {
           _state.value = AuthenticationViewState.Success.SignIn(inProgressSignIn)
           return@launch
         }
@@ -64,6 +74,13 @@ internal class SignInFactorCodeViewModel(
         }
       }
     }
+  }
+
+  private fun SignIn.hasActiveVerification(factor: Factor, isSecondFactor: Boolean): Boolean {
+    val verification = if (isSecondFactor) secondFactorVerification else firstFactorVerification
+    return verification?.status == Verification.Status.UNVERIFIED &&
+      verification.strategy == factor.strategy &&
+      verification.expireAt?.let { it > System.currentTimeMillis() } == true
   }
 
   fun attempt(factor: Factor, isSecondFactor: Boolean, code: String) {
