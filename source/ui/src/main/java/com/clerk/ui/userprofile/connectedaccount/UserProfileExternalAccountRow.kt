@@ -33,6 +33,7 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.logoUrl
+import com.clerk.api.sso.providerName
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp2
@@ -121,8 +122,7 @@ private fun EmailWithAccountBadge(externalAccount: ExternalAccount) {
         fallback = fallbackPainter,
       )
       Text(
-        text =
-          externalAccount.oauthProviderType.name.lowercase().replaceFirstChar { it.titlecase() },
+        text = externalAccount.oauthProviderType.providerName,
         color = ClerkMaterialTheme.colors.mutedForeground,
         style = ClerkMaterialTheme.typography.bodyMedium,
       )

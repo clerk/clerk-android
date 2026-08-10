@@ -515,7 +515,7 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun oauthProviderEnumShouldHaveExpectedValues() {
+  fun oauthProviderShouldHaveExpectedValues() {
     // Test that OAuth providers work correctly with our ViewModel
     val google = OAuthProvider.GOOGLE
     val facebook = OAuthProvider.FACEBOOK
@@ -548,6 +548,24 @@ class AuthViewModelTest {
 
     coVerify(exactly = 0) { SignIn.authenticateWithGoogleOneTap(any()) }
     coVerify(exactly = 1) { SignIn.authenticateWithRedirect(any(), true) }
+  }
+
+  @Test
+  fun customSocialAuthPreservesProviderStrategy() = runTest {
+    val paramsSlot = slot<SignIn.AuthenticateWithRedirectParams>()
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+      ClerkResult.success(OAuthResult(signIn = mockk(relaxed = true)))
+
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.custom("oauth_custom_patreon"),
+      preferGoogleOneTap = false,
+    )
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) { SignIn.authenticateWithRedirect(capture(paramsSlot), true) }
+    val params = paramsSlot.captured as SignIn.AuthenticateWithRedirectParams.OAuth
+    assertEquals("oauth_custom_patreon", params.provider.strategy)
   }
 
   @Test

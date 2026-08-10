@@ -1,12 +1,44 @@
 package com.clerk.ui.auth
 
 import androidx.compose.ui.autofill.ContentType
+import com.clerk.api.Clerk
+import com.clerk.api.network.model.environment.UserSettings
+import com.clerk.api.sso.OAuthProvider
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AuthStartViewHelperTest {
+
+  @Test
+  fun authenticatableSocialProvidersPreserveCustomStrategy() {
+    mockkObject(Clerk)
+    try {
+      every { Clerk.socialProviders } returns
+        mapOf(
+          "oauth_custom_patreon" to
+            UserSettings.SocialConfig(
+              enabled = true,
+              required = false,
+              authenticatable = true,
+              strategy = "oauth_custom_patreon",
+              notSelectable = false,
+              name = "Patreon",
+            )
+        )
+
+      assertEquals(
+        listOf(OAuthProvider.custom("oauth_custom_patreon")),
+        AuthStartViewHelper().authenticatableSocialProviders,
+      )
+    } finally {
+      unmockkObject(Clerk)
+    }
+  }
 
   @Test
   fun shouldStartOnPhoneNumberReturnsFalseWhenIdentifierMethodsAreEnabled() {

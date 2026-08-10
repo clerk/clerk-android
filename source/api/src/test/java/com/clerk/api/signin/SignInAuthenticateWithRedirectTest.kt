@@ -61,6 +61,43 @@ class SignInAuthenticateWithRedirectTest {
   }
 
   @Test
+  fun `authenticateWithRedirect preserves custom OAuth provider strategy`() = runTest {
+    mockkObject(SSOService)
+    val redirectUrl = "clerk://example.callback"
+    val oauthResult = OAuthResult(signIn = null)
+    coEvery {
+      SSOService.authenticateWithRedirect(
+        strategy = "oauth_custom_patreon",
+        redirectUrl = redirectUrl,
+        identifier = null,
+        emailAddress = null,
+        legalAccepted = null,
+        transferable = true,
+      )
+    } returns ClerkResult.success(oauthResult)
+
+    val result =
+      SignIn.authenticateWithRedirect(
+        SignIn.AuthenticateWithRedirectParams.OAuth(
+          provider = OAuthProvider.custom("oauth_custom_patreon"),
+          redirectUrl = redirectUrl,
+        )
+      )
+
+    assertTrue(result is ClerkResult.Success)
+    coVerify(exactly = 1) {
+      SSOService.authenticateWithRedirect(
+        strategy = "oauth_custom_patreon",
+        redirectUrl = redirectUrl,
+        identifier = null,
+        emailAddress = null,
+        legalAccepted = null,
+        transferable = true,
+      )
+    }
+  }
+
+  @Test
   fun `authenticateWithRedirect uses Enterprise SSO strategy`() = runTest {
     mockkObject(SSOService)
     val redirectUrl = "https://sso.example.com/start"

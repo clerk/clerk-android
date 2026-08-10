@@ -2,16 +2,23 @@ package com.clerk.api.sso
 
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 /**
- * Enum class representing supported OAuth providers for authentication.
+ * Value representing an OAuth provider strategy for authentication.
  *
  * Each OAuth provider corresponds to a third-party authentication service that users can use to
- * sign in to your application. The enum provides a type-safe way to reference OAuth providers and
- * automatically handles the mapping to the appropriate strategy strings used in Clerk API requests.
+ * sign in to your application. Built-in providers are available as constants, while custom
+ * providers retain their complete strategy string so it can be sent to Clerk without losing the
+ * provider key.
  *
  * ## Supported Providers
- * The enum includes support for major OAuth providers such as:
+ * The type includes support for major OAuth providers such as:
  * - **Social platforms**: Facebook, Google, Twitter, Instagram, TikTok, Discord
  * - **Professional platforms**: LinkedIn, Microsoft, Slack
  * - **Developer platforms**: GitHub, GitLab, Bitbucket, Atlassian, Vercel
@@ -33,114 +40,219 @@ import com.clerk.api.Clerk
  *
  * // Convert from strategy string
  * val provider = OAuthProvider.fromStrategy("oauth_github")
+ * val customProvider = OAuthProvider.custom("oauth_custom_patreon")
  * ```
  *
  * @see [OAuthProviderData]
  */
-@kotlinx.serialization.Serializable
-enum class OAuthProvider {
-  /** Facebook OAuth authentication provider. */
-  FACEBOOK,
-
-  /** Google OAuth authentication provider. */
-  GOOGLE,
-
-  /** HubSpot OAuth authentication provider. */
-  HUBSPOT,
-
-  /** GitHub OAuth authentication provider. */
-  GITHUB,
-
-  /** TikTok OAuth authentication provider. */
-  TIKTOK,
-
-  /** GitLab OAuth authentication provider. */
-  GITLAB,
-
-  /** Discord OAuth authentication provider. */
-  DISCORD,
-
-  /** Twitter OAuth authentication provider. */
-  TWITTER,
-
-  /** Twitch OAuth authentication provider. */
-  TWITCH,
-
-  /** LinkedIn OAuth authentication provider (legacy). */
-  LINKEDIN,
-
-  /** LinkedIn OpenID Connect authentication provider. */
-  LINKEDIN_OIDC,
-
-  /** Dropbox OAuth authentication provider. */
-  DROPBOX,
-
-  /** Atlassian OAuth authentication provider. */
-  ATLASSIAN,
-
-  /** Bitbucket OAuth authentication provider. */
-  BITBUCKET,
-
-  /** Microsoft OAuth authentication provider. */
-  MICROSOFT,
-
-  /** Notion OAuth authentication provider. */
-  NOTION,
-
-  /** Apple OAuth authentication provider. */
-  APPLE,
-
-  /** LINE OAuth authentication provider. */
-  LINE,
-
-  /** Instagram OAuth authentication provider. */
-  INSTAGRAM,
-
-  /** Coinbase OAuth authentication provider. */
-  COINBASE,
-
-  /** Spotify OAuth authentication provider. */
-  SPOTIFY,
-
-  /** Xero OAuth authentication provider. */
-  XERO,
-
-  /** Box OAuth authentication provider. */
-  BOX,
-
-  /** Slack OAuth authentication provider. */
-  SLACK,
-
-  /** Linear OAuth authentication provider. */
-  LINEAR,
-
-  /** Hugging Face OAuth authentication provider. */
-  HUGGING_FACE,
-
-  /** Vercel OAuth authentication provider. */
-  VERCEL,
-
-  /** Custom OAuth authentication provider for enterprise or specialized implementations. */
-  CUSTOM,
-
-  /** Unknown OAuth provider - used as fallback for unrecognized providers. */
-  UNKNOWN;
-
+@kotlinx.serialization.Serializable(with = OAuthProviderSerializer::class)
+@ConsistentCopyVisibility
+data class OAuthProvider private constructor(val strategy: String) {
   companion object {
+    /** Facebook OAuth authentication provider. */
+    @JvmField val FACEBOOK = OAuthProvider("oauth_facebook")
+
+    /** Google OAuth authentication provider. */
+    @JvmField val GOOGLE = OAuthProvider("oauth_google")
+
+    /** HubSpot OAuth authentication provider. */
+    @JvmField val HUBSPOT = OAuthProvider("oauth_hubspot")
+
+    /** GitHub OAuth authentication provider. */
+    @JvmField val GITHUB = OAuthProvider("oauth_github")
+
+    /** TikTok OAuth authentication provider. */
+    @JvmField val TIKTOK = OAuthProvider("oauth_tiktok")
+
+    /** GitLab OAuth authentication provider. */
+    @JvmField val GITLAB = OAuthProvider("oauth_gitlab")
+
+    /** Discord OAuth authentication provider. */
+    @JvmField val DISCORD = OAuthProvider("oauth_discord")
+
+    /** Twitter OAuth authentication provider. */
+    @JvmField val TWITTER = OAuthProvider("oauth_twitter")
+
+    /** Twitch OAuth authentication provider. */
+    @JvmField val TWITCH = OAuthProvider("oauth_twitch")
+
+    /** LinkedIn OAuth authentication provider (legacy). */
+    @JvmField val LINKEDIN = OAuthProvider("oauth_linkedin")
+
+    /** LinkedIn OpenID Connect authentication provider. */
+    @JvmField val LINKEDIN_OIDC = OAuthProvider("oauth_linkedin_oidc")
+
+    /** Dropbox OAuth authentication provider. */
+    @JvmField val DROPBOX = OAuthProvider("oauth_dropbox")
+
+    /** Atlassian OAuth authentication provider. */
+    @JvmField val ATLASSIAN = OAuthProvider("oauth_atlassian")
+
+    /** Bitbucket OAuth authentication provider. */
+    @JvmField val BITBUCKET = OAuthProvider("oauth_bitbucket")
+
+    /** Microsoft OAuth authentication provider. */
+    @JvmField val MICROSOFT = OAuthProvider("oauth_microsoft")
+
+    /** Notion OAuth authentication provider. */
+    @JvmField val NOTION = OAuthProvider("oauth_notion")
+
+    /** Apple OAuth authentication provider. */
+    @JvmField val APPLE = OAuthProvider("oauth_apple")
+
+    /** LINE OAuth authentication provider. */
+    @JvmField val LINE = OAuthProvider("oauth_line")
+
+    /** Instagram OAuth authentication provider. */
+    @JvmField val INSTAGRAM = OAuthProvider("oauth_instagram")
+
+    /** Coinbase OAuth authentication provider. */
+    @JvmField val COINBASE = OAuthProvider("oauth_coinbase")
+
+    /** Spotify OAuth authentication provider. */
+    @JvmField val SPOTIFY = OAuthProvider("oauth_spotify")
+
+    /** Xero OAuth authentication provider. */
+    @JvmField val XERO = OAuthProvider("oauth_xero")
+
+    /** Box OAuth authentication provider. */
+    @JvmField val BOX = OAuthProvider("oauth_box")
+
+    /** Slack OAuth authentication provider. */
+    @JvmField val SLACK = OAuthProvider("oauth_slack")
+
+    /** Linear OAuth authentication provider. */
+    @JvmField val LINEAR = OAuthProvider("oauth_linear")
+
+    /** Hugging Face OAuth authentication provider. */
+    @JvmField val HUGGING_FACE = OAuthProvider("oauth_huggingface")
+
+    /** Vercel OAuth authentication provider. */
+    @JvmField val VERCEL = OAuthProvider("oauth_vercel")
+
+    /** Generic custom OAuth strategy retained for source compatibility. */
+    @JvmField val CUSTOM = OAuthProvider("oauth_custom")
+
+    /** Unknown OAuth provider - used as fallback for non-OAuth strategies. */
+    @JvmField val UNKNOWN = OAuthProvider("oauth_unknown")
+
+    /** Built-in provider values, matching the former enum entry order. */
+    @JvmField
+    val entries: List<OAuthProvider> =
+      listOf(
+        FACEBOOK,
+        GOOGLE,
+        HUBSPOT,
+        GITHUB,
+        TIKTOK,
+        GITLAB,
+        DISCORD,
+        TWITTER,
+        TWITCH,
+        LINKEDIN,
+        LINKEDIN_OIDC,
+        DROPBOX,
+        ATLASSIAN,
+        BITBUCKET,
+        MICROSOFT,
+        NOTION,
+        APPLE,
+        LINE,
+        INSTAGRAM,
+        COINBASE,
+        SPOTIFY,
+        XERO,
+        BOX,
+        SLACK,
+        LINEAR,
+        HUGGING_FACE,
+        VERCEL,
+        CUSTOM,
+        UNKNOWN,
+      )
+
+    private val entryNameByStrategy: Map<String, String> =
+      listOf(
+          "FACEBOOK",
+          "GOOGLE",
+          "HUBSPOT",
+          "GITHUB",
+          "TIKTOK",
+          "GITLAB",
+          "DISCORD",
+          "TWITTER",
+          "TWITCH",
+          "LINKEDIN",
+          "LINKEDIN_OIDC",
+          "DROPBOX",
+          "ATLASSIAN",
+          "BITBUCKET",
+          "MICROSOFT",
+          "NOTION",
+          "APPLE",
+          "LINE",
+          "INSTAGRAM",
+          "COINBASE",
+          "SPOTIFY",
+          "XERO",
+          "BOX",
+          "SLACK",
+          "LINEAR",
+          "HUGGING_FACE",
+          "VERCEL",
+          "CUSTOM",
+          "UNKNOWN",
+        )
+        .zip(entries)
+        .associate { (name, provider) -> provider.strategy to name }
+
+    private val providerDataByStrategy: Map<String, OAuthProviderData> =
+      listOf(
+          OAuthProviderData("facebook", FACEBOOK.strategy, "Facebook"),
+          OAuthProviderData("google", GOOGLE.strategy, "Google"),
+          OAuthProviderData("hubspot", HUBSPOT.strategy, "HubSpot"),
+          OAuthProviderData("github", GITHUB.strategy, "GitHub"),
+          OAuthProviderData("tiktok", TIKTOK.strategy, "TikTok"),
+          OAuthProviderData("gitlab", GITLAB.strategy, "GitLab"),
+          OAuthProviderData("discord", DISCORD.strategy, "Discord"),
+          OAuthProviderData("twitter", TWITTER.strategy, "Twitter"),
+          OAuthProviderData("twitch", TWITCH.strategy, "Twitch"),
+          OAuthProviderData("linkedin", LINKEDIN.strategy, "LinkedIn"),
+          OAuthProviderData("linkedin_oidc", LINKEDIN_OIDC.strategy, "LinkedIn"),
+          OAuthProviderData("dropbox", DROPBOX.strategy, "Dropbox"),
+          OAuthProviderData("atlassian", ATLASSIAN.strategy, "Atlassian"),
+          OAuthProviderData("bitbucket", BITBUCKET.strategy, "Bitbucket"),
+          OAuthProviderData("microsoft", MICROSOFT.strategy, "Microsoft"),
+          OAuthProviderData("notion", NOTION.strategy, "Notion"),
+          OAuthProviderData("apple", APPLE.strategy, "Apple"),
+          OAuthProviderData("line", LINE.strategy, "LINE"),
+          OAuthProviderData("instagram", INSTAGRAM.strategy, "Instagram"),
+          OAuthProviderData("coinbase", COINBASE.strategy, "Coinbase"),
+          OAuthProviderData("spotify", SPOTIFY.strategy, "Spotify"),
+          OAuthProviderData("xero", XERO.strategy, "Xero"),
+          OAuthProviderData("box", BOX.strategy, "Box"),
+          OAuthProviderData("slack", SLACK.strategy, "Slack"),
+          OAuthProviderData("linear", LINEAR.strategy, "Linear"),
+          OAuthProviderData("huggingface", HUGGING_FACE.strategy, "Hugging Face"),
+          OAuthProviderData("vercel", VERCEL.strategy, "Vercel"),
+          OAuthProviderData("custom", CUSTOM.strategy, "Custom"),
+          OAuthProviderData("unknown", UNKNOWN.strategy, "Unknown"),
+        )
+        .associateBy { it.strategy }
+
     /**
      * Converts a strategy string to the corresponding [OAuthProvider].
      *
      * This convenience function is primarily used to convert strategy strings from
      * [com.clerk.network.model.environment.UserSettings.SocialConfig.strategy] into type-safe
-     * [OAuthProvider] enum values. This is useful when processing configuration data or API
-     * responses that contain strategy strings.
+     * [OAuthProvider] values. This is useful when processing configuration data or API responses
+     * that contain strategy strings.
      *
      * @param strategy The OAuth strategy string to convert (e.g., "oauth_google", "oauth_github").
-     *   The strategy string should match one of the supported provider strategies. For custom OAuth
-     *   providers, any strategy string starting with "oauth_" will return [CUSTOM]. Non-OAuth
-     *   strategies will return [UNKNOWN].
-     * @return The corresponding [OAuthProvider] enum value. Returns [CUSTOM] for unrecognized OAuth
-     *   strategies and [UNKNOWN] for non-OAuth strategies.
+     *   The strategy string should match one of the supported provider strategies. Custom and
+     *   otherwise unrecognized OAuth strategies retain the complete string. Non-OAuth strategies
+     *   return [UNKNOWN].
+     * @return The corresponding [OAuthProvider] value, preserving custom OAuth strategy keys.
      *
      * ### Example usage:
      * ```kotlin
@@ -149,12 +261,27 @@ enum class OAuthProvider {
      * ```
      */
     fun fromStrategy(strategy: String): OAuthProvider {
-      return OAuthProvider.entries.find { it.providerData.strategy == strategy }
-        ?: when {
-          strategy.startsWith("oauth_") -> CUSTOM
-          else -> UNKNOWN
-        }
+      return entries.find { it.strategy == strategy }
+        ?: if (strategy.startsWith("oauth_")) OAuthProvider(strategy) else UNKNOWN
     }
+
+    /** Creates a custom OAuth provider while preserving its complete strategy key. */
+    @JvmStatic
+    fun custom(strategy: String): OAuthProvider {
+      require(strategy == CUSTOM.strategy || strategy.startsWith("oauth_custom_")) {
+        "Custom OAuth strategy must be oauth_custom or start with oauth_custom_"
+      }
+      return OAuthProvider(strategy)
+    }
+
+    /** Returns the built-in provider values, matching the former enum API. */
+    @JvmStatic fun values(): Array<OAuthProvider> = entries.toTypedArray()
+
+    /** Returns a built-in provider by its former enum constant name. */
+    @JvmStatic
+    fun valueOf(name: String): OAuthProvider =
+      entries.firstOrNull { it.name == name }
+        ?: throw IllegalArgumentException("No OAuthProvider with name $name")
   }
 
   /**
@@ -172,77 +299,47 @@ enum class OAuthProvider {
    * @see [OAuthProviderData]
    */
   internal val providerData: OAuthProviderData
-    get() =
-      when (this) {
-        FACEBOOK ->
-          OAuthProviderData(provider = "facebook", strategy = "oauth_facebook", name = "Facebook")
-        GOOGLE -> OAuthProviderData(provider = "google", strategy = "oauth_google", name = "Google")
-        HUBSPOT ->
-          OAuthProviderData(provider = "hubspot", strategy = "oauth_hubspot", name = "HubSpot")
-        GITHUB -> OAuthProviderData(provider = "github", strategy = "oauth_github", name = "GitHub")
-        TIKTOK -> OAuthProviderData(provider = "tiktok", strategy = "oauth_tiktok", name = "TikTok")
-        GITLAB -> OAuthProviderData(provider = "gitlab", strategy = "oauth_gitlab", name = "GitLab")
-        DISCORD ->
-          OAuthProviderData(provider = "discord", strategy = "oauth_discord", name = "Discord")
-        TWITTER ->
-          OAuthProviderData(provider = "twitter", strategy = "oauth_twitter", name = "Twitter")
-        TWITCH -> OAuthProviderData(provider = "twitch", strategy = "oauth_twitch", name = "Twitch")
-        LINKEDIN ->
-          OAuthProviderData(provider = "linkedin", strategy = "oauth_linkedin", name = "LinkedIn")
-        LINKEDIN_OIDC ->
-          OAuthProviderData(
-            provider = "linkedin_oidc",
-            strategy = "oauth_linkedin_oidc",
-            name = "LinkedIn",
-          )
-        DROPBOX ->
-          OAuthProviderData(provider = "dropbox", strategy = "oauth_dropbox", name = "Dropbox")
-        ATLASSIAN ->
-          OAuthProviderData(
-            provider = "atlassian",
-            strategy = "oauth_atlassian",
-            name = "Atlassian",
-          )
-        BITBUCKET ->
-          OAuthProviderData(
-            provider = "bitbucket",
-            strategy = "oauth_bitbucket",
-            name = "Bitbucket",
-          )
-        MICROSOFT ->
-          OAuthProviderData(
-            provider = "microsoft",
-            strategy = "oauth_microsoft",
-            name = "Microsoft",
-          )
-        NOTION -> OAuthProviderData(provider = "notion", strategy = "oauth_notion", name = "Notion")
-        APPLE -> OAuthProviderData(provider = "apple", strategy = "oauth_apple", name = "Apple")
-        LINE -> OAuthProviderData(provider = "line", strategy = "oauth_line", name = "LINE")
-        INSTAGRAM ->
-          OAuthProviderData(
-            provider = "instagram",
-            strategy = "oauth_instagram",
-            name = "Instagram",
-          )
-        COINBASE ->
-          OAuthProviderData(provider = "coinbase", strategy = "oauth_coinbase", name = "Coinbase")
-        SPOTIFY ->
-          OAuthProviderData(provider = "spotify", strategy = "oauth_spotify", name = "Spotify")
-        XERO -> OAuthProviderData(provider = "xero", strategy = "oauth_xero", name = "Xero")
-        BOX -> OAuthProviderData(provider = "box", strategy = "oauth_box", name = "Box")
-        SLACK -> OAuthProviderData(provider = "slack", strategy = "oauth_slack", name = "Slack")
-        LINEAR -> OAuthProviderData(provider = "linear", strategy = "oauth_linear", name = "Linear")
-        HUGGING_FACE ->
-          OAuthProviderData(
-            provider = "huggingface",
-            strategy = "oauth_huggingface",
-            name = "Hugging Face",
-          )
-        VERCEL -> OAuthProviderData(provider = "vercel", strategy = "oauth_vercel", name = "Vercel")
-        CUSTOM -> OAuthProviderData(provider = "custom", strategy = "oauth_custom", name = "Custom")
-        UNKNOWN ->
-          OAuthProviderData(provider = "unknown", strategy = "oauth_unknown", name = "Unknown")
+    get() {
+      providerDataByStrategy[strategy]?.let {
+        return it
       }
+      val configuredProvider = Clerk.socialProviders.values.find { it.strategy == strategy }
+      return OAuthProviderData(
+        provider = strategy.removePrefix("oauth_"),
+        strategy = strategy,
+        name = configuredProvider?.name?.takeIf { it.isNotBlank() } ?: "Custom",
+      )
+    }
+
+  /** Enum-style constant name retained for source compatibility. */
+  val name: String
+    get() =
+      when {
+        strategy in entryNameByStrategy -> entryNameByStrategy.getValue(strategy)
+        strategy.startsWith("oauth_") -> "CUSTOM"
+        else -> "UNKNOWN"
+      }
+
+  override fun toString(): String = name
+}
+
+internal object OAuthProviderSerializer : KSerializer<OAuthProvider> {
+  override val descriptor: SerialDescriptor =
+    PrimitiveSerialDescriptor("OAuthProvider", PrimitiveKind.STRING)
+
+  override fun serialize(encoder: Encoder, value: OAuthProvider) {
+    val builtInProvider = OAuthProvider.entries.firstOrNull { it == value }
+    encoder.encodeString(builtInProvider?.name ?: value.strategy)
+  }
+
+  override fun deserialize(decoder: Decoder): OAuthProvider {
+    val serializedValue = decoder.decodeString()
+    return if (serializedValue.startsWith("oauth_")) {
+      OAuthProvider.fromStrategy(serializedValue)
+    } else {
+      OAuthProvider.valueOf(serializedValue)
+    }
+  }
 }
 
 /**
@@ -306,7 +403,7 @@ val OAuthProvider.logoUrl: String?
     // Test override takes precedence when present
     logoUrlOverrides[this]?.let { it.trim().takeIf { trimmed -> trimmed.isNotEmpty() } }
       ?: Clerk.socialProviders.values
-        .find { it.strategy == this.providerData.strategy }
+        .find { it.strategy == strategy }
         ?.logoUrl
         ?.trim()
         ?.takeIf { it.isNotEmpty() }

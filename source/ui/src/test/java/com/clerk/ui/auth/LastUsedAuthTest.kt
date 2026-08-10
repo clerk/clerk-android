@@ -44,6 +44,21 @@ class LastUsedAuthTest {
   }
 
   @Test
+  fun fromPreservesCustomSocialProviderStrategy() {
+    val customProvider = OAuthProvider.custom("oauth_custom_patreon")
+
+    val result =
+      LastUsedAuth.from(
+        lastAuthenticationStrategy = customProvider.strategy,
+        enabledFirstFactorAttributes = listOf("email_address"),
+        authenticatableSocialProviders = listOf(customProvider),
+        storedIdentifierType = null,
+      )
+
+    assertEquals(customProvider, (result as LastUsedAuth.Social).provider)
+  }
+
+  @Test
   fun fromReturnsNullWhenOAuthStrategyNotAuthenticatable() {
     val result =
       LastUsedAuth.from(
