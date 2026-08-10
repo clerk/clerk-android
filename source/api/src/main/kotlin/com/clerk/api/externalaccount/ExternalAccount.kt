@@ -115,4 +115,7 @@ suspend fun ExternalAccount.revokeTokens(): ClerkResult<User, ClerkErrorResponse
 }
 
 val ExternalAccount.oauthProviderType: OAuthProvider
-  get() = OAuthProvider.fromStrategy(this.provider)
+  get() {
+    val strategy = provider.takeIf { it.startsWith("oauth_") } ?: "oauth_$provider"
+    return OAuthProvider.fromStrategy(strategy)
+  }

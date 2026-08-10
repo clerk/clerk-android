@@ -35,7 +35,7 @@ class UserOAuthProviderTest {
     Clerk.environment = environmentWith(patreon, line)
 
     val connectedAccount = mockk<ExternalAccount>()
-    every { connectedAccount.provider } returns patreon.strategy
+    every { connectedAccount.provider } returns patreon.strategy.removePrefix("oauth_")
     val user = mockk<User>()
     every { user.verifiedExternalAccounts } returns listOf(connectedAccount)
 
