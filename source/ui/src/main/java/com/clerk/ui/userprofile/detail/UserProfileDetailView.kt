@@ -52,6 +52,19 @@ private const val EMAIL_IMMUTABLE_SNACKBAR_MESSAGE =
 
 @Composable
 fun UserProfileDetailView(modifier: Modifier = Modifier) {
+  UserProfileDetailViewContent(modifier = modifier)
+}
+
+@Composable
+internal fun UserProfileDetailViewWithBackHandler(
+  modifier: Modifier = Modifier,
+  onBackPressed: () -> Unit,
+) {
+  UserProfileDetailViewContent(modifier = modifier, onBackPressed = onBackPressed)
+}
+
+@Composable
+private fun UserProfileDetailViewContent(modifier: Modifier, onBackPressed: (() -> Unit)? = null) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
   val destinationLifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
   val isNavigationSettled = destinationLifecycleState == Lifecycle.State.RESUMED
@@ -65,6 +78,7 @@ fun UserProfileDetailView(modifier: Modifier = Modifier) {
     phoneNumbers = user.sortedPhoneNumbers(),
     externalAccounts = user.sortedExternalAccounts(),
     isNavigationSettled = isNavigationSettled,
+    onBackPressed = onBackPressed,
     modifier = modifier,
   )
 }
@@ -76,6 +90,7 @@ private fun UserProfileDetailViewImpl(
   phoneNumbers: ImmutableList<PhoneNumber>,
   externalAccounts: ImmutableList<ExternalAccount>,
   isNavigationSettled: Boolean = true,
+  onBackPressed: (() -> Unit)? = null,
   modifier: Modifier = Modifier,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
@@ -90,7 +105,7 @@ private fun UserProfileDetailViewImpl(
       modifier = modifier,
       topBar = {
         ClerkTopAppBar(
-          onBackPressed = { userProfileState.navigateBack() },
+          onBackPressed = onBackPressed ?: { userProfileState.navigateBack() },
           title = stringResource(R.string.manage_account),
           hasLogo = false,
         )

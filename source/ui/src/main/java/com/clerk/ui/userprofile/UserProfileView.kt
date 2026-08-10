@@ -1,11 +1,14 @@
 package com.clerk.ui.userprofile
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -17,7 +20,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
@@ -46,6 +52,7 @@ import com.clerk.ui.userprofile.custom.UserProfileCustomNavigator
 import com.clerk.ui.userprofile.custom.UserProfileCustomRow
 import com.clerk.ui.userprofile.custom.effectiveCustomRows
 import com.clerk.ui.userprofile.detail.UserProfileDetailView
+import com.clerk.ui.userprofile.detail.UserProfileDetailViewWithBackHandler
 import com.clerk.ui.userprofile.security.BackupCodesView
 import com.clerk.ui.userprofile.security.MfaType
 import com.clerk.ui.userprofile.security.Origin
@@ -101,6 +108,7 @@ fun UserProfileView(
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
+    var showDetail by rememberSaveable { mutableStateOf(false) }
     val user by Clerk.userFlow.collectAsStateWithLifecycle()
     var showAccountSwitcher by rememberSaveable { mutableStateOf(false) }
     var showAuth by rememberSaveable { mutableStateOf(false) }
@@ -136,45 +144,66 @@ fun UserProfileView(
         }
       } else {
         DevelopmentModeWarningBox(modifier = Modifier.fillMaxSize()) {
-          NavDisplay(
-            modifier = Modifier.fillMaxSize(),
-            backStack = backStack,
-            onBack = {
-              handleUserProfileBack(
-                isAtRoot = backStack.size == 1,
-                isDismissible = isDismissible,
-                onDismiss = dismissHandler,
-                onNavigateBack = { backStack.removeLastOrNull() },
-              )
-            },
-            transitionSpec = {
-              val spec = tween<IntOffset>(durationMillis = 300)
-              slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-                slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-            },
-            popTransitionSpec = {
-              val spec = tween<IntOffset>(durationMillis = 300)
-              slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-                slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-            },
-            predictivePopTransitionSpec = { distance ->
-              // Use the provided distance to align with the system back gesture
-              slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-                slideOutHorizontally(targetOffsetX = { distance })
-            },
-            entryProvider =
-              entryProvider {
-                userProfileEntries(
-                  backStack = backStack,
+          val detailProgress by
+            animateFloatAsState(
+              targetValue = if (showDetail) 1f else 0f,
+              animationSpec = tween(durationMillis = 300),
+              label = "user profile detail slide",
+            )
+          Box(modifier = Modifier.fillMaxSize().clipToBounds()) {
+            NavDisplay(
+              modifier =
+                Modifier.fillMaxSize().graphicsLayer {
+                  translationX = -size.width * detailProgress
+                },
+              backStack = backStack,
+              onBack = {
+                handleUserProfileBack(
+                  isAtRoot = backStack.size == 1,
                   isDismissible = isDismissible,
                   onDismiss = dismissHandler,
-                  customRows = customRows,
-                  customDestination = customDestination,
-                  onSwitchAccount = { showAccountSwitcher = true },
-                  onAddAccount = showAddAccountAuth,
+                  onNavigateBack = { backStack.removeLastOrNull() },
                 )
               },
-          )
+              transitionSpec = {
+                val spec = tween<IntOffset>(durationMillis = 300)
+                slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
+                  slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
+              },
+              popTransitionSpec = {
+                val spec = tween<IntOffset>(durationMillis = 300)
+                slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
+                  slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
+              },
+              predictivePopTransitionSpec = { distance ->
+                // Use the provided distance to align with the system back gesture
+                slideInHorizontally(initialOffsetX = { -distance }) togetherWith
+                  slideOutHorizontally(targetOffsetX = { distance })
+              },
+              entryProvider =
+                entryProvider {
+                  userProfileEntries(
+                    backStack = backStack,
+                    isDismissible = isDismissible,
+                    onDismiss = dismissHandler,
+                    customRows = customRows,
+                    customDestination = customDestination,
+                    onSwitchAccount = { showAccountSwitcher = true },
+                    onAddAccount = showAddAccountAuth,
+                    onShowDetail = { showDetail = true },
+                  )
+                },
+            )
+            Box(
+              modifier =
+                Modifier.fillMaxSize().zIndex(1f).graphicsLayer {
+                  translationX = size.width * (1f - detailProgress)
+                }
+            ) {
+              UserProfileDetailViewWithBackHandler(onBackPressed = { showDetail = false })
+            }
+          }
+          BackHandler(enabled = showDetail) { showDetail = false }
 
           if (showAccountSwitcher) {
             UserProfileAccountSwitcherSheet(
@@ -197,12 +226,13 @@ internal fun EntryProviderScope<NavKey>.userProfileEntries(
   customDestination: (@Composable (String) -> Unit)?,
   onSwitchAccount: () -> Unit,
   onAddAccount: () -> Unit,
+  onShowDetail: () -> Unit = { backStack.add(UserProfileDestination.UserProfileDetail) },
 ) {
   entry<UserProfileDestination.UserProfileAccount> {
     UserProfileAccountView(
       onClick = {
         when (it) {
-          UserProfileAction.Profile -> backStack.add(UserProfileDestination.UserProfileDetail)
+          UserProfileAction.Profile -> onShowDetail()
 
           UserProfileAction.Security -> backStack.add(UserProfileDestination.UserProfileSecurity)
 
