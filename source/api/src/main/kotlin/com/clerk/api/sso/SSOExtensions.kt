@@ -3,7 +3,6 @@ package com.clerk.api.sso
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.network.serialization.shortErrorMessageOrNull
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
 
@@ -24,8 +23,7 @@ internal fun ClerkResult<SignIn, ClerkErrorResponse>.signInToOAuthResult():
         ClerkResult.Failure.ErrorType.API -> ClerkResult.apiFailure(this.error)
         ClerkResult.Failure.ErrorType.HTTP ->
           ClerkResult.httpFailure(error = this.error, code = this.code!!)
-        ClerkResult.Failure.ErrorType.UNKNOWN ->
-          ClerkResult.unknownFailure(error("${this.shortErrorMessageOrNull()}"))
+        ClerkResult.Failure.ErrorType.UNKNOWN -> this
       }
     }
   }
@@ -50,8 +48,7 @@ internal fun ClerkResult<SignUp, ClerkErrorResponse>.signUpToOAuthResult():
         ClerkResult.Failure.ErrorType.HTTP ->
           ClerkResult.httpFailure(error = this.error, code = this.code!!)
 
-        ClerkResult.Failure.ErrorType.UNKNOWN ->
-          ClerkResult.unknownFailure(error("${this.shortErrorMessageOrNull()}"))
+        ClerkResult.Failure.ErrorType.UNKNOWN -> this
       }
     }
   }
