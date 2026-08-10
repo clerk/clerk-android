@@ -348,7 +348,7 @@ data class SignIn(
     @Serializable
     @AutoMap
     data class OAuth(
-      @MapProperty("providerData?.strategy") val provider: OAuthProvider,
+      @MapProperty("strategy") val provider: OAuthProvider,
       @SerialName("redirect_url")
       override val redirectUrl: String = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       @SerialName("email_address") override val emailAddress: String? = null,
@@ -728,7 +728,7 @@ data class SignIn(
       val strategy =
         when (params) {
           is AuthenticateWithRedirectParams.EnterpriseSSO -> params.strategy
-          is AuthenticateWithRedirectParams.OAuth -> params.provider.providerData.strategy
+          is AuthenticateWithRedirectParams.OAuth -> params.provider.strategy
         }
       return SSOService.authenticateWithRedirect(
         strategy = strategy,

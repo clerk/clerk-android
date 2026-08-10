@@ -61,6 +61,41 @@ class SignUpAuthenticateWithRedirectTest {
   }
 
   @Test
+  fun `authenticateWithRedirect preserves custom OAuth provider strategy`() = runTest {
+    mockkObject(SSOService)
+    val redirectUrl = "clerk://example.callback"
+    val oauthResult = OAuthResult(signUp = mockk(relaxed = true))
+    coEvery {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "oauth_custom_patreon",
+        redirectUrl = redirectUrl,
+        identifier = null,
+        emailAddress = null,
+        legalAccepted = null,
+      )
+    } returns ClerkResult.success(oauthResult)
+
+    val result =
+      SignUp.authenticateWithRedirect(
+        SignUp.AuthenticateWithRedirectParams.OAuth(
+          provider = OAuthProvider.custom("oauth_custom_patreon"),
+          redirectUrl = redirectUrl,
+        )
+      )
+
+    assertTrue(result is ClerkResult.Success)
+    coVerify(exactly = 1) {
+      SSOService.authenticateSignUpWithRedirect(
+        strategy = "oauth_custom_patreon",
+        redirectUrl = redirectUrl,
+        identifier = null,
+        emailAddress = null,
+        legalAccepted = null,
+      )
+    }
+  }
+
+  @Test
   fun `authenticateWithRedirect forwards unsafe metadata`() = runTest {
     mockkObject(SSOService)
     val unsafeMetadata = mapOf("test" to "test")
@@ -111,5 +146,15 @@ class SignUpAuthenticateWithRedirectTest {
 
     assertEquals("oauth_google", paramsMap["strategy"])
     assertEquals("""{"test":"test"}""", paramsMap["unsafe_metadata"])
+  }
+
+  @Test
+  fun `redirect params map preserves custom OAuth provider strategy`() {
+    val params =
+      SignUp.AuthenticateWithRedirectParams.OAuth(
+        provider = OAuthProvider.custom("oauth_custom_patreon")
+      )
+
+    assertEquals("oauth_custom_patreon", params.toMap()["strategy"])
   }
 }

@@ -1111,7 +1111,7 @@ data class ClerkConfigurationOptions(
  *
  * This is useful for easily iterating over available OAuth providers for UI display or other logic.
  *
- * @return A list of [OAuthProvider] enums corresponding to the enabled social providers.
+ * @return A list of [OAuthProvider] values corresponding to the enabled social providers.
  * @receiver A map where keys are strategy identifiers (e.g., `oauth_google`) and values are
  *   [UserSettings.SocialConfig].
  */

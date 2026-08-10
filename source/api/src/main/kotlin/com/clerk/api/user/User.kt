@@ -284,7 +284,7 @@ data class User(
   @Serializable
   data class CreateExternalAccountParams(
     /** The strategy corresponding to the OAuth provider. For example: `oauth_google` */
-    @MapProperty("providerData?.strategy") @SerialName("strategy") val provider: OAuthProvider,
+    @MapProperty("strategy") @SerialName("strategy") val provider: OAuthProvider,
     /**
      * The full URL or path that the OAuth provider should redirect to, on successful authorization
      * on their part.
@@ -475,9 +475,9 @@ suspend fun User.reload(): ClerkResult<User, ClerkErrorResponse> {
  * [updateMetadata] separately and handle partial failures themselves.
  *
  * The pre-metadata `/v1/me` call also serves as a freshness anchor: the merge-patch diff is
- * computed against the server's current state, not the locally cached value on `this`. Without
- * that step, server-side mutations made by another tab, client, or backend job would silently
- * survive the "replace" call.
+ * computed against the server's current state, not the locally cached value on `this`. Without that
+ * step, server-side mutations made by another tab, client, or backend job would silently survive
+ * the "replace" call.
  *
  * @param params The parameters to update the user with. **See**: [UpdateParams].
  * @return A [ClerkResult] containing the updated [User] if the operation was successful, or a
@@ -514,11 +514,11 @@ private fun parseUnsafeMetadata(rawMetadata: String): ClerkResult<JsonObject, Cl
 
 /**
  * Returns `true` when the caller supplied any field other than `unsafeMetadata`. Used by the
- * routing logic to decide whether the `/v1/me` step is a `PATCH` (to apply non-metadata
- * changes) or a `GET` (to refresh the merge-patch baseline without other mutations).
+ * routing logic to decide whether the `/v1/me` step is a `PATCH` (to apply non-metadata changes) or
+ * a `GET` (to refresh the merge-patch baseline without other mutations).
  *
- * Note: [UpdateParams.publicMetadata] and [UpdateParams.privateMetadata] are deprecated.
- * They are only settable from the Backend API; on the Frontend API they are no-ops
+ * Note: [UpdateParams.publicMetadata] and [UpdateParams.privateMetadata] are deprecated. They are
+ * only settable from the Backend API; on the Frontend API they are no-ops
  */
 @Suppress("DEPRECATION") // params.{public,private,unsafe}Metadata are themselves deprecated.
 private fun UpdateParams.hasNonMetadataFields(): Boolean =
@@ -929,12 +929,11 @@ private fun User.hasAlternativeFirstFactorIdentification(excludingPhoneId: Strin
     emailAddresses.orEmpty().any { email ->
       email.verification?.status == Verification.Status.VERIFIED
     }
-  val hasAnotherVerifiedNonReservedPhone =
-    phoneNumbers.any { phone ->
-      phone.id != excludingPhoneId &&
-        !phone.reservedForSecondFactor &&
-        phone.verification?.status == Verification.Status.VERIFIED
-    }
+  val hasAnotherVerifiedNonReservedPhone = phoneNumbers.any { phone ->
+    phone.id != excludingPhoneId &&
+      !phone.reservedForSecondFactor &&
+      phone.verification?.status == Verification.Status.VERIFIED
+  }
   return hasUsername || hasVerifiedEmail || hasAnotherVerifiedNonReservedPhone
 }
 

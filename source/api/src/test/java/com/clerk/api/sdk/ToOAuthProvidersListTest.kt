@@ -76,4 +76,23 @@ class ToOAuthProvidersListTest {
     assertTrue(result.contains(OAuthProvider.GOOGLE))
     assertTrue(result.contains(OAuthProvider.APPLE))
   }
+
+  @Test
+  fun `preserves distinct custom provider strategies`() {
+    val providers =
+      mapOf(
+        "oauth_custom_patreon" to socialConfig("oauth_custom_patreon"),
+        "oauth_custom_line" to socialConfig("oauth_custom_line"),
+      )
+
+    val result = providers.toOAuthProvidersList()
+
+    assertEquals(
+      listOf(
+        OAuthProvider.custom("oauth_custom_patreon"),
+        OAuthProvider.custom("oauth_custom_line"),
+      ),
+      result,
+    )
+  }
 }

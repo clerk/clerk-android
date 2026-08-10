@@ -304,7 +304,7 @@ class Auth internal constructor() {
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val result =
       SSOService.authenticateWithRedirect(
-        strategy = provider.providerData.strategy,
+        strategy = provider.strategy,
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       )
     result.onFailure { emitAuthError(it) }
@@ -499,7 +499,7 @@ class Auth internal constructor() {
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
     val result =
       SSOService.authenticateSignUpWithRedirect(
-        strategy = provider.providerData.strategy,
+        strategy = provider.strategy,
         redirectUrl = RedirectConfiguration.DEFAULT_REDIRECT_URL,
       )
     result.onFailure { emitAuthError(it) }

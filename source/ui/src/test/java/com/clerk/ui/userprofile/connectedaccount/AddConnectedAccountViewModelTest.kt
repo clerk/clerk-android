@@ -70,6 +70,29 @@ class AddConnectedAccountViewModelTest {
   }
 
   @Test
+  fun connectExternalAccount_preservesCustomProviderStrategy() = runTest {
+    val customProvider = OAuthProvider.custom("oauth_custom_patreon")
+    val user = mockk<User>()
+    val account = mockk<ExternalAccount>()
+    every { Clerk.user } returns user
+    coEvery { user.createExternalAccount(any()) } returns ClerkResult.success(account)
+
+    val viewModel = AddConnectedAccountViewModel()
+
+    viewModel.connectExternalAccount(customProvider)
+    advanceUntilIdle()
+
+    assertEquals(AddConnectedAccountViewModel.State.Success, viewModel.state.value)
+    coVerify(exactly = 1) {
+      user.createExternalAccount(
+        match<User.CreateExternalAccountParams> {
+          it.provider.strategy == "oauth_custom_patreon"
+        }
+      )
+    }
+  }
+
+  @Test
   fun connectExternalAccount_failure_setsErrorState() = runTest {
     val user = mockk<User>()
     every { Clerk.user } returns user
