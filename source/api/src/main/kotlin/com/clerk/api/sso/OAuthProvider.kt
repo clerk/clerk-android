@@ -46,7 +46,8 @@ import kotlinx.serialization.encoding.Encoder
  * @see [OAuthProviderData]
  */
 @kotlinx.serialization.Serializable(with = OAuthProviderSerializer::class)
-class OAuthProvider private constructor(val strategy: String) {
+@ConsistentCopyVisibility
+data class OAuthProvider private constructor(val strategy: String) {
   companion object {
     /** Facebook OAuth authentication provider. */
     @JvmField val FACEBOOK = OAuthProvider("oauth_facebook")
@@ -318,10 +319,6 @@ class OAuthProvider private constructor(val strategy: String) {
         strategy.startsWith("oauth_") -> "CUSTOM"
         else -> "UNKNOWN"
       }
-
-  override fun equals(other: Any?): Boolean = other is OAuthProvider && strategy == other.strategy
-
-  override fun hashCode(): Int = strategy.hashCode()
 
   override fun toString(): String = name
 }
