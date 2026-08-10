@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import com.clerk.ui.core.badge.ClerkBadgeType
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
+import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.spacers.Spacers
@@ -42,63 +44,83 @@ internal fun UserProfileEmailRow(
   onError: (String) -> Unit,
   onVerify: (EmailAddress) -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: EmailViewModel = viewModel(),
+  isInteractive: Boolean = true,
+  viewModel: EmailViewModel? = if (isInteractive) viewModel() else null,
 ) {
 
-  val isPreview = LocalInspectionMode.current
-  val state by viewModel.state.collectAsStateWithLifecycle()
-  ReportEmailRowError(state, onError)
-
-  ClerkMaterialTheme {
-    Row(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(ClerkMaterialTheme.colors.background)
-          .padding(start = dp24)
-          .padding(vertical = dp16)
-          .then(modifier),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      val canRemove = !Clerk.isEmailImmutable
-      val canSetAsPrimary = !Clerk.isEmailImmutable
-      val isPrimary = emailAddress.isPrimary
-      val isVerified = emailAddress.verification?.status == Verification.Status.VERIFIED
-      val shouldShowMenu = canRemove || (canSetAsPrimary && !isPrimary && isVerified) || !isVerified
-
-      EmailWithBadge(isPrimary, emailAddress)
-      Spacer(modifier = Modifier.weight(1f))
-      if (!isPreview && shouldShowMenu) {
-        ItemMoreMenu(
-          dropDownItems =
-            persistentListOf(
-              DropDownItem(
-                id = EmailAction.SetAsPrimary,
-                text = stringResource(R.string.set_as_primary),
-                isHidden = !canSetAsPrimary || isPrimary || !isVerified,
-              ),
-              DropDownItem(
-                id = EmailAction.Verify,
-                text = stringResource(R.string.verify),
-                isHidden = isVerified,
-              ),
-              DropDownItem(
-                id = EmailAction.Remove,
-                text = stringResource(R.string.remove_email),
-                danger = true,
-                isHidden = !canRemove,
-              ),
-            ),
-          onClick = {
-            when (it) {
-              EmailAction.SetAsPrimary -> viewModel.setAsPrimary(emailAddress)
-              EmailAction.Verify -> onVerify(emailAddress)
-              EmailAction.Remove -> viewModel.remove(emailAddress)
-            }
-          },
-        )
-      }
-    }
+  if (isInteractive && viewModel != null) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    ReportEmailRowError(state, onError)
   }
+
+  Row(
+    modifier =
+      Modifier.fillMaxWidth()
+        .background(ClerkMaterialTheme.colors.background)
+        .padding(start = dp24)
+        .padding(vertical = dp16)
+        .then(modifier),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    val isPrimary = emailAddress.isPrimary
+
+    EmailWithBadge(isPrimary, emailAddress)
+    Spacer(modifier = Modifier.weight(1f))
+    EmailRowActions(
+      emailAddress = emailAddress,
+      isInteractive = isInteractive,
+      viewModel = viewModel,
+      onVerify = onVerify,
+    )
+  }
+}
+
+@Composable
+private fun EmailRowActions(
+  emailAddress: EmailAddress,
+  isInteractive: Boolean,
+  viewModel: EmailViewModel?,
+  onVerify: (EmailAddress) -> Unit,
+) {
+  val canRemove = !Clerk.isEmailImmutable
+  val canSetAsPrimary = !Clerk.isEmailImmutable
+  val isPrimary = emailAddress.isPrimary
+  val isVerified = emailAddress.verification?.status == Verification.Status.VERIFIED
+  val shouldShowMenu = canRemove || (canSetAsPrimary && !isPrimary && isVerified) || !isVerified
+
+  if (LocalInspectionMode.current || !shouldShowMenu) return
+  if (!isInteractive || viewModel == null) {
+    Spacer(modifier = Modifier.size(dp48))
+    return
+  }
+  ItemMoreMenu(
+    dropDownItems =
+      persistentListOf(
+        DropDownItem(
+          id = EmailAction.SetAsPrimary,
+          text = stringResource(R.string.set_as_primary),
+          isHidden = !canSetAsPrimary || isPrimary || !isVerified,
+        ),
+        DropDownItem(
+          id = EmailAction.Verify,
+          text = stringResource(R.string.verify),
+          isHidden = isVerified,
+        ),
+        DropDownItem(
+          id = EmailAction.Remove,
+          text = stringResource(R.string.remove_email),
+          danger = true,
+          isHidden = !canRemove,
+        ),
+      ),
+    onClick = {
+      when (it) {
+        EmailAction.SetAsPrimary -> viewModel.setAsPrimary(emailAddress)
+        EmailAction.Verify -> onVerify(emailAddress)
+        EmailAction.Remove -> viewModel.remove(emailAddress)
+      }
+    },
+  )
 }
 
 @Composable

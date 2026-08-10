@@ -28,6 +28,7 @@ internal fun LazyListScope.userProfileEmailSection(
   onError: (String) -> Unit,
   onAddEmailClick: () -> Unit,
   onVerify: (EmailAddress) -> Unit,
+  isInteractive: Boolean = true,
 ) {
   item(key = "user_profile_email_header") {
     Text(
@@ -43,7 +44,12 @@ internal fun LazyListScope.userProfileEmailSection(
     key = { emailAddress -> "user_profile_email_${emailAddress.id}" },
     contentType = { "user_profile_email" },
   ) { emailAddress ->
-    UserProfileEmailRow(emailAddress = emailAddress, onError = onError, onVerify)
+    UserProfileEmailRow(
+      emailAddress = emailAddress,
+      onError = onError,
+      onVerify = onVerify,
+      isInteractive = isInteractive,
+    )
   }
   if (!Clerk.isEmailImmutable) {
     item(key = "user_profile_email_add") {

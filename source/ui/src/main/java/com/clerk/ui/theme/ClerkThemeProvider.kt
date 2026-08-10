@@ -6,6 +6,7 @@ import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import com.clerk.api.ui.ClerkColors
 import com.clerk.api.ui.ClerkDesign
@@ -90,14 +91,15 @@ internal val LocalClerkTypography =
  */
 @Composable
 internal fun ClerkThemeProvider(theme: ClerkTheme? = null, content: @Composable () -> Unit) {
+  val isDarkMode = isSystemInDarkTheme()
 
   // Resolve colors - use provided values or system defaults
-  val colors = generateColors(theme)
+  val colors = remember(theme, isDarkMode) { resolveColors(theme = theme, isDarkMode = isDarkMode) }
 
   // Resolve typography - use provided values or defaults
-  val typography = generateTypography(theme)
+  val typography = remember(theme) { generateTypography(theme) }
 
-  val design = theme?.design ?: ClerkDesign()
+  val design = remember(theme?.design) { theme?.design ?: ClerkDesign() }
 
   CompositionLocalProvider(
     LocalClerkColors provides colors,
@@ -107,7 +109,6 @@ internal fun ClerkThemeProvider(theme: ClerkTheme? = null, content: @Composable 
   )
 }
 
-@Composable
 private fun generateTypography(theme: ClerkTheme?): Typography {
   return Typography(
     displaySmall = theme?.typography?.displaySmall ?: ClerkTypographyDefaults.displaySmall,
@@ -122,11 +123,6 @@ private fun generateTypography(theme: ClerkTheme?): Typography {
     labelMedium = theme?.typography?.labelMedium ?: ClerkTypographyDefaults.labelMedium,
     labelSmall = theme?.typography?.labelSmall ?: ClerkTypographyDefaults.labelSmall,
   )
-}
-
-@Composable
-private fun generateColors(theme: ClerkTheme?): ClerkColors {
-  return resolveColors(theme = theme, isDarkMode = isSystemInDarkTheme())
 }
 
 internal fun resolveColors(theme: ClerkTheme?, isDarkMode: Boolean): ClerkColors {

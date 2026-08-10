@@ -21,7 +21,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.currentStateAsState
 import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
@@ -50,11 +53,18 @@ private const val EMAIL_IMMUTABLE_SNACKBAR_MESSAGE =
 @Composable
 fun UserProfileDetailView(modifier: Modifier = Modifier) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
-  LaunchedEffect(Unit) { Clerk.refreshClient() }
+  val destinationLifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+  val isNavigationSettled = destinationLifecycleState == Lifecycle.State.RESUMED
+  LaunchedEffect(isNavigationSettled) {
+    if (isNavigationSettled) {
+      Clerk.refreshClient()
+    }
+  }
   UserProfileDetailViewImpl(
     emailAddresses = user.sortedEmailAddresses(),
     phoneNumbers = user.sortedPhoneNumbers(),
     externalAccounts = user.sortedExternalAccounts(),
+    isNavigationSettled = isNavigationSettled,
     modifier = modifier,
   )
 }
@@ -65,6 +75,7 @@ private fun UserProfileDetailViewImpl(
   emailAddresses: ImmutableList<EmailAddress>,
   phoneNumbers: ImmutableList<PhoneNumber>,
   externalAccounts: ImmutableList<ExternalAccount>,
+  isNavigationSettled: Boolean = true,
   modifier: Modifier = Modifier,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
@@ -90,6 +101,7 @@ private fun UserProfileDetailViewImpl(
         innerPadding = innerPadding,
         listState = listState,
         data = ProfileContentData(emailAddresses, phoneNumbers, externalAccounts),
+        isNavigationSettled = isNavigationSettled,
         actions =
           ProfileContentActions(
             onShowBottomSheet = { type ->
@@ -129,6 +141,7 @@ private fun ProfileContent(
   innerPadding: PaddingValues,
   listState: LazyListState,
   data: ProfileContentData,
+  isNavigationSettled: Boolean,
   actions: ProfileContentActions,
 ) {
   LazyColumn(
@@ -148,6 +161,7 @@ private fun ProfileContent(
       item(key = "user_profile_detail_email_spacing") { Spacers.Vertical.Spacer32() }
       userProfileEmailSection(
         emailAddresses = data.emailAddresses,
+        isInteractive = isNavigationSettled,
         onError = actions.onError,
         onAddEmailClick = { actions.onShowBottomSheet(BottomSheetMode.EmailAddress) },
         onVerify = { actions.onShowBottomSheet(BottomSheetMode.VerifyEmailAddress(it)) },
@@ -160,6 +174,7 @@ private fun ProfileContent(
       item(key = "user_profile_detail_phone_spacing") { Spacers.Vertical.Spacer16() }
       userProfilePhoneSection(
         phoneNumbers = data.phoneNumbers,
+        isInteractive = isNavigationSettled,
         onError = actions.onError,
         onAddPhoneNumberClick = { actions.onShowBottomSheet(BottomSheetMode.PhoneNumber) },
         onVerify = { actions.onShowBottomSheet(BottomSheetMode.VerifyPhoneNumber(it)) },
@@ -171,6 +186,8 @@ private fun ProfileContent(
     item(key = "user_profile_detail_external_account_spacing") { Spacers.Vertical.Spacer16() }
     userProfileExternalAccountSection(
       externalAccounts = data.externalAccounts,
+      isInteractive = isNavigationSettled,
+      loadRemoteLogos = isNavigationSettled,
       onError = actions.onError,
       onClickAddAccount = { actions.onShowBottomSheet(BottomSheetMode.ExternalAccount) },
     )

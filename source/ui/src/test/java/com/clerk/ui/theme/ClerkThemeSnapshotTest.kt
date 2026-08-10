@@ -15,17 +15,25 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.clerk.api.Clerk
+import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
 import com.materialkolor.ktx.toHex
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import org.junit.Test
 
 class ClerkThemeSnapshotTest : BaseSnapshotTest() {
@@ -119,6 +127,32 @@ class ClerkThemeSnapshotTest : BaseSnapshotTest() {
         }
       }
     }
+  }
+
+  @Test
+  fun clerkThemeRetainsResolvedObjectsAcrossRecompositions() {
+    val observedColors = mutableListOf<ClerkThemeColors>()
+    val observedColorSchemes = mutableListOf<androidx.compose.material3.ColorScheme>()
+
+    paparazzi.snapshot {
+      var recomposition by remember { mutableIntStateOf(0) }
+      val customTheme =
+        if (recomposition >= 0) ClerkTheme(colors = DefaultColors.clerk) else ClerkTheme()
+
+      ClerkMaterialTheme(clerkTheme = customTheme) {
+        val colors = LocalComposeColors.current
+        val colorScheme = MaterialTheme.colorScheme
+        SideEffect {
+          observedColors += colors
+          observedColorSchemes += colorScheme
+          if (recomposition == 0) recomposition++
+        }
+      }
+    }
+
+    assertTrue(observedColors.size >= 2)
+    assertSame(observedColors.first(), observedColors.last())
+    assertSame(observedColorSchemes.first(), observedColorSchemes.last())
   }
 }
 

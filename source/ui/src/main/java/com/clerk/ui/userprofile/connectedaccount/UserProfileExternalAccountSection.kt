@@ -26,8 +26,15 @@ internal fun LazyListScope.userProfileExternalAccountSection(
   externalAccounts: ImmutableList<ExternalAccount>,
   onError: (String) -> Unit,
   onClickAddAccount: () -> Unit,
+  isInteractive: Boolean = true,
+  loadRemoteLogos: Boolean = true,
   externalAccountRow: @Composable (ExternalAccount) -> Unit = {
-    UserProfileExternalAccountRow(it, onError = onError)
+    UserProfileExternalAccountRow(
+      externalAccount = it,
+      isInteractive = isInteractive,
+      loadRemoteLogo = loadRemoteLogos,
+      onError = onError,
+    )
   },
 ) {
   item(key = "user_profile_external_account_header") {

@@ -28,6 +28,7 @@ internal fun LazyListScope.userProfilePhoneSection(
   onError: (String) -> Unit,
   onAddPhoneNumberClick: () -> Unit,
   onVerify: (PhoneNumber) -> Unit,
+  isInteractive: Boolean = true,
 ) {
   item(key = "user_profile_phone_header") {
     Text(
@@ -43,7 +44,12 @@ internal fun LazyListScope.userProfilePhoneSection(
     key = { phoneNumber -> "user_profile_phone_${phoneNumber.id}" },
     contentType = { "user_profile_phone" },
   ) { phoneNumber ->
-    UserProfilePhoneRow(phoneNumber = phoneNumber, onError = onError, onVerify = onVerify)
+    UserProfilePhoneRow(
+      phoneNumber = phoneNumber,
+      onError = onError,
+      onVerify = onVerify,
+      isInteractive = isInteractive,
+    )
   }
   if (!Clerk.isPhoneNumberImmutable) {
     item(key = "user_profile_phone_add") {
