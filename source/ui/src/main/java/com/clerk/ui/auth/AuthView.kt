@@ -8,15 +8,13 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -28,8 +26,6 @@ import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signup.SignUp
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
@@ -57,7 +53,10 @@ import com.clerk.ui.signup.collectfield.SignUpCollectFieldView
 import com.clerk.ui.signup.completeprofile.SignUpCompleteProfileView
 import com.clerk.ui.signup.emaillink.SignUpEmailLinkView
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
+import java.util.UUID
 import kotlinx.serialization.Serializable
+
+private val authViewProcessIdentifier = UUID.randomUUID().toString()
 
 /**
  * Prebuilt Clerk authentication flow.
@@ -108,6 +107,8 @@ fun AuthView(
   ClerkThemeOverrideProvider(clerkTheme) {
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
+    val isAuthNavigationReady = rememberAuthNavigationReady(backStack)
+    if (!isAuthNavigationReady) return@ClerkThemeOverrideProvider
     val identifierConfig =
       remember(
         initialIdentifier,
@@ -128,7 +129,6 @@ fun AuthView(
       }
     AuthStateProvider(backStack = backStack, mode = mode, identifierConfig = identifierConfig) {
       ObservePendingSessionTaskRouting(backStack = backStack)
-      ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
       ClerkLogoProvider(logo) {
         DevelopmentModeWarningBox(
@@ -154,33 +154,22 @@ fun AuthView(
 }
 
 @Composable
-private fun ObserveInProgressAuthRouting(
-  backStack: NavBackStack<NavKey>,
-  onAuthComplete: () -> Unit,
-) {
-  val authState = LocalAuthState.current
-  val lifecycleOwner = LocalLifecycleOwner.current
+private fun rememberAuthNavigationReady(backStack: NavBackStack<NavKey>): Boolean {
+  val savedProcessIdentifier = rememberSaveable { mutableStateOf(authViewProcessIdentifier) }
+  val wasRestoredAfterProcessDeath = savedProcessIdentifier.value != authViewProcessIdentifier
 
-  fun routeIfNeeded() {
-    resumeInProgressAuthAttempt(
-      authState = authState,
-      top = backStack.lastOrNull(),
-      signIn = Clerk.auth.currentSignIn,
-      signUp = Clerk.auth.currentSignUp,
-      onAuthComplete = onAuthComplete,
-    )
-  }
-
-  LaunchedEffect(backStack.lastOrNull()) { routeIfNeeded() }
-
-  DisposableEffect(lifecycleOwner, authState, backStack) {
-    val observer = LifecycleEventObserver { _, event ->
-      if (event == Lifecycle.Event.ON_RESUME) {
-        routeIfNeeded()
-      }
+  LaunchedEffect(wasRestoredAfterProcessDeath, backStack) {
+    if (wasRestoredAfterProcessDeath) {
+      discardRestoredAuthNavigation(backStack)
+      savedProcessIdentifier.value = authViewProcessIdentifier
     }
-    lifecycleOwner.lifecycle.addObserver(observer)
-    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+  }
+  return !wasRestoredAfterProcessDeath
+}
+
+internal fun discardRestoredAuthNavigation(backStack: NavBackStack<NavKey>) {
+  while (backStack.size > 1) {
+    backStack.removeLastOrNull()
   }
 }
 
@@ -366,26 +355,6 @@ private fun NavKey?.satisfiesPendingSessionTask(
         this is AuthDestination.SessionTaskCreateOrganization
     else -> this == destination
   }
-}
-
-internal fun resumeInProgressAuthAttempt(
-  authState: AuthState,
-  top: NavKey?,
-  signIn: SignIn?,
-  signUp: SignUp?,
-  onAuthComplete: () -> Unit,
-) {
-  if (!authState.shouldResumeInProgressAuthAttempt && !authAttemptIsComplete(signIn, signUp)) return
-  if (top != null && top != AuthDestination.AuthStart) return
-
-  when {
-    signIn != null -> authState.setToStepForStatus(signIn, onAuthComplete = onAuthComplete)
-    signUp != null -> authState.setToStepForStatus(signUp, onAuthComplete = onAuthComplete)
-  }
-}
-
-private fun authAttemptIsComplete(signIn: SignIn?, signUp: SignUp?): Boolean {
-  return signIn?.status == SignIn.Status.COMPLETE || signUp?.status == SignUp.Status.COMPLETE
 }
 
 @Composable

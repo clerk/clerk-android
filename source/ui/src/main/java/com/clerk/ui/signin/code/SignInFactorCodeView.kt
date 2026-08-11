@@ -137,7 +137,9 @@ private fun SignInFactorCodeViewImpl(
       onTextChange = {
         handleCodeTextChange(it, verificationTextState, viewModel, factor, isSecondFactor)
       },
-      onClickResend = { viewModel.prepare(factor, isSecondFactor = isSecondFactor) },
+      onClickResend = {
+        viewModel.prepare(factor, isSecondFactor = isSecondFactor, forcePrepare = true)
+      },
     )
     Spacers.Vertical.Spacer24()
     if (SignInFactorCodeUiHelper.showUseAnotherMethod(factor)) {
