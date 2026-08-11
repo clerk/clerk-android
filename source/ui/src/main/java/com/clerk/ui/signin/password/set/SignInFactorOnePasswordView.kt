@@ -85,6 +85,11 @@ private fun SignInFactorOnePasswordViewImpl(
   val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
+  val onSubmit = {
+    if (authState.signInPassword.isNotEmpty() && state !is AuthenticationViewState.Loading) {
+      viewModel.submitPassword(authState.signInPassword)
+    }
+  }
 
   AuthStateEffects(
     authState = authState,
@@ -104,30 +109,15 @@ private fun SignInFactorOnePasswordViewImpl(
     title = stringResource(R.string.enter_password),
     subtitle = stringResource(R.string.enter_the_password_associated_with_your_account),
   ) {
-    ClerkTextField(
-      value = authState.signInPassword,
+    PasswordInput(
+      password = authState.signInPassword,
       onValueChange = { authState.signInPassword = it },
-      label = stringResource(R.string.enter_your_password),
-      visualTransformation = PasswordVisualTransformation(),
-      inputContentType = ContentType.Password,
-      keyboardOptions =
-        KeyboardOptions(
-          autoCorrectEnabled = false,
-          keyboardType = KeyboardType.Password,
-          imeAction = ImeAction.Go,
-        ),
-      keyboardActions =
-        KeyboardActions(
-          onGo = {
-            if (authState.signInPassword.isNotEmpty() && state !is AuthenticationViewState.Loading)
-              viewModel.submitPassword(authState.signInPassword)
-          }
-        ),
+      onSubmit = onSubmit,
     )
     Spacer(Modifier.height(dp24))
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
-      onClick = { viewModel.submitPassword(password = authState.signInPassword) },
+      onClick = onSubmit,
       text = stringResource(R.string.continue_text),
       isEnabled = authState.signInPassword.isNotEmpty(),
       isLoading = state is AuthenticationViewState.Loading,
@@ -140,6 +130,24 @@ private fun SignInFactorOnePasswordViewImpl(
     Spacer(Modifier.height(dp24))
     Footer(authState, factor)
   }
+}
+
+@Composable
+private fun PasswordInput(password: String, onValueChange: (String) -> Unit, onSubmit: () -> Unit) {
+  ClerkTextField(
+    value = password,
+    onValueChange = onValueChange,
+    label = stringResource(R.string.enter_your_password),
+    visualTransformation = PasswordVisualTransformation(),
+    inputContentType = ContentType.Password,
+    keyboardOptions =
+      KeyboardOptions(
+        autoCorrectEnabled = false,
+        keyboardType = KeyboardType.Password,
+        imeAction = ImeAction.Go,
+      ),
+    keyboardActions = KeyboardActions(onGo = { onSubmit() }),
+  )
 }
 
 @Composable

@@ -3,8 +3,10 @@ package com.clerk.ui.auth
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
 import com.clerk.ui.R
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun AuthStateEffects(
@@ -15,11 +17,13 @@ internal fun AuthStateEffects(
   onReset: () -> Unit = {},
 ) {
   val defaultErrorMessage = stringResource(R.string.something_went_wrong_please_try_again)
+  val snackbarScope = rememberCoroutineScope()
   LaunchedEffect(state, defaultErrorMessage) {
     when (state) {
       is AuthenticationViewState.Error -> {
         val msg = state.message ?: defaultErrorMessage
-        snackbarHostState.showSnackbar(msg)
+        snackbarScope.launch { snackbarHostState.showSnackbar(msg) }
+        onReset()
       }
       AuthenticationViewState.NotStarted -> authState.clearBackStack()
       is AuthenticationViewState.Success.SignIn -> {

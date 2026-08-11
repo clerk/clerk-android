@@ -68,6 +68,11 @@ private fun SignInFactorTwoBackupCodeViewImpl(
   val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
+  val onSubmit = {
+    if (authState.signInBackupCode.isNotEmpty() && state !is AuthenticationViewState.Loading) {
+      viewModel.submit(authState.signInBackupCode)
+    }
+  }
 
   AuthStateEffects(
     authState = authState,
@@ -92,22 +97,15 @@ private fun SignInFactorTwoBackupCodeViewImpl(
       onValueChange = { authState.signInBackupCode = it },
       label = stringResource(R.string.backup_code),
       keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-      keyboardActions =
-        KeyboardActions(
-          onGo = {
-            if (
-              authState.signInBackupCode.isNotEmpty() && state !is AuthenticationViewState.Loading
-            )
-              viewModel.submit(authState.signInBackupCode)
-          }
-        ),
+      keyboardActions = KeyboardActions(onGo = { onSubmit() }),
     )
     Spacers.Vertical.Spacer24()
     ClerkButton(
       modifier = Modifier.fillMaxWidth(),
       text = stringResource(R.string.continue_text),
       isLoading = state is AuthenticationViewState.Loading,
-      onClick = { viewModel.submit(authState.signInBackupCode) },
+      isEnabled = authState.signInBackupCode.isNotEmpty(),
+      onClick = onSubmit,
       icons = ClerkButtonDefaults.icons(trailingIcon = R.drawable.ic_triangle_right),
     )
     Spacers.Vertical.Spacer24()

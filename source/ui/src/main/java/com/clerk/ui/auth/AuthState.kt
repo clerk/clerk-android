@@ -125,6 +125,7 @@ internal class AuthState(
   override fun navigateBack() {
     if (backStack.size <= 1) return
     backStack.removeLastOrNull()
+    clearSignInCredentialsIfAtRoot()
   }
 
   override fun clearBackStack() {
@@ -137,6 +138,7 @@ internal class AuthState(
 
   override fun pop(numberOfScreens: Int) {
     backStack.pop(numberOfScreens)
+    clearSignInCredentialsIfAtRoot()
   }
 
   /**
@@ -147,6 +149,7 @@ internal class AuthState(
     if (backStack.size > 1) {
       backStack.pop(backStack.size - 1)
     }
+    clearSignInCredentialsIfAtRoot()
   }
 
   override fun popTo(destination: AuthDestination) {
@@ -157,6 +160,16 @@ internal class AuthState(
     if (toPop > 0) {
       backStack.pop(toPop) // non-inclusive: leaves `destination` on top
     }
+    clearSignInCredentialsIfAtRoot()
+  }
+
+  private fun clearSignInCredentialsIfAtRoot() {
+    if (backStack.size != 1 || backStack.lastOrNull() != AuthDestination.AuthStart) return
+
+    signInPassword = ""
+    signInNewPassword = ""
+    signInConfirmNewPassword = ""
+    signInBackupCode = ""
   }
 
   internal fun setToStepForStatus(
