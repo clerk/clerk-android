@@ -107,15 +107,23 @@ class ClerkEnvironmentCacheTest {
   @Test
   fun `corrupted cached environment is ignored and does not crash initialization`() = runBlocking {
     StorageHelper.saveValue(StorageKey.CACHED_ENVIRONMENT, "not-valid-environment-json")
-    coEvery { Client.get() } returns ClerkResult.success(Client())
-    coEvery { Client.getSkippingClientId() } returns ClerkResult.success(Client())
-    coEvery { Environment.get() } returns ClerkResult.success(testEnvironment("Fresh App"))
+    // The client/environment fetches are held open with a CompletableDeferred (rather than
+    // resolving immediately via `returns`) so the background refresh coroutine - which runs on
+    // Dispatchers.IO independently of this runBlocking scope - cannot race ahead and populate
+    // Clerk.environment before the assertNull below observes the post-hydration state.
+    val clientDeferred = CompletableDeferred<ClerkResult<Client, Nothing>>()
+    val environmentDeferred = CompletableDeferred<ClerkResult<Environment, Nothing>>()
+    coEvery { Client.get() } coAnswers { clientDeferred.await() }
+    coEvery { Client.getSkippingClientId() } coAnswers { clientDeferred.await() }
+    coEvery { Environment.get() } coAnswers { environmentDeferred.await() }
 
     Clerk.initialize(context = context, publishableKey = PUBLISHABLE_KEY)
 
     // The corrupted cache entry should be treated as a cache miss, not crash initialization.
     assertNull(Clerk.environment)
 
+    clientDeferred.complete(ClerkResult.success(Client()))
+    environmentDeferred.complete(ClerkResult.success(testEnvironment("Fresh App")))
     withTimeout(5_000) { Clerk.isInitialized.first { it } }
 
     assertEquals("Fresh App", Clerk.applicationName)
@@ -128,11 +136,20 @@ class ClerkEnvironmentCacheTest {
         StorageKey.CACHED_ENVIRONMENT,
         ClerkApi.json.encodeToString(Environment.serializer(), testEnvironment("Stale Cached App")),
       )
-      coEvery { Client.get() } returns ClerkResult.success(Client())
-      coEvery { Client.getSkippingClientId() } returns ClerkResult.success(Client())
-      coEvery { Environment.get() } returns ClerkResult.success(testEnvironment("Fresh App"))
+      // Held open for the same reason as above: this also lets us assert on the hydrated stale
+      // value before releasing the fresh fetch, actually exercising the "does not clobber"
+      // ordering instead of only checking the final state once both writes have happened.
+      val clientDeferred = CompletableDeferred<ClerkResult<Client, Nothing>>()
+      val environmentDeferred = CompletableDeferred<ClerkResult<Environment, Nothing>>()
+      coEvery { Client.get() } coAnswers { clientDeferred.await() }
+      coEvery { Client.getSkippingClientId() } coAnswers { clientDeferred.await() }
+      coEvery { Environment.get() } coAnswers { environmentDeferred.await() }
 
       Clerk.initialize(context = context, publishableKey = PUBLISHABLE_KEY)
+      assertEquals("Stale Cached App", Clerk.applicationName)
+
+      clientDeferred.complete(ClerkResult.success(Client()))
+      environmentDeferred.complete(ClerkResult.success(testEnvironment("Fresh App")))
       withTimeout(5_000) { Clerk.isInitialized.first { it } }
 
       assertEquals("Fresh App", Clerk.applicationName)
