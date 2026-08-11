@@ -32,23 +32,21 @@ internal fun UserProfileButtonRow(
 ) {
   val interactionSource = remember { MutableInteractionSource() }
 
-  ClerkMaterialTheme {
-    Box(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(ClerkMaterialTheme.colors.background)
-          .clickable(
-            interactionSource = interactionSource,
-            indication = ripple(color = ClerkMaterialTheme.colors.mutedForeground.copy(alpha = 0.1f)),
-            role = Role.Button,
-            onClick = onClick,
-          )
-          .padding(vertical = dp16)
-          .padding(horizontal = dp24)
-          .then(modifier)
-    ) {
-      Text(text = text, color = textColor, style = textStyle)
-    }
+  Box(
+    modifier =
+      Modifier.fillMaxWidth()
+        .background(ClerkMaterialTheme.colors.background)
+        .clickable(
+          interactionSource = interactionSource,
+          indication = ripple(color = ClerkMaterialTheme.colors.mutedForeground.copy(alpha = 0.1f)),
+          role = Role.Button,
+          onClick = onClick,
+        )
+        .padding(vertical = dp16)
+        .padding(horizontal = dp24)
+        .then(modifier)
+  ) {
+    Text(text = text, color = textColor, style = textStyle)
   }
 }
 

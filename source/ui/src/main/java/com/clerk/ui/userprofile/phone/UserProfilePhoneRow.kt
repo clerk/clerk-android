@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
+import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
@@ -43,30 +45,33 @@ internal fun UserProfilePhoneRow(
   onError: (String) -> Unit,
   onVerify: (PhoneNumber) -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: UserProfileAddPhoneViewModel = viewModel(),
+  isInteractive: Boolean = true,
+  viewModel: UserProfileAddPhoneViewModel? = if (isInteractive) viewModel() else null,
 ) {
   val isPreview = LocalInspectionMode.current
-  val state by viewModel.state.collectAsStateWithLifecycle()
-  ReportPhoneRowError(state, onError)
+  if (isInteractive && viewModel != null) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    ReportPhoneRowError(state, onError)
+  }
 
-  ClerkMaterialTheme {
-    Row(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(ClerkMaterialTheme.colors.background)
-          .padding(start = dp24)
-          .padding(vertical = dp8)
-          .then(modifier),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      val canRemove = !Clerk.isPhoneNumberImmutable
-      val isPrimary = phoneNumber.isPrimary
-      val isVerified = phoneNumber.verification?.status == Verification.Status.VERIFIED
-      val shouldShowMenu = canRemove || !isPrimary || !isVerified
+  Row(
+    modifier =
+      Modifier.fillMaxWidth()
+        .background(ClerkMaterialTheme.colors.background)
+        .padding(start = dp24)
+        .padding(vertical = dp8)
+        .then(modifier),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    val canRemove = !Clerk.isPhoneNumberImmutable
+    val isPrimary = phoneNumber.isPrimary
+    val isVerified = phoneNumber.verification?.status == Verification.Status.VERIFIED
+    val shouldShowMenu = canRemove || !isPrimary || !isVerified
 
-      PhoneWithBadge(phoneNumber)
-      Spacer(modifier = Modifier.weight(1f))
-      if (!isPreview && shouldShowMenu) {
+    PhoneWithBadge(phoneNumber)
+    Spacer(modifier = Modifier.weight(1f))
+    if (!isPreview && shouldShowMenu) {
+      if (isInteractive && viewModel != null) {
         ItemMoreMenu(
           dropDownItems =
             persistentListOf(
@@ -95,6 +100,8 @@ internal fun UserProfilePhoneRow(
             }
           },
         )
+      } else {
+        Spacer(modifier = Modifier.size(dp48))
       }
     }
   }

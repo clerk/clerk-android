@@ -2,9 +2,11 @@ package com.clerk.ui.userprofile.phone
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,34 +23,40 @@ import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-@Composable
-internal fun UserProfilePhoneSection(
+internal fun LazyListScope.userProfilePhoneSection(
   phoneNumbers: ImmutableList<PhoneNumber>,
   onError: (String) -> Unit,
   onAddPhoneNumberClick: () -> Unit,
-  modifier: Modifier = Modifier,
   onVerify: (PhoneNumber) -> Unit,
+  isInteractive: Boolean = true,
 ) {
-
-  ClerkMaterialTheme {
-    Column(modifier = modifier.fillMaxWidth()) {
-      Text(
-        modifier = Modifier.padding(horizontal = dp24),
-        text = stringResource(R.string.phone_number).uppercase(),
-        style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
-        color = ClerkMaterialTheme.colors.mutedForeground,
+  item(key = "user_profile_phone_header") {
+    Text(
+      modifier = Modifier.padding(horizontal = dp24),
+      text = stringResource(R.string.phone_number).uppercase(),
+      style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
+      color = ClerkMaterialTheme.colors.mutedForeground,
+    )
+  }
+  item(key = "user_profile_phone_header_spacing") { Spacers.Vertical.Spacer16() }
+  items(
+    items = phoneNumbers,
+    key = { phoneNumber -> "user_profile_phone_${phoneNumber.id}" },
+    contentType = { "user_profile_phone" },
+  ) { phoneNumber ->
+    UserProfilePhoneRow(
+      phoneNumber = phoneNumber,
+      onError = onError,
+      onVerify = onVerify,
+      isInteractive = isInteractive,
+    )
+  }
+  if (!Clerk.isPhoneNumberImmutable) {
+    item(key = "user_profile_phone_add") {
+      UserProfileButtonRow(
+        text = stringResource(R.string.add_phone_number),
+        onClick = onAddPhoneNumberClick,
       )
-      Spacers.Vertical.Spacer16()
-      phoneNumbers.forEach {
-        UserProfilePhoneRow(phoneNumber = it, onError = onError, onVerify = onVerify)
-      }
-
-      if (!Clerk.isPhoneNumberImmutable) {
-        UserProfileButtonRow(
-          text = stringResource(R.string.add_phone_number),
-          onClick = onAddPhoneNumberClick,
-        )
-      }
     }
   }
 }
@@ -58,20 +66,22 @@ internal fun UserProfilePhoneSection(
 private fun Preview() {
   ClerkMaterialTheme {
     Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
-      UserProfilePhoneSection(
-        onError = {},
-        onAddPhoneNumberClick = {},
-        onVerify = {},
-        phoneNumbers =
-          persistentListOf(
-            PhoneNumber(
-              id = "phone_1",
-              phoneNumber = "15555550101",
-              reservedForSecondFactor = true,
+      LazyColumn(modifier = Modifier.fillMaxWidth()) {
+        userProfilePhoneSection(
+          onError = {},
+          onAddPhoneNumberClick = {},
+          onVerify = {},
+          phoneNumbers =
+            persistentListOf(
+              PhoneNumber(
+                id = "phone_1",
+                phoneNumber = "15555550101",
+                reservedForSecondFactor = true,
+              ),
+              PhoneNumber(id = "phone_2", phoneNumber = "447911123456"),
             ),
-            PhoneNumber(id = "phone_2", phoneNumber = "447911123456"),
-          ),
-      )
+        )
+      }
     }
   }
 }

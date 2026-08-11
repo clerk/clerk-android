@@ -2,9 +2,11 @@ package com.clerk.ui.userprofile.connectedaccount
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,28 +22,42 @@ import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-@Composable
-internal fun UserProfileExternalAccountSection(
+internal fun LazyListScope.userProfileExternalAccountSection(
   externalAccounts: ImmutableList<ExternalAccount>,
   onError: (String) -> Unit,
-  modifier: Modifier = Modifier,
   onClickAddAccount: () -> Unit,
+  isInteractive: Boolean = true,
+  loadRemoteLogos: Boolean = true,
+  externalAccountRow: @Composable (ExternalAccount) -> Unit = {
+    UserProfileExternalAccountRow(
+      externalAccount = it,
+      isInteractive = isInteractive,
+      loadRemoteLogo = loadRemoteLogos,
+      onError = onError,
+    )
+  },
 ) {
-  ClerkMaterialTheme {
-    Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
-      Text(
-        modifier = Modifier.padding(horizontal = dp24),
-        text = stringResource(R.string.connected_accounts).uppercase(),
-        style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
-        color = ClerkMaterialTheme.colors.mutedForeground,
-      )
-      Spacers.Vertical.Spacer16()
-      externalAccounts.forEach { UserProfileExternalAccountRow(it, onError = onError) }
-      UserProfileButtonRow(
-        text = stringResource(R.string.connect_account),
-        onClick = onClickAddAccount,
-      )
-    }
+  item(key = "user_profile_external_account_header") {
+    Text(
+      modifier = Modifier.padding(horizontal = dp24),
+      text = stringResource(R.string.connected_accounts).uppercase(),
+      style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
+      color = ClerkMaterialTheme.colors.mutedForeground,
+    )
+  }
+  item(key = "user_profile_external_account_header_spacing") { Spacers.Vertical.Spacer16() }
+  items(
+    items = externalAccounts,
+    key = { externalAccount -> "user_profile_external_account_${externalAccount.id}" },
+    contentType = { "user_profile_external_account" },
+  ) { externalAccount ->
+    externalAccountRow(externalAccount)
+  }
+  item(key = "user_profile_external_account_add") {
+    UserProfileButtonRow(
+      text = stringResource(R.string.connect_account),
+      onClick = onClickAddAccount,
+    )
   }
 }
 
@@ -50,35 +66,37 @@ internal fun UserProfileExternalAccountSection(
 private fun Preview() {
   ClerkMaterialTheme {
     Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
-      UserProfileExternalAccountSection(
-        onError = {},
-        onClickAddAccount = {},
-        externalAccounts =
-          persistentListOf(
-            ExternalAccount(
-              id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
-              identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
-              provider = "oauth_google",
-              providerUserId = "102662613248529322762",
-              emailAddress = "sam@clerk.dev",
-              approvedScopes =
-                "email https://www.googleapis.com/auth/userinfo.email" +
-                  " https://www.googleapis.com/auth/userinfo.profile openid profile",
-              createdAt = 1L,
+      LazyColumn(modifier = Modifier.fillMaxWidth()) {
+        userProfileExternalAccountSection(
+          onError = {},
+          onClickAddAccount = {},
+          externalAccounts =
+            persistentListOf(
+              ExternalAccount(
+                id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
+                identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
+                provider = "oauth_google",
+                providerUserId = "102662613248529322762",
+                emailAddress = "sam@clerk.dev",
+                approvedScopes =
+                  "email https://www.googleapis.com/auth/userinfo.email" +
+                    " https://www.googleapis.com/auth/userinfo.profile openid profile",
+                createdAt = 1L,
+              ),
+              ExternalAccount(
+                id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0L",
+                identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77f",
+                provider = "oauth_linear",
+                providerUserId = "102662613248529322762",
+                emailAddress = "sam@clerk.dev",
+                approvedScopes =
+                  "email https://www.googleapis.com/auth/userinfo.email" +
+                    " https://www.googleapis.com/auth/userinfo.profile openid profile",
+                createdAt = 1L,
+              ),
             ),
-            ExternalAccount(
-              id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
-              identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
-              provider = "oauth_linear",
-              providerUserId = "102662613248529322762",
-              emailAddress = "sam@clerk.dev",
-              approvedScopes =
-                "email https://www.googleapis.com/auth/userinfo.email" +
-                  " https://www.googleapis.com/auth/userinfo.profile openid profile",
-              createdAt = 1L,
-            ),
-          ),
-      )
+        )
+      }
     }
   }
 }

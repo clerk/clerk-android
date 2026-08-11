@@ -1,13 +1,12 @@
 package com.clerk.ui.userprofile.detail
 
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
@@ -22,7 +21,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.currentStateAsState
 import com.clerk.api.Clerk
 import com.clerk.api.emailaddress.EmailAddress
 import com.clerk.api.externalaccount.ExternalAccount
@@ -37,9 +39,9 @@ import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
-import com.clerk.ui.userprofile.connectedaccount.UserProfileExternalAccountSection
-import com.clerk.ui.userprofile.email.UserProfileEmailSection
-import com.clerk.ui.userprofile.phone.UserProfilePhoneSection
+import com.clerk.ui.userprofile.connectedaccount.userProfileExternalAccountSection
+import com.clerk.ui.userprofile.email.userProfileEmailSection
+import com.clerk.ui.userprofile.phone.userProfilePhoneSection
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -50,12 +52,33 @@ private const val EMAIL_IMMUTABLE_SNACKBAR_MESSAGE =
 
 @Composable
 fun UserProfileDetailView(modifier: Modifier = Modifier) {
+  UserProfileDetailViewContent(modifier = modifier)
+}
+
+@Composable
+internal fun UserProfileDetailViewWithBackHandler(
+  modifier: Modifier = Modifier,
+  onBackPressed: () -> Unit,
+) {
+  UserProfileDetailViewContent(modifier = modifier, onBackPressed = onBackPressed)
+}
+
+@Composable
+private fun UserProfileDetailViewContent(modifier: Modifier, onBackPressed: (() -> Unit)? = null) {
   val user by Clerk.userFlow.collectAsStateWithLifecycle()
-  LaunchedEffect(Unit) { Clerk.refreshClient() }
+  val destinationLifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+  val isNavigationSettled = destinationLifecycleState == Lifecycle.State.RESUMED
+  LaunchedEffect(isNavigationSettled) {
+    if (isNavigationSettled) {
+      Clerk.refreshClient()
+    }
+  }
   UserProfileDetailViewImpl(
     emailAddresses = user.sortedEmailAddresses(),
     phoneNumbers = user.sortedPhoneNumbers(),
     externalAccounts = user.sortedExternalAccounts(),
+    isNavigationSettled = isNavigationSettled,
+    onBackPressed = onBackPressed,
     modifier = modifier,
   )
 }
@@ -66,11 +89,13 @@ private fun UserProfileDetailViewImpl(
   emailAddresses: ImmutableList<EmailAddress>,
   phoneNumbers: ImmutableList<PhoneNumber>,
   externalAccounts: ImmutableList<ExternalAccount>,
+  isNavigationSettled: Boolean = true,
+  onBackPressed: (() -> Unit)? = null,
   modifier: Modifier = Modifier,
 ) {
   val snackbarHostState = remember { SnackbarHostState() }
   val userProfileState = LocalUserProfileState.current
-  val scrollState = rememberScrollState()
+  val listState = rememberLazyListState()
   val scope = rememberCoroutineScope()
   var showBottomSheet by remember { mutableStateOf(false) }
   var bottomSheetType by remember { mutableStateOf<BottomSheetMode>(BottomSheetMode.EmailAddress) }
@@ -80,7 +105,7 @@ private fun UserProfileDetailViewImpl(
       modifier = modifier,
       topBar = {
         ClerkTopAppBar(
-          onBackPressed = { userProfileState.navigateBack() },
+          onBackPressed = onBackPressed ?: { userProfileState.navigateBack() },
           title = stringResource(R.string.manage_account),
           hasLogo = false,
         )
@@ -89,19 +114,23 @@ private fun UserProfileDetailViewImpl(
     ) { innerPadding ->
       ProfileContent(
         innerPadding = innerPadding,
-        scrollState = scrollState,
-        emailAddresses = emailAddresses,
-        phoneNumbers = phoneNumbers,
-        externalAccounts = externalAccounts,
-        onShowBottomSheet = { type ->
-          if (type == BottomSheetMode.EmailAddress && Clerk.isEmailImmutable) {
-            scope.launch { snackbarHostState.showSnackbar(EMAIL_IMMUTABLE_SNACKBAR_MESSAGE) }
-          } else {
-            bottomSheetType = type
-            showBottomSheet = true
-          }
-        },
-        onError = { errorMessage -> scope.launch { snackbarHostState.showSnackbar(errorMessage) } },
+        listState = listState,
+        data = ProfileContentData(emailAddresses, phoneNumbers, externalAccounts),
+        isNavigationSettled = isNavigationSettled,
+        actions =
+          ProfileContentActions(
+            onShowBottomSheet = { type ->
+              if (type == BottomSheetMode.EmailAddress && Clerk.isEmailImmutable) {
+                scope.launch { snackbarHostState.showSnackbar(EMAIL_IMMUTABLE_SNACKBAR_MESSAGE) }
+              } else {
+                bottomSheetType = type
+                showBottomSheet = true
+              }
+            },
+            onError = { errorMessage ->
+              scope.launch { snackbarHostState.showSnackbar(errorMessage) }
+            },
+          ),
       )
 
       if (showBottomSheet) {
@@ -125,54 +154,71 @@ private fun UserProfileDetailViewImpl(
 @Composable
 private fun ProfileContent(
   innerPadding: PaddingValues,
-  scrollState: ScrollState,
-  emailAddresses: ImmutableList<EmailAddress>,
-  phoneNumbers: ImmutableList<PhoneNumber>,
-  externalAccounts: ImmutableList<ExternalAccount>,
-  onShowBottomSheet: (BottomSheetMode) -> Unit,
-  onError: (String) -> Unit,
+  listState: LazyListState,
+  data: ProfileContentData,
+  isNavigationSettled: Boolean,
+  actions: ProfileContentActions,
 ) {
-  Column(
+  LazyColumn(
+    state = listState,
     modifier =
-      Modifier.fillMaxSize()
-        .background(ClerkMaterialTheme.colors.background)
-        .padding(innerPadding)
-        .verticalScroll(scrollState)
+      Modifier.fillMaxSize().background(ClerkMaterialTheme.colors.background).padding(innerPadding),
   ) {
     val showEmailSection =
-      Clerk.isEmailEnabled && !(Clerk.isEmailImmutable && emailAddresses.isEmpty())
+      Clerk.isEmailEnabled && !(Clerk.isEmailImmutable && data.emailAddresses.isEmpty())
     val showPhoneSection =
-      Clerk.isPhoneNumberEnabled && !(Clerk.isPhoneNumberImmutable && phoneNumbers.isEmpty())
+      Clerk.isPhoneNumberEnabled && !(Clerk.isPhoneNumberImmutable && data.phoneNumbers.isEmpty())
 
-    HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
-    if (showEmailSection) {
-      Spacers.Vertical.Spacer32()
-      UserProfileEmailSection(
-        emailAddresses = emailAddresses,
-        onError = onError,
-        onAddEmailClick = { onShowBottomSheet(BottomSheetMode.EmailAddress) },
-        onVerify = { onShowBottomSheet(BottomSheetMode.VerifyEmailAddress(it)) },
-      )
+    item(key = "user_profile_detail_top_divider") {
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+    }
+    if (showEmailSection) {
+      item(key = "user_profile_detail_email_spacing") { Spacers.Vertical.Spacer32() }
+      userProfileEmailSection(
+        emailAddresses = data.emailAddresses,
+        isInteractive = isNavigationSettled,
+        onError = actions.onError,
+        onAddEmailClick = { actions.onShowBottomSheet(BottomSheetMode.EmailAddress) },
+        onVerify = { actions.onShowBottomSheet(BottomSheetMode.VerifyEmailAddress(it)) },
+      )
+      item(key = "user_profile_detail_email_divider") {
+        HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+      }
     }
     if (showPhoneSection) {
-      Spacers.Vertical.Spacer16()
-      UserProfilePhoneSection(
-        phoneNumbers = phoneNumbers,
-        onError = onError,
-        onAddPhoneNumberClick = { onShowBottomSheet(BottomSheetMode.PhoneNumber) },
-        onVerify = { onShowBottomSheet(BottomSheetMode.VerifyPhoneNumber(it)) },
+      item(key = "user_profile_detail_phone_spacing") { Spacers.Vertical.Spacer16() }
+      userProfilePhoneSection(
+        phoneNumbers = data.phoneNumbers,
+        isInteractive = isNavigationSettled,
+        onError = actions.onError,
+        onAddPhoneNumberClick = { actions.onShowBottomSheet(BottomSheetMode.PhoneNumber) },
+        onVerify = { actions.onShowBottomSheet(BottomSheetMode.VerifyPhoneNumber(it)) },
       )
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+      item(key = "user_profile_detail_phone_divider") {
+        HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
+      }
     }
-    Spacers.Vertical.Spacer16()
-    UserProfileExternalAccountSection(
-      externalAccounts,
-      onError = onError,
-      onClickAddAccount = { onShowBottomSheet(BottomSheetMode.ExternalAccount) },
+    item(key = "user_profile_detail_external_account_spacing") { Spacers.Vertical.Spacer16() }
+    userProfileExternalAccountSection(
+      externalAccounts = data.externalAccounts,
+      isInteractive = isNavigationSettled,
+      loadRemoteLogos = isNavigationSettled,
+      onError = actions.onError,
+      onClickAddAccount = { actions.onShowBottomSheet(BottomSheetMode.ExternalAccount) },
     )
   }
 }
+
+private data class ProfileContentData(
+  val emailAddresses: ImmutableList<EmailAddress>,
+  val phoneNumbers: ImmutableList<PhoneNumber>,
+  val externalAccounts: ImmutableList<ExternalAccount>,
+)
+
+private data class ProfileContentActions(
+  val onShowBottomSheet: (BottomSheetMode) -> Unit,
+  val onError: (String) -> Unit,
+)
 
 internal sealed interface BottomSheetMode {
   data object ExternalAccount : BottomSheetMode
@@ -216,8 +262,8 @@ private fun Preview() {
         ),
         persistentListOf(
           ExternalAccount(
-            id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
-            identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
+            id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0L",
+            identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77f",
             provider = "oauth_google",
             providerUserId = "102662613248529322762",
             emailAddress = "sam@clerk.dev",

@@ -1,9 +1,11 @@
 package com.clerk.ui.userprofile.email
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,36 +23,40 @@ import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-@Composable
-internal fun UserProfileEmailSection(
+internal fun LazyListScope.userProfileEmailSection(
   emailAddresses: ImmutableList<EmailAddress>,
   onError: (String) -> Unit,
   onAddEmailClick: () -> Unit,
-  modifier: Modifier = Modifier,
   onVerify: (EmailAddress) -> Unit,
+  isInteractive: Boolean = true,
 ) {
-
-  ClerkMaterialTheme {
-    Column(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(color = ClerkMaterialTheme.colors.background)
-          .then(modifier)
-    ) {
-      Text(
-        modifier = Modifier.padding(horizontal = dp24),
-        text = stringResource(R.string.email_addresses).uppercase(),
-        style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
-        color = ClerkMaterialTheme.colors.mutedForeground,
+  item(key = "user_profile_email_header") {
+    Text(
+      modifier = Modifier.padding(horizontal = dp24),
+      text = stringResource(R.string.email_addresses).uppercase(),
+      style = ClerkMaterialTheme.typography.bodySmall.withMediumWeight(),
+      color = ClerkMaterialTheme.colors.mutedForeground,
+    )
+  }
+  item(key = "user_profile_email_header_spacing") { Spacers.Vertical.Spacer16() }
+  items(
+    items = emailAddresses,
+    key = { emailAddress -> "user_profile_email_${emailAddress.id}" },
+    contentType = { "user_profile_email" },
+  ) { emailAddress ->
+    UserProfileEmailRow(
+      emailAddress = emailAddress,
+      onError = onError,
+      onVerify = onVerify,
+      isInteractive = isInteractive,
+    )
+  }
+  if (!Clerk.isEmailImmutable) {
+    item(key = "user_profile_email_add") {
+      UserProfileButtonRow(
+        text = stringResource(R.string.add_email_address),
+        onClick = onAddEmailClick,
       )
-      Spacers.Vertical.Spacer16()
-      emailAddresses.forEach { UserProfileEmailRow(emailAddress = it, onError = onError, onVerify) }
-      if (!Clerk.isEmailImmutable) {
-        UserProfileButtonRow(
-          text = stringResource(R.string.add_email_address),
-          onClick = onAddEmailClick,
-        )
-      }
     }
   }
 }
@@ -58,28 +64,34 @@ internal fun UserProfileEmailSection(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileEmailSection(
-    onError = {},
-    onAddEmailClick = {},
-    onVerify = {},
-    emailAddresses =
-      persistentListOf(
-        EmailAddress(
-          id = "123",
-          emailAddress = "user@example.com",
-          verification = Verification(status = Verification.Status.VERIFIED),
-        ),
-        EmailAddress(
-          id = "123",
-          emailAddress = "user@example.com",
-          verification = Verification(status = Verification.Status.UNVERIFIED),
-        ),
-        EmailAddress(
-          id = "123",
-          emailAddress = "user@example.com",
-          linkedTo = listOf(EmailAddress.LinkedEntity(id = "1", type = "email")),
-          verification = Verification(status = Verification.Status.VERIFIED),
-        ),
-      ),
-  )
+  ClerkMaterialTheme {
+    LazyColumn(
+      modifier = Modifier.fillMaxWidth().background(ClerkMaterialTheme.colors.background)
+    ) {
+      userProfileEmailSection(
+        onError = {},
+        onAddEmailClick = {},
+        onVerify = {},
+        emailAddresses =
+          persistentListOf(
+            EmailAddress(
+              id = "email_1",
+              emailAddress = "user@example.com",
+              verification = Verification(status = Verification.Status.VERIFIED),
+            ),
+            EmailAddress(
+              id = "email_2",
+              emailAddress = "user@example.com",
+              verification = Verification(status = Verification.Status.UNVERIFIED),
+            ),
+            EmailAddress(
+              id = "email_3",
+              emailAddress = "user@example.com",
+              linkedTo = listOf(EmailAddress.LinkedEntity(id = "1", type = "email")),
+              verification = Verification(status = Verification.Status.VERIFIED),
+            ),
+          ),
+      )
+    }
+  }
 }

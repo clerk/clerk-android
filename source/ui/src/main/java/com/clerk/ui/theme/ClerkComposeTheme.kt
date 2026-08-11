@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkColors
@@ -116,11 +117,12 @@ internal fun ClerkMaterialTheme(clerkTheme: ClerkTheme? = null, content: @Compos
   ClerkThemeProvider(theme = resolvedTheme) {
     val colors = ClerkThemeProviderAccess.colors
     val design = ClerkThemeProviderAccess.design
+    val isDarkMode = isSystemInDarkTheme()
 
-    val materialColors = computeColorScheme(colors)
-    val computedColors = generateComputedColors(colors)
+    val materialColors = remember(colors, isDarkMode) { computeColorScheme(colors, isDarkMode) }
+    val computedColors = remember(colors) { generateComputedColors(colors) }
 
-    val themeColors = ClerkThemeColors(colors)
+    val themeColors = remember(colors) { ClerkThemeColors(colors) }
 
     CompositionLocalProvider(
       LocalComposeColors provides themeColors,
@@ -289,7 +291,7 @@ internal class ClerkThemeColors internal constructor(private val colors: ClerkCo
  * @param colors The base ClerkColors to derive variants from.
  * @return A [ComputedColors] object containing all the derived color variants.
  */
-@Composable
+@Suppress("CyclomaticComplexMethod")
 private fun generateComputedColors(colors: ClerkColors): ComputedColors {
 
   val computed =
@@ -332,10 +334,9 @@ private fun generateComputedColors(colors: ClerkColors): ComputedColors {
  * @param colors The ClerkColors to map to Material3 color roles.
  * @return A [ColorScheme] configured for the current theme (light/dark).
  */
-@Composable
-private fun computeColorScheme(colors: ClerkColors): ColorScheme {
+private fun computeColorScheme(colors: ClerkColors, isDarkMode: Boolean): ColorScheme {
 
-  return if (isSystemInDarkTheme()) {
+  return if (isDarkMode) {
     darkColorScheme(
       primary = colors.primary!!,
       background = colors.background!!,

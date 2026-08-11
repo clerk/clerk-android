@@ -1,6 +1,7 @@
 package com.clerk.ui.userprofile.connectedaccount
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,7 @@ import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withDarkVariant
 import com.clerk.ui.core.menu.DropDownItem
@@ -52,34 +54,38 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun UserProfileExternalAccountRow(
   externalAccount: ExternalAccount,
   modifier: Modifier = Modifier,
-  viewModel: AddConnectedAccountViewModel = viewModel(),
+  isInteractive: Boolean = true,
+  viewModel: AddConnectedAccountViewModel? = if (isInteractive) viewModel() else null,
+  loadRemoteLogo: Boolean = true,
   onError: (String) -> Unit,
 ) {
-  val state by viewModel.state.collectAsStateWithLifecycle()
-  val context = LocalContext.current
-  LaunchedEffect(state) {
-    if (state is AddConnectedAccountViewModel.State.Error) {
-      onError(
-        (state as AddConnectedAccountViewModel.State.Error).message
-          ?: context.getString(R.string.something_went_wrong_please_try_again)
-      )
-      viewModel.resetState()
+  if (isInteractive && viewModel != null) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(state) {
+      if (state is AddConnectedAccountViewModel.State.Error) {
+        onError(
+          (state as AddConnectedAccountViewModel.State.Error).message
+            ?: context.getString(R.string.something_went_wrong_please_try_again)
+        )
+        viewModel.resetState()
+      }
     }
   }
   val isPreview = LocalInspectionMode.current
-  ClerkMaterialTheme {
-    Row(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(ClerkMaterialTheme.colors.background)
-          .padding(start = dp24)
-          .padding(vertical = dp16)
-          .then(modifier),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      EmailWithAccountBadge(externalAccount)
-      Spacer(modifier = Modifier.weight(1f))
-      if (!isPreview) {
+  Row(
+    modifier =
+      Modifier.fillMaxWidth()
+        .background(ClerkMaterialTheme.colors.background)
+        .padding(start = dp24)
+        .padding(vertical = dp16)
+        .then(modifier),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    EmailWithAccountBadge(externalAccount, loadRemoteLogo = loadRemoteLogo)
+    Spacer(modifier = Modifier.weight(1f))
+    if (!isPreview) {
+      if (isInteractive && viewModel != null) {
         ItemMoreMenu(
           dropDownItems =
             persistentListOf(
@@ -102,24 +108,25 @@ internal fun UserProfileExternalAccountRow(
             }
           },
         )
+      } else {
+        Spacer(modifier = Modifier.size(dp48))
       }
     }
   }
 }
 
 @Composable
-private fun EmailWithAccountBadge(externalAccount: ExternalAccount) {
+private fun EmailWithAccountBadge(externalAccount: ExternalAccount, loadRemoteLogo: Boolean) {
   val fallbackPainter =
     if (externalAccount.oauthProviderType == OAuthProvider.GOOGLE)
       painterResource(R.drawable.ic_google)
     else painterResource(R.drawable.ic_globe)
   Column {
     Row(horizontalArrangement = Arrangement.spacedBy(dp8)) {
-      AsyncImage(
-        modifier = Modifier.size(dp20),
-        model = externalAccount.oauthProviderType.logoUrl?.withDarkVariant(isSystemInDarkTheme()),
-        contentDescription = null,
-        fallback = fallbackPainter,
+      ExternalAccountLogo(
+        externalAccount = externalAccount,
+        loadRemoteLogo = loadRemoteLogo,
+        fallbackPainter = fallbackPainter,
       )
       Text(
         text = externalAccount.oauthProviderType.providerName,
@@ -163,6 +170,28 @@ private fun EmailWithAccountBadge(externalAccount: ExternalAccount) {
     }
   }
 }
+
+@Composable
+private fun ExternalAccountLogo(
+  externalAccount: ExternalAccount,
+  loadRemoteLogo: Boolean,
+  fallbackPainter: androidx.compose.ui.graphics.painter.Painter,
+) {
+  if (loadRemoteLogo) {
+    AsyncImage(
+      modifier = Modifier.size(dp20),
+      model = externalAccountLogoModel(externalAccount),
+      contentDescription = null,
+      fallback = fallbackPainter,
+    )
+  } else {
+    Image(modifier = Modifier.size(dp20), painter = fallbackPainter, contentDescription = null)
+  }
+}
+
+@Composable
+private fun externalAccountLogoModel(externalAccount: ExternalAccount): String? =
+  externalAccount.oauthProviderType.logoUrl?.withDarkVariant(isSystemInDarkTheme())
 
 internal enum class ExternalAccountAction {
   Reconnect,

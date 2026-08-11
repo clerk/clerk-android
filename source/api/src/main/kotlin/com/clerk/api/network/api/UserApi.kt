@@ -202,7 +202,7 @@ internal interface UserApi {
    * Creates a new email address for the current user.
    *
    * @param emailAddress The email address to add
-   * @param sessionId Optional session ID. Defaults to current user ID from [Clerk.session]
+   * @param sessionId Optional session ID. Defaults to current session ID from [Clerk.session]
    * @return [ClerkResult] containing the created [EmailAddress] on success or [ClerkErrorResponse]
    *   on failure
    */
@@ -210,7 +210,7 @@ internal interface UserApi {
   @POST(ApiPaths.User.EmailAddress.BASE)
   suspend fun createEmailAddress(
     @Field("email_address") emailAddress: String,
-    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.user?.id,
+    @Query(ApiParams.CLERK_SESSION_ID) sessionId: String? = Clerk.session?.id,
   ): ClerkResult<EmailAddress, ClerkErrorResponse>
 
   /**
