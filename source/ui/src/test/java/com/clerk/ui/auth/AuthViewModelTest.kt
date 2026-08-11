@@ -569,6 +569,27 @@ class AuthViewModelTest {
   }
 
   @Test
+  fun socialOAuthCancellationReturnsToIdle() = runTest {
+    val cancellation =
+      Class.forName("com.clerk.api.sso.SSOCancellationException")
+        .getDeclaredConstructor(String::class.java)
+        .apply { isAccessible = true }
+        .newInstance("Authentication cancelled") as Throwable
+    mockkObject(SignIn.Companion)
+    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
+      ClerkResult.unknownFailure(cancellation)
+
+    viewModel.authenticateWithSocialProvider(
+      provider = OAuthProvider.GITHUB,
+      preferGoogleOneTap = false,
+    )
+
+    assertEquals(AuthStartViewModel.AuthState.OAuthState.Loading, viewModel.state.value)
+    testDispatcher.scheduler.advanceUntilIdle()
+    assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
+  }
+
+  @Test
   fun socialOAuthCanStartWithSignUp() = runTest {
     mockkObject(SignIn.Companion)
     mockkObject(SignUp.Companion)

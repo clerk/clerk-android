@@ -76,7 +76,7 @@ internal class SSOManagerActivity : AppCompatActivity() {
     // subsequent runs, we either got the response back from OAuthReceiverActivity or it was
     // cancelled. If we have a response, complete the flow and only finish after completion to
     // avoid cancelling the in-flight network request.
-    intent.data?.let {
+    intent.data?.takeIf(::isCallbackUri)?.let {
       if (completion == Completion.NONE) {
         completion = Completion.SSO
         pendingCallbackUri = it
@@ -206,12 +206,16 @@ internal class SSOManagerActivity : AppCompatActivity() {
     return HostedAuthService.canHandle(uri) ||
       uri.scheme?.startsWith("clerk") == true ||
       canHandleNativeMagicLink(uri) ||
-      uri.getQueryParameter("rotating_token_nonce") != null
+      uri.getQueryParameter("rotating_token_nonce") != null ||
+      uri.getQueryParameter("__clerk_status") != null ||
+      uri.getQueryParameter("error") != null ||
+      uri.getQueryParameter("error_description") != null
   }
 
   /** Finishes an authentication attempt that could not be completed. */
   private fun authorizationFailed() {
     HostedAuthService.cancelPendingAuthentication()
+    SSOService.cancelPendingAuthentication()
     val response = Intent()
     setResult(RESULT_CANCELED, response)
   }

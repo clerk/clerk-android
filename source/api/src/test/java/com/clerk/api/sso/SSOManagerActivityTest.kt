@@ -105,7 +105,9 @@ class SSOManagerActivityTest {
   @Test
   fun authorizationCanceled_setsResultCanceled_whenNoData() {
     mockkObject(HostedAuthService)
+    mockkObject(SSOService)
     justRun { HostedAuthService.cancelPendingAuthentication(any()) }
+    justRun { SSOService.cancelPendingAuthentication() }
     val app = ApplicationProvider.getApplicationContext<Application>()
     val intent =
       SSOManagerActivity.createBaseIntent(app).apply {
@@ -118,6 +120,29 @@ class SSOManagerActivityTest {
     val shadow = Shadows.shadowOf(activity)
     assertEquals(Activity.RESULT_CANCELED, shadow.resultCode)
     verify(exactly = 1) { HostedAuthService.cancelPendingAuthentication(any()) }
+    verify(exactly = 1) { SSOService.cancelPendingAuthentication() }
+  }
+
+  @Test
+  fun authorizationUrl_isNotTreatedAsCallback_whenBrowserIsDismissed() {
+    mockkObject(HostedAuthService)
+    mockkObject(SSOService)
+    justRun { HostedAuthService.cancelPendingAuthentication(any()) }
+    justRun { SSOService.cancelPendingAuthentication() }
+    coJustRun { SSOService.completeAuthenticateWithRedirect(any()) }
+    val app = ApplicationProvider.getApplicationContext<Application>()
+    val authorizationUri = Uri.parse("https://accounts.example.com/oauth/authorize")
+    val intent =
+      SSOManagerActivity.createResponseHandlingIntent(app, authorizationUri).apply {
+        putExtra(com.clerk.api.Constants.Storage.KEY_AUTHORIZATION_STARTED, true)
+      }
+
+    val activity =
+      Robolectric.buildActivity(SSOManagerActivity::class.java, intent).create().resume().get()
+
+    assertEquals(Activity.RESULT_CANCELED, Shadows.shadowOf(activity).resultCode)
+    coVerify(exactly = 0) { SSOService.completeAuthenticateWithRedirect(any()) }
+    verify(exactly = 1) { SSOService.cancelPendingAuthentication() }
   }
 
   @Test

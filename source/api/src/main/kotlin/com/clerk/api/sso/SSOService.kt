@@ -1,6 +1,5 @@
 package com.clerk.api.sso
 
-import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
 import androidx.core.net.toUri
@@ -219,6 +218,11 @@ internal object SSOService {
     redirectFlow: RedirectFlow = RedirectFlow.SIGN_IN,
     signUp: SignUp? = null,
   ): ClerkResult<OAuthResult, ClerkErrorResponse> {
+    val context =
+      Clerk.applicationContext?.get()
+        ?: return ClerkResult.unknownFailure(
+          IllegalStateException("Clerk must be initialized before starting redirect authentication")
+        )
     cancelCompetingAuthenticationFlows()
 
     val completableDeferred = CompletableDeferred<ClerkResult<OAuthResult, ClerkErrorResponse>>()
@@ -229,11 +233,12 @@ internal object SSOService {
     currentSignUp = signUp
 
     val intent =
-      Intent(Clerk.applicationContext?.get(), SSOReceiverActivity::class.java).apply {
-        data = externalVerificationRedirectUrl.toUri()
-        addFlags(FLAG_ACTIVITY_NEW_TASK)
-      }
-    Clerk.applicationContext?.get()?.startActivity(intent)
+      SSOManagerActivity.createAuthorizationIntent(
+          context = context,
+          authorizationUri = externalVerificationRedirectUrl.toUri(),
+        )
+        .apply { addFlags(FLAG_ACTIVITY_NEW_TASK) }
+    context.startActivity(intent)
 
     return completableDeferred.await()
   }
@@ -247,7 +252,7 @@ internal object SSOService {
    *
    * The method handles two authentication scenarios:
    * 1. **Sign In**: When the URI contains a `rotating_token_nonce` parameter
-   * 2. **Sign Up Transfer**: When no nonce is present, indicating a new user registration
+   * 2. **Sign Up Transfer**: When the callback contains Clerk's explicit transfer marker
    *
    * This method is typically triggered internally via [SSOReceiverActivity] when the app receives a
    * redirect URI containing authentication results.
@@ -265,27 +270,31 @@ internal object SSOService {
         return
       }
 
-      val nonce = uri.getQueryParameter("rotating_token_nonce")
+      val nonce = uri.getQueryParameter(ROTATING_TOKEN_NONCE)?.takeIf(String::isNotBlank)
 
       when (currentRedirectFlow) {
         RedirectFlow.SIGN_IN -> {
           if (nonce != null) {
             handleSignIn(nonce)
-          } else if (currentTransferable) {
+          } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN) && currentTransferable) {
             handleSignUpTransfer()
-          } else {
+          } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN)) {
             ClerkLog.d("Sign-up transfer blocked: transferable is false")
             currentPendingAuth?.complete(
               ClerkResult.unknownFailure(Exception("external_account_not_found"))
             )
             clearCurrentAuth()
+          } else {
+            completeCancellation(uri)
           }
         }
         RedirectFlow.SIGN_UP -> {
           if (nonce != null) {
             handleSignUp(nonce)
-          } else {
+          } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_UP)) {
             handleSignInTransfer()
+          } else {
+            completeCancellation(uri)
           }
         }
       }
@@ -374,6 +383,17 @@ internal object SSOService {
     clearCurrentAuth()
   }
 
+  private fun completeCancellation(uri: Uri) {
+    val reason =
+      uri.getQueryParameter(ERROR_DESCRIPTION)
+        ?: uri.getQueryParameter(ERROR)
+        ?: uri.getQueryParameter(CLERK_ERROR_CODE)
+        ?: AUTHENTICATION_CANCELLED
+    ClerkLog.d("Redirect authentication cancelled")
+    currentPendingAuth?.complete(ClerkResult.unknownFailure(SSOCancellationException(reason)))
+    clearCurrentAuth()
+  }
+
   /**
    * Clears the current authentication state.
    *
@@ -391,7 +411,7 @@ internal object SSOService {
   private fun cancelCompetingAuthenticationFlows() {
     currentPendingAuth?.complete(
       ClerkResult.unknownFailure(
-        Exception("New authentication started, cancelling previous attempt")
+        SSOCancellationException("New authentication started, cancelling previous attempt")
       )
     )
     HostedAuthService.cancelPendingAuthentication(HOSTED_AUTH_CANCELLED_BY_NEW_FLOW)
@@ -407,7 +427,7 @@ internal object SSOService {
    */
   fun cancelPendingAuthentication() {
     currentPendingAuth?.complete(
-      ClerkResult.Companion.unknownFailure(Exception("Authentication cancelled"))
+      ClerkResult.unknownFailure(SSOCancellationException(AUTHENTICATION_CANCELLED))
     )
     clearCurrentAuth()
   }
@@ -440,4 +460,23 @@ internal object SSOService {
     SIGN_IN,
     SIGN_UP,
   }
+
+  private fun Uri.isTransferCallbackFor(redirectFlow: RedirectFlow): Boolean {
+    if (getQueryParameter(CLERK_STATUS) != CLERK_STATUS_FAILED) return false
+
+    return when (redirectFlow) {
+      RedirectFlow.SIGN_IN -> getQueryParameter(CLERK_ERROR_CODE) == EXTERNAL_ACCOUNT_NOT_FOUND
+      RedirectFlow.SIGN_UP -> getQueryParameter(CLERK_ERROR_CODE) == EXTERNAL_ACCOUNT_EXISTS
+    }
+  }
+
+  private const val AUTHENTICATION_CANCELLED = "Authentication cancelled"
+  private const val ROTATING_TOKEN_NONCE = "rotating_token_nonce"
+  private const val CLERK_STATUS = "__clerk_status"
+  private const val CLERK_STATUS_FAILED = "failed"
+  private const val CLERK_ERROR_CODE = "__clerk_error_code"
+  private const val EXTERNAL_ACCOUNT_NOT_FOUND = "external_account_not_found"
+  private const val EXTERNAL_ACCOUNT_EXISTS = "external_account_exists"
+  private const val ERROR = "error"
+  private const val ERROR_DESCRIPTION = "error_description"
 }
