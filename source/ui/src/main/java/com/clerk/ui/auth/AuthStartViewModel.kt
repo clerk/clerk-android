@@ -19,6 +19,7 @@ import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
+import com.clerk.api.sso.SSOCancellationException
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
@@ -328,7 +329,14 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
                 AuthState.OAuthState.Error("Unknown result type from OAuth provider")
             }
         }
-        .onFailure { _state.value = AuthState.OAuthState.Error(it.errorMessage) }
+        .onFailure {
+          _state.value =
+            if (it.isSSOCancellation) {
+              AuthState.Idle
+            } else {
+              AuthState.OAuthState.Error(it.errorMessage)
+            }
+        }
     }
   }
 
@@ -386,7 +394,14 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
         }
       }
       .onFailure { failure ->
-        withContext(Dispatchers.Main) { _state.value = AuthState.Error(failure.errorMessage) }
+        withContext(Dispatchers.Main) {
+          _state.value =
+            if (failure.isSSOCancellation) {
+              AuthState.Idle
+            } else {
+              AuthState.Error(failure.errorMessage)
+            }
+        }
       }
   }
 
@@ -435,6 +450,9 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
 
 private fun SignIn.requiresEnterpriseSSO(): Boolean =
   startingFirstFactor?.strategy == "enterprise_sso"
+
+private val ClerkResult.Failure<*>.isSSOCancellation: Boolean
+  get() = throwable is SSOCancellationException
 
 private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
 

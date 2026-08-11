@@ -52,6 +52,19 @@ class SSOReceiverActivityTest {
     assertEquals(callbackUri, forwardedIntent.data)
   }
 
+  @Test
+  fun unrecognizedExplicitIntentIsNotForwardedToManager() {
+    val callbackUri = Uri.parse("https://attacker.example/fake-sign-in")
+    mockkObject(HostedAuthService)
+    every { HostedAuthService.canHandle(callbackUri) } returns false
+
+    val activity = createReceiver(callbackUri)
+
+    assertNull(Shadows.shadowOf(activity).nextStartedActivity)
+    assertTrue(activity.isFinishing)
+    verify(exactly = 0) { HostedAuthService.isForgedCallback(any()) }
+  }
+
   private fun createReceiver(callbackUri: Uri): SSOReceiverActivity {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val intent = Intent(context, SSOReceiverActivity::class.java).apply { data = callbackUri }

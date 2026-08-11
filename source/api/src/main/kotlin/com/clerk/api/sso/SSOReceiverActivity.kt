@@ -24,7 +24,12 @@ internal class SSOReceiverActivity : Activity() {
     ClerkLog.d("OAuthReceiverActivity started with uri: ${SafeUriLog.describe(intent?.data)}")
     super.onCreate(savedInstanceState)
     val callbackUri = intent?.data
-    if (callbackUri != null && HostedAuthService.isForgedCallback(callbackUri)) {
+    if (callbackUri == null || !SSOManagerActivity.isCallbackUri(callbackUri)) {
+      ClerkLog.w("Ignoring unrecognized OAuth/SSO callback")
+      finish()
+      return
+    }
+    if (HostedAuthService.isForgedCallback(callbackUri)) {
       ClerkLog.w("Ignoring invalid hosted auth callback")
       finish()
       return

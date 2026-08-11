@@ -1,6 +1,6 @@
 package com.clerk.api.externalaccount
 
-import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import androidx.core.net.toUri
 import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccountService.connectExternalAccount
@@ -14,7 +14,7 @@ import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.sso.SSOReceiverActivity
+import com.clerk.api.sso.SSOManagerActivity
 import com.clerk.api.user.User
 import com.clerk.api.user.toMap
 import kotlinx.coroutines.CompletableDeferred
@@ -87,16 +87,22 @@ internal object ExternalAccountService {
           requireNotNull(initialResult.value.verification?.externalVerificationRedirectUrl) {
             "External verification redirect URL is missing"
           }
+        val context =
+          Clerk.applicationContext?.get()
+            ?: return ClerkResult.unknownFailure(
+              IllegalStateException(
+                "Clerk must be initialized before connecting an external account"
+              )
+            )
         val completableDeferred =
           CompletableDeferred<ClerkResult<ExternalAccount, ClerkErrorResponse>>()
         currentPendingExternalAccountConnection = completableDeferred
         currentPendingExternalAccountConnectionId = initialResult.value.id
         val intent =
-          Intent(Clerk.applicationContext?.get(), SSOReceiverActivity::class.java).apply {
-            data = externalUrl.toUri()
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+          SSOManagerActivity.createAuthorizationIntent(context, externalUrl.toUri()).apply {
+            addFlags(FLAG_ACTIVITY_NEW_TASK)
           }
-        Clerk.applicationContext?.get()?.startActivity(intent)
+        context.startActivity(intent)
         completableDeferred.await()
       }
     }
