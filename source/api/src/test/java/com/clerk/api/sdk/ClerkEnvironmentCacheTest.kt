@@ -13,6 +13,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.CompletableDeferred
@@ -46,6 +47,11 @@ class ClerkEnvironmentCacheTest {
     Clerk.reset()
     mockkObject(Client.Companion)
     mockkObject(Environment.Companion)
+    // mockkObject() intercepts every member of the companion, including the
+    // compiler-synthesized Environment.serializer() used by Clerk.updateEnvironment()'s
+    // caching and by this test's own encode/decode setup - without this, those calls throw
+    // "no answer found for ...serializer()" since only get() is stubbed per-test below.
+    every { Environment.serializer() } answers { callOriginal() }
   }
 
   @After
