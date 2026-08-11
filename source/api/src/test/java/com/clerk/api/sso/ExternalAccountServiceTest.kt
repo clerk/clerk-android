@@ -1,6 +1,7 @@
 package com.clerk.api.sso
 
 import android.content.Context
+import android.content.Intent
 import com.clerk.api.Clerk
 import com.clerk.api.externalaccount.ExternalAccount
 import com.clerk.api.externalaccount.ExternalAccountService
@@ -16,16 +17,23 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkAll
+import io.mockk.verify
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -72,6 +80,8 @@ class ExternalAccountServiceTest {
     every { ClerkApi.user } returns mockUserApi
     every { Clerk.applicationContext } returns WeakReference(mockContext)
     every { Clerk.debugMode } returns false
+    every { Clerk.session } returns mockSession
+    every { Clerk.session?.id } returns "session_123"
 
     // Setup verification mock
     every { mockVerification.status } returns Verification.Status.VERIFIED
@@ -139,5 +149,32 @@ class ExternalAccountServiceTest {
 
     // After cancellation, there should be no pending connection
     assertFalse(ExternalAccountService.hasPendingExternalAccountConnection())
+  }
+
+  @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
+  fun `connectExternalAccount launches authorization through non-exported manager`() = runTest {
+    coEvery { mockUserApi.createExternalAccount(any(), "session_123") } returns
+      ClerkResult.success(mockExternalAccount)
+    val startedIntent = slot<Intent>()
+
+    val pendingResult = async {
+      ExternalAccountService.connectExternalAccount(
+        User.CreateExternalAccountParams(provider = OAuthProvider.GOOGLE)
+      )
+    }
+    runCurrent()
+
+    verify(exactly = 1) { mockContext.startActivity(capture(startedIntent)) }
+    assertEquals(SSOManagerActivity::class.java.name, startedIntent.captured.component?.className)
+    assertNull(startedIntent.captured.data)
+    assertEquals(
+      mockVerification.externalVerificationRedirectUrl,
+      startedIntent.captured.getStringExtra(SSOManagerActivity.URI_KEY),
+    )
+    assertTrue(startedIntent.captured.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
+
+    ExternalAccountService.cancelPendingExternalAccountConnection()
+    pendingResult.await()
   }
 }

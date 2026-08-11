@@ -4,8 +4,12 @@ import app.cash.turbine.test
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error as ClerkError
+import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.signin.SignIn
+import com.clerk.api.signin.authenticateWithPreparedRedirect
+import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
@@ -15,6 +19,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
@@ -586,6 +591,52 @@ class AuthViewModelTest {
 
     assertEquals(AuthStartViewModel.AuthState.OAuthState.Loading, viewModel.state.value)
     testDispatcher.scheduler.advanceUntilIdle()
+    assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
+  }
+
+  @Test
+  fun enterpriseSSOCancellationReturnsToIdle() = runTest {
+    val cancellation =
+      Class.forName("com.clerk.api.sso.SSOCancellationException")
+        .getDeclaredConstructor(String::class.java)
+        .apply { isAccessible = true }
+        .newInstance("Authentication cancelled") as Throwable
+    val signIn =
+      SignIn(
+        id = "sign_in_enterprise",
+        status = SignIn.Status.NEEDS_FIRST_FACTOR,
+        identifier = "user@example.com",
+        supportedFirstFactors =
+          listOf(Factor(strategy = "enterprise_sso", safeIdentifier = "user@example.com")),
+      )
+    val preparedSignIn =
+      signIn.copy(
+        firstFactorVerification =
+          Verification(
+            strategy = "enterprise_sso",
+            externalVerificationRedirectUrl = "https://sso.example.com/start",
+          )
+      )
+    mockkObject(SignIn.Companion)
+    mockkStatic("com.clerk.api.signin.SignInKt")
+    mockkStatic("com.clerk.api.signin.SignInExtensionsKt")
+    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
+      ClerkResult.success(signIn)
+    coEvery {
+      signIn.prepareFirstFactor(any<SignIn.PrepareFirstFactorParams.EnterpriseSSO>())
+    } returns ClerkResult.success(preparedSignIn)
+    coEvery { preparedSignIn.authenticateWithPreparedRedirect(any()) } returns
+      ClerkResult.unknownFailure(cancellation)
+
+    viewModel.startAuth(
+      authMode = AuthMode.SignIn,
+      isPhoneNumberFieldActive = false,
+      phoneNumber = "",
+      identifier = "user@example.com",
+    )
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) { preparedSignIn.authenticateWithPreparedRedirect(false) }
     assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
   }
 

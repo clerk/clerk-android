@@ -202,16 +202,6 @@ internal class SSOManagerActivity : AppCompatActivity() {
     }
   }
 
-  private fun isCallbackUri(uri: Uri): Boolean {
-    return HostedAuthService.canHandle(uri) ||
-      uri.scheme?.startsWith("clerk") == true ||
-      canHandleNativeMagicLink(uri) ||
-      uri.getQueryParameter("rotating_token_nonce") != null ||
-      uri.getQueryParameter("__clerk_status") != null ||
-      uri.getQueryParameter("error") != null ||
-      uri.getQueryParameter("error_description") != null
-  }
-
   /** Finishes an authentication attempt that could not be completed. */
   private fun authorizationFailed() {
     HostedAuthService.cancelPendingAuthentication()
@@ -221,6 +211,17 @@ internal class SSOManagerActivity : AppCompatActivity() {
   }
 
   internal companion object {
+    internal fun isCallbackUri(uri: Uri): Boolean {
+      return HostedAuthService.canHandle(uri) ||
+        uri.scheme?.startsWith("clerk") == true ||
+        canHandleNativeMagicLink(uri) ||
+        uri.getQueryParameter("rotating_token_nonce") != null ||
+        uri.getQueryParameter("__clerk_status") != null ||
+        uri.getQueryParameter("__clerk_error_code") != null ||
+        uri.getQueryParameter("error") != null ||
+        uri.getQueryParameter("error_description") != null
+    }
+
     /**
      * Creates an intent to handle the OAuth/SSO response.
      *
