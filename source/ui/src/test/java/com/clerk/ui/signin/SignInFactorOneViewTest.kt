@@ -114,6 +114,34 @@ class SignInFactorOneViewTest {
   }
 
   @Test
+  fun resolveFirstFactorShouldKeepExplicitPasswordWhenEmailLinkIsSupported() {
+    val passwordFactor = Factor(strategy = StrategyKeys.PASSWORD)
+    every { mockAuth.currentSignIn } returns
+      SignIn(
+        id = "sign_in_123",
+        identifier = "sam@clerk.dev",
+        supportedFirstFactors =
+          listOf(
+            passwordFactor,
+            Factor(
+              strategy = StrategyKeys.EMAIL_CODE,
+              emailAddressId = "email_123",
+              safeIdentifier = "sam@clerk.dev",
+            ),
+            Factor(
+              strategy = StrategyKeys.EMAIL_LINK,
+              emailAddressId = "email_123",
+              safeIdentifier = "sam@clerk.dev",
+            ),
+          ),
+      )
+
+    val resolved = resolveFirstFactor(passwordFactor)
+
+    assertEquals(passwordFactor, resolved)
+  }
+
+  @Test
   fun resolveFirstFactorShouldKeepResetPasswordEmailCodeWhenEmailLinkIsSupported() {
     val resetFactor =
       Factor(

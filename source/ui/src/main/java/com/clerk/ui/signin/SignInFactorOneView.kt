@@ -88,6 +88,8 @@ private fun SignIn.preferredEmailLinkFactor(
   fallback: Factor,
   supportedFactors: List<Factor>,
 ): Factor? {
+  if (fallback.strategy != StrategyKeys.EMAIL_CODE) return null
+
   return if (isEmailIdentifierSignIn(fallback, supportedFactors)) {
     supportedFactors.firstOrNull { it.strategy == StrategyKeys.EMAIL_LINK }
   } else {
