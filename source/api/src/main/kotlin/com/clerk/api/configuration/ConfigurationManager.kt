@@ -155,27 +155,34 @@ internal class ConfigurationManager {
     }
   }
 
-  /**
-   * Rehydrates [Clerk.environment] from encrypted storage before the network refresh runs, so
-   * offline cold starts have a representation of the environment (e.g. sign-in form fields, social
-   * providers) instead of rendering blank until connectivity returns.
-   *
-   * This is a best-effort cache: it only applies when no environment is already present (never
-   * clobbering a value a fresh fetch already produced), and any decode failure - for example a
-   * schema mismatch left over from an older SDK version - is treated as a cache miss rather than an
-   * initialization error.
-   */
-  private fun hydrateCachedEnvironmentIfNeeded() {
-    if (Clerk.environment != null) return
-    val cachedEnvironment = loadCachedEnvironment() ?: return
-    Clerk.updateEnvironment(cachedEnvironment)
-    ClerkLog.d("Hydrated environment from cache")
+  /** Restores a complete, matching client/environment snapshot before the network refresh runs. */
+  private fun hydrateCachedStateIfNeeded(baseUrl: String) {
+    if (Clerk.clientFlow.value == null && Clerk.environment == null) {
+      val cachedState = loadCachedState()
+      when {
+        cachedState == null -> Unit
+        !cachedState.matchesConfiguration(publishableKey = publishableKey, baseUrl = baseUrl) ->
+          ClerkLog.d("Ignoring cached Clerk state for a different configuration")
+        else -> hydrateCachedState(cachedState)
+      }
+    }
   }
 
-  private fun loadCachedEnvironment(): Environment? {
-    val cachedJson = StorageHelper.loadValue(StorageKey.CACHED_ENVIRONMENT) ?: return null
-    return runCatching { ClerkApi.json.decodeFromString(Environment.serializer(), cachedJson) }
-      .onFailure { error -> ClerkLog.w("Failed to decode cached environment: ${error.message}") }
+  private fun hydrateCachedState(cachedState: CachedClerkState) {
+    Clerk.updateClient(
+      client = cachedState.client,
+      serverFetchAtMillis = cachedState.clientServerFetchAtMillis,
+    )
+    Clerk.updateEnvironment(cachedState.environment)
+    _isInitialized.value = true
+    _initializationError.value = null
+    ClerkLog.d("Hydrated client and environment from cache")
+  }
+
+  private fun loadCachedState(): CachedClerkState? {
+    val cachedJson = StorageHelper.loadValue(StorageKey.CACHED_CLERK_STATE) ?: return null
+    return runCatching { ClerkApi.json.decodeFromString(CachedClerkState.serializer(), cachedJson) }
+      .onFailure { error -> ClerkLog.w("Failed to decode cached Clerk state: ${error.message}") }
       .getOrNull()
   }
 
@@ -242,7 +249,7 @@ internal class ConfigurationManager {
     Clerk.applicationId = context.applicationContext.packageName
 
     ensureStorageInitialized()
-    hydrateCachedEnvironmentIfNeeded()
+    hydrateCachedStateIfNeeded(baseUrl)
     Clerk.configureSharedSessionSync(
       context = context.applicationContext,
       publishableKey = publishableKey,
@@ -261,32 +268,33 @@ internal class ConfigurationManager {
   private fun launchInitialization(
     options: ClerkConfigurationOptions?,
     configuredVersion: Int,
-  ): Job = scope.launch {
-    val attempt =
-      RefreshAttempt(
-        options = options,
-        retryCount = 0,
-        expectedConfigurationVersion = configuredVersion,
-      )
-    Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-    val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
-    val dataRefreshJob = async {
-      refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
-    }
+  ): Job =
+    scope.launch {
+      val attempt =
+        RefreshAttempt(
+          options = options,
+          retryCount = 0,
+          expectedConfigurationVersion = configuredVersion,
+        )
+      Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
+      val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
+      val dataRefreshJob = async {
+        refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+      }
 
-    deviceIdInitJob.await()
-    AppLifecycleListener.configure {
-      if (hasConfigured) {
-        scope.launch {
-          Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-          deferForegroundRefreshDuringPendingAuth()
-          refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
-          startTokenRefresh()
+      deviceIdInitJob.await()
+      AppLifecycleListener.configure {
+        if (hasConfigured) {
+          scope.launch {
+            Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
+            deferForegroundRefreshDuringPendingAuth()
+            refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+            startTokenRefresh()
+          }
         }
       }
+      dataRefreshJob.await()
     }
-    dataRefreshJob.await()
-  }
 
   fun isConfigured(): Boolean = hasConfigured
 
@@ -327,28 +335,29 @@ internal class ConfigurationManager {
 
     // Cancel any ongoing jobs
     refreshJob?.cancel()
-    refreshJob = scope.launch {
-      while (isActive) {
-        try {
-          val session = Clerk.session
-          if (session != null) {
-            if (Clerk.debugMode) {
-              ClerkLog.d("Refreshing token for session: ${session.id}")
+    refreshJob =
+      scope.launch {
+        while (isActive) {
+          try {
+            val session = Clerk.session
+            if (session != null) {
+              if (Clerk.debugMode) {
+                ClerkLog.d("Refreshing token for session: ${session.id}")
+              }
+              // Use async to avoid blocking the refresh loop
+              async { session.fetchToken(GetTokenOptions(skipCache = false)) }
+            } else {
+              if (Clerk.debugMode) {
+                ClerkLog.d("No session available for token refresh")
+              }
             }
-            // Use async to avoid blocking the refresh loop
-            async { session.fetchToken(GetTokenOptions(skipCache = false)) }
-          } else {
-            if (Clerk.debugMode) {
-              ClerkLog.d("No session available for token refresh")
-            }
+          } catch (e: Exception) {
+            ClerkLog.w("Token refresh failed: ${e.message}")
           }
-        } catch (e: Exception) {
-          ClerkLog.w("Token refresh failed: ${e.message}")
-        }
 
-        delay(REFRESH_TOKEN_INTERVAL.seconds)
+          delay(REFRESH_TOKEN_INTERVAL.seconds)
+        }
       }
-    }
   }
 
   suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> {
@@ -666,8 +675,13 @@ internal class ConfigurationManager {
       return
     }
 
-    _isInitialized.value = false
-    _initializationError.value = error
+    val hasUsableState = Clerk.clientFlow.value != null && Clerk.environment != null
+    _isInitialized.value = hasUsableState
+    _initializationError.value = if (hasUsableState) null else error
+
+    if (hasUsableState) {
+      ClerkLog.w("Initialization refresh failed; continuing with cached Clerk state")
+    }
 
     if (attempt.retryCount < MAX_INITIALIZATION_RETRIES) {
       scope.launch { retryInitialization(attempt.nextRetry()) }
