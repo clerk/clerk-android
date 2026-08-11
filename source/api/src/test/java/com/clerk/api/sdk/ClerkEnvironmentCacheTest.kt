@@ -2,6 +2,7 @@ package com.clerk.api.sdk
 
 import android.content.Context
 import com.clerk.api.Clerk
+import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
@@ -96,7 +97,11 @@ class ClerkEnvironmentCacheTest {
       coEvery { Client.getSkippingClientId() } coAnswers { neverCompletingClient.await() }
       coEvery { Environment.get() } coAnswers { neverCompletingEnvironment.await() }
 
-      Clerk.initialize(context = context, publishableKey = PUBLISHABLE_KEY)
+      Clerk.initialize(
+        context = context,
+        publishableKey = PUBLISHABLE_KEY,
+        options = ClerkConfigurationOptions(proxyUrl = PROXY_URL),
+      )
 
       // Hydration from cache happens synchronously as part of initialize(), independently of the
       // network refresh above (which is stalled forever), so the cached values should already be
@@ -117,7 +122,11 @@ class ClerkEnvironmentCacheTest {
     coEvery { Client.getSkippingClientId() } coAnswers { clientDeferred.await() }
     coEvery { Environment.get() } coAnswers { environmentDeferred.await() }
 
-    Clerk.initialize(context = context, publishableKey = PUBLISHABLE_KEY)
+    Clerk.initialize(
+      context = context,
+      publishableKey = PUBLISHABLE_KEY,
+      options = ClerkConfigurationOptions(proxyUrl = PROXY_URL),
+    )
 
     // The corrupted cache entry should be treated as a cache miss, not crash initialization.
     assertNull(Clerk.environment)
@@ -145,7 +154,11 @@ class ClerkEnvironmentCacheTest {
       coEvery { Client.getSkippingClientId() } coAnswers { clientDeferred.await() }
       coEvery { Environment.get() } coAnswers { environmentDeferred.await() }
 
-      Clerk.initialize(context = context, publishableKey = PUBLISHABLE_KEY)
+      Clerk.initialize(
+        context = context,
+        publishableKey = PUBLISHABLE_KEY,
+        options = ClerkConfigurationOptions(proxyUrl = PROXY_URL),
+      )
       assertEquals("Stale Cached App", Clerk.applicationName)
 
       clientDeferred.complete(ClerkResult.success(Client()))
@@ -187,5 +200,12 @@ class ClerkEnvironmentCacheTest {
 
   private companion object {
     const val PUBLISHABLE_KEY = "pk_test_cachedenv"
+    // A proxyUrl is supplied to every Clerk.initialize() call below so that
+    // ConfigurationManager.configureSdkState() short-circuits before
+    // PublishableKeyHelper.extractApiUrl(), which otherwise base64-decodes the
+    // key's suffix via android.util.Base64.decode() and throws
+    // IllegalArgumentException for a non-base64, non-padded value like
+    // "cachedenv".
+    const val PROXY_URL = "https://proxy.example.com/__clerk"
   }
 }
