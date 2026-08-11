@@ -12,6 +12,7 @@ import com.clerk.api.Clerk.session
 import com.clerk.api.Clerk.user
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.auth.Auth
+import com.clerk.api.configuration.CachedClerkState
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
 import com.clerk.api.externalaccount.ExternalAccountService
@@ -750,6 +751,7 @@ object Clerk {
     configurationManager.reset()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
     StorageHelper.deleteValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT)
+    StorageHelper.deleteValue(StorageKey.CACHED_CLERK_STATE)
     clearSessionAndUserState()
     SessionTokensCache.clear()
     SSOService.cancelPendingAuthentication()
@@ -757,10 +759,10 @@ object Clerk {
     DeviceAttestationHelper.clearCache()
     LocaleProvider.cleanup()
     ClerkApi.reset()
+    environment = null
     updateClient(Client())
     _clientFlow.value = null
     lastClientServerFetchAtMillis = null
-    environment = null
     publishableKey = null
     baseUrl = ""
     proxyUrl = null
@@ -926,6 +928,46 @@ object Clerk {
     _organizationLogoUrlFlow.value = environment.displayConfig.logoImageUrl
     _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
     sharedSessionSyncCoordinator?.handleEnvironmentChange(previousEnvironment, environment)
+    cacheStateIfReady()
+  }
+
+  /**
+   * Persists a complete client/environment snapshot to encrypted storage. A complete snapshot lets
+   * a future cold start restore the same readiness contract as a network initialization; caching
+   * only the environment would leave [isInitialized] false and host applications stuck behind their
+   * loading gates.
+   */
+  private fun cacheStateIfReady() {
+    val cachedEnvironment = environment
+    val cachedClient = _clientFlow.value
+    val cachedResources =
+      cachedClient?.let { client ->
+        cachedEnvironment?.let { environment -> client to environment }
+      }
+    val cachedPublishableKey = publishableKey
+    val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
+    val cachedConfiguration =
+      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
+    val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
+    val state =
+      if (
+        cachedResources != null && cachedConfiguration != null && cachedServerFetchAtMillis != null
+      ) {
+        CachedClerkState(
+          publishableKey = cachedConfiguration.first,
+          baseUrl = cachedConfiguration.second,
+          client = cachedResources.first,
+          environment = cachedResources.second,
+          clientServerFetchAtMillis = cachedServerFetchAtMillis,
+        )
+      } else {
+        null
+      }
+    if (state == null) return
+
+    runCatching { ClerkApi.json.encodeToString(CachedClerkState.serializer(), state) }
+      .onSuccess { encoded -> StorageHelper.saveValue(StorageKey.CACHED_CLERK_STATE, encoded) }
+      .onFailure { error -> ClerkLog.w("Failed to cache Clerk state: ${error.message}") }
   }
 
   internal fun credentialActivity(): Activity? = currentActivity?.get()
@@ -961,6 +1003,7 @@ object Clerk {
       ClerkLog.e("${e.message}")
     }
     sharedSessionSyncCoordinator?.handleClientChange(updatedClient, serverFetchAtMillis)
+    cacheStateIfReady()
   }
 
   internal fun configureSharedSessionSync(
@@ -999,9 +1042,8 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
-      sessions.any { it.id == activeSessionId }
-    }
+    val currentActiveSessionId =
+      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1120,9 +1162,8 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
-  it.strategy == strategy && it.safeIdentifier == identifier
-}
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
+  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
 
 val SignIn.resetPasswordFactor: Factor?
   get() =
