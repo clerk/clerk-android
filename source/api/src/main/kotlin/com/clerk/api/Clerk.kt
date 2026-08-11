@@ -750,6 +750,7 @@ object Clerk {
     configurationManager.reset()
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
     StorageHelper.deleteValue(StorageKey.SHARED_SESSION_SYNC_SNAPSHOT)
+    StorageHelper.deleteValue(StorageKey.CACHED_ENVIRONMENT)
     clearSessionAndUserState()
     SessionTokensCache.clear()
     SSOService.cancelPendingAuthentication()
@@ -926,6 +927,18 @@ object Clerk {
     _organizationLogoUrlFlow.value = environment.displayConfig.logoImageUrl
     _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
     sharedSessionSyncCoordinator?.handleEnvironmentChange(previousEnvironment, environment)
+    cacheEnvironment(environment)
+  }
+
+  /**
+   * Persists [environment] to encrypted storage so it can be rehydrated on a future cold start
+   * before the network fetch completes (e.g. while offline). Failures are logged and otherwise
+   * ignored since this is a best-effort cache, not the source of truth.
+   */
+  private fun cacheEnvironment(environment: Environment) {
+    runCatching { ClerkApi.json.encodeToString(Environment.serializer(), environment) }
+      .onSuccess { encoded -> StorageHelper.saveValue(StorageKey.CACHED_ENVIRONMENT, encoded) }
+      .onFailure { error -> ClerkLog.w("Failed to cache environment: ${error.message}") }
   }
 
   internal fun credentialActivity(): Activity? = currentActivity?.get()

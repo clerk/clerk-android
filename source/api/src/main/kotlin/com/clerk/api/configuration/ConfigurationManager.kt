@@ -156,6 +156,30 @@ internal class ConfigurationManager {
   }
 
   /**
+   * Rehydrates [Clerk.environment] from encrypted storage before the network refresh runs, so
+   * offline cold starts have a representation of the environment (e.g. sign-in form fields, social
+   * providers) instead of rendering blank until connectivity returns.
+   *
+   * This is a best-effort cache: it only applies when no environment is already present (never
+   * clobbering a value a fresh fetch already produced), and any decode failure - for example a
+   * schema mismatch left over from an older SDK version - is treated as a cache miss rather than an
+   * initialization error.
+   */
+  private fun hydrateCachedEnvironmentIfNeeded() {
+    if (Clerk.environment != null) return
+    val cachedEnvironment = loadCachedEnvironment() ?: return
+    Clerk.updateEnvironment(cachedEnvironment)
+    ClerkLog.d("Hydrated environment from cache")
+  }
+
+  private fun loadCachedEnvironment(): Environment? {
+    val cachedJson = StorageHelper.loadValue(StorageKey.CACHED_ENVIRONMENT) ?: return null
+    return runCatching { ClerkApi.json.decodeFromString(Environment.serializer(), cachedJson) }
+      .onFailure { error -> ClerkLog.w("Failed to decode cached environment: ${error.message}") }
+      .getOrNull()
+  }
+
+  /**
    * Configures the Clerk SDK with the provided application context and publishable key.
    *
    * This method performs the following initialization steps:
@@ -218,6 +242,7 @@ internal class ConfigurationManager {
     Clerk.applicationId = context.applicationContext.packageName
 
     ensureStorageInitialized()
+    hydrateCachedEnvironmentIfNeeded()
     Clerk.configureSharedSessionSync(
       context = context.applicationContext,
       publishableKey = publishableKey,
