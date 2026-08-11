@@ -61,6 +61,59 @@ class AuthViewPendingAuthRoutingTest {
   }
 
   @Test
+  fun `discardRestoredAuthNavigation clears restored reset factor stack`() {
+    val resetFactor = Factor(strategy = Constants.Strategy.RESET_PASSWORD_EMAIL_CODE)
+    val restoredBackStack =
+      NavBackStack<NavKey>(
+        AuthDestination.AuthStart,
+        AuthDestination.SignInForgotPassword,
+        AuthDestination.SignInFactorOne(resetFactor),
+      )
+
+    discardRestoredAuthNavigation(backStack = restoredBackStack, resumeInProgressAuthAttempt = true)
+
+    assertEquals(listOf(AuthDestination.AuthStart), restoredBackStack.toList())
+  }
+
+  @Test
+  fun `discardRestoredAuthNavigation clears restored new password stack`() {
+    val restoredBackStack =
+      NavBackStack<NavKey>(AuthDestination.AuthStart, AuthDestination.SignInSetNewPassword)
+
+    discardRestoredAuthNavigation(backStack = restoredBackStack, resumeInProgressAuthAttempt = true)
+
+    assertEquals(listOf(AuthDestination.AuthStart), restoredBackStack.toList())
+  }
+
+  @Test
+  fun `discardRestoredAuthNavigation preserves ordinary auth stack when resume is enabled`() {
+    val factor = Factor(strategy = Constants.Strategy.TOTP)
+    val restoredBackStack =
+      NavBackStack<NavKey>(AuthDestination.AuthStart, AuthDestination.SignInFactorTwo(factor))
+
+    discardRestoredAuthNavigation(backStack = restoredBackStack, resumeInProgressAuthAttempt = true)
+
+    assertEquals(
+      listOf(AuthDestination.AuthStart, AuthDestination.SignInFactorTwo(factor)),
+      restoredBackStack.toList(),
+    )
+  }
+
+  @Test
+  fun `discardRestoredAuthNavigation clears ordinary auth stack when resume is disabled`() {
+    val factor = Factor(strategy = Constants.Strategy.TOTP)
+    val restoredBackStack =
+      NavBackStack<NavKey>(AuthDestination.AuthStart, AuthDestination.SignInFactorTwo(factor))
+
+    discardRestoredAuthNavigation(
+      backStack = restoredBackStack,
+      resumeInProgressAuthAttempt = false,
+    )
+
+    assertEquals(listOf(AuthDestination.AuthStart), restoredBackStack.toList())
+  }
+
+  @Test
   fun `resumeInProgressAuthAttempt respects host opt out`() {
     val factor = Factor(strategy = Constants.Strategy.TOTP)
     val optedOutAuthState =

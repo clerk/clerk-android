@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
@@ -26,6 +28,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
 import com.clerk.api.Constants
 import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
@@ -58,7 +61,10 @@ import com.clerk.ui.signup.collectfield.SignUpCollectFieldView
 import com.clerk.ui.signup.completeprofile.SignUpCompleteProfileView
 import com.clerk.ui.signup.emaillink.SignUpEmailLinkView
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
+import java.util.UUID
 import kotlinx.serialization.Serializable
+
+private val authViewProcessIdentifier = UUID.randomUUID().toString()
 
 /**
  * Prebuilt Clerk authentication flow.
@@ -113,6 +119,10 @@ fun AuthView(
   ClerkThemeOverrideProvider(clerkTheme) {
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
+    DiscardRestoredAuthNavigation(
+      backStack = backStack,
+      resumeInProgressAuthAttempt = resumeInProgressAuthAttempt,
+    )
     val identifierConfig =
       remember(
         initialIdentifier,
@@ -161,6 +171,41 @@ fun AuthView(
       }
     }
   }
+}
+
+@Composable
+private fun DiscardRestoredAuthNavigation(
+  backStack: NavBackStack<NavKey>,
+  resumeInProgressAuthAttempt: Boolean,
+) {
+  val savedProcessIdentifier = rememberSaveable { mutableStateOf(authViewProcessIdentifier) }
+  val wasRestoredAfterProcessDeath = savedProcessIdentifier.value != authViewProcessIdentifier
+
+  LaunchedEffect(wasRestoredAfterProcessDeath, resumeInProgressAuthAttempt, backStack) {
+    if (wasRestoredAfterProcessDeath) {
+      discardRestoredAuthNavigation(backStack, resumeInProgressAuthAttempt)
+      savedProcessIdentifier.value = authViewProcessIdentifier
+    }
+  }
+}
+
+internal fun discardRestoredAuthNavigation(
+  backStack: NavBackStack<NavKey>,
+  resumeInProgressAuthAttempt: Boolean,
+) {
+  val shouldDiscard =
+    !resumeInProgressAuthAttempt || backStack.any { it.isPasswordResetDestination() }
+  if (shouldDiscard) {
+    while (backStack.size > 1) {
+      backStack.removeLastOrNull()
+    }
+  }
+}
+
+private fun NavKey.isPasswordResetDestination(): Boolean {
+  return this == AuthDestination.SignInForgotPassword ||
+    this == AuthDestination.SignInSetNewPassword ||
+    (this is AuthDestination.SignInFactorOne && factor.isResetFactor())
 }
 
 @Composable
