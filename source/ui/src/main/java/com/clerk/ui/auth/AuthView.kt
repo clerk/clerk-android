@@ -8,7 +8,6 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,9 +15,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -26,14 +22,10 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
-import com.clerk.api.Constants
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.organizations.OrganizationCreationDefaults
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signup.SignUp
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
@@ -88,9 +80,6 @@ private val authViewProcessIdentifier = UUID.randomUUID().toString()
  *   affordance falls back to the system back dispatcher.
  * @param onAuthComplete Called when authentication completes.
  * @param mode Determines whether the flow starts as sign-in, sign-up, or sign-in-or-up.
- * @param resumeInProgressAuthAttempt When `false`, an auth attempt restored while this view is at
- *   its start screen is not resumed. Completed attempts are still handled. Password-reset attempts
- *   are never resumed from the start screen.
  * @param logo Replaces the logo shown by authentication screens. When provided, it takes precedence
  *   over the dashboard-configured logo and the [ClerkTheme.design] logo sizing — the SDK applies no
  *   sizing or spacing, so you are responsible for its layout and accessibility. To only change the
@@ -114,15 +103,12 @@ fun AuthView(
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit = {},
   mode: AuthMode = AuthMode.SignInOrUp,
-  resumeInProgressAuthAttempt: Boolean = true,
 ) {
   ClerkThemeOverrideProvider(clerkTheme) {
     val fullScreenModifier = Modifier.fillMaxSize().then(modifier)
     val backStack = rememberNavBackStack(AuthDestination.AuthStart)
-    DiscardRestoredAuthNavigation(
-      backStack = backStack,
-      resumeInProgressAuthAttempt = resumeInProgressAuthAttempt,
-    )
+    val isAuthNavigationReady = rememberAuthNavigationReady(backStack)
+    if (!isAuthNavigationReady) return@ClerkThemeOverrideProvider
     val identifierConfig =
       remember(
         initialIdentifier,
@@ -141,14 +127,8 @@ fun AuthView(
           unsafeMetadata = unsafeMetadata,
         )
       }
-    AuthStateProvider(
-      backStack = backStack,
-      mode = mode,
-      identifierConfig = identifierConfig,
-      resumeInProgressAuthAttempt = resumeInProgressAuthAttempt,
-    ) {
+    AuthStateProvider(backStack = backStack, mode = mode, identifierConfig = identifierConfig) {
       ObservePendingSessionTaskRouting(backStack = backStack)
-      ObserveInProgressAuthRouting(backStack = backStack, onAuthComplete = onAuthComplete)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
       ClerkLogoProvider(logo) {
         DevelopmentModeWarningBox(
@@ -174,68 +154,22 @@ fun AuthView(
 }
 
 @Composable
-private fun DiscardRestoredAuthNavigation(
-  backStack: NavBackStack<NavKey>,
-  resumeInProgressAuthAttempt: Boolean,
-) {
+private fun rememberAuthNavigationReady(backStack: NavBackStack<NavKey>): Boolean {
   val savedProcessIdentifier = rememberSaveable { mutableStateOf(authViewProcessIdentifier) }
   val wasRestoredAfterProcessDeath = savedProcessIdentifier.value != authViewProcessIdentifier
 
-  LaunchedEffect(wasRestoredAfterProcessDeath, resumeInProgressAuthAttempt, backStack) {
+  LaunchedEffect(wasRestoredAfterProcessDeath, backStack) {
     if (wasRestoredAfterProcessDeath) {
-      discardRestoredAuthNavigation(backStack, resumeInProgressAuthAttempt)
+      discardRestoredAuthNavigation(backStack)
       savedProcessIdentifier.value = authViewProcessIdentifier
     }
   }
+  return !wasRestoredAfterProcessDeath
 }
 
-internal fun discardRestoredAuthNavigation(
-  backStack: NavBackStack<NavKey>,
-  resumeInProgressAuthAttempt: Boolean,
-) {
-  val shouldDiscard =
-    !resumeInProgressAuthAttempt || backStack.any { it.isPasswordResetDestination() }
-  if (shouldDiscard) {
-    while (backStack.size > 1) {
-      backStack.removeLastOrNull()
-    }
-  }
-}
-
-private fun NavKey.isPasswordResetDestination(): Boolean {
-  return this == AuthDestination.SignInForgotPassword ||
-    this == AuthDestination.SignInSetNewPassword ||
-    (this is AuthDestination.SignInFactorOne && factor.isResetFactor())
-}
-
-@Composable
-private fun ObserveInProgressAuthRouting(
-  backStack: NavBackStack<NavKey>,
-  onAuthComplete: () -> Unit,
-) {
-  val authState = LocalAuthState.current
-  val lifecycleOwner = LocalLifecycleOwner.current
-
-  fun routeIfNeeded() {
-    resumeInProgressAuthAttempt(
-      authState = authState,
-      top = backStack.lastOrNull(),
-      signIn = Clerk.auth.currentSignIn,
-      signUp = Clerk.auth.currentSignUp,
-      onAuthComplete = onAuthComplete,
-    )
-  }
-
-  LaunchedEffect(backStack.lastOrNull()) { routeIfNeeded() }
-
-  DisposableEffect(lifecycleOwner, authState, backStack) {
-    val observer = LifecycleEventObserver { _, event ->
-      if (event == Lifecycle.Event.ON_RESUME) {
-        routeIfNeeded()
-      }
-    }
-    lifecycleOwner.lifecycle.addObserver(observer)
-    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+internal fun discardRestoredAuthNavigation(backStack: NavBackStack<NavKey>) {
+  while (backStack.size > 1) {
+    backStack.removeLastOrNull()
   }
 }
 
@@ -421,38 +355,6 @@ private fun NavKey?.satisfiesPendingSessionTask(
         this is AuthDestination.SessionTaskCreateOrganization
     else -> this == destination
   }
-}
-
-internal fun resumeInProgressAuthAttempt(
-  authState: AuthState,
-  top: NavKey?,
-  signIn: SignIn?,
-  signUp: SignUp?,
-  onAuthComplete: () -> Unit,
-) {
-  if (!authState.shouldResumeInProgressAuthAttempt && !authAttemptIsComplete(signIn, signUp)) return
-  if (
-    (top != null && top != AuthDestination.AuthStart) || signIn?.isPasswordResetInProgress() == true
-  ) {
-    return
-  }
-
-  when {
-    signIn != null -> authState.setToStepForStatus(signIn, onAuthComplete = onAuthComplete)
-    signUp != null -> authState.setToStepForStatus(signUp, onAuthComplete = onAuthComplete)
-  }
-}
-
-private fun SignIn.isPasswordResetInProgress(): Boolean {
-  val verificationStrategy = firstFactorVerification?.strategy
-  return status == SignIn.Status.NEEDS_NEW_PASSWORD ||
-    (status == SignIn.Status.NEEDS_FIRST_FACTOR &&
-      (verificationStrategy == Constants.Strategy.RESET_PASSWORD_EMAIL_CODE ||
-        verificationStrategy == Constants.Strategy.RESET_PASSWORD_PHONE_CODE))
-}
-
-private fun authAttemptIsComplete(signIn: SignIn?, signUp: SignUp?): Boolean {
-  return signIn?.status == SignIn.Status.COMPLETE || signUp?.status == SignUp.Status.COMPLETE
 }
 
 @Composable

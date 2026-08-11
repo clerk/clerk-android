@@ -46,7 +46,6 @@ internal class AuthState(
   private val sharedPreferences: SharedPreferences,
   identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
   organizationLogoUrl: String? = null,
-  resumeInProgressAuthAttempt: Boolean = true,
 ) : NavigableState<AuthDestination> {
 
   private var appliedIdentifierConfig: AuthIdentifierConfig? = null
@@ -89,9 +88,6 @@ internal class AuthState(
 
   var lastSubmittedIdentifier by mutableStateOf<String?>(null)
 
-  var shouldResumeInProgressAuthAttempt by mutableStateOf(resumeInProgressAuthAttempt)
-    private set
-
   var organizationLogoUrl by mutableStateOf(organizationLogoUrl)
     private set
 
@@ -123,16 +119,12 @@ internal class AuthState(
     get() = lockPrefilledFields && initialLastNameWasPrefilled
 
   override fun navigateTo(destination: NavKey) {
-    shouldResumeInProgressAuthAttempt = true
     backStack.add(destination)
   }
 
   override fun navigateBack() {
     if (backStack.size <= 1) return
     backStack.removeLastOrNull()
-    if (backStack.size == 1) {
-      shouldResumeInProgressAuthAttempt = false
-    }
   }
 
   override fun clearBackStack() {
@@ -140,12 +132,7 @@ internal class AuthState(
   }
 
   fun navigateToAuthStartForIdentifierEdit() {
-    shouldResumeInProgressAuthAttempt = false
     resetToRoot()
-  }
-
-  fun enableInProgressAuthAttemptResume() {
-    shouldResumeInProgressAuthAttempt = true
   }
 
   override fun pop(numberOfScreens: Int) {

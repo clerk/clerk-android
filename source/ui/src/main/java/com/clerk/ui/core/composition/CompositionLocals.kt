@@ -65,20 +65,18 @@ internal fun AuthStateProvider(
   backStack: NavBackStack<NavKey>,
   mode: AuthMode = AuthMode.SignInOrUp,
   identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
-  resumeInProgressAuthAttempt: Boolean = true,
   content: @Composable () -> Unit,
 ) {
   val context = LocalContext.current.applicationContext
   val sharedPreferences = remember(context) { authSharedPreferences(context) }
   val authState =
-    remember(backStack, sharedPreferences, mode, resumeInProgressAuthAttempt) {
+    remember(backStack, sharedPreferences, mode) {
       AuthState(
         mode = mode,
         backStack = backStack,
         sharedPreferences = sharedPreferences,
         identifierConfig = identifierConfig,
         organizationLogoUrl = Clerk.organizationLogoUrlFlow.value,
-        resumeInProgressAuthAttempt = resumeInProgressAuthAttempt,
       )
     }
 
