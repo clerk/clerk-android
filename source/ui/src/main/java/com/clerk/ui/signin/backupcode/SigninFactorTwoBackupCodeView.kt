@@ -97,8 +97,9 @@ private fun SignInFactorTwoBackupCodeViewImpl(
           onGo = {
             if (
               authState.signInBackupCode.isNotEmpty() && state !is AuthenticationViewState.Loading
-            )
+            ) {
               viewModel.submit(authState.signInBackupCode)
+            }
           }
         ),
     )
