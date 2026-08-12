@@ -4,6 +4,9 @@ import com.auth0.android.jwt.JWT
 import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SessionApi
+import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.environment.AuthConfig
+import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.model.token.TokenResource
@@ -17,9 +20,15 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.Date
+import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -67,18 +76,20 @@ class SessionTokenFetcherTest {
     every { Clerk.clearSessionAndUserState() } returns Unit
 
     // Mock SessionTokensCache
+    SessionTokensCache.clear()
     mockkObject(SessionTokensCache)
   }
 
   @After
   fun tearDown() {
     unmockkAll()
+    SessionTokensCache.clear()
   }
 
   @Test
   fun `getToken returns cached token if valid and cache not skipped`() = runTest {
     // Given
-    val cacheKey = "session_123"
+    val cacheKey = "session_123-organization-"
     val futureTime = Date(System.currentTimeMillis() + 120000) // 2 minutes from now
 
     every { mockTokenResource.jwt } returns "valid.jwt.token"
@@ -97,13 +108,14 @@ class SessionTokenFetcherTest {
   @Test
   fun `getToken fetches from network if cache is empty`() = runTest {
     // Given
-    val cacheKey = "session_123"
+    val cacheKey = "session_123-organization-"
     val setTokenSlot = slot<TokenResource>()
 
     coEvery { SessionTokensCache.getToken(cacheKey) } returns null
     coEvery { mockClerkApiService.tokens("session_123") } returns
       ClerkResult.success(mockTokenResource)
-    coEvery { SessionTokensCache.setToken(cacheKey, capture(setTokenSlot)) } returns Unit
+    coEvery { SessionTokensCache.storeIfFresher(cacheKey, capture(setTokenSlot), any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
 
     // When
     val result = sessionTokenFetcher.getToken(mockSession)
@@ -112,14 +124,14 @@ class SessionTokenFetcherTest {
     assertEquals(mockTokenResource, result)
     coVerify { SessionTokensCache.getToken(cacheKey) }
     coVerify { mockClerkApiService.tokens("session_123") }
-    coVerify { SessionTokensCache.setToken(cacheKey, mockTokenResource) }
+    coVerify { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) }
     assertEquals(mockTokenResource, setTokenSlot.captured)
   }
 
   @Test
   fun `getToken fetches from network if cached token is expired`() = runTest {
     // Given
-    val cacheKey = "session_123"
+    val cacheKey = "session_123-organization-"
     val pastTime = Date(System.currentTimeMillis() - 60000) // 1 minute ago
     val freshToken = mockk<TokenResource>(relaxed = true)
 
@@ -127,7 +139,8 @@ class SessionTokenFetcherTest {
     every { mockJWT.expiresAt } returns pastTime
     coEvery { SessionTokensCache.getToken(cacheKey) } returns mockTokenResource
     coEvery { mockClerkApiService.tokens("session_123") } returns ClerkResult.success(freshToken)
-    coEvery { SessionTokensCache.setToken(cacheKey, freshToken) } returns Unit
+    coEvery { SessionTokensCache.storeIfFresher(cacheKey, freshToken, any()) } returns
+      SessionTokensCache.StoreResult(freshToken, true)
 
     // When
     val result = sessionTokenFetcher.getToken(mockSession)
@@ -136,20 +149,21 @@ class SessionTokenFetcherTest {
     assertEquals(freshToken, result)
     coVerify { SessionTokensCache.getToken(cacheKey) }
     coVerify { mockClerkApiService.tokens("session_123") }
-    coVerify { SessionTokensCache.setToken(cacheKey, freshToken) }
+    coVerify { SessionTokensCache.storeIfFresher(cacheKey, freshToken, any()) }
   }
 
   @Test
   fun `getToken uses template in API call when provided`() = runTest {
     // Given
     val template = "custom_template"
-    val cacheKey = "session_123-custom_template"
+    val cacheKey = "session_123-template-custom_template"
     val options = GetTokenOptions(template = template)
 
     coEvery { SessionTokensCache.getToken(cacheKey) } returns null
     coEvery { mockClerkApiService.tokens("session_123", template) } returns
       ClerkResult.success(mockTokenResource)
-    coEvery { SessionTokensCache.setToken(cacheKey, mockTokenResource) } returns Unit
+    coEvery { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
 
     // When
     val result = sessionTokenFetcher.getToken(mockSession, options)
@@ -157,27 +171,68 @@ class SessionTokenFetcherTest {
     // Then
     assertEquals(mockTokenResource, result)
     coVerify { mockClerkApiService.tokens("session_123", template) }
-    coVerify { SessionTokensCache.setToken(cacheKey, mockTokenResource) }
+    coVerify { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) }
   }
 
   @Test
-  fun `getToken skips cache when skipCache is true`() = runTest {
+  fun `getToken bypasses cached result when skipCache is true`() = runTest {
     // Given
     val options = GetTokenOptions(skipCache = true)
-    val cacheKey = "session_123"
+    val cacheKey = "session_123-organization-"
 
+    coEvery { SessionTokensCache.getToken(cacheKey) } returns null
     coEvery { mockClerkApiService.tokens("session_123") } returns
       ClerkResult.success(mockTokenResource)
-    coEvery { SessionTokensCache.setToken(cacheKey, mockTokenResource) } returns Unit
+    coEvery { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
 
     // When
     val result = sessionTokenFetcher.getToken(mockSession, options)
 
     // Then
     assertEquals(mockTokenResource, result)
-    coVerify(exactly = 0) { SessionTokensCache.getToken(any()) }
+    coVerify { SessionTokensCache.getToken(cacheKey) }
     coVerify { mockClerkApiService.tokens("session_123") }
-    coVerify { SessionTokensCache.setToken(cacheKey, mockTokenResource) }
+    coVerify { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) }
+  }
+
+  @Test
+  fun `session minter passes previous token and forces origin for forced refresh`() = runTest {
+    // Given
+    val cacheKey = "session_123-organization-org_123"
+    val previousToken = TokenResource("previous.token.value")
+    val environment = mockk<Environment>()
+    every { environment.authConfig } returns
+      AuthConfig(singleSessionMode = false, sessionMinter = true)
+    every { Clerk.environment } returns environment
+    every { mockSession.lastActiveOrganizationId } returns "org_123"
+    every { mockSession.lastActiveToken } returns previousToken
+    every { SessionTokensCache.hydrate(cacheKey, previousToken) } returns Unit
+    every { SessionTokensCache.getToken(cacheKey) } returns null
+    coEvery {
+      mockClerkApiService.tokens(
+        sessionId = "session_123",
+        organizationId = "org_123",
+        token = previousToken.jwt,
+        forceOrigin = "true",
+      )
+    } returns ClerkResult.success(mockTokenResource)
+    every { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
+
+    // When
+    val result = sessionTokenFetcher.getToken(mockSession, GetTokenOptions(skipCache = true))
+
+    // Then
+    assertEquals(mockTokenResource, result)
+    coVerify {
+      mockClerkApiService.tokens(
+        sessionId = "session_123",
+        organizationId = "org_123",
+        token = previousToken.jwt,
+        forceOrigin = "true",
+      )
+    }
   }
 
   @Test
@@ -201,7 +256,7 @@ class SessionTokenFetcherTest {
     // Then
     assertNull(result)
     coVerify { mockClerkApiService.tokens("session_123") }
-    coVerify(exactly = 0) { SessionTokensCache.setToken(any(), any()) }
+    coVerify(exactly = 0) { SessionTokensCache.storeIfFresher(any(), any(), any()) }
     verify(exactly = 0) { Clerk.clearSessionAndUserState() }
   }
 
@@ -266,7 +321,7 @@ class SessionTokenFetcherTest {
     // Given
     val customBuffer = 120L // 2 minutes
     val options = GetTokenOptions(expirationBuffer = customBuffer)
-    val cacheKey = "session_123"
+    val cacheKey = "session_123-organization-"
     // Token expires in 90 seconds (less than 2-minute buffer)
     val soonExpiredTime = Date(System.currentTimeMillis() + 90000)
 
@@ -275,7 +330,8 @@ class SessionTokenFetcherTest {
     coEvery { SessionTokensCache.getToken(cacheKey) } returns mockTokenResource
     coEvery { mockClerkApiService.tokens("session_123") } returns
       ClerkResult.success(mockTokenResource)
-    coEvery { SessionTokensCache.setToken(cacheKey, mockTokenResource) } returns Unit
+    coEvery { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
 
     // When
     val result = sessionTokenFetcher.getToken(mockSession, options)
@@ -289,14 +345,15 @@ class SessionTokenFetcherTest {
   @Test
   fun `getToken handles JWT parsing exception gracefully`() = runTest {
     // Given
-    val cacheKey = "session_123"
+    val cacheKey = "session_123-organization-"
 
     every { mockTokenResource.jwt } returns "invalid.jwt.token"
     every { mockJWTManager.createFromString(any()) } throws RuntimeException("Invalid JWT")
     coEvery { SessionTokensCache.getToken(cacheKey) } returns mockTokenResource
     coEvery { mockClerkApiService.tokens("session_123") } returns
       ClerkResult.success(mockTokenResource)
-    coEvery { SessionTokensCache.setToken(cacheKey, mockTokenResource) } returns Unit
+    coEvery { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
 
     // When
     val result = sessionTokenFetcher.getToken(mockSession)
@@ -310,7 +367,7 @@ class SessionTokenFetcherTest {
   @Test
   fun `getToken handles concurrent requests properly`() = runTest {
     // Given
-    val cacheKey = "session_123"
+    val cacheKey = "session_123-organization-"
 
     coEvery { SessionTokensCache.getToken(cacheKey) } returns null
     coEvery { mockClerkApiService.tokens("session_123") } coAnswers
@@ -318,7 +375,8 @@ class SessionTokenFetcherTest {
         delay(100) // Simulate network delay
         ClerkResult.success(mockTokenResource)
       }
-    coEvery { SessionTokensCache.setToken(cacheKey, mockTokenResource) } returns Unit
+    coEvery { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
 
     // When - Launch multiple concurrent requests
     val deferred1 = async { sessionTokenFetcher.getToken(mockSession) }
@@ -339,6 +397,137 @@ class SessionTokenFetcherTest {
   }
 
   @Test
+  fun `concurrent waiters share a null token result without retrying`() = runTest {
+    // Given
+    val requestStarted = CompletableDeferred<Unit>()
+    val releaseRequest = CompletableDeferred<Unit>()
+    val errorResponse = ClerkErrorResponse(errors = emptyList(), clerkTraceId = "trace_shared")
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } coAnswers
+      {
+        requestStarted.complete(Unit)
+        releaseRequest.await()
+        ClerkResult.apiFailure(errorResponse)
+      }
+
+    // When
+    val first = async { sessionTokenFetcher.getToken(mockSession) }
+    requestStarted.await()
+    val second = async { sessionTokenFetcher.getToken(mockSession) }
+    yield()
+    releaseRequest.complete(Unit)
+
+    // Then
+    assertNull(first.await())
+    assertNull(second.await())
+    coVerify(exactly = 1) { mockClerkApiService.tokens("session_123") }
+  }
+
+  @Test
+  fun `forced refreshes return their own responses while cache retains canonical token`() =
+    runTest {
+      // Given
+      val cacheKey = "session_123-organization-"
+      val firstCallStarted = CompletableDeferred<Unit>()
+      val releaseFirstCall = CompletableDeferred<Unit>()
+      val callCount = AtomicInteger()
+      val secondToken = mockk<TokenResource>(relaxed = true)
+      coEvery { SessionTokensCache.getToken(cacheKey) } returns null
+      coEvery { mockClerkApiService.tokens("session_123") } coAnswers
+        {
+          if (callCount.getAndIncrement() == 0) {
+            firstCallStarted.complete(Unit)
+            releaseFirstCall.await()
+            ClerkResult.success(mockTokenResource)
+          } else {
+            ClerkResult.success(secondToken)
+          }
+        }
+      coEvery { SessionTokensCache.storeIfFresher(cacheKey, any(), any()) } answers
+        {
+          val token = secondArg<TokenResource>()
+          if (token === secondToken) {
+            SessionTokensCache.StoreResult(secondToken, true)
+          } else {
+            SessionTokensCache.StoreResult(secondToken, false)
+          }
+        }
+
+      // When
+      val first = async {
+        sessionTokenFetcher.getToken(mockSession, GetTokenOptions(skipCache = true))
+      }
+      firstCallStarted.await()
+      val second = async {
+        sessionTokenFetcher.getToken(mockSession, GetTokenOptions(skipCache = true))
+      }
+      val secondResult = second.await()
+      releaseFirstCall.complete(Unit)
+      val firstResult = first.await()
+
+      // Then - each forced request returns its own mint for JS parity, even when the cache rejects
+      // the first request's late response as stale.
+      assertEquals(mockTokenResource, firstResult)
+      assertEquals(secondToken, secondResult)
+      coVerify(exactly = 2) { mockClerkApiService.tokens("session_123") }
+    }
+
+  @Test
+  fun `reset fences a late forced refresh response from the previous runtime`() = runTest {
+    // Given
+    val requestStarted = CompletableDeferred<Unit>()
+    val releaseResponse = CompletableDeferred<Unit>()
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } coAnswers
+      {
+        requestStarted.complete(Unit)
+        withContext(NonCancellable) { releaseResponse.await() }
+        ClerkResult.success(mockTokenResource)
+      }
+
+    val request = async {
+      sessionTokenFetcher.getToken(mockSession, GetTokenOptions(skipCache = true))
+    }
+    requestStarted.await()
+
+    // When
+    sessionTokenFetcher.reset()
+    releaseResponse.complete(Unit)
+
+    // Then
+    assertNull(request.await())
+    coVerify(exactly = 0) { SessionTokensCache.storeIfFresher(any(), any(), any()) }
+  }
+
+  @Test
+  fun `reset releases shared token waiters with null`() = runTest {
+    // Given
+    val requestStarted = CompletableDeferred<Unit>()
+    val releaseResponse = CompletableDeferred<Unit>()
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } coAnswers
+      {
+        requestStarted.complete(Unit)
+        withContext(NonCancellable) { releaseResponse.await() }
+        ClerkResult.success(mockTokenResource)
+      }
+
+    val owner = async { sessionTokenFetcher.getToken(mockSession) }
+    requestStarted.await()
+    val waiter = async { sessionTokenFetcher.getToken(mockSession) }
+    yield()
+
+    // When
+    sessionTokenFetcher.reset()
+
+    // Then
+    assertNull(waiter.await())
+    releaseResponse.complete(Unit)
+    assertNull(owner.await())
+    coVerify(exactly = 0) { SessionTokensCache.storeIfFresher(any(), any(), any()) }
+  }
+
+  @Test
   fun `getToken handles API exception gracefully`() = runTest {
     // Given
     coEvery { SessionTokensCache.getToken(any()) } returns null
@@ -350,7 +539,7 @@ class SessionTokenFetcherTest {
     // Then
     assertNull(result)
     coVerify { mockClerkApiService.tokens("session_123") }
-    coVerify(exactly = 0) { SessionTokensCache.setToken(any(), any()) }
+    coVerify(exactly = 0) { SessionTokensCache.storeIfFresher(any(), any(), any()) }
   }
 
   @Test
@@ -362,7 +551,7 @@ class SessionTokenFetcherTest {
     val cacheKey = mockSession.tokenCacheKey(null)
 
     // Then
-    assertEquals("session_456", cacheKey)
+    assertEquals("session_456-organization-", cacheKey)
   }
 
   @Test
@@ -375,7 +564,7 @@ class SessionTokenFetcherTest {
     val cacheKey = mockSession.tokenCacheKey(template)
 
     // Then
-    assertEquals("session_456-admin_template", cacheKey)
+    assertEquals("session_456-template-admin_template", cacheKey)
   }
 
   @Test
@@ -386,13 +575,17 @@ class SessionTokenFetcherTest {
     every { session1.id } returns "session_1"
     every { session2.id } returns "session_2"
 
-    coEvery { SessionTokensCache.getToken("session_1") } returns null
-    coEvery { SessionTokensCache.getToken("session_2") } returns null
+    coEvery { SessionTokensCache.getToken("session_1-organization-") } returns null
+    coEvery { SessionTokensCache.getToken("session_2-organization-") } returns null
     coEvery { mockClerkApiService.tokens("session_1") } returns
       ClerkResult.success(mockTokenResource)
     coEvery { mockClerkApiService.tokens("session_2") } returns
       ClerkResult.success(mockTokenResource)
-    coEvery { SessionTokensCache.setToken(any(), any()) } returns Unit
+    coEvery { SessionTokensCache.storeIfFresher(any(), any(), any()) } answers
+      {
+        val token = secondArg<TokenResource>()
+        SessionTokensCache.StoreResult(token, true)
+      }
 
     // When
     sessionTokenFetcher.getToken(session1)
@@ -401,8 +594,12 @@ class SessionTokenFetcherTest {
     // Then
     coVerify { mockClerkApiService.tokens("session_1") }
     coVerify { mockClerkApiService.tokens("session_2") }
-    coVerify { SessionTokensCache.setToken("session_1", mockTokenResource) }
-    coVerify { SessionTokensCache.setToken("session_2", mockTokenResource) }
+    coVerify {
+      SessionTokensCache.storeIfFresher("session_1-organization-", mockTokenResource, any())
+    }
+    coVerify {
+      SessionTokensCache.storeIfFresher("session_2-organization-", mockTokenResource, any())
+    }
   }
 
   @Test
@@ -420,15 +617,54 @@ class SessionTokenFetcherTest {
   }
 
   @Test
+  fun `getToken uses pending status from current client snapshot`() = runTest {
+    // Given - the caller holds a stale active session while the current snapshot is pending
+    val pendingSession = mockk<Session>(relaxed = true)
+    every { pendingSession.id } returns "session_123"
+    every { pendingSession.status } returns Session.SessionStatus.PENDING
+    every { Clerk.clientFlow } returns MutableStateFlow(Client(sessions = listOf(pendingSession)))
+
+    // When
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    // Then
+    assertNull(result)
+    coVerify(exactly = 0) { mockClerkApiService.tokens(any()) }
+  }
+
+  @Test
+  fun `getToken uses active status from current client snapshot`() = runTest {
+    // Given - the caller holds a stale pending session while the current snapshot is active
+    val activeSession = mockk<Session>(relaxed = true)
+    every { mockSession.status } returns Session.SessionStatus.PENDING
+    every { activeSession.id } returns "session_123"
+    every { activeSession.status } returns Session.SessionStatus.ACTIVE
+    every { Clerk.clientFlow } returns MutableStateFlow(Client(sessions = listOf(activeSession)))
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.success(mockTokenResource)
+    coEvery { SessionTokensCache.storeIfFresher(any(), mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
+
+    // When
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    // Then
+    assertEquals(mockTokenResource, result)
+    coVerify(exactly = 1) { mockClerkApiService.tokens("session_123") }
+  }
+
+  @Test
   fun `getToken proceeds normally for active session`() = runTest {
     // Given - a session with ACTIVE status
-    val cacheKey = "session_123"
+    val cacheKey = "session_123-organization-"
 
     every { mockSession.status } returns Session.SessionStatus.ACTIVE
     coEvery { SessionTokensCache.getToken(cacheKey) } returns null
     coEvery { mockClerkApiService.tokens("session_123") } returns
       ClerkResult.success(mockTokenResource)
-    coEvery { SessionTokensCache.setToken(cacheKey, mockTokenResource) } returns Unit
+    coEvery { SessionTokensCache.storeIfFresher(cacheKey, mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
 
     // When
     val result = sessionTokenFetcher.getToken(mockSession)

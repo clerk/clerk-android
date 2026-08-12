@@ -21,6 +21,7 @@ import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.fold
 import com.clerk.api.session.GetTokenOptions
+import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.session.fetchToken
 import com.clerk.api.sso.SSOService
@@ -268,34 +269,33 @@ internal class ConfigurationManager {
   private fun launchInitialization(
     options: ClerkConfigurationOptions?,
     configuredVersion: Int,
-  ): Job =
-    scope.launch {
-      val attempt =
-        RefreshAttempt(
-          options = options,
-          retryCount = 0,
-          expectedConfigurationVersion = configuredVersion,
-        )
-      Clerk.trustedDevices.retryPendingLocalCredentialCleanup()
-      Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-      val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
-      val dataRefreshJob = async {
-        refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
-      }
+  ): Job = scope.launch {
+    val attempt =
+      RefreshAttempt(
+        options = options,
+        retryCount = 0,
+        expectedConfigurationVersion = configuredVersion,
+      )
+    Clerk.trustedDevices.retryPendingLocalCredentialCleanup()
+    Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
+    val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
+    val dataRefreshJob = async {
+      refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+    }
 
-      deviceIdInitJob.await()
-      AppLifecycleListener.configure {
-        if (hasConfigured) {
-          scope.launch {
-            Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-            deferForegroundRefreshDuringPendingAuth()
-            refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
-            startTokenRefresh()
-          }
+    deviceIdInitJob.await()
+    AppLifecycleListener.configure {
+      if (hasConfigured) {
+        scope.launch {
+          Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
+          deferForegroundRefreshDuringPendingAuth()
+          refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+          startTokenRefresh()
         }
       }
-      dataRefreshJob.await()
     }
+    dataRefreshJob.await()
+  }
 
   fun isConfigured(): Boolean = hasConfigured
 
@@ -336,29 +336,28 @@ internal class ConfigurationManager {
 
     // Cancel any ongoing jobs
     refreshJob?.cancel()
-    refreshJob =
-      scope.launch {
-        while (isActive) {
-          try {
-            val session = Clerk.session
-            if (session != null) {
-              if (Clerk.debugMode) {
-                ClerkLog.d("Refreshing token for session: ${session.id}")
-              }
-              // Use async to avoid blocking the refresh loop
-              async { session.fetchToken(GetTokenOptions(skipCache = false)) }
-            } else {
-              if (Clerk.debugMode) {
-                ClerkLog.d("No session available for token refresh")
-              }
+    refreshJob = scope.launch {
+      while (isActive) {
+        try {
+          val session = Clerk.session
+          if (session != null) {
+            if (Clerk.debugMode) {
+              ClerkLog.d("Refreshing token for session: ${session.id}")
             }
-          } catch (e: Exception) {
-            ClerkLog.w("Token refresh failed: ${e.message}")
+            // Use async to avoid blocking the refresh loop
+            async { session.fetchToken(GetTokenOptions(skipCache = false)) }
+          } else {
+            if (Clerk.debugMode) {
+              ClerkLog.d("No session available for token refresh")
+            }
           }
-
-          delay(REFRESH_TOKEN_INTERVAL.seconds)
+        } catch (e: Exception) {
+          ClerkLog.w("Token refresh failed: ${e.message}")
         }
+
+        delay(REFRESH_TOKEN_INTERVAL.seconds)
       }
+    }
   }
 
   suspend fun updateDeviceToken(deviceToken: String): ClerkResult<Unit, ClerkErrorResponse> {
@@ -383,6 +382,7 @@ internal class ConfigurationManager {
     StorageHelper.deleteValue(StorageKey.DEVICE_TOKEN)
     Clerk.updateClient(Client())
     Clerk.clearSessionAndUserState()
+    SessionTokenFetcher.shared.reset()
     SessionTokensCache.clear()
 
     val result =

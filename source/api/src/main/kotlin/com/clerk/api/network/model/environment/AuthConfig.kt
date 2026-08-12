@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
  *
  * @property singleSessionMode Whether the application is configured for single session mode. When
  *   true, only one active session is allowed per user at a time.
+ * @property sessionMinter Whether session token minting at the edge is enabled.
  * @property nativeSettings Native-app specific settings, such as trusted-device sign-in.
  */
 @Serializable
@@ -20,6 +21,9 @@ internal data class AuthConfig(
    * session is allowed per user at a time.
    */
   @SerialName("single_session_mode") val singleSessionMode: Boolean,
+
+  /** Whether session token minting at the edge is enabled. */
+  @SerialName("session_minter") val sessionMinter: Boolean = false,
 
   /** Native-app specific settings, such as trusted-device sign-in. */
   @SerialName("native_settings") val nativeSettings: NativeSettings = NativeSettings(),

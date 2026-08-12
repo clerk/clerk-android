@@ -34,6 +34,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.session.Session
+import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
 import com.clerk.api.sharedsession.SharedSessionSyncCoordinator
 import com.clerk.api.sharedsession.SharedSessionSyncProvider
@@ -831,6 +832,7 @@ object Clerk {
     StorageHelper.deleteValue(StorageKey.CACHED_CLERK_STATE)
     clearSessionAndUserState()
     resetAuthFlowState()
+    SessionTokenFetcher.shared.reset()
     SessionTokensCache.clear()
     SSOService.cancelPendingAuthentication()
     ExternalAccountService.cancelPendingExternalAccountConnection()
@@ -1018,14 +1020,14 @@ object Clerk {
   private fun cacheStateIfReady() {
     val cachedEnvironment = environment
     val cachedClient = _clientFlow.value
-    val cachedResources =
-      cachedClient?.let { client ->
-        cachedEnvironment?.let { environment -> client to environment }
-      }
+    val cachedResources = cachedClient?.let { client ->
+      cachedEnvironment?.let { environment -> client to environment }
+    }
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration =
-      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
+    val cachedConfiguration = cachedPublishableKey?.let { key ->
+      cachedBaseUrl?.let { url -> key to url }
+    }
     val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
     val state =
       if (
@@ -1131,8 +1133,9 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId =
-      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
+    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
+      sessions.any { it.id == activeSessionId }
+    }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1316,8 +1319,9 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
-  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
+  it.strategy == strategy && it.safeIdentifier == identifier
+}
 
 val SignIn.resetPasswordFactor: Factor?
   get() =
