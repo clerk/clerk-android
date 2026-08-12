@@ -209,7 +209,8 @@ internal object NetworkConnectivityMonitor {
    *
    * @return true if connected, false otherwise.
    */
-  fun isCurrentlyConnected(): Boolean = _isConnected.value
+  fun isCurrentlyConnected(): Boolean =
+    if (isMonitoring) checkCurrentConnectivity() else _isConnected.value
 
   /**
    * Resets the monitor state for testing purposes.
