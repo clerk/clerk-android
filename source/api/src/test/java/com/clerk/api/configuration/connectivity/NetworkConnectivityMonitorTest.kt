@@ -124,6 +124,27 @@ class NetworkConnectivityMonitorTest {
   }
 
   @Test
+  fun `isCurrentlyConnected checks latest connectivity`() {
+    val mockContext = mockk<Context>(relaxed = true)
+    val mockAppContext = mockk<Context>(relaxed = true)
+
+    every { mockContext.applicationContext } returns mockAppContext
+    every { mockAppContext.getSystemService(Context.CONNECTIVITY_SERVICE) } returns
+      mockConnectivityManager
+    every { mockConnectivityManager.activeNetwork } returns mockNetwork
+    every { mockConnectivityManager.getNetworkCapabilities(mockNetwork) } returns
+      mockNetworkCapabilities
+    every { mockNetworkCapabilities.hasCapability(any()) } returns true
+
+    NetworkConnectivityMonitor.configure(mockContext)
+    assertTrue(NetworkConnectivityMonitor.isCurrentlyConnected())
+
+    every { mockConnectivityManager.activeNetwork } returns null
+
+    assertFalse(NetworkConnectivityMonitor.isCurrentlyConnected())
+  }
+
+  @Test
   fun `stop unregisters network callback and cleans up resources`() {
     // Given
     val mockContext = mockk<Context>(relaxed = true)

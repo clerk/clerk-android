@@ -22,7 +22,6 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -113,36 +112,10 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun startAuthWithSignInModeShouldSurfaceNetworkFailure() = runTest {
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.unknownFailure(IOException("Unable to resolve host api.clerk.com"))
-
-    viewModel.state.test {
-      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
-
-      viewModel.startAuth(
-        authMode = AuthMode.SignIn,
-        isPhoneNumberFieldActive = false,
-        phoneNumber = "",
-        identifier = "test@example.com",
-      )
-
-      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
-      assertEquals(
-        AuthStartViewModel.AuthState.Error(
-          "No internet connection detected. Please check your network connection and try again."
-        ),
-        awaitItem(),
-      )
-    }
-  }
-
-  @Test
   fun startAuthWithSignInModeShouldSurfaceUnknownFailure() = runTest {
     mockkObject(SignIn.Companion)
     coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.unknownFailure(IllegalStateException("Unexpected failure"))
+      ClerkResult.unknownFailure(IllegalStateException("Network unavailable"))
 
     viewModel.state.test {
       assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())

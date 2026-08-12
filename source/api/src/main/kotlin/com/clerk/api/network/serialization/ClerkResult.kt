@@ -1,5 +1,6 @@
 package com.clerk.api.network.serialization
 
+import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.firstMessage
 import java.io.IOException
@@ -117,14 +118,14 @@ fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull() = this.err
 /**
  * Convenience function to extract a user-facing error message from a [ClerkResult.Failure].
  *
- * API-provided messages take precedence. Transport failures use a connectivity-specific message,
- * while all other failures fall back to a generic message.
+ * API-provided messages take precedence. I/O failures that occur while the device is offline use a
+ * connectivity-specific message, while all other failures fall back to a generic message.
  */
 val ClerkResult.Failure<ClerkErrorResponse>.errorMessage: String
   get() =
     this.error?.errors?.firstOrNull()?.longMessage
       ?: this.error?.firstMessage()
-      ?: if (this.throwable is IOException) {
+      ?: if (this.throwable is IOException && !NetworkConnectivityMonitor.isCurrentlyConnected()) {
         NETWORK_ERROR_MESSAGE
       } else {
         "Error occurred with unknown message."
