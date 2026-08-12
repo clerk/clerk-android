@@ -2,8 +2,12 @@ package com.clerk.api.network.serialization
 
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.firstMessage
+import java.io.IOException
 import kotlin.reflect.KClass
 import toUnmodifiableMap
+
+private const val NETWORK_ERROR_MESSAGE =
+  "No internet connection detected. Please check your network connection and try again."
 
 /**
  * ClerkResult is a sealed interface used throughout the Clerk SDK to represent the result of an API
@@ -111,12 +115,17 @@ public sealed interface ClerkResult<out T : Any, out E : Any> {
 fun ClerkResult.Failure<ClerkErrorResponse>.shortErrorMessageOrNull() = this.error?.firstMessage()
 
 /**
- * Convenience function to extract the long error message from a [ClerkResult.Failure].
+ * Convenience function to extract a user-facing error message from a [ClerkResult.Failure].
  *
- * @return The error message, or null.
+ * API-provided messages take precedence. Transport failures use a connectivity-specific message,
+ * while all other failures fall back to a generic message.
  */
 val ClerkResult.Failure<ClerkErrorResponse>.errorMessage: String
   get() =
     this.error?.errors?.firstOrNull()?.longMessage
       ?: this.error?.firstMessage()
-      ?: "Error occurred with unknown message."
+      ?: if (this.throwable is IOException) {
+        NETWORK_ERROR_MESSAGE
+      } else {
+        "Error occurred with unknown message."
+      }
