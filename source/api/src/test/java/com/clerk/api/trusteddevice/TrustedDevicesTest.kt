@@ -100,6 +100,24 @@ class TrustedDevicesTest {
   }
 
   @Test
+  fun `failed key deletion retains credential and queued cleanup until retry succeeds`() {
+    credentialStore.credentials += credential(id = "td_1", userId = "user_1")
+    keyManager.deleteFailuresRemaining = 1
+
+    assertFailsWith<IllegalStateException> {
+      TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1")
+    }
+    assertEquals(setOf("user_1"), TrustedDevicePendingCleanupStore.all())
+    assertEquals(listOf("td_1"), credentialStore.credentials.map { it.id })
+
+    TrustedDevices.retryPendingLocalCredentialCleanup()
+
+    assertTrue(TrustedDevicePendingCleanupStore.all().isEmpty())
+    assertTrue(credentialStore.credentials.isEmpty())
+    assertEquals(listOf("tdlk_td_1", "tdlk_td_1"), keyManager.deleteAttempts)
+  }
+
+  @Test
   fun `trusted device sign in includes the configured locale`() = runTest {
     credentialStore.credentials += credential(id = "td_1", userId = "user_1")
     Clerk.environment =
@@ -179,6 +197,8 @@ class TrustedDevicesTest {
 
   private class FakeKeyManager : TrustedDeviceKeyManager {
     val deletedKeyIds = mutableListOf<String>()
+    val deleteAttempts = mutableListOf<String>()
+    var deleteFailuresRemaining = 0
 
     override fun isSupported(policy: TrustedDevicePolicy): Boolean = true
 
@@ -196,6 +216,11 @@ class TrustedDevicesTest {
     override fun hasKey(localKeyId: String): Boolean = true
 
     override fun deleteKey(localKeyId: String) {
+      deleteAttempts += localKeyId
+      if (deleteFailuresRemaining > 0) {
+        deleteFailuresRemaining -= 1
+        error("key deletion failed")
+      }
       deletedKeyIds += localKeyId
     }
   }

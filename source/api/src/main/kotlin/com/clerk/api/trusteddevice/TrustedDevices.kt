@@ -236,7 +236,7 @@ object TrustedDevices {
    */
   fun forgetLocalCredentials(deletedUserId: String): Int {
     val credentials = storedLocalCredentialsForCurrentApp().filter { it.userId == deletedUserId }
-    credentials.forEach { deleteLocalCredential(it) }
+    credentials.forEach { deleteLocalCredential(it, propagateKeyDeletionFailure = true) }
     return credentials.size
   }
 
@@ -625,9 +625,15 @@ object TrustedDevices {
     }
   }
 
-  private fun deleteLocalCredential(credential: TrustedDeviceLocalCredential) {
-    runCatching { keyManager.deleteKey(credential.localKeyId) }
-      .onFailure { ClerkLog.w("Failed to delete trusted-device private key.") }
+  private fun deleteLocalCredential(
+    credential: TrustedDeviceLocalCredential,
+    propagateKeyDeletionFailure: Boolean = false,
+  ) {
+    val keyDeletionResult = runCatching { keyManager.deleteKey(credential.localKeyId) }
+    keyDeletionResult.onFailure { ClerkLog.w("Failed to delete trusted-device private key.") }
+    if (propagateKeyDeletionFailure) {
+      keyDeletionResult.getOrThrow()
+    }
     credentialStore.delete(credential.id)
   }
 

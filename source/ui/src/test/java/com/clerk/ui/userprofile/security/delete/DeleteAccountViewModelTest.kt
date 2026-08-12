@@ -78,6 +78,7 @@ class DeleteAccountViewModelTest {
       assertEquals(DeleteAccountViewModel.State.Loading, awaitItem())
       assertEquals(DeleteAccountViewModel.State.Success, awaitItem())
     }
+    verify(exactly = 1) { TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1") }
   }
 
   @Test
