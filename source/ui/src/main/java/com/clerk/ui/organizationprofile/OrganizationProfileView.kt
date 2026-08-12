@@ -4,10 +4,6 @@ package com.clerk.ui.organizationprofile
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -18,7 +14,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
@@ -35,6 +30,8 @@ import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.core.navigation.rememberDismissHandler
+import com.clerk.ui.navigation.clerkNavigationForwardTransition
+import com.clerk.ui.navigation.clerkNavigationPopTransition
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationView
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileConfirmationAction
 import com.clerk.ui.organizationprofile.custom.LocalOrganizationProfileCustomNavigator
@@ -150,20 +147,9 @@ private fun OrganizationProfileNavDisplay(
         onNavigateBack = { backStack.removeLastOrNull() },
       )
     },
-    transitionSpec = {
-      val spec = tween<IntOffset>(durationMillis = 300)
-      slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-        slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-    },
-    popTransitionSpec = {
-      val spec = tween<IntOffset>(durationMillis = 300)
-      slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-        slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-    },
-    predictivePopTransitionSpec = { distance ->
-      slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-        slideOutHorizontally(targetOffsetX = { distance })
-    },
+    transitionSpec = { clerkNavigationForwardTransition() },
+    popTransitionSpec = { clerkNavigationPopTransition() },
+    predictivePopTransitionSpec = { clerkNavigationPopTransition() },
     entryProvider =
       entryProvider {
         organizationProfileEntries(

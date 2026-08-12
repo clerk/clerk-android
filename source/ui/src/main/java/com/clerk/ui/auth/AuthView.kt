@@ -2,10 +2,6 @@
 
 package com.clerk.ui.auth
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,7 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -35,6 +30,8 @@ import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.footer.DevelopmentModeWarningBackground
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.navigation.clerkNavigationForwardTransition
+import com.clerk.ui.navigation.clerkNavigationPopTransition
 import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
 import com.clerk.ui.sessiontask.organization.SessionTaskChooseOrganizationView
 import com.clerk.ui.sessiontask.organization.SessionTaskCreateOrganizationView
@@ -210,20 +207,9 @@ private fun AuthNavDisplay(
   NavDisplay(
     modifier = modifier,
     backStack = backStack,
-    transitionSpec = {
-      val spec = tween<IntOffset>(durationMillis = 300)
-      slideInHorizontally(animationSpec = spec, initialOffsetX = { it }) togetherWith
-        slideOutHorizontally(animationSpec = spec, targetOffsetX = { -it })
-    },
-    popTransitionSpec = {
-      val spec = tween<IntOffset>(durationMillis = 300)
-      slideInHorizontally(animationSpec = spec, initialOffsetX = { -it }) togetherWith
-        slideOutHorizontally(animationSpec = spec, targetOffsetX = { it })
-    },
-    predictivePopTransitionSpec = { distance ->
-      slideInHorizontally(initialOffsetX = { -distance }) togetherWith
-        slideOutHorizontally(targetOffsetX = { distance })
-    },
+    transitionSpec = { clerkNavigationForwardTransition() },
+    popTransitionSpec = { clerkNavigationPopTransition() },
+    predictivePopTransitionSpec = { clerkNavigationPopTransition() },
     onBack = { authState.navigateBack() },
     entryProvider = authEntryProvider(backStack = backStack, options = options),
   )
