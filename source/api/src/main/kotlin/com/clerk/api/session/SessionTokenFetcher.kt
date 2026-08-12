@@ -10,7 +10,6 @@ import com.clerk.api.network.serialization.ClerkResult
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 
 /**
  * Internal service for fetching and managing session tokens.
@@ -50,20 +49,21 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   )
 
   /** Map of cache keys to deferred token fetch tasks for request deduplication */
-  private val tokenTasks = ConcurrentHashMap<String, Deferred<TokenResource?>>()
+  private val tokenTasks = ConcurrentHashMap<String, CompletableDeferred<TokenResource?>>()
   private val runtimeLock = Any()
   private var runtimeGeneration = 0L
 
   /**
-   * Releases deduplicated waiters and removes requests registered by the previous Clerk runtime.
+   * Releases deduplicated waiters with a null result and removes requests registered by the
+   * previous Clerk runtime.
    */
   internal fun reset() {
-    val tasksToCancel =
+    val tasksToRelease =
       synchronized(runtimeLock) {
         runtimeGeneration += 1
         tokenTasks.values.toList().also { tokenTasks.clear() }
       }
-    tasksToCancel.forEach { it.cancel() }
+    tasksToRelease.forEach { it.complete(null) }
   }
 
   /**

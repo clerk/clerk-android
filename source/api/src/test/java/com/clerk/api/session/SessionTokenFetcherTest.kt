@@ -500,6 +500,34 @@ class SessionTokenFetcherTest {
   }
 
   @Test
+  fun `reset releases shared token waiters with null`() = runTest {
+    // Given
+    val requestStarted = CompletableDeferred<Unit>()
+    val releaseResponse = CompletableDeferred<Unit>()
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } coAnswers
+      {
+        requestStarted.complete(Unit)
+        withContext(NonCancellable) { releaseResponse.await() }
+        ClerkResult.success(mockTokenResource)
+      }
+
+    val owner = async { sessionTokenFetcher.getToken(mockSession) }
+    requestStarted.await()
+    val waiter = async { sessionTokenFetcher.getToken(mockSession) }
+    yield()
+
+    // When
+    sessionTokenFetcher.reset()
+
+    // Then
+    assertNull(waiter.await())
+    releaseResponse.complete(Unit)
+    assertNull(owner.await())
+    coVerify(exactly = 0) { SessionTokensCache.storeIfFresher(any(), any(), any()) }
+  }
+
+  @Test
   fun `getToken handles API exception gracefully`() = runTest {
     // Given
     coEvery { SessionTokensCache.getToken(any()) } returns null
