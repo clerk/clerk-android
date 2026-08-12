@@ -4,6 +4,7 @@ import com.auth0.android.jwt.JWT
 import com.clerk.api.Clerk
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.api.SessionApi
+import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -24,8 +25,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -80,6 +83,7 @@ class SessionTokenFetcherTest {
   @After
   fun tearDown() {
     unmockkAll()
+    SessionTokensCache.clear()
   }
 
   @Test
@@ -393,6 +397,33 @@ class SessionTokenFetcherTest {
   }
 
   @Test
+  fun `concurrent waiters share a null token result without retrying`() = runTest {
+    // Given
+    val requestStarted = CompletableDeferred<Unit>()
+    val releaseRequest = CompletableDeferred<Unit>()
+    val errorResponse = ClerkErrorResponse(errors = emptyList(), clerkTraceId = "trace_shared")
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } coAnswers
+      {
+        requestStarted.complete(Unit)
+        releaseRequest.await()
+        ClerkResult.apiFailure(errorResponse)
+      }
+
+    // When
+    val first = async { sessionTokenFetcher.getToken(mockSession) }
+    requestStarted.await()
+    val second = async { sessionTokenFetcher.getToken(mockSession) }
+    yield()
+    releaseRequest.complete(Unit)
+
+    // Then
+    assertNull(first.await())
+    assertNull(second.await())
+    coVerify(exactly = 1) { mockClerkApiService.tokens("session_123") }
+  }
+
+  @Test
   fun `forced refreshes return their own responses while cache retains canonical token`() =
     runTest {
       // Given
@@ -555,6 +586,44 @@ class SessionTokenFetcherTest {
     assertNull(result)
     coVerify(exactly = 0) { SessionTokensCache.getToken(any()) }
     coVerify(exactly = 0) { mockClerkApiService.tokens(any()) }
+  }
+
+  @Test
+  fun `getToken uses pending status from current client snapshot`() = runTest {
+    // Given - the caller holds a stale active session while the current snapshot is pending
+    val pendingSession = mockk<Session>(relaxed = true)
+    every { pendingSession.id } returns "session_123"
+    every { pendingSession.status } returns Session.SessionStatus.PENDING
+    every { Clerk.clientFlow } returns MutableStateFlow(Client(sessions = listOf(pendingSession)))
+
+    // When
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    // Then
+    assertNull(result)
+    coVerify(exactly = 0) { mockClerkApiService.tokens(any()) }
+  }
+
+  @Test
+  fun `getToken uses active status from current client snapshot`() = runTest {
+    // Given - the caller holds a stale pending session while the current snapshot is active
+    val activeSession = mockk<Session>(relaxed = true)
+    every { mockSession.status } returns Session.SessionStatus.PENDING
+    every { activeSession.id } returns "session_123"
+    every { activeSession.status } returns Session.SessionStatus.ACTIVE
+    every { Clerk.clientFlow } returns MutableStateFlow(Client(sessions = listOf(activeSession)))
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } returns
+      ClerkResult.success(mockTokenResource)
+    coEvery { SessionTokensCache.storeIfFresher(any(), mockTokenResource, any()) } returns
+      SessionTokensCache.StoreResult(mockTokenResource, true)
+
+    // When
+    val result = sessionTokenFetcher.getToken(mockSession)
+
+    // Then
+    assertEquals(mockTokenResource, result)
+    coVerify(exactly = 1) { mockClerkApiService.tokens("session_123") }
   }
 
   @Test

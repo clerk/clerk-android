@@ -83,23 +83,24 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
   suspend fun getToken(
     session: Session,
     options: GetTokenOptions = GetTokenOptions(),
-  ): TokenResource? =
-    when {
-      session.status == Session.SessionStatus.PENDING -> {
+  ): TokenResource? {
+    val context = makeFetchContext(session, options.template)
+    return when {
+      context.session.status == Session.SessionStatus.PENDING -> {
         ClerkLog.w(
-          "Cannot fetch token for session ${session.id}: session is in pending state. " +
+          "Cannot fetch token for session ${context.session.id}: session is in pending state. " +
             "The user has tasks to complete before the session can be activated."
         )
         null
       }
-      else -> fetchTokenWithDeduplication(session, options)
+      else -> fetchTokenWithDeduplication(context, options)
     }
+  }
 
   private suspend fun fetchTokenWithDeduplication(
-    session: Session,
+    context: FetchContext,
     options: GetTokenOptions,
   ): TokenResource? {
-    val context = makeFetchContext(session, options.template)
     ClerkLog.d(
       "Fetching token for session ${context.session.id} with options: $options and cache key: " +
         context.cacheKey
@@ -109,24 +110,23 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       return fetchToken(context, options)
     }
 
-    return tokenTasks[context.cacheKey]?.await()
-      ?: run {
-        val deferred = CompletableDeferred<TokenResource?>()
-        val existingTask = tokenTasks.putIfAbsent(context.cacheKey, deferred)
-
-        existingTask?.await()
-          ?: try {
-            fetchToken(context, options).also { deferred.complete(it) }
-          } catch (e: CancellationException) {
-            deferred.cancel(e)
-            throw e
-          } catch (t: Throwable) {
-            deferred.completeExceptionally(t)
-            throw t
-          } finally {
-            tokenTasks.remove(context.cacheKey, deferred)
-          }
+    val deferred = CompletableDeferred<TokenResource?>()
+    val existingTask = tokenTasks.putIfAbsent(context.cacheKey, deferred)
+    return if (existingTask != null) {
+      existingTask.await()
+    } else {
+      try {
+        fetchToken(context, options).also { deferred.complete(it) }
+      } catch (e: CancellationException) {
+        deferred.cancel(e)
+        throw e
+      } catch (t: Throwable) {
+        deferred.completeExceptionally(t)
+        throw t
+      } finally {
+        tokenTasks.remove(context.cacheKey, deferred)
       }
+    }
   }
 
   private fun makeFetchContext(session: Session, template: String?): FetchContext {
