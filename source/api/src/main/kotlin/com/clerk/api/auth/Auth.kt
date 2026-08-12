@@ -372,6 +372,8 @@ class Auth internal constructor() {
    * @param id The trusted-device credential ID to use. When omitted, the available local credential
    *   is used.
    * @param identifierHint A local-only user identifier hint used to choose a matching credential.
+   * @param promptTitle The title shown in the system authentication prompt.
+   * @param promptSubtitle The subtitle shown in the system authentication prompt.
    * @return A [ClerkResult] containing the [SignIn] object on success, or a [ClerkErrorResponse] on
    *   failure.
    *
@@ -383,8 +385,16 @@ class Auth internal constructor() {
   suspend fun signInWithTrustedDevice(
     id: String? = null,
     identifierHint: String? = null,
+    promptTitle: String? = null,
+    promptSubtitle: String? = null,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
-    val result = TrustedDevices.signIn(id = id, identifierHint = identifierHint)
+    val result =
+      TrustedDevices.signIn(
+        id = id,
+        identifierHint = identifierHint,
+        promptTitle = promptTitle,
+        promptSubtitle = promptSubtitle,
+      )
     result.onFailure { emitAuthError(it) }
     return result
   }
@@ -741,9 +751,10 @@ class Auth internal constructor() {
       // Fetched client is missing the target session entirely (e.g. cleared sessions list);
       // splice it back in from the fallback and force it active.
       !targetInFetchedSessions && targetInFallbackSessions -> {
-        val missingFallbackSessions = fallbackSessions.filterNot { fallbackSession ->
-          sessions.any { it.id == fallbackSession.id }
-        }
+        val missingFallbackSessions =
+          fallbackSessions.filterNot { fallbackSession ->
+            sessions.any { it.id == fallbackSession.id }
+          }
         copy(
           sessions = sessions + missingFallbackSessions,
           lastActiveSessionId = activeSessionFallbackId,

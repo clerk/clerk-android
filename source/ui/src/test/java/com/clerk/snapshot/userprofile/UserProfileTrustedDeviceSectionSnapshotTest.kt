@@ -29,9 +29,18 @@ class UserProfileTrustedDeviceSectionSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun trustedDeviceSectionEnabled_Dark() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
-    paparazzi.snapshot {
-      UserProfileTrustedDeviceSectionImpl(isEnabled = true, isLoading = false, onCheckedChange = {})
+    val previousTheme = Clerk.customTheme
+    try {
+      Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
+      paparazzi.snapshot {
+        UserProfileTrustedDeviceSectionImpl(
+          isEnabled = true,
+          isLoading = false,
+          onCheckedChange = {},
+        )
+      }
+    } finally {
+      Clerk.customTheme = previousTheme
     }
   }
 }

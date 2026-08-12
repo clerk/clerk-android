@@ -16,6 +16,7 @@ import java.math.BigInteger
 import java.security.GeneralSecurityException
 import java.security.KeyPairGenerator
 import java.security.KeyStore
+import java.security.ProviderException
 import java.security.Signature
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
@@ -127,10 +128,19 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
 
   override fun isSupported(policy: TrustedDevicePolicy): Boolean {
     val context = applicationContext()
+    val authenticators =
+      if (
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
+          policy == TrustedDevicePolicy.BIOMETRY_OR_DEVICE_PASSCODE
+      ) {
+        BiometricManager.Authenticators.BIOMETRIC_STRONG or
+          BiometricManager.Authenticators.DEVICE_CREDENTIAL
+      } else {
+        BiometricManager.Authenticators.BIOMETRIC_STRONG
+      }
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
       context != null &&
-      BiometricManager.from(context)
-        .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) ==
+      BiometricManager.from(context).canAuthenticate(authenticators) ==
         BiometricManager.BIOMETRIC_SUCCESS
   }
 
@@ -163,6 +173,8 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
     } catch (e: TrustedDeviceKeyManagerException) {
       throw e
     } catch (e: GeneralSecurityException) {
+      throw keyGenerationFailure(localKeyId, e)
+    } catch (e: ProviderException) {
       throw keyGenerationFailure(localKeyId, e)
     } catch (e: IllegalStateException) {
       throw keyGenerationFailure(localKeyId, e)

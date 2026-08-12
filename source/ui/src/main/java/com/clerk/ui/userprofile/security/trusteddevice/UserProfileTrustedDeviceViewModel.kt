@@ -7,6 +7,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.ui.auth.isTrustedDeviceCancellation
 import com.clerk.ui.auth.trusteddevice.trustedDeviceIdentifierHint
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,20 +17,26 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** ViewModel backing the biometric sign-in toggle in the user-profile security screen. */
-internal class UserProfileTrustedDeviceViewModel : ViewModel() {
+internal class UserProfileTrustedDeviceViewModel(
+  private val workDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : ViewModel() {
 
   private val _state = MutableStateFlow(State())
   val state: StateFlow<State> = _state.asStateFlow()
+  private var availabilityRequestGeneration = 0
 
   /** Refreshes availability locally first, then reconciles with the server. */
   fun refreshAvailability() {
+    val requestGeneration = ++availabilityRequestGeneration
     _state.update {
       it.copy(isEnabled = Clerk.trustedDevices.currentUserLocalAvailability().isAvailable)
     }
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch(workDispatcher) {
       val availability = Clerk.trustedDevices.currentUserAvailability()
       withContext(Dispatchers.Main) {
-        _state.update { it.copy(isEnabled = availability.isAvailable) }
+        if (requestGeneration == availabilityRequestGeneration) {
+          _state.update { it.copy(isEnabled = availability.isAvailable) }
+        }
       }
     }
   }
@@ -48,9 +55,10 @@ internal class UserProfileTrustedDeviceViewModel : ViewModel() {
   ) {
     val current = _state.value
     if (current.isLoading || current.isEnabled == enabled) return
+    availabilityRequestGeneration += 1
     _state.value = current.copy(isEnabled = enabled, isLoading = true)
 
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch(workDispatcher) {
       val failure =
         if (enabled) {
           Clerk.trustedDevices

@@ -42,4 +42,17 @@ class TrustedDeviceKeyManagerTest {
     assertEquals(TrustedDeviceKeyManagerException.Code.SIGNING_FAILED, exception.code)
     assertEquals("Android Keystore returned an invalid ES256 signature.", exception.message)
   }
+
+  @Test
+  fun `raw ES256 signature rejects high-bit DER integer without sign padding`() {
+    val exception =
+      assertFailsWith<TrustedDeviceKeyManagerException> {
+        DefaultTrustedDeviceKeyManager.rawES256SignatureFromDer(
+          byteArrayOf(0x30, 0x06, 0x02, 0x01, 0x80.toByte(), 0x02, 0x01, 0x01)
+        )
+      }
+
+    assertEquals(TrustedDeviceKeyManagerException.Code.SIGNING_FAILED, exception.code)
+    assertEquals("Android Keystore returned an invalid ES256 signature.", exception.message)
+  }
 }

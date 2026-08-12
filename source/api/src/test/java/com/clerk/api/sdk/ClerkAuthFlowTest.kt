@@ -151,6 +151,21 @@ class ClerkAuthFlowTest {
     assertNull(Clerk.pendingAuthFlowCompletion)
   }
 
+  @Test
+  fun `reset clears registered auth flow before a subsequent completed sign in`() {
+    requireNotNull(Clerk.registerAuthFlow())
+    Clerk.markAuthFlowPending()
+
+    Clerk.reset()
+    Clerk.updateClient(
+      client(session(status = Session.SessionStatus.ACTIVE, user = mockk(relaxed = true))),
+      completedAuthFlow = completedSignIn(),
+    )
+
+    assertTrue(Clerk.isAuthFlowComplete)
+    assertNull(Clerk.pendingAuthFlowCompletion)
+  }
+
   private fun client(session: Session): Client =
     Client(id = "client_123", sessions = listOf(session), lastActiveSessionId = session.id)
 

@@ -8,7 +8,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Local metadata that links a Clerk trusted-device credential to its on-device private key.
@@ -105,9 +108,10 @@ internal object DefaultTrustedDeviceLocalCredentialStore : TrustedDeviceLocalCre
       return
     }
 
-    val elements = credentials.map {
-      ClerkApi.json.encodeToJsonElement(TrustedDeviceLocalCredential.serializer(), it)
-    }
+    val elements =
+      credentials.map {
+        ClerkApi.json.encodeToJsonElement(TrustedDeviceLocalCredential.serializer(), it)
+      }
     StorageHelper.saveValue(
       StorageKey.TRUSTED_DEVICE_CREDENTIALS,
       ClerkApi.json.encodeToString(JsonArray.serializer(), JsonArray(elements)),
@@ -120,5 +124,47 @@ internal object DefaultTrustedDeviceLocalCredentialStore : TrustedDeviceLocalCre
       }
       .onFailure { ClerkLog.w("Dropping malformed trusted-device credential record.") }
       .getOrNull()
+  }
+}
+
+/** Persistent queue of user-scoped local credential cleanup work. */
+internal object TrustedDevicePendingCleanupStore {
+
+  fun all(): Set<String> {
+    val stored =
+      StorageHelper.loadValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)
+        ?: return emptySet()
+    return runCatching {
+        ClerkApi.json
+          .parseToJsonElement(stored)
+          .jsonArray
+          .mapNotNull { it.jsonPrimitive.contentOrNull }
+          .filterTo(mutableSetOf()) { it.isNotBlank() }
+      }
+      .getOrElse {
+        ClerkLog.w("Trusted-device pending cleanup metadata is malformed, clearing it.")
+        StorageHelper.deleteValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)
+        emptySet()
+      }
+  }
+
+  fun add(userId: String) {
+    persist(all() + userId)
+  }
+
+  fun remove(userId: String) {
+    persist(all() - userId)
+  }
+
+  private fun persist(userIds: Set<String>) {
+    if (userIds.isEmpty()) {
+      StorageHelper.deleteValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)
+      return
+    }
+    val encoded = JsonArray(userIds.sorted().map(::JsonPrimitive))
+    StorageHelper.saveValue(
+      StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP,
+      ClerkApi.json.encodeToString(JsonArray.serializer(), encoded),
+    )
   }
 }

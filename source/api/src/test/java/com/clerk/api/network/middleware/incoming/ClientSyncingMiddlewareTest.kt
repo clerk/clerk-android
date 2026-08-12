@@ -137,6 +137,40 @@ class ClientSyncingMiddlewareTest {
   }
 
   @Test
+  fun `intercept holds registered auth flow before syncing completed sign up client`() {
+    val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
+    val registration = requireNotNull(Clerk.registerAuthFlow())
+    try {
+      val request =
+        Request.Builder()
+          .url("https://api.clerk.com/v1/client/sign_ups/su_123/attempt_verification")
+          .post("".toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+          .build()
+      val response =
+        Response.Builder()
+          .request(request)
+          .protocol(Protocol.HTTP_1_1)
+          .code(200)
+          .message("OK")
+          .body(completedSignUpResponseBody())
+          .build()
+      val chain = mockk<Interceptor.Chain>()
+      every { chain.request() } returns request
+      every { chain.proceed(request) } returns response
+
+      middleware.intercept(chain)
+
+      val completion = Clerk.pendingAuthFlowCompletion
+      assertEquals(Session.SessionStatus.ACTIVE, Clerk.session?.status)
+      assertFalse(Clerk.isAuthFlowComplete)
+      assertTrue(completion is AuthEvent.SignUpCompleted)
+      assertEquals("su_123", (completion as AuthEvent.SignUpCompleted).signUp.id)
+    } finally {
+      registration.close()
+    }
+  }
+
+  @Test
   fun `intercept clears Clerk client when response client is explicit null`() {
     val middleware = ClientSyncingMiddleware(json = ClerkApi.json)
     val session = testSession("sess_123")
@@ -406,6 +440,51 @@ class ClientSyncingMiddlewareTest {
         "id": "si_123",
         "status": "complete",
         "created_session_id": "sess_123"
+      },
+      "client": {
+        "id": "client_123",
+        "sessions": [{
+          "id": "sess_123",
+          "status": "active",
+          "expire_at": 10000,
+          "last_active_at": 1000,
+          "user": {
+            "has_image": false,
+            "id": "user_123",
+            "image_url": "https://example.com/avatar.png",
+            "passkeys": [],
+            "password_enabled": false,
+            "phone_numbers": [],
+            "totp_enabled": false,
+            "two_factor_enabled": false,
+            "updated_at": 1000
+          },
+          "created_at": 1000,
+          "updated_at": 1000
+        }],
+        "last_active_session_id": "sess_123"
+      }
+    }
+    """
+      .trimIndent()
+      .toResponseBody("application/json".toMediaType())
+
+  private fun completedSignUpResponseBody() =
+    """
+    {
+      "response": {
+        "object": "sign_up_attempt",
+        "id": "su_123",
+        "status": "complete",
+        "required_fields": [],
+        "optional_fields": [],
+        "missing_fields": [],
+        "unverified_fields": [],
+        "verifications": {},
+        "password_enabled": false,
+        "created_session_id": "sess_123",
+        "created_at": 0,
+        "updated_at": 0
       },
       "client": {
         "id": "client_123",

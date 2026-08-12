@@ -1,5 +1,6 @@
 package com.clerk.api.trusteddevice
 
+import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
@@ -175,7 +176,7 @@ object TrustedDevices {
           runCatching { keyManager.deleteKey(localKey.localKeyId) }
           return failure
         }
-        removeOtherLocalCredentialsForCurrentApp(keeping = trustedDevice)
+        removeOtherLocalCredentialsForCurrentApp(userId = userId, keeping = trustedDevice)
         enrollmentResult
       }
       is ClerkResult.Failure -> {
@@ -240,6 +241,26 @@ object TrustedDevices {
   }
 
   /**
+   * Deletes account-scoped local credentials, retaining failed cleanup work for the next SDK
+   * initialization.
+   */
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  fun forgetLocalCredentialsAfterAccountDeletion(deletedUserId: String): Int {
+    TrustedDevicePendingCleanupStore.add(deletedUserId)
+    return forgetLocalCredentials(deletedUserId).also {
+      TrustedDevicePendingCleanupStore.remove(deletedUserId)
+    }
+  }
+
+  internal fun retryPendingLocalCredentialCleanup() {
+    TrustedDevicePendingCleanupStore.all().forEach { deletedUserId ->
+      runCatching { forgetLocalCredentials(deletedUserId) }
+        .onSuccess { TrustedDevicePendingCleanupStore.remove(deletedUserId) }
+        .onFailure { ClerkLog.w("Failed to retry trusted-device local credential cleanup.") }
+    }
+  }
+
+  /**
    * Signs in with a locally enrolled biometric trusted-device credential.
    *
    * @param id The trusted-device credential ID to use. When omitted, the available local credential
@@ -265,7 +286,11 @@ object TrustedDevices {
 
     val createResult =
       ClerkApi.signIn.createSignIn(
-        mapOf("strategy" to TRUSTED_DEVICE, "trusted_device_id" to localCredential.id)
+        mapOf(
+          "strategy" to TRUSTED_DEVICE,
+          "trusted_device_id" to localCredential.id,
+          "locale" to Clerk.locale.value.orEmpty(),
+        )
       )
     val signIn =
       when (createResult) {
@@ -441,9 +466,10 @@ object TrustedDevices {
     }
   }
 
-  private fun removeOtherLocalCredentialsForCurrentApp(keeping: TrustedDevice) {
+  @VisibleForTesting
+  internal fun removeOtherLocalCredentialsForCurrentApp(userId: String, keeping: TrustedDevice) {
     storedLocalCredentialsForCurrentApp()
-      .filter { it.id != keeping.id }
+      .filter { it.userId == userId && it.id != keeping.id }
       .forEach { credential ->
         runCatching { deleteLocalCredential(credential) }
           .onFailure { ClerkLog.w("Failed to remove replaced trusted-device credential locally.") }

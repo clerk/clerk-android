@@ -38,7 +38,7 @@ internal class DeleteAccountViewModel : ViewModel() {
   }
 
   private fun forgetTrustedDeviceLocalCredentials(deletedUserId: String) {
-    runCatching { Clerk.trustedDevices.forgetLocalCredentials(deletedUserId) }
+    runCatching { Clerk.trustedDevices.forgetLocalCredentialsAfterAccountDeletion(deletedUserId) }
       .onFailure {
         ClerkLog.e(
           "Failed to delete trusted-device local credentials after account deletion. " +

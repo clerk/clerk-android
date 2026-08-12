@@ -611,10 +611,14 @@ data class SignIn(
        *   credential is used.
        * @property identifierHint A local-only user identifier hint used to choose a matching
        *   credential.
+       * @property promptTitle The title shown in the system authentication prompt.
+       * @property promptSubtitle The subtitle shown in the system authentication prompt.
        */
       data class TrustedDevice(
         val id: String? = null,
         val identifierHint: String? = null,
+        val promptTitle: String? = null,
+        val promptSubtitle: String? = null,
         override val strategy: String = TRUSTED_DEVICE,
       ) : Strategy
 
@@ -658,7 +662,12 @@ data class SignIn(
       return when (params) {
         is CreateParams.Strategy.Passkey -> create(params)
         is CreateParams.Strategy.TrustedDevice ->
-          TrustedDevices.signIn(id = params.id, identifierHint = params.identifierHint)
+          TrustedDevices.signIn(
+            id = params.id,
+            identifierHint = params.identifierHint,
+            promptTitle = params.promptTitle,
+            promptSubtitle = params.promptSubtitle,
+          )
         else -> {
           val baseMap =
             if (params is CreateParams.Strategy.Transfer) {
