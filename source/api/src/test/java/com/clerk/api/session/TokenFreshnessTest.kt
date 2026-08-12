@@ -72,6 +72,18 @@ class TokenFreshnessTest {
   }
 
   @Test
+  fun `malformed token does not match session context`() {
+    assertFalse(TokenFreshness.matches(TokenResource("malformed"), "session", null))
+  }
+
+  @Test
+  fun `token without session id does not match session context`() {
+    val token = token(sessionId = null, originIssuedAt = 100, issuedAt = 100)
+
+    assertFalse(TokenFreshness.matches(token, "session", null))
+  }
+
+  @Test
   fun `cache cannot be rolled back by a stale response`() {
     val cacheKey = "session-organization-"
     val stale = token(originIssuedAt = 100, issuedAt = 100, signature = "stale")
@@ -118,7 +130,7 @@ class TokenFreshnessTest {
   }
 
   private fun token(
-    sessionId: String = "session",
+    sessionId: String? = "session",
     organizationId: String? = null,
     originIssuedAt: Long?,
     issuedAt: Long,
@@ -134,7 +146,7 @@ class TokenFreshnessTest {
         .joinToString(",")
     val payloadClaims =
       buildList {
-          add("\"sid\":\"$sessionId\"")
+          sessionId?.let { add("\"sid\":\"$it\"") }
           add("\"iat\":$issuedAt")
           add("\"exp\":$expiresAt")
           organizationId?.let { add("\"org_id\":\"$it\"") }

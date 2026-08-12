@@ -46,17 +46,24 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     val session: Session,
     val cacheKey: String,
     val sessionMinterEnabled: Boolean,
+    val runtimeGeneration: Long,
   )
 
   /** Map of cache keys to deferred token fetch tasks for request deduplication */
   private val tokenTasks = ConcurrentHashMap<String, Deferred<TokenResource?>>()
+  private val runtimeLock = Any()
+  private var runtimeGeneration = 0L
 
   /**
    * Releases deduplicated waiters and removes requests registered by the previous Clerk runtime.
    */
   internal fun reset() {
-    tokenTasks.values.forEach { it.cancel() }
-    tokenTasks.clear()
+    val tasksToCancel =
+      synchronized(runtimeLock) {
+        runtimeGeneration += 1
+        tokenTasks.values.toList().also { tokenTasks.clear() }
+      }
+    tasksToCancel.forEach { it.cancel() }
   }
 
   /**
@@ -129,8 +136,12 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       session = currentSession,
       cacheKey = currentSession.tokenCacheKey(template),
       sessionMinterEnabled = Clerk.environment?.authConfig?.sessionMinter == true,
+      runtimeGeneration = synchronized(runtimeLock) { runtimeGeneration },
     )
   }
+
+  private fun isCurrentRuntime(context: FetchContext): Boolean =
+    synchronized(runtimeLock) { context.runtimeGeneration == runtimeGeneration }
 
   /**
    * Internal method to fetch a token from cache or network.
@@ -144,69 +155,91 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
    * @return The token resource, or null if the fetch failed
    */
   private suspend fun fetchToken(context: FetchContext, options: GetTokenOptions): TokenResource? {
-    val session = context.session
-    val cacheKey = context.cacheKey
-
-    if (options.template == null) {
-      session.lastActiveToken
-        ?.takeIf {
-          TokenFreshness.matches(it, session.id, session.lastActiveOrganizationId)
-        }
-        ?.let { SessionTokensCache.hydrate(cacheKey, it) }
-    }
-
-    // Check cache first (unless skipped)
-    if (!options.skipCache) {
-      SessionTokensCache.getToken(cacheKey)?.let { token ->
-        ClerkLog.d("Found cached token for session ${session.id}")
-        if (isTokenValid(token, options.expirationBuffer)) {
-          ClerkLog.d("Cached token is still valid for session ${session.id}")
-          return token
-        } else {
-          ClerkLog.d("Cached token is expired for session ${session.id}")
+    return if (!isCurrentRuntime(context)) {
+      null
+    } else {
+      if (options.template == null) {
+        synchronized(runtimeLock) {
+          if (context.runtimeGeneration == runtimeGeneration) {
+            val session = context.session
+            session.lastActiveToken
+              ?.takeIf { TokenFreshness.matches(it, session.id, session.lastActiveOrganizationId) }
+              ?.let { SessionTokensCache.hydrate(context.cacheKey, it) }
+          }
         }
       }
-    }
 
-    // Fetch from network
-    return try {
-      val tokensRequest =
-        if (options.template != null) {
-          ClerkApi.session.tokens(session.id, options.template)
+      val validCachedToken =
+        if (options.skipCache) {
+          null
         } else {
-          val cachedToken = SessionTokensCache.getToken(cacheKey)
-          val previousToken =
-            cachedToken?.let {
-              TokenFreshness.pickFreshest(
-                existing = session.lastActiveToken,
-                incoming = it,
-              )
-            } ?: session.lastActiveToken
-          ClerkApi.session.tokens(
-            sessionId = session.id,
-            organizationId = session.lastActiveOrganizationId.orEmpty(),
-            token = previousToken?.jwt.takeIf { context.sessionMinterEnabled },
-            forceOrigin = "true".takeIf { context.sessionMinterEnabled && options.skipCache },
-          )
+          SessionTokensCache.getToken(context.cacheKey)?.takeIf { token ->
+            ClerkLog.d("Found cached token for session ${context.session.id}")
+            isTokenValid(token, options.expirationBuffer).also { isValid ->
+              val cacheStatus = if (isValid) "still valid" else "expired"
+              ClerkLog.d("Cached token is $cacheStatus for session ${context.session.id}")
+            }
+          }
         }
+
+      validCachedToken?.takeIf { isCurrentRuntime(context) }
+        ?: if (!isCurrentRuntime(context)) {
+          null
+        } else {
+          try {
+            reconcileTokenResponse(context, requestToken(context, options))
+          } catch (e: CancellationException) {
+            throw e
+          } catch (e: Exception) {
+            ClerkLog.e("Failed to fetch token: ${e.message}")
+            null
+          }
+        }
+    }
+  }
+
+  private suspend fun requestToken(
+    context: FetchContext,
+    options: GetTokenOptions,
+  ): ClerkResult<TokenResource, ClerkErrorResponse> {
+    val session = context.session
+    return if (options.template != null) {
+      ClerkApi.session.tokens(session.id, options.template)
+    } else {
+      val cachedToken = SessionTokensCache.getToken(context.cacheKey)
+      val previousToken =
+        cachedToken?.let {
+          TokenFreshness.pickFreshest(existing = session.lastActiveToken, incoming = it)
+        } ?: session.lastActiveToken
+      ClerkApi.session.tokens(
+        sessionId = session.id,
+        organizationId = session.lastActiveOrganizationId.orEmpty(),
+        token = previousToken?.jwt.takeIf { context.sessionMinterEnabled },
+        forceOrigin = "true".takeIf { context.sessionMinterEnabled && options.skipCache },
+      )
+    }
+  }
+
+  private fun reconcileTokenResponse(
+    context: FetchContext,
+    tokensRequest: ClerkResult<TokenResource, ClerkErrorResponse>,
+  ): TokenResource? =
+    synchronized(runtimeLock) {
+      if (context.runtimeGeneration != runtimeGeneration) return@synchronized null
 
       when (tokensRequest) {
         is ClerkResult.Success -> {
-          SessionTokensCache.storeIfFresher(cacheKey, tokensRequest.value)
+          SessionTokensCache.storeIfFresher(context.cacheKey, tokensRequest.value)
+          // Match Clerk JS: each forced refresh returns its own mint while the shared cache stays
+          // monotonic when responses complete out of order.
           tokensRequest.value
         }
         is ClerkResult.Failure -> {
-          handleSessionInvalidationOnFailure(session, tokensRequest)
+          handleSessionInvalidationOnFailure(context.session, tokensRequest)
           null
         }
       }
-    } catch (e: CancellationException) {
-      throw e
-    } catch (e: Exception) {
-      ClerkLog.e("Failed to fetch token: ${e.message}")
-      null
     }
-  }
 
   private fun handleSessionInvalidationOnFailure(
     session: Session,

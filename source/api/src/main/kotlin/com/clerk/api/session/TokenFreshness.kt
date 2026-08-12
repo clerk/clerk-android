@@ -35,15 +35,11 @@ internal object TokenFreshness {
     }
   }
 
-  internal fun matches(
-    token: TokenResource,
-    sessionId: String,
-    organizationId: String?,
-  ): Boolean {
+  internal fun matches(token: TokenResource, sessionId: String, organizationId: String?): Boolean {
     val jwt = decode(token.jwt)
     val tokenSessionId = jwt?.getClaim("sid")?.asString()
     return if (jwt == null || tokenSessionId == null) {
-      true
+      false
     } else {
       tokenSessionId == sessionId && jwt.organizationId().orEmpty() == organizationId.orEmpty()
     }
