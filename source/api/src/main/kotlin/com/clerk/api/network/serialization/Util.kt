@@ -1,3 +1,5 @@
+package com.clerk.api.network.serialization
+
 /**
  * Extension function to create an unmodifiable copy of a map.
  *

@@ -3,7 +3,6 @@ package com.clerk.api.network.serialization
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.firstMessage
 import kotlin.reflect.KClass
-import toUnmodifiableMap
 
 /**
  * ClerkResult is a sealed interface used throughout the Clerk SDK to represent the result of an API
