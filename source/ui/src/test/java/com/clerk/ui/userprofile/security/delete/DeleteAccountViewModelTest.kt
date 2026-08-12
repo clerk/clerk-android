@@ -5,6 +5,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.trusteddevice.TrustedDevices
 import com.clerk.api.user.User
 import com.clerk.api.user.delete
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -15,6 +16,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -43,8 +45,11 @@ class DeleteAccountViewModelTest {
   @Test
   fun deleteAccount_success_setsSuccessState() = runTest {
     val user = mockk<User>()
+    every { user.id } returns "user_1"
     every { Clerk.user } returns user
     coEvery { user.delete() } returns ClerkResult.success(mockk())
+    mockkObject(TrustedDevices)
+    every { TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1") } returns 1
 
     val viewModel = DeleteAccountViewModel()
     viewModel.state.test {
@@ -53,11 +58,33 @@ class DeleteAccountViewModelTest {
       assertEquals(DeleteAccountViewModel.State.Loading, awaitItem())
       assertEquals(DeleteAccountViewModel.State.Success, awaitItem())
     }
+    verify(exactly = 1) { TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1") }
+  }
+
+  @Test
+  fun deleteAccount_cleanupFailure_stillSetsSuccessState() = runTest {
+    val user = mockk<User>()
+    every { user.id } returns "user_1"
+    every { Clerk.user } returns user
+    coEvery { user.delete() } returns ClerkResult.success(mockk())
+    mockkObject(TrustedDevices)
+    every { TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1") } throws
+      IllegalStateException("cleanup failed")
+
+    val viewModel = DeleteAccountViewModel()
+    viewModel.state.test {
+      assertEquals(DeleteAccountViewModel.State.Idle, awaitItem())
+      viewModel.deleteAccount()
+      assertEquals(DeleteAccountViewModel.State.Loading, awaitItem())
+      assertEquals(DeleteAccountViewModel.State.Success, awaitItem())
+    }
+    verify(exactly = 1) { TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1") }
   }
 
   @Test
   fun deleteAccount_failure_setsErrorState() = runTest {
     val user = mockk<User>()
+    every { user.id } returns "user_1"
     every { Clerk.user } returns user
     val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
     coEvery { user.delete() } returns ClerkResult.Failure(error)

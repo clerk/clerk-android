@@ -41,6 +41,7 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
+import com.clerk.api.trusteddevice.TrustedDevices
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -358,6 +359,42 @@ class Auth internal constructor() {
    */
   suspend fun signInWithPasskey(): ClerkResult<SignIn, ClerkErrorResponse> {
     val result = PasskeyService.signInWithPasskey()
+    result.onFailure { emitAuthError(it) }
+    return result
+  }
+
+  /**
+   * Signs in with a locally enrolled trusted-device (biometric) credential.
+   *
+   * The trusted-device domain owns local credential selection, key access, challenge signing, and
+   * stale local credential cleanup.
+   *
+   * @param id The trusted-device credential ID to use. When omitted, the available local credential
+   *   is used.
+   * @param identifierHint A local-only user identifier hint used to choose a matching credential.
+   * @param promptTitle The title shown in the system authentication prompt.
+   * @param promptSubtitle The subtitle shown in the system authentication prompt.
+   * @return A [ClerkResult] containing the [SignIn] object on success, or a [ClerkErrorResponse] on
+   *   failure.
+   *
+   * ### Example usage:
+   * ```kotlin
+   * val signIn = clerk.auth.signInWithTrustedDevice()
+   * ```
+   */
+  suspend fun signInWithTrustedDevice(
+    id: String? = null,
+    identifierHint: String? = null,
+    promptTitle: String? = null,
+    promptSubtitle: String? = null,
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    val result =
+      TrustedDevices.signIn(
+        id = id,
+        identifierHint = identifierHint,
+        promptTitle = promptTitle,
+        promptSubtitle = promptSubtitle,
+      )
     result.onFailure { emitAuthError(it) }
     return result
   }
@@ -714,9 +751,10 @@ class Auth internal constructor() {
       // Fetched client is missing the target session entirely (e.g. cleared sessions list);
       // splice it back in from the fallback and force it active.
       !targetInFetchedSessions && targetInFallbackSessions -> {
-        val missingFallbackSessions = fallbackSessions.filterNot { fallbackSession ->
-          sessions.any { it.id == fallbackSession.id }
-        }
+        val missingFallbackSessions =
+          fallbackSessions.filterNot { fallbackSession ->
+            sessions.any { it.id == fallbackSession.id }
+          }
         copy(
           sessions = sessions + missingFallbackSessions,
           lastActiveSessionId = activeSessionFallbackId,

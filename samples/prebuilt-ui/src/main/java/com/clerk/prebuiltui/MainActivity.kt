@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -30,7 +31,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.api.session.pendingTaskKey
 import com.clerk.prebuiltui.ui.theme.ClerkTheme
 import com.clerk.ui.R as ClerkUiR
 import com.clerk.ui.auth.AuthView
@@ -48,20 +48,25 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
+      val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
+      val isAuthFlowComplete by Clerk.isAuthFlowCompleteFlow.collectAsStateWithLifecycle()
       val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-      val user by Clerk.userFlow.collectAsStateWithLifecycle()
       ClerkTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
           Box(
             modifier = Modifier.fillMaxSize().padding(innerPadding),
             contentAlignment = Alignment.Center,
           ) {
-            if (user != null && session?.pendingTaskKey == null) {
-              SignedInPrebuiltHome(
-                hasActiveOrganization = session?.lastActiveOrganizationId != null
-              )
+            if (isInitialized) {
+              if (!isAuthFlowComplete) {
+                AuthView(isDismissible = false)
+              } else {
+                SignedInPrebuiltHome(
+                  hasActiveOrganization = session?.lastActiveOrganizationId != null
+                )
+              }
             } else {
-              AuthView()
+              CircularProgressIndicator()
             }
           }
         }

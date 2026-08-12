@@ -24,6 +24,7 @@ data class Error(
   /** A string code that represents the error, such as `username_exists_code`. */
   val code: String? = null,
   /** Additional information about the error. */
+  val meta: JsonObject? = null,
 )
 
 fun ClerkErrorResponse.firstMessage(): String? = this.errors.firstOrNull()?.message
