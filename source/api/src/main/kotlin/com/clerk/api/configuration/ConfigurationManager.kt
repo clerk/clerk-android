@@ -288,8 +288,10 @@ internal class ConfigurationManager {
       if (hasConfigured) {
         scope.launch {
           Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
-          deferForegroundRefreshDuringPendingAuth()
-          refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+          if (shouldRefreshOnForeground(attempt.options)) {
+            deferForegroundRefreshDuringPendingAuth()
+            refreshClientAndEnvironment(attempt, RefreshMode.INITIALIZATION)
+          }
           startTokenRefresh()
         }
       }
@@ -471,6 +473,9 @@ internal class ConfigurationManager {
       SSOService.hasPendingExternalAccountConnection() ||
       HostedAuthService.hasPendingAuthentication()
   }
+
+  internal fun shouldRefreshOnForeground(options: ClerkConfigurationOptions?): Boolean =
+    options?.autoRefreshOnForeground != false
 
   private suspend fun refreshClientAndEnvironment(
     attempt: RefreshAttempt,
