@@ -194,13 +194,18 @@ fun UserProfileView(
                   )
                 },
             )
-            Box(
-              modifier =
-                Modifier.fillMaxSize()
-                  .zIndex(if (detailProgress == 0f) 0f else 1f)
-                  .clerkNavigationForwardEnterTransform(detailProgress, detailAlpha)
-            ) {
-              UserProfileDetailViewWithBackHandler(onBackPressed = { showDetail = false })
+            if (showDetail || detailProgress > 0f) {
+              Box(
+                modifier =
+                  Modifier.fillMaxSize()
+                    .zIndex(1f)
+                    .clerkNavigationForwardEnterTransform(
+                      detailProgress,
+                      if (showDetail) 1f else detailAlpha,
+                    )
+              ) {
+                UserProfileDetailViewWithBackHandler(onBackPressed = { showDetail = false })
+              }
             }
           }
           BackHandler(enabled = showDetail) { showDetail = false }
