@@ -1299,9 +1299,34 @@ data class ClerkConfigurationOptions(
   val customHeaders: Map<String, String>
     get() = _customHeaders
 
+  private var _autoRefreshOnForeground: Boolean = true
+
+  /**
+   * Whether the client and environment are refreshed from the server every time the app returns to
+   * the foreground. Defaults to `true`.
+   */
+  val autoRefreshOnForeground: Boolean
+    get() = _autoRefreshOnForeground
+
   /** Returns a copy of these options with additional outgoing request headers configured. */
   fun withCustomHeaders(customHeaders: Map<String, String>): ClerkConfigurationOptions =
-    copy().also { it._customHeaders = customHeaders.toMap() }
+    copyWithNonConstructorState().also { it._customHeaders = customHeaders.toMap() }
+
+  /**
+   * Returns a copy of these options that skips the client and environment refresh on app
+   * foreground. Intended for host SDKs (for example, the Expo SDK) that own client state and
+   * perform their own refreshes; the initial refresh during [Clerk.initialize] and periodic session
+   * token refresh are unaffected.
+   */
+  @FrameworkIntegrationApi
+  fun withForegroundRefreshDisabled(): ClerkConfigurationOptions =
+    copyWithNonConstructorState().also { it._autoRefreshOnForeground = false }
+
+  private fun copyWithNonConstructorState(): ClerkConfigurationOptions =
+    copy().also {
+      it._customHeaders = _customHeaders
+      it._autoRefreshOnForeground = _autoRefreshOnForeground
+    }
 }
 
 /**
