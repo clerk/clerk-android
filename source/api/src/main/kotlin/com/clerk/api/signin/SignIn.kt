@@ -30,8 +30,12 @@ import com.clerk.api.sso.SSOService
 import com.clerk.api.trusteddevice.TrustedDevices
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 /**
  * The `SignIn` object holds the state of the current sign-in process and provides helper methods to
@@ -64,6 +68,7 @@ import kotlinx.serialization.Serializable
  *
  * @property id Unique identifier for this sign in.
  * @property status The status of the current sign-in.
+ * @property statusRawValue The status value exactly as returned by the Clerk API.
  * @property supportedIdentifiers Array of all the authentication identifiers that are supported for
  *   this sign in.
  * @property identifier The authentication identifier value for the current sign-in.
@@ -79,8 +84,10 @@ import kotlinx.serialization.Serializable
  * @property createdSessionId The identifier of the session that was created upon completion of the
  *   current sign-in.
  */
-@Serializable
-data class SignIn(
+@Serializable(with = SignInSerializer::class)
+@ConsistentCopyVisibility
+data class SignIn
+private constructor(
   /** Unique identifier for this sign in. */
   val id: String,
 
@@ -139,7 +146,61 @@ data class SignIn(
    * The value of this property is null if the sign-in status is not `complete`.
    */
   @SerialName("created_session_id") val createdSessionId: String? = null,
+
+  /** The status value exactly as returned by the Clerk API. */
+  val statusRawValue: String,
 ) {
+
+  constructor(
+    id: String,
+    status: Status = Status.UNKNOWN,
+    supportedIdentifiers: List<String>? = null,
+    identifier: String? = null,
+    supportedFirstFactors: List<Factor>? = null,
+    supportedSecondFactors: List<Factor>? = null,
+    firstFactorVerification: Verification? = null,
+    secondFactorVerification: Verification? = null,
+    userData: UserData? = null,
+    createdSessionId: String? = null,
+  ) : this(
+    id = id,
+    status = status,
+    supportedIdentifiers = supportedIdentifiers,
+    identifier = identifier,
+    supportedFirstFactors = supportedFirstFactors,
+    supportedSecondFactors = supportedSecondFactors,
+    firstFactorVerification = firstFactorVerification,
+    secondFactorVerification = secondFactorVerification,
+    userData = userData,
+    createdSessionId = createdSessionId,
+    statusRawValue = status.serializedValue,
+  )
+
+  fun copy(
+    id: String = this.id,
+    status: Status = this.status,
+    supportedIdentifiers: List<String>? = this.supportedIdentifiers,
+    identifier: String? = this.identifier,
+    supportedFirstFactors: List<Factor>? = this.supportedFirstFactors,
+    supportedSecondFactors: List<Factor>? = this.supportedSecondFactors,
+    firstFactorVerification: Verification? = this.firstFactorVerification,
+    secondFactorVerification: Verification? = this.secondFactorVerification,
+    userData: UserData? = this.userData,
+    createdSessionId: String? = this.createdSessionId,
+  ): SignIn =
+    SignIn(
+      id = id,
+      status = status,
+      supportedIdentifiers = supportedIdentifiers,
+      identifier = identifier,
+      supportedFirstFactors = supportedFirstFactors,
+      supportedSecondFactors = supportedSecondFactors,
+      firstFactorVerification = firstFactorVerification,
+      secondFactorVerification = secondFactorVerification,
+      userData = userData,
+      createdSessionId = createdSessionId,
+      statusRawValue = if (status == this.status) statusRawValue else status.serializedValue,
+    )
 
   /**
    * An object containing information about the user of the current sign-in. This property is
@@ -195,7 +256,32 @@ data class SignIn(
     @SerialName("needs_client_trust") NEEDS_CLIENT_TRUST,
 
     /** The sign-in process is in an unknown state. */
-    UNKNOWN,
+    UNKNOWN;
+
+    internal val serializedValue: String
+      get() =
+        when (this) {
+          COMPLETE -> "complete"
+          NEEDS_FIRST_FACTOR -> "needs_first_factor"
+          NEEDS_SECOND_FACTOR -> "needs_second_factor"
+          NEEDS_IDENTIFIER -> "needs_identifier"
+          NEEDS_NEW_PASSWORD -> "needs_new_password"
+          NEEDS_CLIENT_TRUST -> "needs_client_trust"
+          UNKNOWN -> "unknown"
+        }
+
+    internal companion object {
+      fun fromSerializedValue(value: String): Status =
+        when (value) {
+          "complete" -> COMPLETE
+          "needs_first_factor" -> NEEDS_FIRST_FACTOR
+          "needs_second_factor" -> NEEDS_SECOND_FACTOR
+          "needs_identifier" -> NEEDS_IDENTIFIER
+          "needs_new_password" -> NEEDS_NEW_PASSWORD
+          "needs_client_trust" -> NEEDS_CLIENT_TRUST
+          else -> UNKNOWN
+        }
+    }
   }
 
   /**
@@ -649,6 +735,21 @@ data class SignIn(
   }
 
   companion object {
+    internal fun fromPayload(payload: SignInPayload): SignIn =
+      SignIn(
+        id = payload.id,
+        status = Status.fromSerializedValue(payload.status),
+        supportedIdentifiers = payload.supportedIdentifiers,
+        identifier = payload.identifier,
+        supportedFirstFactors = payload.supportedFirstFactors,
+        supportedSecondFactors = payload.supportedSecondFactors,
+        firstFactorVerification = payload.firstFactorVerification,
+        secondFactorVerification = payload.secondFactorVerification,
+        userData = payload.userData,
+        createdSessionId = payload.createdSessionId,
+        statusRawValue = payload.status,
+      )
+
     /**
      * Starts the sign in process.
      *
@@ -775,6 +876,48 @@ data class SignIn(
         credentialTypes = credentialTypes
       )
     }
+  }
+}
+
+@Serializable
+internal data class SignInPayload(
+  val id: String,
+  val status: String = "unknown",
+  @SerialName("supported_identifiers") val supportedIdentifiers: List<String>? = null,
+  val identifier: String? = null,
+  @SerialName("supported_first_factors") val supportedFirstFactors: List<Factor>? = null,
+  @SerialName("supported_second_factors") val supportedSecondFactors: List<Factor>? = null,
+  @SerialName("first_factor_verification") val firstFactorVerification: Verification? = null,
+  @SerialName("second_factor_verification") val secondFactorVerification: Verification? = null,
+  @SerialName("user_data") val userData: SignIn.UserData? = null,
+  @SerialName("created_session_id") val createdSessionId: String? = null,
+)
+
+internal object SignInSerializer : KSerializer<SignIn> {
+  override val descriptor: SerialDescriptor =
+    SerialDescriptor("com.clerk.api.signin.SignIn", SignInPayload.serializer().descriptor)
+
+  override fun serialize(encoder: Encoder, value: SignIn) {
+    encoder.encodeSerializableValue(
+      SignInPayload.serializer(),
+      SignInPayload(
+        id = value.id,
+        status = value.statusRawValue,
+        supportedIdentifiers = value.supportedIdentifiers,
+        identifier = value.identifier,
+        supportedFirstFactors = value.supportedFirstFactors,
+        supportedSecondFactors = value.supportedSecondFactors,
+        firstFactorVerification = value.firstFactorVerification,
+        secondFactorVerification = value.secondFactorVerification,
+        userData = value.userData,
+        createdSessionId = value.createdSessionId,
+      ),
+    )
+  }
+
+  override fun deserialize(decoder: Decoder): SignIn {
+    val payload = decoder.decodeSerializableValue(SignInPayload.serializer())
+    return SignIn.fromPayload(payload)
   }
 }
 

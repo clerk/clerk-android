@@ -5,12 +5,21 @@ import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.verification.Verification
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TrustedDeviceSerializationTest {
+
+  @Test
+  fun `serializer preserves the public descriptor name`() {
+    assertEquals(
+      "com.clerk.api.trusteddevice.TrustedDevice",
+      TrustedDevice.serializer().descriptor.serialName,
+    )
+  }
 
   @Test
   fun `trusted device decodes from snake_case json`() {
@@ -36,10 +45,12 @@ class TrustedDeviceSerializationTest {
 
     assertEquals("td_123", trustedDevice.id)
     assertEquals(TrustedDevice.Platform.ANDROID, trustedDevice.platform)
+    assertEquals("android", trustedDevice.platformRawValue)
     assertEquals("com.example.app", trustedDevice.appIdentifier)
     assertEquals("Pixel 9", trustedDevice.name)
     assertEquals("ES256", trustedDevice.algorithm)
     assertEquals(TrustedDevice.Status.ACTIVE, trustedDevice.status)
+    assertEquals("active", trustedDevice.statusRawValue)
     assertEquals(1720000000000, trustedDevice.createdAt)
     assertEquals(1720000001000, trustedDevice.updatedAt)
     assertEquals(1720000002000L, trustedDevice.lastUsedAt)
@@ -47,7 +58,7 @@ class TrustedDeviceSerializationTest {
   }
 
   @Test
-  fun `trusted device coerces unknown platform and status`() {
+  fun `trusted device preserves unknown platform and status values`() {
     val json =
       """
       {
@@ -66,6 +77,23 @@ class TrustedDeviceSerializationTest {
 
     assertEquals(TrustedDevice.Platform.UNKNOWN, trustedDevice.platform)
     assertEquals(TrustedDevice.Status.UNKNOWN, trustedDevice.status)
+    assertEquals("vision_pro", trustedDevice.platformRawValue)
+    assertEquals("paused", trustedDevice.statusRawValue)
+
+    val copied = trustedDevice.copy(name = "Updated device")
+    val encodedCopy = ClerkApi.json.encodeToString(TrustedDevice.serializer(), copied)
+    val decodedCopy = ClerkApi.json.decodeFromString<TrustedDevice>(encodedCopy)
+
+    assertEquals("Updated device", decodedCopy.name)
+    assertEquals("vision_pro", decodedCopy.platformRawValue)
+    assertEquals("paused", decodedCopy.statusRawValue)
+
+    val otherPlatform =
+      ClerkApi.json.decodeFromString<TrustedDevice>(json.replace("vision_pro", "visionos"))
+    val otherStatus =
+      ClerkApi.json.decodeFromString<TrustedDevice>(json.replace("paused", "suspended"))
+    assertNotEquals(trustedDevice, otherPlatform)
+    assertNotEquals(trustedDevice, otherStatus)
   }
 
   @Test
