@@ -236,51 +236,33 @@ private constructor(
    * Each status indicates the current state of the sign-in flow and what action is required next.
    */
   @Serializable
-  enum class Status {
+  enum class Status(internal val serializedValue: String) {
     /** The sign-in process is complete. */
-    @SerialName("complete") COMPLETE,
+    @SerialName("complete") COMPLETE("complete"),
 
     /** The sign-in process needs a first factor verification. */
-    @SerialName("needs_first_factor") NEEDS_FIRST_FACTOR,
+    @SerialName("needs_first_factor") NEEDS_FIRST_FACTOR("needs_first_factor"),
 
     /** The sign-in process needs a second factor verification. */
-    @SerialName("needs_second_factor") NEEDS_SECOND_FACTOR,
+    @SerialName("needs_second_factor") NEEDS_SECOND_FACTOR("needs_second_factor"),
 
     /** The sign-in process needs an identifier. */
-    @SerialName("needs_identifier") NEEDS_IDENTIFIER,
+    @SerialName("needs_identifier") NEEDS_IDENTIFIER("needs_identifier"),
 
     /** The user needs to create a new password. */
-    @SerialName("needs_new_password") NEEDS_NEW_PASSWORD,
+    @SerialName("needs_new_password") NEEDS_NEW_PASSWORD("needs_new_password"),
 
     /** Device trust verification is required. */
-    @SerialName("needs_client_trust") NEEDS_CLIENT_TRUST,
+    @SerialName("needs_client_trust") NEEDS_CLIENT_TRUST("needs_client_trust"),
 
     /** The sign-in process is in an unknown state. */
-    UNKNOWN;
-
-    internal val serializedValue: String
-      get() =
-        when (this) {
-          COMPLETE -> "complete"
-          NEEDS_FIRST_FACTOR -> "needs_first_factor"
-          NEEDS_SECOND_FACTOR -> "needs_second_factor"
-          NEEDS_IDENTIFIER -> "needs_identifier"
-          NEEDS_NEW_PASSWORD -> "needs_new_password"
-          NEEDS_CLIENT_TRUST -> "needs_client_trust"
-          UNKNOWN -> "unknown"
-        }
+    UNKNOWN("unknown");
 
     internal companion object {
-      fun fromSerializedValue(value: String): Status =
-        when (value) {
-          "complete" -> COMPLETE
-          "needs_first_factor" -> NEEDS_FIRST_FACTOR
-          "needs_second_factor" -> NEEDS_SECOND_FACTOR
-          "needs_identifier" -> NEEDS_IDENTIFIER
-          "needs_new_password" -> NEEDS_NEW_PASSWORD
-          "needs_client_trust" -> NEEDS_CLIENT_TRUST
-          else -> UNKNOWN
-        }
+      private val entriesBySerializedValue: Map<String, Status> =
+        entries.associateBy(Status::serializedValue)
+
+      fun fromSerializedValue(value: String): Status = entriesBySerializedValue[value] ?: UNKNOWN
     }
   }
 

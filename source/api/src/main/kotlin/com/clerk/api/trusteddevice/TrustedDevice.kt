@@ -123,51 +123,31 @@ private constructor(
 
   /** The platform a trusted-device credential belongs to. */
   @Serializable
-  enum class Platform {
-    @SerialName("ios") IOS,
-    @SerialName("android") ANDROID,
-    UNKNOWN;
-
-    internal val serializedValue: String
-      get() =
-        when (this) {
-          IOS -> "ios"
-          ANDROID -> "android"
-          UNKNOWN -> "unknown"
-        }
+  enum class Platform(internal val serializedValue: String) {
+    @SerialName("ios") IOS("ios"),
+    @SerialName("android") ANDROID("android"),
+    UNKNOWN("unknown");
 
     internal companion object {
-      fun fromSerializedValue(value: String): Platform =
-        when (value) {
-          "ios" -> IOS
-          "android" -> ANDROID
-          else -> UNKNOWN
-        }
+      private val entriesBySerializedValue: Map<String, Platform> =
+        entries.associateBy(Platform::serializedValue)
+
+      fun fromSerializedValue(value: String): Platform = entriesBySerializedValue[value] ?: UNKNOWN
     }
   }
 
   /** The server-side trusted-device credential status. */
   @Serializable
-  enum class Status {
-    @SerialName("active") ACTIVE,
-    @SerialName("revoked") REVOKED,
-    UNKNOWN;
-
-    internal val serializedValue: String
-      get() =
-        when (this) {
-          ACTIVE -> "active"
-          REVOKED -> "revoked"
-          UNKNOWN -> "unknown"
-        }
+  enum class Status(internal val serializedValue: String) {
+    @SerialName("active") ACTIVE("active"),
+    @SerialName("revoked") REVOKED("revoked"),
+    UNKNOWN("unknown");
 
     internal companion object {
-      fun fromSerializedValue(value: String): Status =
-        when (value) {
-          "active" -> ACTIVE
-          "revoked" -> REVOKED
-          else -> UNKNOWN
-        }
+      private val entriesBySerializedValue: Map<String, Status> =
+        entries.associateBy(Status::serializedValue)
+
+      fun fromSerializedValue(value: String): Status = entriesBySerializedValue[value] ?: UNKNOWN
     }
   }
 
