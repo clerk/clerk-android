@@ -82,6 +82,7 @@ class ClerkTest {
     every { mockEnvironment.userSettings } returns mockUserSettings
     every { mockDisplayConfig.logoImageUrl } returns "https://example.com/logo.png"
     every { mockDisplayConfig.applicationName } returns "Test App"
+    every { mockDisplayConfig.supportEmail } returns null
     every { mockUserSettings.social } returns emptyMap()
     every { mockEnvironment.passkeyIsEnabled } returns false
     every { mockEnvironment.mfaIsEnabled } returns false
@@ -134,6 +135,7 @@ class ClerkTest {
         every { uninitializedEnvironment.userSettings } returns uninitializedUserSettings
         every { uninitializedDisplayConfig.logoImageUrl } returns ""
         every { uninitializedDisplayConfig.applicationName } returns ""
+        every { uninitializedDisplayConfig.supportEmail } returns null
         every { uninitializedUserSettings.social } returns emptyMap()
         every { uninitializedEnvironment.passkeyIsEnabled } returns false
         every { uninitializedEnvironment.mfaIsEnabled } returns false
@@ -193,6 +195,7 @@ class ClerkTest {
     every { uninitializedEnvironment.userSettings } returns uninitializedUserSettings
     every { uninitializedDisplayConfig.logoImageUrl } returns ""
     every { uninitializedDisplayConfig.applicationName } returns ""
+    every { uninitializedDisplayConfig.supportEmail } returns null
     every { uninitializedUserSettings.social } returns emptyMap()
     every { uninitializedEnvironment.passkeyIsEnabled } returns false
     every { uninitializedEnvironment.emailIsEnabled } returns false
@@ -527,6 +530,25 @@ class ClerkTest {
 
     // Then
     assertEquals(expectedAppName, applicationName)
+  }
+
+  @Test
+  fun `supportEmail returns configured address when environment is initialized`() = runTest {
+    val expectedSupportEmail = "help@example.com"
+    every { mockDisplayConfig.supportEmail } returns expectedSupportEmail
+    initializeClerkWithEnvironment()
+
+    val supportEmail = Clerk.supportEmail
+
+    assertEquals(expectedSupportEmail, supportEmail)
+  }
+
+  @Test
+  fun `supportEmail ignores blank configured address`() = runTest {
+    every { mockDisplayConfig.supportEmail } returns ""
+    initializeClerkWithEnvironment()
+
+    assertNull(Clerk.supportEmail)
   }
 
   @Test

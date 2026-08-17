@@ -242,6 +242,15 @@ object Clerk {
     get() = environment?.displayConfig?.applicationName
 
   /**
+   * The support email address configured for this application in the Clerk Dashboard.
+   *
+   * Prebuilt UI components use this address when directing users to contact support. Returns `null`
+   * if the SDK is not initialized or no support email is configured.
+   */
+  val supportEmail: String?
+    get() = environment?.displayConfig?.supportEmail?.takeIf { it.isNotBlank() }
+
+  /**
    * The current version of the Clerk Android SDK.
    *
    * @return A string representing the semantic version of the SDK (e.g., "1.0.0").
