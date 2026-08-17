@@ -94,7 +94,7 @@
   <div class="breadcrumbs"><a href="../../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="../index.html">com.clerk.api.signin</a><span class="delimiter">/</span><span class="current">SignIn</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Sign</span><wbr><span><span>In</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">SignIn</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>id<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>status<span class="token operator">: </span><a href="-status/index.html">SignIn.Status</a><span class="token operator"> = </span>Status.UNKNOWN<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>supportedIdentifiers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>identifier<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>supportedFirstFactors<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../com.clerk.api.network.model.factor/-factor/index.html">Factor</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>supportedSecondFactors<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../com.clerk.api.network.model.factor/-factor/index.html">Factor</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>firstFactorVerification<span class="token operator">: </span><a href="../../com.clerk.api.network.model.verification/-verification/index.html">Verification</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>secondFactorVerification<span class="token operator">: </span><a href="../../com.clerk.api.network.model.verification/-verification/index.html">Verification</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>userData<span class="token operator">: </span><a href="-user-data/index.html">SignIn.UserData</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>createdSessionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><p class="paragraph">The <code class="lang-kotlin">SignIn</code> object holds the state of the current sign-in process and provides helper methods to navigate and complete the sign-in lifecycle. This includes managing the first and second factor verifications, as well as creating a new session.</p><h2 class="">The sign-in process follows these steps:</h2><ol><li><p class="paragraph"><strong>Initiate the Sign-In Process</strong></p><p class="paragraph"> Collect the user's authentication information and pass the appropriate parameters to the     SignIn.create method to start the sign-in.</p></li><li><p class="paragraph"><strong>Prepare for First Factor Verification</strong></p><p class="paragraph"> Users <strong>must</strong> complete a first factor verification. This can include:</p></li><ul><li><p class="paragraph">Providing a password</p></li><li><p class="paragraph">Using an email link</p></li><li><p class="paragraph">Entering a one-time code (OTP)</p></li><li><p class="paragraph">Authenticating with a Web3 wallet address</p></li><li><p class="paragraph">Providing proof of identity through an external social account (SSO/OAuth).</p></li></ul><li><p class="paragraph"><strong>Complete First Factor Verification</strong></p><p class="paragraph"> Attempt to verify the user's first factor authentication details.</p></li><li><p class="paragraph"><strong>Prepare for Second Factor Verification (Optional)</strong></p><p class="paragraph"> If multi-factor authentication (MFA) is enabled for your application, prepare the second     factor verification for users who have set up 2FA for their account.</p></li><li><p class="paragraph"><strong>Complete Second Factor Verification</strong></p><p class="paragraph"> Attempt to verify the user's second factor authentication details if MFA is required.</p></li></ol></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span><span class="token punctuation">(</span><span>with<span class="token operator"> = </span><a href="../../../../source/api/com.clerk.api.signin/-sign-in-serializer/index.html">SignInSerializer::class</a></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">SignIn</a></div><p class="paragraph">The <code class="lang-kotlin">SignIn</code> object holds the state of the current sign-in process and provides helper methods to navigate and complete the sign-in lifecycle. This includes managing the first and second factor verifications, as well as creating a new session.</p><h2 class="">The sign-in process follows these steps:</h2><ol><li><p class="paragraph"><strong>Initiate the Sign-In Process</strong></p><p class="paragraph"> Collect the user's authentication information and pass the appropriate parameters to the     SignIn.create method to start the sign-in.</p></li><li><p class="paragraph"><strong>Prepare for First Factor Verification</strong></p><p class="paragraph"> Users <strong>must</strong> complete a first factor verification. This can include:</p></li><ul><li><p class="paragraph">Providing a password</p></li><li><p class="paragraph">Using an email link</p></li><li><p class="paragraph">Entering a one-time code (OTP)</p></li><li><p class="paragraph">Authenticating with a Web3 wallet address</p></li><li><p class="paragraph">Providing proof of identity through an external social account (SSO/OAuth).</p></li></ul><li><p class="paragraph"><strong>Complete First Factor Verification</strong></p><p class="paragraph"> Attempt to verify the user's first factor authentication details.</p></li><li><p class="paragraph"><strong>Prepare for Second Factor Verification (Optional)</strong></p><p class="paragraph"> If multi-factor authentication (MFA) is enabled for your application, prepare the second     factor verification for users who have set up 2FA for their account.</p></li><li><p class="paragraph"><strong>Complete Second Factor Verification</strong></p><p class="paragraph"> Attempt to verify the user's second factor authentication details if MFA is required.</p></li></ol></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
@@ -439,6 +439,21 @@
               </div>
             </div>
           </div>
+<a data-name="1754005288%2FProperties%2F-1784893667" anchor-label="statusRawValue" id="1754005288%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="status-raw-value.html"><span>status</span><wbr><span>Raw</span><wbr><span><span>Value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1754005288%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="status-raw-value.html">statusRawValue</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The status value exactly as returned by the Clerk API.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
 <a data-name="1941402613%2FProperties%2F-1784893667" anchor-label="supportedFirstFactors" id="1941402613%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
           <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
@@ -501,10 +516,10 @@
           </div>
         </div>
       </div>
-      <div data-togglable="EXTENSION_FUNCTION">
+      <div data-togglable="FUNCTION">
         <h2 class="tableheader">Functions</h2>
         <div class="table"><a data-name="1703149032%2FFunctions%2F-1784893667" anchor-label="alternativeFirstFactors" id="1703149032%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../alternative-first-factors.html"><span>alternative</span><wbr><span>First</span><wbr><span><span>Factors</span></span></a></div>
@@ -519,7 +534,7 @@
             </div>
           </div>
 <a data-name="1695297185%2FFunctions%2F-1784893667" anchor-label="alternativeSecondFactors" id="1695297185%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../alternative-second-factors.html"><span>alternative</span><wbr><span>Second</span><wbr><span><span>Factors</span></span></a></div>
@@ -534,7 +549,7 @@
             </div>
           </div>
 <a data-name="-1533833777%2FFunctions%2F-1784893667" anchor-label="attemptFirstFactor" id="-1533833777%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../attempt-first-factor.html"><span>attempt</span><wbr><span>First</span><wbr><span><span>Factor</span></span></a></div>
@@ -549,7 +564,7 @@
             </div>
           </div>
 <a data-name="-647686689%2FFunctions%2F-1784893667" anchor-label="attemptSecondFactor" id="-647686689%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../attempt-second-factor.html"><span>attempt</span><wbr><span>Second</span><wbr><span><span>Factor</span></span></a></div>
@@ -564,7 +579,7 @@
             </div>
           </div>
 <a data-name="-1773714040%2FFunctions%2F-1784893667" anchor-label="authenticateWithPreparedRedirect" id="-1773714040%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../authenticate-with-prepared-redirect.html"><span>authenticate</span><wbr><span>With</span><wbr><span>Prepared</span><wbr><span><span>Redirect</span></span></a></div>
@@ -578,8 +593,23 @@
               </div>
             </div>
           </div>
-<a data-name="1340573612%2FFunctions%2F-1784893667" anchor-label="get" id="1340573612%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
+<a data-name="583737874%2FFunctions%2F-1784893667" anchor-label="copy" id="583737874%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
           <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="copy.html"><span><span>copy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="583737874%2FFunctions%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="copy.html"><span class="token function">copy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator"> = </span>this.id<span class="token punctuation">, </span></span><span class="parameter ">status<span class="token operator">: </span><a href="-status/index.html">SignIn.Status</a><span class="token operator"> = </span>this.status<span class="token punctuation">, </span></span><span class="parameter ">supportedIdentifiers<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>this.supportedIdentifiers<span class="token punctuation">, </span></span><span class="parameter ">identifier<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>this.identifier<span class="token punctuation">, </span></span><span class="parameter ">supportedFirstFactors<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../com.clerk.api.network.model.factor/-factor/index.html">Factor</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>this.supportedFirstFactors<span class="token punctuation">, </span></span><span class="parameter ">supportedSecondFactors<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../com.clerk.api.network.model.factor/-factor/index.html">Factor</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>this.supportedSecondFactors<span class="token punctuation">, </span></span><span class="parameter ">firstFactorVerification<span class="token operator">: </span><a href="../../com.clerk.api.network.model.verification/-verification/index.html">Verification</a><span class="token operator">?</span><span class="token operator"> = </span>this.firstFactorVerification<span class="token punctuation">, </span></span><span class="parameter ">secondFactorVerification<span class="token operator">: </span><a href="../../com.clerk.api.network.model.verification/-verification/index.html">Verification</a><span class="token operator">?</span><span class="token operator"> = </span>this.secondFactorVerification<span class="token punctuation">, </span></span><span class="parameter ">userData<span class="token operator">: </span><a href="-user-data/index.html">SignIn.UserData</a><span class="token operator">?</span><span class="token operator"> = </span>this.userData<span class="token punctuation">, </span></span><span class="parameter ">createdSessionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>this.createdSessionId</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">SignIn</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1340573612%2FFunctions%2F-1784893667" anchor-label="get" id="1340573612%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../get.html"><span><span>get</span></span></a></div>
@@ -594,7 +624,7 @@
             </div>
           </div>
 <a data-name="-1937560620%2FFunctions%2F-1784893667" anchor-label="identifyingFirstFactor" id="-1937560620%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../../com.clerk.api/identifying-first-factor.html"><span>identifying</span><wbr><span>First</span><wbr><span><span>Factor</span></span></a></div>
@@ -609,7 +639,7 @@
             </div>
           </div>
 <a data-name="1246287247%2FFunctions%2F-1784893667" anchor-label="prepareFirstFactor" id="1246287247%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../prepare-first-factor.html"><span>prepare</span><wbr><span>First</span><wbr><span><span>Factor</span></span></a></div>
@@ -624,7 +654,7 @@
             </div>
           </div>
 <a data-name="1718194622%2FFunctions%2F-1784893667" anchor-label="prepareSecondFactor" id="1718194622%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../prepare-second-factor.html"><span>prepare</span><wbr><span>Second</span><wbr><span><span>Factor</span></span></a></div>
@@ -639,7 +669,7 @@
             </div>
           </div>
 <a data-name="-2147049113%2FFunctions%2F-1784893667" anchor-label="reload" id="-2147049113%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../reload.html"><span><span>reload</span></span></a></div>
@@ -654,7 +684,7 @@
             </div>
           </div>
 <a data-name="57284929%2FFunctions%2F-1784893667" anchor-label="resetPassword" id="57284929%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../reset-password.html"><span>reset</span><wbr><span><span>Password</span></span></a></div>
@@ -669,7 +699,7 @@
             </div>
           </div>
 <a data-name="582559603%2FFunctions%2F-1784893667" anchor-label="sendCode" id="582559603%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../send-code.html"><span>send</span><wbr><span><span>Code</span></span></a></div>
@@ -684,7 +714,7 @@
             </div>
           </div>
 <a data-name="-452235881%2FFunctions%2F-1784893667" anchor-label="sendEmailCode" id="-452235881%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../send-email-code.html"><span>send</span><wbr><span>Email</span><wbr><span><span>Code</span></span></a></div>
@@ -699,7 +729,7 @@
             </div>
           </div>
 <a data-name="2145007716%2FFunctions%2F-1784893667" anchor-label="sendEmailLink" id="2145007716%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../send-email-link.html"><span>send</span><wbr><span>Email</span><wbr><span><span>Link</span></span></a></div>
@@ -714,7 +744,7 @@
             </div>
           </div>
 <a data-name="1693304599%2FFunctions%2F-1784893667" anchor-label="sendMfaEmailCode" id="1693304599%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../send-mfa-email-code.html"><span>send</span><wbr><span>Mfa</span><wbr><span>Email</span><wbr><span><span>Code</span></span></a></div>
@@ -729,7 +759,7 @@
             </div>
           </div>
 <a data-name="1360986985%2FFunctions%2F-1784893667" anchor-label="sendMfaPhoneCode" id="1360986985%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../send-mfa-phone-code.html"><span>send</span><wbr><span>Mfa</span><wbr><span>Phone</span><wbr><span><span>Code</span></span></a></div>
@@ -744,7 +774,7 @@
             </div>
           </div>
 <a data-name="-784553495%2FFunctions%2F-1784893667" anchor-label="sendPhoneCode" id="-784553495%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../send-phone-code.html"><span>send</span><wbr><span>Phone</span><wbr><span><span>Code</span></span></a></div>
@@ -759,7 +789,7 @@
             </div>
           </div>
 <a data-name="-519259887%2FFunctions%2F-1784893667" anchor-label="sendResetPasswordCode" id="-519259887%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../send-reset-password-code.html"><span>send</span><wbr><span>Reset</span><wbr><span>Password</span><wbr><span><span>Code</span></span></a></div>
@@ -774,7 +804,7 @@
             </div>
           </div>
 <a data-name="687395887%2FFunctions%2F-1784893667" anchor-label="verifyCode" id="687395887%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../verify-code.html"><span>verify</span><wbr><span><span>Code</span></span></a></div>
@@ -789,7 +819,7 @@
             </div>
           </div>
 <a data-name="1302916941%2FFunctions%2F-1784893667" anchor-label="verifyMfaCode" id="1302916941%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../verify-mfa-code.html"><span>verify</span><wbr><span>Mfa</span><wbr><span><span>Code</span></span></a></div>
@@ -804,7 +834,7 @@
             </div>
           </div>
 <a data-name="1533381822%2FFunctions%2F-1784893667" anchor-label="verifyWithPasskey" id="1533381822%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../verify-with-passkey.html"><span>verify</span><wbr><span>With</span><wbr><span><span>Passkey</span></span></a></div>
@@ -819,7 +849,7 @@
             </div>
           </div>
 <a data-name="1021972507%2FFunctions%2F-1784893667" anchor-label="verifyWithPassword" id="1021972507%2FFunctions%2F-1784893667" data-filterable-set=":source:api/release"></a>
-          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+          <div class="table-row table-row_content" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../verify-with-password.html"><span>verify</span><wbr><span>With</span><wbr><span><span>Password</span></span></a></div>
