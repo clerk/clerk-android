@@ -9,6 +9,7 @@ import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
 import com.clerk.ui.auth.AuthenticationViewState
+import com.clerk.ui.auth.isSSOCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -33,7 +34,14 @@ internal class AlternativeMethodsViewModel : ViewModel() {
               ResultType.UNKNOWN -> AuthenticationViewState.Error("Unknown result type")
             }
         }
-        .onFailure { _state.value = AuthenticationViewState.Error(it.errorMessage) }
+        .onFailure {
+          _state.value =
+            if (it.isSSOCancellation) {
+              AuthenticationViewState.NotStarted
+            } else {
+              AuthenticationViewState.Error(it.errorMessage)
+            }
+        }
     }
   }
 

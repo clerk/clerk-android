@@ -19,7 +19,6 @@ import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
-import com.clerk.api.sso.SSOCancellationException
 import com.clerk.api.trusteddevice.TrustedDeviceKeyManagerException
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
@@ -488,9 +487,6 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
 
 private fun SignIn.requiresEnterpriseSSO(): Boolean =
   startingFirstFactor?.strategy == "enterprise_sso"
-
-private val ClerkResult.Failure<*>.isSSOCancellation: Boolean
-  get() = throwable is SSOCancellationException
 
 internal val ClerkResult.Failure<*>.isTrustedDeviceCancellation: Boolean
   get() =

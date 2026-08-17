@@ -1,9 +1,11 @@
 package com.clerk.ui.auth
 
 import com.clerk.api.Clerk
+import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
+import com.clerk.api.sso.SSOCancellationException
 import com.clerk.ui.signin.code.VerificationState
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -34,6 +36,9 @@ internal sealed interface AuthenticationViewState {
 
   data class Error(val message: String?) : AuthenticationViewState
 }
+
+internal val ClerkResult.Failure<*>.isSSOCancellation: Boolean
+  get() = throwable is SSOCancellationException
 
 /** States for the code verification text, since it's not 1:1 with the view model states. */
 internal sealed interface VerificationUiState {

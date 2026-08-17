@@ -11,20 +11,24 @@ import com.clerk.api.resetPasswordFactor
 import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
+import com.clerk.ui.auth.isSSOCancellation
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-internal class ForgotPasswordViewModel : ViewModel() {
+internal class ForgotPasswordViewModel(
+  private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : ViewModel() {
 
   private val _state = MutableStateFlow<ResetPasswordViewState>(ResetPasswordViewState.Idle)
   val state = _state.asStateFlow()
 
   fun signInWithProvider(provider: OAuthProvider, transferable: Boolean = true) {
     _state.value = ResetPasswordViewState.Loading
-    viewModelScope.launch(Dispatchers.IO) {
+    viewModelScope.launch(ioDispatcher) {
       SignIn.authenticateWithRedirect(
           SignIn.AuthenticateWithRedirectParams.OAuth(provider),
           transferable = transferable,
@@ -40,7 +44,12 @@ internal class ForgotPasswordViewModel : ViewModel() {
         }
         .onFailure {
           withContext(Dispatchers.Main) {
-            _state.value = ResetPasswordViewState.Error(it.errorMessage)
+            _state.value =
+              if (it.isSSOCancellation) {
+                ResetPasswordViewState.NotStarted
+              } else {
+                ResetPasswordViewState.Error(it.errorMessage)
+              }
           }
         }
     }
