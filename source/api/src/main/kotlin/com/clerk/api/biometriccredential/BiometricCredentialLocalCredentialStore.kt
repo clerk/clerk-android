@@ -78,6 +78,7 @@ internal interface BiometricCredentialLocalCredentialStore {
 internal object DefaultBiometricCredentialLocalCredentialStore :
   BiometricCredentialLocalCredentialStore {
 
+  // Keep the trusted-device storage key so SDK upgrades can read existing enrollments.
   @Suppress("ReturnCount")
   override fun all(): List<BiometricCredentialLocalCredential> {
     val stored =
@@ -85,7 +86,7 @@ internal object DefaultBiometricCredentialLocalCredentialStore :
     val elements =
       runCatching { ClerkApi.json.parseToJsonElement(stored).jsonArray }
         .getOrElse {
-          ClerkLog.w("Biometric-credential credential metadata is malformed, clearing it.")
+          ClerkLog.w("Biometric credential metadata is malformed, clearing it.")
           deleteAll()
           return emptyList()
         }
@@ -134,6 +135,7 @@ internal object DefaultBiometricCredentialLocalCredentialStore :
 /** Persistent queue of user-scoped local credential cleanup work. */
 internal object BiometricCredentialPendingCleanupStore {
 
+  // Keep the trusted-device storage key so SDK upgrades can finish pending credential cleanup.
   fun all(): Set<String> {
     val stored =
       StorageHelper.loadValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)

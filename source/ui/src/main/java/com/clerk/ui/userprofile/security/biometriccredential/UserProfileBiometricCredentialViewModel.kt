@@ -61,15 +61,22 @@ internal class UserProfileBiometricCredentialViewModel(
     viewModelScope.launch(workDispatcher) {
       val failure =
         if (enabled) {
-          Clerk.biometricCredentials
-            .enroll(
-              identifierHint = Clerk.user?.biometricCredentialIdentifierHint,
-              promptTitle = promptTitle,
-              promptSubtitle = promptSubtitle,
-            )
-            .asFailureOrNull()
+          when (
+            val result =
+              Clerk.biometricCredentials.enroll(
+                identifierHint = Clerk.user?.biometricCredentialIdentifierHint,
+                promptTitle = promptTitle,
+                promptSubtitle = promptSubtitle,
+              )
+          ) {
+            is ClerkResult.Success -> null
+            is ClerkResult.Failure -> result
+          }
         } else {
-          Clerk.biometricCredentials.revokeCurrentDeviceCredential().asFailureOrNull()
+          when (val result = Clerk.biometricCredentials.revokeCurrentBiometricCredential()) {
+            is ClerkResult.Success -> null
+            is ClerkResult.Failure -> result
+          }
         }
 
       val availability = Clerk.biometricCredentials.currentUserAvailability()
@@ -94,9 +101,4 @@ internal class UserProfileBiometricCredentialViewModel(
     val isLoading: Boolean = false,
     val error: String? = null,
   )
-}
-
-private fun <T : Any> ClerkResult<T, com.clerk.api.network.model.error.ClerkErrorResponse>
-  .asFailureOrNull(): ClerkResult.Failure<com.clerk.api.network.model.error.ClerkErrorResponse>? {
-  return this as? ClerkResult.Failure
 }

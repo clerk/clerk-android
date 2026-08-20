@@ -46,7 +46,7 @@ class UserProfileBiometricCredentialViewModelTest {
             )
           }
         }
-      coEvery { BiometricCredentials.revokeCurrentDeviceCredential() } returns
+      coEvery { BiometricCredentials.revokeCurrentBiometricCredential() } returns
         ClerkResult.success(Unit)
       val viewModel = UserProfileBiometricCredentialViewModel(workDispatcher = dispatcher)
 

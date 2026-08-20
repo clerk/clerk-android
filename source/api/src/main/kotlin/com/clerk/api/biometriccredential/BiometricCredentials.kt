@@ -127,7 +127,7 @@ object BiometricCredentials {
   }
 
   /**
-   * Enrolls the current app installation as a biometric biometric credential.
+   * Enrolls the current app installation as a biometric credential.
    *
    * This requires an active or pending Clerk session. The generated private key stays on the
    * device.
@@ -216,7 +216,7 @@ object BiometricCredentials {
    *
    * @return A [ClerkResult] containing [Unit] on success, or a [ClerkErrorResponse] on failure.
    */
-  suspend fun revokeCurrentDeviceCredential(): ClerkResult<Unit, ClerkErrorResponse> {
+  suspend fun revokeCurrentBiometricCredential(): ClerkResult<Unit, ClerkErrorResponse> {
     if (Clerk.session?.status?.allowsBiometricCredentialEnrollment != true) {
       return clientFailure(
         "Unable to revoke a biometric credential without an active or pending Clerk session."
@@ -690,7 +690,7 @@ object BiometricCredentials {
 
     deleteLocalCredential(localCredential)
     return clientFailure(
-      "This device is no longer trusted. Sign in another way to enroll it again."
+      "Biometric sign-in is no longer set up on this device. Sign in another way to enable it again."
     )
   }
 
@@ -699,7 +699,11 @@ object BiometricCredentials {
       ClerkErrorResponse(
         errors =
           listOf(
-            Error(message = message, longMessage = message, code = "trusted_device_client_error")
+            Error(
+              message = message,
+              longMessage = message,
+              code = "biometric_credential_client_error",
+            )
           )
       )
     )

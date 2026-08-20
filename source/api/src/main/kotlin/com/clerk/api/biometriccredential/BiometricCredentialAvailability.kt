@@ -1,6 +1,6 @@
 package com.clerk.api.biometriccredential
 
-/** Local availability state for biometric biometric-credential sign-in. */
+/** Local availability state for biometric-credential sign-in. */
 sealed interface BiometricCredentialAvailability {
 
   /** Biometric-credential sign-in can be started with a local credential on this device. */
@@ -30,9 +30,6 @@ sealed interface BiometricCredentialAvailability {
 
     /** Biometric-credential sign-in is disabled for this instance. */
     FEATURE_DISABLED,
-
-    /** The device or OS version does not support biometric-credential sign-in. */
-    UNSUPPORTED_PLATFORM,
 
     /** Biometric authentication is not available or not enrolled on this device. */
     BIOMETRIC_AUTHENTICATION_UNAVAILABLE,

@@ -21,7 +21,7 @@ internal class BiometricCredentialEnrollmentViewModel : ViewModel() {
   val state: StateFlow<State> = _state.asStateFlow()
 
   /**
-   * Enrolls the current device as a biometric biometric credential.
+   * Enrolls the current device with a biometric credential.
    *
    * User-canceled biometric prompts reset the state silently instead of surfacing an error.
    */

@@ -83,6 +83,16 @@ class BiometricCredentialsTest {
   }
 
   @Test
+  fun `client failures use the biometric credential error code`() = runTest {
+    Clerk.updateClient(com.clerk.api.network.model.client.Client())
+
+    val result = BiometricCredentials.enroll()
+
+    assertTrue(result is ClerkResult.Failure)
+    assertEquals("biometric_credential_client_error", result.error?.errors?.single()?.code)
+  }
+
+  @Test
   fun `failed account cleanup remains queued until retry succeeds`() {
     credentialStore.credentials += credential(id = "td_1", userId = "user_1")
     credentialStore.deleteFails = true
