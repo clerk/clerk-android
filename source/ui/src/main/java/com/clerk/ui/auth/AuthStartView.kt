@@ -28,10 +28,10 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.biometriccredential.BiometricCredentialValidationResult
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.session.Session
 import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.trusteddevice.TrustedDeviceValidationResult
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.LastUsedAuthBadgeOverlay
@@ -115,13 +115,13 @@ internal fun AuthStartViewImpl(
       }
     }
   val socialProviders = authViewHelper.authenticatableSocialProviders
-  val trustedDeviceSignInConfigIsEnabled =
-    authViewHelper.trustedDeviceSignInConfigIsEnabled && authState.mode != AuthMode.SignUp
-  var trustedDeviceSignInIsAvailable by remember { mutableStateOf(false) }
+  val biometricSignInConfigIsEnabled =
+    authViewHelper.biometricSignInConfigIsEnabled && authState.mode != AuthMode.SignUp
+  var biometricSignInIsAvailable by remember { mutableStateOf(false) }
 
-  LaunchedEffect(trustedDeviceSignInConfigIsEnabled) {
-    trustedDeviceSignInIsAvailable =
-      trustedDeviceSignInConfigIsEnabled && resolveTrustedDeviceSignInAvailability()
+  LaunchedEffect(biometricSignInConfigIsEnabled) {
+    biometricSignInIsAvailable =
+      biometricSignInConfigIsEnabled && resolveBiometricSignInAvailability()
   }
 
   val lastAuthenticationStrategy =
@@ -132,7 +132,7 @@ internal fun AuthStartViewImpl(
       enabledFirstFactorAttributes = Clerk.enabledFirstFactorAttributes,
       authenticatableSocialProviders = socialProviders,
       storedIdentifierType = authState.storedIdentifierType,
-      trustedDeviceSignInIsVisible = trustedDeviceSignInIsAvailable,
+      biometricSignInIsVisible = biometricSignInIsAvailable,
     )
   val lastUsedSocialProvider = lastUsedAuth?.socialProvider
   val socialProvidersMinusLastUsed =
@@ -298,17 +298,17 @@ internal fun AuthStartViewImpl(
 
         if (
           authViewHelper.showOrDivider ||
-            (trustedDeviceSignInIsAvailable && authViewHelper.showIdentifierField)
+            (biometricSignInIsAvailable && authViewHelper.showIdentifierField)
         ) {
           TextDivider(stringResource(R.string.or))
         }
         Column(verticalArrangement = Arrangement.spacedBy(dp8)) {
-          if (trustedDeviceSignInIsAvailable) {
-            TrustedDeviceSignInButton(
-              isLoading = state is AuthStartViewModel.AuthState.TrustedDeviceState.Loading,
-              showsLastUsedBadge = lastUsedAuth?.showsTrustedDeviceBadge == true,
+          if (biometricSignInIsAvailable) {
+            BiometricSignInButton(
+              isLoading = state is AuthStartViewModel.AuthState.BiometricCredentialState.Loading,
+              showsLastUsedBadge = lastUsedAuth?.showsBiometricCredentialBadge == true,
               onClick = {
-                authStartViewModel.signInWithTrustedDevice(
+                authStartViewModel.signInWithBiometrics(
                   promptTitle = signInWithBiometricsTitle,
                   promptSubtitle = biometricPromptSubtitle,
                 )
@@ -365,25 +365,25 @@ private fun dismissTrailingContent(
 }
 
 /**
- * Resolves whether trusted-device sign-in can be offered on the auth start screen.
+ * Resolves whether biometric-credential sign-in can be offered on the auth start screen.
  *
  * Starts from fast local availability and then validates the local credential against the server,
  * cleaning up stale local state when the server no longer recognizes it.
  */
 @Suppress("ReturnCount")
-private suspend fun resolveTrustedDeviceSignInAvailability(): Boolean {
+private suspend fun resolveBiometricSignInAvailability(): Boolean {
   if (Clerk.session?.status == Session.SessionStatus.ACTIVE) return false
-  if (!Clerk.trustedDevices.localAvailability().isAvailable) return false
+  if (!Clerk.biometricCredentials.localAvailability().isAvailable) return false
 
-  return when (Clerk.trustedDevices.validateLocalCredentialIfPossible()) {
-    is TrustedDeviceValidationResult.Invalid -> false
-    TrustedDeviceValidationResult.Valid,
-    TrustedDeviceValidationResult.Inconclusive -> true
+  return when (Clerk.biometricCredentials.validateLocalCredentialIfPossible()) {
+    is BiometricCredentialValidationResult.Invalid -> false
+    BiometricCredentialValidationResult.Valid,
+    BiometricCredentialValidationResult.Inconclusive -> true
   }
 }
 
 @Composable
-private fun TrustedDeviceSignInButton(
+private fun BiometricSignInButton(
   isLoading: Boolean,
   showsLastUsedBadge: Boolean,
   onClick: () -> Unit,

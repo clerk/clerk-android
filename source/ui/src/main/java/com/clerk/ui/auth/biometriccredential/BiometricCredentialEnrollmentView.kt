@@ -1,4 +1,4 @@
-package com.clerk.ui.auth.trusteddevice
+package com.clerk.ui.auth.biometriccredential
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,14 +31,14 @@ import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /**
- * Prompt offered after sign-in or sign-up asking the user to enable biometric (trusted-device)
- * sign-in for this device.
+ * Prompt offered after sign-in or sign-up asking the user to enable biometric
+ * (biometric-credential) sign-in for this device.
  */
 @Composable
-internal fun TrustedDeviceEnrollmentView(
+internal fun BiometricCredentialEnrollmentView(
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: TrustedDeviceEnrollmentViewModel = viewModel(),
+  viewModel: BiometricCredentialEnrollmentViewModel = viewModel(),
 ) {
   val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -51,11 +51,11 @@ internal fun TrustedDeviceEnrollmentView(
 
   LaunchedEffect(state) {
     when (val s = state) {
-      is TrustedDeviceEnrollmentViewModel.State.Enrolled -> {
+      is BiometricCredentialEnrollmentViewModel.State.Enrolled -> {
         viewModel.resetState()
         continueAfterEnrollmentPrompt()
       }
-      is TrustedDeviceEnrollmentViewModel.State.Error -> {
+      is BiometricCredentialEnrollmentViewModel.State.Error -> {
         snackbarHostState.showSnackbar(s.message ?: generic)
         viewModel.resetState()
       }
@@ -95,7 +95,7 @@ internal fun TrustedDeviceEnrollmentView(
       ClerkButton(
         modifier = Modifier.fillMaxWidth(),
         text = stringResource(R.string.allow),
-        isLoading = state is TrustedDeviceEnrollmentViewModel.State.Loading,
+        isLoading = state is BiometricCredentialEnrollmentViewModel.State.Loading,
         onClick = { viewModel.enroll(enrollmentPromptTitle, promptSubtitle) },
       )
 
@@ -110,5 +110,5 @@ internal fun TrustedDeviceEnrollmentView(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  PreviewAuthStateProvider { TrustedDeviceEnrollmentView(onAuthComplete = {}) }
+  PreviewAuthStateProvider { BiometricCredentialEnrollmentView(onAuthComplete = {}) }
 }

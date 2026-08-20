@@ -1,4 +1,4 @@
-package com.clerk.api.trusteddevice
+package com.clerk.api.biometriccredential
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -8,12 +8,12 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 /**
- * A biometric-gated trusted-device credential associated with a user.
+ * A biometric credential associated with a user.
  *
- * Trusted devices allow users to sign in with device biometrics instead of their regular first
- * factor. The private key used to sign server challenges never leaves the device.
+ * Biometric credentials allow users to sign in with device biometrics instead of their regular
+ * first factor. The private key used to sign server challenges never leaves the device.
  *
- * @property id The unique identifier of the trusted-device credential.
+ * @property id The unique identifier of the biometric credential.
  * @property platform The platform this credential belongs to.
  * @property platformRawValue The platform value exactly as returned by the Clerk API.
  * @property appIdentifier The native app identifier this credential is bound to.
@@ -26,11 +26,11 @@ import kotlinx.serialization.encoding.Encoder
  * @property lastUsedAt The time when the credential was last used, in milliseconds since epoch.
  * @property revokedAt The time when the credential was revoked, in milliseconds since epoch.
  */
-@Serializable(with = TrustedDeviceSerializer::class)
+@Serializable(with = BiometricCredentialSerializer::class)
 @ConsistentCopyVisibility
-data class TrustedDevice
+data class BiometricCredential
 private constructor(
-  /** The unique identifier of the trusted-device credential. */
+  /** The unique identifier of the biometric credential. */
   val id: String,
 
   /** The platform this credential belongs to. */
@@ -104,8 +104,8 @@ private constructor(
     updatedAt: Long = this.updatedAt,
     lastUsedAt: Long? = this.lastUsedAt,
     revokedAt: Long? = this.revokedAt,
-  ): TrustedDevice =
-    TrustedDevice(
+  ): BiometricCredential =
+    BiometricCredential(
       id = id,
       platform = platform,
       appIdentifier = appIdentifier,
@@ -121,7 +121,7 @@ private constructor(
       statusRawValue = if (status == this.status) statusRawValue else status.serializedValue,
     )
 
-  /** The platform a trusted-device credential belongs to. */
+  /** The platform a biometric credential belongs to. */
   @Serializable
   enum class Platform(internal val serializedValue: String) {
     @SerialName("ios") IOS("ios"),
@@ -136,7 +136,7 @@ private constructor(
     }
   }
 
-  /** The server-side trusted-device credential status. */
+  /** The server-side biometric credential status. */
   @Serializable
   enum class Status(internal val serializedValue: String) {
     @SerialName("active") ACTIVE("active"),
@@ -152,11 +152,11 @@ private constructor(
   }
 
   companion object {
-    /** The signature algorithm used by trusted-device credentials on Android. */
+    /** The signature algorithm used by biometric credentials on Android. */
     const val ES256_ALGORITHM: String = "ES256"
 
-    internal fun fromPayload(payload: TrustedDevicePayload): TrustedDevice =
-      TrustedDevice(
+    internal fun fromPayload(payload: BiometricCredentialPayload): BiometricCredential =
+      BiometricCredential(
         id = payload.id,
         platform = Platform.fromSerializedValue(payload.platform),
         appIdentifier = payload.appIdentifier,
@@ -174,12 +174,12 @@ private constructor(
 }
 
 @Serializable
-internal data class TrustedDevicePayload(
+internal data class BiometricCredentialPayload(
   val id: String,
   val platform: String = "unknown",
   @SerialName("app_identifier") val appIdentifier: String,
   val name: String? = null,
-  val algorithm: String = TrustedDevice.ES256_ALGORITHM,
+  val algorithm: String = BiometricCredential.ES256_ALGORITHM,
   val status: String = "unknown",
   @SerialName("created_at") val createdAt: Long,
   @SerialName("updated_at") val updatedAt: Long,
@@ -187,17 +187,17 @@ internal data class TrustedDevicePayload(
   @SerialName("revoked_at") val revokedAt: Long? = null,
 )
 
-internal object TrustedDeviceSerializer : KSerializer<TrustedDevice> {
+internal object BiometricCredentialSerializer : KSerializer<BiometricCredential> {
   override val descriptor: SerialDescriptor =
     SerialDescriptor(
-      "com.clerk.api.trusteddevice.TrustedDevice",
-      TrustedDevicePayload.serializer().descriptor,
+      "com.clerk.api.biometriccredential.BiometricCredential",
+      BiometricCredentialPayload.serializer().descriptor,
     )
 
-  override fun serialize(encoder: Encoder, value: TrustedDevice) {
+  override fun serialize(encoder: Encoder, value: BiometricCredential) {
     encoder.encodeSerializableValue(
-      TrustedDevicePayload.serializer(),
-      TrustedDevicePayload(
+      BiometricCredentialPayload.serializer(),
+      BiometricCredentialPayload(
         id = value.id,
         platform = value.platformRawValue,
         appIdentifier = value.appIdentifier,
@@ -212,8 +212,8 @@ internal object TrustedDeviceSerializer : KSerializer<TrustedDevice> {
     )
   }
 
-  override fun deserialize(decoder: Decoder): TrustedDevice {
-    val payload = decoder.decodeSerializableValue(TrustedDevicePayload.serializer())
-    return TrustedDevice.fromPayload(payload)
+  override fun deserialize(decoder: Decoder): BiometricCredential {
+    val payload = decoder.decodeSerializableValue(BiometricCredentialPayload.serializer())
+    return BiometricCredential.fromPayload(payload)
   }
 }

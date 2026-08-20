@@ -4,6 +4,7 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.response.ClientPiggybackedResponse
 import com.clerk.api.network.model.token.TokenResource
+import com.clerk.api.session.Session
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import okhttp3.ResponseBody
@@ -29,15 +30,13 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
     val nextAnnotations = annotations.toList() + errorResultType
 
     // For List<Session>, don't wrap in ClientPiggybackedResponse - it comes as plain JSON array
-    val rawSuccessType = getRawType(successType)
-
-    val isListType =
-      rawSuccessType == List::class.java ||
-        (successType.toString().contains("java.util.List") &&
-          successType.toString().contains("Session"))
+    val isSessionList =
+      successType is ParameterizedType &&
+        getRawType(successType) == List::class.java &&
+        getRawType(successType.actualTypeArguments.single()) == Session::class.java
 
     val actualSuccessType =
-      if (isListType) {
+      if (isSessionList) {
         ClerkLog.d(
           "This is a List<Session> type, using direct type (no ClientPiggybackedResponse wrapper)"
         )

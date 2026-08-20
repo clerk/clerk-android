@@ -1,11 +1,11 @@
-package com.clerk.api.trusteddevice
+package com.clerk.api.biometriccredential
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** The local authentication policy used to protect a trusted-device private key. */
+/** The local authentication policy used to protect a biometric-credential private key. */
 @Serializable
-enum class TrustedDevicePolicy {
+enum class BiometricCredentialPolicy {
   /**
    * Require a Class 3 (strong) biometric from the currently enrolled set.
    *

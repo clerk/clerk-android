@@ -3,6 +3,7 @@ package com.clerk.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.biometriccredential.BiometricCredentialKeyManagerException
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
 import com.clerk.api.credentials.shouldSuppressAutomaticCredentialFlowError
@@ -19,7 +20,6 @@ import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
-import com.clerk.api.trusteddevice.TrustedDeviceKeyManagerException
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
@@ -120,18 +120,18 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
   }
 
   /**
-   * Signs in with the locally enrolled trusted-device (biometric) credential.
+   * Signs in with the locally enrolled biometric-credential (biometric) credential.
    *
    * User-canceled biometric prompts reset the state silently instead of surfacing an error.
    */
-  internal fun signInWithTrustedDevice(
+  internal fun signInWithBiometrics(
     promptTitle: String? = null,
     promptSubtitle: String? = null,
   ) {
     cancelAutomaticPasskeySignIn()
-    _state.value = AuthState.TrustedDeviceState.Loading
+    _state.value = AuthState.BiometricCredentialState.Loading
     viewModelScope.launch(Dispatchers.IO) {
-      Clerk.trustedDevices
+      Clerk.biometricCredentials
         .signIn(promptTitle = promptTitle, promptSubtitle = promptSubtitle)
         .onSuccess { signIn ->
           withContext(Dispatchers.Main) {
@@ -141,7 +141,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
         .onFailure { failure ->
           withContext(Dispatchers.Main) {
             _state.value =
-              if (failure.isTrustedDeviceCancellation) {
+              if (failure.isBiometricCredentialCancellation) {
                 AuthState.Idle
               } else {
                 AuthState.Error(failure.errorMessage)
@@ -457,9 +457,9 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       data class SignUpSuccess(val signUp: SignUp?) : Success
     }
 
-    /** States specific to trusted-device (biometric) sign-in. */
-    sealed interface TrustedDeviceState : AuthState {
-      data object Loading : TrustedDeviceState
+    /** States specific to biometric-credential (biometric) sign-in. */
+    sealed interface BiometricCredentialState : AuthState {
+      data object Loading : BiometricCredentialState
     }
 
     /**
@@ -488,10 +488,10 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
 private fun SignIn.requiresEnterpriseSSO(): Boolean =
   startingFirstFactor?.strategy == "enterprise_sso"
 
-internal val ClerkResult.Failure<*>.isTrustedDeviceCancellation: Boolean
+internal val ClerkResult.Failure<*>.isBiometricCredentialCancellation: Boolean
   get() =
-    (throwable as? TrustedDeviceKeyManagerException)?.code ==
-      TrustedDeviceKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_CANCELED
+    (throwable as? BiometricCredentialKeyManagerException)?.code ==
+      BiometricCredentialKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_CANCELED
 
 private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
 

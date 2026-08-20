@@ -30,18 +30,20 @@ internal class DeleteAccountViewModel : ViewModel() {
             _state.value = State.Error(it.errorMessage)
           }
           .onSuccess {
-            forgetTrustedDeviceLocalCredentials(deletedUserId)
+            forgetBiometricCredentialLocalCredentials(deletedUserId)
             _state.value = State.Success
           }
       }
     }
   }
 
-  private fun forgetTrustedDeviceLocalCredentials(deletedUserId: String) {
-    runCatching { Clerk.trustedDevices.forgetLocalCredentialsAfterAccountDeletion(deletedUserId) }
+  private fun forgetBiometricCredentialLocalCredentials(deletedUserId: String) {
+    runCatching {
+        Clerk.biometricCredentials.forgetLocalCredentialsAfterAccountDeletion(deletedUserId)
+      }
       .onFailure {
         ClerkLog.e(
-          "Failed to delete trusted-device local credentials after account deletion. " +
+          "Failed to delete biometric-credential local credentials after account deletion. " +
             "This is non-critical."
         )
       }

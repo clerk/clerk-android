@@ -75,19 +75,18 @@ internal data class Environment(
         key == "backup_code" && value.enabled && value.usedForSecondFactor
       }
 
-  val trustedDeviceSignInIsEnabled: Boolean
-    get() =
-      authConfig.nativeSettings.apiEnabled && authConfig.nativeSettings.trustedDeviceSignInEnabled
+  val biometricSignInIsEnabled: Boolean
+    get() = authConfig.nativeSettings.apiEnabled && authConfig.nativeSettings.biometricSignInEnabled
 
-  val trustedDevicePromptAfterSignInIsEnabled: Boolean
+  val biometricCredentialPromptAfterSignInIsEnabled: Boolean
     get() =
-      trustedDeviceSignInIsEnabled &&
-        authConfig.nativeSettings.trustedDevicePromptAfterSignInEnabled
+      biometricSignInIsEnabled &&
+        authConfig.nativeSettings.biometricCredentialPromptAfterSignInEnabled
 
-  val trustedDevicePromptAfterSignUpIsEnabled: Boolean
+  val biometricCredentialPromptAfterSignUpIsEnabled: Boolean
     get() =
-      trustedDeviceSignInIsEnabled &&
-        authConfig.nativeSettings.trustedDevicePromptAfterSignUpEnabled
+      biometricSignInIsEnabled &&
+        authConfig.nativeSettings.biometricCredentialPromptAfterSignUpEnabled
 
   companion object {
 
