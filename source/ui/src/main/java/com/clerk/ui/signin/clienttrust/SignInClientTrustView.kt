@@ -21,7 +21,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
 /**
  * A composable that displays the device trust verification view.
  *
- * This view is shown when the user is signing in from a new or untrusted device and needs to
+ * This view is shown when the user is signing in from a new or unbiometric credential and needs to
  * complete an additional verification step. It displays a warning message explaining why
  * verification is needed, followed by the code input for verification.
  *

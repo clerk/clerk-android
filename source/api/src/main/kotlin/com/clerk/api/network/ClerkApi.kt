@@ -2,6 +2,7 @@ package com.clerk.api.network
 
 import android.content.Context
 import com.clerk.api.Clerk
+import com.clerk.api.network.api.BiometricCredentialApi
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.DeviceAttestationApi
 import com.clerk.api.network.api.EnvironmentApi
@@ -10,7 +11,6 @@ import com.clerk.api.network.api.OrganizationApi
 import com.clerk.api.network.api.SessionApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.api.SignUpApi
-import com.clerk.api.network.api.TrustedDeviceApi
 import com.clerk.api.network.api.UserApi
 import com.clerk.api.network.middleware.incoming.ClientSyncingMiddleware
 import com.clerk.api.network.middleware.incoming.DeviceTokenSavingMiddleware
@@ -76,9 +76,9 @@ internal object ClerkApi {
   val magicLink: MagicLinkApi
     get() = _magicLink ?: error("ClerkApi is not configured.")
 
-  private var _trustedDevice: TrustedDeviceApi? = null
-  val trustedDevice: TrustedDeviceApi
-    get() = _trustedDevice ?: error("ClerkApi is not configured.")
+  private var _biometricCredential: BiometricCredentialApi? = null
+  val biometricCredential: BiometricCredentialApi
+    get() = _biometricCredential ?: error("ClerkApi is not configured.")
 
   // Exposed for internal testing/verification
   internal var configuredBaseUrl: String? = null
@@ -110,7 +110,7 @@ internal object ClerkApi {
     _deviceAttestation = retrofit.create(DeviceAttestationApi::class.java)
     _organization = retrofit.create(OrganizationApi::class.java)
     _magicLink = retrofit.create(MagicLinkApi::class.java)
-    _trustedDevice = retrofit.create(TrustedDeviceApi::class.java)
+    _biometricCredential = retrofit.create(BiometricCredentialApi::class.java)
   }
 
   /** Clears all configured Retrofit services. */
@@ -124,7 +124,7 @@ internal object ClerkApi {
     _deviceAttestation = null
     _organization = null
     _magicLink = null
-    _trustedDevice = null
+    _biometricCredential = null
     configuredBaseUrl = null
     configuredUrlWithVersion = null
     configuredCustomHeaders = emptyMap()

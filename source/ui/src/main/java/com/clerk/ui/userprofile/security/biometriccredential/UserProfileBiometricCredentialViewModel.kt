@@ -1,12 +1,12 @@
-package com.clerk.ui.userprofile.security.trusteddevice
+package com.clerk.ui.userprofile.security.biometriccredential
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
-import com.clerk.ui.auth.isTrustedDeviceCancellation
-import com.clerk.ui.auth.trusteddevice.trustedDeviceIdentifierHint
+import com.clerk.ui.auth.biometriccredential.biometricCredentialIdentifierHint
+import com.clerk.ui.auth.isBiometricCredentialCancellation
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** ViewModel backing the biometric sign-in toggle in the user-profile security screen. */
-internal class UserProfileTrustedDeviceViewModel(
+internal class UserProfileBiometricCredentialViewModel(
   private val workDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
@@ -29,10 +29,10 @@ internal class UserProfileTrustedDeviceViewModel(
   fun refreshAvailability() {
     val requestGeneration = ++availabilityRequestGeneration
     _state.update {
-      it.copy(isEnabled = Clerk.trustedDevices.currentUserLocalAvailability().isAvailable)
+      it.copy(isEnabled = Clerk.biometricCredentials.currentUserLocalAvailability().isAvailable)
     }
     viewModelScope.launch(workDispatcher) {
-      val availability = Clerk.trustedDevices.currentUserAvailability()
+      val availability = Clerk.biometricCredentials.currentUserAvailability()
       withContext(Dispatchers.Main) {
         if (requestGeneration == availabilityRequestGeneration) {
           _state.update { it.copy(isEnabled = availability.isAvailable) }
@@ -44,11 +44,11 @@ internal class UserProfileTrustedDeviceViewModel(
   /**
    * Enables or disables biometric sign-in for the current user on this device.
    *
-   * Enabling enrolls this device as a trusted device (showing the system biometric prompt);
-   * disabling revokes the local trusted-device credential. User-canceled biometric prompts revert
-   * the toggle silently.
+   * Enabling enrolls this device as a biometric credential (showing the system biometric prompt);
+   * disabling revokes the local biometric credential. User-canceled biometric prompts revert the
+   * toggle silently.
    */
-  fun setTrustedDeviceSignInEnabled(
+  fun setBiometricSignInEnabled(
     enabled: Boolean,
     promptTitle: String,
     promptSubtitle: String?,
@@ -61,24 +61,25 @@ internal class UserProfileTrustedDeviceViewModel(
     viewModelScope.launch(workDispatcher) {
       val failure =
         if (enabled) {
-          Clerk.trustedDevices
+          Clerk.biometricCredentials
             .enroll(
-              identifierHint = Clerk.user?.trustedDeviceIdentifierHint,
+              identifierHint = Clerk.user?.biometricCredentialIdentifierHint,
               promptTitle = promptTitle,
               promptSubtitle = promptSubtitle,
             )
             .asFailureOrNull()
         } else {
-          Clerk.trustedDevices.revokeCurrentDeviceCredential().asFailureOrNull()
+          Clerk.biometricCredentials.revokeCurrentDeviceCredential().asFailureOrNull()
         }
 
-      val availability = Clerk.trustedDevices.currentUserAvailability()
+      val availability = Clerk.biometricCredentials.currentUserAvailability()
       withContext(Dispatchers.Main) {
         _state.value =
           State(
             isEnabled = availability.isAvailable,
             isLoading = false,
-            error = failure?.takeUnless { it.isTrustedDeviceCancellation }?.let { it.errorMessage },
+            error =
+              failure?.takeUnless { it.isBiometricCredentialCancellation }?.let { it.errorMessage },
           )
       }
     }

@@ -1,4 +1,4 @@
-package com.clerk.api.trusteddevice
+package com.clerk.api.biometriccredential
 
 import android.content.Context
 import android.hardware.biometrics.BiometricPrompt
@@ -27,32 +27,32 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
 /** A locally generated private key and its backend-facing public key material. */
-internal data class TrustedDeviceLocalKey(
+internal data class BiometricCredentialLocalKey(
   val localKeyId: String,
   val publicKeyJwk: String,
-  val algorithm: String = TrustedDevice.ES256_ALGORITHM,
-  val policy: TrustedDevicePolicy = TrustedDevicePolicy.BIOMETRY_OR_DEVICE_PASSCODE,
+  val algorithm: String = BiometricCredential.ES256_ALGORITHM,
+  val policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
 )
 
-/** A signed trusted-device challenge payload ready to send to Clerk. */
-internal data class TrustedDeviceKeySignature(
+/** A signed biometric-credential challenge payload ready to send to Clerk. */
+internal data class BiometricCredentialKeySignature(
   val clientData: String,
   val signature: String,
-  val algorithm: String = TrustedDevice.ES256_ALGORITHM,
+  val algorithm: String = BiometricCredential.ES256_ALGORITHM,
 )
 
 /**
- * An error produced by local trusted-device key management or biometric authentication.
+ * An error produced by local biometric-credential key management or biometric authentication.
  *
  * Check [code] to distinguish user cancellation from real failures.
  */
-class TrustedDeviceKeyManagerException
+class BiometricCredentialKeyManagerException
 internal constructor(val code: Code, message: String, cause: Throwable? = null) :
   Exception(message, cause) {
 
-  /** The category of trusted-device key management error. */
+  /** The category of biometric-credential key management error. */
   enum class Code {
-    /** Trusted-device sign-in requires Android 9 (API 28) or later. */
+    /** Biometric-credential sign-in requires Android 9 (API 28) or later. */
     UNSUPPORTED_PLATFORM,
 
     /** Biometric authentication is not available or not enrolled on this device. */
@@ -64,27 +64,31 @@ internal constructor(val code: Code, message: String, cause: Throwable? = null) 
     /** Biometric authentication failed. */
     BIOMETRIC_AUTHENTICATION_FAILED,
 
-    /** The trusted-device private key could not be created. */
+    /** The biometric-credential private key could not be created. */
     KEY_GENERATION_FAILED,
 
-    /** The trusted-device private key was not found. */
+    /** The biometric-credential private key was not found. */
     KEY_NOT_FOUND,
 
-    /** The trusted-device private key was permanently invalidated (e.g. biometrics changed). */
+    /**
+     * The biometric-credential private key was permanently invalidated (e.g. biometrics changed).
+     */
     KEY_INVALIDATED,
 
-    /** The trusted-device challenge could not be signed. */
+    /** The biometric-credential challenge could not be signed. */
     SIGNING_FAILED,
   }
 }
 
-/** Manager for local, biometric-gated trusted-device private keys. */
-internal interface TrustedDeviceKeyManager {
-  /** Whether trusted-device keys protected by [policy] can be created and used on this device. */
-  fun isSupported(policy: TrustedDevicePolicy): Boolean
+/** Manager for local, biometric-gated biometric-credential private keys. */
+internal interface BiometricCredentialKeyManager {
+  /**
+   * Whether biometric-credential keys protected by [policy] can be created and used on this device.
+   */
+  fun isSupported(policy: BiometricCredentialPolicy): Boolean
 
   /** Creates a new biometric-gated EC P-256 key pair and returns its public key material. */
-  fun createKey(policy: TrustedDevicePolicy): TrustedDeviceLocalKey
+  fun createKey(policy: BiometricCredentialPolicy): BiometricCredentialLocalKey
 
   /**
    * Signs [clientData] with the private key identified by [localKeyId], prompting the user for
@@ -93,10 +97,10 @@ internal interface TrustedDeviceKeyManager {
   suspend fun sign(
     clientData: String,
     localKeyId: String,
-    policy: TrustedDevicePolicy,
+    policy: BiometricCredentialPolicy,
     promptTitle: String,
     promptSubtitle: String? = null,
-  ): TrustedDeviceKeySignature
+  ): BiometricCredentialKeySignature
 
   /** Returns whether the private key identified by [localKeyId] exists. */
   fun hasKey(localKeyId: String): Boolean
@@ -106,14 +110,14 @@ internal interface TrustedDeviceKeyManager {
 }
 
 /**
- * Default [TrustedDeviceKeyManager] backed by the Android Keystore.
+ * Default [BiometricCredentialKeyManager] backed by the Android Keystore.
  *
  * Keys are EC P-256 signing keys requiring per-use user authentication. Challenge signing wraps a
  * [Signature] in a [BiometricPrompt.CryptoObject], so the signature can only be produced after the
  * user passes the system biometric prompt. Requires Android 9 (API 28) for [BiometricPrompt].
  */
 @Suppress("TooManyFunctions")
-internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
+internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyManager {
   private const val ANDROID_KEY_STORE = "AndroidKeyStore"
   private const val KEY_ALIAS_PREFIX = "com.clerk.trusted_device."
   private const val SIGNATURE_ALGORITHM = "SHA256withECDSA"
@@ -126,12 +130,12 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
   private const val DER_LENGTH_MASK = 0x7F
   private const val DER_BYTE_MASK = 0xFF
 
-  override fun isSupported(policy: TrustedDevicePolicy): Boolean {
+  override fun isSupported(policy: BiometricCredentialPolicy): Boolean {
     val context = applicationContext()
     val authenticators =
       if (
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-          policy == TrustedDevicePolicy.BIOMETRY_OR_DEVICE_PASSCODE
+          policy == BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE
       ) {
         BiometricManager.Authenticators.BIOMETRIC_STRONG or
           BiometricManager.Authenticators.DEVICE_CREDENTIAL
@@ -144,16 +148,16 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
         BiometricManager.BIOMETRIC_SUCCESS
   }
 
-  override fun createKey(policy: TrustedDevicePolicy): TrustedDeviceLocalKey {
+  override fun createKey(policy: BiometricCredentialPolicy): BiometricCredentialLocalKey {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-      throw TrustedDeviceKeyManagerException(
-        TrustedDeviceKeyManagerException.Code.UNSUPPORTED_PLATFORM,
-        "Trusted-device sign-in requires Android 9 (API 28) or later.",
+      throw BiometricCredentialKeyManagerException(
+        BiometricCredentialKeyManagerException.Code.UNSUPPORTED_PLATFORM,
+        "Biometric-credential sign-in requires Android 9 (API 28) or later.",
       )
     }
     if (!isSupported(policy)) {
-      throw TrustedDeviceKeyManagerException(
-        TrustedDeviceKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_UNAVAILABLE,
+      throw BiometricCredentialKeyManagerException(
+        BiometricCredentialKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_UNAVAILABLE,
         "Biometric authentication is not available or not enrolled on this device.",
       )
     }
@@ -165,12 +169,12 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
       keyPairGenerator.initialize(keyGenParameterSpec(localKeyId, policy))
       val keyPair = keyPairGenerator.generateKeyPair()
       val publicKey = keyPair.public as ECPublicKey
-      return TrustedDeviceLocalKey(
+      return BiometricCredentialLocalKey(
         localKeyId = localKeyId,
         publicKeyJwk = publicKeyJwk(publicKey),
         policy = policy,
       )
-    } catch (e: TrustedDeviceKeyManagerException) {
+    } catch (e: BiometricCredentialKeyManagerException) {
       throw e
     } catch (e: GeneralSecurityException) {
       throw keyGenerationFailure(localKeyId, e)
@@ -184,11 +188,11 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
   private fun keyGenerationFailure(
     localKeyId: String,
     cause: Exception,
-  ): TrustedDeviceKeyManagerException {
+  ): BiometricCredentialKeyManagerException {
     runCatching { deleteKey(localKeyId) }
-    return TrustedDeviceKeyManagerException(
-      TrustedDeviceKeyManagerException.Code.KEY_GENERATION_FAILED,
-      "Unable to create the trusted-device private key.",
+    return BiometricCredentialKeyManagerException(
+      BiometricCredentialKeyManagerException.Code.KEY_GENERATION_FAILED,
+      "Unable to create the biometric-credential private key.",
       cause,
     )
   }
@@ -196,14 +200,14 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
   override suspend fun sign(
     clientData: String,
     localKeyId: String,
-    policy: TrustedDevicePolicy,
+    policy: BiometricCredentialPolicy,
     promptTitle: String,
     promptSubtitle: String?,
-  ): TrustedDeviceKeySignature {
+  ): BiometricCredentialKeySignature {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-      throw TrustedDeviceKeyManagerException(
-        TrustedDeviceKeyManagerException.Code.UNSUPPORTED_PLATFORM,
-        "Trusted-device sign-in requires Android 9 (API 28) or later.",
+      throw BiometricCredentialKeyManagerException(
+        BiometricCredentialKeyManagerException.Code.UNSUPPORTED_PLATFORM,
+        "Biometric-credential sign-in requires Android 9 (API 28) or later.",
       )
     }
 
@@ -215,16 +219,16 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
       authenticatedSignature.update(clientData.toByteArray(Charsets.UTF_8))
       val derSignature = authenticatedSignature.sign()
       val rawSignature = rawES256SignatureFromDer(derSignature)
-      return TrustedDeviceKeySignature(
+      return BiometricCredentialKeySignature(
         clientData = clientData,
         signature = base64UrlEncode(rawSignature),
       )
-    } catch (e: TrustedDeviceKeyManagerException) {
+    } catch (e: BiometricCredentialKeyManagerException) {
       throw e
     } catch (e: Exception) {
-      throw TrustedDeviceKeyManagerException(
-        TrustedDeviceKeyManagerException.Code.SIGNING_FAILED,
-        "Unable to sign the trusted-device challenge.",
+      throw BiometricCredentialKeyManagerException(
+        BiometricCredentialKeyManagerException.Code.SIGNING_FAILED,
+        "Unable to sign the biometric-credential challenge.",
         e,
       )
     }
@@ -246,9 +250,9 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
   private fun initializedSignature(localKeyId: String): Signature {
     val privateKey =
       keyStore().getKey(keyAlias(localKeyId), null)
-        ?: throw TrustedDeviceKeyManagerException(
-          TrustedDeviceKeyManagerException.Code.KEY_NOT_FOUND,
-          "The trusted-device private key was not found.",
+        ?: throw BiometricCredentialKeyManagerException(
+          BiometricCredentialKeyManagerException.Code.KEY_NOT_FOUND,
+          "The biometric-credential private key was not found.",
         )
 
     try {
@@ -256,9 +260,9 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
         initSign(privateKey as java.security.PrivateKey)
       }
     } catch (e: KeyPermanentlyInvalidatedException) {
-      throw TrustedDeviceKeyManagerException(
-        TrustedDeviceKeyManagerException.Code.KEY_INVALIDATED,
-        "The trusted-device private key was permanently invalidated.",
+      throw BiometricCredentialKeyManagerException(
+        BiometricCredentialKeyManagerException.Code.KEY_INVALIDATED,
+        "The biometric-credential private key was permanently invalidated.",
         e,
       )
     }
@@ -267,15 +271,15 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
   @RequiresApi(Build.VERSION_CODES.P)
   private suspend fun authenticateWithBiometricPrompt(
     signature: Signature,
-    policy: TrustedDevicePolicy,
+    policy: BiometricCredentialPolicy,
     promptTitle: String,
     promptSubtitle: String?,
   ): Signature {
     val activity =
       Clerk.credentialActivity()
-        ?: throw TrustedDeviceKeyManagerException(
-          TrustedDeviceKeyManagerException.Code.SIGNING_FAILED,
-          "Trusted-device sign-in requires an active Activity.",
+        ?: throw BiometricCredentialKeyManagerException(
+          BiometricCredentialKeyManagerException.Code.SIGNING_FAILED,
+          "Biometric-credential sign-in requires an active Activity.",
         )
 
     return withContext(Dispatchers.Main) {
@@ -290,7 +294,7 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
           }
 
         val allowsDeviceCredential =
-          policy == TrustedDevicePolicy.BIOMETRY_OR_DEVICE_PASSCODE &&
+          policy == BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
         if (allowsDeviceCredential) {
           builder.setAllowedAuthenticators(
@@ -307,8 +311,8 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
             { _, _ ->
               if (continuation.isActive) {
                 continuation.resumeWithException(
-                  TrustedDeviceKeyManagerException(
-                    TrustedDeviceKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_CANCELED,
+                  BiometricCredentialKeyManagerException(
+                    BiometricCredentialKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_CANCELED,
                     "Biometric authentication was canceled.",
                   )
                 )
@@ -347,19 +351,19 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
   private fun authenticationError(
     errorCode: Int,
     errString: CharSequence?,
-  ): TrustedDeviceKeyManagerException {
+  ): BiometricCredentialKeyManagerException {
     val code =
       when (errorCode) {
         BiometricPrompt.BIOMETRIC_ERROR_USER_CANCELED,
         BiometricPrompt.BIOMETRIC_ERROR_CANCELED ->
-          TrustedDeviceKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_CANCELED
+          BiometricCredentialKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_CANCELED
         BiometricPrompt.BIOMETRIC_ERROR_NO_BIOMETRICS,
         BiometricPrompt.BIOMETRIC_ERROR_HW_NOT_PRESENT,
         BiometricPrompt.BIOMETRIC_ERROR_HW_UNAVAILABLE ->
-          TrustedDeviceKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_UNAVAILABLE
-        else -> TrustedDeviceKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_FAILED
+          BiometricCredentialKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_UNAVAILABLE
+        else -> BiometricCredentialKeyManagerException.Code.BIOMETRIC_AUTHENTICATION_FAILED
       }
-    return TrustedDeviceKeyManagerException(
+    return BiometricCredentialKeyManagerException(
       code,
       errString?.toString() ?: "Biometric authentication failed.",
     )
@@ -368,18 +372,20 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
   @RequiresApi(Build.VERSION_CODES.P)
   private fun keyGenParameterSpec(
     localKeyId: String,
-    policy: TrustedDevicePolicy,
+    policy: BiometricCredentialPolicy,
   ): KeyGenParameterSpec {
     val builder =
       KeyGenParameterSpec.Builder(keyAlias(localKeyId), KeyProperties.PURPOSE_SIGN)
         .setAlgorithmParameterSpec(ECGenParameterSpec(EC_CURVE))
         .setDigests(KeyProperties.DIGEST_SHA256)
         .setUserAuthenticationRequired(true)
-        .setInvalidatedByBiometricEnrollment(policy == TrustedDevicePolicy.BIOMETRY_CURRENT_SET)
+        .setInvalidatedByBiometricEnrollment(
+          policy == BiometricCredentialPolicy.BIOMETRY_CURRENT_SET
+        )
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       val authenticators =
-        if (policy == TrustedDevicePolicy.BIOMETRY_OR_DEVICE_PASSCODE) {
+        if (policy == BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE) {
           KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL
         } else {
           KeyProperties.AUTH_BIOMETRIC_STRONG
@@ -455,9 +461,9 @@ internal object DefaultTrustedDeviceKeyManager : TrustedDeviceKeyManager {
     }
   }
 
-  private fun invalidES256Signature(): TrustedDeviceKeyManagerException {
-    return TrustedDeviceKeyManagerException(
-      TrustedDeviceKeyManagerException.Code.SIGNING_FAILED,
+  private fun invalidES256Signature(): BiometricCredentialKeyManagerException {
+    return BiometricCredentialKeyManagerException(
+      BiometricCredentialKeyManagerException.Code.SIGNING_FAILED,
       "Android Keystore returned an invalid ES256 signature.",
     )
   }

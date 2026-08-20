@@ -14,7 +14,7 @@ internal sealed class LastUsedAuth {
 
   data object Phone : LastUsedAuth()
 
-  data object TrustedDevice : LastUsedAuth()
+  data object BiometricCredential : LastUsedAuth()
 
   val socialProvider: OAuthProvider?
     get() =
@@ -23,7 +23,7 @@ internal sealed class LastUsedAuth {
         Email,
         Username,
         Phone,
-        TrustedDevice -> null
+        BiometricCredential -> null
       }
 
   val showsEmailUsernameBadge: Boolean
@@ -32,8 +32,8 @@ internal sealed class LastUsedAuth {
   val showsPhoneBadge: Boolean
     get() = this == Phone
 
-  val showsTrustedDeviceBadge: Boolean
-    get() = this == TrustedDevice
+  val showsBiometricCredentialBadge: Boolean
+    get() = this == BiometricCredential
 
   companion object {
     @Suppress("ReturnCount")
@@ -42,20 +42,20 @@ internal sealed class LastUsedAuth {
       enabledFirstFactorAttributes: List<String>,
       authenticatableSocialProviders: List<OAuthProvider>,
       storedIdentifierType: IdentifierType?,
-      trustedDeviceSignInIsVisible: Boolean = false,
+      biometricSignInIsVisible: Boolean = false,
     ): LastUsedAuth? {
       val lastAuth = lastAuthenticationStrategy?.takeIf { it.isNotBlank() } ?: return null
       val visibleMethodCount =
         totalEnabledFirstFactorMethods(
           enabledFirstFactorAttributes,
           authenticatableSocialProviders,
-        ) + (if (trustedDeviceSignInIsVisible) 1 else 0)
+        ) + (if (biometricSignInIsVisible) 1 else 0)
       if (visibleMethodCount <= 1) {
         return null
       }
 
-      if (trustedDeviceSignInIsVisible && lastAuth == StrategyKeys.TRUSTED_DEVICE) {
-        return TrustedDevice
+      if (biometricSignInIsVisible && lastAuth == StrategyKeys.TRUSTED_DEVICE) {
+        return BiometricCredential
       }
 
       if (isOAuthStrategy(lastAuth)) {

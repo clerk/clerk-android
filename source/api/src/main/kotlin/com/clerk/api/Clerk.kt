@@ -14,6 +14,7 @@ import com.clerk.api.Clerk.user
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
+import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.configuration.CachedClerkState
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.PublishableKeyHelper
@@ -43,7 +44,6 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.SSOService
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
-import com.clerk.api.trusteddevice.TrustedDevices
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.api.user.User
 import com.clerk.sdk.BuildConfig
@@ -332,34 +332,34 @@ object Clerk {
     get() = environment?.userSettings?.passkeySettings?.allowAutofill ?: false
 
   /**
-   * Indicates whether trusted-device (biometric) sign-in is enabled for this instance.
+   * Indicates whether biometric-credential (biometric) sign-in is enabled for this instance.
    *
-   * Requires both the Clerk Native API and the trusted-device feature to be enabled for your Clerk
-   * instance.
+   * Requires both the Clerk Native API and the biometric-credential feature to be enabled for your
+   * Clerk instance.
    *
-   * @return `true` if trusted-device sign-in is enabled, `false` otherwise. Returns `false` if the
-   *   SDK is not yet initialized.
+   * @return `true` if biometric-credential sign-in is enabled, `false` otherwise. Returns `false`
+   *   if the SDK is not yet initialized.
    */
-  val trustedDeviceSignInIsEnabled: Boolean
-    get() = environment?.trustedDeviceSignInIsEnabled ?: false
+  val biometricSignInIsEnabled: Boolean
+    get() = environment?.biometricSignInIsEnabled ?: false
 
   /**
-   * Indicates whether the trusted-device enrollment prompt should be offered after sign-in.
+   * Indicates whether the biometric-credential enrollment prompt should be offered after sign-in.
    *
    * @return `true` if the prompt is enabled, `false` otherwise. Returns `false` if the SDK is not
    *   yet initialized.
    */
-  val trustedDevicePromptAfterSignInIsEnabled: Boolean
-    get() = environment?.trustedDevicePromptAfterSignInIsEnabled ?: false
+  val biometricCredentialPromptAfterSignInIsEnabled: Boolean
+    get() = environment?.biometricCredentialPromptAfterSignInIsEnabled ?: false
 
   /**
-   * Indicates whether the trusted-device enrollment prompt should be offered after sign-up.
+   * Indicates whether the biometric-credential enrollment prompt should be offered after sign-up.
    *
    * @return `true` if the prompt is enabled, `false` otherwise. Returns `false` if the SDK is not
    *   yet initialized.
    */
-  val trustedDevicePromptAfterSignUpIsEnabled: Boolean
-    get() = environment?.trustedDevicePromptAfterSignUpIsEnabled ?: false
+  val biometricCredentialPromptAfterSignUpIsEnabled: Boolean
+    get() = environment?.biometricCredentialPromptAfterSignUpIsEnabled ?: false
 
   val isEmailEnabled: Boolean
     get() = environment?.emailIsEnabled ?: false
@@ -626,7 +626,7 @@ object Clerk {
    *
    * Use this flow when choosing between a root `AuthView` and authenticated content. It emits
    * `true` when there is a current user, the current session is active, and a non-dismissible auth
-   * view is no longer completing session tasks or trusted-device enrollment.
+   * view is no longer completing session tasks or biometric-credential enrollment.
    */
   val isAuthFlowCompleteFlow: StateFlow<Boolean> = _isAuthFlowCompleteFlow.asStateFlow()
 
@@ -727,20 +727,20 @@ object Clerk {
   val auth: Auth = Auth()
 
   /**
-   * The main entry point for trusted-device (biometric sign-in) credential operations.
+   * The main entry point for biometric-credential (biometric sign-in) credential operations.
    *
    * ### Example usage:
    * ```kotlin
    * // Enroll this device for biometric sign-in
-   * Clerk.trustedDevices.enroll()
+   * Clerk.biometricCredentials.enroll()
    *
    * // Sign in with the enrolled credential
-   * Clerk.trustedDevices.signIn()
+   * Clerk.biometricCredentials.signIn()
    * ```
    *
-   * @see TrustedDevices for all available trusted-device methods.
+   * @see BiometricCredentials for all available biometric-credential methods.
    */
-  val trustedDevices: TrustedDevices = TrustedDevices
+  val biometricCredentials: BiometricCredentials = BiometricCredentials
 
   // endregion
 

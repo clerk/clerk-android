@@ -1,4 +1,4 @@
-package com.clerk.api.trusteddevice
+package com.clerk.api.biometriccredential
 
 import android.util.Base64
 import com.clerk.api.Clerk
@@ -31,23 +31,23 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
-class TrustedDevicesTest {
+class BiometricCredentialsTest {
 
-  private lateinit var previousCredentialStore: TrustedDeviceLocalCredentialStore
-  private lateinit var previousKeyManager: TrustedDeviceKeyManager
+  private lateinit var previousCredentialStore: BiometricCredentialLocalCredentialStore
+  private lateinit var previousKeyManager: BiometricCredentialKeyManager
   private lateinit var credentialStore: InMemoryCredentialStore
   private lateinit var keyManager: FakeKeyManager
   private lateinit var previousLocale: Locale
 
   @Before
   fun setUp() {
-    previousCredentialStore = TrustedDevices.credentialStore
-    previousKeyManager = TrustedDevices.keyManager
+    previousCredentialStore = BiometricCredentials.credentialStore
+    previousKeyManager = BiometricCredentials.keyManager
     previousLocale = Locale.getDefault()
     credentialStore = InMemoryCredentialStore()
     keyManager = FakeKeyManager()
-    TrustedDevices.credentialStore = credentialStore
-    TrustedDevices.keyManager = keyManager
+    BiometricCredentials.credentialStore = credentialStore
+    BiometricCredentials.keyManager = keyManager
     Clerk.applicationId = APP_IDENTIFIER
     StorageHelper.storageCipherFactoryOverride = { PassthroughStorageCipher() }
     StorageHelper.reset(RuntimeEnvironment.getApplication())
@@ -55,8 +55,8 @@ class TrustedDevicesTest {
 
   @After
   fun tearDown() {
-    TrustedDevices.credentialStore = previousCredentialStore
-    TrustedDevices.keyManager = previousKeyManager
+    BiometricCredentials.credentialStore = previousCredentialStore
+    BiometricCredentials.keyManager = previousKeyManager
     Clerk.applicationId = null
     Clerk.environment = null
     Clerk.updateClient(com.clerk.api.network.model.client.Client())
@@ -73,9 +73,9 @@ class TrustedDevicesTest {
     credentialStore.credentials += credential(id = "td_old", userId = "user_1")
     credentialStore.credentials += credential(id = "td_other", userId = "user_2")
 
-    TrustedDevices.removeOtherLocalCredentialsForCurrentApp(
+    BiometricCredentials.removeOtherLocalCredentialsForCurrentApp(
       userId = "user_1",
-      keeping = trustedDevice(id = "td_keep"),
+      keeping = biometricCredential(id = "td_keep"),
     )
 
     assertEquals(setOf("td_keep", "td_other"), credentialStore.credentials.map { it.id }.toSet())
@@ -88,14 +88,14 @@ class TrustedDevicesTest {
     credentialStore.deleteFails = true
 
     assertFailsWith<IllegalStateException> {
-      TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1")
+      BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1")
     }
-    assertEquals(setOf("user_1"), TrustedDevicePendingCleanupStore.all())
+    assertEquals(setOf("user_1"), BiometricCredentialPendingCleanupStore.all())
 
     credentialStore.deleteFails = false
-    TrustedDevices.retryPendingLocalCredentialCleanup()
+    BiometricCredentials.retryPendingLocalCredentialCleanup()
 
-    assertTrue(TrustedDevicePendingCleanupStore.all().isEmpty())
+    assertTrue(BiometricCredentialPendingCleanupStore.all().isEmpty())
     assertTrue(credentialStore.credentials.isEmpty())
   }
 
@@ -105,20 +105,20 @@ class TrustedDevicesTest {
     keyManager.deleteFailuresRemaining = 1
 
     assertFailsWith<IllegalStateException> {
-      TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1")
+      BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1")
     }
-    assertEquals(setOf("user_1"), TrustedDevicePendingCleanupStore.all())
+    assertEquals(setOf("user_1"), BiometricCredentialPendingCleanupStore.all())
     assertEquals(listOf("td_1"), credentialStore.credentials.map { it.id })
 
-    TrustedDevices.retryPendingLocalCredentialCleanup()
+    BiometricCredentials.retryPendingLocalCredentialCleanup()
 
-    assertTrue(TrustedDevicePendingCleanupStore.all().isEmpty())
+    assertTrue(BiometricCredentialPendingCleanupStore.all().isEmpty())
     assertTrue(credentialStore.credentials.isEmpty())
     assertEquals(listOf("tdlk_td_1", "tdlk_td_1"), keyManager.deleteAttempts)
   }
 
   @Test
-  fun `trusted device sign in includes the configured locale`() = runTest {
+  fun `biometric credential sign in includes the configured locale`() = runTest {
     credentialStore.credentials += credential(id = "td_1", userId = "user_1")
     Clerk.environment =
       mockk<Environment> {
@@ -126,7 +126,7 @@ class TrustedDevicesTest {
           AuthConfig(
             singleSessionMode = false,
             nativeSettings =
-              AuthConfig.NativeSettings(apiEnabled = true, trustedDeviceSignInEnabled = true),
+              AuthConfig.NativeSettings(apiEnabled = true, biometricSignInEnabled = true),
           )
       }
     Locale.setDefault(Locale.CANADA_FRENCH)
@@ -141,11 +141,11 @@ class TrustedDevicesTest {
           id = "si_1",
           firstFactorVerification =
             Verification(
-              trustedDeviceChallenge =
-                TrustedDeviceChallenge(
+              biometricCredentialChallenge =
+                BiometricCredentialChallenge(
                   challenge = "challenge",
                   challengeId = "challenge_1",
-                  trustedDeviceId = "td_1",
+                  biometricCredentialId = "td_1",
                   clientData = "client-data",
                   expiresAt = 1_000,
                 )
@@ -155,14 +155,14 @@ class TrustedDevicesTest {
     coEvery { signInApi.attemptFirstFactor(any(), any()) } returns
       ClerkResult.success(SignIn(id = "si_1", status = SignIn.Status.COMPLETE))
 
-    val result = TrustedDevices.signIn()
+    val result = BiometricCredentials.signIn()
 
     assertTrue(result is ClerkResult.Success)
     assertEquals(LocaleProvider.locale.value.orEmpty(), createParams.captured["locale"])
   }
 
   private fun credential(id: String, userId: String) =
-    TrustedDeviceLocalCredential(
+    BiometricCredentialLocalCredential(
       id = id,
       localKeyId = "tdlk_$id",
       userId = userId,
@@ -171,16 +171,16 @@ class TrustedDevicesTest {
       updatedAt = 1,
     )
 
-  private fun trustedDevice(id: String) =
-    TrustedDevice(id = id, appIdentifier = APP_IDENTIFIER, createdAt = 1, updatedAt = 1)
+  private fun biometricCredential(id: String) =
+    BiometricCredential(id = id, appIdentifier = APP_IDENTIFIER, createdAt = 1, updatedAt = 1)
 
-  private class InMemoryCredentialStore : TrustedDeviceLocalCredentialStore {
-    val credentials = mutableListOf<TrustedDeviceLocalCredential>()
+  private class InMemoryCredentialStore : BiometricCredentialLocalCredentialStore {
+    val credentials = mutableListOf<BiometricCredentialLocalCredential>()
     var deleteFails = false
 
-    override fun all(): List<TrustedDeviceLocalCredential> = credentials.toList()
+    override fun all(): List<BiometricCredentialLocalCredential> = credentials.toList()
 
-    override fun save(credential: TrustedDeviceLocalCredential) {
+    override fun save(credential: BiometricCredentialLocalCredential) {
       credentials.removeAll { it.id == credential.id }
       credentials += credential
     }
@@ -195,23 +195,24 @@ class TrustedDevicesTest {
     }
   }
 
-  private class FakeKeyManager : TrustedDeviceKeyManager {
+  private class FakeKeyManager : BiometricCredentialKeyManager {
     val deletedKeyIds = mutableListOf<String>()
     val deleteAttempts = mutableListOf<String>()
     var deleteFailuresRemaining = 0
 
-    override fun isSupported(policy: TrustedDevicePolicy): Boolean = true
+    override fun isSupported(policy: BiometricCredentialPolicy): Boolean = true
 
-    override fun createKey(policy: TrustedDevicePolicy): TrustedDeviceLocalKey = error("Not used")
+    override fun createKey(policy: BiometricCredentialPolicy): BiometricCredentialLocalKey =
+      error("Not used")
 
     override suspend fun sign(
       clientData: String,
       localKeyId: String,
-      policy: TrustedDevicePolicy,
+      policy: BiometricCredentialPolicy,
       promptTitle: String,
       promptSubtitle: String?,
-    ): TrustedDeviceKeySignature =
-      TrustedDeviceKeySignature(clientData = clientData, signature = "signature")
+    ): BiometricCredentialKeySignature =
+      BiometricCredentialKeySignature(clientData = clientData, signature = "signature")
 
     override fun hasKey(localKeyId: String): Boolean = true
 

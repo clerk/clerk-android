@@ -1,8 +1,8 @@
-package com.clerk.ui.userprofile.security.trusteddevice
+package com.clerk.ui.userprofile.security.biometriccredential
 
+import com.clerk.api.biometriccredential.BiometricCredentialAvailability
+import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.trusteddevice.TrustedDeviceAvailability
-import com.clerk.api.trusteddevice.TrustedDevices
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
@@ -18,7 +18,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class UserProfileTrustedDeviceViewModelTest {
+class UserProfileBiometricCredentialViewModelTest {
 
   private val dispatcher = UnconfinedTestDispatcher()
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule(dispatcher)
@@ -31,33 +31,34 @@ class UserProfileTrustedDeviceViewModelTest {
   @Test
   fun `stale refresh cannot overwrite successful revocation`() =
     runTest(dispatcher) {
-      val staleRefreshResult = CompletableDeferred<TrustedDeviceAvailability>()
+      val staleRefreshResult = CompletableDeferred<BiometricCredentialAvailability>()
       var availabilityRequestCount = 0
-      mockkObject(TrustedDevices)
-      every { TrustedDevices.currentUserLocalAvailability() } returns
-        TrustedDeviceAvailability.Available
-      coEvery { TrustedDevices.currentUserAvailability() } coAnswers
+      mockkObject(BiometricCredentials)
+      every { BiometricCredentials.currentUserLocalAvailability() } returns
+        BiometricCredentialAvailability.Available
+      coEvery { BiometricCredentials.currentUserAvailability() } coAnswers
         {
           if (availabilityRequestCount++ == 0) {
             staleRefreshResult.await()
           } else {
-            TrustedDeviceAvailability.Unavailable(
-              TrustedDeviceAvailability.UnavailableReason.NO_LOCAL_CREDENTIAL
+            BiometricCredentialAvailability.Unavailable(
+              BiometricCredentialAvailability.UnavailableReason.NO_LOCAL_CREDENTIAL
             )
           }
         }
-      coEvery { TrustedDevices.revokeCurrentDeviceCredential() } returns ClerkResult.success(Unit)
-      val viewModel = UserProfileTrustedDeviceViewModel(workDispatcher = dispatcher)
+      coEvery { BiometricCredentials.revokeCurrentDeviceCredential() } returns
+        ClerkResult.success(Unit)
+      val viewModel = UserProfileBiometricCredentialViewModel(workDispatcher = dispatcher)
 
       viewModel.refreshAvailability()
-      viewModel.setTrustedDeviceSignInEnabled(
+      viewModel.setBiometricSignInEnabled(
         enabled = false,
         promptTitle = "Disable biometric sign-in",
         promptSubtitle = null,
       )
       viewModel.state.first { !it.isLoading && !it.isEnabled }
 
-      staleRefreshResult.complete(TrustedDeviceAvailability.Available)
+      staleRefreshResult.complete(BiometricCredentialAvailability.Available)
 
       assertFalse(viewModel.state.value.isEnabled)
     }
