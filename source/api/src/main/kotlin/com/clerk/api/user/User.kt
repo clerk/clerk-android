@@ -751,7 +751,7 @@ suspend fun User.createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
  *
  * **Note:** The social provider that you want to connect to must be enabled in your app's settings
  * in the Clerk Dashboard. See: (Social
- * connections)[https://clerk.com/docs/authentication/configuration/sign-up-sign-in-options#social-connections-o-auth]
+ * connections)[https://clerk.com/docs/guides/configure/auth-strategies/sign-up-sign-in-options#social-connections-oauth]
  *
  * After calling `createExternalAccount`, the initial state of the returned [ExternalAccount] will
  * be unverified. To initiate the connection with the external provider, redirect the user to the
