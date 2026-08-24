@@ -21,7 +21,7 @@ import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.emailVerificationStrategy
 import com.clerk.api.signup.firstFieldToCollect
 import com.clerk.api.signup.firstFieldToVerify
-import com.clerk.ui.auth.trusteddevice.TrustedDeviceEnrollmentPrompt
+import com.clerk.ui.auth.biometriccredential.BiometricCredentialEnrollmentPrompt
 import com.clerk.ui.core.common.NavigableState
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.navigation.pop
@@ -89,7 +89,7 @@ internal class AuthState(
 
   var lastSubmittedIdentifier by mutableStateOf<String?>(null)
 
-  private var trustedDeviceEnrollmentWasOffered by mutableStateOf(false)
+  private var biometricCredentialEnrollmentWasOffered by mutableStateOf(false)
 
   var organizationLogoUrl by mutableStateOf(organizationLogoUrl)
     private set
@@ -219,22 +219,22 @@ internal class AuthState(
       PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION -> routeToChooseOrganization()
       PostAuthCompletionAction.ROUTE_TO_HELP -> backStack.add(AuthDestination.SignInGetHelp)
       PostAuthCompletionAction.COMPLETE_AUTH -> {
-        if (offerTrustedDeviceEnrollmentIfNeeded(completedWithSignUp)) return
+        if (offerBiometricCredentialEnrollmentIfNeeded(completedWithSignUp)) return
         onAuthComplete()
       }
     }
   }
 
   /**
-   * Routes to the trusted-device enrollment prompt when it should be offered after a completed auth
-   * flow. Returns `true` when the prompt was routed to.
+   * Routes to the biometric-credential enrollment prompt when it should be offered after a
+   * completed auth flow. Returns `true` when the prompt was routed to.
    */
   @Suppress("ReturnCount")
-  private fun offerTrustedDeviceEnrollmentIfNeeded(completedWithSignUp: Boolean): Boolean {
-    if (trustedDeviceEnrollmentWasOffered) return false
-    if (backStack.lastOrNull() == AuthDestination.TrustedDeviceEnrollment) return false
+  private fun offerBiometricCredentialEnrollmentIfNeeded(completedWithSignUp: Boolean): Boolean {
+    if (biometricCredentialEnrollmentWasOffered) return false
+    if (backStack.lastOrNull() == AuthDestination.BiometricCredentialEnrollment) return false
     if (
-      !TrustedDeviceEnrollmentPrompt.shouldOffer(
+      !BiometricCredentialEnrollmentPrompt.shouldOffer(
         afterSignUp = completedWithSignUp,
         sharedPreferences = sharedPreferences,
       )
@@ -242,9 +242,9 @@ internal class AuthState(
       return false
     }
 
-    trustedDeviceEnrollmentWasOffered = true
-    TrustedDeviceEnrollmentPrompt.markPromptSeen(sharedPreferences)
-    backStack.add(AuthDestination.TrustedDeviceEnrollment)
+    biometricCredentialEnrollmentWasOffered = true
+    BiometricCredentialEnrollmentPrompt.markPromptSeen(sharedPreferences)
+    backStack.add(AuthDestination.BiometricCredentialEnrollment)
     return true
   }
 

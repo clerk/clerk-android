@@ -38,13 +38,13 @@ import com.clerk.ui.core.dimens.dp10
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.security.biometriccredential.UserProfileBiometricCredentialsSection
 import com.clerk.ui.userprofile.security.delete.UserProfileDeleteAccountSection
 import com.clerk.ui.userprofile.security.device.UserProfileDevicesSection
 import com.clerk.ui.userprofile.security.mfa.UserProfileMfaSection
 import com.clerk.ui.userprofile.security.passkey.UserProfilePasskeySection
 import com.clerk.ui.userprofile.security.password.PasswordAction
 import com.clerk.ui.userprofile.security.password.UserProfilePasswordSection
-import com.clerk.ui.userprofile.security.trusteddevice.UserProfileTrustedDeviceSection
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -58,9 +58,9 @@ internal fun UserProfileSecurityView() {
     isPasskeyEnabled = Clerk.passkeyIsEnabled,
     isMfaEnabled = Clerk.mfaIsEnabled,
     isDeleteSelfEnabled = Clerk.deleteSelfIsEnabled,
-    isTrustedDeviceEnabled =
-      Clerk.trustedDeviceSignInIsEnabled &&
-        Clerk.trustedDevices.deviceSupportsBiometricAuthentication,
+    isBiometricCredentialEnabled =
+      Clerk.biometricSignInIsEnabled &&
+        Clerk.biometricCredentials.deviceSupportsBiometricAuthentication,
   )
 }
 
@@ -71,7 +71,7 @@ private fun UserProfileSecurityViewImpl(
   isPasskeyEnabled: Boolean = false,
   isMfaEnabled: Boolean = false,
   isDeleteSelfEnabled: Boolean = false,
-  isTrustedDeviceEnabled: Boolean = false,
+  isBiometricCredentialEnabled: Boolean = false,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
@@ -96,7 +96,7 @@ private fun UserProfileSecurityViewImpl(
           isPasskeyEnabled = isPasskeyEnabled,
           isMfaEnabled = isMfaEnabled,
           isDeleteSelfEnabled = isDeleteSelfEnabled,
-          isTrustedDeviceEnabled = isTrustedDeviceEnabled,
+          isBiometricCredentialEnabled = isBiometricCredentialEnabled,
           snackbarHostState = snackbarHostState,
           sessions =
             (state as? UserProfileSecurityViewModel.State.Success)
@@ -117,7 +117,7 @@ private fun UserProfileSecurityMainContent(
   isPasskeyEnabled: Boolean,
   isMfaEnabled: Boolean,
   isDeleteSelfEnabled: Boolean,
-  isTrustedDeviceEnabled: Boolean,
+  isBiometricCredentialEnabled: Boolean,
   snackbarHostState: SnackbarHostState,
   sessions: ImmutableList<Session>,
 ) {
@@ -150,7 +150,7 @@ private fun UserProfileSecurityMainContent(
           isMfaEnabled = isMfaEnabled,
           sessions = sessions,
           isDeleteSelfEnabled = isDeleteSelfEnabled,
-          isTrustedDeviceEnabled = isTrustedDeviceEnabled,
+          isBiometricCredentialEnabled = isBiometricCredentialEnabled,
         ),
       onAdd = {
         showBottomSheet = true
@@ -237,8 +237,8 @@ private fun UserProfileSecurityContent(
       UserProfilePasswordSection(onClick = onClickAddPassword)
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
-    if (configuration.isTrustedDeviceEnabled) {
-      UserProfileTrustedDeviceSection(onError = onError)
+    if (configuration.isBiometricCredentialEnabled) {
+      UserProfileBiometricCredentialsSection(onError = onError)
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if (configuration.isPasskeyEnabled) {
@@ -306,6 +306,6 @@ internal data class SecurityContentConfiguration(
   val isPasskeyEnabled: Boolean = true,
   val isMfaEnabled: Boolean = true,
   val isDeleteSelfEnabled: Boolean = true,
-  val isTrustedDeviceEnabled: Boolean = false,
+  val isBiometricCredentialEnabled: Boolean = false,
   val sessions: ImmutableList<Session> = persistentListOf(),
 )

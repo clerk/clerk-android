@@ -1,4 +1,4 @@
-package com.clerk.api.trusteddevice
+package com.clerk.api.biometriccredential
 
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.environment.AuthConfig
@@ -11,18 +11,18 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class TrustedDeviceSerializationTest {
+class BiometricCredentialSerializationTest {
 
   @Test
   fun `serializer preserves the public descriptor name`() {
     assertEquals(
-      "com.clerk.api.trusteddevice.TrustedDevice",
-      TrustedDevice.serializer().descriptor.serialName,
+      "com.clerk.api.biometriccredential.BiometricCredential",
+      BiometricCredential.serializer().descriptor.serialName,
     )
   }
 
   @Test
-  fun `trusted device decodes from snake_case json`() {
+  fun `biometric credential decodes from snake_case json`() {
     val json =
       """
       {
@@ -41,24 +41,24 @@ class TrustedDeviceSerializationTest {
       """
         .trimIndent()
 
-    val trustedDevice = ClerkApi.json.decodeFromString<TrustedDevice>(json)
+    val biometricCredential = ClerkApi.json.decodeFromString<BiometricCredential>(json)
 
-    assertEquals("td_123", trustedDevice.id)
-    assertEquals(TrustedDevice.Platform.ANDROID, trustedDevice.platform)
-    assertEquals("android", trustedDevice.platformRawValue)
-    assertEquals("com.example.app", trustedDevice.appIdentifier)
-    assertEquals("Pixel 9", trustedDevice.name)
-    assertEquals("ES256", trustedDevice.algorithm)
-    assertEquals(TrustedDevice.Status.ACTIVE, trustedDevice.status)
-    assertEquals("active", trustedDevice.statusRawValue)
-    assertEquals(1720000000000, trustedDevice.createdAt)
-    assertEquals(1720000001000, trustedDevice.updatedAt)
-    assertEquals(1720000002000L, trustedDevice.lastUsedAt)
-    assertNull(trustedDevice.revokedAt)
+    assertEquals("td_123", biometricCredential.id)
+    assertEquals(BiometricCredential.Platform.ANDROID, biometricCredential.platform)
+    assertEquals("android", biometricCredential.platformRawValue)
+    assertEquals("com.example.app", biometricCredential.appIdentifier)
+    assertEquals("Pixel 9", biometricCredential.name)
+    assertEquals("ES256", biometricCredential.algorithm)
+    assertEquals(BiometricCredential.Status.ACTIVE, biometricCredential.status)
+    assertEquals("active", biometricCredential.statusRawValue)
+    assertEquals(1720000000000, biometricCredential.createdAt)
+    assertEquals(1720000001000, biometricCredential.updatedAt)
+    assertEquals(1720000002000L, biometricCredential.lastUsedAt)
+    assertNull(biometricCredential.revokedAt)
   }
 
   @Test
-  fun `trusted device preserves unknown platform and status values`() {
+  fun `biometric credential preserves unknown platform and status values`() {
     val json =
       """
       {
@@ -73,31 +73,31 @@ class TrustedDeviceSerializationTest {
       """
         .trimIndent()
 
-    val trustedDevice = ClerkApi.json.decodeFromString<TrustedDevice>(json)
+    val biometricCredential = ClerkApi.json.decodeFromString<BiometricCredential>(json)
 
-    assertEquals(TrustedDevice.Platform.UNKNOWN, trustedDevice.platform)
-    assertEquals(TrustedDevice.Status.UNKNOWN, trustedDevice.status)
-    assertEquals("vision_pro", trustedDevice.platformRawValue)
-    assertEquals("paused", trustedDevice.statusRawValue)
+    assertEquals(BiometricCredential.Platform.UNKNOWN, biometricCredential.platform)
+    assertEquals(BiometricCredential.Status.UNKNOWN, biometricCredential.status)
+    assertEquals("vision_pro", biometricCredential.platformRawValue)
+    assertEquals("paused", biometricCredential.statusRawValue)
 
-    val copied = trustedDevice.copy(name = "Updated device")
-    val encodedCopy = ClerkApi.json.encodeToString(TrustedDevice.serializer(), copied)
-    val decodedCopy = ClerkApi.json.decodeFromString<TrustedDevice>(encodedCopy)
+    val copied = biometricCredential.copy(name = "Updated device")
+    val encodedCopy = ClerkApi.json.encodeToString(BiometricCredential.serializer(), copied)
+    val decodedCopy = ClerkApi.json.decodeFromString<BiometricCredential>(encodedCopy)
 
     assertEquals("Updated device", decodedCopy.name)
     assertEquals("vision_pro", decodedCopy.platformRawValue)
     assertEquals("paused", decodedCopy.statusRawValue)
 
     val otherPlatform =
-      ClerkApi.json.decodeFromString<TrustedDevice>(json.replace("vision_pro", "visionos"))
+      ClerkApi.json.decodeFromString<BiometricCredential>(json.replace("vision_pro", "visionos"))
     val otherStatus =
-      ClerkApi.json.decodeFromString<TrustedDevice>(json.replace("paused", "suspended"))
-    assertNotEquals(trustedDevice, otherPlatform)
-    assertNotEquals(trustedDevice, otherStatus)
+      ClerkApi.json.decodeFromString<BiometricCredential>(json.replace("paused", "suspended"))
+    assertNotEquals(biometricCredential, otherPlatform)
+    assertNotEquals(biometricCredential, otherStatus)
   }
 
   @Test
-  fun `trusted device challenge decodes from snake_case json`() {
+  fun `biometric credential challenge decodes from snake_case json`() {
     val json =
       """
       {
@@ -112,18 +112,18 @@ class TrustedDeviceSerializationTest {
       """
         .trimIndent()
 
-    val challenge = ClerkApi.json.decodeFromString<TrustedDeviceChallenge>(json)
+    val challenge = ClerkApi.json.decodeFromString<BiometricCredentialChallenge>(json)
 
     assertEquals("challenge-value", challenge.challenge)
     assertEquals("tdc_123", challenge.challengeId)
-    assertEquals("td_123", challenge.trustedDeviceId)
+    assertEquals("td_123", challenge.biometricCredentialId)
     assertEquals("client-data-to-sign", challenge.clientData)
     assertEquals(1720000005000, challenge.expiresAt)
     assertEquals("ES256", challenge.algorithm)
   }
 
   @Test
-  fun `verification decodes trusted device challenge`() {
+  fun `verification decodes biometric credential challenge`() {
     val json =
       """
       {
@@ -144,8 +144,8 @@ class TrustedDeviceSerializationTest {
     val verification = ClerkApi.json.decodeFromString<Verification>(json)
 
     assertEquals("trusted_device", verification.strategy)
-    assertNotNull(verification.trustedDeviceChallenge)
-    assertEquals("client-data-to-sign", verification.trustedDeviceChallenge?.clientData)
+    assertNotNull(verification.biometricCredentialChallenge)
+    assertEquals("client-data-to-sign", verification.biometricCredentialChallenge?.clientData)
   }
 
   @Test
@@ -167,9 +167,9 @@ class TrustedDeviceSerializationTest {
     val authConfig = ClerkApi.json.decodeFromString<AuthConfig>(json)
 
     assertTrue(authConfig.nativeSettings.apiEnabled)
-    assertTrue(authConfig.nativeSettings.trustedDeviceSignInEnabled)
-    assertTrue(authConfig.nativeSettings.trustedDevicePromptAfterSignInEnabled)
-    assertFalse(authConfig.nativeSettings.trustedDevicePromptAfterSignUpEnabled)
+    assertTrue(authConfig.nativeSettings.biometricSignInEnabled)
+    assertTrue(authConfig.nativeSettings.biometricCredentialPromptAfterSignInEnabled)
+    assertFalse(authConfig.nativeSettings.biometricCredentialPromptAfterSignUpEnabled)
   }
 
   @Test
@@ -179,8 +179,8 @@ class TrustedDeviceSerializationTest {
     val authConfig = ClerkApi.json.decodeFromString<AuthConfig>(json)
 
     assertFalse(authConfig.nativeSettings.apiEnabled)
-    assertFalse(authConfig.nativeSettings.trustedDeviceSignInEnabled)
-    assertFalse(authConfig.nativeSettings.trustedDevicePromptAfterSignInEnabled)
-    assertFalse(authConfig.nativeSettings.trustedDevicePromptAfterSignUpEnabled)
+    assertFalse(authConfig.nativeSettings.biometricSignInEnabled)
+    assertFalse(authConfig.nativeSettings.biometricCredentialPromptAfterSignInEnabled)
+    assertFalse(authConfig.nativeSettings.biometricCredentialPromptAfterSignUpEnabled)
   }
 }

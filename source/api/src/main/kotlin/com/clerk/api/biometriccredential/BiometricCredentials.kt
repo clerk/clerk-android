@@ -1,4 +1,4 @@
-package com.clerk.api.trusteddevice
+package com.clerk.api.biometriccredential
 
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
@@ -15,9 +15,9 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * The main entry point for trusted-device (biometric sign-in) credential operations.
+ * The main entry point for biometric-credential (biometric sign-in) credential operations.
  *
- * Access via [Clerk.trustedDevices].
+ * Access via [Clerk.biometricCredentials].
  *
  * Enrolling generates a biometric-gated private key in the Android Keystore and registers its
  * public key with Clerk. Signing in signs a server challenge with that key after the user passes
@@ -26,126 +26,132 @@ import kotlinx.serialization.json.jsonPrimitive
  * ### Example usage:
  * ```kotlin
  * // Enroll the current device while signed in
- * Clerk.trustedDevices.enroll()
+ * Clerk.biometricCredentials.enroll()
  *
  * // Later, sign in with biometrics
- * Clerk.trustedDevices.signIn().onSuccess { signIn ->
+ * Clerk.biometricCredentials.signIn().onSuccess { signIn ->
  *   // Session created
  * }
  * ```
  */
 @Suppress("TooManyFunctions", "ReturnCount")
-object TrustedDevices {
+object BiometricCredentials {
 
   @VisibleForTesting
-  internal var keyManager: TrustedDeviceKeyManager = DefaultTrustedDeviceKeyManager
+  internal var keyManager: BiometricCredentialKeyManager = DefaultBiometricCredentialKeyManager
 
   @VisibleForTesting
-  internal var credentialStore: TrustedDeviceLocalCredentialStore =
-    DefaultTrustedDeviceLocalCredentialStore
+  internal var credentialStore: BiometricCredentialLocalCredentialStore =
+    DefaultBiometricCredentialLocalCredentialStore
 
   /**
-   * Lists active trusted-device credentials for the signed-in user.
+   * Lists active biometric credentials for the signed-in user.
    *
-   * @return A [ClerkResult] containing the list of [TrustedDevice] credentials on success, or a
-   *   [ClerkErrorResponse] on failure.
+   * @return A [ClerkResult] containing the list of [BiometricCredential] credentials on success, or
+   *   a [ClerkErrorResponse] on failure.
    */
-  suspend fun list(): ClerkResult<List<TrustedDevice>, ClerkErrorResponse> {
-    return ClerkApi.trustedDevice.list()
+  suspend fun list(): ClerkResult<List<BiometricCredential>, ClerkErrorResponse> {
+    return ClerkApi.biometricCredential.list()
   }
 
   /**
-   * Returns local trusted-device sign-in availability.
+   * Returns local biometric-credential sign-in availability.
    *
    * When a Clerk session is active, this also reconciles the local credential with the server.
    * Without an active session, this reports whether the local biometric-gated credential can be
-   * used to start trusted-device sign-in.
+   * used to start biometric-credential sign-in.
    *
-   * @param id The trusted-device credential ID to check. When omitted, the available local
-   *   credential is used.
+   * @param id The biometric credential ID to check. When omitted, the available local credential is
+   *   used.
    * @param identifierHint A local-only user identifier hint used to choose a matching credential.
    */
   suspend fun availability(
     id: String? = null,
     identifierHint: String? = null,
-  ): TrustedDeviceAvailability {
+  ): BiometricCredentialAvailability {
     return when (val result = selectedLocalCredential(id, identifierHint, userId = null)) {
-      is LocalCredentialResult.Available -> TrustedDeviceAvailability.Available
-      is LocalCredentialResult.Unavailable -> TrustedDeviceAvailability.Unavailable(result.reason)
+      is LocalCredentialResult.Available -> BiometricCredentialAvailability.Available
+      is LocalCredentialResult.Unavailable ->
+        BiometricCredentialAvailability.Unavailable(result.reason)
     }
   }
 
   /**
-   * Returns trusted-device sign-in availability for the current signed-in user, reconciling the
-   * local credential with the server.
+   * Returns biometric-credential sign-in availability for the current signed-in user, reconciling
+   * the local credential with the server.
    */
-  suspend fun currentUserAvailability(): TrustedDeviceAvailability {
+  suspend fun currentUserAvailability(): BiometricCredentialAvailability {
     val userId =
       Clerk.user?.id
-        ?: return TrustedDeviceAvailability.Unavailable(
-          TrustedDeviceAvailability.UnavailableReason.NO_LOCAL_CREDENTIAL
+        ?: return BiometricCredentialAvailability.Unavailable(
+          BiometricCredentialAvailability.UnavailableReason.NO_LOCAL_CREDENTIAL
         )
 
     return when (val result = selectedLocalCredential(id = null, identifierHint = null, userId)) {
-      is LocalCredentialResult.Available -> TrustedDeviceAvailability.Available
-      is LocalCredentialResult.Unavailable -> TrustedDeviceAvailability.Unavailable(result.reason)
+      is LocalCredentialResult.Available -> BiometricCredentialAvailability.Available
+      is LocalCredentialResult.Unavailable ->
+        BiometricCredentialAvailability.Unavailable(result.reason)
     }
   }
 
-  /** Returns local trusted-device sign-in availability without reconciling with the server. */
+  /**
+   * Returns local biometric-credential sign-in availability without reconciling with the server.
+   */
   fun localAvailability(
     id: String? = null,
     identifierHint: String? = null,
-  ): TrustedDeviceAvailability {
+  ): BiometricCredentialAvailability {
     return when (val result = localCredentialCandidates(id, identifierHint, userId = null)) {
-      is LocalCredentialsResult.Available -> TrustedDeviceAvailability.Available
-      is LocalCredentialsResult.Unavailable -> TrustedDeviceAvailability.Unavailable(result.reason)
+      is LocalCredentialsResult.Available -> BiometricCredentialAvailability.Available
+      is LocalCredentialsResult.Unavailable ->
+        BiometricCredentialAvailability.Unavailable(result.reason)
     }
   }
 
   /**
-   * Returns local trusted-device sign-in availability for the current signed-in user without
+   * Returns local biometric-credential sign-in availability for the current signed-in user without
    * reconciling with the server.
    */
-  fun currentUserLocalAvailability(): TrustedDeviceAvailability {
+  fun currentUserLocalAvailability(): BiometricCredentialAvailability {
     val userId =
       Clerk.user?.id
-        ?: return TrustedDeviceAvailability.Unavailable(
-          TrustedDeviceAvailability.UnavailableReason.NO_LOCAL_CREDENTIAL
+        ?: return BiometricCredentialAvailability.Unavailable(
+          BiometricCredentialAvailability.UnavailableReason.NO_LOCAL_CREDENTIAL
         )
 
     return when (val result = localCredentialCandidates(id = null, identifierHint = null, userId)) {
-      is LocalCredentialsResult.Available -> TrustedDeviceAvailability.Available
-      is LocalCredentialsResult.Unavailable -> TrustedDeviceAvailability.Unavailable(result.reason)
+      is LocalCredentialsResult.Available -> BiometricCredentialAvailability.Available
+      is LocalCredentialsResult.Unavailable ->
+        BiometricCredentialAvailability.Unavailable(result.reason)
     }
   }
 
   /**
-   * Enrolls the current app installation as a biometric trusted device.
+   * Enrolls the current app installation as a biometric credential.
    *
    * This requires an active or pending Clerk session. The generated private key stays on the
    * device.
    *
-   * @param deviceName A human-readable device name stored with the trusted-device credential.
+   * @param name A human-readable name stored with the biometric credential.
    * @param identifierHint A local-only user identifier hint for selecting this credential later.
    * @param policy The local authentication policy used to protect the generated private key.
    *   Defaults to requiring biometric availability while allowing device credential fallback during
    *   authentication.
    * @param promptTitle The title shown in the system biometric prompt.
    * @param promptSubtitle The subtitle shown in the system biometric prompt.
-   * @return A [ClerkResult] containing the enrolled [TrustedDevice] on success, or a
+   * @return A [ClerkResult] containing the enrolled [BiometricCredential] on success, or a
    *   [ClerkErrorResponse] on failure.
    */
   suspend fun enroll(
-    deviceName: String? = null,
+    name: String? = null,
     identifierHint: String? = null,
-    policy: TrustedDevicePolicy = TrustedDevicePolicy.BIOMETRY_OR_DEVICE_PASSCODE,
+    policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
     promptTitle: String? = null,
     promptSubtitle: String? = null,
-  ): ClerkResult<TrustedDevice, ClerkErrorResponse> {
-    if (Clerk.session?.status?.allowsTrustedDeviceEnrollment != true) {
+  ): ClerkResult<BiometricCredential, ClerkErrorResponse> {
+    if (Clerk.session?.status?.allowsBiometricCredentialEnrollment != true) {
       return clientFailure(
-        "Unable to enroll a trusted device without an active or pending Clerk session."
+        "Unable to enroll a biometric credential without an active or pending Clerk session."
       )
     }
     featureUnavailableFailure()?.let {
@@ -153,30 +159,32 @@ object TrustedDevices {
     }
     val appIdentifier =
       Clerk.applicationId
-        ?: return clientFailure("Unable to enroll a trusted device without an application ID.")
+        ?: return clientFailure(
+          "Unable to enroll a biometric credential without an application ID."
+        )
     val userId =
       Clerk.user?.id
         ?: return clientFailure(
-          "Unable to enroll a trusted device without a user for the current session."
+          "Unable to enroll a biometric credential without a user for the current session."
         )
 
     val localKey =
       try {
         keyManager.createKey(policy)
-      } catch (e: TrustedDeviceKeyManagerException) {
+      } catch (e: BiometricCredentialKeyManagerException) {
         return ClerkResult.unknownFailure(e)
       }
 
     val enrollmentResult =
-      performEnrollment(localKey, appIdentifier, deviceName, promptTitle, promptSubtitle)
+      performEnrollment(localKey, appIdentifier, name, promptTitle, promptSubtitle)
     return when (enrollmentResult) {
       is ClerkResult.Success -> {
-        val trustedDevice = enrollmentResult.value
-        saveLocalCredential(trustedDevice, localKey, userId, identifierHint)?.let { failure ->
+        val biometricCredential = enrollmentResult.value
+        saveLocalCredential(biometricCredential, localKey, userId, identifierHint)?.let { failure ->
           runCatching { keyManager.deleteKey(localKey.localKeyId) }
           return failure
         }
-        removeOtherLocalCredentialsForCurrentApp(userId = userId, keeping = trustedDevice)
+        removeOtherLocalCredentialsForCurrentApp(userId = userId, keeping = biometricCredential)
         enrollmentResult
       }
       is ClerkResult.Failure -> {
@@ -187,14 +195,14 @@ object TrustedDevices {
   }
 
   /**
-   * Revokes a trusted-device credential for the signed-in user.
+   * Revokes a biometric credential for the signed-in user.
    *
-   * @param id The trusted-device credential ID to revoke.
-   * @return A [ClerkResult] containing the revoked [TrustedDevice] on success, or a
+   * @param id The biometric credential ID to revoke.
+   * @return A [ClerkResult] containing the revoked [BiometricCredential] on success, or a
    *   [ClerkErrorResponse] on failure.
    */
-  suspend fun revoke(id: String): ClerkResult<TrustedDevice, ClerkErrorResponse> {
-    val result = ClerkApi.trustedDevice.revoke(id)
+  suspend fun revoke(id: String): ClerkResult<BiometricCredential, ClerkErrorResponse> {
+    val result = ClerkApi.biometricCredential.revoke(id)
     if (result is ClerkResult.Success) {
       credentialStore.credential(id)?.let { deleteLocalCredential(it) }
     }
@@ -202,17 +210,16 @@ object TrustedDevices {
   }
 
   /**
-   * Revokes the available local trusted-device credential for the current signed-in user, if one
-   * exists.
+   * Revokes the available local biometric credential for the current signed-in user, if one exists.
    *
    * Succeeds without a server call when there is no local credential to revoke.
    *
    * @return A [ClerkResult] containing [Unit] on success, or a [ClerkErrorResponse] on failure.
    */
-  suspend fun revokeCurrentDeviceCredential(): ClerkResult<Unit, ClerkErrorResponse> {
-    if (Clerk.session?.status?.allowsTrustedDeviceEnrollment != true) {
+  suspend fun revokeCurrentBiometricCredential(): ClerkResult<Unit, ClerkErrorResponse> {
+    if (Clerk.session?.status?.allowsBiometricCredentialEnrollment != true) {
       return clientFailure(
-        "Unable to revoke a trusted device without an active or pending Clerk session."
+        "Unable to revoke a biometric credential without an active or pending Clerk session."
       )
     }
     val userId = Clerk.user?.id ?: return ClerkResult.success(Unit)
@@ -228,7 +235,7 @@ object TrustedDevices {
   }
 
   /**
-   * Deletes local trusted-device credentials and keys belonging to [deletedUserId].
+   * Deletes local biometric credentials and keys belonging to [deletedUserId].
    *
    * Call this after the user's account has been deleted so stale local credentials don't linger.
    *
@@ -246,25 +253,25 @@ object TrustedDevices {
    */
   @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
   fun forgetLocalCredentialsAfterAccountDeletion(deletedUserId: String): Int {
-    TrustedDevicePendingCleanupStore.add(deletedUserId)
+    BiometricCredentialPendingCleanupStore.add(deletedUserId)
     return forgetLocalCredentials(deletedUserId).also {
-      TrustedDevicePendingCleanupStore.remove(deletedUserId)
+      BiometricCredentialPendingCleanupStore.remove(deletedUserId)
     }
   }
 
   internal fun retryPendingLocalCredentialCleanup() {
-    TrustedDevicePendingCleanupStore.all().forEach { deletedUserId ->
+    BiometricCredentialPendingCleanupStore.all().forEach { deletedUserId ->
       runCatching { forgetLocalCredentials(deletedUserId) }
-        .onSuccess { TrustedDevicePendingCleanupStore.remove(deletedUserId) }
-        .onFailure { ClerkLog.w("Failed to retry trusted-device local credential cleanup.") }
+        .onSuccess { BiometricCredentialPendingCleanupStore.remove(deletedUserId) }
+        .onFailure { ClerkLog.w("Failed to retry biometric-credential local credential cleanup.") }
     }
   }
 
   /**
-   * Signs in with a locally enrolled biometric trusted-device credential.
+   * Signs in with a locally enrolled biometric credential.
    *
-   * @param id The trusted-device credential ID to use. When omitted, the available local credential
-   *   is used.
+   * @param id The biometric credential ID to use. When omitted, the available local credential is
+   *   used.
    * @param identifierHint A local-only user identifier hint used to choose a matching credential.
    * @param promptTitle The title shown in the system biometric prompt.
    * @param promptSubtitle The subtitle shown in the system biometric prompt.
@@ -281,7 +288,7 @@ object TrustedDevices {
       when (val result = selectedLocalCredential(id, identifierHint, userId = null)) {
         is LocalCredentialResult.Available -> result.credential
         is LocalCredentialResult.Unavailable ->
-          return clientFailure("Trusted-device sign-in is unavailable.")
+          return clientFailure("Biometric-credential sign-in is unavailable.")
       }
 
     val createResult =
@@ -295,13 +302,12 @@ object TrustedDevices {
     val signIn =
       when (createResult) {
         is ClerkResult.Success -> createResult.value
-        is ClerkResult.Failure ->
-          return handleTrustedDeviceSignInError(createResult, localCredential)
+        is ClerkResult.Failure -> return handleBiometricSignInError(createResult, localCredential)
       }
 
     val challenge =
-      signIn.firstFactorVerification?.trustedDeviceChallenge
-        ?: return clientFailure("Trusted-device sign-in did not return a challenge.")
+      signIn.firstFactorVerification?.biometricCredentialChallenge
+        ?: return clientFailure("Biometric-credential sign-in did not return a challenge.")
 
     val signature =
       try {
@@ -312,10 +318,10 @@ object TrustedDevices {
           promptTitle = promptTitle ?: DEFAULT_SIGN_IN_PROMPT_TITLE,
           promptSubtitle = promptSubtitle,
         )
-      } catch (e: TrustedDeviceKeyManagerException) {
+      } catch (e: BiometricCredentialKeyManagerException) {
         if (
-          e.code == TrustedDeviceKeyManagerException.Code.KEY_INVALIDATED ||
-            e.code == TrustedDeviceKeyManagerException.Code.KEY_NOT_FOUND
+          e.code == BiometricCredentialKeyManagerException.Code.KEY_INVALIDATED ||
+            e.code == BiometricCredentialKeyManagerException.Code.KEY_NOT_FOUND
         ) {
           deleteLocalCredential(localCredential)
         }
@@ -336,81 +342,83 @@ object TrustedDevices {
       )
     return when (attemptResult) {
       is ClerkResult.Success -> attemptResult
-      is ClerkResult.Failure -> handleTrustedDeviceSignInError(attemptResult, localCredential)
+      is ClerkResult.Failure -> handleBiometricSignInError(attemptResult, localCredential)
     }
   }
 
   /**
-   * Validates the local trusted-device credential against the server when possible.
+   * Validates the local biometric credential against the server when possible.
    *
    * Stale local credentials are cleaned up when the server reports them missing.
    *
-   * @param id The trusted-device credential ID to validate. When omitted, the available local
-   *   credential is used.
+   * @param id The biometric credential ID to validate. When omitted, the available local credential
+   *   is used.
    * @param identifierHint A local-only user identifier hint used to choose a matching credential.
    */
   suspend fun validateLocalCredentialIfPossible(
     id: String? = null,
     identifierHint: String? = null,
-  ): TrustedDeviceValidationResult {
+  ): BiometricCredentialValidationResult {
     if (
-      trustedDeviceFeatureUnavailableReason() ==
-        TrustedDeviceAvailability.UnavailableReason.ENVIRONMENT_UNAVAILABLE
+      biometricCredentialFeatureUnavailableReason() ==
+        BiometricCredentialAvailability.UnavailableReason.ENVIRONMENT_UNAVAILABLE
     ) {
-      return TrustedDeviceValidationResult.Inconclusive
+      return BiometricCredentialValidationResult.Inconclusive
     }
 
     val localCredential =
       when (val result = localCredentialCandidates(id, identifierHint, userId = null)) {
         is LocalCredentialsResult.Available -> result.credentials.first()
         is LocalCredentialsResult.Unavailable ->
-          return TrustedDeviceValidationResult.Invalid(result.reason)
+          return BiometricCredentialValidationResult.Invalid(result.reason)
       }
 
-    return when (val result = ClerkApi.trustedDevice.validateSignInCredential(localCredential.id)) {
+    return when (
+      val result = ClerkApi.biometricCredential.validateSignInCredential(localCredential.id)
+    ) {
       is ClerkResult.Success ->
         if (result.value.valid) {
-          TrustedDeviceValidationResult.Valid
+          BiometricCredentialValidationResult.Valid
         } else {
           deleteLocalCredential(localCredential)
-          TrustedDeviceValidationResult.Invalid(
-            TrustedDeviceAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
+          BiometricCredentialValidationResult.Invalid(
+            BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
           )
         }
       is ClerkResult.Failure -> {
-        if (result.isMissingTrustedDeviceCredential) {
+        if (result.isMissingBiometricCredential) {
           deleteLocalCredential(localCredential)
-          return TrustedDeviceValidationResult.Invalid(
-            TrustedDeviceAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
+          return BiometricCredentialValidationResult.Invalid(
+            BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
           )
         }
-        result.trustedDeviceValidationUnavailableReason()?.let {
-          return TrustedDeviceValidationResult.Invalid(it)
+        result.biometricCredentialValidationUnavailableReason()?.let {
+          return BiometricCredentialValidationResult.Invalid(it)
         }
-        TrustedDeviceValidationResult.Inconclusive
+        BiometricCredentialValidationResult.Inconclusive
       }
     }
   }
 
-  /** Whether biometric-gated trusted-device keys can be created and used on this device. */
+  /** Whether biometric-gated biometric-credential keys can be created and used on this device. */
   val deviceSupportsBiometricAuthentication: Boolean
-    get() = keyManager.isSupported(TrustedDevicePolicy.BIOMETRY_OR_DEVICE_PASSCODE)
+    get() = keyManager.isSupported(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE)
 
   // region Private helpers
 
   private suspend fun performEnrollment(
-    localKey: TrustedDeviceLocalKey,
+    localKey: BiometricCredentialLocalKey,
     appIdentifier: String,
-    deviceName: String?,
+    name: String?,
     promptTitle: String?,
     promptSubtitle: String?,
-  ): ClerkResult<TrustedDevice, ClerkErrorResponse> {
+  ): ClerkResult<BiometricCredential, ClerkErrorResponse> {
     val challenge =
       when (
         val prepareResult =
-          ClerkApi.trustedDevice.prepareEnrollment(
+          ClerkApi.biometricCredential.prepareEnrollment(
             appIdentifier = appIdentifier,
-            name = deviceName,
+            name = name,
             publicKeyJwk = localKey.publicKeyJwk,
           )
       ) {
@@ -427,13 +435,13 @@ object TrustedDevices {
           promptTitle = promptTitle ?: DEFAULT_ENROLLMENT_PROMPT_TITLE,
           promptSubtitle = promptSubtitle,
         )
-      } catch (e: TrustedDeviceKeyManagerException) {
+      } catch (e: BiometricCredentialKeyManagerException) {
         return ClerkResult.unknownFailure(e)
       }
 
-    return ClerkApi.trustedDevice.attemptEnrollment(
+    return ClerkApi.biometricCredential.attemptEnrollment(
       appIdentifier = appIdentifier,
-      name = deviceName,
+      name = name,
       publicKeyJwk = localKey.publicKeyJwk,
       clientData = signature.clientData,
       signature = signature.signature,
@@ -441,53 +449,57 @@ object TrustedDevices {
   }
 
   private suspend fun saveLocalCredential(
-    trustedDevice: TrustedDevice,
-    localKey: TrustedDeviceLocalKey,
+    biometricCredential: BiometricCredential,
+    localKey: BiometricCredentialLocalKey,
     userId: String,
     identifierHint: String?,
   ): ClerkResult.Failure<ClerkErrorResponse>? {
     return try {
       credentialStore.save(
-        TrustedDeviceLocalCredential(
-          id = trustedDevice.id,
+        BiometricCredentialLocalCredential(
+          id = biometricCredential.id,
           localKeyId = localKey.localKeyId,
           userId = userId,
-          appIdentifier = trustedDevice.appIdentifier,
-          identifierHint = TrustedDeviceLocalCredential.normalizedIdentifierHint(identifierHint),
+          appIdentifier = biometricCredential.appIdentifier,
+          identifierHint =
+            BiometricCredentialLocalCredential.normalizedIdentifierHint(identifierHint),
           policy = localKey.policy,
-          createdAt = trustedDevice.createdAt,
-          updatedAt = trustedDevice.updatedAt,
+          createdAt = biometricCredential.createdAt,
+          updatedAt = biometricCredential.updatedAt,
         )
       )
       null
     } catch (e: Exception) {
-      ClerkApi.trustedDevice.revoke(trustedDevice.id)
+      ClerkApi.biometricCredential.revoke(biometricCredential.id)
       ClerkResult.unknownFailure(e)
     }
   }
 
   @VisibleForTesting
-  internal fun removeOtherLocalCredentialsForCurrentApp(userId: String, keeping: TrustedDevice) {
+  internal fun removeOtherLocalCredentialsForCurrentApp(
+    userId: String,
+    keeping: BiometricCredential,
+  ) {
     storedLocalCredentialsForCurrentApp()
       .filter { it.userId == userId && it.id != keeping.id }
       .forEach { credential ->
         runCatching { deleteLocalCredential(credential) }
-          .onFailure { ClerkLog.w("Failed to remove replaced trusted-device credential locally.") }
+          .onFailure { ClerkLog.w("Failed to remove replaced biometric credential locally.") }
       }
   }
 
   private sealed interface LocalCredentialResult {
-    data class Available(val credential: TrustedDeviceLocalCredential) : LocalCredentialResult
+    data class Available(val credential: BiometricCredentialLocalCredential) : LocalCredentialResult
 
-    data class Unavailable(val reason: TrustedDeviceAvailability.UnavailableReason) :
+    data class Unavailable(val reason: BiometricCredentialAvailability.UnavailableReason) :
       LocalCredentialResult
   }
 
   private sealed interface LocalCredentialsResult {
-    data class Available(val credentials: List<TrustedDeviceLocalCredential>) :
+    data class Available(val credentials: List<BiometricCredentialLocalCredential>) :
       LocalCredentialsResult
 
-    data class Unavailable(val reason: TrustedDeviceAvailability.UnavailableReason) :
+    data class Unavailable(val reason: BiometricCredentialAvailability.UnavailableReason) :
       LocalCredentialsResult
   }
 
@@ -510,37 +522,39 @@ object TrustedDevices {
     val activeUserId =
       Clerk.user?.id ?: return LocalCredentialResult.Available(supportedCredentials.first())
 
-    var trustedDevices: List<TrustedDevice>? = null
-    var firstUnavailableReason: TrustedDeviceAvailability.UnavailableReason? = null
+    var biometricCredentials: List<BiometricCredential>? = null
+    var firstUnavailableReason: BiometricCredentialAvailability.UnavailableReason? = null
 
     for (credential in supportedCredentials) {
       if (credential.userId != activeUserId) {
         return LocalCredentialResult.Available(credential)
       }
 
-      val activeUserTrustedDevices =
-        trustedDevices
-          ?: when (val listResult = ClerkApi.trustedDevice.list()) {
-            is ClerkResult.Success -> listResult.value.also { trustedDevices = it }
+      val activeUserBiometricCredentials =
+        biometricCredentials
+          ?: when (val listResult = ClerkApi.biometricCredential.list()) {
+            is ClerkResult.Success -> listResult.value.also { biometricCredentials = it }
             is ClerkResult.Failure ->
               // Reconciliation is best-effort; keep the local credential when listing fails.
               return LocalCredentialResult.Available(credential)
           }
 
-      val trustedDevice = activeUserTrustedDevices.firstOrNull { it.id == credential.id }
-      if (trustedDevice == null) {
+      val biometricCredential = activeUserBiometricCredentials.firstOrNull {
+        it.id == credential.id
+      }
+      if (biometricCredential == null) {
         deleteLocalCredential(credential)
         firstUnavailableReason =
           firstUnavailableReason
-            ?: TrustedDeviceAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
+            ?: BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
         continue
       }
 
-      if (trustedDevice.status != TrustedDevice.Status.ACTIVE) {
+      if (biometricCredential.status != BiometricCredential.Status.ACTIVE) {
         deleteLocalCredential(credential)
         firstUnavailableReason =
           firstUnavailableReason
-            ?: TrustedDeviceAvailability.UnavailableReason.SERVER_CREDENTIAL_REVOKED
+            ?: BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_REVOKED
         continue
       }
 
@@ -549,7 +563,7 @@ object TrustedDevices {
 
     return LocalCredentialResult.Unavailable(
       firstUnavailableReason
-        ?: TrustedDeviceAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
+        ?: BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING
     )
   }
 
@@ -558,28 +572,28 @@ object TrustedDevices {
     identifierHint: String?,
     userId: String?,
   ): LocalCredentialsResult {
-    trustedDeviceFeatureUnavailableReason()?.let {
+    biometricCredentialFeatureUnavailableReason()?.let {
       return LocalCredentialsResult.Unavailable(it)
     }
 
     val localCredentials = candidateLocalCredentials(id, identifierHint, userId)
     if (localCredentials.isEmpty()) {
       return LocalCredentialsResult.Unavailable(
-        TrustedDeviceAvailability.UnavailableReason.NO_LOCAL_CREDENTIAL
+        BiometricCredentialAvailability.UnavailableReason.NO_LOCAL_CREDENTIAL
       )
     }
 
     val credentialsWithKeys = localCredentialsWithExistingKeys(localCredentials)
     if (credentialsWithKeys.isEmpty()) {
       return LocalCredentialsResult.Unavailable(
-        TrustedDeviceAvailability.UnavailableReason.LOCAL_KEY_MISSING
+        BiometricCredentialAvailability.UnavailableReason.LOCAL_KEY_MISSING
       )
     }
 
     val supportedCredentials = credentialsWithKeys.filter { keyManager.isSupported(it.policy) }
     if (supportedCredentials.isEmpty()) {
       return LocalCredentialsResult.Unavailable(
-        TrustedDeviceAvailability.UnavailableReason.BIOMETRIC_AUTHENTICATION_UNAVAILABLE
+        BiometricCredentialAvailability.UnavailableReason.BIOMETRIC_AUTHENTICATION_UNAVAILABLE
       )
     }
 
@@ -590,7 +604,7 @@ object TrustedDevices {
     id: String?,
     identifierHint: String?,
     userId: String?,
-  ): List<TrustedDeviceLocalCredential> {
+  ): List<BiometricCredentialLocalCredential> {
     var credentials = storedLocalCredentialsForCurrentApp()
     if (id != null) {
       credentials = credentials.filter { it.id == id }
@@ -602,20 +616,20 @@ object TrustedDevices {
         credentials.filter { it.matches(identifierHint) }
       }
     return credentials.sortedWith(
-      compareByDescending<TrustedDeviceLocalCredential> { it.createdAt }
+      compareByDescending<BiometricCredentialLocalCredential> { it.createdAt }
         .thenByDescending { it.updatedAt }
         .thenByDescending { it.id }
     )
   }
 
-  private fun storedLocalCredentialsForCurrentApp(): List<TrustedDeviceLocalCredential> {
+  private fun storedLocalCredentialsForCurrentApp(): List<BiometricCredentialLocalCredential> {
     val appIdentifier = Clerk.applicationId ?: return emptyList()
     return credentialStore.all(appIdentifier)
   }
 
   private fun localCredentialsWithExistingKeys(
-    credentials: List<TrustedDeviceLocalCredential>
-  ): List<TrustedDeviceLocalCredential> {
+    credentials: List<BiometricCredentialLocalCredential>
+  ): List<BiometricCredentialLocalCredential> {
     return credentials.filter { credential ->
       val hasKey = runCatching { keyManager.hasKey(credential.localKeyId) }.getOrDefault(false)
       if (!hasKey) {
@@ -626,57 +640,57 @@ object TrustedDevices {
   }
 
   private fun deleteLocalCredential(
-    credential: TrustedDeviceLocalCredential,
+    credential: BiometricCredentialLocalCredential,
     propagateKeyDeletionFailure: Boolean = false,
   ) {
     val keyDeletionResult = runCatching { keyManager.deleteKey(credential.localKeyId) }
-    keyDeletionResult.onFailure { ClerkLog.w("Failed to delete trusted-device private key.") }
+    keyDeletionResult.onFailure { ClerkLog.w("Failed to delete biometric-credential private key.") }
     if (propagateKeyDeletionFailure) {
       keyDeletionResult.getOrThrow()
     }
     credentialStore.delete(credential.id)
   }
 
-  private fun trustedDeviceFeatureUnavailableReason():
-    TrustedDeviceAvailability.UnavailableReason? {
+  private fun biometricCredentialFeatureUnavailableReason():
+    BiometricCredentialAvailability.UnavailableReason? {
     val environment =
       Clerk.environment
-        ?: return TrustedDeviceAvailability.UnavailableReason.ENVIRONMENT_UNAVAILABLE
+        ?: return BiometricCredentialAvailability.UnavailableReason.ENVIRONMENT_UNAVAILABLE
     if (!environment.authConfig.nativeSettings.apiEnabled) {
-      return TrustedDeviceAvailability.UnavailableReason.NATIVE_API_DISABLED
+      return BiometricCredentialAvailability.UnavailableReason.NATIVE_API_DISABLED
     }
-    if (!environment.authConfig.nativeSettings.trustedDeviceSignInEnabled) {
-      return TrustedDeviceAvailability.UnavailableReason.FEATURE_DISABLED
+    if (!environment.authConfig.nativeSettings.biometricSignInEnabled) {
+      return BiometricCredentialAvailability.UnavailableReason.FEATURE_DISABLED
     }
     return null
   }
 
   private fun featureUnavailableFailure(): ClerkResult.Failure<ClerkErrorResponse>? {
-    val reason = trustedDeviceFeatureUnavailableReason() ?: return null
+    val reason = biometricCredentialFeatureUnavailableReason() ?: return null
     val message =
       when (reason) {
-        TrustedDeviceAvailability.UnavailableReason.ENVIRONMENT_UNAVAILABLE ->
-          "Unable to use trusted-device sign-in before the Clerk environment is loaded."
-        TrustedDeviceAvailability.UnavailableReason.NATIVE_API_DISABLED ->
-          "Unable to use trusted-device sign-in because Native API is disabled."
-        TrustedDeviceAvailability.UnavailableReason.FEATURE_DISABLED ->
-          "Unable to use trusted-device sign-in because it is disabled."
-        else -> "Trusted-device sign-in is unavailable."
+        BiometricCredentialAvailability.UnavailableReason.ENVIRONMENT_UNAVAILABLE ->
+          "Unable to use biometric-credential sign-in before the Clerk environment is loaded."
+        BiometricCredentialAvailability.UnavailableReason.NATIVE_API_DISABLED ->
+          "Unable to use biometric-credential sign-in because Native API is disabled."
+        BiometricCredentialAvailability.UnavailableReason.FEATURE_DISABLED ->
+          "Unable to use biometric-credential sign-in because it is disabled."
+        else -> "Biometric-credential sign-in is unavailable."
       }
     return clientFailure(message)
   }
 
-  private fun <T : Any> handleTrustedDeviceSignInError(
+  private fun <T : Any> handleBiometricSignInError(
     failure: ClerkResult.Failure<ClerkErrorResponse>,
-    localCredential: TrustedDeviceLocalCredential,
+    localCredential: BiometricCredentialLocalCredential,
   ): ClerkResult<T, ClerkErrorResponse> {
-    if (!failure.isMissingTrustedDeviceCredential) {
+    if (!failure.isMissingBiometricCredential) {
       return failure
     }
 
     deleteLocalCredential(localCredential)
     return clientFailure(
-      "This device is no longer trusted. Sign in another way to enroll it again."
+      "Biometric sign-in is no longer set up on this device. Sign in another way to enable it again."
     )
   }
 
@@ -685,24 +699,29 @@ object TrustedDevices {
       ClerkErrorResponse(
         errors =
           listOf(
-            Error(message = message, longMessage = message, code = "trusted_device_client_error")
+            Error(
+              message = message,
+              longMessage = message,
+              code = "biometric_credential_client_error",
+            )
           )
       )
     )
   }
 
-  private val ClerkResult.Failure<ClerkErrorResponse>.isMissingTrustedDeviceCredential: Boolean
+  private val ClerkResult.Failure<ClerkErrorResponse>.isMissingBiometricCredential: Boolean
     get() =
       error?.errors.orEmpty().any { error ->
         error.code in MISSING_CREDENTIAL_ERROR_CODES &&
           error.meta?.get("param_name")?.jsonPrimitive?.contentOrNull == "trusted_device_id"
       }
 
-  private fun ClerkResult.Failure<ClerkErrorResponse>.trustedDeviceValidationUnavailableReason():
-    TrustedDeviceAvailability.UnavailableReason? {
+  private fun ClerkResult.Failure<ClerkErrorResponse>
+    .biometricCredentialValidationUnavailableReason():
+    BiometricCredentialAvailability.UnavailableReason? {
     return when (error?.errors.orEmpty().firstOrNull()?.code) {
-      "native_api_disabled" -> TrustedDeviceAvailability.UnavailableReason.NATIVE_API_DISABLED
-      "feature_not_enabled" -> TrustedDeviceAvailability.UnavailableReason.FEATURE_DISABLED
+      "native_api_disabled" -> BiometricCredentialAvailability.UnavailableReason.NATIVE_API_DISABLED
+      "feature_not_enabled" -> BiometricCredentialAvailability.UnavailableReason.FEATURE_DISABLED
       else -> null
     }
   }
@@ -716,6 +735,6 @@ object TrustedDevices {
   // endregion
 }
 
-/** Whether this session status allows enrolling or revoking a trusted device. */
-internal val Session.SessionStatus.allowsTrustedDeviceEnrollment: Boolean
+/** Whether this session status allows enrolling or revoking a biometric credential. */
+internal val Session.SessionStatus.allowsBiometricCredentialEnrollment: Boolean
   get() = this == Session.SessionStatus.ACTIVE || this == Session.SessionStatus.PENDING

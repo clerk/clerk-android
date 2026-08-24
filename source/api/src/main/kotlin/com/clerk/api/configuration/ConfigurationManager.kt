@@ -276,7 +276,7 @@ internal class ConfigurationManager {
         retryCount = 0,
         expectedConfigurationVersion = configuredVersion,
       )
-    Clerk.trustedDevices.retryPendingLocalCredentialCleanup()
+    Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
     Clerk.sharedSessionSyncCoordinator?.reloadFromSharedStorage()
     val deviceIdInitJob = async { DeviceIdGenerator.initialize() }
     val dataRefreshJob = async {

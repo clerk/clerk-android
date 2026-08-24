@@ -26,7 +26,7 @@ import com.clerk.api.session.pendingTaskKey
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.telemetry.TelemetryEvents
 import com.clerk.telemetry.telemetryPayload
-import com.clerk.ui.auth.trusteddevice.TrustedDeviceEnrollmentView
+import com.clerk.ui.auth.biometriccredential.BiometricCredentialEnrollmentView
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.composition.ClerkLogoProvider
 import com.clerk.ui.core.composition.LocalAuthState
@@ -63,7 +63,7 @@ private val authViewProcessIdentifier = UUID.randomUUID().toString()
  *
  * When using this as a non-dismissible root authentication view, observe
  * [Clerk.isAuthFlowCompleteFlow] to choose between this view and authenticated content. A session
- * can become active while post-auth steps — session tasks or the trusted-device (biometric)
+ * can become active while post-auth steps — session tasks or the biometric-credential (biometric)
  * enrollment prompt — still need to be shown.
  *
  * @param initialIdentifier Optional initial value for the identifier field. Phone-like values are
@@ -210,7 +210,8 @@ private fun ObservePendingSessionTaskRouting(
     val top = backStack.lastOrNull()
     when {
       session == null &&
-        (top.isSessionTaskDestination() || top == AuthDestination.TrustedDeviceEnrollment) -> {
+        (top.isSessionTaskDestination() ||
+          top == AuthDestination.BiometricCredentialEnrollment) -> {
         while (backStack.size > 1) {
           backStack.removeLastOrNull()
         }
@@ -342,8 +343,8 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
     entry<AuthDestination.SignUpCompleteProfile> {
       SignUpCompleteProfileView(onAuthComplete = options.onAuthComplete)
     }
-    entry<AuthDestination.TrustedDeviceEnrollment> {
-      TrustedDeviceEnrollmentView(onAuthComplete = options.onAuthComplete)
+    entry<AuthDestination.BiometricCredentialEnrollment> {
+      BiometricCredentialEnrollmentView(onAuthComplete = options.onAuthComplete)
     }
   }
 
@@ -443,5 +444,5 @@ internal object AuthDestination {
 
   @Serializable data class SignUpCompleteProfile(val progress: Int) : NavKey
 
-  @Serializable data object TrustedDeviceEnrollment : NavKey
+  @Serializable data object BiometricCredentialEnrollment : NavKey
 }

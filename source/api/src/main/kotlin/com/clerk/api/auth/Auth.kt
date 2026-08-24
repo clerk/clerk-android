@@ -13,6 +13,7 @@ import com.clerk.api.auth.builders.SignInWithPasswordBuilder
 import com.clerk.api.auth.builders.SignUpBuilder
 import com.clerk.api.auth.builders.SignUpWithIdTokenBuilder
 import com.clerk.api.auth.types.IdTokenProvider
+import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.hostedauth.HostedAuthCancellationException
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
@@ -41,7 +42,6 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
-import com.clerk.api.trusteddevice.TrustedDevices
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -364,13 +364,13 @@ class Auth internal constructor() {
   }
 
   /**
-   * Signs in with a locally enrolled trusted-device (biometric) credential.
+   * Signs in with a locally enrolled biometric-credential (biometric) credential.
    *
-   * The trusted-device domain owns local credential selection, key access, challenge signing, and
-   * stale local credential cleanup.
+   * The biometric-credential domain owns local credential selection, key access, challenge signing,
+   * and stale local credential cleanup.
    *
-   * @param id The trusted-device credential ID to use. When omitted, the available local credential
-   *   is used.
+   * @param id The biometric credential ID to use. When omitted, the available local credential is
+   *   used.
    * @param identifierHint A local-only user identifier hint used to choose a matching credential.
    * @param promptTitle The title shown in the system authentication prompt.
    * @param promptSubtitle The subtitle shown in the system authentication prompt.
@@ -379,17 +379,17 @@ class Auth internal constructor() {
    *
    * ### Example usage:
    * ```kotlin
-   * val signIn = clerk.auth.signInWithTrustedDevice()
+   * val signIn = clerk.auth.signInWithBiometrics()
    * ```
    */
-  suspend fun signInWithTrustedDevice(
+  suspend fun signInWithBiometrics(
     id: String? = null,
     identifierHint: String? = null,
     promptTitle: String? = null,
     promptSubtitle: String? = null,
   ): ClerkResult<SignIn, ClerkErrorResponse> {
     val result =
-      TrustedDevices.signIn(
+      BiometricCredentials.signIn(
         id = id,
         identifierHint = identifierHint,
         promptTitle = promptTitle,
@@ -751,10 +751,9 @@ class Auth internal constructor() {
       // Fetched client is missing the target session entirely (e.g. cleared sessions list);
       // splice it back in from the fallback and force it active.
       !targetInFetchedSessions && targetInFallbackSessions -> {
-        val missingFallbackSessions =
-          fallbackSessions.filterNot { fallbackSession ->
-            sessions.any { it.id == fallbackSession.id }
-          }
+        val missingFallbackSessions = fallbackSessions.filterNot { fallbackSession ->
+          sessions.any { it.id == fallbackSession.id }
+        }
         copy(
           sessions = sessions + missingFallbackSessions,
           lastActiveSessionId = activeSessionFallbackId,

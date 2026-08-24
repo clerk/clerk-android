@@ -1,4 +1,4 @@
-package com.clerk.api.trusteddevice
+package com.clerk.api.biometriccredential
 
 import android.util.Base64
 import com.clerk.api.storage.StorageCipher
@@ -15,9 +15,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
-class TrustedDeviceLocalCredentialStoreTest {
+class BiometricCredentialLocalCredentialStoreTest {
 
-  private val store = DefaultTrustedDeviceLocalCredentialStore
+  private val store = DefaultBiometricCredentialLocalCredentialStore
 
   @Before
   fun setup() {
@@ -104,14 +104,14 @@ class TrustedDeviceLocalCredentialStoreTest {
     userId: String = "user_1",
     appIdentifier: String = "com.example.app",
     identifierHint: String? = null,
-  ): TrustedDeviceLocalCredential {
-    return TrustedDeviceLocalCredential(
+  ): BiometricCredentialLocalCredential {
+    return BiometricCredentialLocalCredential(
       id = id,
       localKeyId = "tdlk_$id",
       userId = userId,
       appIdentifier = appIdentifier,
-      identifierHint = TrustedDeviceLocalCredential.normalizedIdentifierHint(identifierHint),
-      policy = TrustedDevicePolicy.BIOMETRY_OR_DEVICE_PASSCODE,
+      identifierHint = BiometricCredentialLocalCredential.normalizedIdentifierHint(identifierHint),
+      policy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
       createdAt = 1L,
       updatedAt = 2L,
     )

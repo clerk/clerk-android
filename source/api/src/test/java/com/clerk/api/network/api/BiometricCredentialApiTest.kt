@@ -20,25 +20,26 @@ import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
-class TrustedDeviceApiTest {
+class BiometricCredentialApiTest {
 
   @Test
-  fun `list requests trusted devices for the current user`() = runTest {
-    val interceptor = CapturingInterceptor(TRUSTED_DEVICE_LIST_RESPONSE)
-    val api = trustedDeviceApi(interceptor)
+  fun `list requests biometric credentials for the current user`() = runTest {
+    val interceptor = CapturingInterceptor(wrapped(TRUSTED_DEVICE_LIST_RESPONSE))
+    val api = biometricCredentialApi(interceptor)
 
     val result = api.list(sessionId = "sess_123")
 
     assertTrue(result is ClerkResult.Success)
+    assertEquals(1, (result as ClerkResult.Success).value.size)
     assertEquals("GET", interceptor.method)
-    assertEquals("/v1/me/trusted_devices", interceptor.path)
+    assertEquals("/v1/me/biometric_credentials", interceptor.path)
     assertEquals("sess_123", interceptor.queryParams["_clerk_session_id"])
   }
 
   @Test
   fun `prepareEnrollment sends platform and public key jwk`() = runTest {
     val interceptor = CapturingInterceptor(wrapped(TRUSTED_DEVICE_CHALLENGE_RESPONSE))
-    val api = trustedDeviceApi(interceptor)
+    val api = biometricCredentialApi(interceptor)
 
     val result =
       api.prepareEnrollment(
@@ -50,7 +51,7 @@ class TrustedDeviceApiTest {
 
     assertTrue(result is ClerkResult.Success)
     assertEquals("POST", interceptor.method)
-    assertEquals("/v1/me/trusted_devices/prepare", interceptor.path)
+    assertEquals("/v1/me/biometric_credentials/prepare", interceptor.path)
     assertEquals("android", interceptor.formBody["platform"])
     assertEquals("com.example.app", interceptor.formBody["app_identifier"])
     assertEquals("Pixel 9", interceptor.formBody["name"])
@@ -61,7 +62,7 @@ class TrustedDeviceApiTest {
   @Test
   fun `attemptEnrollment sends signed challenge`() = runTest {
     val interceptor = CapturingInterceptor(wrapped(TRUSTED_DEVICE_RESPONSE))
-    val api = trustedDeviceApi(interceptor)
+    val api = biometricCredentialApi(interceptor)
 
     val result =
       api.attemptEnrollment(
@@ -74,7 +75,7 @@ class TrustedDeviceApiTest {
 
     assertTrue(result is ClerkResult.Success)
     assertEquals("POST", interceptor.method)
-    assertEquals("/v1/me/trusted_devices/attempt", interceptor.path)
+    assertEquals("/v1/me/biometric_credentials/attempt", interceptor.path)
     assertEquals("client-data", interceptor.formBody["client_data"])
     assertEquals("base64url-signature", interceptor.formBody["signature"])
     assertEquals("android", interceptor.formBody["platform"])
@@ -83,30 +84,30 @@ class TrustedDeviceApiTest {
   @Test
   fun `validateSignInCredential posts against the client`() = runTest {
     val interceptor = CapturingInterceptor(wrapped("""{"valid": true}"""))
-    val api = trustedDeviceApi(interceptor)
+    val api = biometricCredentialApi(interceptor)
 
-    val result = api.validateSignInCredential(trustedDeviceId = "td_123")
+    val result = api.validateSignInCredential(biometricCredentialId = "td_123")
 
     assertTrue(result is ClerkResult.Success)
     assertEquals("POST", interceptor.method)
-    assertEquals("/v1/client/trusted_devices/validate", interceptor.path)
+    assertEquals("/v1/client/biometric_credentials/validate", interceptor.path)
     assertEquals("td_123", interceptor.formBody["trusted_device_id"])
   }
 
   @Test
-  fun `revoke deletes the trusted device`() = runTest {
+  fun `revoke deletes the biometric credential`() = runTest {
     val interceptor = CapturingInterceptor(wrapped(TRUSTED_DEVICE_RESPONSE))
-    val api = trustedDeviceApi(interceptor)
+    val api = biometricCredentialApi(interceptor)
 
-    val result = api.revoke(trustedDeviceId = "td_123", sessionId = "sess_123")
+    val result = api.revoke(biometricCredentialId = "td_123", sessionId = "sess_123")
 
     assertTrue(result is ClerkResult.Success)
     assertEquals("DELETE", interceptor.method)
-    assertEquals("/v1/me/trusted_devices/td_123", interceptor.path)
+    assertEquals("/v1/me/biometric_credentials/td_123", interceptor.path)
     assertEquals("sess_123", interceptor.queryParams["_clerk_session_id"])
   }
 
-  private fun trustedDeviceApi(interceptor: CapturingInterceptor): TrustedDeviceApi {
+  private fun biometricCredentialApi(interceptor: CapturingInterceptor): BiometricCredentialApi {
     return Retrofit.Builder()
       .baseUrl("https://example.com/v1/")
       .client(OkHttpClient.Builder().addInterceptor(interceptor).build())
@@ -116,7 +117,7 @@ class TrustedDeviceApiTest {
         ClerkApi.json.asConverterFactory("application/json; charset=utf-8".toMediaType())
       )
       .build()
-      .create(TrustedDeviceApi::class.java)
+      .create(BiometricCredentialApi::class.java)
   }
 
   private class CapturingInterceptor(private val responseBody: String) : Interceptor {

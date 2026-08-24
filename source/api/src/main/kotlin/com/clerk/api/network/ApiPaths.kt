@@ -21,9 +21,9 @@ internal object ApiPaths {
       internal const val VERIFY = "${Client.BASE}/verify"
     }
 
-    /** Trusted-device sign-in endpoints */
-    internal object TrustedDevice {
-      internal const val VALIDATE = "${Client.BASE}/trusted_devices/validate"
+    /** Biometric credential sign-in endpoints */
+    internal object BiometricCredential {
+      internal const val VALIDATE = "${Client.BASE}/biometric_credentials/validate"
     }
 
     /** Session management endpoints */
@@ -130,10 +130,10 @@ internal object ApiPaths {
       internal const val ATTEMPT_VERIFICATION = "${WITH_ID}/attempt_verification"
     }
 
-    /** Trusted-device management */
-    internal object TrustedDevice {
-      internal const val BASE = "${User.BASE}/trusted_devices"
-      internal const val WITH_ID = "${BASE}/{trusted_device_id}"
+    /** Biometric credential management */
+    internal object BiometricCredential {
+      internal const val BASE = "${User.BASE}/biometric_credentials"
+      internal const val WITH_ID = "${BASE}/{biometric_credential_id}"
       internal const val PREPARE = "${BASE}/prepare"
       internal const val ATTEMPT = "${BASE}/attempt"
     }

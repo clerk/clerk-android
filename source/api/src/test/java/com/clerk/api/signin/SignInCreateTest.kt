@@ -1,8 +1,8 @@
 package com.clerk.api.signin
 
+import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.passkeys.PasskeyService
-import com.clerk.api.trusteddevice.TrustedDevices
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockkObject
@@ -56,11 +56,11 @@ class SignInCreateTest {
   }
 
   @Test
-  fun `create with trusted device strategy forwards prompt configuration`() = runTest {
+  fun `create with biometric credential strategy forwards prompt configuration`() = runTest {
     val signIn = SignIn(id = "sign_in_123")
-    mockkObject(TrustedDevices)
+    mockkObject(BiometricCredentials)
     coEvery {
-      TrustedDevices.signIn(
+      BiometricCredentials.signIn(
         id = "td_123",
         identifierHint = "user@example.com",
         promptTitle = "Welcome back",
@@ -70,7 +70,7 @@ class SignInCreateTest {
 
     val result =
       SignIn.create(
-        SignIn.CreateParams.Strategy.TrustedDevice(
+        SignIn.CreateParams.Strategy.BiometricCredential(
           id = "td_123",
           identifierHint = "user@example.com",
           promptTitle = "Welcome back",
@@ -81,7 +81,7 @@ class SignInCreateTest {
     assertTrue(result is ClerkResult.Success)
     assertEquals(signIn, (result as ClerkResult.Success).value)
     coVerify(exactly = 1) {
-      TrustedDevices.signIn(
+      BiometricCredentials.signIn(
         id = "td_123",
         identifierHint = "user@example.com",
         promptTitle = "Welcome back",

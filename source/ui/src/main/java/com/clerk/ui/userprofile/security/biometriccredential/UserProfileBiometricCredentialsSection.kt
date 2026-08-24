@@ -1,4 +1,4 @@
-package com.clerk.ui.userprofile.security.trusteddevice
+package com.clerk.ui.userprofile.security.biometriccredential
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -28,12 +28,12 @@ import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.theme.ClerkMaterialTheme
 
-/** Security-screen section with a toggle for biometric (trusted-device) sign-in. */
+/** Security-screen section with a toggle for biometric (biometric-credential) sign-in. */
 @Composable
-internal fun UserProfileTrustedDeviceSection(
+internal fun UserProfileBiometricCredentialsSection(
   onError: (String?) -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: UserProfileTrustedDeviceViewModel = viewModel(),
+  viewModel: UserProfileBiometricCredentialViewModel = viewModel(),
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -51,12 +51,12 @@ internal fun UserProfileTrustedDeviceSection(
     Clerk.applicationName?.let { stringResource(R.string.app_uses_biometrics_to_sign_you_in, it) }
       ?: stringResource(R.string.use_biometrics_to_sign_in)
 
-  UserProfileTrustedDeviceSectionImpl(
+  UserProfileBiometricCredentialsSectionImpl(
     modifier = modifier,
     isEnabled = state.isEnabled,
     isLoading = state.isLoading,
     onCheckedChange = { enabled ->
-      viewModel.setTrustedDeviceSignInEnabled(
+      viewModel.setBiometricSignInEnabled(
         enabled = enabled,
         promptTitle = promptTitle,
         promptSubtitle = promptSubtitle,
@@ -66,7 +66,7 @@ internal fun UserProfileTrustedDeviceSection(
 }
 
 @Composable
-internal fun UserProfileTrustedDeviceSectionImpl(
+internal fun UserProfileBiometricCredentialsSectionImpl(
   isEnabled: Boolean,
   isLoading: Boolean,
   modifier: Modifier = Modifier,
@@ -123,5 +123,9 @@ internal fun UserProfileTrustedDeviceSectionImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileTrustedDeviceSectionImpl(isEnabled = true, isLoading = false, onCheckedChange = {})
+  UserProfileBiometricCredentialsSectionImpl(
+    isEnabled = true,
+    isLoading = false,
+    onCheckedChange = {},
+  )
 }

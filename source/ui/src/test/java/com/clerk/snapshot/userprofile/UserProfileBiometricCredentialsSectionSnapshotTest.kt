@@ -4,22 +4,26 @@ import com.clerk.api.Clerk
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.theme.DefaultColors
-import com.clerk.ui.userprofile.security.trusteddevice.UserProfileTrustedDeviceSectionImpl
+import com.clerk.ui.userprofile.security.biometriccredential.UserProfileBiometricCredentialsSectionImpl
 import org.junit.Test
 
-class UserProfileTrustedDeviceSectionSnapshotTest : BaseSnapshotTest() {
+class UserProfileBiometricCredentialsSectionSnapshotTest : BaseSnapshotTest() {
 
   @Test
-  fun trustedDeviceSectionEnabled_Light() {
+  fun biometricCredentialsSectionEnabled_Light() {
     paparazzi.snapshot {
-      UserProfileTrustedDeviceSectionImpl(isEnabled = true, isLoading = false, onCheckedChange = {})
+      UserProfileBiometricCredentialsSectionImpl(
+        isEnabled = true,
+        isLoading = false,
+        onCheckedChange = {},
+      )
     }
   }
 
   @Test
-  fun trustedDeviceSectionDisabled_Light() {
+  fun biometricCredentialsSectionDisabled_Light() {
     paparazzi.snapshot {
-      UserProfileTrustedDeviceSectionImpl(
+      UserProfileBiometricCredentialsSectionImpl(
         isEnabled = false,
         isLoading = false,
         onCheckedChange = {},
@@ -28,12 +32,12 @@ class UserProfileTrustedDeviceSectionSnapshotTest : BaseSnapshotTest() {
   }
 
   @Test
-  fun trustedDeviceSectionEnabled_Dark() {
+  fun biometricCredentialsSectionEnabled_Dark() {
     val previousTheme = Clerk.customTheme
     try {
       Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
       paparazzi.snapshot {
-        UserProfileTrustedDeviceSectionImpl(
+        UserProfileBiometricCredentialsSectionImpl(
           isEnabled = true,
           isLoading = false,
           onCheckedChange = {},

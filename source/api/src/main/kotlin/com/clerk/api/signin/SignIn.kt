@@ -14,6 +14,7 @@ import com.clerk.api.Constants.Strategy.TICKET
 import com.clerk.api.Constants.Strategy.TOTP as STRATEGY_TOTP
 import com.clerk.api.Constants.Strategy.TRANSFER
 import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
+import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
@@ -27,7 +28,6 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.RedirectConfiguration
 import com.clerk.api.sso.SSOService
-import com.clerk.api.trusteddevice.TrustedDevices
 import com.clerk.automap.annotations.AutoMap
 import com.clerk.automap.annotations.MapProperty
 import kotlinx.serialization.KSerializer
@@ -673,16 +673,17 @@ private constructor(
       data class Passkey(override val strategy: String = PASSKEY) : Strategy
 
       /**
-       * Trusted-device strategy for authentication using a locally enrolled biometric credential.
+       * Biometric-credential strategy for authentication using a locally enrolled biometric
+       * credential.
        *
-       * @property id The trusted-device credential ID to use. When omitted, the available local
+       * @property id The biometric credential ID to use. When omitted, the available local
        *   credential is used.
        * @property identifierHint A local-only user identifier hint used to choose a matching
        *   credential.
        * @property promptTitle The title shown in the system authentication prompt.
        * @property promptSubtitle The subtitle shown in the system authentication prompt.
        */
-      data class TrustedDevice(
+      data class BiometricCredential(
         val id: String? = null,
         val identifierHint: String? = null,
         val promptTitle: String? = null,
@@ -744,8 +745,8 @@ private constructor(
     suspend fun create(params: CreateParams.Strategy): ClerkResult<SignIn, ClerkErrorResponse> {
       return when (params) {
         is CreateParams.Strategy.Passkey -> create(params)
-        is CreateParams.Strategy.TrustedDevice ->
-          TrustedDevices.signIn(
+        is CreateParams.Strategy.BiometricCredential ->
+          BiometricCredentials.signIn(
             id = params.id,
             identifierHint = params.identifierHint,
             promptTitle = params.promptTitle,

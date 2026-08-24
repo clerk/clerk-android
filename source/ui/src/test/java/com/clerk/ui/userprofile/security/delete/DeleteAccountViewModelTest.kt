@@ -2,10 +2,10 @@ package com.clerk.ui.userprofile.security.delete
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
+import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.trusteddevice.TrustedDevices
 import com.clerk.api.user.User
 import com.clerk.api.user.delete
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -48,8 +48,8 @@ class DeleteAccountViewModelTest {
     every { user.id } returns "user_1"
     every { Clerk.user } returns user
     coEvery { user.delete() } returns ClerkResult.success(mockk())
-    mockkObject(TrustedDevices)
-    every { TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1") } returns 1
+    mockkObject(BiometricCredentials)
+    every { BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1") } returns 1
 
     val viewModel = DeleteAccountViewModel()
     viewModel.state.test {
@@ -58,7 +58,9 @@ class DeleteAccountViewModelTest {
       assertEquals(DeleteAccountViewModel.State.Loading, awaitItem())
       assertEquals(DeleteAccountViewModel.State.Success, awaitItem())
     }
-    verify(exactly = 1) { TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1") }
+    verify(exactly = 1) {
+      BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1")
+    }
   }
 
   @Test
@@ -67,8 +69,8 @@ class DeleteAccountViewModelTest {
     every { user.id } returns "user_1"
     every { Clerk.user } returns user
     coEvery { user.delete() } returns ClerkResult.success(mockk())
-    mockkObject(TrustedDevices)
-    every { TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1") } throws
+    mockkObject(BiometricCredentials)
+    every { BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1") } throws
       IllegalStateException("cleanup failed")
 
     val viewModel = DeleteAccountViewModel()
@@ -78,7 +80,9 @@ class DeleteAccountViewModelTest {
       assertEquals(DeleteAccountViewModel.State.Loading, awaitItem())
       assertEquals(DeleteAccountViewModel.State.Success, awaitItem())
     }
-    verify(exactly = 1) { TrustedDevices.forgetLocalCredentialsAfterAccountDeletion("user_1") }
+    verify(exactly = 1) {
+      BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1")
+    }
   }
 
   @Test
