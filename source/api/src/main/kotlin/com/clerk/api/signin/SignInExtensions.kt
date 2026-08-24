@@ -95,6 +95,11 @@ val SignIn.startingFirstFactor: Factor?
 val SignIn.startingSecondFactor: Factor?
   get() {
     supportedSecondFactors
+      ?.firstOrNull { it.strategy == "passkey" }
+      ?.let {
+        return it
+      }
+    supportedSecondFactors
       ?.firstOrNull { it.strategy == "totp" }
       ?.let {
         return it

@@ -29,7 +29,12 @@ internal object FactorComparators {
     )
 
   val strategySortOrderBackupCodePref =
-    listOf(Constants.Strategy.TOTP, Constants.Strategy.PHONE_CODE, Constants.Strategy.BACKUP_CODE)
+    listOf(
+      Constants.Strategy.PASSKEY,
+      Constants.Strategy.TOTP,
+      Constants.Strategy.PHONE_CODE,
+      Constants.Strategy.BACKUP_CODE,
+    )
 
   val passwordPrefComparator: Comparator<Factor> = Comparator { lhs, rhs ->
     val order1 = strategySortOrderPasswordPref.indexOf(lhs.strategy)

@@ -120,9 +120,20 @@ data class Session(
   )
 
   /** Parameters for attempting a second factor in an in-session reverification flow. */
-  @Serializable
-  @AutoMap
-  internal data class AttemptSecondFactorParams(val strategy: String, val code: String)
+  internal sealed interface AttemptSecondFactorParams {
+    val strategy: String
+
+    @Serializable
+    @AutoMap
+    data class Code(override val strategy: String, val code: String) : AttemptSecondFactorParams
+
+    @Serializable
+    @AutoMap
+    data class Passkey(
+      @SerialName("public_key_credential") val publicKeyCredential: String,
+      override val strategy: String = PASSKEY,
+    ) : AttemptSecondFactorParams
+  }
 }
 
 @Serializable data class SessionTask(val key: String)
