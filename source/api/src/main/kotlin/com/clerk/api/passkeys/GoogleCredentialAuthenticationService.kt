@@ -23,9 +23,13 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionVerification
 import com.clerk.api.session.attemptFirstFactorVerification
+import com.clerk.api.session.attemptSecondFactorVerification
 import com.clerk.api.session.prepareFirstFactorVerification
+import com.clerk.api.session.prepareSecondFactorVerification
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.attemptFirstFactor
+import com.clerk.api.signin.attemptSecondFactor
+import com.clerk.api.signin.prepareSecondFactor
 import com.clerk.api.sso.GoogleCredentialManagerImpl
 import com.clerk.api.sso.GoogleSignInService
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -185,6 +189,90 @@ internal object GoogleCredentialAuthenticationService {
     }
   }
 
+  /**
+   * Authenticates an existing sign-in with a passkey when passkey is offered as a second factor.
+   */
+  suspend fun authenticateWithPasskey(
+    signIn: SignIn,
+    allowedCredentialIds: List<String> = emptyList(),
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    val isSecondFactorStatus =
+      signIn.status == SignIn.Status.NEEDS_SECOND_FACTOR ||
+        signIn.status == SignIn.Status.NEEDS_CLIENT_TRUST
+    val hasPasskeySecondFactor =
+      signIn.supportedSecondFactors?.any { it.strategy == PasskeyHelper.passkeyStrategy } == true
+
+    return when {
+      !isSecondFactorStatus || !hasPasskeySecondFactor ->
+        signInWithGoogleCredential(
+          credentialTypes = listOf(SignIn.CredentialType.PASSKEY),
+          allowedCredentialIds = allowedCredentialIds,
+        )
+      Clerk.credentialActivity() == null ->
+        ClerkResult.unknownFailure(CredentialFlowException.MissingActivity()).also {
+          ClerkLog.e("Passkey second-factor sign-in requires an active Activity")
+        }
+      else -> {
+        val activity = requireNotNull(Clerk.credentialActivity())
+        val prepareResult =
+          signIn.prepareSecondFactor(strategy = SignIn.PrepareSecondFactorStrategy.Passkey)
+        when (prepareResult) {
+          is ClerkResult.Failure -> {
+            ClerkLog.e("Failed to prepare passkey second-factor sign-in: ${prepareResult.error}")
+            prepareResult
+          }
+          is ClerkResult.Success -> {
+            val nonce = prepareResult.value.secondFactorVerification?.nonce
+            if (nonce == null) {
+              missingPreparedVerificationNonceFailure("secondFactorVerification")
+            } else {
+              attemptSignInPasskeySecondFactor(
+                activity = activity,
+                signIn = prepareResult.value,
+                allowedCredentialIds = allowedCredentialIds,
+                nonce = nonce,
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private suspend fun attemptSignInPasskeySecondFactor(
+    activity: android.app.Activity,
+    signIn: SignIn,
+    allowedCredentialIds: List<String>,
+    nonce: String,
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    return try {
+      val credential =
+        getCredentialFromManager(
+          activity = activity,
+          nonce = nonce,
+          allowedCredentialIds = allowedCredentialIds,
+          credentialRequestTypes = listOf(SignIn.CredentialType.PASSKEY),
+        )
+
+      if (credential is PublicKeyCredential) {
+        signIn.attemptSecondFactor(
+          SignIn.AttemptSecondFactorParams.Passkey(credential.authenticationResponseJson)
+        )
+      } else {
+        ClerkResult.unknownFailure(IllegalStateException("Unsupported credential type"))
+      }
+    } catch (e: GetCredentialException) {
+      ClerkLog.e("Passkey second-factor sign-in failed: ${e.message}")
+      classifyGetCredentialFailure(e, listOf(SignIn.CredentialType.PASSKEY))
+    } catch (e: CredentialFlowException) {
+      ClerkLog.e("Passkey second-factor sign-in cannot start: ${e.message}")
+      ClerkResult.unknownFailure(e)
+    } catch (e: Exception) {
+      ClerkLog.e("Passkey second-factor sign-in failed: ${e.message}")
+      ClerkResult.unknownFailure(e)
+    }
+  }
+
   private fun clearSuppressedAutomaticSignInAttempt(
     preferImmediatelyAvailableCredentials: Boolean,
     signIn: SignIn,
@@ -210,6 +298,7 @@ internal object GoogleCredentialAuthenticationService {
   suspend fun verifySessionWithPasskey(
     session: Session,
     allowedCredentialIds: List<String> = emptyList(),
+    level: SessionVerification.Level = SessionVerification.Level.FIRST_FACTOR,
   ): ClerkResult<SessionVerification, ClerkErrorResponse> {
     ClerkLog.d("Starting passkey session reverification")
     val activity =
@@ -218,33 +307,61 @@ internal object GoogleCredentialAuthenticationService {
           ClerkLog.e("Passkey session reverification requires an active Activity")
         }
 
-    return verifySessionWithPasskey(activity, session, allowedCredentialIds)
+    return verifySessionWithPasskey(activity, session, allowedCredentialIds, level)
   }
 
   private suspend fun verifySessionWithPasskey(
     activity: android.app.Activity,
     session: Session,
     allowedCredentialIds: List<String>,
+    level: SessionVerification.Level,
   ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-    val prepareResult = session.prepareFirstFactorVerification(PasskeyHelper.passkeyStrategy)
+    if (
+      level != SessionVerification.Level.FIRST_FACTOR &&
+        level != SessionVerification.Level.SECOND_FACTOR
+    ) {
+      return ClerkResult.unknownFailure(
+        IllegalArgumentException("Passkey verification level must be first_factor or second_factor")
+      )
+    }
+
+    val prepareResult =
+      if (level == SessionVerification.Level.SECOND_FACTOR) {
+        session.prepareSecondFactorVerification(PasskeyHelper.passkeyStrategy)
+      } else {
+        session.prepareFirstFactorVerification(PasskeyHelper.passkeyStrategy)
+      }
     return when (prepareResult) {
       is ClerkResult.Failure -> {
         ClerkLog.e("Failed to prepare passkey session reverification: ${prepareResult.error}")
         prepareResult
       }
       is ClerkResult.Success -> {
-        val nonce = prepareResult.value.firstFactorVerification?.nonce
+        val nonce =
+          if (level == SessionVerification.Level.SECOND_FACTOR) {
+            prepareResult.value.secondFactorVerification?.nonce
+          } else {
+            prepareResult.value.firstFactorVerification?.nonce
+          }
         if (nonce == null) {
-          missingPreparedVerificationNonceFailure()
+          missingPreparedVerificationNonceFailure(
+            if (level == SessionVerification.Level.SECOND_FACTOR) {
+              "secondFactorVerification"
+            } else {
+              "firstFactorVerification"
+            }
+          )
         } else {
-          attemptSessionPasskeyVerification(activity, session, allowedCredentialIds, nonce)
+          attemptSessionPasskeyVerification(activity, session, allowedCredentialIds, nonce, level)
         }
       }
     }
   }
 
-  private fun missingPreparedVerificationNonceFailure(): ClerkResult.Failure<Nothing> {
-    ClerkLog.e("Missing nonce in preparedVerification.firstFactorVerification")
+  private fun missingPreparedVerificationNonceFailure(
+    verificationField: String
+  ): ClerkResult.Failure<Nothing> {
+    ClerkLog.e("Missing nonce in prepared verification $verificationField")
     return ClerkResult.unknownFailure(
       IllegalStateException("Missing nonce in prepared verification")
     )
@@ -255,6 +372,7 @@ internal object GoogleCredentialAuthenticationService {
     session: Session,
     allowedCredentialIds: List<String>,
     nonce: String,
+    level: SessionVerification.Level,
   ): ClerkResult<SessionVerification, ClerkErrorResponse> {
     return try {
       val credential =
@@ -268,9 +386,16 @@ internal object GoogleCredentialAuthenticationService {
       if (credential is PublicKeyCredential) {
         ClerkLog.d("Attempting passkey session reverification")
         val result =
-          session.attemptFirstFactorVerification(
-            Session.AttemptFirstFactorParams.Passkey(credential.authenticationResponseJson)
-          )
+          if (level == SessionVerification.Level.SECOND_FACTOR) {
+            session.attemptSecondFactorVerification(
+              strategy = PasskeyHelper.passkeyStrategy,
+              publicKeyCredential = credential.authenticationResponseJson,
+            )
+          } else {
+            session.attemptFirstFactorVerification(
+              Session.AttemptFirstFactorParams.Passkey(credential.authenticationResponseJson)
+            )
+          }
 
         if (result is ClerkResult.Failure) {
           ClerkLog.e("Passkey session reverification failed: ${result.error}")

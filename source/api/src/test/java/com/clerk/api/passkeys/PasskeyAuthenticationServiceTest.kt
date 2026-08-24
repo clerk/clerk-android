@@ -20,6 +20,7 @@ import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
+import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
@@ -58,6 +59,8 @@ class PasskeyAuthenticationServiceTest {
   private lateinit var mockPublicKeyCredential: PublicKeyCredential
   private lateinit var mockPasswordCredential: PasswordCredential
   private lateinit var mockCustomCredential: CustomCredential
+  private lateinit var mockSignInApi: SignInApi
+  private lateinit var mockSessionApi: SessionApi
 
   @Before
   fun setup() {
@@ -77,8 +80,8 @@ class PasskeyAuthenticationServiceTest {
 
     // Mock ClerkApi and its nested objects
     mockkObject(ClerkApi)
-    val mockSignInApi = mockk<SignInApi>(relaxed = true)
-    val mockSessionApi = mockk<SessionApi>(relaxed = true)
+    mockSignInApi = mockk(relaxed = true)
+    mockSessionApi = mockk(relaxed = true)
     every { ClerkApi.signIn } returns mockSignInApi
     every { ClerkApi.session } returns mockSessionApi
 
@@ -166,6 +169,51 @@ class PasskeyAuthenticationServiceTest {
     assertTrue(result is ClerkResult.Success)
     assertTrue(requestSlot.captured.preferImmediatelyAvailableCredentials)
   }
+
+  @Test
+  fun `authenticateWithPasskey uses second factor endpoints for an in-progress sign in`() =
+    runTest {
+      val nonce = """{"challenge":"test-challenge"}"""
+      val authResponseJson = """{"type":"public-key","id":"credential-123"}"""
+      val signIn =
+        SignIn(
+          id = "sign_in_123",
+          status = SignIn.Status.NEEDS_SECOND_FACTOR,
+          supportedSecondFactors = listOf(Factor(strategy = "passkey")),
+        )
+      val preparedSignIn =
+        signIn.copy(secondFactorVerification = Verification(nonce = nonce, strategy = "passkey"))
+      val completedSignIn = preparedSignIn.copy(status = SignIn.Status.COMPLETE)
+
+      every { mockGetCredentialResponse.credential } returns mockPublicKeyCredential
+      every { mockPublicKeyCredential.authenticationResponseJson } returns authResponseJson
+      coEvery { mockCredentialManager.getCredential(any(), any()) } returns
+        mockGetCredentialResponse
+      coEvery {
+        mockSignInApi.prepareSecondFactor("sign_in_123", mapOf("strategy" to "passkey"))
+      } returns ClerkResult.success(preparedSignIn)
+      coEvery {
+        mockSignInApi.attemptSecondFactor(
+          "sign_in_123",
+          mapOf("public_key_credential" to authResponseJson, "strategy" to "passkey"),
+        )
+      } returns ClerkResult.success(completedSignIn)
+
+      val result = GoogleCredentialAuthenticationService.authenticateWithPasskey(signIn)
+
+      assertTrue(result is ClerkResult.Success)
+      assertEquals(completedSignIn, (result as ClerkResult.Success).value)
+      coVerify(exactly = 0) { mockSignInApi.createSignIn(any()) }
+      coVerify(exactly = 1) {
+        mockSignInApi.prepareSecondFactor("sign_in_123", mapOf("strategy" to "passkey"))
+      }
+      coVerify(exactly = 1) {
+        mockSignInApi.attemptSecondFactor(
+          "sign_in_123",
+          mapOf("public_key_credential" to authResponseJson, "strategy" to "passkey"),
+        )
+      }
+    }
 
   @Test
   fun `signInWithPasskey returns error when SignIn creation fails`() = runTest {
@@ -269,7 +317,9 @@ class PasskeyAuthenticationServiceTest {
       )
 
     assertTrue(result is ClerkResult.Failure)
-    assertTrue((result as ClerkResult.Failure).throwable is CredentialFlowException.ProviderUnavailable)
+    assertTrue(
+      (result as ClerkResult.Failure).throwable is CredentialFlowException.ProviderUnavailable
+    )
     verify(exactly = 1) { Clerk.updateClient(client.copy(signIn = null)) }
   }
 
@@ -451,6 +501,53 @@ class PasskeyAuthenticationServiceTest {
       assertEquals("Missing nonce in prepared verification", failure.throwable?.message)
       coVerify(exactly = 0) { mockCredentialManager.getCredential(any(), any()) }
     }
+
+  @Test
+  fun `verifySessionWithPasskey uses second factor endpoints when requested`() = runTest {
+    val session = testSession()
+    val nonce = """{"challenge":"test-challenge"}"""
+    val authResponseJson = """{"type":"public-key","id":"credential-123"}"""
+    val preparedVerification =
+      SessionVerification(
+        id = "ver_123",
+        status = SessionVerification.Status.NEEDS_SECOND_FACTOR,
+        level = SessionVerification.Level.MULTI_FACTOR,
+        secondFactorVerification = Verification(nonce = nonce, strategy = "passkey"),
+      )
+    val completedVerification =
+      preparedVerification.copy(status = SessionVerification.Status.COMPLETE)
+
+    every { mockGetCredentialResponse.credential } returns mockPublicKeyCredential
+    every { mockPublicKeyCredential.authenticationResponseJson } returns authResponseJson
+    coEvery { mockCredentialManager.getCredential(any(), any()) } returns mockGetCredentialResponse
+    coEvery {
+      mockSessionApi.prepareSecondFactorVerification("sess_123", mapOf("strategy" to "passkey"))
+    } returns ClerkResult.success(preparedVerification)
+    coEvery {
+      mockSessionApi.attemptSecondFactorVerification(
+        "sess_123",
+        mapOf("public_key_credential" to authResponseJson, "strategy" to "passkey"),
+      )
+    } returns ClerkResult.success(completedVerification)
+
+    val result =
+      GoogleCredentialAuthenticationService.verifySessionWithPasskey(
+        session = session,
+        level = SessionVerification.Level.SECOND_FACTOR,
+      )
+
+    assertTrue(result is ClerkResult.Success)
+    assertEquals(completedVerification, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      mockSessionApi.prepareSecondFactorVerification("sess_123", mapOf("strategy" to "passkey"))
+    }
+    coVerify(exactly = 1) {
+      mockSessionApi.attemptSecondFactorVerification(
+        "sess_123",
+        mapOf("public_key_credential" to authResponseJson, "strategy" to "passkey"),
+      )
+    }
+  }
 
   private fun testSession(): Session {
     return Session(

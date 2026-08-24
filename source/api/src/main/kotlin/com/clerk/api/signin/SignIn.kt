@@ -382,6 +382,13 @@ private constructor(
     @Serializable
     data class EmailCode(val code: String, override val strategy: String = EMAIL_CODE) :
       AttemptSecondFactorParams
+
+    @AutoMap
+    @Serializable
+    data class Passkey(
+      @SerialName("public_key_credential") val publicKeyCredential: String,
+      override val strategy: String = PASSKEY,
+    ) : AttemptSecondFactorParams
   }
 
   /**
@@ -547,6 +554,7 @@ private constructor(
     companion object {
       const val PHONE_CODE = "phone_code"
       const val EMAIL_CODE = "email_code"
+      const val PASSKEY = "passkey"
     }
   }
 
@@ -555,6 +563,8 @@ private constructor(
     data class PhoneCode(val phoneNumberId: String? = null) : PrepareSecondFactorStrategy()
 
     data class EmailCode(val emailAddressId: String? = null) : PrepareSecondFactorStrategy()
+
+    data object Passkey : PrepareSecondFactorStrategy()
 
     fun toParams(): PrepareSecondFactorParams =
       when (this) {
@@ -568,6 +578,7 @@ private constructor(
             strategy = PrepareSecondFactorParams.EMAIL_CODE,
             emailAddressId = emailAddressId,
           )
+        Passkey -> PrepareSecondFactorParams(strategy = PrepareSecondFactorParams.PASSKEY)
       }
   }
 
@@ -1040,7 +1051,7 @@ suspend fun SignIn.prepareSecondFactor(
   return ClerkApi.signIn.prepareSecondFactor(id = id, params = params.toMap())
 }
 
-private fun invalidPrepareState(
+internal fun invalidPrepareState(
   code: String,
   longMessage: String,
 ): ClerkResult.Failure<ClerkErrorResponse> {

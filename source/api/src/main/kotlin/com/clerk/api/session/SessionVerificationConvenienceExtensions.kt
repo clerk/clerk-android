@@ -91,7 +91,8 @@ suspend fun Session.verifyWithBackupCode(
 
 /** Verifies the current session with a passkey via Android Credential Manager. */
 suspend fun Session.verifyWithPasskey(
-  allowedCredentialIds: List<String> = emptyList()
+  allowedCredentialIds: List<String> = emptyList(),
+  level: SessionVerification.Level = SessionVerification.Level.FIRST_FACTOR,
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return PasskeyService.verifySessionWithPasskey(this, allowedCredentialIds)
+  return PasskeyService.verifySessionWithPasskey(this, allowedCredentialIds, level)
 }
