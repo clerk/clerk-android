@@ -365,7 +365,7 @@ private fun dismissTrailingContent(
 }
 
 /**
- * Resolves whether biometric-credential sign-in can be offered on the auth start screen.
+ * Resolves whether biometric sign-in can be offered on the auth start screen.
  *
  * Starts from fast local availability and then validates the local credential against the server,
  * cleaning up stale local state when the server no longer recognizes it.

@@ -8,13 +8,13 @@ import com.clerk.api.log.ClerkLog
 import com.clerk.api.session.Session
 import com.clerk.api.user.User
 
-/** Decides whether the post-auth biometric-credential enrollment prompt should be offered. */
+/** Decides whether the post-auth biometric credential enrollment prompt should be offered. */
 internal object BiometricCredentialEnrollmentPrompt {
 
   /**
    * Returns whether the enrollment prompt should be offered after a completed auth flow.
    *
-   * The prompt is offered when the biometric-credential feature and the matching prompt setting are
+   * The prompt is offered when the biometric sign-in feature and the matching prompt setting are
    * enabled, the device supports biometric authentication, the session allows enrollment, and this
    * device doesn't already hold a usable credential for the user.
    */
@@ -61,7 +61,7 @@ internal object BiometricCredentialEnrollmentPrompt {
   }
 
   private fun skip(reason: String): Boolean {
-    ClerkLog.d("Biometric-credential enrollment prompt not offered: $reason")
+    ClerkLog.d("Biometric credential enrollment prompt not offered: $reason")
     return false
   }
 

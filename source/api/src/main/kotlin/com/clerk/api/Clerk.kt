@@ -332,19 +332,19 @@ object Clerk {
     get() = environment?.userSettings?.passkeySettings?.allowAutofill ?: false
 
   /**
-   * Indicates whether biometric-credential (biometric) sign-in is enabled for this instance.
+   * Indicates whether biometric sign-in is enabled for this instance.
    *
-   * Requires both the Clerk Native API and the biometric-credential feature to be enabled for your
+   * Requires both the Clerk Native API and the biometric sign-in feature to be enabled for your
    * Clerk instance.
    *
-   * @return `true` if biometric-credential sign-in is enabled, `false` otherwise. Returns `false`
-   *   if the SDK is not yet initialized.
+   * @return `true` if biometric sign-in is enabled, `false` otherwise. Returns `false` if the SDK
+   *   is not yet initialized.
    */
   val biometricSignInIsEnabled: Boolean
     get() = environment?.biometricSignInIsEnabled ?: false
 
   /**
-   * Indicates whether the biometric-credential enrollment prompt should be offered after sign-in.
+   * Indicates whether the biometric credential enrollment prompt should be offered after sign-in.
    *
    * @return `true` if the prompt is enabled, `false` otherwise. Returns `false` if the SDK is not
    *   yet initialized.
@@ -353,7 +353,7 @@ object Clerk {
     get() = environment?.biometricCredentialPromptAfterSignInIsEnabled ?: false
 
   /**
-   * Indicates whether the biometric-credential enrollment prompt should be offered after sign-up.
+   * Indicates whether the biometric credential enrollment prompt should be offered after sign-up.
    *
    * @return `true` if the prompt is enabled, `false` otherwise. Returns `false` if the SDK is not
    *   yet initialized.
@@ -727,7 +727,7 @@ object Clerk {
   val auth: Auth = Auth()
 
   /**
-   * The main entry point for biometric-credential (biometric sign-in) credential operations.
+   * The main entry point for biometric credential operations.
    *
    * ### Example usage:
    * ```kotlin
