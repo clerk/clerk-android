@@ -9,10 +9,7 @@ sealed interface BiometricCredentialAvailability {
   /** Biometric sign-in is unavailable for the given [reason]. */
   data class Unavailable(val reason: UnavailableReason) : BiometricCredentialAvailability
 
-  /**
-   * Whether the SDK has a local credential and key that can be used for biometric-credential
-   * sign-in.
-   */
+  /** Whether the SDK has a local credential and key that can be used for biometric sign-in. */
   val isAvailable: Boolean
     get() = this is Available
 
