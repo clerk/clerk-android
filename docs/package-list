@@ -6,6 +6,7 @@ com.clerk.api
 com.clerk.api.auth
 com.clerk.api.auth.builders
 com.clerk.api.auth.types
+com.clerk.api.biometriccredential
 com.clerk.api.credentials
 com.clerk.api.emailaddress
 com.clerk.api.extensions
@@ -35,7 +36,6 @@ com.clerk.api.session
 com.clerk.api.signin
 com.clerk.api.signup
 com.clerk.api.sso
-com.clerk.api.trusteddevice
 com.clerk.api.ui
 com.clerk.api.user
 module:Clerk Android UI
