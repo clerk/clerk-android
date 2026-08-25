@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  * @property singleSessionMode Whether the application is configured for single session mode. When
  *   true, only one active session is allowed per user at a time.
  * @property sessionMinter Whether session token minting at the edge is enabled.
- * @property nativeSettings Native-app specific settings, such as biometric-credential sign-in.
+ * @property nativeSettings Native-app specific settings, such as biometric sign-in.
  */
 @Serializable
 internal data class AuthConfig(
@@ -25,7 +25,7 @@ internal data class AuthConfig(
   /** Whether session token minting at the edge is enabled. */
   @SerialName("session_minter") val sessionMinter: Boolean = false,
 
-  /** Native-app specific settings, such as biometric-credential sign-in. */
+  /** Native-app specific settings, such as biometric sign-in. */
   @SerialName("native_settings") val nativeSettings: NativeSettings = NativeSettings(),
 ) {
 
@@ -33,7 +33,7 @@ internal data class AuthConfig(
    * Native-app specific settings from the Clerk environment.
    *
    * @property apiEnabled Whether the Clerk Native API is enabled for this instance.
-   * @property biometricSignInEnabled Whether biometric-credential (biometric) sign-in is enabled.
+   * @property biometricSignInEnabled Whether biometric sign-in is enabled.
    * @property biometricCredentialPromptAfterSignInEnabled Whether the biometric-credential
    *   enrollment prompt should be offered after sign-in.
    * @property biometricCredentialPromptAfterSignUpEnabled Whether the biometric-credential
@@ -44,14 +44,14 @@ internal data class AuthConfig(
     /** Whether the Clerk Native API is enabled for this instance. */
     @SerialName("api_enabled") val apiEnabled: Boolean = false,
 
-    /** Whether biometric-credential (biometric) sign-in is enabled. */
+    /** Whether biometric sign-in is enabled. */
     @SerialName("trusted_device_sign_in_enabled") val biometricSignInEnabled: Boolean = false,
 
-    /** Whether the biometric-credential enrollment prompt should be offered after sign-in. */
+    /** Whether the biometric credential enrollment prompt should be offered after sign-in. */
     @SerialName("trusted_device_enrollment_prompt_after_sign_in_enabled")
     val biometricCredentialPromptAfterSignInEnabled: Boolean = false,
 
-    /** Whether the biometric-credential enrollment prompt should be offered after sign-up. */
+    /** Whether the biometric credential enrollment prompt should be offered after sign-up. */
     @SerialName("trusted_device_enrollment_prompt_after_sign_up_enabled")
     val biometricCredentialPromptAfterSignUpEnabled: Boolean = false,
   )

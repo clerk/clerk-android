@@ -33,7 +33,7 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class BiometricCredentialsTest {
 
-  private lateinit var previousCredentialStore: BiometricCredentialLocalCredentialStore
+  private lateinit var previousCredentialStore: BiometricCredentialLocalStore
   private lateinit var previousKeyManager: BiometricCredentialKeyManager
   private lateinit var credentialStore: InMemoryCredentialStore
   private lateinit var keyManager: FakeKeyManager
@@ -172,7 +172,7 @@ class BiometricCredentialsTest {
   }
 
   private fun credential(id: String, userId: String) =
-    BiometricCredentialLocalCredential(
+    BiometricCredentialLocalRecord(
       id = id,
       localKeyId = "tdlk_$id",
       userId = userId,
@@ -184,13 +184,13 @@ class BiometricCredentialsTest {
   private fun biometricCredential(id: String) =
     BiometricCredential(id = id, appIdentifier = APP_IDENTIFIER, createdAt = 1, updatedAt = 1)
 
-  private class InMemoryCredentialStore : BiometricCredentialLocalCredentialStore {
-    val credentials = mutableListOf<BiometricCredentialLocalCredential>()
+  private class InMemoryCredentialStore : BiometricCredentialLocalStore {
+    val credentials = mutableListOf<BiometricCredentialLocalRecord>()
     var deleteFails = false
 
-    override fun all(): List<BiometricCredentialLocalCredential> = credentials.toList()
+    override fun all(): List<BiometricCredentialLocalRecord> = credentials.toList()
 
-    override fun save(credential: BiometricCredentialLocalCredential) {
+    override fun save(credential: BiometricCredentialLocalRecord) {
       credentials.removeAll { it.id == credential.id }
       credentials += credential
     }

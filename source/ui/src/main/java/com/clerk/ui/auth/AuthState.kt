@@ -226,7 +226,7 @@ internal class AuthState(
   }
 
   /**
-   * Routes to the biometric-credential enrollment prompt when it should be offered after a
+   * Routes to the biometric credential enrollment prompt when it should be offered after a
    * completed auth flow. Returns `true` when the prompt was routed to.
    */
   @Suppress("ReturnCount")

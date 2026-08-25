@@ -15,7 +15,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * The main entry point for biometric-credential (biometric sign-in) credential operations.
+ * The main entry point for biometric credential operations.
  *
  * Access via [Clerk.biometricCredentials].
  *
@@ -41,8 +41,7 @@ object BiometricCredentials {
   internal var keyManager: BiometricCredentialKeyManager = DefaultBiometricCredentialKeyManager
 
   @VisibleForTesting
-  internal var credentialStore: BiometricCredentialLocalCredentialStore =
-    DefaultBiometricCredentialLocalCredentialStore
+  internal var credentialStore: BiometricCredentialLocalStore = DefaultBiometricCredentialLocalStore
 
   /**
    * Lists active biometric credentials for the signed-in user.
@@ -55,11 +54,11 @@ object BiometricCredentials {
   }
 
   /**
-   * Returns local biometric-credential sign-in availability.
+   * Returns local biometric sign-in availability.
    *
    * When a Clerk session is active, this also reconciles the local credential with the server.
    * Without an active session, this reports whether the local biometric-gated credential can be
-   * used to start biometric-credential sign-in.
+   * used to start biometric sign-in.
    *
    * @param id The biometric credential ID to check. When omitted, the available local credential is
    *   used.
@@ -77,8 +76,8 @@ object BiometricCredentials {
   }
 
   /**
-   * Returns biometric-credential sign-in availability for the current signed-in user, reconciling
-   * the local credential with the server.
+   * Returns biometric sign-in availability for the current signed-in user, reconciling the local
+   * credential with the server.
    */
   suspend fun currentUserAvailability(): BiometricCredentialAvailability {
     val userId =
@@ -94,9 +93,7 @@ object BiometricCredentials {
     }
   }
 
-  /**
-   * Returns local biometric-credential sign-in availability without reconciling with the server.
-   */
+  /** Returns local biometric sign-in availability without reconciling with the server. */
   fun localAvailability(
     id: String? = null,
     identifierHint: String? = null,
@@ -109,8 +106,8 @@ object BiometricCredentials {
   }
 
   /**
-   * Returns local biometric-credential sign-in availability for the current signed-in user without
-   * reconciling with the server.
+   * Returns local biometric sign-in availability for the current signed-in user without reconciling
+   * with the server.
    */
   fun currentUserLocalAvailability(): BiometricCredentialAvailability {
     val userId =
@@ -263,7 +260,7 @@ object BiometricCredentials {
     BiometricCredentialPendingCleanupStore.all().forEach { deletedUserId ->
       runCatching { forgetLocalCredentials(deletedUserId) }
         .onSuccess { BiometricCredentialPendingCleanupStore.remove(deletedUserId) }
-        .onFailure { ClerkLog.w("Failed to retry biometric-credential local credential cleanup.") }
+        .onFailure { ClerkLog.w("Failed to retry biometric local credential cleanup.") }
     }
   }
 
@@ -288,7 +285,7 @@ object BiometricCredentials {
       when (val result = selectedLocalCredential(id, identifierHint, userId = null)) {
         is LocalCredentialResult.Available -> result.credential
         is LocalCredentialResult.Unavailable ->
-          return clientFailure("Biometric-credential sign-in is unavailable.")
+          return clientFailure("Biometric sign-in is unavailable.")
       }
 
     val createResult =
@@ -307,7 +304,7 @@ object BiometricCredentials {
 
     val challenge =
       signIn.firstFactorVerification?.biometricCredentialChallenge
-        ?: return clientFailure("Biometric-credential sign-in did not return a challenge.")
+        ?: return clientFailure("Biometric sign-in did not return a challenge.")
 
     val signature =
       try {
@@ -400,7 +397,7 @@ object BiometricCredentials {
     }
   }
 
-  /** Whether biometric-gated biometric-credential keys can be created and used on this device. */
+  /** Whether biometric-gated keys can be created and used on this device. */
   val deviceSupportsBiometricAuthentication: Boolean
     get() = keyManager.isSupported(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE)
 
@@ -456,13 +453,12 @@ object BiometricCredentials {
   ): ClerkResult.Failure<ClerkErrorResponse>? {
     return try {
       credentialStore.save(
-        BiometricCredentialLocalCredential(
+        BiometricCredentialLocalRecord(
           id = biometricCredential.id,
           localKeyId = localKey.localKeyId,
           userId = userId,
           appIdentifier = biometricCredential.appIdentifier,
-          identifierHint =
-            BiometricCredentialLocalCredential.normalizedIdentifierHint(identifierHint),
+          identifierHint = BiometricCredentialLocalRecord.normalizedIdentifierHint(identifierHint),
           policy = localKey.policy,
           createdAt = biometricCredential.createdAt,
           updatedAt = biometricCredential.updatedAt,
@@ -489,14 +485,14 @@ object BiometricCredentials {
   }
 
   private sealed interface LocalCredentialResult {
-    data class Available(val credential: BiometricCredentialLocalCredential) : LocalCredentialResult
+    data class Available(val credential: BiometricCredentialLocalRecord) : LocalCredentialResult
 
     data class Unavailable(val reason: BiometricCredentialAvailability.UnavailableReason) :
       LocalCredentialResult
   }
 
   private sealed interface LocalCredentialsResult {
-    data class Available(val credentials: List<BiometricCredentialLocalCredential>) :
+    data class Available(val credentials: List<BiometricCredentialLocalRecord>) :
       LocalCredentialsResult
 
     data class Unavailable(val reason: BiometricCredentialAvailability.UnavailableReason) :
@@ -604,7 +600,7 @@ object BiometricCredentials {
     id: String?,
     identifierHint: String?,
     userId: String?,
-  ): List<BiometricCredentialLocalCredential> {
+  ): List<BiometricCredentialLocalRecord> {
     var credentials = storedLocalCredentialsForCurrentApp()
     if (id != null) {
       credentials = credentials.filter { it.id == id }
@@ -616,20 +612,20 @@ object BiometricCredentials {
         credentials.filter { it.matches(identifierHint) }
       }
     return credentials.sortedWith(
-      compareByDescending<BiometricCredentialLocalCredential> { it.createdAt }
+      compareByDescending<BiometricCredentialLocalRecord> { it.createdAt }
         .thenByDescending { it.updatedAt }
         .thenByDescending { it.id }
     )
   }
 
-  private fun storedLocalCredentialsForCurrentApp(): List<BiometricCredentialLocalCredential> {
+  private fun storedLocalCredentialsForCurrentApp(): List<BiometricCredentialLocalRecord> {
     val appIdentifier = Clerk.applicationId ?: return emptyList()
     return credentialStore.all(appIdentifier)
   }
 
   private fun localCredentialsWithExistingKeys(
-    credentials: List<BiometricCredentialLocalCredential>
-  ): List<BiometricCredentialLocalCredential> {
+    credentials: List<BiometricCredentialLocalRecord>
+  ): List<BiometricCredentialLocalRecord> {
     return credentials.filter { credential ->
       val hasKey = runCatching { keyManager.hasKey(credential.localKeyId) }.getOrDefault(false)
       if (!hasKey) {
@@ -640,7 +636,7 @@ object BiometricCredentials {
   }
 
   private fun deleteLocalCredential(
-    credential: BiometricCredentialLocalCredential,
+    credential: BiometricCredentialLocalRecord,
     propagateKeyDeletionFailure: Boolean = false,
   ) {
     val keyDeletionResult = runCatching { keyManager.deleteKey(credential.localKeyId) }
@@ -670,19 +666,19 @@ object BiometricCredentials {
     val message =
       when (reason) {
         BiometricCredentialAvailability.UnavailableReason.ENVIRONMENT_UNAVAILABLE ->
-          "Unable to use biometric-credential sign-in before the Clerk environment is loaded."
+          "Unable to use biometric sign-in before the Clerk environment is loaded."
         BiometricCredentialAvailability.UnavailableReason.NATIVE_API_DISABLED ->
-          "Unable to use biometric-credential sign-in because Native API is disabled."
+          "Unable to use biometric sign-in because Native API is disabled."
         BiometricCredentialAvailability.UnavailableReason.FEATURE_DISABLED ->
-          "Unable to use biometric-credential sign-in because it is disabled."
-        else -> "Biometric-credential sign-in is unavailable."
+          "Unable to use biometric sign-in because it is disabled."
+        else -> "Biometric sign-in is unavailable."
       }
     return clientFailure(message)
   }
 
   private fun <T : Any> handleBiometricSignInError(
     failure: ClerkResult.Failure<ClerkErrorResponse>,
-    localCredential: BiometricCredentialLocalCredential,
+    localCredential: BiometricCredentialLocalRecord,
   ): ClerkResult<T, ClerkErrorResponse> {
     if (!failure.isMissingBiometricCredential) {
       return failure

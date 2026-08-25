@@ -15,9 +15,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
-class BiometricCredentialLocalCredentialStoreTest {
+class BiometricCredentialLocalStoreTest {
 
-  private val store = DefaultBiometricCredentialLocalCredentialStore
+  private val store = DefaultBiometricCredentialLocalStore
 
   @Before
   fun setup() {
@@ -104,13 +104,13 @@ class BiometricCredentialLocalCredentialStoreTest {
     userId: String = "user_1",
     appIdentifier: String = "com.example.app",
     identifierHint: String? = null,
-  ): BiometricCredentialLocalCredential {
-    return BiometricCredentialLocalCredential(
+  ): BiometricCredentialLocalRecord {
+    return BiometricCredentialLocalRecord(
       id = id,
       localKeyId = "tdlk_$id",
       userId = userId,
       appIdentifier = appIdentifier,
-      identifierHint = BiometricCredentialLocalCredential.normalizedIdentifierHint(identifierHint),
+      identifierHint = BiometricCredentialLocalRecord.normalizedIdentifierHint(identifierHint),
       policy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
       createdAt = 1L,
       updatedAt = 2L,

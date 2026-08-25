@@ -26,7 +26,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * @property updatedAt The time the credential was last updated, in milliseconds since epoch.
  */
 @Serializable
-internal data class BiometricCredentialLocalCredential(
+internal data class BiometricCredentialLocalRecord(
   val id: String,
   @SerialName("localKeyId") val localKeyId: String,
   @SerialName("userId") val userId: String,
@@ -52,16 +52,15 @@ internal data class BiometricCredentialLocalCredential(
 }
 
 /** Store for local biometric credential metadata. */
-internal interface BiometricCredentialLocalCredentialStore {
-  fun all(): List<BiometricCredentialLocalCredential>
+internal interface BiometricCredentialLocalStore {
+  fun all(): List<BiometricCredentialLocalRecord>
 
-  fun all(appIdentifier: String): List<BiometricCredentialLocalCredential> =
+  fun all(appIdentifier: String): List<BiometricCredentialLocalRecord> =
     all().filter { it.appIdentifier == appIdentifier }
 
-  fun credential(id: String): BiometricCredentialLocalCredential? =
-    all().firstOrNull { it.id == id }
+  fun credential(id: String): BiometricCredentialLocalRecord? = all().firstOrNull { it.id == id }
 
-  fun save(credential: BiometricCredentialLocalCredential)
+  fun save(credential: BiometricCredentialLocalRecord)
 
   fun delete(id: String)
 
@@ -69,18 +68,17 @@ internal interface BiometricCredentialLocalCredentialStore {
 }
 
 /**
- * Default [BiometricCredentialLocalCredentialStore] persisting credential metadata as encrypted
- * JSON via [StorageHelper].
+ * Default [BiometricCredentialLocalStore] persisting credential metadata as encrypted JSON via
+ * [StorageHelper].
  *
  * Malformed records are dropped on read instead of failing the whole list, so a single corrupt
- * entry can't lock out biometric-credential sign-in.
+ * entry can't lock out biometric sign-in.
  */
-internal object DefaultBiometricCredentialLocalCredentialStore :
-  BiometricCredentialLocalCredentialStore {
+internal object DefaultBiometricCredentialLocalStore : BiometricCredentialLocalStore {
 
   // Keep the trusted-device storage key so SDK upgrades can read existing enrollments.
   @Suppress("ReturnCount")
-  override fun all(): List<BiometricCredentialLocalCredential> {
+  override fun all(): List<BiometricCredentialLocalRecord> {
     val stored =
       StorageHelper.loadValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS) ?: return emptyList()
     val elements =
@@ -93,7 +91,7 @@ internal object DefaultBiometricCredentialLocalCredentialStore :
     return elements.mapNotNull { element -> decodeCredential(element) }
   }
 
-  override fun save(credential: BiometricCredentialLocalCredential) {
+  override fun save(credential: BiometricCredentialLocalRecord) {
     persist(all().filterNot { it.id == credential.id } + credential)
   }
 
@@ -105,14 +103,14 @@ internal object DefaultBiometricCredentialLocalCredentialStore :
     StorageHelper.deleteValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS)
   }
 
-  private fun persist(credentials: List<BiometricCredentialLocalCredential>) {
+  private fun persist(credentials: List<BiometricCredentialLocalRecord>) {
     if (credentials.isEmpty()) {
       deleteAll()
       return
     }
 
     val elements = credentials.map {
-      ClerkApi.json.encodeToJsonElement(BiometricCredentialLocalCredential.serializer(), it)
+      ClerkApi.json.encodeToJsonElement(BiometricCredentialLocalRecord.serializer(), it)
     }
     StorageHelper.saveValue(
       StorageKey.TRUSTED_DEVICE_CREDENTIALS,
@@ -120,10 +118,10 @@ internal object DefaultBiometricCredentialLocalCredentialStore :
     )
   }
 
-  private fun decodeCredential(element: JsonElement): BiometricCredentialLocalCredential? {
+  private fun decodeCredential(element: JsonElement): BiometricCredentialLocalRecord? {
     return runCatching {
         ClerkApi.json.decodeFromJsonElement(
-          BiometricCredentialLocalCredential.serializer(),
+          BiometricCredentialLocalRecord.serializer(),
           element,
         )
       }
@@ -148,7 +146,7 @@ internal object BiometricCredentialPendingCleanupStore {
           .filterTo(mutableSetOf()) { it.isNotBlank() }
       }
       .getOrElse {
-        ClerkLog.w("Biometric-credential pending cleanup metadata is malformed, clearing it.")
+        ClerkLog.w("Biometric credential cleanup metadata is malformed, clearing it.")
         StorageHelper.deleteValue(StorageKey.PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP)
         emptySet()
       }

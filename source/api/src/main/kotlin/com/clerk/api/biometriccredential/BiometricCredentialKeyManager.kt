@@ -52,7 +52,7 @@ internal constructor(val code: Code, message: String, cause: Throwable? = null) 
 
   /** The category of biometric-credential key management error. */
   enum class Code {
-    /** Biometric-credential sign-in requires Android 9 (API 28) or later. */
+    /** Biometric sign-in requires Android 9 (API 28) or later. */
     UNSUPPORTED_PLATFORM,
 
     /** Biometric authentication is not available or not enrolled on this device. */
@@ -80,7 +80,7 @@ internal constructor(val code: Code, message: String, cause: Throwable? = null) 
   }
 }
 
-/** Manager for local, biometric-gated biometric-credential private keys. */
+/** Manager for local biometric-credential private keys. */
 internal interface BiometricCredentialKeyManager {
   /**
    * Whether biometric-credential keys protected by [policy] can be created and used on this device.
@@ -152,7 +152,7 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
       throw BiometricCredentialKeyManagerException(
         BiometricCredentialKeyManagerException.Code.UNSUPPORTED_PLATFORM,
-        "Biometric-credential sign-in requires Android 9 (API 28) or later.",
+        "Biometric sign-in requires Android 9 (API 28) or later.",
       )
     }
     if (!isSupported(policy)) {
@@ -207,7 +207,7 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
       throw BiometricCredentialKeyManagerException(
         BiometricCredentialKeyManagerException.Code.UNSUPPORTED_PLATFORM,
-        "Biometric-credential sign-in requires Android 9 (API 28) or later.",
+        "Biometric sign-in requires Android 9 (API 28) or later.",
       )
     }
 
@@ -279,7 +279,7 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
       Clerk.credentialActivity()
         ?: throw BiometricCredentialKeyManagerException(
           BiometricCredentialKeyManagerException.Code.SIGNING_FAILED,
-          "Biometric-credential sign-in requires an active Activity.",
+          "Biometric sign-in requires an active Activity.",
         )
 
     return withContext(Dispatchers.Main) {
