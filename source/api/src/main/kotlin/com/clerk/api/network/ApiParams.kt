@@ -29,6 +29,7 @@ internal object ApiParams {
   internal const val CODE_CHALLENGE = "code_challenge"
   internal const val CODE_CHALLENGE_METHOD = "code_challenge_method"
   internal const val CLERK_SESSION_ID = "_clerk_session_id"
+  internal const val PROOF_TOKEN = "proof_token"
 
   internal const val ROLE = "role"
 
