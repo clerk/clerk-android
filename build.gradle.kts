@@ -95,8 +95,8 @@ tasks.register("verifyPublishedArtifacts") {
 
   val apiConsumerRules = file("source/api/consumer-rules.pro")
   val uiConsumerRules = file("source/ui/consumer-rules.pro")
-  val apiPublication = layout.projectDirectory.dir("source/api/build/publications/maven")
-  val uiPublication = layout.projectDirectory.dir("source/ui/build/publications/maven")
+  val apiPublication = project(":source:api").layout.buildDirectory.dir("publications/maven")
+  val uiPublication = project(":source:ui").layout.buildDirectory.dir("publications/maven")
   inputs.files(apiConsumerRules, uiConsumerRules)
   inputs.dir(apiPublication)
   inputs.dir(uiPublication)
@@ -121,8 +121,14 @@ tasks.register("verifyPublishedArtifacts") {
           "\\\"group\\\"\\s*:\\s*\\\"${Regex.escape(group)}\\\"\\s*,\\s*" +
             "\\\"module\\\"\\s*:\\s*\\\"${Regex.escape(artifact)}\\\""
         )
-      val publicationMetadata =
-        directory.walkTopDown().filter(File::isFile).joinToString("\n") { it.readText() }
+      val metadataFiles =
+        listOf(directory.resolve("pom-default.xml"), directory.resolve("module.json"))
+      metadataFiles.forEach { metadataFile ->
+        check(metadataFile.isFile) {
+          "Expected publication metadata file ${metadataFile.relativeTo(rootDir)} to exist."
+        }
+      }
+      val publicationMetadata = metadataFiles.joinToString("\n") { it.readText() }
       check(!pomPattern.containsMatchIn(publicationMetadata)) {
         "$coordinate must not be published from ${directory.relativeTo(rootDir)}."
       }
@@ -154,7 +160,7 @@ tasks.register("verifyPublishedArtifacts") {
     )
 
     listOf("com.google.devtools.ksp:symbol-processing-api").forEach {
-      assertCoordinateIsNotPublished(apiPublication.asFile, it)
+      assertCoordinateIsNotPublished(apiPublication.get().asFile, it)
     }
     listOf(
         "androidx.compose.ui:ui-tooling",
@@ -162,7 +168,7 @@ tasks.register("verifyPublishedArtifacts") {
         "androidx.compose.ui:ui-tooling-preview-android",
         "androidx.test:core-ktx",
       )
-      .forEach { assertCoordinateIsNotPublished(uiPublication.asFile, it) }
+      .forEach { assertCoordinateIsNotPublished(uiPublication.get().asFile, it) }
   }
 }
 
