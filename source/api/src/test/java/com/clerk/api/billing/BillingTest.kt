@@ -431,7 +431,9 @@ class BillingTest {
     val payment = decode<BillingPayment>(json)
 
     assertEquals("pay_1", payment.id)
-    assertEquals("si_1", payment.subscriptionItem.id)
+    assertEquals("item_1", payment.subscriptionItem.id)
+    assertEquals(0, payment.subscriptionItem.createdAt)
+    assertEquals(0, payment.subscriptionItem.periodStart)
     assertEquals(BillingPaymentStatus.PAID, payment.status)
   }
 
