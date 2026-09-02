@@ -105,7 +105,6 @@ dependencies {
   implementation(libs.jwt.decode)
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlinx.datetime)
-  implementation(libs.ksp.api)
   implementation(libs.okhttp)
   implementation(libs.okhttp.logging)
   implementation(libs.retrofit)
