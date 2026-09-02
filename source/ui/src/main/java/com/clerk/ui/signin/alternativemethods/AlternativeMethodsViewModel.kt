@@ -6,6 +6,7 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
+import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
 import com.clerk.ui.auth.AuthenticationViewState
@@ -20,14 +21,18 @@ internal class AlternativeMethodsViewModel : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun signInWithProvider(provider: OAuthProvider, transferable: Boolean = true) {
+  fun signInWithProvider(
+    provider: OAuthProvider,
+    transferable: Boolean = true,
+    signIn: SignIn? = Clerk.auth.currentSignIn,
+  ) {
     _state.value = AuthenticationViewState.Loading
     viewModelScope.launch {
-      authenticateWithRedirect(
-          signIn = Clerk.auth.currentSignIn,
-          provider = provider,
-          transferable = transferable,
-        )
+      if (signIn == null) {
+        _state.value = AuthenticationViewState.NotStarted
+        return@launch
+      }
+      authenticateWithRedirect(signIn = signIn, provider = provider, transferable = transferable)
         .onSuccess {
           _state.value =
             when (it.resultType) {

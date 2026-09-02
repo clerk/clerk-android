@@ -8,6 +8,7 @@ import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.resetPasswordFactor
+import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
 import com.clerk.ui.auth.isSSOCancellation
@@ -26,14 +27,18 @@ internal class ForgotPasswordViewModel(
   private val _state = MutableStateFlow<ResetPasswordViewState>(ResetPasswordViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun signInWithProvider(provider: OAuthProvider, transferable: Boolean = true) {
+  fun signInWithProvider(
+    provider: OAuthProvider,
+    transferable: Boolean = true,
+    signIn: SignIn? = Clerk.auth.currentSignIn,
+  ) {
     _state.value = ResetPasswordViewState.Loading
     viewModelScope.launch(ioDispatcher) {
-      authenticateWithRedirect(
-          signIn = Clerk.auth.currentSignIn,
-          provider = provider,
-          transferable = transferable,
-        )
+      if (signIn == null) {
+        withContext(Dispatchers.Main) { _state.value = ResetPasswordViewState.NotStarted }
+        return@launch
+      }
+      authenticateWithRedirect(signIn = signIn, provider = provider, transferable = transferable)
         .onSuccess {
           withContext(Dispatchers.Main) {
             if (it.resultType == ResultType.SIGN_IN) {

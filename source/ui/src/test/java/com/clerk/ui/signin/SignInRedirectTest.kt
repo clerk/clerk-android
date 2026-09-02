@@ -10,7 +10,6 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
@@ -29,7 +28,6 @@ class SignInRedirectTest {
 
   @Test
   fun `redirect reuses the current sign in attempt`() = runTest {
-    mockkObject(SignIn.Companion)
     mockkStatic("com.clerk.api.signin.SignInKt")
     mockkStatic("com.clerk.api.signin.SignInExtensionsKt")
     val currentSignIn =
@@ -67,6 +65,5 @@ class SignInRedirectTest {
     assertEquals(OAuthProvider.GITHUB.strategy, prepareParams.captured.strategy)
     coVerify(exactly = 1) { currentSignIn.prepareFirstFactor(any()) }
     coVerify(exactly = 1) { preparedSignIn.authenticateWithPreparedRedirect(transferable = true) }
-    coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
   }
 }

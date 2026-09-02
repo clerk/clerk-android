@@ -9,15 +9,11 @@ import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
 
 internal suspend fun authenticateWithRedirect(
-  signIn: SignIn?,
+  signIn: SignIn,
   provider: OAuthProvider,
   transferable: Boolean,
 ): ClerkResult<OAuthResult, ClerkErrorResponse> {
   val params = SignIn.AuthenticateWithRedirectParams.OAuth(provider)
-  if (signIn == null) {
-    return SignIn.authenticateWithRedirect(params, transferable)
-  }
-
   return when (
     val prepareResult =
       signIn.prepareFirstFactor(
