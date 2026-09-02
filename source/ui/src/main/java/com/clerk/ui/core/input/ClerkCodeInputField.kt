@@ -105,14 +105,9 @@ fun ClerkCodeInputField(
   showResend: Boolean = true,
   clerkTheme: ClerkTheme? = null,
 ) {
-  var timeLeft by remember { mutableIntStateOf(timerDuration) }
+  val resendTimer = remember(timerDuration) { ResendTimerState(timerDuration) }
 
-  LaunchedEffect(Unit) {
-    while (timeLeft > 0) {
-      delay(DEFAULT_DELAY)
-      timeLeft--
-    }
-  }
+  LaunchedEffect(resendTimer.restartCount) { resendTimer.countDown() }
 
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val selectionColors = rememberSelectionColors()
@@ -130,13 +125,41 @@ fun ClerkCodeInputField(
 
         SupportingText(verificationState)
         if (showResend) {
-          if (timeLeft > 0) {
-            IconTextRow(text = stringResource(R.string.didn_t_receive_a_code_resend, timeLeft))
+          if (resendTimer.secondsRemaining > 0) {
+            IconTextRow(
+              text =
+                stringResource(R.string.didn_t_receive_a_code_resend, resendTimer.secondsRemaining)
+            )
           } else {
-            ResendCodeText(onClick = onClickResend)
+            ResendCodeText(
+              onClick = {
+                resendTimer.restart()
+                onClickResend()
+              }
+            )
           }
         }
       }
+    }
+  }
+}
+
+internal class ResendTimerState(private val durationSeconds: Int) {
+  var secondsRemaining by mutableIntStateOf(durationSeconds)
+    private set
+
+  var restartCount by mutableIntStateOf(0)
+    private set
+
+  fun restart() {
+    secondsRemaining = durationSeconds
+    restartCount++
+  }
+
+  suspend fun countDown() {
+    while (secondsRemaining > 0) {
+      delay(DEFAULT_DELAY)
+      secondsRemaining--
     }
   }
 }
