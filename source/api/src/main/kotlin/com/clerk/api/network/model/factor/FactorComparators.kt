@@ -8,12 +8,14 @@ internal object FactorComparators {
     listOf(
       Constants.Strategy.PASSKEY,
       Constants.Strategy.PASSWORD,
+      Constants.Strategy.EMAIL_LINK,
       Constants.Strategy.EMAIL_CODE,
       Constants.Strategy.PHONE_CODE,
     )
 
   val strategySortOrderOtpPref =
     listOf(
+      Constants.Strategy.EMAIL_LINK,
       Constants.Strategy.EMAIL_CODE,
       Constants.Strategy.PHONE_CODE,
       Constants.Strategy.PASSKEY,
@@ -22,6 +24,7 @@ internal object FactorComparators {
 
   val strategySortOrderAllStrategies =
     listOf(
+      Constants.Strategy.EMAIL_LINK,
       Constants.Strategy.EMAIL_CODE,
       Constants.Strategy.PHONE_CODE,
       Constants.Strategy.PASSKEY,
