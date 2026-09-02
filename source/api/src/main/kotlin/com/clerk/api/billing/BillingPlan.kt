@@ -25,7 +25,7 @@ enum class BillingPayerResourceType {
  */
 @Serializable
 data class BillingPlanUnitPriceTier(
-  val id: String,
+  val id: String? = null,
   val startsAtBlock: Int,
   val endsAfterBlock: Int? = null,
   val feePerBlock: BillingMoneyAmount,
