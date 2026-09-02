@@ -38,14 +38,13 @@ import com.clerk.api.sso.SSOService
  *   no suitable alternatives are found or if [SignIn.supportedFirstFactors] is null.
  */
 fun SignIn.alternativeFirstFactors(factor: Factor? = null): List<Factor> {
-  val firstFactors =
-    supportedFirstFactors?.filter {
-      it != factor &&
-        !it.isResetFactor() &&
-        !it.strategy.contains("oauth") &&
-        it.strategy != "enterprise_sso" &&
-        it.strategy != "saml"
-    }
+  val firstFactors = supportedFirstFactors?.filter {
+    it != factor &&
+      !it.isResetFactor() &&
+      !it.strategy.contains("oauth") &&
+      it.strategy != "enterprise_sso" &&
+      it.strategy != "saml"
+  }
   return (firstFactors ?: emptyList()).sortedWith(FactorComparators.allStrategiesButtonsComparator)
 }
 
@@ -82,15 +81,11 @@ fun SignIn.alternativeSecondFactors(factor: Factor): List<Factor> {
  *   is found.
  */
 val SignIn.startingFirstFactor: Factor?
-  get() {
-    preparedFirstFactor?.let {
-      return it
-    }
-    return when (Clerk.environment?.displayConfig?.preferredSignInStrategy) {
+  get() =
+    when (Clerk.environment?.displayConfig?.preferredSignInStrategy) {
       PreferredSignInStrategy.PASSWORD -> this.factorWhenPasswordIsPreferred
       else -> this.factorWhenOtpIsPreferred
     }
-  }
 
 val SignIn.startingSecondFactor: Factor?
   get() {
@@ -116,10 +111,6 @@ private val SignIn.factorWhenPasswordIsPreferred: Factor?
   get() {
     val availableFirstFactors = supportedFirstFactors ?: return null
 
-    availableFirstFactors.emailLinkFactorForIdentifier(identifier)?.let {
-      return it
-    }
-
     // Prefer passkey
     availableFirstFactors
       .firstOrNull { it.strategy == "passkey" }
@@ -134,6 +125,10 @@ private val SignIn.factorWhenPasswordIsPreferred: Factor?
         return it
       }
 
+    availableFirstFactors.emailLinkFactorForIdentifier(identifier)?.let {
+      return it
+    }
+
     // Then: sort by password-pref comparator, but first try to match current identifier
     val sorted = availableFirstFactors.sortedWith(FactorComparators.passwordPrefComparator)
     return availableFirstFactors.firstOrNull { it.safeIdentifier == identifier }
@@ -144,10 +139,6 @@ private val SignIn.factorWhenOtpIsPreferred: Factor?
   get() {
     val availableFirstFactors = supportedFirstFactors ?: return null
 
-    availableFirstFactors.emailLinkFactorForIdentifier(identifier)?.let {
-      return it
-    }
-
     // Prefer passkey
     availableFirstFactors
       .firstOrNull { it.strategy == "passkey" }
@@ -155,19 +146,13 @@ private val SignIn.factorWhenOtpIsPreferred: Factor?
         return it
       }
 
+    availableFirstFactors.emailLinkFactorForIdentifier(identifier)?.let {
+      return it
+    }
+
     // Then: sort by OTP-pref comparator; prefer matching identifier if present
     val sorted = availableFirstFactors.sortedWith(FactorComparators.otpPrefComparator)
     return sorted.firstOrNull { it.safeIdentifier == identifier } ?: sorted.firstOrNull()
-  }
-
-private val SignIn.preparedFirstFactor: Factor?
-  get() {
-    val preparedStrategy = firstFactorVerification?.strategy ?: return null
-    val availableFirstFactors = supportedFirstFactors ?: return null
-
-    return availableFirstFactors.firstOrNull {
-      it.strategy == preparedStrategy && it.safeIdentifier == identifier
-    } ?: availableFirstFactors.singleOrNull { it.strategy == preparedStrategy }
   }
 
 private fun List<Factor>.emailLinkFactorForIdentifier(identifier: String?): Factor? {
