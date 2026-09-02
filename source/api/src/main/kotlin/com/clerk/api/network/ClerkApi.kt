@@ -2,6 +2,7 @@ package com.clerk.api.network
 
 import android.content.Context
 import com.clerk.api.Clerk
+import com.clerk.api.network.api.BillingApi
 import com.clerk.api.network.api.BiometricCredentialApi
 import com.clerk.api.network.api.ClientApi
 import com.clerk.api.network.api.DeviceAttestationApi
@@ -80,6 +81,10 @@ internal object ClerkApi {
   val biometricCredential: BiometricCredentialApi
     get() = _biometricCredential ?: error("ClerkApi is not configured.")
 
+  private var _billing: BillingApi? = null
+  val billing: BillingApi
+    get() = _billing ?: error("ClerkApi is not configured.")
+
   // Exposed for internal testing/verification
   internal var configuredBaseUrl: String? = null
     private set
@@ -111,6 +116,7 @@ internal object ClerkApi {
     _organization = retrofit.create(OrganizationApi::class.java)
     _magicLink = retrofit.create(MagicLinkApi::class.java)
     _biometricCredential = retrofit.create(BiometricCredentialApi::class.java)
+    _billing = retrofit.create(BillingApi::class.java)
   }
 
   /** Clears all configured Retrofit services. */
@@ -125,6 +131,7 @@ internal object ClerkApi {
     _organization = null
     _magicLink = null
     _biometricCredential = null
+    _billing = null
     configuredBaseUrl = null
     configuredUrlWithVersion = null
     configuredCustomHeaders = emptyMap()
