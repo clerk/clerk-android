@@ -23,7 +23,8 @@ import retrofit2.http.Query
  * Internal Retrofit API for Clerk Billing GET endpoints.
  *
  * Paths are relative to `/v1/`. [ClerkApiResultConverterFactory] unwraps FAPI `{ response: T,
- * client }` envelopes, so methods declare the inner resource type.
+ * client }` envelopes except for the raw-body GETs (`getPlans`, `getPlan`, `getPaymentAttempts`,
+ * `getPaymentAttempt`), which match clerk-js.
  */
 internal interface BillingApi {
 

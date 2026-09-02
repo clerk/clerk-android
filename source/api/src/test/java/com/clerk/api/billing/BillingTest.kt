@@ -294,9 +294,8 @@ class BillingTest {
   }
 
   @Test
-  fun `converter unwraps piggybacked getPlans response`() = runTest {
-    val interceptor =
-      CapturingInterceptor(piggybacked("""{"data": [$PLAN_JSON], "total_count": 1}"""))
+  fun `converter decodes raw getPlans body matching clerk-js`() = runTest {
+    val interceptor = CapturingInterceptor("""{"data": [$PLAN_JSON], "total_count": 1}""")
     val api = billingApi(interceptor)
 
     val result =
@@ -311,6 +310,35 @@ class BillingTest {
     assertEquals("2", interceptor.url.queryParameter("min_seats"))
     assertEquals("5", interceptor.url.queryParameter("limit"))
     assertEquals("5", interceptor.url.queryParameter("offset"))
+  }
+
+  @Test
+  fun `converter decodes raw getPlan and getPaymentAttempt bodies`() = runTest {
+    val planApi = billingApi(CapturingInterceptor(PLAN_JSON))
+    val plan = planApi.getPlan(id = "plan_pro")
+    assertTrue(plan is ClerkResult.Success)
+    assertEquals("plan_pro", (plan as ClerkResult.Success).value.id)
+
+    val paymentApi = billingApi(CapturingInterceptor(PAYMENT_JSON))
+    val payment = paymentApi.getUserPaymentAttempt(id = "pay_1")
+    assertTrue(payment is ClerkResult.Success)
+    assertEquals("pay_1", (payment as ClerkResult.Success).value.id)
+  }
+
+  @Test
+  fun `converter unwraps piggybacked subscription and statements`() = runTest {
+    val subscriptionApi = billingApi(CapturingInterceptor(piggybacked(SUBSCRIPTION_JSON)))
+    val subscription = subscriptionApi.getUserSubscription()
+    assertTrue(subscription is ClerkResult.Success)
+    assertEquals("sub_1", (subscription as ClerkResult.Success).value.id)
+
+    val statementsApi =
+      billingApi(
+        CapturingInterceptor(piggybacked("""{"data": [$STATEMENT_JSON], "total_count": 1}"""))
+      )
+    val statements = statementsApi.getUserStatements(limit = 10, offset = 0)
+    assertTrue(statements is ClerkResult.Success)
+    assertEquals("stmt_1", (statements as ClerkResult.Success).value.data.single().id)
   }
 
   @Test
