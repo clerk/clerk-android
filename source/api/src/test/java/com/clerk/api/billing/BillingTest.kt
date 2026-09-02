@@ -365,6 +365,16 @@ class BillingTest {
   }
 
   @Test
+  fun `decodes billing plan unit price tier when id is missing`() {
+    val json = PLAN_JSON.replace("\"id\": \"tier_1\",", "")
+    val plan = decode<BillingPlan>(json)
+
+    assertEquals("plan_pro", plan.id)
+    assertEquals(null, plan.unitPrices?.single()?.tiers?.single()?.id)
+    assertEquals(1, plan.unitPrices?.single()?.tiers?.single()?.startsAtBlock)
+  }
+
+  @Test
   fun `decodes billing subscription with seats credits and discount`() {
     val subscription = decode<BillingSubscription>(SUBSCRIPTION_JSON)
     val item = subscription.subscriptionItems.single()
