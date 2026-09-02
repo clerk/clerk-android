@@ -18,3 +18,19 @@ internal class JWTManagerImpl : JWTManager {
     return JWT(jwt)
   }
 }
+
+internal fun JWTManager.featuresClaim(jwt: String): String {
+  return try {
+    createFromString(jwt).getClaim("fea").asString().orEmpty()
+  } catch (_: Exception) {
+    ""
+  }
+}
+
+internal fun JWTManager.plansClaim(jwt: String): String {
+  return try {
+    createFromString(jwt).getClaim("pla").asString().orEmpty()
+  } catch (_: Exception) {
+    ""
+  }
+}
