@@ -15,6 +15,7 @@ enum class BillingSubscriptionStatus {
   @SerialName("ended") ENDED,
   @SerialName("upcoming") UPCOMING,
   @SerialName("past_due") PAST_DUE,
+  @SerialName("unknown") UNKNOWN,
 }
 
 /**
@@ -26,6 +27,7 @@ enum class BillingSubscriptionStatus {
 enum class BillingSubscriptionPlanPeriod {
   @SerialName("month") MONTH,
   @SerialName("annual") ANNUAL,
+  @SerialName("unknown") UNKNOWN,
 }
 
 /**
@@ -114,9 +116,9 @@ data class BillingSubscriptionItemNextPayment(
 data class BillingSubscriptionItem(
   val id: String,
   val plan: BillingPlan,
-  val planPeriod: BillingSubscriptionPlanPeriod,
+  val planPeriod: BillingSubscriptionPlanPeriod = BillingSubscriptionPlanPeriod.UNKNOWN,
   val priceId: String,
-  val status: BillingSubscriptionStatus,
+  val status: BillingSubscriptionStatus = BillingSubscriptionStatus.UNKNOWN,
   val createdAt: Long,
   val pastDueAt: Long? = null,
   val periodStart: Long,
@@ -155,7 +157,7 @@ data class BillingSubscription(
   val createdAt: Long,
   val nextPayment: BillingSubscriptionNextPayment? = null,
   val pastDueAt: Long? = null,
-  val status: BillingSubscriptionStatus,
+  val status: BillingSubscriptionStatus = BillingSubscriptionStatus.UNKNOWN,
   val subscriptionItems: List<BillingSubscriptionItem> = emptyList(),
   val updatedAt: Long? = null,
   val eligibleForFreeTrial: Boolean = false,

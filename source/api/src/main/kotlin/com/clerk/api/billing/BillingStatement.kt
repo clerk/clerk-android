@@ -12,6 +12,7 @@ import kotlinx.serialization.Serializable
 enum class BillingStatementStatus {
   @SerialName("open") OPEN,
   @SerialName("closed") CLOSED,
+  @SerialName("unknown") UNKNOWN,
 }
 
 /**
@@ -61,7 +62,7 @@ data class BillingStatementGroup(
 data class BillingStatement(
   val id: String,
   val totals: BillingStatementTotals,
-  val status: BillingStatementStatus,
+  val status: BillingStatementStatus = BillingStatementStatus.UNKNOWN,
   val timestamp: Long,
   val groups: List<BillingStatementGroup> = emptyList(),
 )

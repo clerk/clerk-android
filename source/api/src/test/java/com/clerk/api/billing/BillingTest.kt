@@ -372,6 +372,21 @@ class BillingTest {
   }
 
   @Test
+  fun `decodes unknown billing enum values without failing the resource`() {
+    val json =
+      PAYMENT_JSON.replace(
+          "\"charge_type\": \"recurring\"",
+          "\"charge_type\": \"price_transition\"",
+        )
+        .replace("\"status\": \"paid\"", "\"status\": \"settled\"")
+    val payment = decode<BillingPayment>(json)
+
+    assertEquals("pay_1", payment.id)
+    assertEquals(BillingPaymentChargeType.PRICE_TRANSITION, payment.chargeType)
+    assertEquals(BillingPaymentStatus.UNKNOWN, payment.status)
+  }
+
+  @Test
   fun `decodes billing statement with groups`() {
     val statement = decode<BillingStatement>(STATEMENT_JSON)
 

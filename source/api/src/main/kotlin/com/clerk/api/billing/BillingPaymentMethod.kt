@@ -13,6 +13,7 @@ enum class BillingPaymentMethodStatus {
   @SerialName("active") ACTIVE,
   @SerialName("expired") EXPIRED,
   @SerialName("disconnected") DISCONNECTED,
+  @SerialName("unknown") UNKNOWN,
 }
 
 /**
@@ -42,7 +43,7 @@ data class BillingPaymentMethod(
   val cardType: String? = null,
   val isDefault: Boolean? = null,
   val isRemovable: Boolean? = null,
-  val status: BillingPaymentMethodStatus,
+  val status: BillingPaymentMethodStatus = BillingPaymentMethodStatus.UNKNOWN,
   val walletType: String? = null,
   val expiryYear: Int? = null,
   val expiryMonth: Int? = null,
