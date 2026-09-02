@@ -356,6 +356,28 @@ class SessionAuthorizationTest {
     assertFalse(session.has(feature = "missing"))
     assertFalse(session.has(plan = "free"))
   }
+
+  @Test
+  fun `has on a cached token stays under one millisecond`() {
+    val session =
+      session(
+        orgId = "org_123",
+        orgRole = "org:admin",
+        orgPermissions = listOf("org:sys_memberships:read"),
+        features = "o:reservations,u:dashboard",
+        plans = "u:plus",
+      )
+    session.has(plan = "plus")
+
+    val samples = DoubleArray(1000)
+    repeat(1000) { index ->
+      val start = System.nanoTime()
+      session.has(plan = "plus")
+      samples[index] = (System.nanoTime() - start) / 1_000_000.0
+    }
+    samples.sort()
+    assertTrue(samples[949] < 1.0)
+  }
 }
 
 @Suppress("DEPRECATION")
