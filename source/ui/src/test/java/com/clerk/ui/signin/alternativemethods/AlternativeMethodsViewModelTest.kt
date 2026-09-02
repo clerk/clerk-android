@@ -33,7 +33,7 @@ class AlternativeMethodsViewModelTest {
   }
 
   @Test
-  fun `OAuth cancellation returns to auth start`() = runTest {
+  fun `OAuth cancellation leaves alternative methods idle`() = runTest {
     coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
       ClerkResult.unknownFailure(ssoCancellation())
     val viewModel = AlternativeMethodsViewModel()
@@ -41,7 +41,7 @@ class AlternativeMethodsViewModelTest {
     viewModel.signInWithProvider(OAuthProvider.GITHUB)
     advanceUntilIdle()
 
-    assertEquals(AuthenticationViewState.NotStarted, viewModel.state.value)
+    assertEquals(AuthenticationViewState.Idle, viewModel.state.value)
   }
 
   private fun ssoCancellation(): Throwable =

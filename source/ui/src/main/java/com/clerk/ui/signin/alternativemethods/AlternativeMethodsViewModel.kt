@@ -2,14 +2,15 @@ package com.clerk.ui.signin.alternativemethods
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.SignIn
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.isSSOCancellation
+import com.clerk.ui.signin.authenticateWithRedirect
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -22,8 +23,9 @@ internal class AlternativeMethodsViewModel : ViewModel() {
   fun signInWithProvider(provider: OAuthProvider, transferable: Boolean = true) {
     _state.value = AuthenticationViewState.Loading
     viewModelScope.launch {
-      SignIn.authenticateWithRedirect(
-          SignIn.AuthenticateWithRedirectParams.OAuth(provider),
+      authenticateWithRedirect(
+          signIn = Clerk.auth.currentSignIn,
+          provider = provider,
           transferable = transferable,
         )
         .onSuccess {
@@ -37,7 +39,7 @@ internal class AlternativeMethodsViewModel : ViewModel() {
         .onFailure {
           _state.value =
             if (it.isSSOCancellation) {
-              AuthenticationViewState.NotStarted
+              AuthenticationViewState.Idle
             } else {
               AuthenticationViewState.Error(it.errorMessage)
             }

@@ -34,7 +34,7 @@ class ForgotPasswordViewModelTest {
   }
 
   @Test
-  fun `OAuth cancellation returns to auth start`() =
+  fun `OAuth cancellation leaves forgot password idle`() =
     runTest(testDispatcher) {
       coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
         ClerkResult.unknownFailure(ssoCancellation())
@@ -43,7 +43,7 @@ class ForgotPasswordViewModelTest {
       viewModel.signInWithProvider(OAuthProvider.GITHUB)
       advanceUntilIdle()
 
-      assertEquals(ResetPasswordViewState.NotStarted, viewModel.state.value)
+      assertEquals(ResetPasswordViewState.Idle, viewModel.state.value)
     }
 
   private fun ssoCancellation(): Throwable =
