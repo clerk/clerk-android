@@ -415,6 +415,17 @@ class BillingTest {
   }
 
   @Test
+  fun `decodes billing payment when nested subscription item omits created at`() {
+    val json =
+      PAYMENT_JSON.replace("\"created_at\": 1700000000000,", "").replace("\"period_start\": 1700000000000,", "")
+    val payment = decode<BillingPayment>(json)
+
+    assertEquals("pay_1", payment.id)
+    assertEquals("si_1", payment.subscriptionItem.id)
+    assertEquals(BillingPaymentStatus.PAID, payment.status)
+  }
+
+  @Test
   fun `decodes billing statement with groups`() {
     val statement = decode<BillingStatement>(STATEMENT_JSON)
 
