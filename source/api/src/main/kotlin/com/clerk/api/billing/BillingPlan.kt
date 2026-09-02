@@ -12,6 +12,7 @@ import kotlinx.serialization.Serializable
 enum class BillingPayerResourceType {
   @SerialName("org") ORG,
   @SerialName("user") USER,
+  @SerialName("unknown") UNKNOWN,
 }
 
 /**
@@ -99,7 +100,7 @@ data class BillingPlan(
   val isDefault: Boolean,
   val isRecurring: Boolean,
   val hasBaseFee: Boolean,
-  val forPayerType: BillingPayerResourceType,
+  val forPayerType: BillingPayerResourceType = BillingPayerResourceType.UNKNOWN,
   val publiclyVisible: Boolean,
   val slug: String,
   val avatarUrl: String? = null,

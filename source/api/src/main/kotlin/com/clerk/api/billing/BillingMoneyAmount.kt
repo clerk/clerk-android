@@ -29,6 +29,7 @@ data class BillingMoneyAmount(
 enum class BillingDiscountEffect {
   @SerialName("percentage") PERCENTAGE,
   @SerialName("fixed_amount") FIXED_AMOUNT,
+  @SerialName("unknown") UNKNOWN,
 }
 
 /**
@@ -41,6 +42,7 @@ enum class BillingDiscountSource {
   @SerialName("promotion") PROMOTION,
   @SerialName("manual") MANUAL,
   @SerialName("promo_code") PROMO_CODE,
+  @SerialName("unknown") UNKNOWN,
 }
 
 /**
@@ -53,6 +55,7 @@ enum class BillingDiscountRedemptionStatus {
   @SerialName("active") ACTIVE,
   @SerialName("exhausted") EXHAUSTED,
   @SerialName("removed") REMOVED,
+  @SerialName("unknown") UNKNOWN,
 }
 
 /**
@@ -163,7 +166,7 @@ data class BillingAppliedDiscount(
   val amount: BillingMoneyAmount,
   val discountId: String,
   val name: String,
-  val effect: BillingDiscountEffect,
+  val effect: BillingDiscountEffect = BillingDiscountEffect.UNKNOWN,
   val percentOff: Int? = null,
   val amountOff: BillingMoneyAmount? = null,
   val promoCode: String? = null,
@@ -201,7 +204,7 @@ data class BillingDiscountRedemption(
   val subscriptionItemId: String,
   val discountId: String,
   val name: String,
-  val source: BillingDiscountSource,
+  val source: BillingDiscountSource = BillingDiscountSource.UNKNOWN,
   val promoCode: String? = null,
   val effect: BillingDiscountEffect? = null,
   val percentOff: Int? = null,

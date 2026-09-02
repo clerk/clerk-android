@@ -12,6 +12,8 @@ import kotlinx.serialization.Serializable
 enum class BillingPaymentChargeType {
   @SerialName("checkout") CHECKOUT,
   @SerialName("recurring") RECURRING,
+  @SerialName("price_transition") PRICE_TRANSITION,
+  @SerialName("unknown") UNKNOWN,
 }
 
 /**
@@ -24,6 +26,7 @@ enum class BillingPaymentStatus {
   @SerialName("pending") PENDING,
   @SerialName("paid") PAID,
   @SerialName("failed") FAILED,
+  @SerialName("unknown") UNKNOWN,
 }
 
 /**
@@ -73,7 +76,7 @@ data class BillingPayment(
   val updatedAt: Long,
   val paymentMethod: BillingPaymentMethod? = null,
   val subscriptionItem: BillingSubscriptionItem,
-  val chargeType: BillingPaymentChargeType,
-  val status: BillingPaymentStatus,
+  val chargeType: BillingPaymentChargeType = BillingPaymentChargeType.UNKNOWN,
+  val status: BillingPaymentStatus = BillingPaymentStatus.UNKNOWN,
   val totals: BillingPaymentTotals? = null,
 )
