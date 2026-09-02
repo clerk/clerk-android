@@ -35,105 +35,58 @@ sealed class ReverificationConfig {
 }
 
 internal object SessionAuthorization {
-  private val jwtManager: JWTManager = JWTManagerImpl()
-
-  private val orgScopes = setOf("o", "org", "organization")
-  private val userScopes = setOf("u", "user")
-  private val allowedLevels = setOf("first_factor", "second_factor", "multi_factor")
-
-  private enum class CheckResult {
-    PASS,
-    FAIL,
-    SKIP,
-  }
-
-  fun evaluate(
-    session: Session,
-    role: String?,
-    permission: String?,
-    feature: String?,
-    plan: String?,
-    reverification: ReverificationConfig?,
-  ): Boolean {
+  fun evaluate(session: Session, params: CheckAuthorizationParams): Boolean {
     val membership =
       session.user?.organizationMemberships?.firstOrNull {
         it.organization.id == session.lastActiveOrganizationId
       }
     val jwt = session.lastActiveToken?.jwt
     return evaluate(
-      userId = session.user?.id,
-      orgId = membership?.organization?.id,
-      orgRole = membership?.role,
-      orgPermissions = membership?.permissions,
-      factorVerificationAge = session.factorVerificationAge,
-      features = jwt?.let { jwtManager.featuresClaim(it) }.orEmpty(),
-      plans = jwt?.let { jwtManager.plansClaim(it) }.orEmpty(),
-      role = role,
-      permission = permission,
-      feature = feature,
-      plan = plan,
-      reverification = reverification,
+      AuthorizationContext(
+        userId = session.user?.id,
+        org =
+          OrgAuthorizationContext(
+            orgId = membership?.organization?.id,
+            orgRole = membership?.role,
+            orgPermissions = membership?.permissions,
+          ),
+        billing =
+          BillingAuthorizationContext(
+            features = jwt?.let { jwtManager.featuresClaim(it) }.orEmpty(),
+            plans = jwt?.let { jwtManager.plansClaim(it) }.orEmpty(),
+          ),
+        factorVerificationAge = session.factorVerificationAge,
+      ),
+      params,
     )
   }
 
-  fun evaluate(
-    userId: String?,
-    orgId: String?,
-    orgRole: String?,
-    orgPermissions: List<String>?,
-    factorVerificationAge: List<Int>?,
-    features: String?,
-    plans: String?,
-    role: String?,
-    permission: String?,
-    feature: String?,
-    plan: String?,
-    reverification: ReverificationConfig?,
-  ): Boolean {
-    if (userId.isNullOrEmpty()) {
+  fun evaluate(context: AuthorizationContext, params: CheckAuthorizationParams): Boolean {
+    if (context.userId.isNullOrEmpty()) {
       return false
     }
-
-    return combine(
+    val results =
       listOf(
-        checkOrgAuthorization(
-          role = role,
-          permission = permission,
-          orgId = orgId,
-          orgRole = orgRole,
-          orgPermissions = orgPermissions,
-        ),
-        checkBillingAuthorization(
-          feature = feature,
-          plan = plan,
-          features = features,
-          plans = plans,
-        ),
-        checkReverificationAuthorization(
-          reverification = reverification,
-          factorVerificationAge = factorVerificationAge,
-        ),
+        checkOrgAuthorization(context.org, params),
+        checkBillingAuthorization(context.billing, params),
+        checkReverificationAuthorization(context.factorVerificationAge, params.reverification),
       )
-    )
+    return results.any { it == CheckResult.PASS } &&
+      results.all { it == CheckResult.PASS || it == CheckResult.SKIP }
   }
 
   fun splitByScope(claim: String?): Pair<List<String>, List<String>> {
     val org = mutableListOf<String>()
     val user = mutableListOf<String>()
-
     if (claim.isNullOrEmpty()) {
       return org to user
     }
-
     for (part in claim.split(",")) {
       val trimmed = part.trim()
       val colonIndex = trimmed.indexOf(':')
-      if (colonIndex == -1) {
-        throw IllegalArgumentException("Invalid claim element (missing colon): $trimmed")
-      }
-      val scope = trimmed.substring(0, colonIndex)
+      require(colonIndex != -1) { "Invalid claim element (missing colon): $trimmed" }
       val value = trimmed.substring(colonIndex + 1)
-      when (scope) {
+      when (trimmed.substring(0, colonIndex)) {
         "o" -> org.add(value)
         "u" -> user.add(value)
         "ou",
@@ -143,193 +96,192 @@ internal object SessionAuthorization {
         }
       }
     }
-
     return org to user
   }
+}
 
-  private fun combine(results: List<CheckResult>): Boolean {
-    return results.any { it == CheckResult.PASS } &&
-      results.all { it == CheckResult.PASS || it == CheckResult.SKIP }
+internal data class AuthorizationContext(
+  val userId: String?,
+  val org: OrgAuthorizationContext,
+  val billing: BillingAuthorizationContext,
+  val factorVerificationAge: List<Int>?,
+)
+
+internal data class OrgAuthorizationContext(
+  val orgId: String?,
+  val orgRole: String?,
+  val orgPermissions: List<String>?,
+)
+
+internal data class BillingAuthorizationContext(val features: String?, val plans: String?)
+
+private enum class CheckResult {
+  PASS,
+  FAIL,
+  SKIP,
+}
+
+private const val FACTOR_NOT_ENROLLED = -1
+private const val STRICT_AFTER_MINUTES = 10
+private const val MODERATE_AFTER_MINUTES = 60
+private const val LAX_AFTER_MINUTES = 1_440
+private val orgScopes = setOf("o", "org", "organization")
+private val userScopes = setOf("u", "user")
+private val allowedLevels = setOf("first_factor", "second_factor", "multi_factor")
+private val orgPrefix = Regex("^(org:)*")
+private val jwtManager: JWTManager = JWTManagerImpl()
+
+private fun checkOrgAuthorization(
+  org: OrgAuthorizationContext,
+  params: CheckAuthorizationParams,
+): CheckResult {
+  val role = params.role
+  val permission = params.permission
+  val roleMatches =
+    role == null ||
+      (!org.orgRole.isNullOrEmpty() && prefixWithOrg(org.orgRole) == prefixWithOrg(role))
+  val permissionMatches =
+    permission == null ||
+      (org.orgPermissions != null && org.orgPermissions.contains(prefixWithOrg(permission)))
+  return when {
+    role == null && permission == null -> CheckResult.SKIP
+    org.orgId.isNullOrEmpty() || !roleMatches || !permissionMatches -> CheckResult.FAIL
+    else -> CheckResult.PASS
   }
+}
 
-  private fun prefixWithOrg(value: String): String {
-    return "org:" + value.replace(Regex("^(org:)*"), "")
-  }
+private fun prefixWithOrg(value: String): String {
+  return "org:" + value.replace(orgPrefix, "")
+}
 
-  private fun checkOrgAuthorization(
-    role: String?,
-    permission: String?,
-    orgId: String?,
-    orgRole: String?,
-    orgPermissions: List<String>?,
-  ): CheckResult {
-    val roleAsked = role != null
-    val permissionAsked = permission != null
-
-    if (!roleAsked && !permissionAsked) {
-      return CheckResult.SKIP
-    }
-
-    if (orgId.isNullOrEmpty()) {
-      return CheckResult.FAIL
-    }
-
-    if (roleAsked) {
-      if (orgRole.isNullOrEmpty() || prefixWithOrg(orgRole) != prefixWithOrg(role as String)) {
-        return CheckResult.FAIL
-      }
-    }
-
-    if (permissionAsked) {
-      if (orgPermissions == null || !orgPermissions.contains(prefixWithOrg(permission as String))) {
-        return CheckResult.FAIL
-      }
-    }
-
-    return CheckResult.PASS
-  }
-
-  private fun checkBillingAuthorization(
-    feature: String?,
-    plan: String?,
-    features: String?,
-    plans: String?,
-  ): CheckResult {
-    val featureAsked = feature != null
-    val planAsked = plan != null
-
-    if (!featureAsked && !planAsked) {
-      return CheckResult.SKIP
-    }
-
-    if (featureAsked) {
-      if (features.isNullOrEmpty()) {
-        return CheckResult.FAIL
-      }
-      try {
-        if (!checkForFeatureOrPlan(features, feature as String)) {
-          return CheckResult.FAIL
+private fun checkBillingAuthorization(
+  billing: BillingAuthorizationContext,
+  params: CheckAuthorizationParams,
+): CheckResult {
+  val feature = params.feature
+  val plan = params.plan
+  val features = billing.features
+  val plans = billing.plans
+  val featureMatches =
+    when {
+      feature == null -> true
+      features.isNullOrEmpty() -> false
+      else ->
+        try {
+          checkForFeatureOrPlan(features, feature)
+        } catch (_: IllegalArgumentException) {
+          false
         }
-      } catch (_: Exception) {
-        return CheckResult.FAIL
-      }
     }
-
-    if (planAsked) {
-      if (plans.isNullOrEmpty()) {
-        return CheckResult.FAIL
-      }
-      try {
-        if (!checkForFeatureOrPlan(plans, plan as String)) {
-          return CheckResult.FAIL
+  val planMatches =
+    when {
+      plan == null -> true
+      plans.isNullOrEmpty() -> false
+      else ->
+        try {
+          checkForFeatureOrPlan(plans, plan)
+        } catch (_: IllegalArgumentException) {
+          false
         }
-      } catch (_: Exception) {
-        return CheckResult.FAIL
-      }
     }
-
-    return CheckResult.PASS
+  return when {
+    feature == null && plan == null -> CheckResult.SKIP
+    featureMatches && planMatches -> CheckResult.PASS
+    else -> CheckResult.FAIL
   }
+}
 
-  private fun checkForFeatureOrPlan(claim: String, featureOrPlan: String): Boolean {
-    val (orgFeatures, userFeatures) = splitByScope(claim)
-    val parts = featureOrPlan.split(":")
-    val rawScope = parts[0]
-    val hasExplicitScope = parts.size > 1
-    val id = if (hasExplicitScope) parts[1] else rawScope
-
-    if (hasExplicitScope && rawScope !in orgScopes && rawScope !in userScopes) {
-      throw IllegalArgumentException("Invalid scope: $rawScope")
-    }
-
-    if (hasExplicitScope) {
-      if (rawScope in orgScopes) {
-        return orgFeatures.contains(id)
-      }
-      if (rawScope in userScopes) {
-        return userFeatures.contains(id)
-      }
-    }
-
-    return (orgFeatures + userFeatures).contains(id)
+private fun checkForFeatureOrPlan(claim: String, featureOrPlan: String): Boolean {
+  val (orgFeatures, userFeatures) = SessionAuthorization.splitByScope(claim)
+  val parts = featureOrPlan.split(":")
+  val rawScope = parts[0]
+  val hasExplicitScope = parts.size > 1
+  val id = if (hasExplicitScope) parts[1] else rawScope
+  require(!hasExplicitScope || rawScope in orgScopes || rawScope in userScopes) {
+    "Invalid scope: $rawScope"
   }
+  return when {
+    hasExplicitScope && rawScope in orgScopes -> orgFeatures.contains(id)
+    hasExplicitScope && rawScope in userScopes -> userFeatures.contains(id)
+    else -> (orgFeatures + userFeatures).contains(id)
+  }
+}
 
-  private fun checkReverificationAuthorization(
-    reverification: ReverificationConfig?,
-    factorVerificationAge: List<Int>?,
-  ): CheckResult {
-    if (reverification == null) {
-      return CheckResult.SKIP
+private fun checkReverificationAuthorization(
+  factorVerificationAge: List<Int>?,
+  reverification: ReverificationConfig?,
+): CheckResult {
+  val resolved = reverification?.let(::resolveReverification)
+  return when {
+    reverification == null -> CheckResult.SKIP
+    resolved == null -> CheckResult.FAIL
+    factorVerificationAge == null -> CheckResult.FAIL
+    factorVerificationAge.size != 2 -> CheckResult.FAIL
+    else -> factorFreshness(factorVerificationAge[0], factorVerificationAge[1], resolved)
+  }
+}
+
+private fun factorFreshness(
+  factor1Age: Int,
+  factor2Age: Int,
+  resolved: Pair<SessionVerification.Level, Int>,
+): CheckResult {
+  val afterMinutes = resolved.second
+  val age1Ok = factor1Age == FACTOR_NOT_ENROLLED || factor1Age >= 0
+  val age2Ok = factor2Age == FACTOR_NOT_ENROLLED || factor2Age >= 0
+  val factor1Fresh = factor1Age != FACTOR_NOT_ENROLLED && afterMinutes > factor1Age
+  val factor2Fresh = factor2Age != FACTOR_NOT_ENROLLED && afterMinutes > factor2Age
+  return when {
+    !age1Ok || !age2Ok -> CheckResult.FAIL
+    factor1Age == FACTOR_NOT_ENROLLED && factor2Age == FACTOR_NOT_ENROLLED -> CheckResult.FAIL
+    else ->
+      authorizedForLevel(
+        resolved.first,
+        factor1Age,
+        factor2Age,
+        factor1Fresh,
+        factor2Fresh,
+      )
+  }
+}
+
+private fun authorizedForLevel(
+  level: SessionVerification.Level,
+  factor1Age: Int,
+  factor2Age: Int,
+  factor1Fresh: Boolean,
+  factor2Fresh: Boolean,
+): CheckResult {
+  val secondOk = if (factor2Age == FACTOR_NOT_ENROLLED) factor1Fresh else factor2Fresh
+  val multiOk =
+    if (factor2Age == FACTOR_NOT_ENROLLED) {
+      factor1Fresh
+    } else {
+      factor1Age != FACTOR_NOT_ENROLLED && factor1Fresh && factor2Fresh
     }
+  return when (level) {
+    SessionVerification.Level.FIRST_FACTOR ->
+      if (factor1Fresh) CheckResult.PASS else CheckResult.FAIL
+    SessionVerification.Level.SECOND_FACTOR -> if (secondOk) CheckResult.PASS else CheckResult.FAIL
+    SessionVerification.Level.MULTI_FACTOR -> if (multiOk) CheckResult.PASS else CheckResult.FAIL
+    SessionVerification.Level.UNKNOWN -> CheckResult.FAIL
+  }
+}
 
-    if (factorVerificationAge == null) {
-      return CheckResult.FAIL
-    }
-
-    if (
-      factorVerificationAge.size != 2 ||
-        !isValidFactorAge(factorVerificationAge[0]) ||
-        !isValidFactorAge(factorVerificationAge[1])
-    ) {
-      return CheckResult.FAIL
-    }
-
-    val resolved = resolveReverification(reverification) ?: return CheckResult.FAIL
-    val factor1Age = factorVerificationAge[0]
-    val factor2Age = factorVerificationAge[1]
-    val afterMinutes = resolved.second
-
-    if (factor1Age == -1 && factor2Age == -1) {
-      return CheckResult.FAIL
-    }
-
-    val factor1FreshEnough = factor1Age != -1 && afterMinutes > factor1Age
-    val factor2FreshEnough = factor2Age != -1 && afterMinutes > factor2Age
-
-    return when (resolved.first) {
-      SessionVerification.Level.FIRST_FACTOR ->
-        if (factor1FreshEnough) CheckResult.PASS else CheckResult.FAIL
-      SessionVerification.Level.SECOND_FACTOR -> {
-        if (factor2Age == -1) {
-          if (factor1FreshEnough) CheckResult.PASS else CheckResult.FAIL
-        } else if (factor1Age == -1) {
-          if (factor2FreshEnough) CheckResult.PASS else CheckResult.FAIL
-        } else {
-          if (factor2FreshEnough) CheckResult.PASS else CheckResult.FAIL
+private fun resolveReverification(
+  config: ReverificationConfig
+): Pair<SessionVerification.Level, Int>? {
+  return when (config) {
+    ReverificationConfig.StrictMfa -> SessionVerification.Level.MULTI_FACTOR to STRICT_AFTER_MINUTES
+    ReverificationConfig.Strict -> SessionVerification.Level.SECOND_FACTOR to STRICT_AFTER_MINUTES
+    ReverificationConfig.Moderate ->
+      SessionVerification.Level.SECOND_FACTOR to MODERATE_AFTER_MINUTES
+    ReverificationConfig.Lax -> SessionVerification.Level.SECOND_FACTOR to LAX_AFTER_MINUTES
+    is ReverificationConfig.Custom ->
+      config
+        .takeIf { it.level.value in allowedLevels && it.afterMinutes > 0 }
+        ?.let {
+          it.level to it.afterMinutes
         }
-      }
-      SessionVerification.Level.MULTI_FACTOR -> {
-        if (factor2Age == -1) {
-          if (factor1FreshEnough) CheckResult.PASS else CheckResult.FAIL
-        } else if (factor1Age == -1) {
-          CheckResult.FAIL
-        } else {
-          if (factor1FreshEnough && factor2FreshEnough) CheckResult.PASS else CheckResult.FAIL
-        }
-      }
-      SessionVerification.Level.UNKNOWN -> CheckResult.FAIL
-    }
-  }
-
-  private fun resolveReverification(
-    config: ReverificationConfig
-  ): Pair<SessionVerification.Level, Int>? {
-    return when (config) {
-      ReverificationConfig.StrictMfa -> SessionVerification.Level.MULTI_FACTOR to 10
-      ReverificationConfig.Strict -> SessionVerification.Level.SECOND_FACTOR to 10
-      ReverificationConfig.Moderate -> SessionVerification.Level.SECOND_FACTOR to 60
-      ReverificationConfig.Lax -> SessionVerification.Level.SECOND_FACTOR to 1440
-      is ReverificationConfig.Custom -> {
-        if (config.level.value !in allowedLevels || config.afterMinutes <= 0) {
-          null
-        } else {
-          config.level to config.afterMinutes
-        }
-      }
-    }
-  }
-
-  private fun isValidFactorAge(value: Int): Boolean {
-    return value == -1 || value >= 0
   }
 }
