@@ -93,11 +93,14 @@ data class Session(
   ): Boolean {
     return SessionAuthorization.evaluate(
       session = this,
-      role = role,
-      permission = permission,
-      feature = feature,
-      plan = plan,
-      reverification = reverification,
+      params =
+        CheckAuthorizationParams(
+          role = role,
+          permission = permission,
+          feature = feature,
+          plan = plan,
+          reverification = reverification,
+        ),
     )
   }
 
