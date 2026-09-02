@@ -121,7 +121,10 @@ dependencies {
   implementation(libs.material3)
   implementation(libs.materialKolor)
 
+  debugImplementation(libs.androidx.ui.test.manifest)
+
   testImplementation(libs.androidx.core)
+  testImplementation(libs.androidx.ui.test.junit4)
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)

@@ -107,7 +107,7 @@ fun ClerkCodeInputField(
 ) {
   val resendTimer = remember(timerDuration) { ResendTimerState(timerDuration) }
 
-  LaunchedEffect(resendTimer.restartCount) { resendTimer.countDown() }
+  LaunchedEffect(resendTimer, resendTimer.restartCount) { resendTimer.countDown() }
 
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     val selectionColors = rememberSelectionColors()
