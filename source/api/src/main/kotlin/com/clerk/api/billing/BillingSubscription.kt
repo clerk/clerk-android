@@ -93,11 +93,11 @@ data class BillingSubscriptionItemNextPayment(
  * @property priceId The ID of the price that this subscription item is associated with.
  * @property status The status of the subscription item.
  * @property createdAt The date and time when the subscription item was created, as Unix
- *   milliseconds.
+ *   milliseconds. `null` if FAPI omits it.
  * @property pastDueAt The date and time when the subscription item became past due, as Unix
  *   milliseconds. `null` if the subscription item is not past due.
  * @property periodStart The date and time when the current billing period starts, as Unix
- *   milliseconds.
+ *   milliseconds. `null` if FAPI omits it.
  * @property periodEnd The date and time when the current billing period ends, as Unix milliseconds.
  *   `null` if not set.
  * @property canceledAt The date and time when the subscription item was canceled, as Unix
@@ -119,9 +119,9 @@ data class BillingSubscriptionItem(
   val planPeriod: BillingSubscriptionPlanPeriod = BillingSubscriptionPlanPeriod.UNKNOWN,
   val priceId: String,
   val status: BillingSubscriptionStatus = BillingSubscriptionStatus.UNKNOWN,
-  val createdAt: Long = 0,
+  val createdAt: Long? = null,
   val pastDueAt: Long? = null,
-  val periodStart: Long = 0,
+  val periodStart: Long? = null,
   val periodEnd: Long? = null,
   val canceledAt: Long? = null,
   val amount: BillingMoneyAmount? = null,

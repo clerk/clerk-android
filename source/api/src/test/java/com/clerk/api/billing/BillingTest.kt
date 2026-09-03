@@ -432,8 +432,8 @@ class BillingTest {
 
     assertEquals("pay_1", payment.id)
     assertEquals("item_1", payment.subscriptionItem.id)
-    assertEquals(0, payment.subscriptionItem.createdAt)
-    assertEquals(0, payment.subscriptionItem.periodStart)
+    assertEquals(null, payment.subscriptionItem.createdAt)
+    assertEquals(null, payment.subscriptionItem.periodStart)
     assertEquals(BillingPaymentStatus.PAID, payment.status)
   }
 
