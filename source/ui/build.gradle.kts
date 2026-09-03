@@ -118,11 +118,13 @@ dependencies {
   implementation(libs.material3)
   implementation(libs.materialKolor)
 
+  debugImplementation(libs.androidx.ui.test.manifest)
   debugImplementation(libs.androidx.ui.tooling)
 
   compileOnly(libs.androidx.ui.tooling.preview.android)
 
   testImplementation(libs.androidx.core)
+  testImplementation(libs.androidx.ui.test.junit4)
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)
