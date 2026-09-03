@@ -186,4 +186,34 @@ internal object ApiPaths {
       internal const val ATTEMPT_AFFILIATION = "${WITH_ID}/attempt_affiliation_verification"
     }
   }
+
+  /** Billing endpoints. Plans are unscoped; other resources are user (`me`) or organization. */
+  internal object Billing {
+    internal const val PLANS = "billing/plans"
+    internal const val PLAN = "${PLANS}/{id}"
+
+    internal object User {
+      internal const val BASE = "${ApiPaths.User.BASE}/billing"
+      internal const val SUBSCRIPTION = "${BASE}/subscription"
+      internal const val STATEMENTS = "${BASE}/statements"
+      internal const val STATEMENT = "${STATEMENTS}/{id}"
+      internal const val PAYMENT_ATTEMPTS = "${BASE}/payment_attempts"
+      internal const val PAYMENT_ATTEMPT = "${PAYMENT_ATTEMPTS}/{id}"
+      internal const val CREDITS = "${BASE}/credits"
+      internal const val CREDIT_HISTORY = "${CREDITS}/history"
+      internal const val PAYMENT_METHODS = "${BASE}/payment_methods"
+    }
+
+    internal object Organization {
+      internal const val BASE = "${ApiPaths.Organization.WITH_ID}/billing"
+      internal const val SUBSCRIPTION = "${BASE}/subscription"
+      internal const val STATEMENTS = "${BASE}/statements"
+      internal const val STATEMENT = "${STATEMENTS}/{id}"
+      internal const val PAYMENT_ATTEMPTS = "${BASE}/payment_attempts"
+      internal const val PAYMENT_ATTEMPT = "${PAYMENT_ATTEMPTS}/{id}"
+      internal const val CREDITS = "${BASE}/credits"
+      internal const val CREDIT_HISTORY = "${CREDITS}/history"
+      internal const val PAYMENT_METHODS = "${BASE}/payment_methods"
+    }
+  }
 }
