@@ -76,6 +76,51 @@ data class Session(
     @SerialName("pending") PENDING,
   }
 
+  /**
+   * Checks whether this session is authorized for the requested role, permission, feature, plan,
+   * and/or reverification.
+   *
+   * Shares one implementation with [has]. Returns `false` when the user is missing or any requested
+   * dimension fails. Org role and permission come from the active organization membership. Feature
+   * and plan come from the last active session token `fea` / `pla` claims.
+   */
+  fun checkAuthorization(
+    role: String? = null,
+    permission: String? = null,
+    feature: String? = null,
+    plan: String? = null,
+    reverification: ReverificationConfig? = null,
+  ): Boolean {
+    return SessionAuthorization.evaluate(
+      session = this,
+      params =
+        CheckAuthorizationParams(
+          role = role,
+          permission = permission,
+          feature = feature,
+          plan = plan,
+          reverification = reverification,
+        ),
+    )
+  }
+
+  /** Alias for [checkAuthorization]. Matches the `useAuth().has` / `auth().has` name. */
+  fun has(
+    role: String? = null,
+    permission: String? = null,
+    feature: String? = null,
+    plan: String? = null,
+    reverification: ReverificationConfig? = null,
+  ): Boolean {
+    return checkAuthorization(
+      role = role,
+      permission = permission,
+      feature = feature,
+      plan = plan,
+      reverification = reverification,
+    )
+  }
+
   /** Parameters for starting an in-session reverification flow. */
   @Serializable @AutoMap internal data class StartVerificationParams(val level: String)
 
