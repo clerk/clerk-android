@@ -1,7 +1,12 @@
 package com.clerk.api.billing
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 /**
  * The status of a Billing Subscription or subscription item.
@@ -117,11 +122,11 @@ data class BillingSubscriptionItem(
   val id: String,
   val plan: BillingPlan,
   val planPeriod: BillingSubscriptionPlanPeriod = BillingSubscriptionPlanPeriod.UNKNOWN,
-  val priceId: String,
+  val priceId: String? = null,
   val status: BillingSubscriptionStatus = BillingSubscriptionStatus.UNKNOWN,
-  val createdAt: Long? = null,
+  @Serializable(with = ZeroMillisAsNullSerializer::class) val createdAt: Long? = null,
   val pastDueAt: Long? = null,
-  val periodStart: Long? = null,
+  @Serializable(with = ZeroMillisAsNullSerializer::class) val periodStart: Long? = null,
   val periodEnd: Long? = null,
   val canceledAt: Long? = null,
   val amount: BillingMoneyAmount? = null,
@@ -162,3 +167,17 @@ data class BillingSubscription(
   val updatedAt: Long? = null,
   val eligibleForFreeTrial: Boolean = false,
 )
+
+internal object ZeroMillisAsNullSerializer : KSerializer<Long?> {
+  private val delegate = Long.serializer().nullable
+
+  override val descriptor = delegate.descriptor
+
+  override fun deserialize(decoder: Decoder): Long? {
+    return decoder.decodeSerializableValue(delegate)?.takeUnless { it == 0L }
+  }
+
+  override fun serialize(encoder: Encoder, value: Long?) {
+    encoder.encodeSerializableValue(delegate, value)
+  }
+}

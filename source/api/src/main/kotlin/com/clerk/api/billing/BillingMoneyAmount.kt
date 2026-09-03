@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class BillingMoneyAmount(
-  val amount: Int,
+  val amount: Long,
   val amountFormatted: String,
   val currency: String,
   val currencySymbol: String,
@@ -167,7 +167,7 @@ data class BillingAppliedDiscount(
   val discountId: String,
   val name: String,
   val effect: BillingDiscountEffect = BillingDiscountEffect.UNKNOWN,
-  val percentOff: Int? = null,
+  val percentOff: Double? = null,
   val amountOff: BillingMoneyAmount? = null,
   val promoCode: String? = null,
   val cyclesRemaining: Int? = null,
@@ -207,7 +207,7 @@ data class BillingDiscountRedemption(
   val source: BillingDiscountSource = BillingDiscountSource.UNKNOWN,
   val promoCode: String? = null,
   val effect: BillingDiscountEffect? = null,
-  val percentOff: Int? = null,
+  val percentOff: Double? = null,
   val amountOff: BillingMoneyAmount? = null,
   val amount: BillingMoneyAmount? = null,
   val cyclesRemaining: Int? = null,
