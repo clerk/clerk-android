@@ -142,7 +142,8 @@ data class BillingSubscriptionItem(
  * A subscription to a plan for the current user or an Organization.
  *
  * @property id The unique identifier for the subscription.
- * @property activeAt The date when the subscription became active, as Unix milliseconds.
+ * @property activeAt The date when the subscription became active, as Unix milliseconds. `null`
+ *   when FAPI has not activated the subscription yet.
  * @property createdAt The date when the subscription was created, as Unix milliseconds.
  * @property nextPayment Information about the next payment, including the amount and the date it is
  *   due. `null` if there is no upcoming payment.
@@ -158,7 +159,7 @@ data class BillingSubscriptionItem(
 @Serializable
 data class BillingSubscription(
   val id: String,
-  val activeAt: Long,
+  val activeAt: Long? = null,
   val createdAt: Long,
   val nextPayment: BillingSubscriptionNextPayment? = null,
   val pastDueAt: Long? = null,
