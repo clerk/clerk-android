@@ -347,7 +347,7 @@ class BillingTest {
 
     assertEquals("plan_pro", plan.id)
     assertEquals("Pro", plan.name)
-    assertEquals(1000, plan.fee?.amount)
+    assertEquals(1000L, plan.fee?.amount)
     assertEquals("10.00", plan.fee?.amountFormatted)
     assertEquals("USD", plan.fee?.currency)
     assertEquals("$", plan.fee?.currencySymbol)
@@ -404,9 +404,9 @@ class BillingTest {
     assertEquals("pm_1", payment.paymentMethod?.id)
     assertEquals("4242", payment.paymentMethod?.last4)
     assertEquals(BillingPaymentMethodStatus.ACTIVE, payment.paymentMethod?.status)
-    assertEquals(1000, payment.totals?.subtotal?.amount)
+    assertEquals(1000L, payment.totals?.subtotal?.amount)
     assertEquals("seats", payment.totals?.perUnitTotals?.single()?.name)
-    assertEquals(100, payment.totals?.discounts?.proration?.amount?.amount)
+    assertEquals(100L, payment.totals?.discounts?.proration?.amount?.amount)
   }
 
   @Test
@@ -427,14 +427,49 @@ class BillingTest {
   @Test
   fun `decodes billing payment when nested subscription item omits created at`() {
     val json =
-      PAYMENT_JSON.replace("\"created_at\": 1700000000000,", "").replace("\"period_start\": 1700000000000,", "")
+      PAYMENT_JSON.replace("\"price_id\": \"price_1\",", "")
+        .replace("\"created_at\": 1700000000000,", "")
+        .replace("\"period_start\": 1700000000000,", "")
     val payment = decode<BillingPayment>(json)
 
     assertEquals("pay_1", payment.id)
     assertEquals("item_1", payment.subscriptionItem.id)
+    assertEquals(null, payment.subscriptionItem.priceId)
     assertEquals(null, payment.subscriptionItem.createdAt)
     assertEquals(null, payment.subscriptionItem.periodStart)
     assertEquals(BillingPaymentStatus.PAID, payment.status)
+  }
+
+  @Test
+  fun `decodes billing payment when nested subscription item sends epoch timestamps`() {
+    val json =
+      PAYMENT_JSON.replace("\"created_at\": 1700000000000,", "\"created_at\": 0,")
+        .replace("\"period_start\": 1700000000000,", "\"period_start\": 0,")
+    val payment = decode<BillingPayment>(json)
+
+    assertEquals(null, payment.subscriptionItem.createdAt)
+    assertEquals(null, payment.subscriptionItem.periodStart)
+  }
+
+  @Test
+  fun `decodes fractional percent off and int64 money amounts`() {
+    val json =
+      MONEY.replace("\"amount\": 1000,", "\"amount\": 3000000000,")
+        .let { money ->
+          """
+          {
+            "amount": $money,
+            "discount_id": "disc_1",
+            "name": "Launch",
+            "effect": "percentage",
+            "percent_off": 12.5
+          }
+          """
+        }
+    val discount = decode<BillingAppliedDiscount>(json)
+
+    assertEquals(3_000_000_000L, discount.amount.amount)
+    assertEquals(12.5, discount.percentOff)
   }
 
   @Test
@@ -443,7 +478,7 @@ class BillingTest {
 
     assertEquals("stmt_1", statement.id)
     assertEquals(BillingStatementStatus.OPEN, statement.status)
-    assertEquals(2500, statement.totals.grandTotal.amount)
+    assertEquals(2500L, statement.totals.grandTotal.amount)
     assertEquals("pay_1", statement.groups.single().items.single().id)
     assertEquals("grp_1", statement.groups.single().id)
   }
@@ -458,7 +493,7 @@ class BillingTest {
     assertEquals("pm_1", method.id)
     assertEquals("card", method.paymentType)
     assertEquals("visa", method.cardType)
-    assertEquals(500, balance.balance?.amount)
+    assertEquals(500L, balance.balance?.amount)
     assertEquals("ledger_1", ledger.id)
     assertEquals("grant", ledger.sourceType)
     assertEquals("SSO", feature.name)
