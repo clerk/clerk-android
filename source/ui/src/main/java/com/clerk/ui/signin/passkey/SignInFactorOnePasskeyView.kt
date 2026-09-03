@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
@@ -49,14 +50,16 @@ fun SignInFactorOnePasskeyView(
     SignInFactorOnePasskeyViewImpl(
       modifier = modifier,
       factor = factor,
+      isSecondFactor = false,
       onAuthComplete = onAuthComplete,
     )
   }
 }
 
 @Composable
-private fun SignInFactorOnePasskeyViewImpl(
+internal fun SignInFactorOnePasskeyViewImpl(
   factor: Factor,
+  isSecondFactor: Boolean,
   modifier: Modifier = Modifier,
   viewModel: PasskeyViewModel = viewModel(),
   onAuthComplete: () -> Unit,
@@ -93,7 +96,9 @@ private fun SignInFactorOnePasskeyViewImpl(
     Spacers.Vertical.Spacer32()
     ClerkButton(
       text = stringResource(R.string.continue_text),
-      onClick = { viewModel.authenticate() },
+      onClick = {
+        viewModel.authenticate(signIn = Clerk.auth.currentSignIn.takeIf { isSecondFactor })
+      },
       modifier = Modifier.fillMaxWidth(),
       isLoading = state is AuthenticationViewState.Loading,
       icons =
@@ -105,9 +110,13 @@ private fun SignInFactorOnePasskeyViewImpl(
     Spacers.Vertical.Spacer16()
     ClerkTextButton(
       onClick = {
-        authState.navigateTo(
-          AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
-        )
+        val destination =
+          if (isSecondFactor) {
+            AuthDestination.SignInFactorTwoUseAnotherMethod(currentFactor = factor)
+          } else {
+            AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
+          }
+        authState.navigateTo(destination)
       },
       text = stringResource(R.string.use_a_different_method),
     )

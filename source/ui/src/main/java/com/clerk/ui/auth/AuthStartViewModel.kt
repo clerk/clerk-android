@@ -120,7 +120,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
   }
 
   /**
-   * Signs in with the locally enrolled biometric-credential (biometric) credential.
+   * Signs in with the locally enrolled biometric credential.
    *
    * User-canceled biometric prompts reset the state silently instead of surfacing an error.
    */
@@ -457,7 +457,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
       data class SignUpSuccess(val signUp: SignUp?) : Success
     }
 
-    /** States specific to biometric-credential (biometric) sign-in. */
+    /** States specific to biometric sign-in. */
     sealed interface BiometricCredentialState : AuthState {
       data object Loading : BiometricCredentialState
     }

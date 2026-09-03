@@ -30,7 +30,7 @@ class SignInFactorOneViewTest {
   }
 
   @Test
-  fun resolveFirstFactorShouldPreferEmailLinkWhenFallbackEmailCodeHasEmailAddressId() {
+  fun resolveFirstFactorShouldKeepSelectedEmailCodeWhenEmailLinkIsSupported() {
     every { mockAuth.currentSignIn } returns
       SignIn(
         id = "sign_in_123",
@@ -45,7 +45,7 @@ class SignInFactorOneViewTest {
     val resolved =
       resolveFirstFactor(Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"))
 
-    assertEquals(StrategyKeys.EMAIL_LINK, resolved.strategy)
+    assertEquals(StrategyKeys.EMAIL_CODE, resolved.strategy)
   }
 
   @Test
@@ -65,7 +65,7 @@ class SignInFactorOneViewTest {
   }
 
   @Test
-  fun resolveFirstFactorShouldPreferEmailLinkOverPreparedEmailCodeForEmailIdentifier() {
+  fun resolveFirstFactorShouldKeepPreparedEmailCodeSelectionForEmailIdentifier() {
     every { mockAuth.currentSignIn } returns
       SignIn(
         id = "sign_in_123",
@@ -85,7 +85,7 @@ class SignInFactorOneViewTest {
     val resolved =
       resolveFirstFactor(Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"))
 
-    assertEquals(StrategyKeys.EMAIL_LINK, resolved.strategy)
+    assertEquals(StrategyKeys.EMAIL_CODE, resolved.strategy)
   }
 
   @Test

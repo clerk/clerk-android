@@ -32,6 +32,17 @@ internal object PasskeyService {
     )
   }
 
+  /** Authenticates an existing sign-in with a passkey when it is offered as a second factor. */
+  suspend fun authenticateWithPasskey(
+    signIn: SignIn,
+    allowedCredentialIds: List<String> = emptyList(),
+  ): ClerkResult<SignIn, ClerkErrorResponse> {
+    return GoogleCredentialAuthenticationService.authenticateWithPasskey(
+      signIn = signIn,
+      allowedCredentialIds = allowedCredentialIds,
+    )
+  }
+
   /**
    * Completes an in-session reverification flow using passkeys.
    *
@@ -42,10 +53,12 @@ internal object PasskeyService {
   suspend fun verifySessionWithPasskey(
     session: Session,
     allowedCredentialIds: List<String> = emptyList(),
+    level: SessionVerification.Level = SessionVerification.Level.FIRST_FACTOR,
   ): ClerkResult<SessionVerification, ClerkErrorResponse> {
     return GoogleCredentialAuthenticationService.verifySessionWithPasskey(
       session = session,
       allowedCredentialIds = allowedCredentialIds,
+      level = level,
     )
   }
 

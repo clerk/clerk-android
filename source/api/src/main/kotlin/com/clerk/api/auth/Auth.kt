@@ -364,7 +364,7 @@ class Auth internal constructor() {
   }
 
   /**
-   * Signs in with a locally enrolled biometric-credential (biometric) credential.
+   * Signs in with a locally enrolled biometric credential.
    *
    * The biometric-credential domain owns local credential selection, key access, challenge signing,
    * and stale local credential cleanup.

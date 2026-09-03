@@ -81,10 +81,16 @@ internal suspend fun Session.prepareSecondFactorVerification(
 /** Attempts the second factor of an in-session reverification flow. */
 internal suspend fun Session.attemptSecondFactorVerification(
   strategy: String,
-  code: String,
+  code: String? = null,
+  publicKeyCredential: String? = null,
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
-  return ClerkApi.session.attemptSecondFactorVerification(
-    sessionId = id,
-    params = Session.AttemptSecondFactorParams(strategy = strategy, code = code).toMap(),
-  )
+  val params =
+    when {
+      publicKeyCredential != null ->
+        Session.AttemptSecondFactorParams.Passkey(publicKeyCredential = publicKeyCredential)
+      code != null -> Session.AttemptSecondFactorParams.Code(strategy = strategy, code = code)
+      else -> error("One of code or publicKeyCredential is required")
+    }
+
+  return ClerkApi.session.attemptSecondFactorVerification(sessionId = id, params = params.toMap())
 }

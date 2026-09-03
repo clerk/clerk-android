@@ -113,6 +113,28 @@ class PasskeyServiceTest {
   }
 
   @Test
+  fun `authenticateWithPasskey delegates an existing sign in`() = runTest {
+    val allowedCredentialIds = listOf("credential-1")
+    coEvery {
+      GoogleCredentialAuthenticationService.authenticateWithPasskey(
+        signIn = mockSignIn,
+        allowedCredentialIds = allowedCredentialIds,
+      )
+    } returns ClerkResult.success(mockSignIn)
+
+    val result = PasskeyService.authenticateWithPasskey(mockSignIn, allowedCredentialIds)
+
+    assertTrue(result is ClerkResult.Success)
+    assertEquals(mockSignIn, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) {
+      GoogleCredentialAuthenticationService.authenticateWithPasskey(
+        signIn = mockSignIn,
+        allowedCredentialIds = allowedCredentialIds,
+      )
+    }
+  }
+
+  @Test
   fun `signInWithPasskey returns error when PasskeyAuthenticationService fails`() = runTest {
     // Given
     val error =

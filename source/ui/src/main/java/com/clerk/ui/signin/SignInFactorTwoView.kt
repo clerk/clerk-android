@@ -10,6 +10,7 @@ import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.signin.backupcode.SignInFactorTwoBackupCodeView
 import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.ui.signin.help.SignInGetHelpView
+import com.clerk.ui.signin.passkey.SignInFactorTwoPasskeyView
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 /**
@@ -45,6 +46,12 @@ fun SignInFactorTwoView(
         SignInFactorTwoBackupCodeView(
           modifier = modifier,
           factor = factor,
+          onAuthComplete = onAuthComplete,
+        )
+      StrategyKeys.PASSKEY ->
+        SignInFactorTwoPasskeyView(
+          factor = factor,
+          modifier = modifier,
           onAuthComplete = onAuthComplete,
         )
       else -> SignInGetHelpView(modifier = modifier)

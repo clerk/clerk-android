@@ -63,8 +63,8 @@ private val authViewProcessIdentifier = UUID.randomUUID().toString()
  *
  * When using this as a non-dismissible root authentication view, observe
  * [Clerk.isAuthFlowCompleteFlow] to choose between this view and authenticated content. A session
- * can become active while post-auth steps — session tasks or the biometric-credential (biometric)
- * enrollment prompt — still need to be shown.
+ * can become active while post-auth steps — session tasks or the biometric credential enrollment
+ * prompt — still need to be shown.
  *
  * @param initialIdentifier Optional initial value for the identifier field. Phone-like values are
  *   routed to the phone number field automatically.

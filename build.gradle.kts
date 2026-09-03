@@ -83,6 +83,97 @@ dependencies {
   dokka(project(":source:ui"))
 }
 
+tasks.register("verifyPublishedArtifacts") {
+  group = "verification"
+  description = "Checks consumer rules and published dependency metadata for forbidden entries."
+  dependsOn(
+    ":source:api:generateMetadataFileForMavenPublication",
+    ":source:api:generatePomFileForMavenPublication",
+    ":source:ui:generateMetadataFileForMavenPublication",
+    ":source:ui:generatePomFileForMavenPublication",
+  )
+
+  val apiConsumerRules = file("source/api/consumer-rules.pro")
+  val uiConsumerRules = file("source/ui/consumer-rules.pro")
+  val apiPublication = project(":source:api").layout.buildDirectory.dir("publications/maven")
+  val uiPublication = project(":source:ui").layout.buildDirectory.dir("publications/maven")
+  inputs.files(apiConsumerRules, uiConsumerRules)
+  inputs.dir(apiPublication)
+  inputs.dir(uiPublication)
+
+  doLast {
+    fun assertRulesDoNotContain(file: File, forbiddenRules: List<String>) {
+      val rules = file.readText()
+      forbiddenRules.forEach { rule ->
+        check(rule !in rules) { "${file.relativeTo(rootDir)} must not contain '$rule'." }
+      }
+    }
+
+    fun assertCoordinateIsNotPublished(directory: File, coordinate: String) {
+      val (group, artifact) = coordinate.split(":", limit = 2)
+      val pomPattern =
+        Regex(
+          "<groupId>\\s*${Regex.escape(group)}\\s*</groupId>\\s*" +
+            "<artifactId>\\s*${Regex.escape(artifact)}\\s*</artifactId>"
+        )
+      val modulePattern =
+        Regex(
+          "\\\"group\\\"\\s*:\\s*\\\"${Regex.escape(group)}\\\"\\s*,\\s*" +
+            "\\\"module\\\"\\s*:\\s*\\\"${Regex.escape(artifact)}\\\""
+        )
+      val metadataFiles =
+        listOf(directory.resolve("pom-default.xml"), directory.resolve("module.json"))
+      metadataFiles.forEach { metadataFile ->
+        check(metadataFile.isFile) {
+          "Expected publication metadata file ${metadataFile.relativeTo(rootDir)} to exist."
+        }
+      }
+      val publicationMetadata = metadataFiles.joinToString("\n") { it.readText() }
+      check(!pomPattern.containsMatchIn(publicationMetadata)) {
+        "$coordinate must not be published from ${directory.relativeTo(rootDir)}."
+      }
+      check(!modulePattern.containsMatchIn(publicationMetadata)) {
+        "$coordinate must not be published from ${directory.relativeTo(rootDir)}."
+      }
+    }
+
+    assertRulesDoNotContain(
+      apiConsumerRules,
+      listOf(
+        "-keep class com.clerk.api.**",
+        "-keep class com.clerk.sdk.**",
+        "-keep class com.auth0.android.jwt.**",
+        "-keep class com.google.android.gms.**",
+        "-keep class androidx.credentials.**",
+        "-keepclassmembers enum *",
+      ),
+    )
+    assertRulesDoNotContain(
+      uiConsumerRules,
+      listOf(
+        "-keep class com.clerk.ui.**",
+        "-keep class androidx.compose.runtime.**",
+        "class * extends androidx.lifecycle.ViewModel",
+        "-keep class androidx.compose.material3.**",
+        "-keep class coil3.**",
+      ),
+    )
+
+    listOf("com.google.devtools.ksp:symbol-processing-api").forEach {
+      assertCoordinateIsNotPublished(apiPublication.get().asFile, it)
+    }
+    listOf(
+        "androidx.compose.ui:ui-tooling",
+        "androidx.compose.ui:ui-tooling-preview",
+        "androidx.compose.ui:ui-tooling-preview-android",
+        "androidx.test:core-ktx",
+      )
+      .forEach { assertCoordinateIsNotPublished(uiPublication.get().asFile, it) }
+  }
+}
+
+tasks.named("check") { dependsOn("verifyPublishedArtifacts") }
+
 subprojects {
   plugins.withType<JavaPlugin> {
     the<JavaPluginExtension>().toolchain {

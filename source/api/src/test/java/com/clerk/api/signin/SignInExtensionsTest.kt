@@ -35,7 +35,7 @@ class SignInExtensionsTest {
   }
 
   @Test
-  fun `startingFirstFactor prefers email_link for email identifier when password is preferred`() {
+  fun `startingFirstFactor prefers password for email identifier when password is preferred`() {
     every { displayConfig.preferredSignInStrategy } returns PreferredSignInStrategy.PASSWORD
     val signIn =
       SignIn(
@@ -51,7 +51,7 @@ class SignInExtensionsTest {
 
     val factor = signIn.startingFirstFactor
 
-    assertEquals("email_link", factor?.strategy)
+    assertEquals("password", factor?.strategy)
   }
 
   @Test
@@ -93,7 +93,7 @@ class SignInExtensionsTest {
   }
 
   @Test
-  fun `startingFirstFactor chooses email_link matching the email factor identity`() {
+  fun `startingFirstFactor chooses matching email_link when preferred password is unavailable`() {
     every { displayConfig.preferredSignInStrategy } returns PreferredSignInStrategy.PASSWORD
     val signIn =
       SignIn(
@@ -108,7 +108,6 @@ class SignInExtensionsTest {
               safeIdentifier = "user@example.com",
             ),
             Factor(strategy = "email_link", emailAddressId = "email_123"),
-            Factor(strategy = "password", safeIdentifier = "user@example.com"),
           ),
       )
 
@@ -167,14 +166,15 @@ class SignInExtensionsTest {
   }
 
   @Test
-  fun `startingFirstFactor returns prepared email_code when verification is already prepared`() {
-    every { displayConfig.preferredSignInStrategy } returns PreferredSignInStrategy.OTP
+  fun `startingFirstFactor uses preferred password over prepared email_code`() {
+    every { displayConfig.preferredSignInStrategy } returns PreferredSignInStrategy.PASSWORD
     val signIn =
       SignIn(
         id = "sign_in_123",
         identifier = "user@example.com",
         supportedFirstFactors =
           listOf(
+            Factor(strategy = "password", safeIdentifier = "user@example.com"),
             Factor(strategy = "email_code", emailAddressId = "email_123"),
             Factor(strategy = "email_link", emailAddressId = "email_123"),
           ),
@@ -184,6 +184,6 @@ class SignInExtensionsTest {
 
     val factor = signIn.startingFirstFactor
 
-    assertEquals("email_code", factor?.strategy)
+    assertEquals("password", factor?.strategy)
   }
 }

@@ -5,7 +5,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.isResetFactor
-import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.PreviewAuthStateProvider
@@ -58,20 +57,13 @@ internal fun resolveFirstFactor(fallback: Factor): Factor {
     } else {
       null
     }
-  val emailLinkFactor =
-    if (hasSignInContext) {
-      currentSignIn.preferredEmailLinkFactor(fallback, supportedFactors)
-    } else {
-      null
-    }
   val fallbackIsSupported = hasSignInContext && supportedFactors.hasStrategy(fallback.strategy)
 
   return if (!hasSignInContext) {
     fallback
   } else {
-    emailLinkFactor
-      ?: if (fallbackIsSupported) fallback
-      else preparedFactor ?: currentSignIn.startingFirstFactor ?: fallback
+    if (fallbackIsSupported) fallback
+    else preparedFactor ?: currentSignIn.startingFirstFactor ?: fallback
   }
 }
 
@@ -82,31 +74,6 @@ private fun List<Factor>.factorForStrategy(strategy: String?): Factor? {
 
 private fun List<Factor>.hasStrategy(strategy: String): Boolean {
   return any { it.strategy == strategy }
-}
-
-private fun SignIn.preferredEmailLinkFactor(
-  fallback: Factor,
-  supportedFactors: List<Factor>,
-): Factor? {
-  if (fallback.strategy != StrategyKeys.EMAIL_CODE) return null
-
-  return if (isEmailIdentifierSignIn(fallback, supportedFactors)) {
-    supportedFactors.firstOrNull { it.strategy == StrategyKeys.EMAIL_LINK }
-  } else {
-    null
-  }
-}
-
-private fun SignIn.isEmailIdentifierSignIn(
-  fallback: Factor,
-  supportedFactors: List<Factor>,
-): Boolean {
-  return (fallback.strategy == StrategyKeys.EMAIL_CODE && fallback.emailAddressId != null) ||
-    identifier?.contains("@") == true ||
-    supportedFactors.any {
-      (it.strategy == StrategyKeys.EMAIL_LINK || it.strategy == StrategyKeys.EMAIL_CODE) &&
-        it.safeIdentifier?.contains("@") == true
-    }
 }
 
 @PreviewLightDark
