@@ -24,6 +24,7 @@ import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.environment.CommerceSettings
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.InstanceEnvironmentType
 import com.clerk.api.network.model.environment.UserSettings
@@ -402,6 +403,15 @@ object Clerk {
 
   val organizationDefaultRoleKey: String?
     get() = environment?.organizationSettings?.domains?.defaultRole
+
+  /**
+   * Billing flags from `/v1/environment`.
+   *
+   * Defaults to disabled billing when the SDK has not fetched environment yet, or when the payload
+   * omits `commerce_settings`.
+   */
+  val commerceSettings: CommerceSettings
+    get() = environment?.commerceSettings ?: CommerceSettings()
 
   private val _organizationLogoUrlFlow = MutableStateFlow<String?>(null)
 
