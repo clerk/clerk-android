@@ -395,6 +395,15 @@ class BillingTest {
   }
 
   @Test
+  fun `decodes billing subscription when active at is null`() {
+    val json = SUBSCRIPTION_JSON.replace("\"active_at\": 1700000000000,", "\"active_at\": null,")
+    val subscription = decode<BillingSubscription>(json)
+
+    assertEquals(null, subscription.activeAt)
+    assertEquals(BillingSubscriptionStatus.ACTIVE, subscription.status)
+  }
+
+  @Test
   fun `decodes billing payment with totals and payment method`() {
     val payment = decode<BillingPayment>(PAYMENT_JSON)
 
