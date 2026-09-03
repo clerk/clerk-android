@@ -180,6 +180,11 @@ internal class AuthState(
     session: Session? = signIn.correspondingSession(),
     onAuthComplete: () -> Unit,
   ) {
+    if (signIn.protectCheck != null) {
+      routeToProtectCheck(AuthDestination.SignInProtectCheck)
+      return
+    }
+
     when (signIn.status) {
       SignIn.Status.COMPLETE -> {
         handlePostAuthCompletion(
@@ -196,6 +201,7 @@ internal class AuthState(
       SignIn.Status.NEEDS_SECOND_FACTOR -> routeToSecondFactorOrHelp(signIn)
       SignIn.Status.NEEDS_NEW_PASSWORD -> backStack.add(AuthDestination.SignInSetNewPassword)
       SignIn.Status.NEEDS_CLIENT_TRUST -> routeToClientTrustOrHelp(signIn)
+      SignIn.Status.NEEDS_PROTECT_CHECK -> routeToProtectCheck(AuthDestination.SignInProtectCheck)
       SignIn.Status.UNKNOWN -> Unit
     }
   }
@@ -295,6 +301,11 @@ internal class AuthState(
     session: Session? = signUp.correspondingSession(),
     onAuthComplete: () -> Unit,
   ) {
+    if (signUp.protectCheck != null) {
+      routeToProtectCheck(AuthDestination.SignUpProtectCheck)
+      return
+    }
+
     when (signUp.status) {
       SignUp.Status.ABANDONED -> resetToRoot()
       SignUp.Status.MISSING_REQUIREMENTS -> handleMissingRequirements(signUp)
@@ -307,13 +318,17 @@ internal class AuthState(
           completedWithSignUp = true,
           onAuthComplete = onAuthComplete,
         )
-        return
       }
-      SignUp.Status.UNKNOWN -> return
+      SignUp.Status.UNKNOWN -> Unit
     }
   }
 
   private fun handleMissingRequirements(signUp: SignUp) {
+    if (signUp.protectCheck != null || "protect_check" in signUp.missingFields) {
+      routeToProtectCheck(AuthDestination.SignUpProtectCheck)
+      return
+    }
+
     val firstFieldToCollect = signUp.firstFieldToCollect
     if (firstFieldToCollect != null) {
       handleFieldCollection(signUp)
@@ -323,6 +338,12 @@ internal class AuthState(
     val firstFieldToVerify = signUp.firstFieldToVerify
     if (firstFieldToVerify != null) {
       handleFieldVerification(signUp, firstFieldToVerify)
+    }
+  }
+
+  private fun routeToProtectCheck(destination: NavKey) {
+    if (backStack.lastOrNull() != destination) {
+      backStack.add(destination)
     }
   }
 

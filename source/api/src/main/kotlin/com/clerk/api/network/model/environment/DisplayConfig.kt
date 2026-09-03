@@ -58,6 +58,9 @@ internal data class DisplayConfig(
 
   /** Google One Tap client ID for enhanced sign-in (optional) */
   @SerialName("google_one_tap_client_id") val googleOneTapClientId: String?,
+
+  /** Frontend API URL used as a fallback when configuring Clerk Protect. */
+  @SerialName("frontend_api_url") val frontendApiUrl: String? = null,
 )
 
 /**

@@ -28,6 +28,7 @@ uiToolingPreviewAndroid = "1.11.4"
 kotlinStdlib = "2.4.10"
 kotlinTest = "2.4.10"
 paparazziPlugin = "2.0.0-alpha05"
+protect = "0.1.0-alpha.1"
 
 # Build Versions -- Do not delete
 jdk = "17"
@@ -64,6 +65,7 @@ androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 clerk-automap-annotations = { module = "com.clerk:automap-annotations", version.ref = "automap" }
 clerk-automap-processor = { module = "com.clerk:automap-processor", version.ref = "automap" }
+clerk-protect = { module = "com.clerk.protect:protect", version.ref = "protect" }
 coil = "io.coil-kt.coil3:coil-compose:3.5.0"
 coil-okhttp = "io.coil-kt.coil3:coil-network-okhttp:3.5.0"
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }

@@ -49,6 +49,7 @@ internal object ApiPaths {
       internal const val ATTEMPT_SECOND_FACTOR = "${WITH_ID}/attempt_second_factor"
       internal const val PREPARE_FIRST_FACTOR = "${WITH_ID}/prepare_first_factor"
       internal const val PREPARE_SECOND_FACTOR = "${WITH_ID}/prepare_second_factor"
+      internal const val PROTECT_CHECK = "${WITH_ID}/protect_check"
       internal const val RESET_PASSWORD = "${WITH_ID}/reset_password"
     }
 
@@ -69,6 +70,7 @@ internal object ApiPaths {
       internal const val WITH_ID = "${BASE}/{id}"
       internal const val PREPARE_VERIFICATION = "${WITH_ID}/prepare_verification"
       internal const val ATTEMPT_VERIFICATION = "${WITH_ID}/attempt_verification"
+      internal const val PROTECT_CHECK = "${WITH_ID}/protect_check"
     }
   }
 

@@ -34,6 +34,7 @@ import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.protect.ClerkProtect
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
@@ -846,6 +847,7 @@ object Clerk {
     SSOService.cancelPendingAuthentication()
     ExternalAccountService.cancelPendingExternalAccountConnection()
     DeviceAttestationHelper.clearCache()
+    ClerkProtect.reset()
     LocaleProvider.cleanup()
     ClerkApi.reset()
     environment = null
@@ -993,6 +995,16 @@ object Clerk {
     configurationManager.clearDeviceToken()
 
   /**
+   * Sets the customer-signed Protect assertion attached to Clerk requests, or clears it with null.
+   *
+   * This is intended for deterministic Protect coverage in application test suites. Assertions
+   * remain subject to the instance's Protect rules and do not directly choose a verdict.
+   */
+  fun setProtectAssertion(token: String?) {
+    ClerkProtect.setAssertion(token)
+  }
+
+  /**
    * Returns the current device token from encrypted storage, or null if unavailable.
    *
    * This is used by the Expo bridge to sync the native client token with the JS SDK.
@@ -1014,6 +1026,10 @@ object Clerk {
   internal fun updateEnvironment(environment: Environment) {
     val previousEnvironment = this.environment
     this.environment = environment
+    ClerkProtect.initialize(
+      environment = environment,
+      fapiOrigin = runCatching { baseUrl }.getOrNull()?.takeIf(String::isNotBlank),
+    )
     _organizationLogoUrlFlow.value = environment.displayConfig.logoImageUrl
     _multiSessionModeIsEnabled.value = !environment.authConfig.singleSessionMode
     sharedSessionSyncCoordinator?.handleEnvironmentChange(previousEnvironment, environment)
@@ -1029,14 +1045,14 @@ object Clerk {
   private fun cacheStateIfReady() {
     val cachedEnvironment = environment
     val cachedClient = _clientFlow.value
-    val cachedResources = cachedClient?.let { client ->
-      cachedEnvironment?.let { environment -> client to environment }
-    }
+    val cachedResources =
+      cachedClient?.let { client ->
+        cachedEnvironment?.let { environment -> client to environment }
+      }
     val cachedPublishableKey = publishableKey
     val cachedBaseUrl = runCatching { baseUrl }.getOrNull()
-    val cachedConfiguration = cachedPublishableKey?.let { key ->
-      cachedBaseUrl?.let { url -> key to url }
-    }
+    val cachedConfiguration =
+      cachedPublishableKey?.let { key -> cachedBaseUrl?.let { url -> key to url } }
     val cachedServerFetchAtMillis = lastClientServerFetchAtMillis
     val state =
       if (
@@ -1142,9 +1158,8 @@ object Clerk {
   }
 
   private fun Client.withResolvedActiveSession(previousSession: Session?): Client {
-    val currentActiveSessionId = lastActiveSessionId?.takeIf { activeSessionId ->
-      sessions.any { it.id == activeSessionId }
-    }
+    val currentActiveSessionId =
+      lastActiveSessionId?.takeIf { activeSessionId -> sessions.any { it.id == activeSessionId } }
     val resolvedActiveSessionId =
       currentActiveSessionId
         ?: previousSession?.id?.takeIf { previousSessionId ->
@@ -1353,9 +1368,8 @@ fun Map<String, UserSettings.SocialConfig>.toOAuthProvidersList(): List<OAuthPro
     .filter { it.enabled && it.authenticatable }
     .map { OAuthProvider.fromStrategy(it.strategy) }
 
-fun SignIn.identifyingFirstFactor(strategy: String): Factor? = supportedFirstFactors?.firstOrNull {
-  it.strategy == strategy && it.safeIdentifier == identifier
-}
+fun SignIn.identifyingFirstFactor(strategy: String): Factor? =
+  supportedFirstFactors?.firstOrNull { it.strategy == strategy && it.safeIdentifier == identifier }
 
 val SignIn.resetPasswordFactor: Factor?
   get() =
