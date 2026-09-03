@@ -111,15 +111,16 @@ dependencies {
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.ui)
-  implementation(libs.androidx.ui.tooling)
-  implementation(libs.androidx.ui.tooling.preview.android)
   implementation(libs.coil)
   implementation(libs.coil.okhttp)
-  implementation(libs.core.ktx)
   implementation(libs.google.libphonenumber)
   implementation(libs.kotlinx.immutable)
   implementation(libs.material3)
   implementation(libs.materialKolor)
+
+  debugImplementation(libs.androidx.ui.tooling)
+
+  compileOnly(libs.androidx.ui.tooling.preview.android)
 
   testImplementation(libs.androidx.core)
   testImplementation(libs.junit)
