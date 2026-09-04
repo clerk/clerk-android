@@ -34,6 +34,7 @@ import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTokenFetcher
 import com.clerk.api.session.SessionTokensCache
@@ -741,6 +742,14 @@ object Clerk {
    * @see BiometricCredentials for all available biometric-credential methods.
    */
   val biometricCredentials: BiometricCredentials = BiometricCredentials
+
+  /**
+   * The main entry point for Google Play Restore Credentials operations.
+   *
+   * Use this to create a restore key for the signed-in user, redeem a restored key on a new device,
+   * or explicitly clear the restore key.
+   */
+  val restoreCredentials: RestoreCredentials = RestoreCredentials
 
   // endregion
 

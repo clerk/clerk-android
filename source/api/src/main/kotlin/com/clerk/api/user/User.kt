@@ -22,6 +22,7 @@ import com.clerk.api.organizations.UserOrganizationInvitation
 import com.clerk.api.passkeys.Passkey
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
@@ -741,6 +742,20 @@ suspend fun User.createPhoneNumber(
  */
 suspend fun User.createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
   return PasskeyService.createPasskey()
+}
+
+/**
+ * Creates a Google Play restore credential for this signed-in user.
+ *
+ * Cloud backup is attempted by default and automatically falls back to device-to-device transfer
+ * when end-to-end encrypted cloud backup is unavailable.
+ *
+ * @param isCloudBackupEnabled Whether to back up the restore credential to encrypted cloud backup.
+ */
+suspend fun User.createRestoreCredential(
+  isCloudBackupEnabled: Boolean = true
+): ClerkResult<Unit, ClerkErrorResponse> {
+  return RestoreCredentials.create(isCloudBackupEnabled)
 }
 
 /**
