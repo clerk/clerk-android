@@ -765,10 +765,9 @@ class Auth internal constructor() {
       // Fetched client is missing the target session entirely (e.g. cleared sessions list);
       // splice it back in from the fallback and force it active.
       !targetInFetchedSessions && targetInFallbackSessions -> {
-        val missingFallbackSessions =
-          fallbackSessions.filterNot { fallbackSession ->
-            sessions.any { it.id == fallbackSession.id }
-          }
+        val missingFallbackSessions = fallbackSessions.filterNot { fallbackSession ->
+          sessions.any { it.id == fallbackSession.id }
+        }
         copy(
           sessions = sessions + missingFallbackSessions,
           lastActiveSessionId = activeSessionFallbackId,

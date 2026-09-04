@@ -944,12 +944,11 @@ private fun User.hasAlternativeFirstFactorIdentification(excludingPhoneId: Strin
     emailAddresses.orEmpty().any { email ->
       email.verification?.status == Verification.Status.VERIFIED
     }
-  val hasAnotherVerifiedNonReservedPhone =
-    phoneNumbers.any { phone ->
-      phone.id != excludingPhoneId &&
-        !phone.reservedForSecondFactor &&
-        phone.verification?.status == Verification.Status.VERIFIED
-    }
+  val hasAnotherVerifiedNonReservedPhone = phoneNumbers.any { phone ->
+    phone.id != excludingPhoneId &&
+      !phone.reservedForSecondFactor &&
+      phone.verification?.status == Verification.Status.VERIFIED
+  }
   return hasUsername || hasVerifiedEmail || hasAnotherVerifiedNonReservedPhone
 }
 
