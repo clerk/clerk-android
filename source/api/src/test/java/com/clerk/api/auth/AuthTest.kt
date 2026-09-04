@@ -16,6 +16,7 @@ import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
@@ -73,6 +74,19 @@ class AuthTest {
     assertTrue(result is ClerkResult.Success)
     assertSame(oauthResult, (result as ClerkResult.Success).value)
     coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
+  }
+
+  @Test
+  fun `signInWithRestoreCredential delegates to restore credentials`() = runTest {
+    mockkObject(RestoreCredentials)
+    val signIn = mockk<SignIn>(relaxed = true)
+    coEvery { RestoreCredentials.signIn() } returns ClerkResult.success(signIn)
+
+    val result = Auth().signInWithRestoreCredential()
+
+    assertTrue(result is ClerkResult.Success)
+    assertSame(signIn, (result as ClerkResult.Success).value)
+    coVerify(exactly = 1) { RestoreCredentials.signIn() }
   }
 
   @Test
@@ -236,8 +250,10 @@ class AuthTest {
     val sessionApi = mockk<SessionApi>()
     val clientApi = mockk<ClientApi>()
     mockkObject(ClerkApi)
+    mockkObject(RestoreCredentials)
     every { ClerkApi.session } returns sessionApi
     every { ClerkApi.client } returns clientApi
+    coEvery { RestoreCredentials.clearSilently() } returns Unit
     coEvery { sessionApi.removeSession(firstSession.id) } returns ClerkResult.success(firstSession)
     coEvery { clientApi.get() } returns
       ClerkResult.apiFailure(ClerkErrorResponse(errors = emptyList()))
@@ -256,6 +272,7 @@ class AuthTest {
     assertEquals(secondSession.id, Clerk.client.lastActiveSessionId)
     assertEquals(secondSession, Clerk.sessionFlow.value)
     coVerify(exactly = 1) { sessionApi.removeSession(firstSession.id) }
+    coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
   }
 
   @Test

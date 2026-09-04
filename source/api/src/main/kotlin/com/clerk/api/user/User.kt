@@ -22,6 +22,7 @@ import com.clerk.api.organizations.UserOrganizationInvitation
 import com.clerk.api.passkeys.Passkey
 import com.clerk.api.passkeys.PasskeyService
 import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
 import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
@@ -744,6 +745,20 @@ suspend fun User.createPasskey(): ClerkResult<Passkey, ClerkErrorResponse> {
 }
 
 /**
+ * Creates a Google Play restore credential for this signed-in user.
+ *
+ * Cloud backup is attempted by default and automatically falls back to device-to-device transfer
+ * when end-to-end encrypted cloud backup is unavailable.
+ *
+ * @param isCloudBackupEnabled Whether to back up the restore credential to encrypted cloud backup.
+ */
+suspend fun User.createRestoreCredential(
+  isCloudBackupEnabled: Boolean = true
+): ClerkResult<Unit, ClerkErrorResponse> {
+  return RestoreCredentials.create(isCloudBackupEnabled)
+}
+
+/**
  * Adds an external account for the user. A new [ExternalAccount] will be created and associated
  * with the user. This method is useful if you want to allow an already signed-in user to connect
  * their account with an external provider, such as Facebook, GitHub, etc., so that they can sign in
@@ -929,11 +944,12 @@ private fun User.hasAlternativeFirstFactorIdentification(excludingPhoneId: Strin
     emailAddresses.orEmpty().any { email ->
       email.verification?.status == Verification.Status.VERIFIED
     }
-  val hasAnotherVerifiedNonReservedPhone = phoneNumbers.any { phone ->
-    phone.id != excludingPhoneId &&
-      !phone.reservedForSecondFactor &&
-      phone.verification?.status == Verification.Status.VERIFIED
-  }
+  val hasAnotherVerifiedNonReservedPhone =
+    phoneNumbers.any { phone ->
+      phone.id != excludingPhoneId &&
+        !phone.reservedForSecondFactor &&
+        phone.verification?.status == Verification.Status.VERIFIED
+    }
   return hasUsername || hasVerifiedEmail || hasAnotherVerifiedNonReservedPhone
 }
 

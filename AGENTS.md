@@ -148,6 +148,7 @@ clerk-android/
 
 4. **Authentication Features:**
    - `passkeys/` - WebAuthn/Passkey via Google Credential Manager
+   - `restorecredentials/` - Google Play restore-key creation, sign-in, and cleanup through Credential Manager; currently reuses passkey endpoints and requires backend compatibility and device restore validation before release
    - `sso/` - OAuth/SSO providers (Google One Tap, enterprise SSO)
    - `organizations/` - Multi-tenant organization support
    - `session/` - JWT token caching and refresh

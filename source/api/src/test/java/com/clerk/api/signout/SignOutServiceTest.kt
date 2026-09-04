@@ -10,6 +10,7 @@ import com.clerk.api.network.model.environment.DisplayConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.UserSettings
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.Session
 import com.clerk.api.storage.StorageHelper
 import com.clerk.api.storage.StorageKey
@@ -17,8 +18,10 @@ import com.clerk.api.user.User
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.runs
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -160,6 +163,19 @@ class SignOutServiceTest {
     assertNull("Session should be cleared on failure", Clerk.session)
     assertNull("User should be cleared on failure", Clerk.user)
     assertFalse("isSignedIn should be false on failure", Clerk.isSignedIn)
+  }
+
+  @Test
+  fun `signOut clears restore credential even when server sign-out fails`() = runTest {
+    setupActiveSession()
+    mockkObject(RestoreCredentials)
+    coEvery { RestoreCredentials.clearSilently() } just runs
+    coEvery { mockSessionApi.deleteSessions() } throws Exception("Network error")
+    coEvery { mockClientApi.getSkippingClientId(any()) } returns ClerkResult.success(Client())
+
+    SignOutService.signOut()
+
+    coVerify(exactly = 1) { RestoreCredentials.clearSilently() }
   }
 
   @Test
