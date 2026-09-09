@@ -10,11 +10,12 @@ import kotlinx.serialization.json.*
 
 public enum class CoreFailureKind { Clerk, Rejection, Bridge, Cancelled }
 
-public class CoreException(public val code: String, override val message: String = "The operation could not be completed.", public val details: JsonElement? = null, public val kind: CoreFailureKind = CoreFailureKind.Bridge) : Exception(message) {
+public class CoreException(public val code: String, override val message: String = "The operation could not be completed.", public val details: JsonElement? = null, public val kind: CoreFailureKind = CoreFailureKind.Bridge, public val errors: List<ClerkAPIError> = emptyList()) : Exception(message) {
+  override fun getLocalizedMessage(): String = errors.firstOrNull()?.let { it.longMessage ?: it.message } ?: message
   internal companion object {
-    fun fromJson(value: JsonElement): CoreException {
+    fun fromJson(value: JsonElement, runtime: CoreRuntime): CoreException {
       val v = value.jsonObject
-      return CoreException(v.getValue("code").requireString(), v["message"]?.requireString() ?: "The operation could not be completed.", v["errors"], CoreFailureKind.entries.firstOrNull { it.name.equals(v["kind"]?.requireString(), ignoreCase = true) } ?: CoreFailureKind.Bridge)
+      return CoreException(v.getValue("code").requireString(), v["message"]?.requireString() ?: "The operation could not be completed.", v["errors"], CoreFailureKind.entries.firstOrNull { it.name.equals(v["kind"]?.requireString(), ignoreCase = true) } ?: CoreFailureKind.Bridge, v["errors"]?.jsonArray?.map { ClerkAPIError.fromJson(it, runtime) } ?: emptyList())
     }
   }
 }
@@ -94,7 +95,8 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
   private data class Snapshot(val revision: Long = -1, val epoch: Long = 0, val roots: Map<String, ResourceHandle> = emptyMap(), val states: Map<ResourceHandle, Any> = emptyMap(), val available: Boolean = true)
   @Volatile private var snapshot = Snapshot()
   private val scope = CoroutineScope(SupervisorJob() + dispatcher)
-  private val pending = mutableMapOf<String, CompletableDeferred<JsonElement>>()
+  private val pending = mutableMapOf<String, (Result<JsonElement>) -> Unit>()
+  private var completionLeases: List<CoreResource> = emptyList()
   private val resources = mutableMapOf<ResourceHandle, ResourceCleanup.Reference>()
   private var projecting: Set<ResourceHandle>? = null
   private val pendingOwners = mutableMapOf<String, CoreResource>()
@@ -125,7 +127,7 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
   public suspend fun initialize(publishableKey: String, callbackUrl: String, platform: String, capabilities: Set<String>): Unit = withContext(dispatcher) {
     val id = UUID.randomUUID().toString()
     val result = CompletableDeferred<JsonElement>()
-    pending[id] = result
+    pending[id] = { outcome -> outcome.fold(result::complete, result::completeExceptionally) }
     try {
       transport.send(buildJsonObject {
         put("kind", "init"); put("id", id)
@@ -140,11 +142,13 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
     finally { pending.remove(id) }
     Unit
   }
-  public suspend fun invoke(owner: CoreResource, target: ResourceHandle, operation: String, arguments: List<JsonElement>): JsonElement = withContext(dispatcher) {
+  public suspend fun <T> invoke(owner: CoreResource, target: ResourceHandle, operation: String, arguments: List<JsonElement>, decode: (JsonElement) -> T): T = withContext(dispatcher) {
     if (isInvalidated(target) || target !in snapshot.states) throw CoreException("stale_resource")
     val id = UUID.randomUUID().toString()
-    val result = CompletableDeferred<JsonElement>()
-    pending[id] = result
+    val result = CompletableDeferred<T>()
+    pending[id] = { outcome ->
+      outcome.mapCatching(decode).fold(result::complete, result::completeExceptionally)
+    }
     pendingOwners[id] = owner
     try {
       transport.send(buildJsonObject { put("kind", "invoke"); put("id", id); put("target", target.toJson()); put("operation", operation); put("args", JsonArray(arguments)) })
@@ -156,32 +160,34 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
   }
   public fun checkErrorResult(value: JsonElement) {
     val error = value.jsonObject["error"] ?: throw CoreException("invalid_error_result")
-    if (error != JsonNull) throw CoreException.fromJson(error)
+    if (error != JsonNull) throw CoreException.fromJson(error, this)
   }
   private fun receive(message: JsonElement) {
     if (!snapshot.available) return
+    val previousLeases = completionLeases
     try {
       val m = message.jsonObject
-      m["state"]?.let(::apply)
+      completionLeases = previousLeases + (m["state"]?.let(::apply) ?: emptyList())
       when (m.getValue("kind").requireString()) {
         "ready" -> {
           val manifest = m.getValue("manifest").jsonObject
           if (manifest["contractHash"] != JsonPrimitive(GeneratedBindings.contractHash) || manifest["protocolVersion"] != JsonPrimitive(GeneratedBindings.protocolVersion)) throw CoreException("incompatible_bindings")
-          pending.remove(m.getValue("id").requireString())?.complete(JsonNull)
+          pending.remove(m.getValue("id").requireString())?.invoke(Result.success(JsonNull))
         }
         "complete" -> {
-          val result = pending.remove(m.getValue("id").requireString()) ?: return
-          m["failure"]?.let { result.completeExceptionally(CoreException.fromJson(it)) } ?: result.complete(m["result"] ?: Undefined)
+          val outcome = m["failure"]?.let { Result.failure<JsonElement>(CoreException.fromJson(it, this)) } ?: Result.success(m["result"] ?: Undefined)
+          pending.remove(m.getValue("id").requireString())?.invoke(outcome)
         }
-        "lifecycleError" -> lifecycleErrors.value = m["failure"]?.let(CoreException::fromJson)
-        "runtimeError", "unavailable", "initializationFailed" -> fail(m["failure"]?.let(CoreException::fromJson) ?: CoreException("runtime_unavailable"))
+        "lifecycleError" -> lifecycleErrors.value = m["failure"]?.let { CoreException.fromJson(it, this) }
+        "runtimeError", "unavailable", "initializationFailed" -> fail(m["failure"]?.let { CoreException.fromJson(it, this) } ?: CoreException("runtime_unavailable"))
       }
     } catch (error: Exception) { fail(error) }
+    finally { completionLeases = previousLeases }
   }
-  @Synchronized private fun apply(value: JsonElement) {
+  @Synchronized private fun apply(value: JsonElement): List<CoreResource> {
     val v = value.jsonObject
     val revision = v.getValue("revision").jsonPrimitive.long
-    if (revision <= snapshot.revision) return
+    if (revision <= snapshot.revision) return emptyList()
     val epoch = v.getValue("epoch").jsonPrimitive.long
     if (epoch < snapshot.epoch) throw CoreException("stale_state")
     val invalid = v.getValue("invalidated").jsonArray.map(ResourceHandle::fromJson)
@@ -203,6 +209,7 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
     staged.forEach { (handle, resource) -> states[handle]?.let(resource.context::store) }
     invalid.forEach(resources::remove)
     revisions.value = revision
+    return staged.values.toList()
     } finally { projecting = null }
   }
   internal fun release(reference: ResourceCleanup.Reference) {
@@ -219,7 +226,7 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
     val calls = pending.values.toList()
     pending.clear()
     pendingOwners.clear()
-    calls.forEach { it.completeExceptionally(error) }
+    calls.forEach { it(Result.failure(error)) }
     revisions.value += 1
   }
   public fun setApplicationActive(active: Boolean) {

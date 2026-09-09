@@ -15,6 +15,7 @@ private class PackagedFixtures(context: Context) : NativeCapabilities {
   private val fixtures = Json.parseToJsonElement(context.assets.open("fapi.json").bufferedReader().use { it.readText() }).jsonObject
   var credential: String? = null
   var signedOut = false
+  var nextAuthError: JsonElement? = null
   var clientReads = 0
   val requests = mutableListOf<JsonObject>()
   override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
@@ -29,6 +30,10 @@ private class PackagedFixtures(context: Context) : NativeCapabilities {
     check(capability == "http")
     requests += args
     val url = URI(args.getValue("url").requireString())
+    if (url.path.contains("sign_ins")) nextAuthError?.let { failure ->
+      nextAuthError = null
+      return buildJsonObject { put("status", 422); put("headers", buildJsonObject {}); put("body", failure.toString()) }
+    }
     var raw = false
     var client: JsonElement? = null
     val response = when {
@@ -37,6 +42,14 @@ private class PackagedFixtures(context: Context) : NativeCapabilities {
       url.path.endsWith("/sessions") -> { signedOut = true; fixtures.getValue("client") }
       url.path.endsWith("/tokens") -> { raw = true; fixtures.getValue("token") }
       url.path.endsWith("/touch") -> { client = fixtures.getValue("authenticatedClient"); fixtures.getValue("session") }
+      url.path.contains("/phone_numbers") -> {
+        val phone = Json.parseToJsonElement("""{"object":"phone_number","id":"phone_native","phone_number":"+15555550123","reserved_for_second_factor":false,"default_second_factor":false,"linked_to":[],"verification":{"status":"verified","strategy":"phone_code","attempts":null,"expire_at":null,"error":null,"verified_at_client":null}}""").jsonObject.toMutableMap()
+        if (url.path.endsWith("phone_native")) {
+          phone["reserved_for_second_factor"] = JsonPrimitive(true)
+          phone["backup_codes"] = JsonArray(listOf(JsonPrimitive("fixture-recovery-code")))
+        }
+        JsonObject(phone)
+      }
       else -> {
         val resource = fixtures.getValue(if (url.path.contains("sign_ins")) "signIn" else "signUp").jsonObject.toMutableMap()
         if (args["method"] == JsonPrimitive("GET")) {
@@ -65,6 +78,15 @@ class PackagedCoreTest {
       val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
       val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
       try {
+        capabilities.nextAuthError = Json.parseToJsonElement("""{"errors":[{"code":"form_identifier_not_found","message":"Account not found","long_message":"No account was found for this identifier.","meta":{"param_name":"identifier"}}]}""")
+        try {
+          clerk.signIn.create(SignInCreateParams(identifier = "missing@example.com"))
+          error("Expected a structured Clerk error")
+        } catch (error: CoreException) {
+          check(error.errors.first().code == "form_identifier_not_found")
+          check(error.errors.first().meta?.paramName == "identifier")
+          check(error.localizedMessage == "No account was found for this identifier.")
+        }
         clerk.signIn.sso(SignInSSOParams(SignInSSOParamsStrategy.OauthGoogle))
         check(clerk.signIn.status.rawValue == "complete" && clerk.session == null)
         clerk.signUp.sso(SignUpSSOParams("oauth_google"))
@@ -79,6 +101,11 @@ class PackagedCoreTest {
         clerk.signIn.finalize()
         check(clerk.session?.status?.rawValue == "active" && clerk.user?.id == "user_native")
         check(clerk.session?.getToken()?.contains("fixture_signature") == true)
+        val phone = clerk.user!!.createPhoneNumber(CreatePhoneNumberParams("+15555550123"))
+        check(phone.backupCodes() == null)
+        val reservedPhone = phone.setReservedForSecondFactor(SetReservedForSecondFactorParams(true))
+        check(reservedPhone === phone && phone.reservedForSecondFactor)
+        check(phone.backupCodes() == listOf("fixture-recovery-code"))
         clerk.signOut()
         check(clerk.session == null && clerk.user == null)
       } finally { withContext(Dispatchers.Main) { clerk.close() } }

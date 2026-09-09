@@ -10,10 +10,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.*
 
-public data class ClerkState(public val `status`: ClerkStatus, public val `loaded`: Boolean, public val `session`: Session?, public val `user`: User?, public val `organization`: Organization?, public val `signIn`: SignIn, public val `signUp`: SignUp) {
+public data class ClerkState(public val `status`: ClerkStatus, public val `loaded`: Boolean, public val `environment`: MobileEnvironment, public val `session`: Session?, public val `user`: User?, public val `organization`: Organization?, public val `signIn`: SignIn, public val `signUp`: SignUp) {
   public fun toJson(): JsonElement = buildJsonObject {
     putPresent("status", this@ClerkState.`status`.toJson())
     putPresent("loaded", JsonPrimitive(this@ClerkState.`loaded`))
+    putPresent("environment", this@ClerkState.`environment`.toJson())
     putPresent("session", this@ClerkState.`session`?.let { value -> value.toJson() } ?: JsonNull)
     putPresent("user", this@ClerkState.`user`?.let { value -> value.toJson() } ?: JsonNull)
     putPresent("organization", this@ClerkState.`organization`?.let { value -> value.toJson() } ?: JsonNull)
@@ -24,7 +25,7 @@ public data class ClerkState(public val `status`: ClerkStatus, public val `loade
     public fun fromJson(value: JsonElement, runtime: CoreRuntime): ClerkState {
       val values = value.jsonObject
 
-      return ClerkState(`status` = ClerkStatus.fromJson((values["status"] ?: Undefined), runtime), `loaded` = (values["loaded"] ?: Undefined).requireBoolean(), `session` = (values["session"] ?: Undefined).decodeOptional { value -> Session.fromJson(value, runtime) }, `user` = (values["user"] ?: Undefined).decodeOptional { value -> User.fromJson(value, runtime) }, `organization` = (values["organization"] ?: Undefined).decodeOptional { value -> Organization.fromJson(value, runtime) }, `signIn` = SignIn.fromJson((values["signIn"] ?: Undefined), runtime), `signUp` = SignUp.fromJson((values["signUp"] ?: Undefined), runtime))
+      return ClerkState(`status` = ClerkStatus.fromJson((values["status"] ?: Undefined), runtime), `loaded` = (values["loaded"] ?: Undefined).requireBoolean(), `environment` = MobileEnvironment.fromJson((values["environment"] ?: Undefined), runtime), `session` = (values["session"] ?: Undefined).decodeOptional { value -> Session.fromJson(value, runtime) }, `user` = (values["user"] ?: Undefined).decodeOptional { value -> User.fromJson(value, runtime) }, `organization` = (values["organization"] ?: Undefined).decodeOptional { value -> Organization.fromJson(value, runtime) }, `signIn` = SignIn.fromJson((values["signIn"] ?: Undefined), runtime), `signUp` = SignUp.fromJson((values["signUp"] ?: Undefined), runtime))
     }
   }
 }
@@ -35,6 +36,7 @@ public class Clerk(override val handle: ResourceHandle, runtime: CoreRuntime) : 
   override val isInvalidated: Boolean get() = context.isInvalidated(handle)
   public val `status`: ClerkStatus get() = state.`status`
   public val `loaded`: Boolean get() = state.`loaded`
+  public val `environment`: MobileEnvironment get() = state.`environment`
   public val `session`: Session? get() = state.`session`
   public val `user`: User? get() = state.`user`
   public val `organization`: Organization? get() = state.`organization`
@@ -53,24 +55,30 @@ public class Clerk(override val handle: ResourceHandle, runtime: CoreRuntime) : 
    */
   public suspend fun `createOrganization`(`params`: CreateOrganizationParams): Organization {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Clerk.createOrganization", listOf(`params`.toJson()))
-    return Organization.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Clerk.createOrganization", listOf(`params`.toJson())) { result ->
+      Organization.fromJson(result, runtime)
+    }
   }
   /**
    * Gets a single [Organization](https://clerk.com/docs/reference/objects/organization) by ID.
    */
   public suspend fun `getOrganization`(`organizationId`: String): Organization {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Clerk.getOrganization", listOf(JsonPrimitive(`organizationId`)))
-    return Organization.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Clerk.getOrganization", listOf(JsonPrimitive(`organizationId`))) { result ->
+      Organization.fromJson(result, runtime)
+    }
   }
   public suspend fun `setActive`(`params`: MobileSetActiveParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Clerk.setActive", listOf(`params`.toJson()))
+    return runtime.invoke(this, handle, "Clerk.setActive", listOf(`params`.toJson())) { result ->
+      Unit
+    }
   }
   public suspend fun `signOut`(`options`: MobileSignOutOptions? = null): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Clerk.signOut", listOf(`options`?.let { value -> value.toJson() } ?: Undefined))
+    return runtime.invoke(this, handle, "Clerk.signOut", listOf(`options`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Unit
+    }
   }
 }
 
@@ -165,150 +173,171 @@ public class Organization(override val handle: ResourceHandle, runtime: CoreRunt
    */
   public suspend fun `update`(`params`: UpdateOrganizationParams): Organization {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.update", listOf(`params`.toJson()))
-    return Organization.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.update", listOf(`params`.toJson())) { result ->
+      Organization.fromJson(result, runtime)
+    }
   }
   /**
    * Gets the list of Organization Memberships.
    */
   public suspend fun `getMemberships`(`params`: GetMembersParams? = null): ClerkPaginatedResponseOrganizationMembership {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.getMemberships", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return ClerkPaginatedResponseOrganizationMembership.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.getMemberships", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ClerkPaginatedResponseOrganizationMembership.fromJson(result, runtime)
+    }
   }
   /**
    * Gets the list of invitations.
    */
   public suspend fun `getInvitations`(`params`: GetInvitationsParams? = null): ClerkPaginatedResponseOrganizationInvitation {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.getInvitations", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return ClerkPaginatedResponseOrganizationInvitation.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.getInvitations", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ClerkPaginatedResponseOrganizationInvitation.fromJson(result, runtime)
+    }
   }
   /**
    * Gets the list of [Roles](https://clerk.com/docs/guides/organizations/control-access/roles-and-permissions) available.
    */
   public suspend fun `getRoles`(`params`: GetRolesParams? = null): GetRolesResponse {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.getRoles", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return GetRolesResponse.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.getRoles", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      GetRolesResponse.fromJson(result, runtime)
+    }
   }
   /**
    * Gets the list of domains.
    */
   public suspend fun `getDomains`(`params`: GetDomainsParams? = null): ClerkPaginatedResponseOrganizationDomain {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.getDomains", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return ClerkPaginatedResponseOrganizationDomain.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.getDomains", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ClerkPaginatedResponseOrganizationDomain.fromJson(result, runtime)
+    }
   }
   /**
    * Gets the list of membership requests.
    */
   public suspend fun `getMembershipRequests`(`params`: GetMembershipRequestParams? = null): ClerkPaginatedResponseOrganizationMembershipRequest {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.getMembershipRequests", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return ClerkPaginatedResponseOrganizationMembershipRequest.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.getMembershipRequests", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ClerkPaginatedResponseOrganizationMembershipRequest.fromJson(result, runtime)
+    }
   }
   /**
    * Adds a user as a member to an organization. A user can only be added to an organization if they are not already a member of it and if they already exist in the same instance as the organization. Only administrators can add members to an organization.
    */
   public suspend fun `addMember`(`params`: AddMemberParams): OrganizationMembership {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.addMember", listOf(`params`.toJson()))
-    return OrganizationMembership.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.addMember", listOf(`params`.toJson())) { result ->
+      OrganizationMembership.fromJson(result, runtime)
+    }
   }
   /**
    * Creates and sends an invitation to the given email address.
    */
   public suspend fun `inviteMember`(`params`: InviteMemberParams): OrganizationInvitation {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.inviteMember", listOf(`params`.toJson()))
-    return OrganizationInvitation.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.inviteMember", listOf(`params`.toJson())) { result ->
+      OrganizationInvitation.fromJson(result, runtime)
+    }
   }
   /**
    * Creates and sends invitations to the given email addresses.
    */
   public suspend fun `inviteMembers`(`params`: InviteMembersParams): List<OrganizationInvitation> {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.inviteMembers", listOf(`params`.toJson()))
-    return result.jsonArray.map { value -> OrganizationInvitation.fromJson(value, runtime) }
+    return runtime.invoke(this, handle, "Organization.inviteMembers", listOf(`params`.toJson())) { result ->
+      result.jsonArray.map { value -> OrganizationInvitation.fromJson(value, runtime) }
+    }
   }
   /**
    * Updates a given member.
    */
   public suspend fun `updateMember`(`params`: UpdateMembershipParams): OrganizationMembership {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.updateMember", listOf(`params`.toJson()))
-    return OrganizationMembership.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.updateMember", listOf(`params`.toJson())) { result ->
+      OrganizationMembership.fromJson(result, runtime)
+    }
   }
   /**
    * Removes a member.
    */
   public suspend fun `removeMember`(`userId`: String): OrganizationMembership {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.removeMember", listOf(JsonPrimitive(`userId`)))
-    return OrganizationMembership.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.removeMember", listOf(JsonPrimitive(`userId`))) { result ->
+      OrganizationMembership.fromJson(result, runtime)
+    }
   }
   /**
    * Creates a new domain.
    */
   public suspend fun `createDomain`(`domainName`: String, `params`: PickCreateOrganizationDomainParamsAndenrollmentMode? = null): OrganizationDomain {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.createDomain", listOf(JsonPrimitive(`domainName`), `params`?.let { value -> value.toJson() } ?: Undefined))
-    return OrganizationDomain.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.createDomain", listOf(JsonPrimitive(`domainName`), `params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      OrganizationDomain.fromJson(result, runtime)
+    }
   }
   /**
    * Starts the verification process of multiple [Verified Domains](https://clerk.com/docs/guides/organizations/add-members/verified-domains) at once by issuing a fresh TXT challenge for each of the given domains in a single request. Each resolved domain's `ownershipVerification` property carries the `txtRecordName` and `txtRecordValue` the Organization [admin](https://clerk.com/docs/guides/organizations/control-access/roles-and-permissions) must publish. A single bad domain does not fail the batch; it lands in the returned [`OrganizationDomainsBulkOwnershipVerificationResource`](https://clerk.com/docs/reference/types/organization-domains-bulk-ownership-verification-resource) object's `errors` array.
    */
   public suspend fun `prepareOwnershipVerification`(`domainIds`: List<String>): OrganizationDomainsBulkOwnershipVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.prepareOwnershipVerification", listOf(JsonArray(`domainIds`.map { value -> JsonPrimitive(value) })))
-    return OrganizationDomainsBulkOwnershipVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.prepareOwnershipVerification", listOf(JsonArray(`domainIds`.map { value -> JsonPrimitive(value) }))) { result ->
+      OrganizationDomainsBulkOwnershipVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Completes the verification process started by [`prepareOwnershipVerification()`](https://clerk.com/docs/reference/objects/organization#prepare-ownership-verification), by resolving the published TXT record for each of the given domains in a single request. A single bad domain does not fail the batch; it lands in the returned [`OrganizationDomainsBulkOwnershipVerificationResource`](https://clerk.com/docs/reference/types/organization-domains-bulk-ownership-verification-resource) object's `errors` array.
    */
   public suspend fun `attemptOwnershipVerification`(`domainIds`: List<String>): OrganizationDomainsBulkOwnershipVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.attemptOwnershipVerification", listOf(JsonArray(`domainIds`.map { value -> JsonPrimitive(value) })))
-    return OrganizationDomainsBulkOwnershipVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.attemptOwnershipVerification", listOf(JsonArray(`domainIds`.map { value -> JsonPrimitive(value) }))) { result ->
+      OrganizationDomainsBulkOwnershipVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Gets a domain for an Organization based on the given domain ID.
    */
   public suspend fun `getDomain`(`value0`: OrganizationGetDomain__0): OrganizationDomain {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.getDomain", listOf(`value0`.toJson()))
-    return OrganizationDomain.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.getDomain", listOf(`value0`.toJson())) { result ->
+      OrganizationDomain.fromJson(result, runtime)
+    }
   }
   public suspend fun `getEnterpriseConnections`(`params`: GetEnterpriseConnectionsParams? = null): List<EnterpriseConnection> {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.getEnterpriseConnections", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return result.jsonArray.map { value -> EnterpriseConnection.fromJson(value, runtime) }
+    return runtime.invoke(this, handle, "Organization.getEnterpriseConnections", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      result.jsonArray.map { value -> EnterpriseConnection.fromJson(value, runtime) }
+    }
   }
   public suspend fun `createEnterpriseConnection`(`params`: CreateOrganizationEnterpriseConnectionParams): EnterpriseConnection {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.createEnterpriseConnection", listOf(`params`.toJson()))
-    return EnterpriseConnection.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.createEnterpriseConnection", listOf(`params`.toJson())) { result ->
+      EnterpriseConnection.fromJson(result, runtime)
+    }
   }
   public suspend fun `updateEnterpriseConnection`(`enterpriseConnectionId`: String, `params`: UpdateOrganizationEnterpriseConnectionParams): EnterpriseConnection {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.updateEnterpriseConnection", listOf(JsonPrimitive(`enterpriseConnectionId`), `params`.toJson()))
-    return EnterpriseConnection.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.updateEnterpriseConnection", listOf(JsonPrimitive(`enterpriseConnectionId`), `params`.toJson())) { result ->
+      EnterpriseConnection.fromJson(result, runtime)
+    }
   }
   public suspend fun `deleteEnterpriseConnection`(`enterpriseConnectionId`: String): DeletedObject {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.deleteEnterpriseConnection", listOf(JsonPrimitive(`enterpriseConnectionId`)))
-    return DeletedObject.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.deleteEnterpriseConnection", listOf(JsonPrimitive(`enterpriseConnectionId`))) { result ->
+      DeletedObject.fromJson(result, runtime)
+    }
   }
   public suspend fun `createEnterpriseConnectionTestRun`(`enterpriseConnectionId`: String): EnterpriseConnectionTestRunInit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.createEnterpriseConnectionTestRun", listOf(JsonPrimitive(`enterpriseConnectionId`)))
-    return EnterpriseConnectionTestRunInit.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.createEnterpriseConnectionTestRun", listOf(JsonPrimitive(`enterpriseConnectionId`))) { result ->
+      EnterpriseConnectionTestRunInit.fromJson(result, runtime)
+    }
   }
   public suspend fun `getEnterpriseConnectionTestRuns`(`enterpriseConnectionId`: String, `params`: GetEnterpriseConnectionTestRunsParams? = null): ClerkPaginatedResponseEnterpriseConnectionTestRun {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.getEnterpriseConnectionTestRuns", listOf(JsonPrimitive(`enterpriseConnectionId`), `params`?.let { value -> value.toJson() } ?: Undefined))
-    return ClerkPaginatedResponseEnterpriseConnectionTestRun.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.getEnterpriseConnectionTestRuns", listOf(JsonPrimitive(`enterpriseConnectionId`), `params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ClerkPaginatedResponseEnterpriseConnectionTestRun.fromJson(result, runtime)
+    }
   }
   /**
    * Deletes the Organization. Only administrators can delete an Organization.
@@ -317,47 +346,54 @@ public class Organization(override val handle: ResourceHandle, runtime: CoreRunt
    */
   public suspend fun `destroy`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.destroy", listOf())
+    return runtime.invoke(this, handle, "Organization.destroy", listOf()) { result ->
+      Unit
+    }
   }
   /**
    * Sets or replaces an Organization's logo.
    */
   public suspend fun `setLogo`(`params`: SetOrganizationLogoParams): Organization {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.setLogo", listOf(`params`.toJson()))
-    return Organization.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.setLogo", listOf(`params`.toJson())) { result ->
+      Organization.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): Organization {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return Organization.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Organization.fromJson(result, runtime)
+    }
   }
   /**
    * Initializes a payment method.
    */
   public suspend fun `initializePaymentMethod`(`params`: InitializePaymentMethodParams): BillingInitializedPaymentMethod {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.initializePaymentMethod", listOf(`params`.toJson()))
-    return BillingInitializedPaymentMethod.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.initializePaymentMethod", listOf(`params`.toJson())) { result ->
+      BillingInitializedPaymentMethod.fromJson(result, runtime)
+    }
   }
   /**
    * Adds a payment method.
    */
   public suspend fun `addPaymentMethod`(`params`: AddPaymentMethodParams): BillingPaymentMethod {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.addPaymentMethod", listOf(`params`.toJson()))
-    return BillingPaymentMethod.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.addPaymentMethod", listOf(`params`.toJson())) { result ->
+      BillingPaymentMethod.fromJson(result, runtime)
+    }
   }
   /**
    * Gets a list of payment methods that have been stored.
    */
   public suspend fun `getPaymentMethods`(`params`: GetPaymentMethodsParams? = null): ClerkPaginatedResponseBillingPaymentMethod {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Organization.getPaymentMethods", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return ClerkPaginatedResponseBillingPaymentMethod.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Organization.getPaymentMethods", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ClerkPaginatedResponseBillingPaymentMethod.fromJson(result, runtime)
+    }
   }
 }
 
@@ -458,24 +494,27 @@ public class OrganizationMembership(override val handle: ResourceHandle, runtime
    */
   public suspend fun `destroy`(): OrganizationMembership {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationMembership.destroy", listOf())
-    return OrganizationMembership.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationMembership.destroy", listOf()) { result ->
+      OrganizationMembership.fromJson(result, runtime)
+    }
   }
   /**
    * Updates the member's [Role](https://clerk.com/docs/guides/organizations/control-access/roles-and-permissions) in the Organization.
    */
   public suspend fun `update`(`updateParams`: UpdateOrganizationMembershipParams): OrganizationMembership {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationMembership.update", listOf(`updateParams`.toJson()))
-    return OrganizationMembership.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationMembership.update", listOf(`updateParams`.toJson())) { result ->
+      OrganizationMembership.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): OrganizationMembership {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationMembership.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return OrganizationMembership.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationMembership.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      OrganizationMembership.fromJson(result, runtime)
+    }
   }
 }
 
@@ -629,16 +668,18 @@ public class OrganizationInvitation(override val handle: ResourceHandle, runtime
    */
   public suspend fun `revoke`(): OrganizationInvitation {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationInvitation.revoke", listOf())
-    return OrganizationInvitation.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationInvitation.revoke", listOf()) { result ->
+      OrganizationInvitation.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): OrganizationInvitation {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationInvitation.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return OrganizationInvitation.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationInvitation.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      OrganizationInvitation.fromJson(result, runtime)
+    }
   }
 }
 
@@ -711,8 +752,9 @@ public class Role(override val handle: ResourceHandle, runtime: CoreRuntime) : C
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): Role {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Role.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return Role.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Role.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Role.fromJson(result, runtime)
+    }
   }
 }
 
@@ -756,8 +798,9 @@ public class Permission(override val handle: ResourceHandle, runtime: CoreRuntim
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): Permission {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Permission.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return Permission.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Permission.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Permission.fromJson(result, runtime)
+    }
   }
 }
 
@@ -881,39 +924,45 @@ public class OrganizationDomain(override val handle: ResourceHandle, runtime: Co
    */
   public suspend fun `prepareAffiliationVerification`(`params`: PrepareAffiliationVerificationParams): OrganizationDomain {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationDomain.prepareAffiliationVerification", listOf(`params`.toJson()))
-    return OrganizationDomain.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationDomain.prepareAffiliationVerification", listOf(`params`.toJson())) { result ->
+      OrganizationDomain.fromJson(result, runtime)
+    }
   }
   /**
    * Completes the verification process started by [`prepareAffiliationVerification()`](https://clerk.com/docs/reference/types/organization-domain-resource#prepare-affiliation-verification), by validating the provided verification code.
    */
   public suspend fun `attemptAffiliationVerification`(`params`: AttemptAffiliationVerificationParams): OrganizationDomain {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationDomain.attemptAffiliationVerification", listOf(`params`.toJson()))
-    return OrganizationDomain.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationDomain.attemptAffiliationVerification", listOf(`params`.toJson())) { result ->
+      OrganizationDomain.fromJson(result, runtime)
+    }
   }
   /**
    * Deletes the Verified Domain.
    */
   public suspend fun `delete`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationDomain.delete", listOf())
+    return runtime.invoke(this, handle, "OrganizationDomain.delete", listOf()) { result ->
+      Unit
+    }
   }
   /**
    * Updates the enrollment mode of the Verified Domain.
    */
   public suspend fun `updateEnrollmentMode`(`params`: UpdateEnrollmentModeParams): OrganizationDomain {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationDomain.updateEnrollmentMode", listOf(`params`.toJson()))
-    return OrganizationDomain.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationDomain.updateEnrollmentMode", listOf(`params`.toJson())) { result ->
+      OrganizationDomain.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): OrganizationDomain {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationDomain.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return OrganizationDomain.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationDomain.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      OrganizationDomain.fromJson(result, runtime)
+    }
   }
 }
 
@@ -1149,24 +1198,27 @@ public class OrganizationMembershipRequest(override val handle: ResourceHandle, 
    */
   public suspend fun `accept`(): OrganizationMembershipRequest {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationMembershipRequest.accept", listOf())
-    return OrganizationMembershipRequest.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationMembershipRequest.accept", listOf()) { result ->
+      OrganizationMembershipRequest.fromJson(result, runtime)
+    }
   }
   /**
    * Rejects the Membership Request, declining the user's request to join the Organization.
    */
   public suspend fun `reject`(): OrganizationMembershipRequest {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationMembershipRequest.reject", listOf())
-    return OrganizationMembershipRequest.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationMembershipRequest.reject", listOf()) { result ->
+      OrganizationMembershipRequest.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): OrganizationMembershipRequest {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationMembershipRequest.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return OrganizationMembershipRequest.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationMembershipRequest.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      OrganizationMembershipRequest.fromJson(result, runtime)
+    }
   }
 }
 
@@ -1355,8 +1407,9 @@ public class EnterpriseConnection(override val handle: ResourceHandle, runtime: 
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): EnterpriseConnection {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EnterpriseConnection.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return EnterpriseConnection.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "EnterpriseConnection.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      EnterpriseConnection.fromJson(result, runtime)
+    }
   }
 }
 
@@ -1641,8 +1694,9 @@ public class EnterpriseConnectionTestRun(override val handle: ResourceHandle, ru
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): EnterpriseConnectionTestRun {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EnterpriseConnectionTestRun.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return EnterpriseConnectionTestRun.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "EnterpriseConnectionTestRun.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      EnterpriseConnectionTestRun.fromJson(result, runtime)
+    }
   }
 }
 
@@ -1807,8 +1861,9 @@ public class BillingInitializedPaymentMethod(override val handle: ResourceHandle
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): BillingInitializedPaymentMethod {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "BillingInitializedPaymentMethod.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return BillingInitializedPaymentMethod.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "BillingInitializedPaymentMethod.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      BillingInitializedPaymentMethod.fromJson(result, runtime)
+    }
   }
 }
 
@@ -1883,8 +1938,9 @@ public class BillingPaymentMethod(override val handle: ResourceHandle, runtime: 
    */
   public suspend fun `remove`(`params`: BillingPaymentMethodRemoveParams? = null): DeletedObject {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "BillingPaymentMethod.remove", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return DeletedObject.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "BillingPaymentMethod.remove", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      DeletedObject.fromJson(result, runtime)
+    }
   }
   /**
    * A function that sets this payment method as the default for the account. Accepts the following parameters:
@@ -1894,16 +1950,18 @@ public class BillingPaymentMethod(override val handle: ResourceHandle, runtime: 
    */
   public suspend fun `makeDefault`(`params`: BillingPaymentMethodRemoveParams? = null): JsonElement {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "BillingPaymentMethod.makeDefault", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return result
+    return runtime.invoke(this, handle, "BillingPaymentMethod.makeDefault", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      result
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): BillingPaymentMethod {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "BillingPaymentMethod.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return BillingPaymentMethod.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "BillingPaymentMethod.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      BillingPaymentMethod.fromJson(result, runtime)
+    }
   }
 }
 
@@ -1969,6 +2027,717 @@ public data class ClerkPaginatedResponseBillingPaymentMethod(public val `data`: 
       val values = value.jsonObject
 
       return ClerkPaginatedResponseBillingPaymentMethod(`data` = (values["data"] ?: Undefined).jsonArray.map { value -> BillingPaymentMethod.fromJson(value, runtime) }, `totalCount` = (values["total_count"] ?: Undefined).requireDouble())
+    }
+  }
+}
+
+public data class MobileEnvironment(public val `organizationSettings`: OrganizationSettings, public val `authConfig`: AuthConfig, public val `displayConfig`: DisplayConfig, public val `maintenanceMode`: Boolean, public val `userSettings`: MobileUserSettings) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("organizationSettings", this@MobileEnvironment.`organizationSettings`.toJson())
+    putPresent("authConfig", this@MobileEnvironment.`authConfig`.toJson())
+    putPresent("displayConfig", this@MobileEnvironment.`displayConfig`.toJson())
+    putPresent("maintenanceMode", JsonPrimitive(this@MobileEnvironment.`maintenanceMode`))
+    putPresent("userSettings", this@MobileEnvironment.`userSettings`.toJson())
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): MobileEnvironment {
+      val values = value.jsonObject
+
+      return MobileEnvironment(`organizationSettings` = OrganizationSettings.fromJson((values["organizationSettings"] ?: Undefined), runtime), `authConfig` = AuthConfig.fromJson((values["authConfig"] ?: Undefined), runtime), `displayConfig` = DisplayConfig.fromJson((values["displayConfig"] ?: Undefined), runtime), `maintenanceMode` = (values["maintenanceMode"] ?: Undefined).requireBoolean(), `userSettings` = MobileUserSettings.fromJson((values["userSettings"] ?: Undefined), runtime))
+    }
+  }
+}
+
+/**
+ * The `OrganizationSettings` object holds the Organization-related settings configured for the instance.
+ */
+public data class OrganizationSettings(public val `enabled`: Boolean, public val `maxAllowedMemberships`: Double, public val `forceOrganizationSelection`: Boolean, public val `actions`: OrganizationSettingsActions, public val `domains`: OrganizationSettingsDomains, public val `slug`: OrganizationSettingsSlug, public val `organizationCreationDefaults`: OrganizationSettingsOrganizationCreationDefaults, public val `id`: String? = null) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("enabled", JsonPrimitive(this@OrganizationSettings.`enabled`))
+    putPresent("maxAllowedMemberships", JsonPrimitive(this@OrganizationSettings.`maxAllowedMemberships`))
+    putPresent("forceOrganizationSelection", JsonPrimitive(this@OrganizationSettings.`forceOrganizationSelection`))
+    putPresent("actions", this@OrganizationSettings.`actions`.toJson())
+    putPresent("domains", this@OrganizationSettings.`domains`.toJson())
+    putPresent("slug", this@OrganizationSettings.`slug`.toJson())
+    putPresent("organizationCreationDefaults", this@OrganizationSettings.`organizationCreationDefaults`.toJson())
+    putPresent("id", this@OrganizationSettings.`id`?.let { value -> JsonPrimitive(value) } ?: Undefined)
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): OrganizationSettings {
+      val values = value.jsonObject
+
+      return OrganizationSettings(`enabled` = (values["enabled"] ?: Undefined).requireBoolean(), `maxAllowedMemberships` = (values["maxAllowedMemberships"] ?: Undefined).requireDouble(), `forceOrganizationSelection` = (values["forceOrganizationSelection"] ?: Undefined).requireBoolean(), `actions` = OrganizationSettingsActions.fromJson((values["actions"] ?: Undefined), runtime), `domains` = OrganizationSettingsDomains.fromJson((values["domains"] ?: Undefined), runtime), `slug` = OrganizationSettingsSlug.fromJson((values["slug"] ?: Undefined), runtime), `organizationCreationDefaults` = OrganizationSettingsOrganizationCreationDefaults.fromJson((values["organizationCreationDefaults"] ?: Undefined), runtime), `id` = (values["id"] ?: Undefined).decodeOptional { value -> value.requireString() })
+    }
+  }
+}
+
+public data class OrganizationSettingsActions(public val `adminDelete`: Boolean) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("adminDelete", JsonPrimitive(this@OrganizationSettingsActions.`adminDelete`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): OrganizationSettingsActions {
+      val values = value.jsonObject
+
+      return OrganizationSettingsActions(`adminDelete` = (values["adminDelete"] ?: Undefined).requireBoolean())
+    }
+  }
+}
+
+public data class OrganizationSettingsDomains(public val `enabled`: Boolean, public val `enrollmentModes`: List<OrganizationEnrollmentMode>, public val `defaultRole`: String?) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("enabled", JsonPrimitive(this@OrganizationSettingsDomains.`enabled`))
+    putPresent("enrollmentModes", JsonArray(this@OrganizationSettingsDomains.`enrollmentModes`.map { value -> value.toJson() }))
+    putPresent("defaultRole", this@OrganizationSettingsDomains.`defaultRole`?.let { value -> JsonPrimitive(value) } ?: JsonNull)
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): OrganizationSettingsDomains {
+      val values = value.jsonObject
+
+      return OrganizationSettingsDomains(`enabled` = (values["enabled"] ?: Undefined).requireBoolean(), `enrollmentModes` = (values["enrollmentModes"] ?: Undefined).jsonArray.map { value -> OrganizationEnrollmentMode.fromJson(value, runtime) }, `defaultRole` = (values["defaultRole"] ?: Undefined).decodeOptional { value -> value.requireString() })
+    }
+  }
+}
+
+public data class OrganizationSettingsSlug(public val `disabled`: Boolean) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("disabled", JsonPrimitive(this@OrganizationSettingsSlug.`disabled`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): OrganizationSettingsSlug {
+      val values = value.jsonObject
+
+      return OrganizationSettingsSlug(`disabled` = (values["disabled"] ?: Undefined).requireBoolean())
+    }
+  }
+}
+
+public data class OrganizationSettingsOrganizationCreationDefaults(public val `enabled`: Boolean) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("enabled", JsonPrimitive(this@OrganizationSettingsOrganizationCreationDefaults.`enabled`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): OrganizationSettingsOrganizationCreationDefaults {
+      val values = value.jsonObject
+
+      return OrganizationSettingsOrganizationCreationDefaults(`enabled` = (values["enabled"] ?: Undefined).requireBoolean())
+    }
+  }
+}
+
+public data class AuthConfig(public val `singleSessionMode`: Boolean, public val `claimedAt`: Instant?, public val `reverification`: Boolean, public val `preferredChannels`: Map<String, PhoneCodeChannel>?, public val `sessionMinter`: Boolean, public val `id`: String? = null) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("singleSessionMode", JsonPrimitive(this@AuthConfig.`singleSessionMode`))
+    putPresent("claimedAt", this@AuthConfig.`claimedAt`?.let { value -> JsonPrimitive(value.toString()) } ?: JsonNull)
+    putPresent("reverification", JsonPrimitive(this@AuthConfig.`reverification`))
+    putPresent("preferredChannels", this@AuthConfig.`preferredChannels`?.let { value -> JsonObject(value.mapValues { (_, value) -> value.toJson() }) } ?: JsonNull)
+    putPresent("sessionMinter", JsonPrimitive(this@AuthConfig.`sessionMinter`))
+    putPresent("id", this@AuthConfig.`id`?.let { value -> JsonPrimitive(value) } ?: Undefined)
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): AuthConfig {
+      val values = value.jsonObject
+
+      return AuthConfig(`singleSessionMode` = (values["singleSessionMode"] ?: Undefined).requireBoolean(), `claimedAt` = (values["claimedAt"] ?: Undefined).decodeOptional { value -> Instant.parse(value.requireString()) }, `reverification` = (values["reverification"] ?: Undefined).requireBoolean(), `preferredChannels` = (values["preferredChannels"] ?: Undefined).decodeOptional { value -> value.jsonObject.mapValues { (_, value) -> PhoneCodeChannel.fromJson(value, runtime) } }, `sessionMinter` = (values["sessionMinter"] ?: Undefined).requireBoolean(), `id` = (values["id"] ?: Undefined).decodeOptional { value -> value.requireString() })
+    }
+  }
+}
+
+public sealed class PhoneCodeChannel(public val rawValue: String) {
+  public data object Sms : PhoneCodeChannel("sms")
+  public data object Whatsapp : PhoneCodeChannel("whatsapp")
+  public data class Unrecognized(val value: String) : PhoneCodeChannel(value)
+  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): PhoneCodeChannel = when (val raw = value.requireString()) {
+      "sms" -> Sms
+      "whatsapp" -> Whatsapp
+      else -> Unrecognized(raw)
+    }
+  }
+}
+
+public data class DisplayConfig(public val `id`: String, public val `afterSignInUrl`: String, public val `afterSignOutAllUrl`: String, public val `afterSignOutOneUrl`: String, public val `afterSignUpUrl`: String, public val `afterSwitchSessionUrl`: String, public val `applicationName`: String, public val `backendHost`: String, public val `branded`: Boolean, public val `captchaPublicKey`: String?, public val `captchaWidgetType`: DisplayConfigCaptchaWidgetType?, public val `captchaPublicKeyInvisible`: String?, public val `captchaOauthBypass`: List<OAuthStrategy>, public val `captchaHeartbeat`: Boolean, public val `captchaHeartbeatIntervalMs`: Double? = null, public val `homeUrl`: String, public val `instanceEnvironmentType`: String, public val `logoImageUrl`: String, public val `faviconImageUrl`: String, public val `preferredSignInStrategy`: PreferredSignInStrategy, public val `signInUrl`: String, public val `signUpUrl`: String, public val `supportEmail`: String, public val `theme`: DisplayThemeJSON, public val `userProfileUrl`: String, public val `clerkJSVersion`: String? = null, public val `organizationProfileUrl`: String, public val `createOrganizationUrl`: String, public val `afterLeaveOrganizationUrl`: String, public val `afterCreateOrganizationUrl`: String, public val `googleOneTapClientId`: String? = null, public val `showDevModeWarning`: Boolean, public val `termsUrl`: String, public val `privacyPolicyUrl`: String, public val `waitlistUrl`: String, public val `afterJoinWaitlistUrl`: String) {
+  public val `captchaProvider`: String get() = "turnstile"
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("id", JsonPrimitive(this@DisplayConfig.`id`))
+    putPresent("afterSignInUrl", JsonPrimitive(this@DisplayConfig.`afterSignInUrl`))
+    putPresent("afterSignOutAllUrl", JsonPrimitive(this@DisplayConfig.`afterSignOutAllUrl`))
+    putPresent("afterSignOutOneUrl", JsonPrimitive(this@DisplayConfig.`afterSignOutOneUrl`))
+    putPresent("afterSignUpUrl", JsonPrimitive(this@DisplayConfig.`afterSignUpUrl`))
+    putPresent("afterSwitchSessionUrl", JsonPrimitive(this@DisplayConfig.`afterSwitchSessionUrl`))
+    putPresent("applicationName", JsonPrimitive(this@DisplayConfig.`applicationName`))
+    putPresent("backendHost", JsonPrimitive(this@DisplayConfig.`backendHost`))
+    putPresent("branded", JsonPrimitive(this@DisplayConfig.`branded`))
+    putPresent("captchaPublicKey", this@DisplayConfig.`captchaPublicKey`?.let { value -> JsonPrimitive(value) } ?: JsonNull)
+    putPresent("captchaWidgetType", this@DisplayConfig.`captchaWidgetType`?.let { value -> value.toJson() } ?: JsonNull)
+    putPresent("captchaProvider", JsonPrimitive("turnstile"))
+    putPresent("captchaPublicKeyInvisible", this@DisplayConfig.`captchaPublicKeyInvisible`?.let { value -> JsonPrimitive(value) } ?: JsonNull)
+    putPresent("captchaOauthBypass", JsonArray(this@DisplayConfig.`captchaOauthBypass`.map { value -> value.toJson() }))
+    putPresent("captchaHeartbeat", JsonPrimitive(this@DisplayConfig.`captchaHeartbeat`))
+    putPresent("captchaHeartbeatIntervalMs", this@DisplayConfig.`captchaHeartbeatIntervalMs`?.let { value -> JsonPrimitive(value) } ?: Undefined)
+    putPresent("homeUrl", JsonPrimitive(this@DisplayConfig.`homeUrl`))
+    putPresent("instanceEnvironmentType", JsonPrimitive(this@DisplayConfig.`instanceEnvironmentType`))
+    putPresent("logoImageUrl", JsonPrimitive(this@DisplayConfig.`logoImageUrl`))
+    putPresent("faviconImageUrl", JsonPrimitive(this@DisplayConfig.`faviconImageUrl`))
+    putPresent("preferredSignInStrategy", this@DisplayConfig.`preferredSignInStrategy`.toJson())
+    putPresent("signInUrl", JsonPrimitive(this@DisplayConfig.`signInUrl`))
+    putPresent("signUpUrl", JsonPrimitive(this@DisplayConfig.`signUpUrl`))
+    putPresent("supportEmail", JsonPrimitive(this@DisplayConfig.`supportEmail`))
+    putPresent("theme", this@DisplayConfig.`theme`.toJson())
+    putPresent("userProfileUrl", JsonPrimitive(this@DisplayConfig.`userProfileUrl`))
+    putPresent("clerkJSVersion", this@DisplayConfig.`clerkJSVersion`?.let { value -> JsonPrimitive(value) } ?: Undefined)
+    putPresent("organizationProfileUrl", JsonPrimitive(this@DisplayConfig.`organizationProfileUrl`))
+    putPresent("createOrganizationUrl", JsonPrimitive(this@DisplayConfig.`createOrganizationUrl`))
+    putPresent("afterLeaveOrganizationUrl", JsonPrimitive(this@DisplayConfig.`afterLeaveOrganizationUrl`))
+    putPresent("afterCreateOrganizationUrl", JsonPrimitive(this@DisplayConfig.`afterCreateOrganizationUrl`))
+    putPresent("googleOneTapClientId", this@DisplayConfig.`googleOneTapClientId`?.let { value -> JsonPrimitive(value) } ?: Undefined)
+    putPresent("showDevModeWarning", JsonPrimitive(this@DisplayConfig.`showDevModeWarning`))
+    putPresent("termsUrl", JsonPrimitive(this@DisplayConfig.`termsUrl`))
+    putPresent("privacyPolicyUrl", JsonPrimitive(this@DisplayConfig.`privacyPolicyUrl`))
+    putPresent("waitlistUrl", JsonPrimitive(this@DisplayConfig.`waitlistUrl`))
+    putPresent("afterJoinWaitlistUrl", JsonPrimitive(this@DisplayConfig.`afterJoinWaitlistUrl`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): DisplayConfig {
+      val values = value.jsonObject
+      require(values["captchaProvider"] == JsonPrimitive("turnstile"))
+      return DisplayConfig(`id` = (values["id"] ?: Undefined).requireString(), `afterSignInUrl` = (values["afterSignInUrl"] ?: Undefined).requireString(), `afterSignOutAllUrl` = (values["afterSignOutAllUrl"] ?: Undefined).requireString(), `afterSignOutOneUrl` = (values["afterSignOutOneUrl"] ?: Undefined).requireString(), `afterSignUpUrl` = (values["afterSignUpUrl"] ?: Undefined).requireString(), `afterSwitchSessionUrl` = (values["afterSwitchSessionUrl"] ?: Undefined).requireString(), `applicationName` = (values["applicationName"] ?: Undefined).requireString(), `backendHost` = (values["backendHost"] ?: Undefined).requireString(), `branded` = (values["branded"] ?: Undefined).requireBoolean(), `captchaPublicKey` = (values["captchaPublicKey"] ?: Undefined).decodeOptional { value -> value.requireString() }, `captchaWidgetType` = (values["captchaWidgetType"] ?: Undefined).decodeOptional { value -> DisplayConfigCaptchaWidgetType.fromJson(value, runtime) }, `captchaPublicKeyInvisible` = (values["captchaPublicKeyInvisible"] ?: Undefined).decodeOptional { value -> value.requireString() }, `captchaOauthBypass` = (values["captchaOauthBypass"] ?: Undefined).jsonArray.map { value -> OAuthStrategy.fromJson(value, runtime) }, `captchaHeartbeat` = (values["captchaHeartbeat"] ?: Undefined).requireBoolean(), `captchaHeartbeatIntervalMs` = (values["captchaHeartbeatIntervalMs"] ?: Undefined).decodeOptional { value -> value.requireDouble() }, `homeUrl` = (values["homeUrl"] ?: Undefined).requireString(), `instanceEnvironmentType` = (values["instanceEnvironmentType"] ?: Undefined).requireString(), `logoImageUrl` = (values["logoImageUrl"] ?: Undefined).requireString(), `faviconImageUrl` = (values["faviconImageUrl"] ?: Undefined).requireString(), `preferredSignInStrategy` = PreferredSignInStrategy.fromJson((values["preferredSignInStrategy"] ?: Undefined), runtime), `signInUrl` = (values["signInUrl"] ?: Undefined).requireString(), `signUpUrl` = (values["signUpUrl"] ?: Undefined).requireString(), `supportEmail` = (values["supportEmail"] ?: Undefined).requireString(), `theme` = DisplayThemeJSON.fromJson((values["theme"] ?: Undefined), runtime), `userProfileUrl` = (values["userProfileUrl"] ?: Undefined).requireString(), `clerkJSVersion` = (values["clerkJSVersion"] ?: Undefined).decodeOptional { value -> value.requireString() }, `organizationProfileUrl` = (values["organizationProfileUrl"] ?: Undefined).requireString(), `createOrganizationUrl` = (values["createOrganizationUrl"] ?: Undefined).requireString(), `afterLeaveOrganizationUrl` = (values["afterLeaveOrganizationUrl"] ?: Undefined).requireString(), `afterCreateOrganizationUrl` = (values["afterCreateOrganizationUrl"] ?: Undefined).requireString(), `googleOneTapClientId` = (values["googleOneTapClientId"] ?: Undefined).decodeOptional { value -> value.requireString() }, `showDevModeWarning` = (values["showDevModeWarning"] ?: Undefined).requireBoolean(), `termsUrl` = (values["termsUrl"] ?: Undefined).requireString(), `privacyPolicyUrl` = (values["privacyPolicyUrl"] ?: Undefined).requireString(), `waitlistUrl` = (values["waitlistUrl"] ?: Undefined).requireString(), `afterJoinWaitlistUrl` = (values["afterJoinWaitlistUrl"] ?: Undefined).requireString())
+    }
+  }
+}
+
+public sealed class DisplayConfigCaptchaWidgetType(public val rawValue: String) {
+  public data object Smart : DisplayConfigCaptchaWidgetType("smart")
+  public data object Invisible : DisplayConfigCaptchaWidgetType("invisible")
+  public data class Unrecognized(val value: String) : DisplayConfigCaptchaWidgetType(value)
+  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): DisplayConfigCaptchaWidgetType = when (val raw = value.requireString()) {
+      "smart" -> Smart
+      "invisible" -> Invisible
+      else -> Unrecognized(raw)
+    }
+  }
+}
+
+/**
+ * OAuth-related authentication strategies (`oauth_<provider>` and custom OAuth).
+ */
+public sealed class OAuthStrategy(public val rawValue: String) {
+  public data object OauthFacebook : OAuthStrategy("oauth_facebook")
+  public data object OauthGoogle : OAuthStrategy("oauth_google")
+  public data object OauthHubspot : OAuthStrategy("oauth_hubspot")
+  public data object OauthGithub : OAuthStrategy("oauth_github")
+  public data object OauthTiktok : OAuthStrategy("oauth_tiktok")
+  public data object OauthGitlab : OAuthStrategy("oauth_gitlab")
+  public data object OauthDiscord : OAuthStrategy("oauth_discord")
+  public data object OauthTwitter : OAuthStrategy("oauth_twitter")
+  public data object OauthTwitch : OAuthStrategy("oauth_twitch")
+  public data object OauthLinkedin : OAuthStrategy("oauth_linkedin")
+  public data object OauthLinkedinOidc : OAuthStrategy("oauth_linkedin_oidc")
+  public data object OauthDropbox : OAuthStrategy("oauth_dropbox")
+  public data object OauthAtlassian : OAuthStrategy("oauth_atlassian")
+  public data object OauthBitbucket : OAuthStrategy("oauth_bitbucket")
+  public data object OauthMicrosoft : OAuthStrategy("oauth_microsoft")
+  public data object OauthNotion : OAuthStrategy("oauth_notion")
+  public data object OauthApple : OAuthStrategy("oauth_apple")
+  public data object OauthLine : OAuthStrategy("oauth_line")
+  public data object OauthInstagram : OAuthStrategy("oauth_instagram")
+  public data object OauthCoinbase : OAuthStrategy("oauth_coinbase")
+  public data object OauthSpotify : OAuthStrategy("oauth_spotify")
+  public data object OauthXero : OAuthStrategy("oauth_xero")
+  public data object OauthBox : OAuthStrategy("oauth_box")
+  public data object OauthSlack : OAuthStrategy("oauth_slack")
+  public data object OauthLinear : OAuthStrategy("oauth_linear")
+  public data object OauthX : OAuthStrategy("oauth_x")
+  public data object OauthEnstall : OAuthStrategy("oauth_enstall")
+  public data object OauthHuggingface : OAuthStrategy("oauth_huggingface")
+  public data object OauthVercel : OAuthStrategy("oauth_vercel")
+  public data class Unrecognized(val value: String) : OAuthStrategy(value)
+  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): OAuthStrategy = when (val raw = value.requireString()) {
+      "oauth_facebook" -> OauthFacebook
+      "oauth_google" -> OauthGoogle
+      "oauth_hubspot" -> OauthHubspot
+      "oauth_github" -> OauthGithub
+      "oauth_tiktok" -> OauthTiktok
+      "oauth_gitlab" -> OauthGitlab
+      "oauth_discord" -> OauthDiscord
+      "oauth_twitter" -> OauthTwitter
+      "oauth_twitch" -> OauthTwitch
+      "oauth_linkedin" -> OauthLinkedin
+      "oauth_linkedin_oidc" -> OauthLinkedinOidc
+      "oauth_dropbox" -> OauthDropbox
+      "oauth_atlassian" -> OauthAtlassian
+      "oauth_bitbucket" -> OauthBitbucket
+      "oauth_microsoft" -> OauthMicrosoft
+      "oauth_notion" -> OauthNotion
+      "oauth_apple" -> OauthApple
+      "oauth_line" -> OauthLine
+      "oauth_instagram" -> OauthInstagram
+      "oauth_coinbase" -> OauthCoinbase
+      "oauth_spotify" -> OauthSpotify
+      "oauth_xero" -> OauthXero
+      "oauth_box" -> OauthBox
+      "oauth_slack" -> OauthSlack
+      "oauth_linear" -> OauthLinear
+      "oauth_x" -> OauthX
+      "oauth_enstall" -> OauthEnstall
+      "oauth_huggingface" -> OauthHuggingface
+      "oauth_vercel" -> OauthVercel
+      else -> Unrecognized(raw)
+    }
+  }
+}
+
+public sealed class PreferredSignInStrategy(public val rawValue: String) {
+  public data object Password : PreferredSignInStrategy("password")
+  public data object Otp : PreferredSignInStrategy("otp")
+  public data class Unrecognized(val value: String) : PreferredSignInStrategy(value)
+  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): PreferredSignInStrategy = when (val raw = value.requireString()) {
+      "password" -> Password
+      "otp" -> Otp
+      else -> Unrecognized(raw)
+    }
+  }
+}
+
+public data class DisplayThemeJSON(public val `general`: DisplayThemeJSONGeneral, public val `buttons`: DisplayThemeJSONButtons, public val `accounts`: DisplayThemeJSONAccounts) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("general", this@DisplayThemeJSON.`general`.toJson())
+    putPresent("buttons", this@DisplayThemeJSON.`buttons`.toJson())
+    putPresent("accounts", this@DisplayThemeJSON.`accounts`.toJson())
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): DisplayThemeJSON {
+      val values = value.jsonObject
+
+      return DisplayThemeJSON(`general` = DisplayThemeJSONGeneral.fromJson((values["general"] ?: Undefined), runtime), `buttons` = DisplayThemeJSONButtons.fromJson((values["buttons"] ?: Undefined), runtime), `accounts` = DisplayThemeJSONAccounts.fromJson((values["accounts"] ?: Undefined), runtime))
+    }
+  }
+}
+
+public data class DisplayThemeJSONGeneral(public val `color`: String, public val `backgroundColor`: Color, public val `fontFamily`: String, public val `fontColor`: String, public val `labelFontWeight`: String, public val `padding`: String, public val `borderRadius`: String, public val `boxShadow`: String) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("color", JsonPrimitive(this@DisplayThemeJSONGeneral.`color`))
+    putPresent("background_color", this@DisplayThemeJSONGeneral.`backgroundColor`.toJson())
+    putPresent("font_family", JsonPrimitive(this@DisplayThemeJSONGeneral.`fontFamily`))
+    putPresent("font_color", JsonPrimitive(this@DisplayThemeJSONGeneral.`fontColor`))
+    putPresent("label_font_weight", JsonPrimitive(this@DisplayThemeJSONGeneral.`labelFontWeight`))
+    putPresent("padding", JsonPrimitive(this@DisplayThemeJSONGeneral.`padding`))
+    putPresent("border_radius", JsonPrimitive(this@DisplayThemeJSONGeneral.`borderRadius`))
+    putPresent("box_shadow", JsonPrimitive(this@DisplayThemeJSONGeneral.`boxShadow`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): DisplayThemeJSONGeneral {
+      val values = value.jsonObject
+
+      return DisplayThemeJSONGeneral(`color` = (values["color"] ?: Undefined).requireString(), `backgroundColor` = Color.fromJson((values["background_color"] ?: Undefined), runtime), `fontFamily` = (values["font_family"] ?: Undefined).requireString(), `fontColor` = (values["font_color"] ?: Undefined).requireString(), `labelFontWeight` = (values["label_font_weight"] ?: Undefined).requireString(), `padding` = (values["padding"] ?: Undefined).requireString(), `borderRadius` = (values["border_radius"] ?: Undefined).requireString(), `boxShadow` = (values["box_shadow"] ?: Undefined).requireString())
+    }
+  }
+}
+
+public sealed interface Color {
+  public data class Case1(val value: String) : Color
+  public data class Case2(val value: HslaColor) : Color
+  public data class Case3(val value: RgbaColor) : Color
+  public fun toJson(): JsonElement = when (this) {
+    is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to JsonPrimitive(value)))
+    is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
+    is Case3 -> JsonObject(mapOf("\$case" to JsonPrimitive(2), "value" to value.toJson()))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): Color {
+      val values = value.jsonObject
+      val payload = values["value"] ?: Undefined
+      return when (values.getValue("\$case").jsonPrimitive.int) {
+        0 -> Case1(payload.requireString())
+        1 -> Case2(HslaColor.fromJson(payload, runtime))
+        2 -> Case3(RgbaColor.fromJson(payload, runtime))
+        else -> throw CoreException("invalid_value")
+      }
+    }
+  }
+}
+
+public data class HslaColor(public val `h`: Double, public val `s`: Double, public val `l`: Double, public val `a`: Double? = null) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("h", JsonPrimitive(this@HslaColor.`h`))
+    putPresent("s", JsonPrimitive(this@HslaColor.`s`))
+    putPresent("l", JsonPrimitive(this@HslaColor.`l`))
+    putPresent("a", this@HslaColor.`a`?.let { value -> JsonPrimitive(value) } ?: Undefined)
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): HslaColor {
+      val values = value.jsonObject
+
+      return HslaColor(`h` = (values["h"] ?: Undefined).requireDouble(), `s` = (values["s"] ?: Undefined).requireDouble(), `l` = (values["l"] ?: Undefined).requireDouble(), `a` = (values["a"] ?: Undefined).decodeOptional { value -> value.requireDouble() })
+    }
+  }
+}
+
+public data class RgbaColor(public val `r`: Double, public val `g`: Double, public val `b`: Double, public val `a`: Double? = null) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("r", JsonPrimitive(this@RgbaColor.`r`))
+    putPresent("g", JsonPrimitive(this@RgbaColor.`g`))
+    putPresent("b", JsonPrimitive(this@RgbaColor.`b`))
+    putPresent("a", this@RgbaColor.`a`?.let { value -> JsonPrimitive(value) } ?: Undefined)
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): RgbaColor {
+      val values = value.jsonObject
+
+      return RgbaColor(`r` = (values["r"] ?: Undefined).requireDouble(), `g` = (values["g"] ?: Undefined).requireDouble(), `b` = (values["b"] ?: Undefined).requireDouble(), `a` = (values["a"] ?: Undefined).decodeOptional { value -> value.requireDouble() })
+    }
+  }
+}
+
+public data class DisplayThemeJSONButtons(public val `fontColor`: String, public val `fontFamily`: String, public val `fontWeight`: String) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("font_color", JsonPrimitive(this@DisplayThemeJSONButtons.`fontColor`))
+    putPresent("font_family", JsonPrimitive(this@DisplayThemeJSONButtons.`fontFamily`))
+    putPresent("font_weight", JsonPrimitive(this@DisplayThemeJSONButtons.`fontWeight`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): DisplayThemeJSONButtons {
+      val values = value.jsonObject
+
+      return DisplayThemeJSONButtons(`fontColor` = (values["font_color"] ?: Undefined).requireString(), `fontFamily` = (values["font_family"] ?: Undefined).requireString(), `fontWeight` = (values["font_weight"] ?: Undefined).requireString())
+    }
+  }
+}
+
+public data class DisplayThemeJSONAccounts(public val `backgroundColor`: Color) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("background_color", this@DisplayThemeJSONAccounts.`backgroundColor`.toJson())
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): DisplayThemeJSONAccounts {
+      val values = value.jsonObject
+
+      return DisplayThemeJSONAccounts(`backgroundColor` = Color.fromJson((values["background_color"] ?: Undefined), runtime))
+    }
+  }
+}
+
+public data class MobileUserSettings(public val `enterpriseSSO`: EnterpriseSSOSettings, public val `attributes`: Map<String, AttributeData>, public val `actions`: Actions, public val `signIn`: SignInData, public val `signUp`: SignUpData, public val `passwordSettings`: PasswordSettingsData, public val `usernameSettings`: UsernameSettingsData, public val `attackProtection`: AttackProtectionData, public val `passkeySettings`: PasskeySettingsData, public val `socialProviderStrategies`: List<OAuthStrategy>, public val `authenticatableSocialStrategies`: List<OAuthStrategy>, public val `web3FirstFactors`: List<MobileUserSettingsWeb3FirstFactorsElement>, public val `alternativePhoneCodeChannels`: List<PhoneCodeChannel>, public val `enabledFirstFactorIdentifiers`: List<Attribute>, public val `instanceIsPasswordBased`: Boolean, public val `hasValidAuthFactor`: Boolean, public val `social`: Map<String, OAuthProviderSettings?>) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("enterpriseSSO", this@MobileUserSettings.`enterpriseSSO`.toJson())
+    putPresent("attributes", JsonObject(this@MobileUserSettings.`attributes`.mapValues { (_, value) -> value.toJson() }))
+    putPresent("actions", this@MobileUserSettings.`actions`.toJson())
+    putPresent("signIn", this@MobileUserSettings.`signIn`.toJson())
+    putPresent("signUp", this@MobileUserSettings.`signUp`.toJson())
+    putPresent("passwordSettings", this@MobileUserSettings.`passwordSettings`.toJson())
+    putPresent("usernameSettings", this@MobileUserSettings.`usernameSettings`.toJson())
+    putPresent("attackProtection", this@MobileUserSettings.`attackProtection`.toJson())
+    putPresent("passkeySettings", this@MobileUserSettings.`passkeySettings`.toJson())
+    putPresent("socialProviderStrategies", JsonArray(this@MobileUserSettings.`socialProviderStrategies`.map { value -> value.toJson() }))
+    putPresent("authenticatableSocialStrategies", JsonArray(this@MobileUserSettings.`authenticatableSocialStrategies`.map { value -> value.toJson() }))
+    putPresent("web3FirstFactors", JsonArray(this@MobileUserSettings.`web3FirstFactors`.map { value -> value.toJson() }))
+    putPresent("alternativePhoneCodeChannels", JsonArray(this@MobileUserSettings.`alternativePhoneCodeChannels`.map { value -> value.toJson() }))
+    putPresent("enabledFirstFactorIdentifiers", JsonArray(this@MobileUserSettings.`enabledFirstFactorIdentifiers`.map { value -> value.toJson() }))
+    putPresent("instanceIsPasswordBased", JsonPrimitive(this@MobileUserSettings.`instanceIsPasswordBased`))
+    putPresent("hasValidAuthFactor", JsonPrimitive(this@MobileUserSettings.`hasValidAuthFactor`))
+    putPresent("social", JsonObject(this@MobileUserSettings.`social`.mapValues { (_, value) -> value?.let { value -> value.toJson() } ?: Undefined }))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): MobileUserSettings {
+      val values = value.jsonObject
+
+      return MobileUserSettings(`enterpriseSSO` = EnterpriseSSOSettings.fromJson((values["enterpriseSSO"] ?: Undefined), runtime), `attributes` = (values["attributes"] ?: Undefined).jsonObject.mapValues { (_, value) -> AttributeData.fromJson(value, runtime) }, `actions` = Actions.fromJson((values["actions"] ?: Undefined), runtime), `signIn` = SignInData.fromJson((values["signIn"] ?: Undefined), runtime), `signUp` = SignUpData.fromJson((values["signUp"] ?: Undefined), runtime), `passwordSettings` = PasswordSettingsData.fromJson((values["passwordSettings"] ?: Undefined), runtime), `usernameSettings` = UsernameSettingsData.fromJson((values["usernameSettings"] ?: Undefined), runtime), `attackProtection` = AttackProtectionData.fromJson((values["attackProtection"] ?: Undefined), runtime), `passkeySettings` = PasskeySettingsData.fromJson((values["passkeySettings"] ?: Undefined), runtime), `socialProviderStrategies` = (values["socialProviderStrategies"] ?: Undefined).jsonArray.map { value -> OAuthStrategy.fromJson(value, runtime) }, `authenticatableSocialStrategies` = (values["authenticatableSocialStrategies"] ?: Undefined).jsonArray.map { value -> OAuthStrategy.fromJson(value, runtime) }, `web3FirstFactors` = (values["web3FirstFactors"] ?: Undefined).jsonArray.map { value -> MobileUserSettingsWeb3FirstFactorsElement.fromJson(value, runtime) }, `alternativePhoneCodeChannels` = (values["alternativePhoneCodeChannels"] ?: Undefined).jsonArray.map { value -> PhoneCodeChannel.fromJson(value, runtime) }, `enabledFirstFactorIdentifiers` = (values["enabledFirstFactorIdentifiers"] ?: Undefined).jsonArray.map { value -> Attribute.fromJson(value, runtime) }, `instanceIsPasswordBased` = (values["instanceIsPasswordBased"] ?: Undefined).requireBoolean(), `hasValidAuthFactor` = (values["hasValidAuthFactor"] ?: Undefined).requireBoolean(), `social` = (values["social"] ?: Undefined).jsonObject.mapValues { (_, value) -> value.decodeOptional { value -> OAuthProviderSettings.fromJson(value, runtime) } })
+    }
+  }
+}
+
+public data class EnterpriseSSOSettings(public val `enabled`: Boolean, public val `selfServeSso`: Boolean) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("enabled", JsonPrimitive(this@EnterpriseSSOSettings.`enabled`))
+    putPresent("self_serve_sso", JsonPrimitive(this@EnterpriseSSOSettings.`selfServeSso`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): EnterpriseSSOSettings {
+      val values = value.jsonObject
+
+      return EnterpriseSSOSettings(`enabled` = (values["enabled"] ?: Undefined).requireBoolean(), `selfServeSso` = (values["self_serve_sso"] ?: Undefined).requireBoolean())
+    }
+  }
+}
+
+public data class AttributeData(public val `enabled`: Boolean, public val `required`: Boolean, public val `immutable`: Boolean? = null, public val `verifications`: List<VerificationStrategy>, public val `usedForFirstFactor`: Boolean, public val `firstFactors`: List<VerificationStrategy>, public val `usedForSecondFactor`: Boolean, public val `secondFactors`: List<VerificationStrategy>, public val `verifyAtSignUp`: Boolean, public val `channels`: List<PhoneCodeChannel>? = null, public val `name`: Attribute) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("enabled", JsonPrimitive(this@AttributeData.`enabled`))
+    putPresent("required", JsonPrimitive(this@AttributeData.`required`))
+    putPresent("immutable", this@AttributeData.`immutable`?.let { value -> JsonPrimitive(value) } ?: Undefined)
+    putPresent("verifications", JsonArray(this@AttributeData.`verifications`.map { value -> value.toJson() }))
+    putPresent("used_for_first_factor", JsonPrimitive(this@AttributeData.`usedForFirstFactor`))
+    putPresent("first_factors", JsonArray(this@AttributeData.`firstFactors`.map { value -> value.toJson() }))
+    putPresent("used_for_second_factor", JsonPrimitive(this@AttributeData.`usedForSecondFactor`))
+    putPresent("second_factors", JsonArray(this@AttributeData.`secondFactors`.map { value -> value.toJson() }))
+    putPresent("verify_at_sign_up", JsonPrimitive(this@AttributeData.`verifyAtSignUp`))
+    putPresent("channels", this@AttributeData.`channels`?.let { value -> JsonArray(value.map { value -> value.toJson() }) } ?: Undefined)
+    putPresent("name", this@AttributeData.`name`.toJson())
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): AttributeData {
+      val values = value.jsonObject
+
+      return AttributeData(`enabled` = (values["enabled"] ?: Undefined).requireBoolean(), `required` = (values["required"] ?: Undefined).requireBoolean(), `immutable` = (values["immutable"] ?: Undefined).decodeOptional { value -> value.requireBoolean() }, `verifications` = (values["verifications"] ?: Undefined).jsonArray.map { value -> VerificationStrategy.fromJson(value, runtime) }, `usedForFirstFactor` = (values["used_for_first_factor"] ?: Undefined).requireBoolean(), `firstFactors` = (values["first_factors"] ?: Undefined).jsonArray.map { value -> VerificationStrategy.fromJson(value, runtime) }, `usedForSecondFactor` = (values["used_for_second_factor"] ?: Undefined).requireBoolean(), `secondFactors` = (values["second_factors"] ?: Undefined).jsonArray.map { value -> VerificationStrategy.fromJson(value, runtime) }, `verifyAtSignUp` = (values["verify_at_sign_up"] ?: Undefined).requireBoolean(), `channels` = (values["channels"] ?: Undefined).decodeOptional { value -> value.jsonArray.map { value -> PhoneCodeChannel.fromJson(value, runtime) } }, `name` = Attribute.fromJson((values["name"] ?: Undefined), runtime))
+    }
+  }
+}
+
+public sealed class VerificationStrategy(public val rawValue: String) {
+  public data object EmailCode : VerificationStrategy("email_code")
+  public data object BackupCode : VerificationStrategy("backup_code")
+  public data object EmailLink : VerificationStrategy("email_link")
+  public data object PhoneCode : VerificationStrategy("phone_code")
+  public data object Totp : VerificationStrategy("totp")
+  public data class Unrecognized(val value: String) : VerificationStrategy(value)
+  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): VerificationStrategy = when (val raw = value.requireString()) {
+      "email_code" -> EmailCode
+      "backup_code" -> BackupCode
+      "email_link" -> EmailLink
+      "phone_code" -> PhoneCode
+      "totp" -> Totp
+      else -> Unrecognized(raw)
+    }
+  }
+}
+
+public sealed class Attribute(public val rawValue: String) {
+  public data object Password : Attribute("password")
+  public data object EmailAddress : Attribute("email_address")
+  public data object PhoneNumber : Attribute("phone_number")
+  public data object Username : Attribute("username")
+  public data object FirstName : Attribute("first_name")
+  public data object LastName : Attribute("last_name")
+  public data object Web3Wallet : Attribute("web3_wallet")
+  public data object AuthenticatorApp : Attribute("authenticator_app")
+  public data object BackupCode : Attribute("backup_code")
+  public data object Passkey : Attribute("passkey")
+  public data class Unrecognized(val value: String) : Attribute(value)
+  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): Attribute = when (val raw = value.requireString()) {
+      "password" -> Password
+      "email_address" -> EmailAddress
+      "phone_number" -> PhoneNumber
+      "username" -> Username
+      "first_name" -> FirstName
+      "last_name" -> LastName
+      "web3_wallet" -> Web3Wallet
+      "authenticator_app" -> AuthenticatorApp
+      "backup_code" -> BackupCode
+      "passkey" -> Passkey
+      else -> Unrecognized(raw)
+    }
+  }
+}
+
+public data class Actions(public val `deleteSelf`: Boolean, public val `createOrganization`: Boolean) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("delete_self", JsonPrimitive(this@Actions.`deleteSelf`))
+    putPresent("create_organization", JsonPrimitive(this@Actions.`createOrganization`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): Actions {
+      val values = value.jsonObject
+
+      return Actions(`deleteSelf` = (values["delete_self"] ?: Undefined).requireBoolean(), `createOrganization` = (values["create_organization"] ?: Undefined).requireBoolean())
+    }
+  }
+}
+
+public data class SignInData(public val `secondFactor`: SignInDataSecond_factor) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("second_factor", this@SignInData.`secondFactor`.toJson())
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): SignInData {
+      val values = value.jsonObject
+
+      return SignInData(`secondFactor` = SignInDataSecond_factor.fromJson((values["second_factor"] ?: Undefined), runtime))
+    }
+  }
+}
+
+public data class SignInDataSecond_factor(public val `required`: Boolean, public val `enabled`: Boolean) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("required", JsonPrimitive(this@SignInDataSecond_factor.`required`))
+    putPresent("enabled", JsonPrimitive(this@SignInDataSecond_factor.`enabled`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): SignInDataSecond_factor {
+      val values = value.jsonObject
+
+      return SignInDataSecond_factor(`required` = (values["required"] ?: Undefined).requireBoolean(), `enabled` = (values["enabled"] ?: Undefined).requireBoolean())
+    }
+  }
+}
+
+public data class SignUpData(public val `allowlistOnly`: Boolean, public val `progressive`: Boolean, public val `captchaEnabled`: Boolean, public val `mode`: SignUpModes, public val `legalConsentEnabled`: Boolean, public val `mfa`: SignUpDataMfa? = null) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("allowlist_only", JsonPrimitive(this@SignUpData.`allowlistOnly`))
+    putPresent("progressive", JsonPrimitive(this@SignUpData.`progressive`))
+    putPresent("captcha_enabled", JsonPrimitive(this@SignUpData.`captchaEnabled`))
+    putPresent("mode", this@SignUpData.`mode`.toJson())
+    putPresent("legal_consent_enabled", JsonPrimitive(this@SignUpData.`legalConsentEnabled`))
+    putPresent("mfa", this@SignUpData.`mfa`?.let { value -> value.toJson() } ?: Undefined)
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): SignUpData {
+      val values = value.jsonObject
+
+      return SignUpData(`allowlistOnly` = (values["allowlist_only"] ?: Undefined).requireBoolean(), `progressive` = (values["progressive"] ?: Undefined).requireBoolean(), `captchaEnabled` = (values["captcha_enabled"] ?: Undefined).requireBoolean(), `mode` = SignUpModes.fromJson((values["mode"] ?: Undefined), runtime), `legalConsentEnabled` = (values["legal_consent_enabled"] ?: Undefined).requireBoolean(), `mfa` = (values["mfa"] ?: Undefined).decodeOptional { value -> SignUpDataMfa.fromJson(value, runtime) })
+    }
+  }
+}
+
+public sealed class SignUpModes(public val rawValue: String) {
+  public data object Public : SignUpModes("public")
+  public data object Restricted : SignUpModes("restricted")
+  public data object Waitlist : SignUpModes("waitlist")
+  public data class Unrecognized(val value: String) : SignUpModes(value)
+  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): SignUpModes = when (val raw = value.requireString()) {
+      "public" -> Public
+      "restricted" -> Restricted
+      "waitlist" -> Waitlist
+      else -> Unrecognized(raw)
+    }
+  }
+}
+
+public data class SignUpDataMfa(public val `required`: Boolean) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("required", JsonPrimitive(this@SignUpDataMfa.`required`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): SignUpDataMfa {
+      val values = value.jsonObject
+
+      return SignUpDataMfa(`required` = (values["required"] ?: Undefined).requireBoolean())
+    }
+  }
+}
+
+public data class PasswordSettingsData(public val `allowedSpecialCharacters`: String, public val `disableHibp`: Boolean, public val `minLength`: Double, public val `maxLength`: Double, public val `requireSpecialChar`: Boolean, public val `requireNumbers`: Boolean, public val `requireUppercase`: Boolean, public val `requireLowercase`: Boolean, public val `showZxcvbn`: Boolean, public val `minZxcvbnStrength`: Double) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("allowed_special_characters", JsonPrimitive(this@PasswordSettingsData.`allowedSpecialCharacters`))
+    putPresent("disable_hibp", JsonPrimitive(this@PasswordSettingsData.`disableHibp`))
+    putPresent("min_length", JsonPrimitive(this@PasswordSettingsData.`minLength`))
+    putPresent("max_length", JsonPrimitive(this@PasswordSettingsData.`maxLength`))
+    putPresent("require_special_char", JsonPrimitive(this@PasswordSettingsData.`requireSpecialChar`))
+    putPresent("require_numbers", JsonPrimitive(this@PasswordSettingsData.`requireNumbers`))
+    putPresent("require_uppercase", JsonPrimitive(this@PasswordSettingsData.`requireUppercase`))
+    putPresent("require_lowercase", JsonPrimitive(this@PasswordSettingsData.`requireLowercase`))
+    putPresent("show_zxcvbn", JsonPrimitive(this@PasswordSettingsData.`showZxcvbn`))
+    putPresent("min_zxcvbn_strength", JsonPrimitive(this@PasswordSettingsData.`minZxcvbnStrength`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): PasswordSettingsData {
+      val values = value.jsonObject
+
+      return PasswordSettingsData(`allowedSpecialCharacters` = (values["allowed_special_characters"] ?: Undefined).requireString(), `disableHibp` = (values["disable_hibp"] ?: Undefined).requireBoolean(), `minLength` = (values["min_length"] ?: Undefined).requireDouble(), `maxLength` = (values["max_length"] ?: Undefined).requireDouble(), `requireSpecialChar` = (values["require_special_char"] ?: Undefined).requireBoolean(), `requireNumbers` = (values["require_numbers"] ?: Undefined).requireBoolean(), `requireUppercase` = (values["require_uppercase"] ?: Undefined).requireBoolean(), `requireLowercase` = (values["require_lowercase"] ?: Undefined).requireBoolean(), `showZxcvbn` = (values["show_zxcvbn"] ?: Undefined).requireBoolean(), `minZxcvbnStrength` = (values["min_zxcvbn_strength"] ?: Undefined).requireDouble())
+    }
+  }
+}
+
+public data class UsernameSettingsData(public val `minLength`: Double, public val `maxLength`: Double) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("min_length", JsonPrimitive(this@UsernameSettingsData.`minLength`))
+    putPresent("max_length", JsonPrimitive(this@UsernameSettingsData.`maxLength`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): UsernameSettingsData {
+      val values = value.jsonObject
+
+      return UsernameSettingsData(`minLength` = (values["min_length"] ?: Undefined).requireDouble(), `maxLength` = (values["max_length"] ?: Undefined).requireDouble())
+    }
+  }
+}
+
+public data class AttackProtectionData(public val `enumerationProtection`: AttackProtectionDataEnumeration_protection) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("enumeration_protection", this@AttackProtectionData.`enumerationProtection`.toJson())
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): AttackProtectionData {
+      val values = value.jsonObject
+
+      return AttackProtectionData(`enumerationProtection` = AttackProtectionDataEnumeration_protection.fromJson((values["enumeration_protection"] ?: Undefined), runtime))
+    }
+  }
+}
+
+public data class AttackProtectionDataEnumeration_protection(public val `enabled`: Boolean) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("enabled", JsonPrimitive(this@AttackProtectionDataEnumeration_protection.`enabled`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): AttackProtectionDataEnumeration_protection {
+      val values = value.jsonObject
+
+      return AttackProtectionDataEnumeration_protection(`enabled` = (values["enabled"] ?: Undefined).requireBoolean())
+    }
+  }
+}
+
+public data class PasskeySettingsData(public val `allowAutofill`: Boolean, public val `showSignInButton`: Boolean) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("allow_autofill", JsonPrimitive(this@PasskeySettingsData.`allowAutofill`))
+    putPresent("show_sign_in_button", JsonPrimitive(this@PasskeySettingsData.`showSignInButton`))
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): PasskeySettingsData {
+      val values = value.jsonObject
+
+      return PasskeySettingsData(`allowAutofill` = (values["allow_autofill"] ?: Undefined).requireBoolean(), `showSignInButton` = (values["show_sign_in_button"] ?: Undefined).requireBoolean())
+    }
+  }
+}
+
+public sealed class MobileUserSettingsWeb3FirstFactorsElement(public val rawValue: String) {
+  public data object Web3MetamaskSignature : MobileUserSettingsWeb3FirstFactorsElement("web3_metamask_signature")
+  public data object Web3BaseSignature : MobileUserSettingsWeb3FirstFactorsElement("web3_base_signature")
+  public data object Web3CoinbaseWalletSignature : MobileUserSettingsWeb3FirstFactorsElement("web3_coinbase_wallet_signature")
+  public data object Web3OkxWalletSignature : MobileUserSettingsWeb3FirstFactorsElement("web3_okx_wallet_signature")
+  public data object Web3SolanaSignature : MobileUserSettingsWeb3FirstFactorsElement("web3_solana_signature")
+  public data class Unrecognized(val value: String) : MobileUserSettingsWeb3FirstFactorsElement(value)
+  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): MobileUserSettingsWeb3FirstFactorsElement = when (val raw = value.requireString()) {
+      "web3_metamask_signature" -> Web3MetamaskSignature
+      "web3_base_signature" -> Web3BaseSignature
+      "web3_coinbase_wallet_signature" -> Web3CoinbaseWalletSignature
+      "web3_okx_wallet_signature" -> Web3OkxWalletSignature
+      "web3_solana_signature" -> Web3SolanaSignature
+      else -> Unrecognized(raw)
+    }
+  }
+}
+
+public data class OAuthProviderSettings(public val `enabled`: Boolean, public val `required`: Boolean, public val `authenticatable`: Boolean, public val `strategy`: OAuthStrategy, public val `name`: String, public val `logoUrl`: String?) {
+  public fun toJson(): JsonElement = buildJsonObject {
+    putPresent("enabled", JsonPrimitive(this@OAuthProviderSettings.`enabled`))
+    putPresent("required", JsonPrimitive(this@OAuthProviderSettings.`required`))
+    putPresent("authenticatable", JsonPrimitive(this@OAuthProviderSettings.`authenticatable`))
+    putPresent("strategy", this@OAuthProviderSettings.`strategy`.toJson())
+    putPresent("name", JsonPrimitive(this@OAuthProviderSettings.`name`))
+    putPresent("logo_url", this@OAuthProviderSettings.`logoUrl`?.let { value -> JsonPrimitive(value) } ?: JsonNull)
+  }
+  public companion object {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): OAuthProviderSettings {
+      val values = value.jsonObject
+
+      return OAuthProviderSettings(`enabled` = (values["enabled"] ?: Undefined).requireBoolean(), `required` = (values["required"] ?: Undefined).requireBoolean(), `authenticatable` = (values["authenticatable"] ?: Undefined).requireBoolean(), `strategy` = OAuthStrategy.fromJson((values["strategy"] ?: Undefined), runtime), `name` = (values["name"] ?: Undefined).requireString(), `logoUrl` = (values["logo_url"] ?: Undefined).decodeOptional { value -> value.requireString() })
     }
   }
 }
@@ -2043,24 +2812,27 @@ public class Session(override val handle: ResourceHandle, runtime: CoreRuntime) 
    */
   public suspend fun `end`(): Session {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.end", listOf())
-    return Session.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Session.end", listOf()) { result ->
+      Session.fromJson(result, runtime)
+    }
   }
   /**
    * Invalidates the current session by marking it as removed. Once removed, the session will be deactivated for the current Client instance and its `status` will be set to `removed`. This operation cannot be undone.
    */
   public suspend fun `remove`(): Session {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.remove", listOf())
-    return Session.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Session.remove", listOf()) { result ->
+      Session.fromJson(result, runtime)
+    }
   }
   /**
    * Updates the session's last active timestamp to the current time. This method should be called periodically to indicate ongoing user activity and prevent the session from becoming stale. The updated timestamp is used for session management and analytics purposes.
    */
   public suspend fun `touch`(`params`: SessionTouchParams? = null): Session {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.touch", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return Session.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Session.touch", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Session.fromJson(result, runtime)
+    }
   }
   /**
    * Gets the current user's [session token](https://clerk.com/docs/guides/sessions/session-tokens) or a [custom JWT template](https://clerk.com/docs/guides/sessions/jwt-templates).
@@ -2071,79 +2843,90 @@ public class Session(override val handle: ResourceHandle, runtime: CoreRuntime) 
    */
   public suspend fun `getToken`(`options`: GetTokenOptions? = null): String? {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.getToken", listOf(`options`?.let { value -> value.toJson() } ?: Undefined))
-    return result.decodeOptional { value -> value.requireString() }
+    return runtime.invoke(this, handle, "Session.getToken", listOf(`options`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      result.decodeOptional { value -> value.requireString() }
+    }
   }
   /**
    * Checks if the user is [authorized for the specified Role, Permission, Feature, or Plan](https://clerk.com/docs/guides/secure/authorization-checks) or requires the user to [reverify their credentials](https://clerk.com/docs/guides/secure/reverification) if their last verification is older than allowed.
    */
   public suspend fun `checkAuthorization`(`isAuthorizedParams`: CheckAuthorizationParams): Boolean {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.checkAuthorization", listOf(`isAuthorizedParams`.toJson()))
-    return result.requireBoolean()
+    return runtime.invoke(this, handle, "Session.checkAuthorization", listOf(`isAuthorizedParams`.toJson())) { result ->
+      result.requireBoolean()
+    }
   }
   /**
    * Clears the cache for the current session. This is useful if the session has been updated and the cache is no longer valid.
    */
   public suspend fun `clearCache`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.clearCache", listOf())
+    return runtime.invoke(this, handle, "Session.clearCache", listOf()) { result ->
+      Unit
+    }
   }
   /**
    * Initiates the reverification flow.
    */
   public suspend fun `startVerification`(`params`: SessionVerifyCreateParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.startVerification", listOf(`params`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Session.startVerification", listOf(`params`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Initiates the [first factor verification](!first-factor-verification) process. This is a required step to complete a reverification flow when using a preparable factor.
    */
   public suspend fun `prepareFirstFactorVerification`(`factor`: SessionVerifyPrepareFirstFactorParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.prepareFirstFactorVerification", listOf(`factor`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Session.prepareFirstFactorVerification", listOf(`factor`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Attempts to complete the [first factor verification](!first-factor-verification) process.
    */
   public suspend fun `attemptFirstFactorVerification`(`attemptFactor`: SessionVerifyAttemptFirstFactorParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.attemptFirstFactorVerification", listOf(`attemptFactor`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Session.attemptFirstFactorVerification", listOf(`attemptFactor`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Initiates the [second factor verification](!second-factor-verification) process. This is a required step to complete a reverification flow when using a preparable factor.
    */
   public suspend fun `prepareSecondFactorVerification`(`params`: PhoneCodeSecondFactorConfig): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.prepareSecondFactorVerification", listOf(`params`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Session.prepareSecondFactorVerification", listOf(`params`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Attempts to complete the [second factor verification](!second-factor-verification) process.
    */
   public suspend fun `attemptSecondFactorVerification`(`params`: SessionVerifyAttemptSecondFactorParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.attemptSecondFactorVerification", listOf(`params`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Session.attemptSecondFactorVerification", listOf(`params`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Initiates a verification flow using passkeys.
    */
   public suspend fun `verifyWithPasskey`(): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.verifyWithPasskey", listOf())
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Session.verifyWithPasskey", listOf()) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): Session {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Session.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return Session.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Session.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Session.fromJson(result, runtime)
+    }
   }
 }
 
@@ -2321,39 +3104,45 @@ public class User(override val handle: ResourceHandle, runtime: CoreRuntime) : C
    */
   public suspend fun `update`(`params`: UpdateUserParams): User {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.update", listOf(`params`.toJson()))
-    return User.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.update", listOf(`params`.toJson())) { result ->
+      User.fromJson(result, runtime)
+    }
   }
   /**
    * Updates the user's `unsafeMetadata` using deep-merge semantics. Unlike [`update()`](https://clerk.com/docs/reference/objects/user#update), which fully replaces `unsafeMetadata`, this method merges the provided value with the existing `unsafeMetadata`. Top-level and nested keys are merged, and any key set to `null` is removed. Only `unsafeMetadata` is writable from the frontend; `publicMetadata` and `privateMetadata` can only be set from the [Backend API](https://clerk.com/docs/reference/backend-api){{ target: '_blank' }}.
    */
   public suspend fun `updateMetadata`(`params`: UpdateUserMetadataParams): User {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.updateMetadata", listOf(`params`.toJson()))
-    return User.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.updateMetadata", listOf(`params`.toJson())) { result ->
+      User.fromJson(result, runtime)
+    }
   }
   /**
    * Deletes the current user.
    */
   public suspend fun `delete`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.delete", listOf())
+    return runtime.invoke(this, handle, "User.delete", listOf()) { result ->
+      Unit
+    }
   }
   /**
    * Updates the user's password.
    */
   public suspend fun `updatePassword`(`params`: UpdateUserPasswordParams): User {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.updatePassword", listOf(`params`.toJson()))
-    return User.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.updatePassword", listOf(`params`.toJson())) { result ->
+      User.fromJson(result, runtime)
+    }
   }
   /**
    * Removes the user's password.
    */
   public suspend fun `removePassword`(`params`: RemoveUserPasswordParams): User {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.removePassword", listOf(`params`.toJson()))
-    return User.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.removePassword", listOf(`params`.toJson())) { result ->
+      User.fromJson(result, runtime)
+    }
   }
   /**
    * Adds an email address for the user. A new [`EmailAddress`](https://clerk.com/docs/reference/types/email-address) will be created and associated with the user.
@@ -2363,16 +3152,18 @@ public class User(override val handle: ResourceHandle, runtime: CoreRuntime) : C
    */
   public suspend fun `createEmailAddress`(`params`: CreateEmailAddressParams): EmailAddress {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.createEmailAddress", listOf(`params`.toJson()))
-    return EmailAddress.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.createEmailAddress", listOf(`params`.toJson())) { result ->
+      EmailAddress.fromJson(result, runtime)
+    }
   }
   /**
    * Creates a passkey for the signed-in user. For an example, see the [custom flow guide](https://clerk.com/docs/guides/development/custom-flows/authentication/passkeys#create-user-passkeys).
    */
   public suspend fun `createPasskey`(): Passkey {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.createPasskey", listOf())
-    return Passkey.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.createPasskey", listOf()) { result ->
+      Passkey.fromJson(result, runtime)
+    }
   }
   /**
    * Adds a phone number for the user. A new [`PhoneNumber`](https://clerk.com/docs/reference/types/phone-number) will be created and associated with the user.
@@ -2382,40 +3173,45 @@ public class User(override val handle: ResourceHandle, runtime: CoreRuntime) : C
    */
   public suspend fun `createPhoneNumber`(`params`: CreatePhoneNumberParams): PhoneNumber {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.createPhoneNumber", listOf(`params`.toJson()))
-    return PhoneNumber.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.createPhoneNumber", listOf(`params`.toJson())) { result ->
+      PhoneNumber.fromJson(result, runtime)
+    }
   }
   /**
    * Adds a Web3 wallet for the user. A new [`Web3WalletResource`](https://clerk.com/docs/reference/types/web3-wallet) will be created and associated with the user.
    */
   public suspend fun `createWeb3Wallet`(`params`: CreateWeb3WalletParams): Web3Wallet {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.createWeb3Wallet", listOf(`params`.toJson()))
-    return Web3Wallet.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.createWeb3Wallet", listOf(`params`.toJson())) { result ->
+      Web3Wallet.fromJson(result, runtime)
+    }
   }
   /**
    * A check whether or not the given resource is the primary identifier for the user.
    */
   public suspend fun `isPrimaryIdentification`(`ident`: UserIsPrimaryIdentificationIdent): Boolean {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.isPrimaryIdentification", listOf(`ident`.toJson()))
-    return result.requireBoolean()
+    return runtime.invoke(this, handle, "User.isPrimaryIdentification", listOf(`ident`.toJson())) { result ->
+      result.requireBoolean()
+    }
   }
   /**
    * Gets all **active** sessions for this user. This method uses a cache so a network request will only be triggered only once.
    */
   public suspend fun `getSessions`(): List<SessionWithActivities> {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.getSessions", listOf())
-    return result.jsonArray.map { value -> SessionWithActivities.fromJson(value, runtime) }
+    return runtime.invoke(this, handle, "User.getSessions", listOf()) { result ->
+      result.jsonArray.map { value -> SessionWithActivities.fromJson(value, runtime) }
+    }
   }
   /**
    * Adds the user's profile image or replaces it if one already exists. This method will upload an image and associate it with the user.
    */
   public suspend fun `setProfileImage`(`params`: SetProfileImageParams): Image {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.setProfileImage", listOf(`params`.toJson()))
-    return Image.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.setProfileImage", listOf(`params`.toJson())) { result ->
+      Image.fromJson(result, runtime)
+    }
   }
   /**
    * Adds an external account for the user. A new [`ExternalAccount`](https://clerk.com/docs/reference/types/external-account) will be created and associated with the user. This method is useful if you want to allow an already signed-in user to connect their account with an external provider, such as Facebook, GitHub, etc., so that they can sign in with that provider in the future.
@@ -2425,45 +3221,51 @@ public class User(override val handle: ResourceHandle, runtime: CoreRuntime) : C
    */
   public suspend fun `createExternalAccount`(`params`: CreateExternalAccountParams): ExternalAccount {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.createExternalAccount", listOf(`params`.toJson()))
-    return ExternalAccount.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.createExternalAccount", listOf(`params`.toJson())) { result ->
+      ExternalAccount.fromJson(result, runtime)
+    }
   }
   public suspend fun `getOrganizationMemberships`(`params`: GetUserOrganizationMembershipParams? = null): ClerkPaginatedResponseOrganizationMembership {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.getOrganizationMemberships", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return ClerkPaginatedResponseOrganizationMembership.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.getOrganizationMemberships", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ClerkPaginatedResponseOrganizationMembership.fromJson(result, runtime)
+    }
   }
   /**
    * Gets a list of Organization invitations for the user.
    */
   public suspend fun `getOrganizationInvitations`(`params`: GetUserOrganizationInvitationsParams? = null): ClerkPaginatedResponseUserOrganizationInvitation {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.getOrganizationInvitations", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return ClerkPaginatedResponseUserOrganizationInvitation.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.getOrganizationInvitations", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ClerkPaginatedResponseUserOrganizationInvitation.fromJson(result, runtime)
+    }
   }
   /**
    * Gets a list of Organization suggestions for the user.
    */
   public suspend fun `getOrganizationSuggestions`(`params`: GetUserOrganizationSuggestionsParams? = null): ClerkPaginatedResponseOrganizationSuggestion {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.getOrganizationSuggestions", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return ClerkPaginatedResponseOrganizationSuggestion.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.getOrganizationSuggestions", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ClerkPaginatedResponseOrganizationSuggestion.fromJson(result, runtime)
+    }
   }
   /**
    * Gets organization creation defaults for the current user.
    */
   public suspend fun `getOrganizationCreationDefaults`(): OrganizationCreationDefaults {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.getOrganizationCreationDefaults", listOf())
-    return OrganizationCreationDefaults.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.getOrganizationCreationDefaults", listOf()) { result ->
+      OrganizationCreationDefaults.fromJson(result, runtime)
+    }
   }
   /**
    * Leaves an organization that the user is a member of.
    */
   public suspend fun `leaveOrganization`(`organizationId`: String): DeletedObject {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.leaveOrganization", listOf(JsonPrimitive(`organizationId`)))
-    return DeletedObject.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.leaveOrganization", listOf(JsonPrimitive(`organizationId`))) { result ->
+      DeletedObject.fromJson(result, runtime)
+    }
   }
   /**
    * Get the enterprise connections for the current user. This method is not intended for public use.
@@ -2471,72 +3273,81 @@ public class User(override val handle: ResourceHandle, runtime: CoreRuntime) : C
    */
   public suspend fun `getEnterpriseConnections`(`params`: GetEnterpriseConnectionsParams? = null): List<EnterpriseConnection> {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.getEnterpriseConnections", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return result.jsonArray.map { value -> EnterpriseConnection.fromJson(value, runtime) }
+    return runtime.invoke(this, handle, "User.getEnterpriseConnections", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      result.jsonArray.map { value -> EnterpriseConnection.fromJson(value, runtime) }
+    }
   }
   /**
    * Generates a TOTP secret for a user that can be used to register the application on the user's authenticator app of choice. If this method is called again (while still unverified), it replaces the previously generated secret.
    */
   public suspend fun `createTOTP`(): TOTP {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.createTOTP", listOf())
-    return TOTP.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.createTOTP", listOf()) { result ->
+      TOTP.fromJson(result, runtime)
+    }
   }
   /**
    * Verifies a TOTP secret after a user has created it. The user must provide a code from their authenticator app that has been generated using the previously created secret. This way, correct set up and ownership of the authenticator app can be validated.
    */
   public suspend fun `verifyTOTP`(`params`: VerifyTOTPParams): TOTP {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.verifyTOTP", listOf(`params`.toJson()))
-    return TOTP.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.verifyTOTP", listOf(`params`.toJson())) { result ->
+      TOTP.fromJson(result, runtime)
+    }
   }
   /**
    * Disables TOTP by deleting the user's TOTP secret.
    */
   public suspend fun `disableTOTP`(): DeletedObject {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.disableTOTP", listOf())
-    return DeletedObject.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.disableTOTP", listOf()) { result ->
+      DeletedObject.fromJson(result, runtime)
+    }
   }
   /**
    * Generates a fresh new set of backup codes for the user. Every time the method is called, it will replace the previously generated backup codes.
    */
   public suspend fun `createBackupCode`(): BackupCode {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.createBackupCode", listOf())
-    return BackupCode.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.createBackupCode", listOf()) { result ->
+      BackupCode.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): User {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return User.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      User.fromJson(result, runtime)
+    }
   }
   /**
    * Initializes a payment method.
    */
   public suspend fun `initializePaymentMethod`(`params`: InitializePaymentMethodParams): BillingInitializedPaymentMethod {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.initializePaymentMethod", listOf(`params`.toJson()))
-    return BillingInitializedPaymentMethod.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.initializePaymentMethod", listOf(`params`.toJson())) { result ->
+      BillingInitializedPaymentMethod.fromJson(result, runtime)
+    }
   }
   /**
    * Adds a payment method.
    */
   public suspend fun `addPaymentMethod`(`params`: AddPaymentMethodParams): BillingPaymentMethod {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.addPaymentMethod", listOf(`params`.toJson()))
-    return BillingPaymentMethod.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.addPaymentMethod", listOf(`params`.toJson())) { result ->
+      BillingPaymentMethod.fromJson(result, runtime)
+    }
   }
   /**
    * Gets a list of payment methods that have been stored.
    */
   public suspend fun `getPaymentMethods`(`params`: GetPaymentMethodsParams? = null): ClerkPaginatedResponseBillingPaymentMethod {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "User.getPaymentMethods", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return ClerkPaginatedResponseBillingPaymentMethod.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "User.getPaymentMethods", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ClerkPaginatedResponseBillingPaymentMethod.fromJson(result, runtime)
+    }
   }
 }
 
@@ -2576,45 +3387,54 @@ public class EmailAddress(override val handle: ResourceHandle, runtime: CoreRunt
    */
   public suspend fun `stringValue`(): String {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EmailAddress.toString", listOf())
-    return result.requireString()
+    return runtime.invoke(this, handle, "EmailAddress.toString", listOf()) { result ->
+      result.requireString()
+    }
   }
   public suspend fun `prepareVerification`(`params`: PrepareEmailAddressVerificationParams): EmailAddress {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EmailAddress.prepareVerification", listOf(`params`.toJson()))
-    return EmailAddress.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "EmailAddress.prepareVerification", listOf(`params`.toJson())) { result ->
+      EmailAddress.fromJson(result, runtime)
+    }
   }
   public suspend fun `attemptVerification`(`params`: AttemptEmailAddressVerificationParams): EmailAddress {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EmailAddress.attemptVerification", listOf(`params`.toJson()))
-    return EmailAddress.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "EmailAddress.attemptVerification", listOf(`params`.toJson())) { result ->
+      EmailAddress.fromJson(result, runtime)
+    }
   }
   public suspend fun `createEmailLinkFlow`(): CreateEmailLinkFlowReturnStartEmailLinkFlowParamsAndEmailAddress {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EmailAddress.createEmailLinkFlow", listOf())
-    return CreateEmailLinkFlowReturnStartEmailLinkFlowParamsAndEmailAddress.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "EmailAddress.createEmailLinkFlow", listOf()) { result ->
+      CreateEmailLinkFlowReturnStartEmailLinkFlowParamsAndEmailAddress.fromJson(result, runtime)
+    }
   }
   public suspend fun `createEnterpriseSSOLinkFlow`(): CreateEnterpriseSSOLinkFlowReturnStartEnterpriseSSOLinkFlowParamsAndEmailAddress {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EmailAddress.createEnterpriseSSOLinkFlow", listOf())
-    return CreateEnterpriseSSOLinkFlowReturnStartEnterpriseSSOLinkFlowParamsAndEmailAddress.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "EmailAddress.createEnterpriseSSOLinkFlow", listOf()) { result ->
+      CreateEnterpriseSSOLinkFlowReturnStartEnterpriseSSOLinkFlowParamsAndEmailAddress.fromJson(result, runtime)
+    }
   }
   public suspend fun `destroy`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EmailAddress.destroy", listOf())
+    return runtime.invoke(this, handle, "EmailAddress.destroy", listOf()) { result ->
+      Unit
+    }
   }
   public suspend fun `create`(): EmailAddress {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EmailAddress.create", listOf())
-    return EmailAddress.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "EmailAddress.create", listOf()) { result ->
+      EmailAddress.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): EmailAddress {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EmailAddress.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return EmailAddress.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "EmailAddress.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      EmailAddress.fromJson(result, runtime)
+    }
   }
 }
 
@@ -2657,16 +3477,18 @@ public class Verification(override val handle: ResourceHandle, runtime: CoreRunt
   }
   public suspend fun `verifiedFromTheSameClient`(): Boolean {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Verification.verifiedFromTheSameClient", listOf())
-    return result.requireBoolean()
+    return runtime.invoke(this, handle, "Verification.verifiedFromTheSameClient", listOf()) { result ->
+      result.requireBoolean()
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): Verification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Verification.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return Verification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Verification.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Verification.fromJson(result, runtime)
+    }
   }
 }
 
@@ -2775,20 +3597,6 @@ public sealed class VerificationStatus(public val rawValue: String) {
   }
 }
 
-public sealed class PhoneCodeChannel(public val rawValue: String) {
-  public data object Sms : PhoneCodeChannel("sms")
-  public data object Whatsapp : PhoneCodeChannel("whatsapp")
-  public data class Unrecognized(val value: String) : PhoneCodeChannel(value)
-  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
-  public companion object {
-    public fun fromJson(value: JsonElement, runtime: CoreRuntime): PhoneCodeChannel = when (val raw = value.requireString()) {
-      "sms" -> Sms
-      "whatsapp" -> Whatsapp
-      else -> Unrecognized(raw)
-    }
-  }
-}
-
 public data class IdentificationLinkState(public val `id`: String, public val `type`: String) {
   public fun toJson(): JsonElement = buildJsonObject {
     putPresent("id", JsonPrimitive(this@IdentificationLinkState.`id`))
@@ -2819,14 +3627,19 @@ public class IdentificationLink(override val handle: ResourceHandle, runtime: Co
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): IdentificationLink {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "IdentificationLink.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return IdentificationLink.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "IdentificationLink.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      IdentificationLink.fromJson(result, runtime)
+    }
   }
 }
 
 public sealed interface PrepareEmailAddressVerificationParams {
   public data class Case1(val value: EmailAddressPrepareVerificationParamsCase1) : PrepareEmailAddressVerificationParams
   public data class Case2(val value: EmailAddressPrepareVerificationParamsCase2) : PrepareEmailAddressVerificationParams
+  public val `strategy`: String get() = when (this) {
+    is Case1 -> value.`strategy`
+    is Case2 -> value.`strategy`.rawValue
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -2924,12 +3737,15 @@ public class CreateEmailLinkFlowReturnStartEmailLinkFlowParamsAndEmailAddress(ov
   }
   public suspend fun `startEmailLinkFlow`(`params`: StartEmailLinkFlowParams): EmailAddress {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "CreateEmailLinkFlowReturnStartEmailLinkFlowParamsAndEmailAddress.startEmailLinkFlow", listOf(`params`.toJson()))
-    return EmailAddress.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "CreateEmailLinkFlowReturnStartEmailLinkFlowParamsAndEmailAddress.startEmailLinkFlow", listOf(`params`.toJson())) { result ->
+      EmailAddress.fromJson(result, runtime)
+    }
   }
   public suspend fun `cancelEmailLinkFlow`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "CreateEmailLinkFlowReturnStartEmailLinkFlowParamsAndEmailAddress.cancelEmailLinkFlow", listOf())
+    return runtime.invoke(this, handle, "CreateEmailLinkFlowReturnStartEmailLinkFlowParamsAndEmailAddress.cancelEmailLinkFlow", listOf()) { result ->
+      Unit
+    }
   }
 }
 
@@ -2971,12 +3787,15 @@ public class CreateEnterpriseSSOLinkFlowReturnStartEnterpriseSSOLinkFlowParamsAn
   }
   public suspend fun `startEnterpriseSSOLinkFlow`(`params`: StartEnterpriseSSOLinkFlowParams): EmailAddress {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "CreateEnterpriseSSOLinkFlowReturnStartEnterpriseSSOLinkFlowParamsAndEmailAddress.startEnterpriseSSOLinkFlow", listOf(`params`.toJson()))
-    return EmailAddress.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "CreateEnterpriseSSOLinkFlowReturnStartEnterpriseSSOLinkFlowParamsAndEmailAddress.startEnterpriseSSOLinkFlow", listOf(`params`.toJson())) { result ->
+      EmailAddress.fromJson(result, runtime)
+    }
   }
   public suspend fun `cancelEnterpriseSSOLinkFlow`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "CreateEnterpriseSSOLinkFlowReturnStartEnterpriseSSOLinkFlowParamsAndEmailAddress.cancelEnterpriseSSOLinkFlow", listOf())
+    return runtime.invoke(this, handle, "CreateEnterpriseSSOLinkFlowReturnStartEnterpriseSSOLinkFlowParamsAndEmailAddress.cancelEnterpriseSSOLinkFlow", listOf()) { result ->
+      Unit
+    }
   }
 }
 
@@ -3026,50 +3845,65 @@ public class PhoneNumber(override val handle: ResourceHandle, runtime: CoreRunti
   public companion object {
     public fun fromJson(value: JsonElement, runtime: CoreRuntime): PhoneNumber = runtime.resource(ResourceHandle.fromReference(value)) as PhoneNumber
   }
+  public suspend fun `backupCodes`(): List<String>? {
+    val runtime = context.requireRuntime()
+    return runtime.invoke(this, handle, "PhoneNumber.backupCodes", listOf()) { result ->
+      result.decodeOptional { value -> value.jsonArray.map { value -> value.requireString() } }
+    }
+  }
   /**
    * Returns a string representation of an object.
    */
   public suspend fun `stringValue`(): String {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PhoneNumber.toString", listOf())
-    return result.requireString()
+    return runtime.invoke(this, handle, "PhoneNumber.toString", listOf()) { result ->
+      result.requireString()
+    }
   }
   public suspend fun `prepareVerification`(): PhoneNumber {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PhoneNumber.prepareVerification", listOf())
-    return PhoneNumber.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PhoneNumber.prepareVerification", listOf()) { result ->
+      PhoneNumber.fromJson(result, runtime)
+    }
   }
   public suspend fun `attemptVerification`(`params`: AttemptPhoneNumberVerificationParams): PhoneNumber {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PhoneNumber.attemptVerification", listOf(`params`.toJson()))
-    return PhoneNumber.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PhoneNumber.attemptVerification", listOf(`params`.toJson())) { result ->
+      PhoneNumber.fromJson(result, runtime)
+    }
   }
   public suspend fun `makeDefaultSecondFactor`(): PhoneNumber {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PhoneNumber.makeDefaultSecondFactor", listOf())
-    return PhoneNumber.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PhoneNumber.makeDefaultSecondFactor", listOf()) { result ->
+      PhoneNumber.fromJson(result, runtime)
+    }
   }
   public suspend fun `setReservedForSecondFactor`(`params`: SetReservedForSecondFactorParams): PhoneNumber {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PhoneNumber.setReservedForSecondFactor", listOf(`params`.toJson()))
-    return PhoneNumber.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PhoneNumber.setReservedForSecondFactor", listOf(`params`.toJson())) { result ->
+      PhoneNumber.fromJson(result, runtime)
+    }
   }
   public suspend fun `destroy`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PhoneNumber.destroy", listOf())
+    return runtime.invoke(this, handle, "PhoneNumber.destroy", listOf()) { result ->
+      Unit
+    }
   }
   public suspend fun `create`(): PhoneNumber {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PhoneNumber.create", listOf())
-    return PhoneNumber.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PhoneNumber.create", listOf()) { result ->
+      PhoneNumber.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): PhoneNumber {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PhoneNumber.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return PhoneNumber.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PhoneNumber.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      PhoneNumber.fromJson(result, runtime)
+    }
   }
 }
 
@@ -3131,39 +3965,46 @@ public class Web3Wallet(override val handle: ResourceHandle, runtime: CoreRuntim
    */
   public suspend fun `stringValue`(): String {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Web3Wallet.toString", listOf())
-    return result.requireString()
+    return runtime.invoke(this, handle, "Web3Wallet.toString", listOf()) { result ->
+      result.requireString()
+    }
   }
   public suspend fun `prepareVerification`(`params`: PrepareWeb3WalletVerificationParams): Web3Wallet {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Web3Wallet.prepareVerification", listOf(`params`.toJson()))
-    return Web3Wallet.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Web3Wallet.prepareVerification", listOf(`params`.toJson())) { result ->
+      Web3Wallet.fromJson(result, runtime)
+    }
   }
   public suspend fun `attemptVerification`(`params`: AttemptWeb3WalletVerificationParams): Web3Wallet {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Web3Wallet.attemptVerification", listOf(`params`.toJson()))
-    return Web3Wallet.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Web3Wallet.attemptVerification", listOf(`params`.toJson())) { result ->
+      Web3Wallet.fromJson(result, runtime)
+    }
   }
   public suspend fun `destroy`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Web3Wallet.destroy", listOf())
+    return runtime.invoke(this, handle, "Web3Wallet.destroy", listOf()) { result ->
+      Unit
+    }
   }
   public suspend fun `create`(): Web3Wallet {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Web3Wallet.create", listOf())
-    return Web3Wallet.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Web3Wallet.create", listOf()) { result ->
+      Web3Wallet.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): Web3Wallet {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Web3Wallet.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return Web3Wallet.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Web3Wallet.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Web3Wallet.fromJson(result, runtime)
+    }
   }
 }
 
-public data class PrepareWeb3WalletVerificationParams(public val `strategy`: PrepareWeb3WalletVerificationParamsStrategy) {
+public data class PrepareWeb3WalletVerificationParams(public val `strategy`: MobileUserSettingsWeb3FirstFactorsElement) {
   public fun toJson(): JsonElement = buildJsonObject {
     putPresent("strategy", this@PrepareWeb3WalletVerificationParams.`strategy`.toJson())
   }
@@ -3171,32 +4012,12 @@ public data class PrepareWeb3WalletVerificationParams(public val `strategy`: Pre
     public fun fromJson(value: JsonElement, runtime: CoreRuntime): PrepareWeb3WalletVerificationParams {
       val values = value.jsonObject
 
-      return PrepareWeb3WalletVerificationParams(`strategy` = PrepareWeb3WalletVerificationParamsStrategy.fromJson((values["strategy"] ?: Undefined), runtime))
+      return PrepareWeb3WalletVerificationParams(`strategy` = MobileUserSettingsWeb3FirstFactorsElement.fromJson((values["strategy"] ?: Undefined), runtime))
     }
   }
 }
 
-public sealed class PrepareWeb3WalletVerificationParamsStrategy(public val rawValue: String) {
-  public data object Web3MetamaskSignature : PrepareWeb3WalletVerificationParamsStrategy("web3_metamask_signature")
-  public data object Web3BaseSignature : PrepareWeb3WalletVerificationParamsStrategy("web3_base_signature")
-  public data object Web3CoinbaseWalletSignature : PrepareWeb3WalletVerificationParamsStrategy("web3_coinbase_wallet_signature")
-  public data object Web3OkxWalletSignature : PrepareWeb3WalletVerificationParamsStrategy("web3_okx_wallet_signature")
-  public data object Web3SolanaSignature : PrepareWeb3WalletVerificationParamsStrategy("web3_solana_signature")
-  public data class Unrecognized(val value: String) : PrepareWeb3WalletVerificationParamsStrategy(value)
-  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
-  public companion object {
-    public fun fromJson(value: JsonElement, runtime: CoreRuntime): PrepareWeb3WalletVerificationParamsStrategy = when (val raw = value.requireString()) {
-      "web3_metamask_signature" -> Web3MetamaskSignature
-      "web3_base_signature" -> Web3BaseSignature
-      "web3_coinbase_wallet_signature" -> Web3CoinbaseWalletSignature
-      "web3_okx_wallet_signature" -> Web3OkxWalletSignature
-      "web3_solana_signature" -> Web3SolanaSignature
-      else -> Unrecognized(raw)
-    }
-  }
-}
-
-public data class AttemptWeb3WalletVerificationParams(public val `signature`: String, public val `strategy`: PrepareWeb3WalletVerificationParamsStrategy? = null) {
+public data class AttemptWeb3WalletVerificationParams(public val `signature`: String, public val `strategy`: MobileUserSettingsWeb3FirstFactorsElement? = null) {
   public fun toJson(): JsonElement = buildJsonObject {
     putPresent("signature", JsonPrimitive(this@AttemptWeb3WalletVerificationParams.`signature`))
     putPresent("strategy", this@AttemptWeb3WalletVerificationParams.`strategy`?.let { value -> value.toJson() } ?: Undefined)
@@ -3205,7 +4026,7 @@ public data class AttemptWeb3WalletVerificationParams(public val `signature`: St
     public fun fromJson(value: JsonElement, runtime: CoreRuntime): AttemptWeb3WalletVerificationParams {
       val values = value.jsonObject
 
-      return AttemptWeb3WalletVerificationParams(`signature` = (values["signature"] ?: Undefined).requireString(), `strategy` = (values["strategy"] ?: Undefined).decodeOptional { value -> PrepareWeb3WalletVerificationParamsStrategy.fromJson(value, runtime) })
+      return AttemptWeb3WalletVerificationParams(`signature` = (values["signature"] ?: Undefined).requireString(), `strategy` = (values["strategy"] ?: Undefined).decodeOptional { value -> MobileUserSettingsWeb3FirstFactorsElement.fromJson(value, runtime) })
     }
   }
 }
@@ -3261,35 +4082,42 @@ public class ExternalAccount(override val handle: ResourceHandle, runtime: CoreR
   }
   public suspend fun `reauthorize`(`params`: ReauthorizeExternalAccountParams): ExternalAccount {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ExternalAccount.reauthorize", listOf(`params`.toJson()))
-    return ExternalAccount.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ExternalAccount.reauthorize", listOf(`params`.toJson())) { result ->
+      ExternalAccount.fromJson(result, runtime)
+    }
   }
   public suspend fun `destroy`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ExternalAccount.destroy", listOf())
+    return runtime.invoke(this, handle, "ExternalAccount.destroy", listOf()) { result ->
+      Unit
+    }
   }
   public suspend fun `providerSlug`(): OAuthProvider {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ExternalAccount.providerSlug", listOf())
-    return OAuthProvider.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ExternalAccount.providerSlug", listOf()) { result ->
+      OAuthProvider.fromJson(result, runtime)
+    }
   }
   public suspend fun `providerTitle`(): String {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ExternalAccount.providerTitle", listOf())
-    return result.requireString()
+    return runtime.invoke(this, handle, "ExternalAccount.providerTitle", listOf()) { result ->
+      result.requireString()
+    }
   }
   public suspend fun `accountIdentifier`(): String {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ExternalAccount.accountIdentifier", listOf())
-    return result.requireString()
+    return runtime.invoke(this, handle, "ExternalAccount.accountIdentifier", listOf()) { result ->
+      result.requireString()
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): ExternalAccount {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ExternalAccount.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return ExternalAccount.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ExternalAccount.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ExternalAccount.fromJson(result, runtime)
+    }
   }
 }
 
@@ -3429,15 +4257,18 @@ public class EnterpriseAccount(override val handle: ResourceHandle, runtime: Cor
   }
   public suspend fun `destroy`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EnterpriseAccount.destroy", listOf())
+    return runtime.invoke(this, handle, "EnterpriseAccount.destroy", listOf()) { result ->
+      Unit
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): EnterpriseAccount {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EnterpriseAccount.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return EnterpriseAccount.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "EnterpriseAccount.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      EnterpriseAccount.fromJson(result, runtime)
+    }
   }
 }
 
@@ -3493,8 +4324,9 @@ public class EnterpriseAccountConnection(override val handle: ResourceHandle, ru
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): EnterpriseAccountConnection {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "EnterpriseAccountConnection.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return EnterpriseAccountConnection.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "EnterpriseAccountConnection.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      EnterpriseAccountConnection.fromJson(result, runtime)
+    }
   }
 }
 
@@ -3623,21 +4455,24 @@ public class Passkey(override val handle: ResourceHandle, runtime: CoreRuntime) 
   }
   public suspend fun `update`(`params`: Partialtype): Passkey {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Passkey.update", listOf(`params`.toJson()))
-    return Passkey.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Passkey.update", listOf(`params`.toJson())) { result ->
+      Passkey.fromJson(result, runtime)
+    }
   }
   public suspend fun `delete`(): DeletedObject {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Passkey.delete", listOf())
-    return DeletedObject.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Passkey.delete", listOf()) { result ->
+      DeletedObject.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): Passkey {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Passkey.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return Passkey.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Passkey.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Passkey.fromJson(result, runtime)
+    }
   }
 }
 
@@ -3680,16 +4515,18 @@ public class PasskeyVerification(override val handle: ResourceHandle, runtime: C
   }
   public suspend fun `verifiedFromTheSameClient`(): Boolean {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PasskeyVerification.verifiedFromTheSameClient", listOf())
-    return result.requireBoolean()
+    return runtime.invoke(this, handle, "PasskeyVerification.verifiedFromTheSameClient", listOf()) { result ->
+      result.requireBoolean()
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): PasskeyVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PasskeyVerification.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return PasskeyVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PasskeyVerification.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      PasskeyVerification.fromJson(result, runtime)
+    }
   }
 }
 
@@ -3812,6 +4649,11 @@ public sealed interface UserIsPrimaryIdentificationIdent {
   public data class Case1(val value: EmailAddress) : UserIsPrimaryIdentificationIdent
   public data class Case2(val value: PhoneNumber) : UserIsPrimaryIdentificationIdent
   public data class Case3(val value: Web3Wallet) : UserIsPrimaryIdentificationIdent
+  public val `id`: String get() = when (this) {
+    is Case1 -> value.`id`
+    is Case2 -> value.`id`
+    is Case3 -> value.`id`
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -3868,16 +4710,18 @@ public class SessionWithActivities(override val handle: ResourceHandle, runtime:
   }
   public suspend fun `revoke`(): SessionWithActivities {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SessionWithActivities.revoke", listOf())
-    return SessionWithActivities.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "SessionWithActivities.revoke", listOf()) { result ->
+      SessionWithActivities.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): SessionWithActivities {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SessionWithActivities.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return SessionWithActivities.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "SessionWithActivities.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      SessionWithActivities.fromJson(result, runtime)
+    }
   }
 }
 
@@ -3949,8 +4793,9 @@ public class Image(override val handle: ResourceHandle, runtime: CoreRuntime) : 
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): Image {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "Image.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return Image.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "Image.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Image.fromJson(result, runtime)
+    }
   }
 }
 
@@ -3968,77 +4813,6 @@ public data class CreateExternalAccountParams(public val `strategy`: OAuthStrate
       val values = value.jsonObject
 
       return CreateExternalAccountParams(`strategy` = (values["strategy"] ?: Undefined).decodeOptional { value -> OAuthStrategy.fromJson(value, runtime) }, `enterpriseConnectionId` = (values["enterpriseConnectionId"] ?: Undefined).decodeOptional { value -> value.requireString() }, `redirectUrl` = (values["redirectUrl"] ?: Undefined).decodeOptional { value -> value.requireString() }, `additionalScopes` = (values["additionalScopes"] ?: Undefined).decodeOptional { value -> value.jsonArray.map { value -> value.requireString() } }, `oidcPrompt` = (values["oidcPrompt"] ?: Undefined).decodeOptional { value -> value.requireString() }, `oidcLoginHint` = (values["oidcLoginHint"] ?: Undefined).decodeOptional { value -> value.requireString() })
-    }
-  }
-}
-
-/**
- * OAuth-related authentication strategies (`oauth_<provider>` and custom OAuth).
- */
-public sealed class OAuthStrategy(public val rawValue: String) {
-  public data object OauthFacebook : OAuthStrategy("oauth_facebook")
-  public data object OauthGoogle : OAuthStrategy("oauth_google")
-  public data object OauthHubspot : OAuthStrategy("oauth_hubspot")
-  public data object OauthGithub : OAuthStrategy("oauth_github")
-  public data object OauthTiktok : OAuthStrategy("oauth_tiktok")
-  public data object OauthGitlab : OAuthStrategy("oauth_gitlab")
-  public data object OauthDiscord : OAuthStrategy("oauth_discord")
-  public data object OauthTwitter : OAuthStrategy("oauth_twitter")
-  public data object OauthTwitch : OAuthStrategy("oauth_twitch")
-  public data object OauthLinkedin : OAuthStrategy("oauth_linkedin")
-  public data object OauthLinkedinOidc : OAuthStrategy("oauth_linkedin_oidc")
-  public data object OauthDropbox : OAuthStrategy("oauth_dropbox")
-  public data object OauthAtlassian : OAuthStrategy("oauth_atlassian")
-  public data object OauthBitbucket : OAuthStrategy("oauth_bitbucket")
-  public data object OauthMicrosoft : OAuthStrategy("oauth_microsoft")
-  public data object OauthNotion : OAuthStrategy("oauth_notion")
-  public data object OauthApple : OAuthStrategy("oauth_apple")
-  public data object OauthLine : OAuthStrategy("oauth_line")
-  public data object OauthInstagram : OAuthStrategy("oauth_instagram")
-  public data object OauthCoinbase : OAuthStrategy("oauth_coinbase")
-  public data object OauthSpotify : OAuthStrategy("oauth_spotify")
-  public data object OauthXero : OAuthStrategy("oauth_xero")
-  public data object OauthBox : OAuthStrategy("oauth_box")
-  public data object OauthSlack : OAuthStrategy("oauth_slack")
-  public data object OauthLinear : OAuthStrategy("oauth_linear")
-  public data object OauthX : OAuthStrategy("oauth_x")
-  public data object OauthEnstall : OAuthStrategy("oauth_enstall")
-  public data object OauthHuggingface : OAuthStrategy("oauth_huggingface")
-  public data object OauthVercel : OAuthStrategy("oauth_vercel")
-  public data class Unrecognized(val value: String) : OAuthStrategy(value)
-  public fun toJson(): JsonElement = JsonPrimitive(rawValue)
-  public companion object {
-    public fun fromJson(value: JsonElement, runtime: CoreRuntime): OAuthStrategy = when (val raw = value.requireString()) {
-      "oauth_facebook" -> OauthFacebook
-      "oauth_google" -> OauthGoogle
-      "oauth_hubspot" -> OauthHubspot
-      "oauth_github" -> OauthGithub
-      "oauth_tiktok" -> OauthTiktok
-      "oauth_gitlab" -> OauthGitlab
-      "oauth_discord" -> OauthDiscord
-      "oauth_twitter" -> OauthTwitter
-      "oauth_twitch" -> OauthTwitch
-      "oauth_linkedin" -> OauthLinkedin
-      "oauth_linkedin_oidc" -> OauthLinkedinOidc
-      "oauth_dropbox" -> OauthDropbox
-      "oauth_atlassian" -> OauthAtlassian
-      "oauth_bitbucket" -> OauthBitbucket
-      "oauth_microsoft" -> OauthMicrosoft
-      "oauth_notion" -> OauthNotion
-      "oauth_apple" -> OauthApple
-      "oauth_line" -> OauthLine
-      "oauth_instagram" -> OauthInstagram
-      "oauth_coinbase" -> OauthCoinbase
-      "oauth_spotify" -> OauthSpotify
-      "oauth_xero" -> OauthXero
-      "oauth_box" -> OauthBox
-      "oauth_slack" -> OauthSlack
-      "oauth_linear" -> OauthLinear
-      "oauth_x" -> OauthX
-      "oauth_enstall" -> OauthEnstall
-      "oauth_huggingface" -> OauthHuggingface
-      "oauth_vercel" -> OauthVercel
-      else -> Unrecognized(raw)
     }
   }
 }
@@ -4134,16 +4908,18 @@ public class UserOrganizationInvitation(override val handle: ResourceHandle, run
   }
   public suspend fun `accept`(): UserOrganizationInvitation {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "UserOrganizationInvitation.accept", listOf())
-    return UserOrganizationInvitation.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "UserOrganizationInvitation.accept", listOf()) { result ->
+      UserOrganizationInvitation.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): UserOrganizationInvitation {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "UserOrganizationInvitation.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return UserOrganizationInvitation.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "UserOrganizationInvitation.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      UserOrganizationInvitation.fromJson(result, runtime)
+    }
   }
 }
 
@@ -4275,16 +5051,18 @@ public class OrganizationSuggestion(override val handle: ResourceHandle, runtime
    */
   public suspend fun `accept`(): OrganizationSuggestion {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationSuggestion.accept", listOf())
-    return OrganizationSuggestion.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationSuggestion.accept", listOf()) { result ->
+      OrganizationSuggestion.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): OrganizationSuggestion {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationSuggestion.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return OrganizationSuggestion.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationSuggestion.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      OrganizationSuggestion.fromJson(result, runtime)
+    }
   }
 }
 
@@ -4340,8 +5118,9 @@ public class OrganizationCreationDefaults(override val handle: ResourceHandle, r
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): OrganizationCreationDefaults {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "OrganizationCreationDefaults.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return OrganizationCreationDefaults.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "OrganizationCreationDefaults.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      OrganizationCreationDefaults.fromJson(result, runtime)
+    }
   }
 }
 
@@ -4379,48 +5158,22 @@ public data class OrganizationCreationDefaultsForm(public val `name`: String, pu
   }
 }
 
-public data class TOTPState(public val `id`: String, public val `secret`: String? = null, public val `uri`: String? = null, public val `verified`: Boolean, public val `backupCodes`: List<String>? = null, public val `createdAt`: Instant?, public val `updatedAt`: Instant?) {
+public data class TOTP(public val `id`: String, public val `secret`: String? = null, public val `uri`: String? = null, public val `verified`: Boolean, public val `backupCodes`: List<String>? = null, public val `createdAt`: Instant?, public val `updatedAt`: Instant?) {
   public fun toJson(): JsonElement = buildJsonObject {
-    putPresent("id", JsonPrimitive(this@TOTPState.`id`))
-    putPresent("secret", this@TOTPState.`secret`?.let { value -> JsonPrimitive(value) } ?: Undefined)
-    putPresent("uri", this@TOTPState.`uri`?.let { value -> JsonPrimitive(value) } ?: Undefined)
-    putPresent("verified", JsonPrimitive(this@TOTPState.`verified`))
-    putPresent("backupCodes", this@TOTPState.`backupCodes`?.let { value -> JsonArray(value.map { value -> JsonPrimitive(value) }) } ?: Undefined)
-    putPresent("createdAt", this@TOTPState.`createdAt`?.let { value -> JsonPrimitive(value.toString()) } ?: JsonNull)
-    putPresent("updatedAt", this@TOTPState.`updatedAt`?.let { value -> JsonPrimitive(value.toString()) } ?: JsonNull)
+    putPresent("id", JsonPrimitive(this@TOTP.`id`))
+    putPresent("secret", this@TOTP.`secret`?.let { value -> JsonPrimitive(value) } ?: Undefined)
+    putPresent("uri", this@TOTP.`uri`?.let { value -> JsonPrimitive(value) } ?: Undefined)
+    putPresent("verified", JsonPrimitive(this@TOTP.`verified`))
+    putPresent("backupCodes", this@TOTP.`backupCodes`?.let { value -> JsonArray(value.map { value -> JsonPrimitive(value) }) } ?: Undefined)
+    putPresent("createdAt", this@TOTP.`createdAt`?.let { value -> JsonPrimitive(value.toString()) } ?: JsonNull)
+    putPresent("updatedAt", this@TOTP.`updatedAt`?.let { value -> JsonPrimitive(value.toString()) } ?: JsonNull)
   }
   public companion object {
-    public fun fromJson(value: JsonElement, runtime: CoreRuntime): TOTPState {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): TOTP {
       val values = value.jsonObject
 
-      return TOTPState(`id` = (values["id"] ?: Undefined).requireString(), `secret` = (values["secret"] ?: Undefined).decodeOptional { value -> value.requireString() }, `uri` = (values["uri"] ?: Undefined).decodeOptional { value -> value.requireString() }, `verified` = (values["verified"] ?: Undefined).requireBoolean(), `backupCodes` = (values["backupCodes"] ?: Undefined).decodeOptional { value -> value.jsonArray.map { value -> value.requireString() } }, `createdAt` = (values["createdAt"] ?: Undefined).decodeOptional { value -> Instant.parse(value.requireString()) }, `updatedAt` = (values["updatedAt"] ?: Undefined).decodeOptional { value -> Instant.parse(value.requireString()) })
+      return TOTP(`id` = (values["id"] ?: Undefined).requireString(), `secret` = (values["secret"] ?: Undefined).decodeOptional { value -> value.requireString() }, `uri` = (values["uri"] ?: Undefined).decodeOptional { value -> value.requireString() }, `verified` = (values["verified"] ?: Undefined).requireBoolean(), `backupCodes` = (values["backupCodes"] ?: Undefined).decodeOptional { value -> value.jsonArray.map { value -> value.requireString() } }, `createdAt` = (values["createdAt"] ?: Undefined).decodeOptional { value -> Instant.parse(value.requireString()) }, `updatedAt` = (values["updatedAt"] ?: Undefined).decodeOptional { value -> Instant.parse(value.requireString()) })
     }
-  }
-}
-public class TOTP(override val handle: ResourceHandle, runtime: CoreRuntime) : CoreResource {
-  override val context: ResourceContext = ResourceContext(runtime, handle, false)
-  public val state: TOTPState get() = context.state(handle)
-  public val changes: Flow<TOTPState> = runtime.changes.map { state }
-  override val isInvalidated: Boolean get() = context.isInvalidated(handle)
-  public val `id`: String get() = state.`id`
-  public val `secret`: String? get() = state.`secret`
-  public val `uri`: String? get() = state.`uri`
-  public val `verified`: Boolean get() = state.`verified`
-  public val `backupCodes`: List<String>? get() = state.`backupCodes`
-  public val `createdAt`: Instant? get() = state.`createdAt`
-  public val `updatedAt`: Instant? get() = state.`updatedAt`
-  override fun prepare(value: JsonElement): Any = TOTPState.fromJson(value, context.requireRuntime())
-  public fun toJson(): JsonElement = buildJsonObject { put("\$ref", handle.toJson()) }
-  public companion object {
-    public fun fromJson(value: JsonElement, runtime: CoreRuntime): TOTP = runtime.resource(ResourceHandle.fromReference(value)) as TOTP
-  }
-  /**
-   * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
-   */
-  public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): TOTP {
-    val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "TOTP.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return TOTP.fromJson(result, runtime)
   }
 }
 
@@ -4437,42 +5190,19 @@ public data class VerifyTOTPParams(public val `code`: String) {
   }
 }
 
-public data class BackupCodeState(public val `id`: String, public val `codes`: List<String>, public val `createdAt`: Instant?, public val `updatedAt`: Instant?) {
+public data class BackupCode(public val `id`: String, public val `codes`: List<String>, public val `createdAt`: Instant?, public val `updatedAt`: Instant?) {
   public fun toJson(): JsonElement = buildJsonObject {
-    putPresent("id", JsonPrimitive(this@BackupCodeState.`id`))
-    putPresent("codes", JsonArray(this@BackupCodeState.`codes`.map { value -> JsonPrimitive(value) }))
-    putPresent("createdAt", this@BackupCodeState.`createdAt`?.let { value -> JsonPrimitive(value.toString()) } ?: JsonNull)
-    putPresent("updatedAt", this@BackupCodeState.`updatedAt`?.let { value -> JsonPrimitive(value.toString()) } ?: JsonNull)
+    putPresent("id", JsonPrimitive(this@BackupCode.`id`))
+    putPresent("codes", JsonArray(this@BackupCode.`codes`.map { value -> JsonPrimitive(value) }))
+    putPresent("createdAt", this@BackupCode.`createdAt`?.let { value -> JsonPrimitive(value.toString()) } ?: JsonNull)
+    putPresent("updatedAt", this@BackupCode.`updatedAt`?.let { value -> JsonPrimitive(value.toString()) } ?: JsonNull)
   }
   public companion object {
-    public fun fromJson(value: JsonElement, runtime: CoreRuntime): BackupCodeState {
+    public fun fromJson(value: JsonElement, runtime: CoreRuntime): BackupCode {
       val values = value.jsonObject
 
-      return BackupCodeState(`id` = (values["id"] ?: Undefined).requireString(), `codes` = (values["codes"] ?: Undefined).jsonArray.map { value -> value.requireString() }, `createdAt` = (values["createdAt"] ?: Undefined).decodeOptional { value -> Instant.parse(value.requireString()) }, `updatedAt` = (values["updatedAt"] ?: Undefined).decodeOptional { value -> Instant.parse(value.requireString()) })
+      return BackupCode(`id` = (values["id"] ?: Undefined).requireString(), `codes` = (values["codes"] ?: Undefined).jsonArray.map { value -> value.requireString() }, `createdAt` = (values["createdAt"] ?: Undefined).decodeOptional { value -> Instant.parse(value.requireString()) }, `updatedAt` = (values["updatedAt"] ?: Undefined).decodeOptional { value -> Instant.parse(value.requireString()) })
     }
-  }
-}
-public class BackupCode(override val handle: ResourceHandle, runtime: CoreRuntime) : CoreResource {
-  override val context: ResourceContext = ResourceContext(runtime, handle, false)
-  public val state: BackupCodeState get() = context.state(handle)
-  public val changes: Flow<BackupCodeState> = runtime.changes.map { state }
-  override val isInvalidated: Boolean get() = context.isInvalidated(handle)
-  public val `id`: String get() = state.`id`
-  public val `codes`: List<String> get() = state.`codes`
-  public val `createdAt`: Instant? get() = state.`createdAt`
-  public val `updatedAt`: Instant? get() = state.`updatedAt`
-  override fun prepare(value: JsonElement): Any = BackupCodeState.fromJson(value, context.requireRuntime())
-  public fun toJson(): JsonElement = buildJsonObject { put("\$ref", handle.toJson()) }
-  public companion object {
-    public fun fromJson(value: JsonElement, runtime: CoreRuntime): BackupCode = runtime.resource(ResourceHandle.fromReference(value)) as BackupCode
-  }
-  /**
-   * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
-   */
-  public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): BackupCode {
-    val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "BackupCode.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return BackupCode.fromJson(result, runtime)
   }
 }
 
@@ -4735,8 +5465,9 @@ public class SessionVerification(override val handle: ResourceHandle, runtime: C
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SessionVerification.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "SessionVerification.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
 }
 
@@ -4762,6 +5493,13 @@ public sealed interface SessionVerificationFirstFactor {
   public data class Case3(val value: PasswordFactor) : SessionVerificationFirstFactor
   public data class Case4(val value: PasskeyFactor) : SessionVerificationFirstFactor
   public data class Case5(val value: EnterpriseSSOFactor) : SessionVerificationFirstFactor
+  public val `strategy`: String get() = when (this) {
+    is Case1 -> value.`strategy`
+    is Case2 -> value.`strategy`
+    is Case3 -> value.`strategy`
+    is Case4 -> value.`strategy`
+    is Case5 -> value.`strategy`
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -4869,6 +5607,11 @@ public sealed interface SessionVerificationSecondFactor {
   public data class Case1(val value: PhoneCodeFactor) : SessionVerificationSecondFactor
   public data class Case2(val value: TOTPFactor) : SessionVerificationSecondFactor
   public data class Case3(val value: BackupCodeFactor) : SessionVerificationSecondFactor
+  public val `strategy`: String get() = when (this) {
+    is Case1 -> value.`strategy`
+    is Case2 -> value.`strategy`
+    is Case3 -> value.`strategy`
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -4921,6 +5664,12 @@ public sealed interface SessionVerifyPrepareFirstFactorParams {
   public data class Case2(val value: EmailCodeConfig) : SessionVerifyPrepareFirstFactorParams
   public data class Case3(val value: PhoneCodeConfig) : SessionVerifyPrepareFirstFactorParams
   public data class Case4(val value: OmitEnterpriseSSOConfigAndactionCompleteRedirectUrl) : SessionVerifyPrepareFirstFactorParams
+  public val `strategy`: String get() = when (this) {
+    is Case1 -> value.`strategy`
+    is Case2 -> value.`strategy`
+    is Case3 -> value.`strategy`
+    is Case4 -> value.`strategy`
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -5003,6 +5752,12 @@ public sealed interface SessionVerifyAttemptFirstFactorParams {
   public data class Case2(val value: PhoneCodeAttempt) : SessionVerifyAttemptFirstFactorParams
   public data class Case3(val value: PasswordAttempt) : SessionVerifyAttemptFirstFactorParams
   public data class Case4(val value: PasskeyAttempt) : SessionVerifyAttemptFirstFactorParams
+  public val `strategy`: String get() = when (this) {
+    is Case1 -> value.`strategy`
+    is Case2 -> value.`strategy`
+    is Case3 -> value.`strategy`
+    is Case4 -> value.`strategy`
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -5142,6 +5897,16 @@ public sealed interface SessionVerifyAttemptSecondFactorParams {
   public data class Case1(val value: PhoneCodeAttempt) : SessionVerifyAttemptSecondFactorParams
   public data class Case2(val value: TOTPAttempt) : SessionVerifyAttemptSecondFactorParams
   public data class Case3(val value: BackupCodeAttempt) : SessionVerifyAttemptSecondFactorParams
+  public val `strategy`: String get() = when (this) {
+    is Case1 -> value.`strategy`
+    is Case2 -> value.`strategy`
+    is Case3 -> value.`strategy`
+  }
+  public val `code`: String get() = when (this) {
+    is Case1 -> value.`code`
+    is Case2 -> value.`code`
+    is Case3 -> value.`code`
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -5265,56 +6030,63 @@ public class SignIn(override val handle: ResourceHandle, runtime: CoreRuntime) :
    */
   public suspend fun `create`(`params`: SignInCreateParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignIn.create", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignIn.create", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Submits a password to sign-in.
    */
   public suspend fun `password`(`params`: SignInPasswordParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignIn.password", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignIn.password", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Performs an SSO-based sign-in (Social/OAuth or Enterprise).
    */
   public suspend fun `sso`(`params`: SignInSSOParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignIn.sso", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignIn.sso", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Performs a ticket-based sign-in.
    */
   public suspend fun `ticket`(`params`: SignInTicketParams? = null): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignIn.ticket", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignIn.ticket", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Initiates a passkey-based authentication flow, enabling users to authenticate using a previously registered passkey. When called without parameters, this method requires a prior call to `SignIn.create({ strategy: 'passkey' })` to initialize the sign-in context. This pattern is particularly useful in scenarios where the authentication strategy needs to be determined dynamically at runtime.
    */
   public suspend fun `passkey`(`params`: SignInPasskeyParams? = null): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignIn.passkey", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignIn.passkey", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Submits a proof token to resolve a pending protect check challenge. The response may contain another `protectCheck` (a chained challenge) which must be resolved iteratively.
    */
   public suspend fun `submitProtectCheck`(`params`: SignInSubmitProtectCheckParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignIn.submitProtectCheck", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignIn.submitProtectCheck", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Converts a sign-in with `status === 'complete'` into an active session. Will cause anything observing the session state (such as the [`useUser()`](https://clerk.com/docs/reference/hooks/use-user) hook) to update automatically.
    */
   public suspend fun `finalize`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignIn.finalize", listOf())
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignIn.finalize", listOf()) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Resets the current sign-in attempt by clearing all local state back to null. This is useful when you want to allow users to go back to the beginning of the sign-in flow (e.g., to change their identifier during verification).
@@ -5323,8 +6095,9 @@ public class SignIn(override val handle: ResourceHandle, runtime: CoreRuntime) :
    */
   public suspend fun `reset`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignIn.reset", listOf())
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignIn.reset", listOf()) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
 }
 
@@ -5339,6 +6112,18 @@ public sealed interface SignInFirstFactor {
   public data class Case8(val value: ResetPasswordEmailCodeFactor) : SignInFirstFactor
   public data class Case9(val value: Web3SignatureFactor) : SignInFirstFactor
   public data class Case10(val value: OauthFactor) : SignInFirstFactor
+  public val `strategy`: String get() = when (this) {
+    is Case1 -> value.`strategy`
+    is Case2 -> value.`strategy`
+    is Case3 -> value.`strategy`
+    is Case4 -> value.`strategy`
+    is Case5 -> value.`strategy`
+    is Case6 -> value.`strategy`
+    is Case7 -> value.`strategy`
+    is Case8 -> value.`strategy`
+    is Case9 -> value.`strategy`.rawValue
+    is Case10 -> value.`strategy`.rawValue
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -5423,7 +6208,7 @@ public data class ResetPasswordEmailCodeFactor(public val `emailAddressId`: Stri
   }
 }
 
-public data class Web3SignatureFactor(public val `strategy`: PrepareWeb3WalletVerificationParamsStrategy, public val `web3WalletId`: String, public val `primary`: Boolean? = null, public val `walletName`: String? = null) {
+public data class Web3SignatureFactor(public val `strategy`: MobileUserSettingsWeb3FirstFactorsElement, public val `web3WalletId`: String, public val `primary`: Boolean? = null, public val `walletName`: String? = null) {
   public fun toJson(): JsonElement = buildJsonObject {
     putPresent("strategy", this@Web3SignatureFactor.`strategy`.toJson())
     putPresent("web3WalletId", JsonPrimitive(this@Web3SignatureFactor.`web3WalletId`))
@@ -5434,7 +6219,7 @@ public data class Web3SignatureFactor(public val `strategy`: PrepareWeb3WalletVe
     public fun fromJson(value: JsonElement, runtime: CoreRuntime): Web3SignatureFactor {
       val values = value.jsonObject
 
-      return Web3SignatureFactor(`strategy` = PrepareWeb3WalletVerificationParamsStrategy.fromJson((values["strategy"] ?: Undefined), runtime), `web3WalletId` = (values["web3WalletId"] ?: Undefined).requireString(), `primary` = (values["primary"] ?: Undefined).decodeOptional { value -> value.requireBoolean() }, `walletName` = (values["walletName"] ?: Undefined).decodeOptional { value -> value.requireString() })
+      return Web3SignatureFactor(`strategy` = MobileUserSettingsWeb3FirstFactorsElement.fromJson((values["strategy"] ?: Undefined), runtime), `web3WalletId` = (values["web3WalletId"] ?: Undefined).requireString(), `primary` = (values["primary"] ?: Undefined).decodeOptional { value -> value.requireBoolean() }, `walletName` = (values["walletName"] ?: Undefined).decodeOptional { value -> value.requireString() })
     }
   }
 }
@@ -5458,6 +6243,13 @@ public sealed interface SignInSecondFactor {
   public data class Case3(val value: TOTPFactor) : SignInSecondFactor
   public data class Case4(val value: BackupCodeFactor) : SignInSecondFactor
   public data class Case5(val value: EmailLinkFactor) : SignInSecondFactor
+  public val `strategy`: String get() = when (this) {
+    is Case1 -> value.`strategy`
+    is Case2 -> value.`strategy`
+    is Case3 -> value.`strategy`
+    is Case4 -> value.`strategy`
+    is Case5 -> value.`strategy`
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -5658,6 +6450,12 @@ public sealed interface SignInPasswordParams {
   public data class Case2(val value: SignInPasswordParamsCase2) : SignInPasswordParams
   public data class Case3(val value: SignInPasswordParamsCase3) : SignInPasswordParams
   public data class Case4(val value: SignInPasswordParamsCase4) : SignInPasswordParams
+  public val `password`: String get() = when (this) {
+    is Case1 -> value.`password`
+    is Case2 -> value.`password`
+    is Case3 -> value.`password`
+    is Case4 -> value.`password`
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -5762,16 +6560,18 @@ public class SignInEmailCode(override val handle: ResourceHandle, runtime: CoreR
    */
   public suspend fun `sendCode`(`params`: SignInEmailCodeSendParams? = null): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInEmailCode.sendCode", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInEmailCode.sendCode", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Verifies a code sent with the [`emailCode.sendCode()`](https://clerk.com/docs/reference/objects/sign-in-future#email-code-send-code) method.
    */
   public suspend fun `verifyCode`(`params`: SignInEmailCodeVerifyParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInEmailCode.verifyCode", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInEmailCode.verifyCode", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
 }
 
@@ -5865,16 +6665,18 @@ public class SignInEmailLink(override val handle: ResourceHandle, runtime: CoreR
    */
   public suspend fun `sendLink`(`params`: SignInEmailLinkSendParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInEmailLink.sendLink", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInEmailLink.sendLink", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Waits for email link verification to complete or expire.
    */
   public suspend fun `waitForVerification`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInEmailLink.waitForVerification", listOf())
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInEmailLink.waitForVerification", listOf()) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
 }
 
@@ -5884,6 +6686,10 @@ public class SignInEmailLink(override val handle: ResourceHandle, runtime: CoreR
 public sealed interface SignInEmailLinkSendParams {
   public data class Case1(val value: SignInEmailLinkSendLinkParamsCase1) : SignInEmailLinkSendParams
   public data class Case2(val value: SignInEmailLinkSendLinkParamsCase2) : SignInEmailLinkSendParams
+  public val `verificationUrl`: String get() = when (this) {
+    is Case1 -> value.`verificationUrl`
+    is Case2 -> value.`verificationUrl`
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -5990,16 +6796,18 @@ public class SignInPhoneCode(override val handle: ResourceHandle, runtime: CoreR
    */
   public suspend fun `sendCode`(`params`: SignInPhoneCodeSendParams? = null): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInPhoneCode.sendCode", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInPhoneCode.sendCode", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Verifies a code sent with the [`phoneCode.sendCode()`](https://clerk.com/docs/reference/objects/sign-in-future#phone-code-send-code) method.
    */
   public suspend fun `verifyCode`(`params`: SignInPhoneCodeVerifyParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInPhoneCode.verifyCode", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInPhoneCode.verifyCode", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
 }
 
@@ -6092,24 +6900,27 @@ public class SignInResetPasswordEmailCode(override val handle: ResourceHandle, r
    */
   public suspend fun `sendCode`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInResetPasswordEmailCode.sendCode", listOf())
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInResetPasswordEmailCode.sendCode", listOf()) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Verifies a password reset code sent with the [`resetPasswordEmailCode.sendCode()`](https://clerk.com/docs/reference/objects/sign-in-future#reset-password-email-code-send-code) method. Will cause `signIn.status` to become `'needs_new_password'`. This is when you will call the [`resetPasswordEmailCode.submitPassword()`](https://clerk.com/docs/reference/objects/sign-in-future#reset-password-email-code-submit-password) method to complete the password reset flow.
    */
   public suspend fun `verifyCode`(`params`: SignInEmailCodeVerifyParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInResetPasswordEmailCode.verifyCode", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInResetPasswordEmailCode.verifyCode", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Submits a new password and moves the sign-in status to `'complete'`.
    */
   public suspend fun `submitPassword`(`params`: SignInResetPasswordSubmitParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInResetPasswordEmailCode.submitPassword", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInResetPasswordEmailCode.submitPassword", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
 }
 
@@ -6155,24 +6966,27 @@ public class SignInResetPasswordPhoneCode(override val handle: ResourceHandle, r
    */
   public suspend fun `sendCode`(`params`: SignInResetPasswordPhoneCodeSendParams? = null): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInResetPasswordPhoneCode.sendCode", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInResetPasswordPhoneCode.sendCode", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Verifies a password reset code sent with the [`resetPasswordPhoneCode.sendCode()`](https://clerk.com/docs/reference/objects/sign-in-future#reset-password-phone-code-send-code) method. Will cause `signIn.status` to become `'needs_new_password'`. This is when you will call the [`resetPasswordPhoneCode.submitPassword()`](https://clerk.com/docs/reference/objects/sign-in-future#reset-password-phone-code-submit-password) method to complete the password reset flow.
    */
   public suspend fun `verifyCode`(`params`: SignInResetPasswordPhoneCodeVerifyParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInResetPasswordPhoneCode.verifyCode", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInResetPasswordPhoneCode.verifyCode", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Submits a new password and moves the sign-in status to `'complete'`.
    */
   public suspend fun `submitPassword`(`params`: SignInResetPasswordSubmitParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInResetPasswordPhoneCode.submitPassword", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInResetPasswordPhoneCode.submitPassword", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
 }
 
@@ -6316,48 +7130,54 @@ public class SignInMfa(override val handle: ResourceHandle, runtime: CoreRuntime
    */
   public suspend fun `sendPhoneCode`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInMfa.sendPhoneCode", listOf())
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInMfa.sendPhoneCode", listOf()) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Verifies a phone code sent with the [`mfa.sendPhoneCode()`](https://clerk.com/docs/reference/objects/sign-in-future#mfa-send-phone-code) method.
    */
   public suspend fun `verifyPhoneCode`(`params`: SignInMFAPhoneCodeVerifyParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInMfa.verifyPhoneCode", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInMfa.verifyPhoneCode", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Sends an email code to sign in with as a second factor.
    */
   public suspend fun `sendEmailCode`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInMfa.sendEmailCode", listOf())
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInMfa.sendEmailCode", listOf()) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Verifies an email code sent with the [`mfa.sendEmailCode()`](https://clerk.com/docs/reference/objects/sign-in-future#mfa-send-email-code) method.
    */
   public suspend fun `verifyEmailCode`(`params`: SignInMFAEmailCodeVerifyParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInMfa.verifyEmailCode", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInMfa.verifyEmailCode", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Verifies an authenticator app (TOTP) code to sign in with as a second factor.
    */
   public suspend fun `verifyTOTP`(`params`: SignInTOTPVerifyParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInMfa.verifyTOTP", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInMfa.verifyTOTP", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Verifies a backup code to sign in with as a second factor.
    */
   public suspend fun `verifyBackupCode`(`params`: SignInBackupCodeVerifyParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignInMfa.verifyBackupCode", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignInMfa.verifyBackupCode", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
 }
 
@@ -6550,56 +7370,63 @@ public class SignUp(override val handle: ResourceHandle, runtime: CoreRuntime) :
    */
   public suspend fun `create`(`params`: SignUpCreateParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUp.create", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUp.create", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Updates the current `SignUpFuture` instance with the provided parameters.
    */
   public suspend fun `update`(`params`: SignUpUpdateParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUp.update", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUp.update", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Performs a password-based sign-up.
    */
   public suspend fun `password`(`params`: SignUpPasswordParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUp.password", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUp.password", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Performs an SSO-based sign-up ([Social/OAuth](https://clerk.com/docs/guides/configure/auth-strategies/social-connections/overview) or [Enterprise](https://clerk.com/docs/guides/configure/auth-strategies/enterprise-connections/overview)).
    */
   public suspend fun `sso`(`params`: SignUpSSOParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUp.sso", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUp.sso", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Performs a ticket-based sign-up.
    */
   public suspend fun `ticket`(`params`: SignUpTicketParams? = null): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUp.ticket", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUp.ticket", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Submits a proof token to resolve a pending protect check challenge. The response may contain another `protectCheck` (a chained challenge) which must be resolved iteratively.
    */
   public suspend fun `submitProtectCheck`(`params`: SignUpSubmitProtectCheckParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUp.submitProtectCheck", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUp.submitProtectCheck", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Converts a sign-up with `status === 'complete'` into an active session. Will cause anything observing the session state (such as the [`useUser()`](https://clerk.com/docs/reference/hooks/use-user) hook) to update automatically.
    */
   public suspend fun `finalize`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUp.finalize", listOf())
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUp.finalize", listOf()) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Resets the current sign-up attempt by clearing all local state back to null. This is useful when you want to allow users to go back to the beginning of the sign-up flow (e.g., to change their email address during verification).
@@ -6608,8 +7435,9 @@ public class SignUp(override val handle: ResourceHandle, runtime: CoreRuntime) :
    */
   public suspend fun `reset`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUp.reset", listOf())
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUp.reset", listOf()) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
 }
 
@@ -6660,15 +7488,15 @@ public sealed class SignUpField(public val rawValue: String) {
   public data object OauthEnstall : SignUpField("oauth_enstall")
   public data object OauthHuggingface : SignUpField("oauth_huggingface")
   public data object OauthVercel : SignUpField("oauth_vercel")
+  public data object Password : SignUpField("password")
+  public data object EmailAddress : SignUpField("email_address")
+  public data object PhoneNumber : SignUpField("phone_number")
   public data object Username : SignUpField("username")
   public data object FirstName : SignUpField("first_name")
   public data object LastName : SignUpField("last_name")
-  public data object Password : SignUpField("password")
-  public data object LegalAccepted : SignUpField("legal_accepted")
-  public data object EmailAddress : SignUpField("email_address")
-  public data object PhoneNumber : SignUpField("phone_number")
-  public data object EmailAddressOrPhoneNumber : SignUpField("email_address_or_phone_number")
   public data object Web3Wallet : SignUpField("web3_wallet")
+  public data object LegalAccepted : SignUpField("legal_accepted")
+  public data object EmailAddressOrPhoneNumber : SignUpField("email_address_or_phone_number")
   public data object ProtectCheck : SignUpField("protect_check")
   public data class Unrecognized(val value: String) : SignUpField(value)
   public fun toJson(): JsonElement = JsonPrimitive(rawValue)
@@ -6704,15 +7532,15 @@ public sealed class SignUpField(public val rawValue: String) {
       "oauth_enstall" -> OauthEnstall
       "oauth_huggingface" -> OauthHuggingface
       "oauth_vercel" -> OauthVercel
+      "password" -> Password
+      "email_address" -> EmailAddress
+      "phone_number" -> PhoneNumber
       "username" -> Username
       "first_name" -> FirstName
       "last_name" -> LastName
-      "password" -> Password
-      "legal_accepted" -> LegalAccepted
-      "email_address" -> EmailAddress
-      "phone_number" -> PhoneNumber
-      "email_address_or_phone_number" -> EmailAddressOrPhoneNumber
       "web3_wallet" -> Web3Wallet
+      "legal_accepted" -> LegalAccepted
+      "email_address_or_phone_number" -> EmailAddressOrPhoneNumber
       "protect_check" -> ProtectCheck
       else -> Unrecognized(raw)
     }
@@ -6750,11 +7578,11 @@ public sealed class SignUpIdentificationField(public val rawValue: String) {
   public data object OauthEnstall : SignUpIdentificationField("oauth_enstall")
   public data object OauthHuggingface : SignUpIdentificationField("oauth_huggingface")
   public data object OauthVercel : SignUpIdentificationField("oauth_vercel")
-  public data object Username : SignUpIdentificationField("username")
   public data object EmailAddress : SignUpIdentificationField("email_address")
   public data object PhoneNumber : SignUpIdentificationField("phone_number")
-  public data object EmailAddressOrPhoneNumber : SignUpIdentificationField("email_address_or_phone_number")
+  public data object Username : SignUpIdentificationField("username")
   public data object Web3Wallet : SignUpIdentificationField("web3_wallet")
+  public data object EmailAddressOrPhoneNumber : SignUpIdentificationField("email_address_or_phone_number")
   public data class Unrecognized(val value: String) : SignUpIdentificationField(value)
   public fun toJson(): JsonElement = JsonPrimitive(rawValue)
   public companion object {
@@ -6789,11 +7617,11 @@ public sealed class SignUpIdentificationField(public val rawValue: String) {
       "oauth_enstall" -> OauthEnstall
       "oauth_huggingface" -> OauthHuggingface
       "oauth_vercel" -> OauthVercel
-      "username" -> Username
       "email_address" -> EmailAddress
       "phone_number" -> PhoneNumber
-      "email_address_or_phone_number" -> EmailAddressOrPhoneNumber
+      "username" -> Username
       "web3_wallet" -> Web3Wallet
+      "email_address_or_phone_number" -> EmailAddressOrPhoneNumber
       else -> Unrecognized(raw)
     }
   }
@@ -6974,48 +7802,54 @@ public class SignUpVerifications(override val handle: ResourceHandle, runtime: C
    */
   public suspend fun `sendEmailCode`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUpVerifications.sendEmailCode", listOf())
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUpVerifications.sendEmailCode", listOf()) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Verifies a code sent with the [`verifications.sendEmailCode()`](https://clerk.com/docs/reference/objects/sign-up-future#verifications-send-email-code) method.
    */
   public suspend fun `verifyEmailCode`(`params`: SignUpEmailCodeVerifyParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUpVerifications.verifyEmailCode", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUpVerifications.verifyEmailCode", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Sends an email link to verify an email address.
    */
   public suspend fun `sendEmailLink`(`params`: SignUpEmailLinkSendParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUpVerifications.sendEmailLink", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUpVerifications.sendEmailLink", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Will wait for email link verification to complete or expire after calling [`verifications.sendEmailLink()`](https://clerk.com/docs/reference/objects/sign-up-future#verifications-send-email-link).
    */
   public suspend fun `waitForEmailLinkVerification`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUpVerifications.waitForEmailLinkVerification", listOf())
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUpVerifications.waitForEmailLinkVerification", listOf()) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Sends a phone code to verify a phone number.
    */
   public suspend fun `sendPhoneCode`(`params`: SignUpPhoneCodeSendParams? = null): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUpVerifications.sendPhoneCode", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUpVerifications.sendPhoneCode", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
   /**
    * Verifies a code sent with the [`verifications.sendPhoneCode()`](https://clerk.com/docs/reference/objects/sign-up-future#verifications-send-phone-code) method.
    */
   public suspend fun `verifyPhoneCode`(`params`: SignUpPhoneCodeVerifyParams): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUpVerifications.verifyPhoneCode", listOf(`params`.toJson()))
-    runtime.checkErrorResult(result)
+    return runtime.invoke(this, handle, "SignUpVerifications.verifyPhoneCode", listOf(`params`.toJson())) { result ->
+      runtime.checkErrorResult(result)
+    }
   }
 }
 
@@ -7062,16 +7896,18 @@ public class SignUpVerification(override val handle: ResourceHandle, runtime: Co
   }
   public suspend fun `verifiedFromTheSameClient`(): Boolean {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUpVerification.verifiedFromTheSameClient", listOf())
-    return result.requireBoolean()
+    return runtime.invoke(this, handle, "SignUpVerification.verifiedFromTheSameClient", listOf()) { result ->
+      result.requireBoolean()
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): SignUpVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "SignUpVerification.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return SignUpVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "SignUpVerification.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      SignUpVerification.fromJson(result, runtime)
+    }
   }
 }
 
@@ -7147,6 +7983,12 @@ public sealed interface SignUpPasswordParams {
   public data class Case2(val value: SignUpPasswordParamsCase2) : SignUpPasswordParams
   public data class Case3(val value: SignUpPasswordParamsCase3) : SignUpPasswordParams
   public data class Case4(val value: SignUpPasswordParamsCase4) : SignUpPasswordParams
+  public val `password`: String get() = when (this) {
+    is Case1 -> value.`password`
+    is Case2 -> value.`password`
+    is Case3 -> value.`password`
+    is Case4 -> value.`password`
+  }
   public fun toJson(): JsonElement = when (this) {
     is Case1 -> JsonObject(mapOf("\$case" to JsonPrimitive(0), "value" to value.toJson()))
     is Case2 -> JsonObject(mapOf("\$case" to JsonPrimitive(1), "value" to value.toJson()))
@@ -7402,24 +8244,27 @@ public class ActiveSession(override val handle: ResourceHandle, runtime: CoreRun
    */
   public suspend fun `end`(): Session {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.end", listOf())
-    return Session.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ActiveSession.end", listOf()) { result ->
+      Session.fromJson(result, runtime)
+    }
   }
   /**
    * Invalidates the current session by marking it as removed. Once removed, the session will be deactivated for the current Client instance and its `status` will be set to `removed`. This operation cannot be undone.
    */
   public suspend fun `remove`(): Session {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.remove", listOf())
-    return Session.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ActiveSession.remove", listOf()) { result ->
+      Session.fromJson(result, runtime)
+    }
   }
   /**
    * Updates the session's last active timestamp to the current time. This method should be called periodically to indicate ongoing user activity and prevent the session from becoming stale. The updated timestamp is used for session management and analytics purposes.
    */
   public suspend fun `touch`(`params`: SessionTouchParams? = null): Session {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.touch", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return Session.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ActiveSession.touch", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Session.fromJson(result, runtime)
+    }
   }
   /**
    * Gets the current user's [session token](https://clerk.com/docs/guides/sessions/session-tokens) or a [custom JWT template](https://clerk.com/docs/guides/sessions/jwt-templates).
@@ -7430,79 +8275,90 @@ public class ActiveSession(override val handle: ResourceHandle, runtime: CoreRun
    */
   public suspend fun `getToken`(`options`: GetTokenOptions? = null): String? {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.getToken", listOf(`options`?.let { value -> value.toJson() } ?: Undefined))
-    return result.decodeOptional { value -> value.requireString() }
+    return runtime.invoke(this, handle, "ActiveSession.getToken", listOf(`options`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      result.decodeOptional { value -> value.requireString() }
+    }
   }
   /**
    * Checks if the user is [authorized for the specified Role, Permission, Feature, or Plan](https://clerk.com/docs/guides/secure/authorization-checks) or requires the user to [reverify their credentials](https://clerk.com/docs/guides/secure/reverification) if their last verification is older than allowed.
    */
   public suspend fun `checkAuthorization`(`isAuthorizedParams`: CheckAuthorizationParams): Boolean {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.checkAuthorization", listOf(`isAuthorizedParams`.toJson()))
-    return result.requireBoolean()
+    return runtime.invoke(this, handle, "ActiveSession.checkAuthorization", listOf(`isAuthorizedParams`.toJson())) { result ->
+      result.requireBoolean()
+    }
   }
   /**
    * Clears the cache for the current session. This is useful if the session has been updated and the cache is no longer valid.
    */
   public suspend fun `clearCache`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.clearCache", listOf())
+    return runtime.invoke(this, handle, "ActiveSession.clearCache", listOf()) { result ->
+      Unit
+    }
   }
   /**
    * Initiates the reverification flow.
    */
   public suspend fun `startVerification`(`params`: SessionVerifyCreateParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.startVerification", listOf(`params`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ActiveSession.startVerification", listOf(`params`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Initiates the [first factor verification](!first-factor-verification) process. This is a required step to complete a reverification flow when using a preparable factor.
    */
   public suspend fun `prepareFirstFactorVerification`(`factor`: SessionVerifyPrepareFirstFactorParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.prepareFirstFactorVerification", listOf(`factor`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ActiveSession.prepareFirstFactorVerification", listOf(`factor`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Attempts to complete the [first factor verification](!first-factor-verification) process.
    */
   public suspend fun `attemptFirstFactorVerification`(`attemptFactor`: SessionVerifyAttemptFirstFactorParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.attemptFirstFactorVerification", listOf(`attemptFactor`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ActiveSession.attemptFirstFactorVerification", listOf(`attemptFactor`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Initiates the [second factor verification](!second-factor-verification) process. This is a required step to complete a reverification flow when using a preparable factor.
    */
   public suspend fun `prepareSecondFactorVerification`(`params`: PhoneCodeSecondFactorConfig): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.prepareSecondFactorVerification", listOf(`params`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ActiveSession.prepareSecondFactorVerification", listOf(`params`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Attempts to complete the [second factor verification](!second-factor-verification) process.
    */
   public suspend fun `attemptSecondFactorVerification`(`params`: SessionVerifyAttemptSecondFactorParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.attemptSecondFactorVerification", listOf(`params`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ActiveSession.attemptSecondFactorVerification", listOf(`params`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Initiates a verification flow using passkeys.
    */
   public suspend fun `verifyWithPasskey`(): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.verifyWithPasskey", listOf())
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ActiveSession.verifyWithPasskey", listOf()) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): ActiveSession {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "ActiveSession.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return ActiveSession.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "ActiveSession.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      ActiveSession.fromJson(result, runtime)
+    }
   }
 }
 
@@ -7566,24 +8422,27 @@ public class PendingSession(override val handle: ResourceHandle, runtime: CoreRu
    */
   public suspend fun `end`(): Session {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.end", listOf())
-    return Session.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PendingSession.end", listOf()) { result ->
+      Session.fromJson(result, runtime)
+    }
   }
   /**
    * Invalidates the current session by marking it as removed. Once removed, the session will be deactivated for the current Client instance and its `status` will be set to `removed`. This operation cannot be undone.
    */
   public suspend fun `remove`(): Session {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.remove", listOf())
-    return Session.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PendingSession.remove", listOf()) { result ->
+      Session.fromJson(result, runtime)
+    }
   }
   /**
    * Updates the session's last active timestamp to the current time. This method should be called periodically to indicate ongoing user activity and prevent the session from becoming stale. The updated timestamp is used for session management and analytics purposes.
    */
   public suspend fun `touch`(`params`: SessionTouchParams? = null): Session {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.touch", listOf(`params`?.let { value -> value.toJson() } ?: Undefined))
-    return Session.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PendingSession.touch", listOf(`params`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      Session.fromJson(result, runtime)
+    }
   }
   /**
    * Gets the current user's [session token](https://clerk.com/docs/guides/sessions/session-tokens) or a [custom JWT template](https://clerk.com/docs/guides/sessions/jwt-templates).
@@ -7594,79 +8453,90 @@ public class PendingSession(override val handle: ResourceHandle, runtime: CoreRu
    */
   public suspend fun `getToken`(`options`: GetTokenOptions? = null): String? {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.getToken", listOf(`options`?.let { value -> value.toJson() } ?: Undefined))
-    return result.decodeOptional { value -> value.requireString() }
+    return runtime.invoke(this, handle, "PendingSession.getToken", listOf(`options`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      result.decodeOptional { value -> value.requireString() }
+    }
   }
   /**
    * Checks if the user is [authorized for the specified Role, Permission, Feature, or Plan](https://clerk.com/docs/guides/secure/authorization-checks) or requires the user to [reverify their credentials](https://clerk.com/docs/guides/secure/reverification) if their last verification is older than allowed.
    */
   public suspend fun `checkAuthorization`(`isAuthorizedParams`: CheckAuthorizationParams): Boolean {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.checkAuthorization", listOf(`isAuthorizedParams`.toJson()))
-    return result.requireBoolean()
+    return runtime.invoke(this, handle, "PendingSession.checkAuthorization", listOf(`isAuthorizedParams`.toJson())) { result ->
+      result.requireBoolean()
+    }
   }
   /**
    * Clears the cache for the current session. This is useful if the session has been updated and the cache is no longer valid.
    */
   public suspend fun `clearCache`(): Unit {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.clearCache", listOf())
+    return runtime.invoke(this, handle, "PendingSession.clearCache", listOf()) { result ->
+      Unit
+    }
   }
   /**
    * Initiates the reverification flow.
    */
   public suspend fun `startVerification`(`params`: SessionVerifyCreateParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.startVerification", listOf(`params`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PendingSession.startVerification", listOf(`params`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Initiates the [first factor verification](!first-factor-verification) process. This is a required step to complete a reverification flow when using a preparable factor.
    */
   public suspend fun `prepareFirstFactorVerification`(`factor`: SessionVerifyPrepareFirstFactorParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.prepareFirstFactorVerification", listOf(`factor`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PendingSession.prepareFirstFactorVerification", listOf(`factor`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Attempts to complete the [first factor verification](!first-factor-verification) process.
    */
   public suspend fun `attemptFirstFactorVerification`(`attemptFactor`: SessionVerifyAttemptFirstFactorParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.attemptFirstFactorVerification", listOf(`attemptFactor`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PendingSession.attemptFirstFactorVerification", listOf(`attemptFactor`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Initiates the [second factor verification](!second-factor-verification) process. This is a required step to complete a reverification flow when using a preparable factor.
    */
   public suspend fun `prepareSecondFactorVerification`(`params`: PhoneCodeSecondFactorConfig): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.prepareSecondFactorVerification", listOf(`params`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PendingSession.prepareSecondFactorVerification", listOf(`params`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Attempts to complete the [second factor verification](!second-factor-verification) process.
    */
   public suspend fun `attemptSecondFactorVerification`(`params`: SessionVerifyAttemptSecondFactorParams): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.attemptSecondFactorVerification", listOf(`params`.toJson()))
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PendingSession.attemptSecondFactorVerification", listOf(`params`.toJson())) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Initiates a verification flow using passkeys.
    */
   public suspend fun `verifyWithPasskey`(): SessionVerification {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.verifyWithPasskey", listOf())
-    return SessionVerification.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PendingSession.verifyWithPasskey", listOf()) { result ->
+      SessionVerification.fromJson(result, runtime)
+    }
   }
   /**
    * Reloads the resource, which is useful when you want to access the latest user data after performing a mutation. To make the updated data immediately available, this method forces a session token refresh instead of waiting for the automatic refresh cycle that could temporarily retain stale information. Learn more about [forcing a token refresh](https://clerk.com/docs/guides/sessions/force-token-refresh).
    */
   public suspend fun `reload`(`p`: ClerkResourceReloadParams? = null): PendingSession {
     val runtime = context.requireRuntime()
-    val result = runtime.invoke(this, handle, "PendingSession.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined))
-    return PendingSession.fromJson(result, runtime)
+    return runtime.invoke(this, handle, "PendingSession.reload", listOf(`p`?.let { value -> value.toJson() } ?: Undefined)) { result ->
+      PendingSession.fromJson(result, runtime)
+    }
   }
 }
 
@@ -7737,7 +8607,7 @@ public data class PendingSessionFactorVerificationAgeValue(public val item0: Dou
 }
 
 public object GeneratedBindings {
-  public const val contractHash: String = "0a52bc1140be0af0d047410ae267d11c38ed7c2244a335deb211c30131b85616"
+  public const val contractHash: String = "6d856909ecaad00b05898db345582a87a00387fd1215513831ecd7fe9a9968ae"
   public const val protocolVersion: Int = 1
   public fun makeResource(handle: ResourceHandle, runtime: CoreRuntime): CoreResource = when (handle.type) {
     "Clerk" -> Clerk(handle, runtime)
@@ -7771,8 +8641,6 @@ public object GeneratedBindings {
     "UserOrganizationInvitation" -> UserOrganizationInvitation(handle, runtime)
     "OrganizationSuggestion" -> OrganizationSuggestion(handle, runtime)
     "OrganizationCreationDefaults" -> OrganizationCreationDefaults(handle, runtime)
-    "TOTP" -> TOTP(handle, runtime)
-    "BackupCode" -> BackupCode(handle, runtime)
     "SessionVerification" -> SessionVerification(handle, runtime)
     "SignIn" -> SignIn(handle, runtime)
     "SignInEmailCode" -> SignInEmailCode(handle, runtime)
