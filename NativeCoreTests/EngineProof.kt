@@ -44,7 +44,7 @@ private class FixtureCapabilities(path: String) : NativeCapabilities {
     }
     return buildJsonObject {
       put("status", 200)
-      put("headers", buildJsonObject { put("authorization", "fixture-client-credential") })
+      put("headers", buildJsonObject { if (!url.path.endsWith("/environment")) put("authorization", "fixture-client-credential") })
       put("body", buildJsonObject { put("response", response) }.toString())
     }
   }

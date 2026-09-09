@@ -111,7 +111,7 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
     val body = if (raw) response else buildJsonObject { put("response", response); client?.let { put("client", it) } }
     return buildJsonObject {
       put("status", 200)
-      put("headers", buildJsonObject { put("authorization", "fixture-client-credential") })
+      put("headers", buildJsonObject { if (!url.path.endsWith("/environment")) put("authorization", "fixture-client-credential") })
       put("body", body.toString())
     }
   }
@@ -123,6 +123,56 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
 
 @RunWith(AndroidJUnit4::class)
 class PackagedCoreTest {
+  @Test fun credentialRotationRejectsResponsesIssuedWithThePreviousCredential() = runBlocking {
+    withContext(Dispatchers.Main.immediate) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val base = PackagedFixtures(instrumentation.context)
+      val client = base.fixtures.getValue("authenticatedClient").jsonObject
+      base.clientResponse = client
+      val starts = List(2) { CompletableDeferred<Unit>() }
+      val releases = List(2) { CompletableDeferred<Unit>() }
+      var count = 0
+      val capabilities = object : NativeCapabilities {
+        override val supported = base.supported
+        override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
+          if (capability != "http" || !URI(arguments.jsonObject.getValue("url").requireString()).path.endsWith("/sessions/sess_native"))
+            return base.perform(capability, arguments)
+          val index = count++
+          if (index < 2) { starts[index].complete(Unit); releases[index].await() }
+          val active = base.fixtures.getValue("session").jsonObject
+          val session = if (index == 1) active else JsonObject(active + mapOf(
+            "status" to JsonPrimitive("pending"), "tasks" to JsonArray(listOf(buildJsonObject { put("key", "choose-organization") }))))
+          return buildJsonObject {
+            put("status", 200)
+            put("headers", buildJsonObject {
+              put("date", if (index == 0) "Wed, 09 Sep 2026 16:00:01 GMT" else "Wed, 09 Sep 2026 16:00:02 GMT")
+              if (index == 0) put("authorization", "rotated-client-credential")
+            })
+            put("body", buildJsonObject { put("response", session); put("client", JsonObject(client + ("sessions" to JsonArray(listOf(session))))) }.toString())
+          }
+        }
+      }
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+      try {
+        val session = requireNotNull(clerk.session)
+        val first = async { session.reload() }
+        withTimeout(3000) { starts[0].await() }
+        val second = async { runCatching { session.reload() } }
+        withTimeout(3000) { starts[1].await() }
+        releases[0].complete(Unit)
+        first.await()
+        check(session.status.rawValue == "pending")
+        releases[1].complete(Unit)
+        check((second.await().exceptionOrNull() as? CoreException)?.code == "stale_client_request")
+        check(clerk.session === session && session.currentTask?.key?.rawValue == "choose-organization")
+        check(base.credential == "rotated-client-credential")
+        session.reload()
+        check(session.status.rawValue == "pending")
+      } finally { releases.forEach { it.complete(Unit) }; clerk.close() }
+    }
+  }
+
   @Test fun canonicalClientRequiresANewOrRestoredCredential() = runBlocking {
     withContext(Dispatchers.Main.immediate) {
       val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -270,7 +320,7 @@ class PackagedCoreTest {
             put("status", 200)
             put("headers", buildJsonObject {
               put("date", if (older) "Wed, 09 Sep 2026 16:00:00 GMT" else "Wed, 09 Sep 2026 16:00:01 GMT")
-              put("authorization", if (older) "older-response-credential" else "newer-response-credential")
+              put("authorization", if (older) "older-response-credential" else "fixture-client-credential")
             })
             put("body", buildJsonObject { put("response", session); put("client", nextClient) }.toString())
           }
@@ -289,7 +339,7 @@ class PackagedCoreTest {
         check((older.await().exceptionOrNull() as? CoreException)?.code == "stale_client_response")
         check(clerk.session === session)
         check(session.status.rawValue == "pending" && session.currentTask?.key?.rawValue == "choose-organization")
-        check(base.credential == "newer-response-credential")
+        check(base.credential == "fixture-client-credential")
         session.reload()
         check(session.status.rawValue == "pending")
       } finally { release.complete(Unit); clerk.close() }

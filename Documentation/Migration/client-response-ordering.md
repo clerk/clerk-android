@@ -1,5 +1,14 @@
 # Shared client response ordering
 
+Bundle pin `f64a85d7ac` adds the credential-change fence. Once a changed credential
+is persisted, a response issued with the previous credential cannot commit a
+client snapshot or credential. `credentialRotationRejectsResponsesIssuedWithThePreviousCredential`
+reproduces two pending reloads: the first rotates the credential and reports a
+pending organization task; the later-issued reply must fail with
+`stale_client_request` even though its server date is newer. The task and saved
+credential remain intact, and a subsequent reload succeeds. Date-ordering cases
+repeat the original credential to test their separate acceptance rule.
+
 The shared transport also requires a returned or stored client credential before
 hydrating a native client snapshot. `canonicalClientRequiresANewOrRestoredCredential`
 reproduced an active fixture session being exposed without either credential,
