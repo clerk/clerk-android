@@ -19,11 +19,13 @@ public class ClerkConfiguration(
     val decoded = try { Base64.getDecoder().decode(this.publishableKey.substring(8).replace('-', '+').replace('_', '/')).toString(Charsets.UTF_8) }
     catch (_: IllegalArgumentException) { throw CoreException("invalid_publishable_key") }
     if (!decoded.endsWith('$')) throw CoreException("invalid_publishable_key")
-    val origin = URI("https://${decoded.dropLast(1)}")
+    val origin = try { URI("https://${decoded.dropLast(1)}") }
+    catch (_: java.net.URISyntaxException) { throw CoreException("invalid_publishable_key") }
     if (origin.host.isNullOrEmpty() || origin.userInfo != null || !origin.path.isNullOrEmpty() || origin.query != null || origin.fragment != null) throw CoreException("invalid_publishable_key")
     frontendAPI = origin.toString()
-    val callback = URI(callbackUrl)
-    if (callback.scheme in setOf(null, "http", "javascript", "data", "file", "about") || callback.host.isNullOrEmpty() || callback.userInfo != null || callback.fragment != null) throw CoreException("invalid_callback_url")
+    val callback = try { URI(callbackUrl) }
+    catch (_: java.net.URISyntaxException) { throw CoreException("invalid_callback_url") }
+    if (callback.scheme?.lowercase(java.util.Locale.ROOT) in setOf(null, "http", "javascript", "data", "file", "about") || callback.host.isNullOrEmpty() || callback.userInfo != null || callback.fragment != null) throw CoreException("invalid_callback_url")
   }
 }
 

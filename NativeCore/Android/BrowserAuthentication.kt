@@ -22,7 +22,7 @@ public class BrowserAuthentication(private val activity: () -> Activity?) {
     val target = Uri.parse(url)
     val callback = Uri.parse(callbackUrl)
     if (target.scheme != "https" || target.host.isNullOrEmpty() || target.userInfo != null) throw CoreException("invalid_browser_url")
-    if (callback.scheme in setOf(null, "http", "javascript", "data", "file", "about") || callback.host.isNullOrEmpty() || callback.fragment != null || callback.userInfo != null) throw CoreException("invalid_callback_url")
+    if (callback.scheme?.lowercase(java.util.Locale.ROOT) in setOf(null, "http", "javascript", "data", "file", "about") || callback.host.isNullOrEmpty() || callback.fragment != null || callback.userInfo != null) throw CoreException("invalid_callback_url")
     val route = Intent(Intent.ACTION_VIEW, callback).addCategory(Intent.CATEGORY_BROWSABLE).setPackage(presenter.packageName)
     if (route.resolveActivity(presenter.packageManager) == null) throw CoreException("callback_not_registered")
     suspendCancellableCoroutine { continuation ->
