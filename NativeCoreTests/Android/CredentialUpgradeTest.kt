@@ -13,6 +13,11 @@ import java.util.UUID
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
@@ -32,6 +37,58 @@ class CredentialUpgradeTest {
       AtomicFile(File(context.noBackupFilesDir, "clerk-core/$hash.${purpose.suffix}")).delete()
     }
     KeyStore.getInstance("AndroidKeyStore").apply { load(null); deleteEntry("${context.packageName}.clerk.core.v2.$hash") }
+  }
+
+  @OptIn(ExperimentalSerializationApi::class)
+  @Test fun legacyBiometricMetadataReachesTheCoreWithItsOriginalPolicy() = runBlocking {
+    // Serializer shape and configuration from clerk-android 1ea9f972.
+    val legacyJson = Json {
+      isLenient = true; ignoreUnknownKeys = true; coerceInputValues = true
+      explicitNulls = true; namingStrategy = JsonNamingStrategy.SnakeCase
+    }
+    for (policy in listOf("biometry_or_device_passcode", "biometry_current_set")) {
+      val key = "pk_test_" + Base64.getEncoder().encodeToString((UUID.randomUUID().toString() + ".clerk.accounts.dev$").toByteArray())
+      try {
+        val encoded = legacyJson.encodeToJsonElement(LegacyBiometricRecord.serializer(), LegacyBiometricRecord(id = "td_legacy", localKeyId = "tdlk_legacy", userId = "user_native", appIdentifier = "com.example.native", policy = policy, createdAt = 1700000000000, updatedAt = 1700000000001))
+        check(encoded.jsonObject["local_key_id"] == JsonPrimitive("tdlk_legacy"))
+        check(encoded.jsonObject.containsKey("policy") == (policy != "biometry_or_device_passcode"))
+        val original = JsonArray(listOf(encoded)).toString()
+        preferences.edit().clear().putString("CACHED_CLERK_STATE", encrypted(buildJsonObject { put("publishable_key", key) }.toString()))
+          .putString("TRUSTED_DEVICE_CREDENTIALS", encrypted(original)).commit()
+        val metadata = AndroidCredentialStorage(context, key, purpose = AndroidCredentialStorage.Purpose.BIOMETRIC_CREDENTIALS)
+        check(metadata.read() == original)
+        withContext(Dispatchers.Main.immediate) {
+          val base = PackagedFixtures(InstrumentationRegistry.getInstrumentation().context)
+          val checkedPolicies = mutableListOf<String>()
+          val deleted = mutableListOf<String>()
+          val capabilities = object : NativeCapabilities {
+            override val supported = base.supported
+            override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
+              val args = arguments.jsonObject
+              if (capability == "biometrics.storage.read" && args["key"] == JsonPrimitive("credentials"))
+                return metadata.read()?.let(::JsonPrimitive) ?: JsonNull
+              if (capability == "biometrics.storage.write" && args["key"] == JsonPrimitive("credentials")) {
+                metadata.write(args.getValue("value").requireString()); return JsonNull
+              }
+              if (capability == "biometrics.supports") checkedPolicies += args.getValue("policy").requireString()
+              if (capability == "biometrics.hasKey") check(args["localKeyId"] == JsonPrimitive("tdlk_legacy"))
+              if (capability == "biometrics.deleteKey") deleted += args.getValue("localKeyId").requireString()
+              return base.perform(capability, arguments)
+            }
+          }
+          val clerk = Clerk.connect(context, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+          try {
+            check(clerk.biometricCredentials.localAvailability().isAvailable)
+            check(checkedPolicies == listOf(policy))
+            check(clerk.biometricCredentials.forgetLocalCredentials(BiometricCredentialsForgetLocalCredentialsParams(userId = "user_native")) == 1.0)
+            check(deleted == listOf("tdlk_legacy"))
+          } finally { clerk.close() }
+        }
+        check(AndroidCredentialStorage(context, key, purpose = AndroidCredentialStorage.Purpose.BIOMETRIC_CREDENTIALS).read() == "[]")
+        check(preferences.getString("TRUSTED_DEVICE_CREDENTIALS", null) != null)
+      } finally { cleanup(key); preferences.edit().clear().commit() }
+    }
+    Unit
   }
 
   @Test fun concurrentFirstWritesPreserveEveryCredentialPurpose() = runBlocking {
@@ -178,3 +235,15 @@ class CredentialUpgradeTest {
     Unit
   }
 }
+
+@Serializable
+private data class LegacyBiometricRecord(
+  val id: String,
+  @SerialName("localKeyId") val localKeyId: String,
+  @SerialName("userId") val userId: String,
+  @SerialName("appIdentifier") val appIdentifier: String,
+  @SerialName("identifierHint") val identifierHint: String? = null,
+  val policy: String = "biometry_or_device_passcode",
+  @SerialName("createdAt") val createdAt: Long,
+  @SerialName("updatedAt") val updatedAt: Long,
+)
