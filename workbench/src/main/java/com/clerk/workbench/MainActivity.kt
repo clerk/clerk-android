@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
             if (normalizedKey.isBlank()) {
               StorageHelper.deleteValue(StorageKey.PUBLIC_KEY)
             } else {
-              StorageHelper.saveValue(StorageKey.PUBLIC_KEY,  normalizedKey)
+              StorageHelper.saveValue(StorageKey.PUBLIC_KEY, normalizedKey)
             }
 
             if (normalizedProxy.isBlank()) {
@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
           onClear = {
             StorageHelper.deleteValue(StorageKey.PUBLIC_KEY)
             StorageHelper.deleteValue(StorageKey.PROXY_URL)
+            ProcessPhoenix.triggerRebirth(context)
           },
           onClickFirstItem = { context.startActivity(Intent(context, UiActivity1::class.java)) },
           onClickSecondItem = { context.startActivity(Intent(context, UiActivity2::class.java)) },
@@ -276,7 +277,8 @@ private object WorkbenchConstants {
   const val APP_TITLE = "Clerk Workbench"
   const val INSTRUCTIONS_TITLE = "Instructions:"
   const val SETTINGS_TITLE = "Settings"
-  const val SETTINGS_DESCRIPTION = "Please enter your publishable key and optional proxy URL"
+  const val SETTINGS_DESCRIPTION =
+    "Enter a publishable key. Leave the proxy URL empty; proxy transport is unavailable in this prerelease."
   const val PUBLISHABLE_KEY_LABEL = "Publishable Key"
   const val PUBLISHABLE_KEY_PLACEHOLDER = "Enter publishable key"
   const val PROXY_URL_LABEL = "Proxy URL"

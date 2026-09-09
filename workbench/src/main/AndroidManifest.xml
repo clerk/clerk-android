@@ -13,7 +13,15 @@
         android:theme="@style/Theme.Clerk">
         <activity
             android:name=".UiActivity1"
-            android:exported="false" />
+            android:launchMode="singleTask"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.clerk.workbench.clerk" android:host="oauth" android:path="/callback" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".UiActivity2"

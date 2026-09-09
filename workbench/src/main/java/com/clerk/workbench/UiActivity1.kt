@@ -1,8 +1,6 @@
 package com.clerk.workbench
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,11 +12,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.workbench.ui.theme.WorkbenchTheme
 
-class UiActivity1 : ComponentActivity() {
+class UiActivity1 : WorkbenchActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    setContent {
+    setClerkContent {
       WorkbenchTheme {
         Box(
           modifier = Modifier.fillMaxSize().background(color = Color(0xFFF9F9F9)),
