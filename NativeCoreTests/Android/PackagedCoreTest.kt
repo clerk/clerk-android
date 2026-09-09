@@ -113,6 +113,23 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
 
 @RunWith(AndroidJUnit4::class)
 class PackagedCoreTest {
+  @Test fun previousNativeEmailLinkCallbackFormsCompleteWithoutActivation() = runBlocking {
+    withTimeout(30000) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val capabilities = PackagedFixtures(instrumentation.context)
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+      try {
+        clerk.signUp.create(SignUpCreateParams(emailAddress = "test@example.com"))
+        clerk.signUp.verifications.sendEmailLink(SignUpEmailLinkSendParams())
+        val result = clerk.handleAuthCallback(URI("clerk-test://sso-callback/#flow_id=sua_native&approval_token=fixture_approval"))
+        check(result is MobileAuthenticationResult.Case2 && result.value.signUp === clerk.signUp)
+        check(clerk.signUp.status == SignUpStatus.Complete && clerk.session == null)
+        check(capabilities.authRecord == null)
+      } finally { clerk.close() }
+    }
+  }
+
   @Test fun generatedApiUsesPackagedCore() = runBlocking {
     withTimeout(30000) {
       val instrumentation = InstrumentationRegistry.getInstrumentation()
