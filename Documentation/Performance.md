@@ -37,4 +37,6 @@ Physical-device startup/latency, single-owner steady/peak memory, Expo overhead,
 
 ## Matched Android release application measurement
 
-The [arm64 release footprint report](Measurements/android-arm64-release-footprint.md) records a fresh-install app-byte delta of 3,874,816 bytes on the API 36 emulator, with both matched R8 builds executing successfully. It includes current bundle/APK hashes and all three stripped AAR library sizes. This closes the measurement gap for that harness configuration; physical-device, other-ABI, Play delivery and iOS application-size gates remain open.
+The [arm64 release footprint report](Measurements/android-arm64-release-footprint.md) records a fresh-install app-byte delta of 3,874,816 bytes on the API 36 emulator, with both matched R8 builds executing successfully. It includes current bundle/APK hashes and all three stripped AAR library sizes. This closes the measurement gap for that harness configuration; physical-device, other-ABI and iOS application-size gates remain open. The following report adds the device-specific delivery estimate.
+
+The [device-specific App Bundle report](Measurements/android-arm64-bundle-download.md) adds bundletool delivery estimates and verified split-APK execution for the same arm64 configuration. Its split-install counters are separate from the monolithic-APK sample above.

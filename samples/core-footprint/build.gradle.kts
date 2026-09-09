@@ -48,3 +48,28 @@ dependencies {
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
   "embeddedImplementation"(project(":source:api"))
 }
+
+// Build-time measurement dependency only; never part of either application.
+val footprintBundletool =
+  configurations.create("footprintBundletool") {
+    isCanBeConsumed = false
+  }
+
+dependencies {
+  add(footprintBundletool.name, "com.android.tools.build:bundletool:1.18.3")
+  add(footprintBundletool.name, libs.kotlin.stdlib)
+}
+
+tasks.register<JavaExec>("bundletool") {
+  group = "verification"
+  description = "Runs pinned bundletool with arguments from a JSON array file."
+  classpath = footprintBundletool
+  mainClass.set("com.android.tools.build.bundletool.BundleToolMain")
+  workingDir = rootProject.projectDir
+  doFirst {
+    val path = providers.gradleProperty("footprintBundletoolArgsFile").get()
+    val values = groovy.json.JsonSlurper().parse(rootProject.file(path)) as List<*>
+    require(values.all { it is String }) { "bundletool arguments must be strings" }
+    setArgs(values.map { it as String })
+  }
+}

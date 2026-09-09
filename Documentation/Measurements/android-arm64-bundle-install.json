@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "delivery": "device-targeted bundletool split APK install",
+  "samples": {
+    "baseline": {
+      "package": "com.clerk.footprint.baseline",
+      "appBytes": 172032,
+      "dataBytes": 57344,
+      "cacheBytes": 32768,
+      "sdk": 36,
+      "abi": "arm64-v8a",
+      "definition": "StorageStatsManager own-UID sample after first ready"
+    },
+    "embedded": {
+      "package": "com.clerk.footprint.embedded",
+      "appBytes": 3190784,
+      "dataBytes": 57344,
+      "cacheBytes": 32768,
+      "sdk": 36,
+      "abi": "arm64-v8a",
+      "definition": "StorageStatsManager own-UID sample after first ready"
+    }
+  },
+  "deltaAppBytes": 3018752,
+  "apkSetSHA256": {
+    "baseline": "21e363dfeb745032dcdbcfe2d83fa605655c0673fe73a8eac47e33d5e7bc5753",
+    "embedded": "3d4caf3ed91f5f47b24a52e9e4cb4c82cf09394fa59c35184c57687281e419f1"
+  },
+  "installedBudgetBytes": 8388608,
+  "limitation": "one emulator own-UID sample after first ready; no physical-device or all-configuration acceptance"
+}

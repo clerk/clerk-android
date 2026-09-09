@@ -48,3 +48,40 @@ The pinned NDK is also needed for app-level stripping when consuming the SDK as
 a Gradle project. A missing compatible strip tool can cause Gradle to package
 its unstripped intermediate library with a warning. The published release AAR
 is separately stripped by the library build.
+
+## App Bundle delivery estimate
+
+The `bundletool` Gradle task uses pinned bundletool 1.18.3 and an explicit Kotlin
+runtime in a build-time-only configuration. Its arguments come from a JSON array
+file so paths with spaces are preserved. It does not change application dependencies.
+
+Build the paired bundles, then use bundletool's `get-device-spec` command through
+that task to capture the actual test-device configuration. For example, write
+this JSON to `build/core-bundle-measurement/device-arguments.json` with paths for
+your machine:
+
+```json
+["get-device-spec", "--adb=/path/to/adb", "--device-id=emulator-5554", "--output=/absolute/path/device.json"]
+```
+
+```sh
+./gradlew :samples:core-footprint:bundleBaselineRelease \
+  :samples:core-footprint:bundleEmbeddedRelease -PfootprintAbi=arm64-v8a
+./gradlew :samples:core-footprint:bundletool \
+  -PfootprintBundletoolArgsFile=build/core-bundle-measurement/device-arguments.json
+python3 scripts/measure-native-core-bundle.py \
+  build/core-bundle-download.json --device-spec /absolute/path/device.json \
+  --aapt2 /path/to/android-sdk/build-tools/36.1.0/aapt2
+```
+
+The script creates device-targeted split APK sets, runs `get-size total`, verifies
+the tool version and core/fixture hashes, and records the size range and split
+hashes. Raw tool logs and argument files remain in `build/core-bundle-measurement`.
+The maximum incremental estimate is compared against the 5 MiB budget. This is
+bundletool's compressed-delivery estimate, not an observed Play download.
+
+To verify split execution, run the tool's `install-apks` command with the resulting
+`.apks` path and the same device, then launch the corresponding measurement
+Activity. Only replace the dedicated measurement applications; preserve other
+apps and their data. Capture fresh PID-scoped ready/size logs and stop the two
+measurement apps when done.
