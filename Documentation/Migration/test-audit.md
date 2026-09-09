@@ -1,5 +1,7 @@
 # Legacy test audit
 
+The [deletion result contract](deletion-result-contract.md) records the reproduced membership return-value regression and packaged QuickJS checks. It does not retire unaudited legacy tests.
+
 Baseline: `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. This is a file-level ownership and migration audit of the old native API suite, with exact test declarations retained in [legacy-tests.json](legacy-tests.json). Parameterized cases are not expanded; declarations and helper functions are not a coverage percentage.
 
 The old tests are still retained while assertion-level platform and coverage migration is incomplete. No file in this inventory is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The lists below identify where that decision belongs and explicitly preserve unresolved gates.

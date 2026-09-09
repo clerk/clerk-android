@@ -1,0 +1,9 @@
+# Resource results after deletion
+
+The generated `OrganizationMembership.destroy()` returns the removed membership. The canonical TypeScript implementation previously declared that result but returned `undefined`, causing a bridge error after an otherwise successful deletion. It now returns the hydrated resource after deletion completes. A full resource response supplies updated fields; a minimal `deleted: true` receipt preserves the last readable fields. The response's client updates the user's membership collection and active organization before completion.
+
+`NativeCoreTests/Android/OrganizationMembershipTest.kt` exercises both response forms on the packaged QuickJS runtime. It checks the effective DELETE path, membership user ID, session query, typed result, metadata, readable nested organization after deselection, updated user collection, and a subsequent operation. Both instrumentation tests failed before the fix and pass afterward on the API 36 emulator. All 11 existing `PackagedCoreTest` tests also pass in a separate instrumentation run.
+
+The shared `Client.removeSessions()` implementation had the same declared-result mismatch and now returns its updated client. Its source test checks that public result and cleared session state. This does not restore a native `Client` root.
+
+Shared evidence: all 227 embedded-core tests and 17 focused source tests pass, including rejected membership deletion retaining canonical state. Packaged core revision: `86c89414f7ea26ba3de14ab65ba7ea5407c2e95a`; bundle SHA-256: `34808311909b099c643ad5c85209f54381346d74bf72467feef0397fbe759e92`. The generated API contract is unchanged. These are fixture checks, not live organization deletion, device upgrade, or release-performance evidence. No unaudited legacy test is retired by this change; membership deletion without a public user ID remains unresolved.
