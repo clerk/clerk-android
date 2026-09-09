@@ -1,5 +1,6 @@
 package com.clerk.prebuiltui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,7 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.api.Clerk
+import com.clerk.ui.core.composition.ClerkProvider
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.prebuiltui.ui.theme.ClerkTheme
 import com.clerk.ui.R as ClerkUiR
 import com.clerk.ui.auth.AuthView
@@ -44,29 +46,72 @@ import com.clerk.ui.organizationprofile.custom.OrganizationProfileRowIcon
 import com.clerk.ui.organizationswitcher.OrganizationSwitcher
 
 class MainActivity : ComponentActivity() {
+  private val app get() = application as PrebuiltUiApplication
+
+  override fun onResume() {
+    super.onResume()
+    app.setActivity(this)
+  }
+
+  override fun onDestroy() {
+    app.clearActivity(this)
+    super.onDestroy()
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    handleCallback(intent)
+  }
+
+  private fun handleCallback(intent: Intent) {
+    val url = intent.data ?: return
+    intent.data = null
+    app.handleCallback(url.toString())
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    app.setActivity(this)
     enableEdgeToEdge()
+    handleCallback(intent)
     setContent {
-      val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
-      val isAuthFlowComplete by Clerk.isAuthFlowCompleteFlow.collectAsStateWithLifecycle()
-      val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
+      val connection by app.connection.collectAsStateWithLifecycle()
+      val callbackError by app.callbackError.collectAsStateWithLifecycle()
       ClerkTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
           Box(
             modifier = Modifier.fillMaxSize().padding(innerPadding),
             contentAlignment = Alignment.Center,
           ) {
-            if (isInitialized) {
-              if (!isAuthFlowComplete) {
-                AuthView(isDismissible = false)
-              } else {
-                SignedInPrebuiltHome(
-                  hasActiveOrganization = session?.lastActiveOrganizationId != null
-                )
+            val clerk = connection?.getOrNull()
+            if (clerk != null) {
+              ClerkProvider(clerk) {
+                if (!LocalClerk.isAuthFlowComplete) {
+                  AuthView(isDismissible = false)
+                } else {
+                  SignedInPrebuiltHome(
+                    hasActiveOrganization = LocalClerk.current.organization != null
+                  )
+                }
+              }
+            } else if (connection?.isFailure == true) {
+              Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(connection?.exceptionOrNull()?.localizedMessage ?: "Unable to connect")
+                Button(onClick = app::connect) { Text("Retry") }
               }
             } else {
               CircularProgressIndicator()
+            }
+            callbackError?.let { message ->
+              androidx.compose.material3.AlertDialog(
+                onDismissRequest = app::clearCallbackError,
+                title = { Text("Unable to complete authentication") },
+                text = { Text(message) },
+                confirmButton = {
+                  Button(onClick = app::clearCallbackError) { Text("OK") }
+                },
+              )
             }
           }
         }

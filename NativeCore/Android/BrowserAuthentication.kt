@@ -96,6 +96,13 @@ public class CoreBrowserCallbackActivity : Activity() {
     if (callback != null && BrowserRequests.matches(callback)) {
       startActivity(Intent(this, CoreBrowserActivity::class.java).setData(callback)
         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+    } else if (callback != null && callback.scheme == "$packageName.clerk" &&
+      callback.host == "oauth" && callback.path == "/callback" && callback.userInfo == null) {
+      // Email links and restored callbacks belong to the application's connected core.
+      packageManager.getLaunchIntentForPackage(packageName)?.let { launch ->
+        startActivity(launch.setData(callback)
+          .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+      }
     }
     finish()
   }
