@@ -34,3 +34,7 @@ The 2026-09-09 bundle at TypeScript revision `5e2b30ccdecf9bc031bcf5506f7faedc0a
 Android's repeated release-engine run accumulated managed garbage before collection: process PSS rose from 14,202 KiB to 210,843 KiB and returned to 33,010 KiB after close. This is a stress-run sample, not a passing single-owner startup-peak or isolated-engine-memory result. The macOS process peak RSS likewise includes the harness and system libraries.
 
 Physical-device startup/latency, single-owner steady/peak memory, Expo overhead, and matched application download/installed-size gates remain unverified. Do not infer release approval from the fixture timing or bundle-size results.
+
+## Matched Android release application measurement
+
+The [arm64 release footprint report](Measurements/android-arm64-release-footprint.md) records a fresh-install app-byte delta of 3,874,816 bytes on the API 36 emulator, with both matched R8 builds executing successfully. It includes current bundle/APK hashes and all three stripped AAR library sizes. This closes the measurement gap for that harness configuration; physical-device, other-ABI, Play delivery and iOS application-size gates remain open.

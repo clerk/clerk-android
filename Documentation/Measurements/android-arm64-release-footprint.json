@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "abi": "arm64-v8a",
+  "baseline": {
+    "apk": "samples/core-footprint/build/outputs/apk/baseline/release/core-footprint-baseline-release.apk",
+    "sha256": "d8855481103611ef2971e1fcbfc3c39cc75118f62b7b8d00bd80e9425acda173",
+    "apkBytes": 62000,
+    "gzipApkBytes": 57883,
+    "expandedEntryBytes": 150233,
+    "groups": {
+      "other": {
+        "compressedBytes": 16478,
+        "expandedBytes": 70865
+      },
+      "dex": {
+        "compressedBytes": 38719,
+        "expandedBytes": 79368
+      }
+    },
+    "nativeDebugSections": {},
+    "abis": [],
+    "fixtureSHA256": "171fec9df9f9aea3bbc0c3887a94802bad0caa0a96a03bd50efb0c92315a1e2d",
+    "core": null
+  },
+  "embedded": {
+    "apk": "samples/core-footprint/build/outputs/apk/embedded/release/core-footprint-embedded-release.apk",
+    "sha256": "be882a9d5640920511653551ea5109b5bf8ae2403584ec265a371250ce19126f",
+    "apkBytes": 2425202,
+    "gzipApkBytes": 1664634,
+    "expandedEntryBytes": 4566596,
+    "groups": {
+      "other": {
+        "compressedBytes": 409500,
+        "expandedBytes": 696086
+      },
+      "dex": {
+        "compressedBytes": 706594,
+        "expandedBytes": 1542380
+      },
+      "native": {
+        "compressedBytes": 1013440,
+        "expandedBytes": 1013440
+      },
+      "core": {
+        "compressedBytes": 236718,
+        "expandedBytes": 1314690
+      }
+    },
+    "nativeDebugSections": {
+      "lib/arm64-v8a/libclerk_quickjs.so": []
+    },
+    "abis": [
+      "arm64-v8a"
+    ],
+    "fixtureSHA256": "171fec9df9f9aea3bbc0c3887a94802bad0caa0a96a03bd50efb0c92315a1e2d",
+    "core": {
+      "sha256": "85fd61ac8a7d5ca95c5be7c8bbfa17d2004eb13c280f587ebc8d24d50f9aa52c",
+      "bytes": 1314690,
+      "gzipBytes": 234247
+    }
+  },
+  "delta": {
+    "apkBytes": 2363202,
+    "gzipApkBytes": 1606751,
+    "expandedEntryBytes": 4416363
+  },
+  "compressedBundleBudget": {
+    "maximumBytes": 393216,
+    "passed": true
+  },
+  "limitations": [
+    "gzip APK bytes estimate compression, not Play delivery or an App Bundle split install",
+    "expanded ZIP entry bytes are not installed application size; they exclude runtime compilation and package-manager storage",
+    "minimal R8 release app; retained default platform hosts, generated local reset, fixture startup; no prebuilt Compose UI assets",
+    "no startup latency, memory or physical-device acceptance claim"
+  ],
+  "installedSize": {
+    "baseline": {
+      "package": "com.clerk.footprint.baseline",
+      "appBytes": 212992,
+      "dataBytes": 57344,
+      "cacheBytes": 32768,
+      "sdk": 36,
+      "abi": "arm64-v8a",
+      "definition": "StorageStatsManager own-UID sample after first ready"
+    },
+    "embedded": {
+      "package": "com.clerk.footprint.embedded",
+      "appBytes": 4087808,
+      "dataBytes": 57344,
+      "cacheBytes": 32768,
+      "sdk": 36,
+      "abi": "arm64-v8a",
+      "definition": "StorageStatsManager own-UID sample after first ready"
+    },
+    "deltaAppBytes": 3874816,
+    "budgetBytes": 8388608,
+    "withinBudgetForThisSample": true,
+    "limitation": "one device's own-UID appBytes after first launch; excludes data/cache, is not all device or Play split-install acceptance"
+  }
+}

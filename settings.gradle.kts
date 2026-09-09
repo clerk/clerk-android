@@ -36,3 +36,5 @@ include(
 )
 
 include(":samples:prebuilt-ui")
+
+include(":samples:core-footprint")
