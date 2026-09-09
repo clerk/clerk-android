@@ -16,6 +16,7 @@ internal fun AuthStateEffects(
   onAuthComplete: () -> Unit,
   onReset: () -> Unit = {},
 ) {
+  AuthPresentationErrorEffect(authState, snackbarHostState)
   val defaultErrorMessage = stringResource(R.string.something_went_wrong_please_try_again)
   val snackbarScope = rememberCoroutineScope()
   LaunchedEffect(state, defaultErrorMessage) {
@@ -39,6 +40,20 @@ internal fun AuthStateEffects(
         onReset()
       }
       else -> Unit
+    }
+  }
+}
+
+@Composable
+internal fun AuthPresentationErrorEffect(
+  authState: AuthState,
+  snackbarHostState: SnackbarHostState,
+) {
+  val message = authState.presentationError
+  LaunchedEffect(message) {
+    if (message != null) {
+      snackbarHostState.showSnackbar(message)
+      if (authState.presentationError == message) authState.clearPresentationError()
     }
   }
 }

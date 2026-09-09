@@ -61,6 +61,7 @@ internal fun AuthStateProvider(
   val authState =
     remember(clerk, backStack, sharedPreferences, mode) {
       AuthState(
+        clerk = clerk,
         mode = mode,
         backStack = backStack,
         sharedPreferences = sharedPreferences,

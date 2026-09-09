@@ -11,16 +11,12 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
-import com.clerk.api.Constants
 import com.clerk.api.Session
 import com.clerk.api.SessionTaskKey
 import com.clerk.api.SignIn
+import com.clerk.api.SignInStatus
 import com.clerk.api.SignUp
-import com.clerk.api.signin.startingFirstFactor
-import com.clerk.api.signin.startingSecondFactor
-import com.clerk.api.signup.emailVerificationStrategy
-import com.clerk.api.signup.firstFieldToCollect
-import com.clerk.api.signup.firstFieldToVerify
+import com.clerk.api.SignUpStatus
 import com.clerk.ui.auth.biometriccredential.BiometricCredentialEnrollmentPrompt
 import com.clerk.ui.core.common.NavigableState
 import com.clerk.ui.core.composition.AuthStateProvider
@@ -30,6 +26,8 @@ import com.clerk.ui.signup.collectfield.CollectField
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import java.util.Locale
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private const val EMAIL_ADDRESS = "email_address"
 
@@ -42,12 +40,22 @@ private const val USERNAME = "username"
 @Stable
 @Suppress("TooManyFunctions")
 internal class AuthState(
+  val clerk: Clerk,
   val mode: AuthMode = AuthMode.SignInOrUp,
   val backStack: NavBackStack<NavKey>,
   private val sharedPreferences: SharedPreferences,
   identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
   organizationLogoUrl: String? = null,
 ) : NavigableState<AuthDestination> {
+
+  var presentationError by mutableStateOf<String?>(null)
+    private set
+
+  fun clearPresentationError() {
+    presentationError = null
+  }
+
+  private val finalization = Mutex()
 
   private var appliedIdentifierConfig: AuthIdentifierConfig? = null
 
@@ -175,35 +183,78 @@ internal class AuthState(
     signInBackupCode = ""
   }
 
-  internal fun setToStepForStatus(
+  internal suspend fun setToStepForStatus(signIn: SignIn, onAuthComplete: () -> Unit): Boolean =
+    com.clerk.ui.core.common
+      .runUiOperation {
+        finalization.withLock { advanceToStepForStatus(signIn, onAuthComplete = onAuthComplete) }
+      }
+      .fold(
+        onSuccess = { true },
+        onFailure = {
+          presentationError = it.localizedMessage ?: "The operation could not be completed."
+          false
+        },
+      )
+
+  internal suspend fun setToStepForStatus(signUp: SignUp, onAuthComplete: () -> Unit): Boolean =
+    com.clerk.ui.core.common
+      .runUiOperation {
+        finalization.withLock { advanceToStepForStatus(signUp, onAuthComplete = onAuthComplete) }
+      }
+      .fold(
+        onSuccess = { true },
+        onFailure = {
+          presentationError = it.localizedMessage ?: "The operation could not be completed."
+          false
+        },
+      )
+
+  private var completedPresentationSessionId: String? = null
+
+  internal fun completePresentation(onAuthComplete: () -> Unit) {
+    val session = clerk.session ?: return
+    if (
+      session.status != com.clerk.api.SessionStatus.Active ||
+        session.currentTask != null ||
+        completedPresentationSessionId == session.id
+    )
+      return
+    completedPresentationSessionId = session.id
+    onAuthComplete()
+  }
+
+  private suspend fun advanceToStepForStatus(
     signIn: SignIn,
-    session: Session? = signIn.correspondingSession(),
+    session: Session? = null,
     onAuthComplete: () -> Unit,
   ) {
+    if (
+      signIn.status == SignInStatus.Complete &&
+        (signIn.createdSessionId == null || clerk.session?.id != signIn.createdSessionId)
+    )
+      signIn.finalize()
+    val resolvedSession = session ?: signIn.correspondingSession(clerk)
     when (signIn.status) {
-      SignIn.Status.COMPLETE -> {
+      SignInStatus.Complete -> {
         handlePostAuthCompletion(
-          taskKey = signIn.pendingSessionTaskKey(session),
-          hasUnresolvedCreatedSession = signIn.createdSessionId != null && session == null,
-          shouldChooseOrganizationForCreatedSession =
-            signIn.createdSessionId != null && Clerk.organizationSelectionIsForced,
+          taskKey = resolvedSession.pendingSessionTaskKey(),
+          hasUnresolvedCreatedSession = signIn.createdSessionId != null && resolvedSession == null,
           completedWithSignUp = false,
           onAuthComplete = onAuthComplete,
         )
       }
-      SignIn.Status.NEEDS_IDENTIFIER -> resetToRoot()
-      SignIn.Status.NEEDS_FIRST_FACTOR -> routeToFirstFactorOrHelp(signIn)
-      SignIn.Status.NEEDS_SECOND_FACTOR -> routeToSecondFactorOrHelp(signIn)
-      SignIn.Status.NEEDS_NEW_PASSWORD -> backStack.add(AuthDestination.SignInSetNewPassword)
-      SignIn.Status.NEEDS_CLIENT_TRUST -> routeToClientTrustOrHelp(signIn)
-      SignIn.Status.UNKNOWN -> Unit
+      SignInStatus.NeedsIdentifier -> resetToRoot()
+      SignInStatus.NeedsFirstFactor -> routeToFirstFactorOrHelp(signIn)
+      SignInStatus.NeedsSecondFactor -> routeToSecondFactorOrHelp(signIn)
+      SignInStatus.NeedsNewPassword -> backStack.add(AuthDestination.SignInSetNewPassword)
+      SignInStatus.NeedsClientTrust -> routeToClientTrustOrHelp(signIn)
+      else -> backStack.add(AuthDestination.SignInGetHelp)
     }
   }
 
-  private fun handlePostAuthCompletion(
+  private suspend fun handlePostAuthCompletion(
     taskKey: SessionTaskKey?,
     hasUnresolvedCreatedSession: Boolean,
-    shouldChooseOrganizationForCreatedSession: Boolean,
     completedWithSignUp: Boolean,
     onAuthComplete: () -> Unit,
   ) {
@@ -211,7 +262,6 @@ internal class AuthState(
       postAuthCompletionAction(
         taskKey = taskKey,
         hasUnresolvedCreatedSession = hasUnresolvedCreatedSession,
-        shouldChooseOrganizationForCreatedSession = shouldChooseOrganizationForCreatedSession,
       )
     ) {
       PostAuthCompletionAction.ROUTE_TO_MFA -> routeToSessionTaskMfa()
@@ -220,7 +270,7 @@ internal class AuthState(
       PostAuthCompletionAction.ROUTE_TO_HELP -> backStack.add(AuthDestination.SignInGetHelp)
       PostAuthCompletionAction.COMPLETE_AUTH -> {
         if (offerBiometricCredentialEnrollmentIfNeeded(completedWithSignUp)) return
-        onAuthComplete()
+        completePresentation(onAuthComplete)
       }
     }
   }
@@ -230,11 +280,14 @@ internal class AuthState(
    * completed auth flow. Returns `true` when the prompt was routed to.
    */
   @Suppress("ReturnCount")
-  private fun offerBiometricCredentialEnrollmentIfNeeded(completedWithSignUp: Boolean): Boolean {
+  private suspend fun offerBiometricCredentialEnrollmentIfNeeded(
+    completedWithSignUp: Boolean
+  ): Boolean {
     if (biometricCredentialEnrollmentWasOffered) return false
     if (backStack.lastOrNull() == AuthDestination.BiometricCredentialEnrollment) return false
     if (
       !BiometricCredentialEnrollmentPrompt.shouldOffer(
+        clerk = clerk,
         afterSignUp = completedWithSignUp,
         sharedPreferences = sharedPreferences,
       )
@@ -243,7 +296,7 @@ internal class AuthState(
     }
 
     biometricCredentialEnrollmentWasOffered = true
-    BiometricCredentialEnrollmentPrompt.markPromptSeen(sharedPreferences)
+    BiometricCredentialEnrollmentPrompt.markPromptSeen(clerk, sharedPreferences)
     backStack.add(AuthDestination.BiometricCredentialEnrollment)
     return true
   }
@@ -267,14 +320,7 @@ internal class AuthState(
   }
 
   private fun routeToFirstFactorOrHelp(signIn: SignIn) {
-    val resolvedSignIn =
-      if (signIn.identifier.isNullOrBlank() && !lastSubmittedIdentifier.isNullOrBlank()) {
-        signIn.copy(identifier = lastSubmittedIdentifier)
-      } else {
-        signIn
-      }
-
-    resolvedSignIn.startingFirstFactor?.let {
+    signIn.startingFirstFactor(clerk, lastSubmittedIdentifier)?.let {
       backStack.add(AuthDestination.SignInFactorOne(factor = it))
     } ?: backStack.add(AuthDestination.SignInGetHelp)
   }
@@ -290,26 +336,30 @@ internal class AuthState(
     } ?: backStack.add(AuthDestination.SignInGetHelp)
   }
 
-  internal fun setToStepForStatus(
+  private suspend fun advanceToStepForStatus(
     signUp: SignUp,
-    session: Session? = signUp.correspondingSession(),
+    session: Session? = null,
     onAuthComplete: () -> Unit,
   ) {
+    if (
+      signUp.status == SignUpStatus.Complete &&
+        (signUp.createdSessionId == null || clerk.session?.id != signUp.createdSessionId)
+    )
+      signUp.finalize()
+    val resolvedSession = session ?: signUp.correspondingSession(clerk)
     when (signUp.status) {
-      SignUp.Status.ABANDONED -> resetToRoot()
-      SignUp.Status.MISSING_REQUIREMENTS -> handleMissingRequirements(signUp)
-      SignUp.Status.COMPLETE -> {
+      SignUpStatus.Abandoned -> resetToRoot()
+      SignUpStatus.MissingRequirements -> handleMissingRequirements(signUp)
+      SignUpStatus.Complete -> {
         handlePostAuthCompletion(
-          taskKey = signUp.pendingSessionTaskKey(session),
-          hasUnresolvedCreatedSession = signUp.createdSessionId != null && session == null,
-          shouldChooseOrganizationForCreatedSession =
-            signUp.createdSessionId != null && Clerk.organizationSelectionIsForced,
+          taskKey = resolvedSession.pendingSessionTaskKey(),
+          hasUnresolvedCreatedSession = signUp.createdSessionId != null && resolvedSession == null,
           completedWithSignUp = true,
           onAuthComplete = onAuthComplete,
         )
         return
       }
-      SignUp.Status.UNKNOWN -> return
+      else -> backStack.add(AuthDestination.SignInGetHelp)
     }
   }
 
@@ -332,7 +382,7 @@ internal class AuthState(
         val emailAddress = signUp.emailAddress
         if (emailAddress != null) {
           val destination =
-            if (signUp.emailVerificationStrategy == Constants.Strategy.EMAIL_LINK) {
+            if (signUp.emailVerificationStrategy(clerk) == "email_link") {
               AuthDestination.SignUpEmailLink(emailAddress = emailAddress)
             } else {
               AuthDestination.SignUpCode(field = SignUpCodeField.Email(emailAddress))
@@ -466,12 +516,12 @@ internal data class AuthIdentifierConfig(
   val initialLastName: String? = null,
   val lockPrefilledFields: Boolean = false,
   val persistIdentifiers: Boolean = true,
-  val unsafeMetadata: Map<String, Any>? = null,
+  val unsafeMetadata: kotlinx.serialization.json.JsonObject? = null,
 )
 
 internal fun authSharedPreferences(context: Context): SharedPreferences {
   return context.applicationContext.getSharedPreferences(
-    Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
+    "clerk_preferences",
     Context.MODE_PRIVATE,
   )
 }
@@ -496,6 +546,8 @@ private fun String.looksLikePhoneNumber(): Boolean {
 
 @Composable
 internal fun PreviewAuthStateProvider(content: @Composable () -> Unit) {
-  val backStack = rememberNavBackStack()
-  AuthStateProvider(backStack) { content() }
+  com.clerk.ui.core.preview.ClerkPreview {
+    val backStack = rememberNavBackStack(AuthDestination.AuthStart)
+    AuthStateProvider(backStack) { content() }
+  }
 }

@@ -1,28 +1,19 @@
 package com.clerk.ui.signin.code
 
-import com.clerk.api.SignIn
-import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.attemptFirstFactor
-import com.clerk.api.signin.attemptSecondFactor
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 
 internal class SignInAttemptHandler {
-
   internal suspend fun attemptForTotp(
     inProgressSignIn: SignIn,
     code: String,
     onSuccessCallback: suspend (SignIn) -> Unit,
     onErrorCallback: suspend (String?) -> Unit,
   ) {
-    inProgressSignIn
-      .attemptSecondFactor(SignIn.AttemptSecondFactorParams.TOTP(code = code))
-      .onSuccess { onSuccessCallback(it) }
-      .onFailure {
-        ClerkLog.e("Error attempting TOTP code: $it")
-        onErrorCallback(it.errorMessage)
-      }
+    runUiOperation { inProgressSignIn.mfa.verifyTOTP(SignInTOTPVerifyParams(code)) }
+      .onSuccess { onSuccessCallback(inProgressSignIn) }
+      .onFailure { onErrorCallback(it.displayMessage) }
   }
 
   internal suspend fun attemptResetForPhoneCode(
@@ -31,13 +22,13 @@ internal class SignInAttemptHandler {
     onSuccessCallback: suspend (SignIn) -> Unit,
     onErrorCallback: suspend (String?) -> Unit,
   ) {
-    inProgressSignIn
-      .attemptFirstFactor(SignIn.AttemptFirstFactorParams.ResetPasswordPhoneCode(code = code))
-      .onSuccess { onSuccessCallback(it) }
-      .onFailure {
-        ClerkLog.e("Error attempting reset password phone code: $it")
-        onErrorCallback(it.errorMessage)
+    runUiOperation {
+        inProgressSignIn.resetPasswordPhoneCode.verifyCode(
+          SignInResetPasswordPhoneCodeVerifyParams(code)
+        )
       }
+      .onSuccess { onSuccessCallback(inProgressSignIn) }
+      .onFailure { onErrorCallback(it.displayMessage) }
   }
 
   internal suspend fun attemptResetForEmailCode(
@@ -46,13 +37,11 @@ internal class SignInAttemptHandler {
     onSuccessCallback: suspend (SignIn) -> Unit,
     onErrorCallback: suspend (String?) -> Unit,
   ) {
-    inProgressSignIn
-      .attemptFirstFactor(SignIn.AttemptFirstFactorParams.ResetPasswordEmailCode(code = code))
-      .onSuccess { onSuccessCallback(it) }
-      .onFailure {
-        ClerkLog.e("Error attempting reset password email code: $it")
-        onErrorCallback(it.errorMessage)
+    runUiOperation {
+        inProgressSignIn.resetPasswordEmailCode.verifyCode(SignInEmailCodeVerifyParams(code))
       }
+      .onSuccess { onSuccessCallback(inProgressSignIn) }
+      .onFailure { onErrorCallback(it.displayMessage) }
   }
 
   internal suspend fun attemptFirstFactorPhoneCode(
@@ -62,23 +51,13 @@ internal class SignInAttemptHandler {
     onSuccessCallback: suspend (SignIn) -> Unit,
     onErrorCallback: suspend (String?) -> Unit,
   ) {
-    if (isSecondFactor) {
-      inProgressSignIn
-        .attemptSecondFactor(SignIn.AttemptSecondFactorParams.PhoneCode(code = code))
-        .onSuccess { onSuccessCallback(it) }
-        .onFailure {
-          ClerkLog.e("Error attempting phone code as second factor: $it")
-          onErrorCallback(it.errorMessage)
-        }
-    } else {
-      inProgressSignIn
-        .attemptFirstFactor(SignIn.AttemptFirstFactorParams.PhoneCode(code = code))
-        .onSuccess { onSuccessCallback(it) }
-        .onFailure {
-          ClerkLog.e("Error attempting phone code: $it")
-          onErrorCallback(it.errorMessage)
-        }
-    }
+    runUiOperation {
+        if (isSecondFactor)
+          inProgressSignIn.mfa.verifyPhoneCode(SignInMFAPhoneCodeVerifyParams(code))
+        else inProgressSignIn.phoneCode.verifyCode(SignInPhoneCodeVerifyParams(code))
+      }
+      .onSuccess { onSuccessCallback(inProgressSignIn) }
+      .onFailure { onErrorCallback(it.displayMessage) }
   }
 
   internal suspend fun attemptEmailCode(
@@ -88,22 +67,12 @@ internal class SignInAttemptHandler {
     onSuccessCallback: suspend (SignIn) -> Unit,
     onErrorCallback: suspend (String?) -> Unit,
   ) {
-    if (isSecondFactor) {
-      inProgressSignIn
-        .attemptSecondFactor(SignIn.AttemptSecondFactorParams.EmailCode(code = code))
-        .onSuccess { onSuccessCallback(it) }
-        .onFailure {
-          ClerkLog.e("Error attempting email code as second factor: $it")
-          onErrorCallback(it.errorMessage)
-        }
-    } else {
-      inProgressSignIn
-        .attemptFirstFactor(SignIn.AttemptFirstFactorParams.EmailCode(code = code))
-        .onSuccess { onSuccessCallback(it) }
-        .onFailure {
-          ClerkLog.e("Error attempting email code: $it")
-          onErrorCallback(it.errorMessage)
-        }
-    }
+    runUiOperation {
+        if (isSecondFactor)
+          inProgressSignIn.mfa.verifyEmailCode(SignInMFAEmailCodeVerifyParams(code))
+        else inProgressSignIn.emailCode.verifyCode(SignInEmailCodeVerifyParams(code))
+      }
+      .onSuccess { onSuccessCallback(inProgressSignIn) }
+      .onFailure { onErrorCallback(it.displayMessage) }
   }
 }

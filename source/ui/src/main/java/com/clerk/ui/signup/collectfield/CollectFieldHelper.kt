@@ -13,7 +13,7 @@ import com.clerk.ui.R
  * well as a method to determine if a field is optional based on the Clerk configuration.
  */
 @Stable
-internal class CollectFieldHelper {
+internal class CollectFieldHelper(private val clerk: Clerk) {
   @Composable
   fun title(collectField: CollectField) =
     when (collectField) {
@@ -42,7 +42,7 @@ internal class CollectFieldHelper {
     }
 
   fun fieldIsOptional(collectField: CollectField) =
-    fieldIsOptional(collectField, Clerk.auth.currentSignUp?.requiredFields)
+    fieldIsOptional(collectField, clerk.signUp.requiredFields.map { it.rawValue })
 
   internal fun fieldIsOptional(collectField: CollectField, requiredFields: List<String>?): Boolean {
     return requiredFields?.contains(collectField.rawValue) != true

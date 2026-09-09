@@ -18,13 +18,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.auth.handleSessionTaskCompletion
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp64
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
@@ -38,15 +39,18 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 internal fun BiometricCredentialEnrollmentView(
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: BiometricCredentialEnrollmentViewModel = viewModel(),
+  viewModel: BiometricCredentialEnrollmentViewModel = clerkViewModel {
+    BiometricCredentialEnrollmentViewModel(it)
+  },
 ) {
+  val clerk = LocalClerk.current
   val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val generic = stringResource(R.string.something_went_wrong_please_try_again)
 
   fun continueAfterEnrollmentPrompt() {
-    authState.handleSessionTaskCompletion(Clerk.session, onAuthComplete)
+    authState.handleSessionTaskCompletion(clerk.session, onAuthComplete)
   }
 
   LaunchedEffect(state) {
@@ -63,7 +67,7 @@ internal fun BiometricCredentialEnrollmentView(
     }
   }
 
-  val applicationName = Clerk.applicationName
+  val applicationName = clerk.environment.displayConfig.applicationName.takeIf { it.isNotBlank() }
   val promptSubtitle =
     applicationName?.let { stringResource(R.string.app_uses_biometrics_to_sign_you_in, it) }
       ?: stringResource(R.string.use_biometrics_to_sign_in)

@@ -24,13 +24,14 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkTextField
@@ -74,10 +75,11 @@ private fun SignUpCompleteProfileImpl(
   firstNameEnabled: Boolean = false,
   lastNameEnabled: Boolean = false,
   legalConsentMissing: Boolean = false,
-  viewModel: CompleteProfileViewModel = viewModel(),
+  viewModel: CompleteProfileViewModel = clerkViewModel { CompleteProfileViewModel(it) },
 ) {
+  val clerk = LocalClerk.current
   val authState = LocalAuthState.current
-  val signUp = Clerk.auth.currentSignUp
+  val signUp = clerk.signUp.takeIf { it.id != null }
   val firstEnabled = firstNameEnabled || signUp?.supportsField(FIRST_NAME_FIELD) == true
   val lastEnabled = lastNameEnabled || signUp?.supportsField(LAST_NAME_FIELD) == true
 
@@ -85,10 +87,10 @@ private fun SignUpCompleteProfileImpl(
   // fields.
   val legalConsentRequired =
     legalConsentMissing ||
-      (signUp?.requiredFields?.contains(LEGAL_ACCEPTED_FIELD) == true &&
-        signUp.missingFields.contains(LEGAL_ACCEPTED_FIELD))
-  val termsUrl = Clerk.termsUrl
-  val privacyPolicyUrl = Clerk.privacyPolicyUrl
+      (signUp?.requiredFields?.any { it.rawValue == LEGAL_ACCEPTED_FIELD } == true &&
+        signUp.missingFields.any { it.rawValue == LEGAL_ACCEPTED_FIELD })
+  val termsUrl = clerk.environment.displayConfig.termsUrl.takeIf { it.isNotBlank() }
+  val privacyPolicyUrl = clerk.environment.displayConfig.privacyPolicyUrl.takeIf { it.isNotBlank() }
   val hasLegalUrls = termsUrl != null || privacyPolicyUrl != null
   val showLegalConsent = legalConsentRequired && hasLegalUrls
 

@@ -10,11 +10,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
-import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.verificationState
@@ -47,13 +46,13 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  *
  * ```kotlin
  * SignInFactorCodeView(
- *   factor = Factor(strategy = "email_code", emailAddressId = "user@example.com")
+ *   factor = FactorSelection(strategy = "email_code", emailAddressId = "user@example.com")
  * )
  * ```
  */
 @Composable
 fun SignInFactorCodeView(
-  factor: Factor,
+  factor: FactorSelection,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
   isClientTrust: Boolean = false,
@@ -76,7 +75,7 @@ fun SignInFactorCodeView(
  *
  * This component handles:
  * - View model state management
- * - Factor preparation on composition
+ * - FactorSelection preparation on composition
  * - Timer countdown for resend functionality
  * - Code input and automatic submission when complete
  * - Navigation actions (back, use another method)
@@ -86,12 +85,16 @@ fun SignInFactorCodeView(
  */
 @Composable
 private fun SignInFactorCodeViewImpl(
-  factor: Factor,
+  factor: FactorSelection,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
   isClientTrust: Boolean = false,
   viewModel: SignInFactorCodeViewModel =
-    viewModel(key = signInFactorCodeViewModelKey(isSecondFactor)),
+    com.clerk.ui.core.composition.clerkViewModel(
+      key = "${com.clerk.ui.core.composition.LocalClerk.current.signIn.id}:$isSecondFactor"
+    ) {
+      SignInFactorCodeViewModel(it)
+    },
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
@@ -161,14 +164,11 @@ private fun SignInFactorCodeViewImpl(
   }
 }
 
-private fun signInFactorCodeViewModelKey(isSecondFactor: Boolean): String =
-  "sign-in-code-${Clerk.auth.currentSignIn?.id ?: "no-sign-in"}-$isSecondFactor"
-
 private fun handleCodeTextChange(
   code: String,
   verificationTextState: VerificationUiState,
   viewModel: SignInFactorCodeViewModel,
-  factor: Factor,
+  factor: FactorSelection,
   isSecondFactor: Boolean,
 ) {
   if (verificationTextState is VerificationUiState.Error) {
@@ -182,7 +182,7 @@ private fun handleCodeTextChange(
 
 @Composable
 private fun SignInCodeInput(
-  factor: Factor,
+  factor: FactorSelection,
   verificationTextState: VerificationUiState,
   onTextChange: (String) -> Unit,
   onClickResend: () -> Unit,
@@ -207,7 +207,7 @@ private fun PreviewSignInFactorCodeView() {
   ClerkMaterialTheme {
     PreviewAuthStateProvider {
       SignInFactorCodeView(
-        Factor(StrategyKeys.PHONE_CODE, safeIdentifier = "sam@clerk.dev"),
+        FactorSelection(StrategyKeys.PHONE_CODE, safeIdentifier = "sam@clerk.dev"),
         onAuthComplete = {},
       )
     }

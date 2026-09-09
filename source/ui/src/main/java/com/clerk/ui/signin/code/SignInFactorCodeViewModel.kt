@@ -3,11 +3,13 @@ package com.clerk.ui.signin.code
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.SignIn
-import com.clerk.api.Verification
-import com.clerk.api.network.model.factor.Factor
+import com.clerk.api.VerificationStatus
 import com.clerk.ui.auth.AuthenticationViewState
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.auth.VerificationUiState
+import com.clerk.ui.auth.firstFactorChoices
 import com.clerk.ui.auth.guardSignIn
+import com.clerk.ui.auth.secondFactorChoices
 import com.clerk.ui.core.common.StrategyKeys
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class SignInFactorCodeViewModel(
+  private val clerk: com.clerk.api.Clerk,
   private val attemptHandler: SignInAttemptHandler = SignInAttemptHandler(),
   private val prepareHandler: SignInPrepareHandler = SignInPrepareHandler(),
   private val workDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -28,8 +31,8 @@ internal class SignInFactorCodeViewModel(
     MutableStateFlow(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun prepare(factor: Factor, isSecondFactor: Boolean, forcePrepare: Boolean = false) {
-    guardSignIn(_state) { inProgressSignIn ->
+  fun prepare(factor: FactorSelection, isSecondFactor: Boolean, forcePrepare: Boolean = false) {
+    guardSignIn(clerk, _state) { inProgressSignIn ->
       val shouldReroute =
         shouldRerouteForUnsupportedFactor(inProgressSignIn, factor, isSecondFactor)
       if (
@@ -76,16 +79,19 @@ internal class SignInFactorCodeViewModel(
     }
   }
 
-  private fun SignIn.hasActiveVerification(factor: Factor, isSecondFactor: Boolean): Boolean {
+  private fun SignIn.hasActiveVerification(
+    factor: FactorSelection,
+    isSecondFactor: Boolean,
+  ): Boolean {
     val verification = if (isSecondFactor) secondFactorVerification else firstFactorVerification
-    return verification?.status == Verification.Status.UNVERIFIED &&
+    return verification?.status == VerificationStatus.Unverified &&
       verification.strategy == factor.strategy &&
-      verification.expireAt?.let { it > System.currentTimeMillis() } == true
+      verification.expireAt?.let { it.toEpochMilli() > System.currentTimeMillis() } == true
   }
 
-  fun attempt(factor: Factor, isSecondFactor: Boolean, code: String) {
+  fun attempt(factor: FactorSelection, isSecondFactor: Boolean, code: String) {
     _verificationUiState.value = VerificationUiState.Verifying
-    guardSignIn(_state) { inProgressSignIn ->
+    guardSignIn(clerk, _state) { inProgressSignIn ->
       _state.value = AuthenticationViewState.Loading
       val onSuccessCallback = { signIn: SignIn ->
         _verificationUiState.value = VerificationUiState.Verified
@@ -156,10 +162,10 @@ internal class SignInFactorCodeViewModel(
 
   private fun shouldRerouteForUnsupportedFactor(
     signIn: SignIn,
-    factor: Factor,
+    factor: FactorSelection,
     isSecondFactor: Boolean,
   ): Boolean {
-    val supportedFirstFactors = signIn.supportedFirstFactors.orEmpty()
+    val supportedFirstFactors = signIn.firstFactorChoices.orEmpty()
     val prefersEmailLinkOverEmailCode =
       factor.strategy == StrategyKeys.EMAIL_CODE &&
         signIn.firstFactorVerification?.strategy != StrategyKeys.EMAIL_CODE &&
@@ -169,15 +175,15 @@ internal class SignInFactorCodeViewModel(
         )
 
     return if (isSecondFactor) {
-      signIn.supportedSecondFactors?.none { it.matches(factor) } == true
+      signIn.secondFactorChoices?.none { it.matches(factor) } == true
     } else {
       supportedFirstFactors.none { it.matches(factor) } || prefersEmailLinkOverEmailCode
     }
   }
 
   private fun SignIn.shouldPreferEmailLink(
-    supportedFirstFactors: List<Factor>,
-    fallbackFactor: Factor,
+    supportedFirstFactors: List<FactorSelection>,
+    fallbackFactor: FactorSelection,
   ): Boolean {
     val hasEmailLink = supportedFirstFactors.any { it.strategy == StrategyKeys.EMAIL_LINK }
     if (!hasEmailLink) return false
@@ -193,7 +199,7 @@ internal class SignInFactorCodeViewModel(
     return isEmailIdentifier
   }
 
-  private fun Factor.matches(other: Factor): Boolean {
+  private fun FactorSelection.matches(other: FactorSelection): Boolean {
     if (strategy != other.strategy) return false
 
     return when {

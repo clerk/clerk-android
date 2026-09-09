@@ -2,89 +2,58 @@ package com.clerk.ui.signin.password.reset
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.User
-import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.model.client.Client
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.resetPassword
-import com.clerk.api.user.updatePassword
-import com.clerk.ui.auth.AuthenticationViewState
-import com.clerk.ui.auth.guardSignIn
-import com.clerk.ui.core.common.guardUser
-import kotlinx.coroutines.Dispatchers
+import com.clerk.api.*
+import com.clerk.ui.auth.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-internal class ResetPasswordViewModel : ViewModel() {
-
+internal class ResetPasswordViewModel(private val clerk: Clerk) : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
   fun setNewPassword(newPassword: String, signOutOtherSessions: Boolean) =
-    guardSignIn(state = _state) { signIn ->
+    guardSignIn(clerk, _state) { signIn ->
       _state.value = AuthenticationViewState.Loading
-      viewModelScope.launch(Dispatchers.IO) {
-        signIn
-          .resetPassword(newPassword = newPassword, signOutOfOtherSessions = signOutOtherSessions)
-          .onSuccess {
-            withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Success.SignIn(it)
-            }
+      viewModelScope.launch {
+        runUiOperation {
+            val params = SignInResetPasswordSubmitParams(newPassword, signOutOtherSessions)
+            if (signIn.firstFactorVerification.strategy == "reset_password_phone_code")
+              signIn.resetPasswordPhoneCode.submitPassword(params)
+            else signIn.resetPasswordEmailCode.submitPassword(params)
           }
-          .onFailure {
-            ClerkLog.e("ResetPasswordViewModel, ${it.errorMessage}")
-            withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Error(it.errorMessage)
-            }
-          }
+          .onSuccess { _state.value = AuthenticationViewState.Success.SignIn(signIn) }
+          .onFailure { _state.value = AuthenticationViewState.Error(it.displayMessage) }
       }
     }
 
   fun completeSessionTask(newPassword: String, signOutOtherSessions: Boolean) {
-    guardUser(
-      userDoesNotExist = { _state.value = AuthenticationViewState.Error("User does not exist") }
-    ) { user ->
-      _state.value = AuthenticationViewState.Loading
-      viewModelScope.launch(Dispatchers.IO) {
-        user
-          .updatePassword(
-            User.UpdatePasswordParams(
-              currentPassword = null,
+    val user =
+      clerk.user
+        ?: run {
+          _state.value = AuthenticationViewState.Error("User does not exist")
+          return
+        }
+    val session = clerk.session ?: return
+    _state.value = AuthenticationViewState.Loading
+    viewModelScope.launch {
+      runUiOperation {
+          user.updatePassword(
+            UpdateUserPasswordParams(
               newPassword = newPassword,
               signOutOfOtherSessions = signOutOtherSessions,
             )
           )
-          .onSuccess { refreshClientForSessionTaskCompletion() }
-          .onFailure {
-            ClerkLog.e("ResetPasswordViewModel, ${it.errorMessage}")
-            withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Error(it.errorMessage)
-            }
-          }
-      }
+          session.reload()
+        }
+        .onSuccess {
+          if (clerk.session?.id == session.id)
+            _state.value = AuthenticationViewState.Success.SessionTaskComplete(session)
+        }
+        .onFailure { _state.value = AuthenticationViewState.Error(it.displayMessage) }
     }
-  }
-
-  private suspend fun refreshClientForSessionTaskCompletion() {
-    Client.get()
-      .onSuccess {
-        withContext(Dispatchers.Main) {
-          _state.value =
-            AuthenticationViewState.Success.SessionTaskComplete(
-              it.sessions.firstOrNull { session -> session.id == it.lastActiveSessionId }
-            )
-        }
-      }
-      .onFailure {
-        ClerkLog.e("ResetPasswordViewModel, ${it.errorMessage}")
-        withContext(Dispatchers.Main) {
-          _state.value = AuthenticationViewState.Error(it.errorMessage)
-        }
-      }
   }
 
   fun resetState() {

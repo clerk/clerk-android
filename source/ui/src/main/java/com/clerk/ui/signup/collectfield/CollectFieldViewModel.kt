@@ -2,22 +2,15 @@ package com.clerk.ui.signup.collectfield
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.SignUp
-import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signup.update
-import com.clerk.ui.auth.AuthenticationViewState
-import com.clerk.ui.auth.guardSignUp
-import kotlinx.coroutines.Dispatchers
+import com.clerk.api.*
+import com.clerk.ui.auth.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-internal class CollectFieldViewModel : ViewModel() {
-
+internal class CollectFieldViewModel(private val clerk: Clerk) : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
@@ -27,37 +20,25 @@ internal class CollectFieldViewModel : ViewModel() {
     password: String,
     username: String,
     phone: String,
-  ) {
-    guardSignUp(_state) { inProgressSignUp ->
+  ) =
+    guardSignUp(clerk, _state) { signUp ->
       _state.value = AuthenticationViewState.Loading
-
-      viewModelScope.launch(Dispatchers.IO) {
-        val params =
-          when (collectField) {
-            CollectField.Email -> SignUp.SignUpUpdateParams.Standard(emailAddress = email)
-            CollectField.Password -> SignUp.SignUpUpdateParams.Standard(password = password)
-            CollectField.Phone -> SignUp.SignUpUpdateParams.Standard(phoneNumber = phone)
-            CollectField.Username -> SignUp.SignUpUpdateParams.Standard(username = username)
-          }
-
-        inProgressSignUp
-          .update(params)
-          .onSuccess {
-            withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Success.SignUp(it)
+      viewModelScope.launch {
+        runUiOperation {
+            when (collectField) {
+              CollectField.Email -> signUp.update(SignUpUpdateParams(emailAddress = email))
+              CollectField.Phone -> signUp.update(SignUpUpdateParams(phoneNumber = phone))
+              CollectField.Username -> signUp.update(SignUpUpdateParams(username = username))
+              CollectField.Password ->
+                signUp.password(
+                  SignUpPasswordParams.Case4(SignUpPasswordParamsCase4(password = password))
+                )
             }
           }
-          .onFailure {
-            ClerkLog.e(
-              "CollectFieldViewModel - updateSignUp - failed to update sign up: ${it.errorMessage}"
-            )
-            withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Error(it.errorMessage)
-            }
-          }
+          .onSuccess { _state.value = AuthenticationViewState.Success.SignUp(signUp) }
+          .onFailure { _state.value = AuthenticationViewState.Error(it.displayMessage) }
       }
     }
-  }
 
   fun resetState() {
     _state.value = AuthenticationViewState.Idle

@@ -89,7 +89,12 @@ internal fun SessionTaskResetPasswordView(
 private fun SignInSetNewPasswordViewImpl(
   mode: ResetPasswordMode,
   modifier: Modifier = Modifier,
-  viewModel: ResetPasswordViewModel = viewModel(key = mode.viewModelKey()),
+  viewModel: ResetPasswordViewModel =
+    com.clerk.ui.core.composition.clerkViewModel(
+      key = mode.viewModelKey(com.clerk.ui.core.composition.LocalClerk.current)
+    ) {
+      ResetPasswordViewModel(it)
+    },
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current

@@ -3,10 +3,9 @@ package com.clerk.ui.auth.biometriccredential
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.clerk.api.BiometricCredentialAvailability
+import com.clerk.api.BiometricCredentialUnavailableReason
 import com.clerk.api.Clerk
-import com.clerk.api.Session
 import com.clerk.api.User
-import com.clerk.api.log.ClerkLog
 
 /** Decides whether the post-auth biometric credential enrollment prompt should be offered. */
 internal object BiometricCredentialEnrollmentPrompt {
@@ -18,55 +17,33 @@ internal object BiometricCredentialEnrollmentPrompt {
    * enabled, the device supports biometric authentication, the session allows enrollment, and this
    * device doesn't already hold a usable credential for the user.
    */
-  @Suppress("ReturnCount")
-  fun shouldOffer(afterSignUp: Boolean, sharedPreferences: SharedPreferences): Boolean {
-    val userId = Clerk.user?.id ?: return skip("no signed-in user")
-    val sessionStatus = Clerk.session?.status ?: return skip("no session")
-    if (
-      sessionStatus != Session.SessionStatus.ACTIVE &&
-        sessionStatus != Session.SessionStatus.PENDING
-    ) {
-      return skip("session status is $sessionStatus")
-    }
-
-    val promptSettingIsEnabled =
-      if (afterSignUp) {
-        Clerk.biometricCredentialPromptAfterSignUpIsEnabled
-      } else {
-        Clerk.biometricCredentialPromptAfterSignInIsEnabled &&
+  suspend fun shouldOffer(
+    clerk: Clerk,
+    afterSignUp: Boolean,
+    sharedPreferences: SharedPreferences,
+  ): Boolean {
+    val userId = clerk.user?.id ?: return false
+    val sessionId = clerk.session?.id ?: return false
+    if (!clerk.biometricCredentials.canEnroll) return false
+    val settings = clerk.environment.authConfig.nativeSettings ?: return false
+    val enabled =
+      if (afterSignUp) settings.trustedDeviceEnrollmentPromptAfterSignUpEnabled
+      else
+        settings.trustedDeviceEnrollmentPromptAfterSignInEnabled &&
           !hasSeenPrompt(sharedPreferences, userId)
-      }
-    if (!promptSettingIsEnabled) {
-      return skip(
-        "prompt setting disabled or already seen " +
-          "(afterSignUp=$afterSignUp, " +
-          "promptAfterSignIn=${Clerk.biometricCredentialPromptAfterSignInIsEnabled}, " +
-          "promptAfterSignUp=${Clerk.biometricCredentialPromptAfterSignUpIsEnabled}, " +
-          "seen=${hasSeenPrompt(sharedPreferences, userId)})"
+    if (!enabled) return false
+    val availability =
+      clerk.biometricCredentials.localAvailability(
+        com.clerk.api.BiometricCredentialSelectionParams(currentUser = true)
       )
-    }
-
-    if (!Clerk.biometricCredentials.deviceSupportsBiometricAuthentication) {
-      return skip("device does not support biometric authentication")
-    }
-
-    val availability = Clerk.biometricCredentials.currentUserLocalAvailability()
-    if (availability.isAvailable) {
-      return skip("device already enrolled")
-    }
-    if (!availability.canPromptForEnrollment) {
-      return skip("unavailable for reason ${availability.unavailableReason}")
-    }
-    return true
+    return clerk.user?.id == userId &&
+      clerk.session?.id == sessionId &&
+      !availability.isAvailable &&
+      availability.canPromptForEnrollment
   }
 
-  private fun skip(reason: String): Boolean {
-    ClerkLog.d("Biometric credential enrollment prompt not offered: $reason")
-    return false
-  }
-
-  fun markPromptSeen(sharedPreferences: SharedPreferences) {
-    val userId = Clerk.user?.id ?: return
+  fun markPromptSeen(clerk: Clerk, sharedPreferences: SharedPreferences) {
+    val userId = clerk.user?.id ?: return
     sharedPreferences.edit(commit = true) { putBoolean(storageKey(userId), true) }
   }
 
@@ -83,10 +60,10 @@ internal object BiometricCredentialEnrollmentPrompt {
 internal val BiometricCredentialAvailability.canPromptForEnrollment: Boolean
   get() =
     when (unavailableReason) {
-      BiometricCredentialAvailability.UnavailableReason.NO_LOCAL_CREDENTIAL,
-      BiometricCredentialAvailability.UnavailableReason.LOCAL_KEY_MISSING,
-      BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_MISSING,
-      BiometricCredentialAvailability.UnavailableReason.SERVER_CREDENTIAL_REVOKED -> true
+      BiometricCredentialUnavailableReason.NoLocalCredential,
+      BiometricCredentialUnavailableReason.LocalKeyMissing,
+      BiometricCredentialUnavailableReason.ServerCredentialMissing,
+      BiometricCredentialUnavailableReason.ServerCredentialRevoked -> true
       else -> false
     }
 

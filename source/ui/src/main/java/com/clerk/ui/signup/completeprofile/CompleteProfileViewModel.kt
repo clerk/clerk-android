@@ -2,46 +2,30 @@ package com.clerk.ui.signup.completeprofile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.SignUp
-import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signup.update
-import com.clerk.ui.auth.AuthenticationViewState
-import com.clerk.ui.auth.guardSignUp
-import kotlinx.coroutines.Dispatchers
+import com.clerk.api.*
+import com.clerk.ui.auth.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 internal const val FIRST_NAME_FIELD = "first_name"
-
 internal const val LAST_NAME_FIELD = "last_name"
 
-internal class CompleteProfileViewModel : ViewModel() {
-
+internal class CompleteProfileViewModel(private val clerk: Clerk) : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
   fun updateSignUp(firstName: String?, lastName: String?, legalAccepted: Boolean? = null) =
-    guardSignUp(_state) { signUp ->
+    guardSignUp(clerk, _state) { signUp ->
       _state.value = AuthenticationViewState.Loading
-      viewModelScope.launch(Dispatchers.IO) {
-        signUp
-          .update(signUp.completeProfileUpdateParams(firstName, lastName, legalAccepted))
-          .onSuccess {
-            withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Success.SignUp(it)
-            }
+      viewModelScope.launch {
+        runUiOperation {
+            signUp.update(signUp.completeProfileUpdateParams(firstName, lastName, legalAccepted))
           }
-          .onFailure {
-            ClerkLog.e("Failed to update sign up: ${it.errorMessage}")
-            withContext(Dispatchers.Main) {
-              _state.value = AuthenticationViewState.Error(it.errorMessage)
-            }
-          }
+          .onSuccess { _state.value = AuthenticationViewState.Success.SignUp(signUp) }
+          .onFailure { _state.value = AuthenticationViewState.Error(it.displayMessage) }
       }
     }
 
@@ -54,14 +38,13 @@ internal fun SignUp.completeProfileUpdateParams(
   firstName: String?,
   lastName: String?,
   legalAccepted: Boolean?,
-): SignUp.SignUpUpdateParams.Standard {
-  return SignUp.SignUpUpdateParams.Standard(
+): SignUpUpdateParams =
+  SignUpUpdateParams(
     firstName = firstName.takeIf { supportsField(FIRST_NAME_FIELD) && !it.isNullOrBlank() },
     lastName = lastName.takeIf { supportsField(LAST_NAME_FIELD) && !it.isNullOrBlank() },
     legalAccepted = legalAccepted,
   )
-}
 
-internal fun SignUp.supportsField(field: String): Boolean {
-  return requiredFields.contains(field)
+internal fun SignUp.supportsField(field: String): Boolean = requiredFields.any {
+  it.rawValue == field
 }

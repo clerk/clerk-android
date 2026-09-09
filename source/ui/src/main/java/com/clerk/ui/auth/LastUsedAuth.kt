@@ -59,14 +59,11 @@ internal sealed class LastUsedAuth {
       }
 
       if (isOAuthStrategy(lastAuth)) {
-        val provider = OAuthProvider.fromStrategy(lastAuth)
-        if (provider != OAuthProvider.UNKNOWN) {
-          authenticatableSocialProviders
-            .firstOrNull { it == provider }
-            ?.let {
-              return Social(it)
-            }
-        }
+        authenticatableSocialProviders
+          .firstOrNull { "oauth_${it.rawValue}" == lastAuth }
+          ?.let {
+            return Social(it)
+          }
       }
 
       if (

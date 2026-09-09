@@ -21,7 +21,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.PreviewAuthStateProvider
@@ -30,6 +29,7 @@ import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
@@ -58,7 +58,7 @@ fun SignUpEmailLinkView(
 private fun SignUpEmailLinkViewImpl(
   emailAddress: String,
   modifier: Modifier = Modifier,
-  viewModel: SignUpEmailLinkViewModel = viewModel(),
+  viewModel: SignUpEmailLinkViewModel = clerkViewModel { SignUpEmailLinkViewModel(it) },
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
@@ -81,7 +81,9 @@ private fun SignUpEmailLinkViewImpl(
     onBackPressed = authState::navigateBack,
     title = stringResource(R.string.check_your_email),
     subtitle =
-      Clerk.applicationName?.let { stringResource(R.string.to_continue_to, it) }
+      com.clerk.ui.core.composition.LocalClerk.current.environment.displayConfig.applicationName
+        .takeIf { it.isNotBlank() }
+        ?.let { stringResource(R.string.to_continue_to, it) }
         ?: stringResource(R.string.to_continue),
     identifier = emailAddress,
     identifierEditable = !authState.authStartIdentifierLocked,

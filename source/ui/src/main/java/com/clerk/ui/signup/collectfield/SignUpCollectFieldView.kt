@@ -20,7 +20,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
@@ -29,12 +28,15 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
+import kotlinx.coroutines.launch
 
 @Composable
 fun SignUpCollectFieldView(
@@ -43,7 +45,7 @@ fun SignUpCollectFieldView(
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
 ) {
-  val collectFieldHelper = CollectFieldHelper()
+  val collectFieldHelper = CollectFieldHelper(LocalClerk.current)
   ClerkThemeOverrideProvider(clerkTheme) {
     SignUpCollectFieldViewImpl(
       collectField = field,
@@ -60,8 +62,10 @@ private fun SignUpCollectFieldViewImpl(
   collectFieldHelper: CollectFieldHelper,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: CollectFieldViewModel = viewModel(),
+  viewModel: CollectFieldViewModel = clerkViewModel { CollectFieldViewModel(it) },
 ) {
+  val clerk = LocalClerk.current
+  val scope = androidx.compose.runtime.rememberCoroutineScope()
 
   val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -132,10 +136,9 @@ private fun SignUpCollectFieldViewImpl(
         ClerkTextButton(
           text = stringResource(R.string.skip),
           onClick = {
-            authState.setToStepForStatus(
-              signUp = Clerk.auth.currentSignUp!!,
-              onAuthComplete = onAuthComplete,
-            )
+            scope.launch {
+              authState.setToStepForStatus(signUp = clerk.signUp, onAuthComplete = onAuthComplete)
+            }
           },
         )
       }

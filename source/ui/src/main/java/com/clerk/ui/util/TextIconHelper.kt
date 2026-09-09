@@ -1,19 +1,19 @@
 package com.clerk.ui.util
 
 import android.content.Context
-import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.core.common.StrategyKeys
 
 internal class TextIconHelper {
   /**
    * Returns the appropriate action text for a given sign-in factor.
    *
-   * @param factor The [Factor] to get the action text for.
+   * @param factor The [FactorSelection] to get the action text for.
    * @param context The current Android [Context].
    * @return A formatted string describing the sign-in action.
    */
-  fun actionText(factor: Factor, context: Context): String? {
+  fun actionText(factor: FactorSelection, context: Context): String? {
     return when (factor.strategy) {
       StrategyKeys.PHONE_CODE -> {
         val safeIdentifier = factor.safeIdentifier
@@ -53,10 +53,10 @@ internal class TextIconHelper {
   /**
    * Returns the appropriate icon resource for a given sign-in factor.
    *
-   * @param factor The [Factor] to get the icon for.
+   * @param factor The [FactorSelection] to get the icon for.
    * @return A drawable resource ID for the factor's icon, or null if not applicable.
    */
-  fun iconResource(factor: Factor): Int? {
+  fun iconResource(factor: FactorSelection): Int? {
     return when (factor.strategy) {
       StrategyKeys.PHONE_CODE -> R.drawable.ic_sms
       StrategyKeys.EMAIL_CODE -> R.drawable.ic_email

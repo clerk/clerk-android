@@ -12,21 +12,17 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.clerk.api.Clerk
-import com.clerk.api.OrganizationCreationDefaults
 import com.clerk.api.SessionTaskKey
-import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.session.pendingTaskKey
 import com.clerk.ui.auth.biometriccredential.BiometricCredentialEnrollmentView
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.composition.ClerkLogoProvider
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.footer.DevelopmentModeWarningBackground
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
@@ -35,8 +31,10 @@ import com.clerk.ui.core.telemetry.telemetryPayload
 import com.clerk.ui.navigation.clerkNavigationForwardTransition
 import com.clerk.ui.navigation.clerkNavigationPopTransition
 import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
+import com.clerk.ui.sessiontask.organization.OrganizationCreationPrefill
 import com.clerk.ui.sessiontask.organization.SessionTaskChooseOrganizationView
 import com.clerk.ui.sessiontask.organization.SessionTaskCreateOrganizationView
+import com.clerk.ui.sessiontask.organization.prefill
 import com.clerk.ui.signin.SignInFactorOneView
 import com.clerk.ui.signin.SignInFactorTwoView
 import com.clerk.ui.signin.alternativemethods.SignInFactorAlternativeMethodsView
@@ -62,7 +60,7 @@ private val authViewProcessIdentifier = UUID.randomUUID().toString()
  * Prebuilt Clerk authentication flow.
  *
  * When using this as a non-dismissible root authentication view, observe
- * [Clerk.isAuthFlowCompleteFlow] to choose between this view and authenticated content. A session
+ * [LocalClerk.isAuthFlowComplete] to choose between this view and authenticated content. A session
  * can become active while post-auth steps — session tasks or the biometric credential enrollment
  * prompt — still need to be shown.
  *
@@ -103,7 +101,7 @@ fun AuthView(
   persistIdentifiers: Boolean = true,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
-  unsafeMetadata: Map<String, Any>? = null,
+  unsafeMetadata: kotlinx.serialization.json.JsonObject? = null,
   isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
   onAuthComplete: () -> Unit = {},
@@ -135,6 +133,7 @@ fun AuthView(
       }
     AuthStateProvider(backStack = backStack, mode = mode, identifierConfig = identifierConfig) {
       ObservePendingSessionTaskRouting(backStack = backStack, isDismissible = isDismissible)
+      ObserveAuthCallback(onAuthComplete = completeAuthFlow)
       TrackScreenLoaded(LocalAuthState.current.mode.name)
       ClerkLogoProvider(logo) {
         DevelopmentModeWarningBox(
@@ -160,19 +159,39 @@ fun AuthView(
 }
 
 @Composable
+private fun ObserveAuthCallback(onAuthComplete: () -> Unit) {
+  val clerk = LocalClerk.current
+  val authState = LocalAuthState.current
+  val callback = clerk.authCallback
+  LaunchedEffect(clerk, callback?.id) {
+    if (callback != null) {
+      val handled =
+        when (val result = callback.result) {
+          is com.clerk.api.MobileAuthenticationResult.Case1 ->
+            authState.setToStepForStatus(result.value.signIn, onAuthComplete)
+          is com.clerk.api.MobileAuthenticationResult.Case2 ->
+            authState.setToStepForStatus(result.value.signUp, onAuthComplete)
+        }
+      if (handled) clerk.clearAuthCallback(callback.id)
+    }
+  }
+}
+
+@Composable
 private fun rememberAuthFlowCompletion(
   isDismissible: Boolean,
   onAuthComplete: () -> Unit,
 ): () -> Unit {
+  val presentation = LocalClerk.authPresentation
   val currentOnAuthComplete = rememberUpdatedState(onAuthComplete)
-  DisposableEffect(isDismissible) {
-    val registration = if (isDismissible) null else Clerk.registerAuthFlow()
+  DisposableEffect(presentation, isDismissible) {
+    val registration = if (isDismissible) null else presentation.register()
     onDispose { registration?.close() }
   }
-  return remember(isDismissible) {
+  return remember(presentation, isDismissible) {
     {
       if (!isDismissible) {
-        Clerk.markAuthFlowComplete()
+        presentation.complete()
       }
       currentOnAuthComplete.value()
     }
@@ -204,8 +223,10 @@ private fun ObservePendingSessionTaskRouting(
   backStack: NavBackStack<NavKey>,
   isDismissible: Boolean,
 ) {
-  val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
-  val pendingTaskKey = session?.pendingTaskKey
+  val clerk = LocalClerk.current
+  val presentation = LocalClerk.authPresentation
+  val session = clerk.session
+  val pendingTaskKey = session?.currentTask?.key
   LaunchedEffect(session?.id, pendingTaskKey, backStack.lastOrNull()) {
     val top = backStack.lastOrNull()
     when {
@@ -220,7 +241,7 @@ private fun ObservePendingSessionTaskRouting(
         pendingSessionTaskDestination(pendingTaskKey)?.let {
           backStack.add(it)
           if (!isDismissible) {
-            Clerk.markAuthFlowPending()
+            presentation.pending()
           }
         }
       }
@@ -297,7 +318,7 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
           }
           authState.navigateTo(
             AuthDestination.SessionTaskCreateOrganization(
-              creationDefaults = creationDefaults,
+              creationDefaults = creationDefaults?.prefill(),
               showBackButton = !replaceChooser,
             )
           )
@@ -354,10 +375,10 @@ internal fun shouldRouteToSessionTaskMfa(requiresForcedMfa: Boolean, top: NavKey
 
 internal fun pendingSessionTaskDestination(taskKey: SessionTaskKey?): NavKey? {
   return when (taskKey) {
-    SessionTaskKey.MFA_REQUIRED -> AuthDestination.SessionTaskMfa
-    SessionTaskKey.RESET_PASSWORD -> AuthDestination.SessionTaskResetPassword
-    SessionTaskKey.CHOOSE_ORGANIZATION -> AuthDestination.SessionTaskChooseOrganization
-    SessionTaskKey.UNKNOWN -> AuthDestination.SignInGetHelp
+    SessionTaskKey.SetupMfa -> AuthDestination.SessionTaskMfa
+    SessionTaskKey.ResetPassword -> AuthDestination.SessionTaskResetPassword
+    SessionTaskKey.ChooseOrganization -> AuthDestination.SessionTaskChooseOrganization
+    is SessionTaskKey.Unrecognized -> AuthDestination.SignInGetHelp
     null -> null
   }
 }
@@ -369,7 +390,10 @@ internal fun shouldRouteToPendingSessionTask(taskKey: SessionTaskKey?, top: NavK
     !top.satisfiesPendingSessionTask(taskKey = taskKey, destination = destination)
 }
 
-internal fun navigateToForgotPasswordFactor(backStack: NavBackStack<NavKey>, factor: Factor) {
+internal fun navigateToForgotPasswordFactor(
+  backStack: NavBackStack<NavKey>,
+  factor: FactorSelection,
+) {
   backStack.add(AuthDestination.SignInFactorOne(factor = factor))
 }
 
@@ -378,7 +402,7 @@ private fun NavKey?.satisfiesPendingSessionTask(
   destination: NavKey,
 ): Boolean {
   return when (taskKey) {
-    SessionTaskKey.CHOOSE_ORGANIZATION ->
+    SessionTaskKey.ChooseOrganization ->
       this == AuthDestination.SessionTaskChooseOrganization ||
         this is AuthDestination.SessionTaskCreateOrganization
     else -> this == destination
@@ -408,11 +432,12 @@ internal object AuthDestination {
 
   @Serializable data object AuthStart : NavKey
 
-  @Serializable data class SignInFactorOne(val factor: Factor) : NavKey
+  @Serializable data class SignInFactorOne(val factor: FactorSelection) : NavKey
 
-  @Serializable data class SignInFactorOneUseAnotherMethod(val currentFactor: Factor) : NavKey
+  @Serializable
+  data class SignInFactorOneUseAnotherMethod(val currentFactor: FactorSelection) : NavKey
 
-  @Serializable data class SignInFactorTwo(val factor: Factor) : NavKey
+  @Serializable data class SignInFactorTwo(val factor: FactorSelection) : NavKey
 
   @Serializable data object SessionTaskMfa : NavKey
 
@@ -422,11 +447,12 @@ internal object AuthDestination {
 
   @Serializable
   data class SessionTaskCreateOrganization(
-    val creationDefaults: OrganizationCreationDefaults? = null,
+    val creationDefaults: OrganizationCreationPrefill? = null,
     val showBackButton: Boolean = true,
   ) : NavKey
 
-  @Serializable data class SignInFactorTwoUseAnotherMethod(val currentFactor: Factor) : NavKey
+  @Serializable
+  data class SignInFactorTwoUseAnotherMethod(val currentFactor: FactorSelection) : NavKey
 
   @Serializable data object SignInForgotPassword : NavKey
 
@@ -434,7 +460,7 @@ internal object AuthDestination {
 
   @Serializable data object SignInGetHelp : NavKey
 
-  @Serializable data class SignInClientTrust(val factor: Factor) : NavKey
+  @Serializable data class SignInClientTrust(val factor: FactorSelection) : NavKey
 
   @Serializable data class SignUpCollectField(val field: CollectField) : NavKey
 

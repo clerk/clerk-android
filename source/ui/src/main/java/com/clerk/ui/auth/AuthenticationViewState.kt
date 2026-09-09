@@ -1,11 +1,11 @@
 package com.clerk.ui.auth
 
 import com.clerk.api.Clerk
+import com.clerk.api.CoreException
+import com.clerk.api.CoreFailureKind
 import com.clerk.api.Session
 import com.clerk.api.SignIn
 import com.clerk.api.SignUp
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.sso.SSOCancellationException
 import com.clerk.ui.signin.code.VerificationState
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -37,8 +37,12 @@ internal sealed interface AuthenticationViewState {
   data class Error(val message: String?) : AuthenticationViewState
 }
 
-internal val ClerkResult.Failure<*>.isSSOCancellation: Boolean
-  get() = throwable is SSOCancellationException
+internal val Throwable.isSSOCancellation: Boolean
+  get() =
+    (this as? CoreException)?.let {
+      it.kind == CoreFailureKind.Cancelled ||
+        it.code in setOf("user_cancelled", "cancelled", "credential_cancelled")
+    } == true
 
 /** States for the code verification text, since it's not 1:1 with the view model states. */
 internal sealed interface VerificationUiState {
@@ -83,10 +87,11 @@ internal fun VerificationUiState.verificationState(): VerificationState {
  *   active [ClerkSignIn] object as a parameter.
  */
 internal fun guardSignIn(
+  clerk: Clerk,
   state: MutableStateFlow<AuthenticationViewState>,
   block: (ClerkSignIn) -> Unit,
 ) {
-  val s = Clerk.auth.currentSignIn
+  val s = clerk.signIn.takeIf { it.id != null }
   if (s == null) {
     state.value = AuthenticationViewState.NotStarted
     null
@@ -110,10 +115,11 @@ internal fun guardSignIn(
  *   active [ClerkSignUp] object as a parameter.
  */
 internal fun guardSignUp(
+  clerk: Clerk,
   state: MutableStateFlow<AuthenticationViewState>,
   block: (ClerkSignUp) -> Unit,
 ) {
-  val s = Clerk.auth.currentSignUp
+  val s = clerk.signUp.takeIf { it.id != null }
   if (s == null) {
     state.value = AuthenticationViewState.NotStarted
     null

@@ -15,6 +15,7 @@ import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.verificationState
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp28
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
@@ -51,7 +52,7 @@ private fun SignUpCodeViewImpl(
   field: SignUpCodeField,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: SignUpCodeViewModel = viewModel(),
+  viewModel: SignUpCodeViewModel = clerkViewModel { SignUpCodeViewModel(it) },
 ) {
   val authState = LocalAuthState.current
   val state by viewModel.state.collectAsStateWithLifecycle()

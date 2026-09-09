@@ -6,12 +6,12 @@ import com.clerk.api.Clerk
 import com.clerk.api.Organization
 import com.clerk.api.Session
 import com.clerk.api.SessionTaskKey
-import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.organizations.updateLogo
 import com.clerk.api.session.pendingTaskKey
+import com.clerk.ui.core.common.ClerkLog
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

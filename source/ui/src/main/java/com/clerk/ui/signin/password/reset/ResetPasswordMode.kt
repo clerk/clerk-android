@@ -7,14 +7,14 @@ internal enum class ResetPasswordMode {
   SESSION_TASK,
 }
 
-internal fun ResetPasswordMode.viewModelKey(): String {
+internal fun ResetPasswordMode.viewModelKey(clerk: Clerk): String {
   return when (this) {
     ResetPasswordMode.SIGN_IN -> {
-      val signInId = Clerk.auth.currentSignIn?.id ?: "no-sign-in"
+      val signInId = clerk.signIn?.id ?: "no-sign-in"
       "reset-password-$signInId"
     }
     ResetPasswordMode.SESSION_TASK -> {
-      val sessionId = Clerk.session?.id ?: "no-session"
+      val sessionId = clerk.session?.id ?: "no-session"
       "session-task-reset-password-$sessionId"
     }
   }

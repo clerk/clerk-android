@@ -13,18 +13,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
-import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp72
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
@@ -41,7 +42,7 @@ import com.clerk.ui.theme.DefaultColors
  */
 @Composable
 fun SignInFactorOnePasskeyView(
-  factor: Factor,
+  factor: FactorSelection,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
@@ -58,12 +59,13 @@ fun SignInFactorOnePasskeyView(
 
 @Composable
 internal fun SignInFactorOnePasskeyViewImpl(
-  factor: Factor,
+  factor: FactorSelection,
   isSecondFactor: Boolean,
   modifier: Modifier = Modifier,
-  viewModel: PasskeyViewModel = viewModel(),
+  viewModel: PasskeyViewModel = clerkViewModel { PasskeyViewModel(it) },
   onAuthComplete: () -> Unit,
 ) {
+  val clerk = LocalClerk.current
 
   val authState = LocalAuthState.current
   val snackbarHostState = remember { SnackbarHostState() }
@@ -97,7 +99,9 @@ internal fun SignInFactorOnePasskeyViewImpl(
     ClerkButton(
       text = stringResource(R.string.continue_text),
       onClick = {
-        viewModel.authenticate(signIn = Clerk.auth.currentSignIn.takeIf { isSecondFactor })
+        viewModel.authenticate(
+          signIn = clerk.signIn.takeIf { it.id != null }.takeIf { isSecondFactor }
+        )
       },
       modifier = Modifier.fillMaxWidth(),
       isLoading = state is AuthenticationViewState.Loading,
@@ -128,7 +132,7 @@ internal fun SignInFactorOnePasskeyViewImpl(
 private fun PreviewSignInFactorOnePasskeyView() {
   PreviewAuthStateProvider {
     SignInFactorOnePasskeyView(
-      factor = Factor(strategy = StrategyKeys.PASSKEY, safeIdentifier = "sam@clerk.dev"),
+      factor = FactorSelection(strategy = StrategyKeys.PASSKEY, safeIdentifier = "sam@clerk.dev"),
       clerkTheme = ClerkTheme(colors = DefaultColors.clerk),
       onAuthComplete = {},
     )

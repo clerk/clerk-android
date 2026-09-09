@@ -2,9 +2,8 @@ package com.clerk.ui.signin.code
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import com.clerk.api.Clerk
-import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.core.common.StrategyKeys
 
 internal object SignInFactorCodeUiHelper {
@@ -16,14 +15,14 @@ internal object SignInFactorCodeUiHelper {
       VerificationState.Success -> false
     }
 
-  internal fun showResend(factor: Factor, verificationState: VerificationState): Boolean {
+  internal fun showResend(factor: FactorSelection, verificationState: VerificationState): Boolean {
     return when (factor.strategy) {
       StrategyKeys.TOTP -> false
       else -> getShowResendValue(verificationState)
     }
   }
 
-  internal fun showUseAnotherMethod(factor: Factor): Boolean {
+  internal fun showUseAnotherMethod(factor: FactorSelection): Boolean {
     return when (factor.strategy) {
       StrategyKeys.RESET_PASSWORD_EMAIL_CODE,
       StrategyKeys.RESET_PASSWORD_PHONE_CODE -> false
@@ -32,7 +31,7 @@ internal object SignInFactorCodeUiHelper {
   }
 
   @Composable
-  internal fun titleForStrategy(factor: Factor): String {
+  internal fun titleForStrategy(factor: FactorSelection): String {
     return when (factor.strategy) {
       StrategyKeys.EMAIL_CODE -> stringResource(R.string.check_your_email)
       StrategyKeys.PHONE_CODE -> stringResource(R.string.check_your_phone)
@@ -44,7 +43,7 @@ internal object SignInFactorCodeUiHelper {
   }
 
   @Composable
-  internal fun subtitleForStrategy(factor: Factor): String {
+  internal fun subtitleForStrategy(factor: FactorSelection): String {
     return when (factor.strategy) {
       StrategyKeys.RESET_PASSWORD_EMAIL_CODE ->
         stringResource(R.string.first_enter_the_code_sent_to_your_email_address)
@@ -56,7 +55,9 @@ internal object SignInFactorCodeUiHelper {
             .to_continue_please_enter_the_verification_code_generated_by_your_authenticator_app
         )
       else -> {
-        Clerk.applicationName?.let { stringResource(R.string.to_continue_to, it) }
+        com.clerk.ui.core.composition.LocalClerk.current.environment.displayConfig.applicationName
+          .takeIf { it.isNotBlank() }
+          ?.let { stringResource(R.string.to_continue_to, it) }
           ?: stringResource(R.string.to_continue)
       }
     }

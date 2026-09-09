@@ -2,35 +2,27 @@ package com.clerk.ui.signin.backupcode
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Clerk
-import com.clerk.api.SignIn
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.attemptSecondFactor
-import com.clerk.ui.auth.AuthenticationViewState
+import com.clerk.api.*
+import com.clerk.ui.auth.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class BackupCodeViewModel : ViewModel() {
+internal class BackupCodeViewModel(private val clerk: Clerk) : ViewModel() {
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun submit(backupCode: String) {
-    if (Clerk.auth.currentSignIn == null) {
-      _state.value = AuthenticationViewState.NotStarted
-      return
+  fun submit(backupCode: String) =
+    guardSignIn(clerk, _state) { signIn ->
+      _state.value = AuthenticationViewState.Loading
+      viewModelScope.launch {
+        runUiOperation { signIn.mfa.verifyBackupCode(SignInBackupCodeVerifyParams(backupCode)) }
+          .onSuccess { _state.value = AuthenticationViewState.Success.SignIn(signIn) }
+          .onFailure { _state.value = AuthenticationViewState.Error(it.displayMessage) }
+      }
     }
-    _state.value = AuthenticationViewState.Loading
-    val inProgressSignIn = Clerk.auth.currentSignIn!!
-    viewModelScope.launch {
-      inProgressSignIn
-        .attemptSecondFactor(SignIn.AttemptSecondFactorParams.BackupCode(backupCode))
-        .onSuccess { _state.value = AuthenticationViewState.Success.SignIn(it) }
-        .onFailure { _state.value = AuthenticationViewState.Error(it.errorMessage) }
-    }
-  }
 
   fun resetState() {
     _state.value = AuthenticationViewState.Idle

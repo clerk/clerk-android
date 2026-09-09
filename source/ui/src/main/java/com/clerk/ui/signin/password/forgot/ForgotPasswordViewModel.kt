@@ -2,75 +2,53 @@ package com.clerk.ui.signin.password.forgot
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Clerk
-import com.clerk.api.OAuthProvider
-import com.clerk.api.SignIn
-import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.resetPasswordFactor
-import com.clerk.api.sso.ResultType
-import com.clerk.ui.auth.isSSOCancellation
+import com.clerk.api.*
+import com.clerk.ui.auth.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import com.clerk.ui.signin.authenticateWithRedirect
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-internal class ForgotPasswordViewModel(
-  private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-) : ViewModel() {
-
+internal class ForgotPasswordViewModel(private val clerk: Clerk) : ViewModel() {
   private val _state = MutableStateFlow<ResetPasswordViewState>(ResetPasswordViewState.Idle)
   val state = _state.asStateFlow()
 
   fun signInWithProvider(
     provider: OAuthProvider,
     transferable: Boolean = true,
-    signIn: SignIn? = Clerk.auth.currentSignIn,
+    signIn: SignIn? = clerk.signIn.takeIf { it.id != null },
   ) {
+    if (signIn == null) {
+      _state.value = ResetPasswordViewState.NotStarted
+      return
+    }
     _state.value = ResetPasswordViewState.Loading
-    viewModelScope.launch(ioDispatcher) {
-      if (signIn == null) {
-        withContext(Dispatchers.Main) { _state.value = ResetPasswordViewState.NotStarted }
-        return@launch
-      }
-      authenticateWithRedirect(signIn = signIn, provider = provider, transferable = transferable)
-        .onSuccess {
-          withContext(Dispatchers.Main) {
-            if (it.resultType == ResultType.SIGN_IN) {
-              _state.value = ResetPasswordViewState.Success.SignIn(it.signIn!!)
-            } else {
-              _state.value = ResetPasswordViewState.Success.SignUp(it.signUp!!)
+    viewModelScope.launch {
+      runUiOperation { authenticateWithRedirect(clerk, provider, transferable) }
+        .onSuccess { result ->
+          _state.value =
+            when (result) {
+              is MobileAuthenticationResult.Case1 ->
+                ResetPasswordViewState.Success.SignIn(result.value.signIn)
+              is MobileAuthenticationResult.Case2 ->
+                ResetPasswordViewState.Success.SignUp(result.value.signUp)
             }
-          }
         }
         .onFailure {
-          withContext(Dispatchers.Main) {
-            _state.value =
-              if (it.isSSOCancellation) {
-                ResetPasswordViewState.Idle
-              } else {
-                ResetPasswordViewState.Error(it.errorMessage)
-              }
-          }
+          _state.value =
+            if (it.isSSOCancellation) ResetPasswordViewState.Idle
+            else ResetPasswordViewState.Error(it.displayMessage)
         }
     }
   }
 
   fun resetPassword() {
-    _state.value = ResetPasswordViewState.Loading
-    val signIn = Clerk.auth.currentSignIn
-    val resetPasswordFactor = Clerk.auth.currentSignIn?.resetPasswordFactor
-    if (signIn == null || resetPasswordFactor == null) {
-      _state.value = ResetPasswordViewState.NotStarted
-      return
-    } else {
-      _state.value = ResetPasswordViewState.ResetFactor(resetPasswordFactor)
-    }
+    val factor = clerk.signIn.resetPasswordFactor
+    _state.value =
+      if (clerk.signIn.id == null || factor == null) ResetPasswordViewState.NotStarted
+      else ResetPasswordViewState.ResetFactor(factor)
   }
 
   fun resetState() {
@@ -78,12 +56,6 @@ internal class ForgotPasswordViewModel(
   }
 }
 
-/**
- * Represents the various states of an authentication process.
- *
- * This sealed interface is used to model the different stages that an authentication flow can be
- * in, such as not started, idle, loading, successful, or encountering an error.
- */
 internal sealed interface ResetPasswordViewState {
   data object NotStarted : ResetPasswordViewState
 
@@ -92,12 +64,12 @@ internal sealed interface ResetPasswordViewState {
   data object Loading : ResetPasswordViewState
 
   sealed interface Success : ResetPasswordViewState {
-    data class SignIn(val signIn: com.clerk.api.signin.SignIn) : Success
+    data class SignIn(val signIn: com.clerk.api.SignIn) : Success
 
-    data class SignUp(val signUp: com.clerk.api.signup.SignUp) : Success
+    data class SignUp(val signUp: com.clerk.api.SignUp) : Success
   }
 
   data class Error(val message: String?) : ResetPasswordViewState
 
-  data class ResetFactor(val factor: Factor) : ResetPasswordViewState
+  data class ResetFactor(val factor: FactorSelection) : ResetPasswordViewState
 }

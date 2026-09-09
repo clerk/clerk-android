@@ -3,11 +3,13 @@ package com.clerk.ui.signin
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.model.factor.isResetFactor
-import com.clerk.api.signin.startingFirstFactor
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.auth.PreviewAuthStateProvider
+import com.clerk.ui.auth.firstFactorChoices
+import com.clerk.ui.auth.isResetFactor
+import com.clerk.ui.auth.startingFirstFactor
 import com.clerk.ui.core.common.StrategyKeys
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.ui.signin.emaillink.SignInFactorOneEmailLinkView
 import com.clerk.ui.signin.help.SignInGetHelpView
@@ -19,11 +21,11 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 @Composable
 fun SignInFactorOneView(
-  factor: Factor,
+  factor: FactorSelection,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
-  val effectiveFactor = resolveFirstFactor(factor)
+  val effectiveFactor = resolveFirstFactor(LocalClerk.current, factor)
   ClerkThemeOverrideProvider(clerkTheme) {
     ClerkMaterialTheme {
       when (effectiveFactor.strategy) {
@@ -44,11 +46,11 @@ fun SignInFactorOneView(
   }
 }
 
-internal fun resolveFirstFactor(fallback: Factor): Factor {
+internal fun resolveFirstFactor(clerk: Clerk, fallback: FactorSelection): FactorSelection {
   if (fallback.isResetFactor()) return fallback
 
-  val currentSignIn = Clerk.auth.currentSignIn
-  val supportedFactors = currentSignIn?.supportedFirstFactors.orEmpty()
+  val currentSignIn = clerk.signIn.takeIf { it.id != null }
+  val supportedFactors = currentSignIn?.firstFactorChoices.orEmpty()
   val hasSignInContext = currentSignIn != null && supportedFactors.isNotEmpty()
 
   val preparedFactor =
@@ -63,21 +65,23 @@ internal fun resolveFirstFactor(fallback: Factor): Factor {
     fallback
   } else {
     if (fallbackIsSupported) fallback
-    else preparedFactor ?: currentSignIn.startingFirstFactor ?: fallback
+    else preparedFactor ?: currentSignIn.startingFirstFactor(clerk) ?: fallback
   }
 }
 
-private fun List<Factor>.factorForStrategy(strategy: String?): Factor? {
+private fun List<FactorSelection>.factorForStrategy(strategy: String?): FactorSelection? {
   val preparedStrategy = strategy?.takeIf { it.isNotBlank() } ?: return null
   return firstOrNull { it.strategy == preparedStrategy }
 }
 
-private fun List<Factor>.hasStrategy(strategy: String): Boolean {
+private fun List<FactorSelection>.hasStrategy(strategy: String): Boolean {
   return any { it.strategy == strategy }
 }
 
 @PreviewLightDark
 @Composable
 private fun PreviewSignInComponent() {
-  PreviewAuthStateProvider { SignInFactorOneView(factor = Factor("passkey"), onAuthComplete = {}) }
+  PreviewAuthStateProvider {
+    SignInFactorOneView(factor = FactorSelection("passkey"), onAuthComplete = {})
+  }
 }

@@ -17,7 +17,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
-import com.clerk.api.OrganizationCreationDefaults
 import com.clerk.ui.R
 import com.clerk.ui.auth.handleSessionTaskCompletion
 import com.clerk.ui.core.composition.LocalAuthState
@@ -33,7 +32,7 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
 internal fun SessionTaskCreateOrganizationView(
-  creationDefaults: OrganizationCreationDefaults?,
+  creationDefaults: OrganizationCreationPrefill?,
   showBackButton: Boolean,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
@@ -41,8 +40,8 @@ internal fun SessionTaskCreateOrganizationView(
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val authState = LocalAuthState.current
-  val defaultName = creationDefaults?.form?.name.orEmpty()
-  val defaultSlug = creationDefaults?.form?.slug ?: createOrganizationSlug(defaultName)
+  val defaultName = creationDefaults?.name.orEmpty()
+  val defaultSlug = creationDefaults?.slug ?: createOrganizationSlug(defaultName)
 
   LaunchedEffect(state.completedSession) {
     state.completedSession?.let {
@@ -108,17 +107,13 @@ private fun CreateOrganizationHeader() {
 }
 
 @Composable
-private fun AdvisoryText(advisory: OrganizationCreationDefaults.Advisory) {
+private fun AdvisoryText(advisory: ExistingOrganizationNotice) {
   val message =
-    when (advisory.code) {
-      "organization_already_exists" ->
-        stringResource(
-          R.string.organization_already_exists_advisory,
-          advisory.meta["organization_name"].orEmpty(),
-          advisory.meta["organization_domain"].orEmpty(),
-        )
-      else -> null
-    }
+    stringResource(
+      R.string.organization_already_exists_advisory,
+      advisory.name,
+      advisory.domain,
+    )
 
   message?.let {
     Text(

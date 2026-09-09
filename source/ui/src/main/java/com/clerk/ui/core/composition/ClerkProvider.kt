@@ -15,6 +15,8 @@ import java.util.UUID
 
 private data class ObservedClerk(val clerk: Clerk, val revision: Long)
 
+private val LocalAuthPresentation = compositionLocalOf<AuthPresentationState?> { null }
+
 private val LocalObservedClerk = compositionLocalOf<ObservedClerk?> { null }
 
 /** Supplies the application's generated Clerk instance to prebuilt Compose UI. */
@@ -23,12 +25,28 @@ fun ClerkProvider(clerk: Clerk, theme: ClerkTheme? = null, content: @Composable 
   // Observe revisions, including nested resource changes whose root handle stays identical.
   val runtime = remember(clerk) { clerk.context.requireRuntime() }
   val revision by runtime.changes.collectAsState()
-  CompositionLocalProvider(LocalObservedClerk provides ObservedClerk(clerk, revision)) {
+  val presentation = remember(clerk) { AuthPresentationState(clerk) }
+  CompositionLocalProvider(
+    LocalObservedClerk provides ObservedClerk(clerk, revision),
+    LocalAuthPresentation provides presentation,
+  ) {
     ClerkThemeOverrideProvider(theme, content)
   }
 }
 
 object LocalClerk {
+  /** Includes the prebuilt UI's pending presentation steps, such as biometric enrollment. */
+  val isAuthFlowComplete: Boolean
+    @Composable
+    get() {
+      current // Track core revision changes as well as presentation state.
+      return authPresentation.isComplete
+    }
+
+  internal val authPresentation: AuthPresentationState
+    @Composable
+    get() = LocalAuthPresentation.current ?: error("Wrap Clerk UI in ClerkProvider(clerk).")
+
   val current: Clerk
     @Composable get() = currentOrNull ?: error("Wrap Clerk UI in ClerkProvider(clerk).")
 
@@ -38,8 +56,11 @@ object LocalClerk {
 
 /** Each UI model belongs to the supplied core, including when the provider changes instances. */
 @Composable
-internal inline fun <reified T : ViewModel> clerkViewModel(crossinline create: (Clerk) -> T): T {
+internal inline fun <reified T : ViewModel> clerkViewModel(
+  key: String? = null,
+  crossinline create: (Clerk) -> T,
+): T {
   val clerk = LocalClerk.current
-  val ownerKey = remember(clerk) { UUID.randomUUID().toString() }
+  val ownerKey = remember(clerk, key) { UUID.randomUUID().toString() }
   return viewModel(key = "${T::class.java.name}:$ownerKey") { create(clerk) }
 }

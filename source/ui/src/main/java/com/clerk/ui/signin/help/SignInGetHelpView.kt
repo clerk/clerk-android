@@ -13,11 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.Clerk
-import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.common.ClerkLog
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -37,7 +36,9 @@ fun SignInGetHelpView(modifier: Modifier = Modifier) {
   ) {
     val context = LocalContext.current
     val defaultSupportEmail = stringResource(R.string.support_clerk_com)
-    val supportEmail = Clerk.supportEmail ?: defaultSupportEmail
+    val supportEmail =
+      com.clerk.ui.core.composition.LocalClerk.current.environment.displayConfig.supportEmail
+        .takeIf { it.isNotBlank() } ?: defaultSupportEmail
     val noEmailClientsMessage = stringResource(R.string.no_email_clients_installed_on_device)
     val emailSupportTitle = stringResource(R.string.email_support)
     val emailIntent = remember(supportEmail) { supportEmailIntent(supportEmail) }

@@ -6,67 +6,36 @@ import com.clerk.api.Session
 import com.clerk.api.SessionTaskKey
 import com.clerk.api.SignIn
 import com.clerk.api.SignUp
-import com.clerk.api.session.pendingTaskKey
 
-internal fun SignIn.pendingSessionTaskKey(
-  session: Session? = this.correspondingSession()
-): SessionTaskKey? {
-  return if (status == SignIn.Status.COMPLETE) session.pendingSessionTaskKey() else null
-}
+/** Never route one completed attempt using a different active session. */
+internal fun SignIn.correspondingSession(clerk: Clerk): Session? =
+  resolveCorrespondingSession(createdSessionId, clerk.sessions, clerk.session)
 
-internal fun SignIn.correspondingSession(): Session? {
-  val sessions = runCatching { Clerk.client.sessions }.getOrDefault(emptyList())
-  return resolveCorrespondingSession(
-    createdSessionId = createdSessionId,
-    sessions = sessions,
-    fallbackSession = Clerk.session,
-  )
-}
-
-internal fun SignUp.pendingSessionTaskKey(
-  session: Session? = this.correspondingSession()
-): SessionTaskKey? {
-  return if (status == SignUp.Status.COMPLETE) session.pendingSessionTaskKey() else null
-}
-
-internal fun SignUp.correspondingSession(): Session? {
-  val sessions = runCatching { Clerk.client.sessions }.getOrDefault(emptyList())
-  return resolveCorrespondingSession(
-    createdSessionId = createdSessionId,
-    sessions = sessions,
-    fallbackSession = Clerk.session,
-  )
-}
+internal fun SignUp.correspondingSession(clerk: Clerk): Session? =
+  resolveCorrespondingSession(createdSessionId, clerk.sessions, clerk.session)
 
 internal fun resolveCorrespondingSession(
   createdSessionId: String?,
   sessions: List<Session>,
   fallbackSession: Session?,
-): Session? {
-  return if (createdSessionId == null) {
-    fallbackSession
-  } else {
-    sessions.firstOrNull { it.id == createdSessionId } ?: fallbackSession
-  }
-}
+): Session? =
+  if (createdSessionId == null) fallbackSession
+  else
+    sessions.firstOrNull { it.id == createdSessionId }
+      ?: fallbackSession?.takeIf { it.id == createdSessionId }
 
 internal fun postAuthCompletionAction(
   taskKey: SessionTaskKey?,
   hasUnresolvedCreatedSession: Boolean,
-  shouldChooseOrganizationForCreatedSession: Boolean,
-): PostAuthCompletionAction {
-  return when {
-    taskKey == SessionTaskKey.MFA_REQUIRED -> PostAuthCompletionAction.ROUTE_TO_MFA
-    taskKey == SessionTaskKey.RESET_PASSWORD -> PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD
-    taskKey == SessionTaskKey.CHOOSE_ORGANIZATION ->
+): PostAuthCompletionAction =
+  when {
+    taskKey == SessionTaskKey.SetupMfa -> PostAuthCompletionAction.ROUTE_TO_MFA
+    taskKey == SessionTaskKey.ResetPassword -> PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD
+    taskKey == SessionTaskKey.ChooseOrganization ->
       PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION
-    taskKey == SessionTaskKey.UNKNOWN -> PostAuthCompletionAction.ROUTE_TO_HELP
-    hasUnresolvedCreatedSession -> PostAuthCompletionAction.ROUTE_TO_MFA
-    shouldChooseOrganizationForCreatedSession ->
-      PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION
+    taskKey != null || hasUnresolvedCreatedSession -> PostAuthCompletionAction.ROUTE_TO_HELP
     else -> PostAuthCompletionAction.COMPLETE_AUTH
   }
-}
 
 internal enum class PostAuthCompletionAction {
   ROUTE_TO_MFA,
@@ -77,18 +46,22 @@ internal enum class PostAuthCompletionAction {
 }
 
 internal fun Session?.pendingSessionTaskKey(): SessionTaskKey? {
-  return this?.pendingTaskKey
+  return this?.currentTask?.key
 }
 
 internal fun AuthState.handleSessionTaskCompletion(session: Session?, onAuthComplete: () -> Unit) {
+  if (session == null) {
+    clearBackStack()
+    return
+  }
   when (session.pendingSessionTaskKey()) {
-    SessionTaskKey.MFA_REQUIRED -> replaceSessionTaskDestination(AuthDestination.SessionTaskMfa)
-    SessionTaskKey.RESET_PASSWORD ->
+    SessionTaskKey.SetupMfa -> replaceSessionTaskDestination(AuthDestination.SessionTaskMfa)
+    SessionTaskKey.ResetPassword ->
       replaceSessionTaskDestination(AuthDestination.SessionTaskResetPassword)
-    SessionTaskKey.CHOOSE_ORGANIZATION ->
+    SessionTaskKey.ChooseOrganization ->
       replaceSessionTaskDestination(AuthDestination.SessionTaskChooseOrganization)
-    SessionTaskKey.UNKNOWN -> replaceSessionTaskDestination(AuthDestination.SignInGetHelp)
-    null -> onAuthComplete()
+    is SessionTaskKey.Unrecognized -> replaceSessionTaskDestination(AuthDestination.SignInGetHelp)
+    null -> completePresentation(onAuthComplete)
   }
 }
 

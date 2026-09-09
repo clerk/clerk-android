@@ -1,6 +1,6 @@
 # TypeScript core prerelease
 
-The API module now builds generated Kotlin resources from `NativeCore`, using the bundled QuickJS runtime and JavaScript asset. The authentication roots derive from `SignInFutureResource` and `SignUpFutureResource`. The former native domain implementation is excluded from the API module; Compose migration is in progress: profile actions and shared presentation infrastructure use the generated instance; authentication and organization screens still need migration before the UI module can build.
+The API module now builds generated Kotlin resources from `NativeCore`, using the bundled QuickJS runtime and JavaScript asset. The authentication roots derive from `SignInFutureResource` and `SignUpFutureResource`. The former native domain implementation is excluded from the API module; Compose migration is in progress: profile and authentication screens use the generated instance; organization and session-task screens still need migration before the UI module can build.
 
 ```kotlin
 val clerk = Clerk.connect(
@@ -21,6 +21,8 @@ One owner should be retained for the application. Process lifecycle events suspe
 ## Compose ownership
 
 Supply the retained instance with `ClerkProvider(clerk, theme = theme) { ... }` from `com.clerk.ui.core.composition`. It observes core revisions, including changes to nested resources, and supplies that same instance to UI view models. Presentation tokens now belong to `com.clerk.ui.theme`. UI telemetry uses the generated TypeScript collector.
+
+Authentication models call generated future methods, and `AuthView` explicitly finalizes completed attempts before presenting source-reported session tasks. Identifier fallback and Google One Tap transfer remain in the shared core. Saved navigation holds UI factor selections and form prefills, never live resource handles. Use `LocalClerk.isAuthFlowComplete` to include pending prebuilt presentation steps when choosing authenticated content.
 
 Profile actions call generated resources directly and catch structured exceptions. Device lists use `User.getSessions()` and `SessionWithActivities`; account deletion delegates cleanup to the source `User.delete()`. Previews decode fixtures produced by the TypeScript state serializer rather than constructing independent native domain objects.
 

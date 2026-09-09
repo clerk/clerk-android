@@ -21,11 +21,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
-import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
@@ -33,6 +32,7 @@ import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
@@ -43,7 +43,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SignInFactorOneEmailLinkView(
-  factor: Factor,
+  factor: FactorSelection,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
@@ -59,16 +59,18 @@ fun SignInFactorOneEmailLinkView(
 
 @Composable
 private fun SignInFactorOneEmailLinkViewImpl(
-  factor: Factor,
+  factor: FactorSelection,
   modifier: Modifier = Modifier,
-  viewModel: SignInFactorOneEmailLinkViewModel = viewModel(),
+  viewModel: SignInFactorOneEmailLinkViewModel = clerkViewModel {
+    SignInFactorOneEmailLinkViewModel(it)
+  },
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
   val snackbarHostState = remember { SnackbarHostState() }
   val state by viewModel.state.collectAsStateWithLifecycle()
 
-  LaunchedEffect(Unit) { viewModel.sendLink() }
+  LaunchedEffect(viewModel, factor) { viewModel.sendLink(factor) }
   ObserveHostResume(onHostResumed = viewModel::onHostResumed)
 
   AuthStateEffects(
@@ -84,7 +86,9 @@ private fun SignInFactorOneEmailLinkViewImpl(
     onBackPressed = authState::navigateBack,
     title = stringResource(R.string.check_your_email),
     subtitle =
-      Clerk.applicationName?.let { stringResource(R.string.to_continue_to, it) }
+      com.clerk.ui.core.composition.LocalClerk.current.environment.displayConfig.applicationName
+        .takeIf { it.isNotBlank() }
+        ?.let { stringResource(R.string.to_continue_to, it) }
         ?: stringResource(R.string.to_continue),
     identifier = factor.safeIdentifier,
     identifierEditable = !authState.authStartIdentifierLocked,
@@ -94,7 +98,7 @@ private fun SignInFactorOneEmailLinkViewImpl(
     OpenEmailAppButton(snackbarHostState = snackbarHostState)
     Spacers.Vertical.Spacer24()
     SignInEmailLinkSecondaryActions(
-      onResendClick = viewModel::sendLink,
+      onResendClick = { viewModel.sendLink(factor) },
       onUseAnotherMethodClick = {
         authState.navigateTo(
           AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
@@ -168,7 +172,8 @@ private fun SignInEmailLinkSecondaryActions(
 private fun PreviewSignInFactorOneEmailLinkView() {
   PreviewAuthStateProvider {
     SignInFactorOneEmailLinkView(
-      factor = Factor(strategy = StrategyKeys.EMAIL_LINK, safeIdentifier = "sam@clerk.dev"),
+      factor =
+        FactorSelection(strategy = StrategyKeys.EMAIL_LINK, safeIdentifier = "sam@clerk.dev"),
       onAuthComplete = {},
     )
   }

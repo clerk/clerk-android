@@ -7,8 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.network.model.factor.Factor
 import com.clerk.ui.R
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.dimens.dp16
@@ -37,7 +37,7 @@ import com.clerk.ui.theme.ClerkThemeOverrideProvider
  */
 @Composable
 fun SignInClientTrustView(
-  factor: Factor,
+  factor: FactorSelection,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
@@ -86,7 +86,7 @@ internal fun ClientTrustWarningMessage(modifier: Modifier = Modifier) {
 private fun Preview() {
   PreviewAuthStateProvider {
     SignInClientTrustView(
-      factor = Factor(StrategyKeys.EMAIL_CODE, safeIdentifier = "user@example.com"),
+      factor = FactorSelection(StrategyKeys.EMAIL_CODE, safeIdentifier = "user@example.com"),
       onAuthComplete = {},
     )
   }

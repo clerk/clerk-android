@@ -26,12 +26,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.BiometricCredentialValidationResult
+import com.clerk.api.BiometricCredentialValidationResultStatus
 import com.clerk.api.Clerk
 import com.clerk.api.OAuthProvider
-import com.clerk.api.Session
-import com.clerk.api.log.ClerkLog
+import com.clerk.api.SessionStatus
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.LastUsedAuthBadgeOverlay
 import com.clerk.ui.core.button.social.ClerkSocialButton
@@ -40,8 +38,11 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
+import com.clerk.ui.core.common.ClerkLog
 import com.clerk.ui.core.composition.ClerkLogoProvider
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.divider.TextDivider
@@ -83,17 +84,19 @@ fun AuthStartView(
 internal fun AuthStartViewImpl(
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
-  authViewHelper: AuthStartViewHelper = AuthStartViewHelper(),
+  authViewHelper: AuthStartViewHelper = AuthStartViewHelper(LocalClerk.current),
   clerkTheme: ClerkTheme? = null,
   preferGoogleOneTap: Boolean = true,
   startSocialOAuthAsSignUp: Boolean = false,
   isDismissible: Boolean = true,
   onDismiss: (() -> Unit)? = null,
-  authStartViewModel: AuthStartViewModel = viewModel(),
+  authStartViewModel: AuthStartViewModel = clerkViewModel { AuthStartViewModel(it) },
 ) {
+  val clerk = LocalClerk.current
   val authState = LocalAuthState.current
   val state by authStartViewModel.state.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
+  com.clerk.ui.auth.AuthPresentationErrorEffect(authState, snackbarHostState)
   val generic = stringResource(R.string.something_went_wrong_please_try_again)
   var phoneActive by
     rememberSaveable(authState.identifierConfigVersion) {
@@ -119,17 +122,21 @@ internal fun AuthStartViewImpl(
     authViewHelper.biometricSignInConfigIsEnabled && authState.mode != AuthMode.SignUp
   var biometricSignInIsAvailable by remember { mutableStateOf(false) }
 
-  LaunchedEffect(biometricSignInConfigIsEnabled) {
+  LaunchedEffect(clerk, clerk.session?.id, biometricSignInConfigIsEnabled) {
     biometricSignInIsAvailable =
-      biometricSignInConfigIsEnabled && resolveBiometricSignInAvailability()
+      biometricSignInConfigIsEnabled &&
+        com.clerk.ui.core.common
+          .runUiOperation { resolveBiometricSignInAvailability(clerk) }
+          .getOrDefault(false)
   }
 
   val lastAuthenticationStrategy =
-    runCatching { Clerk.client.lastAuthenticationStrategy }.getOrNull()
+    runCatching { clerk.lastAuthenticationStrategy?.rawValue }.getOrNull()
   val lastUsedAuth =
     LastUsedAuth.from(
       lastAuthenticationStrategy = lastAuthenticationStrategy,
-      enabledFirstFactorAttributes = Clerk.enabledFirstFactorAttributes,
+      enabledFirstFactorAttributes =
+        clerk.environment.userSettings.enabledFirstFactorIdentifiers.map { it.rawValue },
       authenticatableSocialProviders = socialProviders,
       storedIdentifierType = authState.storedIdentifierType,
       biometricSignInIsVisible = biometricSignInIsAvailable,
@@ -187,7 +194,9 @@ internal fun AuthStartViewImpl(
 
   val signInWithBiometricsTitle = stringResource(R.string.sign_in_with_biometrics)
   val biometricPromptSubtitle =
-    Clerk.applicationName?.let { stringResource(R.string.app_uses_biometrics_to_sign_you_in, it) }
+    clerk.environment.displayConfig.applicationName
+      .takeIf { it.isNotBlank() }
+      ?.let { stringResource(R.string.app_uses_biometrics_to_sign_you_in, it) }
       ?: stringResource(R.string.use_biometrics_to_sign_in)
 
   LaunchedEffect(state) {
@@ -202,9 +211,11 @@ internal fun AuthStartViewImpl(
       }
       is AuthStartViewModel.AuthState.OAuthState.SignInSuccess -> {
         authState.setToStepForStatus(s.signIn, onAuthComplete = onAuthComplete)
+        authStartViewModel.resetState()
       }
       is AuthStartViewModel.AuthState.OAuthState.SignUpSuccess -> {
         authState.setToStepForStatus(s.signUp, onAuthComplete = onAuthComplete)
+        authStartViewModel.resetState()
       }
       is AuthStartViewModel.AuthState.Error -> {
         snackbarHostState.showSnackbar(s.message ?: generic)
@@ -371,15 +382,11 @@ private fun dismissTrailingContent(
  * cleaning up stale local state when the server no longer recognizes it.
  */
 @Suppress("ReturnCount")
-private suspend fun resolveBiometricSignInAvailability(): Boolean {
-  if (Clerk.session?.status == Session.SessionStatus.ACTIVE) return false
-  if (!Clerk.biometricCredentials.localAvailability().isAvailable) return false
-
-  return when (Clerk.biometricCredentials.validateLocalCredentialIfPossible()) {
-    is BiometricCredentialValidationResult.Invalid -> false
-    BiometricCredentialValidationResult.Valid,
-    BiometricCredentialValidationResult.Inconclusive -> true
-  }
+private suspend fun resolveBiometricSignInAvailability(clerk: Clerk): Boolean {
+  if (clerk.session?.status == SessionStatus.Active) return false
+  if (!clerk.biometricCredentials.localAvailability().isAvailable) return false
+  return clerk.biometricCredentials.validateLocalCredential().status !=
+    BiometricCredentialValidationResultStatus.Invalid
 }
 
 @Composable
@@ -491,16 +498,13 @@ private val String.isEmailAddress: Boolean
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  //  Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
-  val authViewHelper = AuthStartViewHelper()
-
-  authViewHelper.setTestValues(
-    enabledFirstFactorAttributes = listOf("email_address", "phone_number", "username"),
-    applicationName = "Acme Co",
-    socialProviders = listOf(OAuthProvider.Google, OAuthProvider.Apple, OAuthProvider.Facebook),
-  )
-
   PreviewAuthStateProvider {
+    val authViewHelper = AuthStartViewHelper(LocalClerk.current)
+    authViewHelper.setTestValues(
+      enabledFirstFactorAttributes = listOf("email_address", "phone_number", "username"),
+      applicationName = "Acme Co",
+      socialProviders = listOf(OAuthProvider.Google, OAuthProvider.Apple, OAuthProvider.Facebook),
+    )
     AuthStartViewImpl(authViewHelper = authViewHelper, onAuthComplete = {})
   }
 }

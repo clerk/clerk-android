@@ -2,76 +2,63 @@ package com.clerk.ui.signup.code
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Clerk
-import com.clerk.api.Constants
-import com.clerk.api.SignUp
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signup.attemptVerification
-import com.clerk.api.signup.emailVerificationStrategy
-import com.clerk.api.signup.prepareVerification
-import com.clerk.ui.auth.AuthenticationViewState
-import com.clerk.ui.auth.VerificationUiState
+import com.clerk.api.*
+import com.clerk.ui.auth.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class SignUpCodeViewModel : ViewModel() {
-
+internal class SignUpCodeViewModel(private val clerk: Clerk) : ViewModel() {
   private val _verificationState = MutableStateFlow<VerificationUiState>(VerificationUiState.Idle)
   val verificationState = _verificationState.asStateFlow()
-
   private val _state = MutableStateFlow<AuthenticationViewState>(AuthenticationViewState.Idle)
   val state = _state.asStateFlow()
 
-  fun prepare(field: SignUpCodeField) {
-    val signUp = Clerk.client.signUp ?: return
-    if (
-      field is SignUpCodeField.Email &&
-        signUp.emailVerificationStrategy == Constants.Strategy.EMAIL_LINK
-    ) {
-      _state.value = AuthenticationViewState.Success.SignUp(signUp)
-      return
-    }
-    viewModelScope.launch {
-      val signUp =
-        when (field) {
-          is SignUpCodeField.Email -> {
-            signUp.prepareVerification(SignUp.PrepareVerificationParams.Strategy.EmailCode())
+  fun prepare(field: SignUpCodeField) =
+    guardSignUp(clerk, _state) { signUp ->
+      if (
+        field is SignUpCodeField.Email && signUp.emailVerificationStrategy(clerk) == "email_link"
+      ) {
+        _state.value = AuthenticationViewState.Success.SignUp(signUp)
+        return@guardSignUp
+      }
+      _state.value = AuthenticationViewState.Loading
+      viewModelScope.launch {
+        runUiOperation {
+            when (field) {
+              is SignUpCodeField.Email -> signUp.verifications.sendEmailCode()
+              is SignUpCodeField.Phone -> signUp.verifications.sendPhoneCode()
+            }
           }
-          is SignUpCodeField.Phone -> {
-            signUp.prepareVerification(SignUp.PrepareVerificationParams.Strategy.PhoneCode())
-          }
-        }
-      signUp
-        .onSuccess { _state.value = AuthenticationViewState.Success.SignUp(it) }
-        .onFailure { _state.value = AuthenticationViewState.Error(it.errorMessage) }
+          .onSuccess { _state.value = AuthenticationViewState.Idle }
+          .onFailure { _state.value = AuthenticationViewState.Error(it.displayMessage) }
+      }
     }
-  }
 
-  fun attempt(code: String, field: SignUpCodeField) {
-    _verificationState.value = VerificationUiState.Verifying
-    val signUp = Clerk.client.signUp ?: return
-    viewModelScope.launch {
-      val signUp =
-        when (field) {
-          is SignUpCodeField.Email ->
-            signUp.attemptVerification(SignUp.AttemptVerificationParams.EmailCode(code))
-          is SignUpCodeField.Phone ->
-            signUp.attemptVerification(SignUp.AttemptVerificationParams.PhoneCode(code))
-        }
-      signUp
-        .onSuccess {
-          _verificationState.value = VerificationUiState.Verified
-          _state.value = AuthenticationViewState.Success.SignUp(it)
-        }
-        .onFailure {
-          _verificationState.value = VerificationUiState.Error(it.errorMessage)
-          _state.value = AuthenticationViewState.Error(it.errorMessage)
-        }
+  fun attempt(code: String, field: SignUpCodeField) =
+    guardSignUp(clerk, _state) { signUp ->
+      _verificationState.value = VerificationUiState.Verifying
+      viewModelScope.launch {
+        runUiOperation {
+            when (field) {
+              is SignUpCodeField.Email ->
+                signUp.verifications.verifyEmailCode(SignUpEmailCodeVerifyParams(code))
+              is SignUpCodeField.Phone ->
+                signUp.verifications.verifyPhoneCode(SignUpPhoneCodeVerifyParams(code))
+            }
+          }
+          .onSuccess {
+            _verificationState.value = VerificationUiState.Verified
+            _state.value = AuthenticationViewState.Success.SignUp(signUp)
+          }
+          .onFailure {
+            _verificationState.value = VerificationUiState.Error(it.displayMessage)
+            _state.value = AuthenticationViewState.Error(it.displayMessage)
+          }
+      }
     }
-  }
 
   fun reset() {
     _state.value = AuthenticationViewState.Idle

@@ -10,20 +10,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.OAuthProvider
-import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.signin.alternativeFirstFactors
-import com.clerk.api.signin.alternativeSecondFactors
-import com.clerk.api.toOAuthProvidersList
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.auth.PreviewAuthStateProvider
+import com.clerk.ui.auth.alternativeFirstFactors
+import com.clerk.ui.auth.alternativeSecondFactors
 import com.clerk.ui.auth.transferable
 import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
@@ -50,18 +50,21 @@ import kotlinx.collections.immutable.toImmutableList
  */
 @Composable
 fun SignInFactorAlternativeMethodsView(
-  currentFactor: Factor,
+  currentFactor: FactorSelection,
   modifier: Modifier = Modifier,
   isSecondFactor: Boolean = false,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
 ) {
+  val clerk = LocalClerk.current
   ClerkThemeOverrideProvider(clerkTheme) {
     val socialProviders =
-      if (isSecondFactor) emptyList() else Clerk.socialProviders.toOAuthProvidersList()
+      if (isSecondFactor) emptyList()
+      else com.clerk.ui.auth.AuthStartViewHelper(clerk).authenticatableSocialProviders
     val alternativeFactors =
-      if (isSecondFactor) Clerk.auth.currentSignIn?.alternativeSecondFactors(currentFactor)
-      else Clerk.auth.currentSignIn?.alternativeFirstFactors(currentFactor)
+      if (isSecondFactor)
+        clerk.signIn.takeIf { it.id != null }?.alternativeSecondFactors(currentFactor)
+      else clerk.signIn.takeIf { it.id != null }?.alternativeFirstFactors(currentFactor)
 
     SignInFactorAlternativeMethodsViewImpl(
       modifier = modifier,
@@ -86,12 +89,12 @@ fun SignInFactorAlternativeMethodsView(
 @Composable
 private fun SignInFactorAlternativeMethodsViewImpl(
   providers: ImmutableList<OAuthProvider>,
-  alternativeFactors: ImmutableList<Factor>,
+  alternativeFactors: ImmutableList<FactorSelection>,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
   textIconHelper: TextIconHelper = TextIconHelper(),
   isSecondFactor: Boolean = false,
-  viewModel: AlternativeMethodsViewModel = viewModel(),
+  viewModel: AlternativeMethodsViewModel = clerkViewModel { AlternativeMethodsViewModel(it) },
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val authState = LocalAuthState.current
@@ -145,8 +148,8 @@ private fun Preview() {
       onAuthComplete = {},
       alternativeFactors =
         persistentListOf(
-          Factor(strategy = StrategyKeys.PASSWORD),
-          Factor(strategy = StrategyKeys.PHONE_CODE),
+          FactorSelection(strategy = StrategyKeys.PASSWORD),
+          FactorSelection(strategy = StrategyKeys.PHONE_CODE),
         ),
       providers =
         persistentListOf(OAuthProvider.Google, OAuthProvider.Apple, OAuthProvider.Facebook),

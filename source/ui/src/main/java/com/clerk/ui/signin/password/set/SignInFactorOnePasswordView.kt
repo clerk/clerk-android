@@ -26,20 +26,21 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
-import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.resetPasswordFactor
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthState
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.AuthenticationViewState
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.auth.PreviewAuthStateProvider
+import com.clerk.ui.auth.resetPasswordFactor
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkTextButton
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.ClerkTextField
@@ -55,13 +56,13 @@ import com.clerk.ui.theme.DefaultColors
  * This view displays a password input field, the user's email, and options for "Forgot Password"
  * and "Use another method".
  *
- * @param factor The [Factor] associated with this password step.
+ * @param factor The [FactorSelection] associated with this password step.
  * @param modifier The [Modifier] to be applied to the view.
  * @param onAuthComplete A callback invoked when the authentication process is complete.
  */
 @Composable
 fun SignInFactorOnePasswordView(
-  factor: Factor,
+  factor: FactorSelection,
   modifier: Modifier = Modifier,
   clerkTheme: ClerkTheme? = null,
   onAuthComplete: () -> Unit,
@@ -77,9 +78,9 @@ fun SignInFactorOnePasswordView(
 
 @Composable
 private fun SignInFactorOnePasswordViewImpl(
-  factor: Factor,
+  factor: FactorSelection,
   modifier: Modifier = Modifier,
-  viewModel: SetPasswordViewModel = viewModel(),
+  viewModel: SetPasswordViewModel = clerkViewModel { SetPasswordViewModel(it) },
   onAuthComplete: () -> Unit,
 ) {
   val authState = LocalAuthState.current
@@ -151,7 +152,8 @@ private fun PasswordInput(password: String, onValueChange: (String) -> Unit, onS
 }
 
 @Composable
-private fun Footer(authState: AuthState, factor: Factor) {
+private fun Footer(authState: AuthState, factor: FactorSelection) {
+  val clerk = LocalClerk.current
   val windowInfo = LocalWindowInfo.current
   val density = LocalDensity.current
   val widthDp = with(density) { windowInfo.containerSize.width.toDp() }
@@ -173,9 +175,12 @@ private fun Footer(authState: AuthState, factor: Factor) {
       ClerkTextButton(
         text = stringResource(R.string.forgot_password),
         onClick = {
-          Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
-            authState.navigateTo(AuthDestination.SignInForgotPassword)
-          }
+          clerk.signIn
+            .takeIf { it.id != null }
+            ?.resetPasswordFactor
+            ?.let {
+              authState.navigateTo(AuthDestination.SignInForgotPassword)
+            }
             ?: authState.navigateTo(
               AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
             )
@@ -199,9 +204,12 @@ private fun Footer(authState: AuthState, factor: Factor) {
       ClerkTextButton(
         text = stringResource(R.string.forgot_password),
         onClick = {
-          Clerk.auth.currentSignIn?.resetPasswordFactor?.let {
-            authState.navigateTo(AuthDestination.SignInForgotPassword)
-          }
+          clerk.signIn
+            .takeIf { it.id != null }
+            ?.resetPasswordFactor
+            ?.let {
+              authState.navigateTo(AuthDestination.SignInForgotPassword)
+            }
             ?: authState.navigateTo(
               AuthDestination.SignInFactorOneUseAnotherMethod(currentFactor = factor)
             )
@@ -217,7 +225,8 @@ private fun PreviewSignInFactorOnePasswordView() {
   PreviewAuthStateProvider {
     ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
       SignInFactorOnePasswordView(
-        factor = Factor(strategy = StrategyKeys.PASSWORD, safeIdentifier = "sam@clerk.dev"),
+        factor =
+          FactorSelection(strategy = StrategyKeys.PASSWORD, safeIdentifier = "sam@clerk.dev"),
         onAuthComplete = {},
       )
     }

@@ -8,7 +8,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.clerk.api.Clerk
 import com.clerk.api.OAuthProvider
-import com.clerk.api.UserSettings
 import com.clerk.ui.R
 
 private const val EMAIL_ADDRESS = "email_address"
@@ -18,7 +17,7 @@ private const val USERNAME = "username"
 private const val PHONE_NUMBER = "phone_number"
 
 @Stable
-internal class AuthStartViewHelper {
+internal class AuthStartViewHelper(private val clerk: Clerk) {
 
   // Test backdoor properties - set these for testing
   internal var testEnabledFirstFactorAttributes: List<String>? = null
@@ -33,27 +32,34 @@ internal class AuthStartViewHelper {
       return if (testSocialProviders != null) {
         testSocialProviders!!
       } else {
-        Clerk.socialProviders.values
+        clerk.environment.userSettings.social.values
           .filter { it.enabled && it.authenticatable }
-          .map { OAuthProvider.fromStrategy(it.strategy) }
+          .map {
+            OAuthProvider.fromJson(
+              kotlinx.serialization.json.JsonPrimitive(it.strategy.rawValue.removePrefix("oauth_")),
+              clerk.context.requireRuntime(),
+            )
+          }
       }
     }
 
   val emailIsEnabled: Boolean
     get() =
-      (testEnabledFirstFactorAttributes ?: Clerk.enabledFirstFactorAttributes).contains(
-        EMAIL_ADDRESS
-      )
+      (testEnabledFirstFactorAttributes
+          ?: clerk.environment.userSettings.enabledFirstFactorIdentifiers.map { it.rawValue })
+        .contains(EMAIL_ADDRESS)
 
   val usernameIsEnabled: Boolean
     get() =
-      (testEnabledFirstFactorAttributes ?: Clerk.enabledFirstFactorAttributes).contains(USERNAME)
+      (testEnabledFirstFactorAttributes
+          ?: clerk.environment.userSettings.enabledFirstFactorIdentifiers.map { it.rawValue })
+        .contains(USERNAME)
 
   val phoneNumberIsEnabled: Boolean
     get() =
-      (testEnabledFirstFactorAttributes ?: Clerk.enabledFirstFactorAttributes).contains(
-        PHONE_NUMBER
-      )
+      (testEnabledFirstFactorAttributes
+          ?: clerk.environment.userSettings.enabledFirstFactorIdentifiers.map { it.rawValue })
+        .contains(PHONE_NUMBER)
 
   val showIdentifierSwitcher: Boolean
     get() = (emailIsEnabled || usernameIsEnabled) && phoneNumberIsEnabled
@@ -62,25 +68,19 @@ internal class AuthStartViewHelper {
     get() = emailIsEnabled || usernameIsEnabled || phoneNumberIsEnabled
 
   val showOrDivider: Boolean
-    get() {
-      val socialProviders = testSocialProviders ?: Clerk.socialProviders.values
-      return socialProviders.any {
-        // For testing, assume all test social providers are authenticatable
-        if (testSocialProviders != null) true
-        else
-          (it as? UserSettings.SocialConfig)?.let { config ->
-            config.enabled && config.authenticatable
-          } == true
-      } && showIdentifierField
-    }
+    get() = authenticatableSocialProviders.isNotEmpty() && showIdentifierField
 
   val passkeySignInConfigIsEnabled: Boolean
     get() =
-      (testPasskeyIsEnabled ?: Clerk.passkeyFirstFactorIsEnabled) &&
-        (testPasskeyAutofillIsEnabled ?: Clerk.passkeyAutofillIsEnabled)
+      (testPasskeyIsEnabled
+        ?: (clerk.environment.userSettings.attributes["passkey"]?.usedForFirstFactor == true)) &&
+        (testPasskeyAutofillIsEnabled
+          ?: clerk.environment.userSettings.passkeySettings.allowAutofill)
 
   val biometricSignInConfigIsEnabled: Boolean
-    get() = testBiometricSignInIsEnabled ?: Clerk.biometricSignInIsEnabled
+    get() =
+      testBiometricSignInIsEnabled
+        ?: (clerk.environment.authConfig.nativeSettings?.trustedDeviceSignInEnabled == true)
 
   fun getKeyboardType(isPhoneNumberFieldActive: Boolean): KeyboardType {
     return if (isPhoneNumberFieldActive) {
@@ -115,7 +115,9 @@ internal class AuthStartViewHelper {
   }
 
   private val applicationName: String?
-    get() = testApplicationName ?: Clerk.applicationName
+    get() =
+      testApplicationName
+        ?: clerk.environment.displayConfig.applicationName.takeIf { it.isNotBlank() }
 
   fun shouldStartOnPhoneNumber(authStartPhoneNumber: String, authStartIdentifier: String): Boolean {
     val identifierFieldIsEnabled = emailIsEnabled || usernameIsEnabled
