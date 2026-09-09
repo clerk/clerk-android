@@ -14,6 +14,8 @@ The [storage assertion audit](storage-test-audit.md) records the actual snapshot
 encoding and the reproduced first-write Keystore race, with passing replacements.
 The [HTTP host audit](http-test-audit.md) records reproduced response-body
 cancellation and UTF-8 defects and separates the old header/logging assertions.
+The [lifecycle/connectivity audit](lifecycle-test-audit.md) records packaged-core
+recovery tests and the unimplemented automatic connectivity-restoration behavior.
 
 ## Configuration validation
 
