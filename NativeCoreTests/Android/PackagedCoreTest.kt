@@ -1,0 +1,87 @@
+package com.clerk.api
+
+import android.content.Context
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import java.net.URI
+import java.util.Base64
+import kotlinx.coroutines.*
+import kotlinx.serialization.json.*
+import org.junit.Test
+import org.junit.runner.RunWith
+
+private class PackagedFixtures(context: Context) : NativeCapabilities {
+  override val supported = setOf("http", "storage", "timer", "random", "browser")
+  private val fixtures = Json.parseToJsonElement(context.assets.open("fapi.json").bufferedReader().use { it.readText() }).jsonObject
+  var credential: String? = null
+  var signedOut = false
+  var clientReads = 0
+  val requests = mutableListOf<JsonObject>()
+  override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
+    val args = arguments.jsonObject
+    when (capability) {
+      "storage.read" -> return credential?.let(::JsonPrimitive) ?: JsonNull
+      "storage.write" -> { credential = args.getValue("value").requireString(); return JsonNull }
+      "storage.remove" -> { credential = null; return JsonNull }
+      "timer" -> { delay(args.getValue("milliseconds").jsonPrimitive.long); return JsonNull }
+      "browser" -> return buildJsonObject { put("callbackUrl", "clerk-test://sso-callback?rotating_token_nonce=native_nonce") }
+    }
+    check(capability == "http")
+    requests += args
+    val url = URI(args.getValue("url").requireString())
+    var raw = false
+    var client: JsonElement? = null
+    val response = when {
+      url.path.endsWith("/environment") -> fixtures.getValue("environment")
+      url.path.endsWith("/client") -> fixtures.getValue(if (++clientReads > 1 && !signedOut) "authenticatedClient" else "client")
+      url.path.endsWith("/sessions") -> { signedOut = true; fixtures.getValue("client") }
+      url.path.endsWith("/tokens") -> { raw = true; fixtures.getValue("token") }
+      url.path.endsWith("/touch") -> { client = fixtures.getValue("authenticatedClient"); fixtures.getValue("session") }
+      else -> {
+        val resource = fixtures.getValue(if (url.path.contains("sign_ins")) "signIn" else "signUp").jsonObject.toMutableMap()
+        if (args["method"] == JsonPrimitive("GET")) {
+          check(url.rawQuery.contains("rotating_token_nonce=native_nonce"))
+          resource["status"] = JsonPrimitive("complete")
+          resource["created_session_id"] = JsonPrimitive("sess_native")
+        }
+        JsonObject(resource)
+      }
+    }
+    val body = if (raw) response else buildJsonObject { put("response", response); client?.let { put("client", it) } }
+    return buildJsonObject {
+      put("status", 200)
+      put("headers", buildJsonObject { put("authorization", "fixture-client-credential") })
+      put("body", body.toString())
+    }
+  }
+}
+
+@RunWith(AndroidJUnit4::class)
+class PackagedCoreTest {
+  @Test fun generatedApiUsesPackagedCore() = runBlocking {
+    withTimeout(30000) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val capabilities = PackagedFixtures(instrumentation.context)
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+      try {
+        clerk.signIn.sso(SignInSSOParams(SignInSSOParamsStrategy.OauthGoogle))
+        check(clerk.signIn.status.rawValue == "complete" && clerk.session == null)
+        clerk.signUp.sso(SignUpSSOParams("oauth_google"))
+        check(clerk.signUp.status.rawValue == "complete" && clerk.session == null)
+        val group = clerk.signIn.emailCode
+        val requestCount = capabilities.requests.size
+        clerk.signIn.reset()
+        check(group.isInvalidated && capabilities.requests.size == requestCount)
+        try { group.verifyCode(SignInEmailCodeVerifyParams("123456")); error("Stale group accepted") }
+        catch (error: CoreException) { check(error.code == "stale_resource") }
+        clerk.signIn.sso(SignInSSOParams(SignInSSOParamsStrategy.OauthGoogle))
+        clerk.signIn.finalize()
+        check(clerk.session?.status?.rawValue == "active" && clerk.user?.id == "user_native")
+        check(clerk.session?.getToken()?.contains("fixture_signature") == true)
+        clerk.signOut()
+        check(clerk.session == null && clerk.user == null)
+      } finally { withContext(Dispatchers.Main) { clerk.close() } }
+    }
+  }
+}

@@ -99,6 +99,9 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
   private var projecting: Set<ResourceHandle>? = null
   private val pendingOwners = mutableMapOf<String, CoreResource>()
   private val revisions = MutableStateFlow(-1L)
+  private val lifecycleErrors = MutableStateFlow<CoreException?>(null)
+  public val lastLifecycleError: StateFlow<CoreException?> = lifecycleErrors.asStateFlow()
+  private val teardown = mutableListOf<() -> Unit>()
   public val changes: StateFlow<Long> = revisions.asStateFlow()
   public val revision: Long get() = snapshot.revision
   public val epoch: Long get() = snapshot.epoch
@@ -170,6 +173,7 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
           val result = pending.remove(m.getValue("id").requireString()) ?: return
           m["failure"]?.let { result.completeExceptionally(CoreException.fromJson(it)) } ?: result.complete(m["result"] ?: Undefined)
         }
+        "lifecycleError" -> lifecycleErrors.value = m["failure"]?.let(CoreException::fromJson)
         "runtimeError", "unavailable", "initializationFailed" -> fail(m["failure"]?.let(CoreException::fromJson) ?: CoreException("runtime_unavailable"))
       }
     } catch (error: Exception) { fail(error) }
@@ -218,8 +222,17 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
     calls.forEach { it.completeExceptionally(error) }
     revisions.value += 1
   }
+  public fun setApplicationActive(active: Boolean) {
+    scope.launch {
+      if (!isAvailable) return@launch
+      runCatching { transport.send(buildJsonObject { put("kind", "lifecycle"); put("state", if (active) "foreground" else "background") }) }
+        .onFailure { fail(it as? Exception ?: CoreException("runtime_unavailable")) }
+    }
+  }
+  internal fun addTeardown(action: () -> Unit) { teardown += action }
   override fun close() {
     scope.launch {
+      teardown.forEach { it() }; teardown.clear()
       runCatching { transport.send(buildJsonObject { put("kind", "dispose") }) }
       transport.close()
       fail(CoreException("runtime_disposed"))

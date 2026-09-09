@@ -1,18 +1,31 @@
 plugins {
   alias(libs.plugins.android.library)
-  alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.dokka)
   alias(libs.plugins.kotlin.plugin.serialization)
-  alias(libs.plugins.ksp)
   alias(libs.plugins.mavenPublish)
 }
 
-android {
+extensions.configure<com.android.build.api.dsl.LibraryExtension> {
   namespace = "com.clerk.sdk"
   compileSdk = libs.versions.compileSdk.get().toInt()
+  ndkVersion = "27.1.12297006"
+  sourceSets.getByName("main").apply {
+    java.directories.clear()
+    kotlin.directories.apply { clear(); add("../../NativeCore") }
+    assets.directories.apply { clear(); add("../../NativeCore/Resources") }
+    res.directories.clear()
+    manifest.srcFile("../../NativeCore/Android/AndroidManifest.xml")
+  }
+  sourceSets.getByName("test").kotlin.directories.apply { clear(); add("../../NativeCoreTests/Unit") }
+  sourceSets.getByName("androidTest").kotlin.directories.apply { clear(); add("../../NativeCoreTests/Android") }
+  sourceSets.getByName("androidTest").assets.directories.add("../../NativeCoreTests/Fixtures")
+  externalNativeBuild { cmake { path = file("../../NativeCore/cpp/CMakeLists.txt"); version = "3.22.1" } }
+  compileOptions { isCoreLibraryDesugaringEnabled = true }
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
+    ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("String", "SDK_VERSION", "\"${property("CLERK_API_VERSION")}\"")
     consumerProguardFiles("consumer-rules.pro")
   }
@@ -44,13 +57,6 @@ dokka {
   }
   dokkaPublications.configureEach { suppressInheritedMembers.set(true) }
 }
-
-tasks
-  .matching { it.name.startsWith("dokkaGenerate") }
-  .configureEach {
-    dependsOn(tasks.named("kspDebugKotlin"))
-    dependsOn(tasks.named("kspReleaseKotlin"))
-  }
 
 mavenPublishing {
   coordinates("com.clerk", "clerk-android-api", property("CLERK_API_VERSION") as String)
@@ -89,50 +95,18 @@ mavenPublishing {
 
 dependencies {
   api(libs.kotlinx.serialization)
-
-  implementation(platform(libs.compose.bom))
-  implementation(libs.androidx.appcompat)
-  implementation(libs.androidx.biometric)
+  api(libs.kotlinx.coroutines)
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
   implementation(libs.androidx.browser)
   implementation(libs.androidx.credentials)
-  implementation(libs.androidx.lifecycle.process)
-  implementation(libs.androidx.lifecycle.runtime)
-  implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.playServicesAuth)
-  implementation(libs.clerk.automap.annotations)
-  implementation(libs.google.identity)
-  implementation(libs.google.playIntegrity)
-  implementation(libs.jwt.decode)
-  implementation(libs.kotlinx.coroutines)
-  implementation(libs.kotlinx.datetime)
+  implementation(libs.androidx.lifecycle.process)
   implementation(libs.okhttp)
-  implementation(libs.okhttp.logging)
-  implementation(libs.retrofit)
-  implementation(libs.retrofit.kotlinx)
-
-  compileOnly(libs.androidx.compose.foundation)
-
-  testImplementation(platform(libs.compose.bom))
-  testImplementation(libs.androidx.appcompat)
-  testImplementation(libs.androidx.arch.test)
-  testImplementation(libs.androidx.compose.foundation)
-  testImplementation(libs.core.ktx)
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)
-  testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
-  testImplementation(libs.mockito)
-  testImplementation(libs.mockk)
-  testImplementation(libs.robolectric)
-
-  androidTestImplementation(libs.androidx.arch.test)
-  androidTestImplementation(libs.junit)
+  androidTestImplementation("androidx.test:runner:1.7.0")
+  androidTestImplementation("androidx.test.ext:junit:1.3.0")
   androidTestImplementation(libs.kotlinx.coroutines.test)
-  androidTestImplementation(libs.mockito)
-  androidTestImplementation(libs.mockk)
-  androidTestImplementation(libs.robolectric)
-
   dokkaPlugin(libs.versioning.plugin)
-
-  ksp(libs.clerk.automap.processor)
 }
