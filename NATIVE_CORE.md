@@ -57,3 +57,11 @@ From a clean JavaScript checkout run `node packages/mobile-runtime/pack.mjs IOS_
 ## Previous native API
 
 The [separate migration guide](Documentation/Migration/README.md) records the audited main baseline, old public declarations, call changes, unavailable features, and the legacy-test coverage audit. The old native test trees remain pending their explicit assertion-level migration.
+
+## Performance measurements
+
+Run `scripts/benchmark-native-core.sh OUTPUT_JSON` to collect raw fresh-engine startup and generated local-reset timings against the packaged deterministic fixture. The reset check verifies invalidation and the absence of HTTP. The first startup sample is separate from subsequent fresh engines in the same warm process. These are not cold-app or live-network timings.
+
+The Android script builds and installs the isolated debug instrumentation APK. Set `ANDROID_SERIAL` when multiple devices are connected. The report includes sampled process PSS and native heap allocation, including the test runner and libraries. Debug emulator measurements do not set release-device budgets.
+
+Record the OS/device, build mode, core revision/hash and packaged artifact sizes with each run. Agree release startup, memory, size and call-overhead budgets before treating measurements as a go/no-go gate.

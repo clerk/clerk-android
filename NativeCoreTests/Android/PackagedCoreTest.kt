@@ -11,7 +11,7 @@ import kotlinx.serialization.json.*
 import org.junit.Test
 import org.junit.runner.RunWith
 
-private class PackagedFixtures(context: Context) : NativeCapabilities {
+internal class PackagedFixtures(context: Context) : NativeCapabilities {
   override val supported = setOf("http", "storage", "timer", "random", "browser", "passkeys", "authStorage", "crypto.sha256", "biometrics")
   private val fixtures = Json.parseToJsonElement(context.assets.open("fapi.json").bufferedReader().use { it.readText() }).jsonObject
   var biometricRecords: String? = null
