@@ -87,17 +87,24 @@ class PackagedCoreTest {
           check(error.errors.first().meta?.paramName == "identifier")
           check(error.localizedMessage == "No account was found for this identifier.")
         }
-        clerk.signIn.sso(SignInSSOParams(SignInSSOParamsStrategy.OauthGoogle))
+        clerk.signIn.sso(SignInSSOParams(MobileSSOParamsStrategy.OauthGoogle))
         check(clerk.signIn.status.rawValue == "complete" && clerk.session == null)
         clerk.signUp.sso(SignUpSSOParams("oauth_google"))
         check(clerk.signUp.status.rawValue == "complete" && clerk.session == null)
+        val sharedFlow = clerk.authenticateWithSSO(MobileSSOParams(
+          strategy = MobileSSOParamsStrategy.OauthGoogle,
+          start = MobileSSOParamsStart.SignIn,
+          transferable = false,
+        ))
+        check(sharedFlow is MobileAuthenticationResult.Case1 && sharedFlow.value.signIn === clerk.signIn)
+        check(clerk.signIn.status.rawValue == "complete" && clerk.session == null)
         val group = clerk.signIn.emailCode
         val requestCount = capabilities.requests.size
         clerk.signIn.reset()
         check(group.isInvalidated && capabilities.requests.size == requestCount)
         try { group.verifyCode(SignInEmailCodeVerifyParams("123456")); error("Stale group accepted") }
         catch (error: CoreException) { check(error.code == "stale_resource") }
-        clerk.signIn.sso(SignInSSOParams(SignInSSOParamsStrategy.OauthGoogle))
+        clerk.signIn.sso(SignInSSOParams(MobileSSOParamsStrategy.OauthGoogle))
         clerk.signIn.finalize()
         check(clerk.session?.status?.rawValue == "active" && clerk.user?.id == "user_native")
         check(clerk.session?.getToken()?.contains("fixture_signature") == true)
