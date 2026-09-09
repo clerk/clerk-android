@@ -7,13 +7,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.input.ClerkCodeInputField
 import com.clerk.ui.signin.code.VerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
 
@@ -21,7 +20,7 @@ class ClerkCodeInputFieldSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun testClerkCodeInputField() {
-    paparazzi.snapshot {
+    snapshot {
       CompositionLocalProvider(LocalInspectionMode provides true) {
         ClerkMaterialTheme {
           Column(
@@ -52,8 +51,8 @@ class ClerkCodeInputFieldSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun testClerkCodeInputFieldDarkMode() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(colors = DefaultColors.dark)
+    snapshot {
       CompositionLocalProvider(LocalInspectionMode provides true) {
         ClerkMaterialTheme {
           Column(

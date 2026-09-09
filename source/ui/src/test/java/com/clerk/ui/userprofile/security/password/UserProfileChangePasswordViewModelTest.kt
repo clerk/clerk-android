@@ -1,20 +1,15 @@
 package com.clerk.ui.userprofile.security.password
 
 import app.cash.turbine.test
+import com.clerk.api.*
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.user.User
-import com.clerk.api.user.updatePassword
+import com.clerk.api.User
+import com.clerk.testing.testCoreError
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -24,29 +19,28 @@ import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserProfileChangePasswordViewModelTest {
+  private val clerk = mockk<Clerk>(relaxed = true)
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
   @BeforeTest
   fun setUp() {
-    mockkObject(Clerk)
-    every { Clerk.user } returns null
-    mockkStatic("com.clerk.api.user.UserKt")
+    every { clerk.user } returns null
   }
 
   @AfterTest
   fun tearDown() {
-    unmockkStatic("com.clerk.api.user.UserKt")
+
     unmockkAll()
   }
 
   @Test
   fun resetPassword_success_setsSuccessState() = runTest {
     val user = mockk<User>()
-    every { Clerk.user } returns user
-    coEvery { user.updatePassword(any()) } returns ClerkResult.success(user)
+    every { clerk.user } returns user
+    coEvery { user.updatePassword(any()) } returns user
 
-    val viewModel = UserProfileChangePasswordViewModel()
+    val viewModel = UserProfileChangePasswordViewModel(clerk)
     viewModel.state.test {
       assertEquals(UserProfileChangePasswordViewModel.State.Idle, awaitItem())
       viewModel.resetPassword("old", "new", true)
@@ -57,11 +51,11 @@ class UserProfileChangePasswordViewModelTest {
   @Test
   fun resetPassword_failure_setsErrorState() = runTest {
     val user = mockk<User>()
-    every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "fail")))
-    coEvery { user.updatePassword(any()) } returns ClerkResult.Failure(error)
+    every { clerk.user } returns user
+    val error = testCoreError("fail")
+    coEvery { user.updatePassword(any()) } throws error
 
-    val viewModel = UserProfileChangePasswordViewModel()
+    val viewModel = UserProfileChangePasswordViewModel(clerk)
     viewModel.state.test {
       assertEquals(UserProfileChangePasswordViewModel.State.Idle, awaitItem())
       viewModel.resetPassword("old", "new", false)
@@ -71,9 +65,9 @@ class UserProfileChangePasswordViewModelTest {
 
   @Test
   fun resetPassword_withoutUser_setsGuardError() = runTest {
-    every { Clerk.user } returns null
+    every { clerk.user } returns null
 
-    val viewModel = UserProfileChangePasswordViewModel()
+    val viewModel = UserProfileChangePasswordViewModel(clerk)
     viewModel.state.test {
       assertEquals(UserProfileChangePasswordViewModel.State.Idle, awaitItem())
       viewModel.resetPassword("old", "new", false)
@@ -86,7 +80,7 @@ class UserProfileChangePasswordViewModelTest {
 
   @Test
   fun resetState_setsIdle() {
-    val viewModel = UserProfileChangePasswordViewModel()
+    val viewModel = UserProfileChangePasswordViewModel(clerk)
     // Already Idle; ensure it's Idle
     assertEquals(UserProfileChangePasswordViewModel.State.Idle, viewModel.state.value)
     viewModel.resetState()

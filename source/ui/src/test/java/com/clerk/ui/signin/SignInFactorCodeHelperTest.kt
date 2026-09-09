@@ -1,6 +1,6 @@
 package com.clerk.ui.signin
 
-import com.clerk.api.network.model.factor.Factor
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.signin.code.SignInFactorCodeUiHelper
 import com.clerk.ui.signin.code.VerificationState
@@ -36,56 +36,56 @@ class SignInFactorCodeHelperTest {
   // Tests for showResend
   @Test
   fun `showResend with totp strategy returns false for Default state`() {
-    val factor = Factor(strategy = "totp")
+    val factor = FactorSelection(strategy = "totp")
     assertFalse(helper.showResend(factor, VerificationState.Default))
   }
 
   @Test
   fun `showResend with totp strategy returns false for Error state`() {
-    val factor = Factor(strategy = "totp")
+    val factor = FactorSelection(strategy = "totp")
     assertFalse(helper.showResend(factor, VerificationState.Error))
   }
 
   @Test
   fun `showResend with other strategy and Default state returns true`() {
-    val factor = Factor(strategy = StrategyKeys.PHONE_CODE)
+    val factor = FactorSelection(strategy = StrategyKeys.PHONE_CODE)
     assertTrue(helper.showResend(factor, VerificationState.Default))
   }
 
   @Test
   fun `showResend with other strategy and Verifying state returns false`() {
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val factor = FactorSelection(strategy = StrategyKeys.EMAIL_CODE)
     assertFalse(helper.showResend(factor, VerificationState.Verifying))
   }
 
   // Tests for showUseAnotherMethod
   @Test
   fun `showUseAnotherMethod with reset_password_email_code strategy returns false`() {
-    val factor = Factor(strategy = StrategyKeys.RESET_PASSWORD_EMAIL_CODE)
+    val factor = FactorSelection(strategy = StrategyKeys.RESET_PASSWORD_EMAIL_CODE)
     assertFalse(helper.showUseAnotherMethod(factor))
   }
 
   @Test
   fun `showUseAnotherMethod with reset_password_phone_code strategy returns false`() {
-    val factor = Factor(strategy = StrategyKeys.RESET_PASSWORD_PHONE_CODE)
+    val factor = FactorSelection(strategy = StrategyKeys.RESET_PASSWORD_PHONE_CODE)
     assertFalse(helper.showUseAnotherMethod(factor))
   }
 
   @Test
   fun `showUseAnotherMethod with phone_code strategy returns true`() {
-    val factor = Factor(strategy = StrategyKeys.PHONE_CODE)
+    val factor = FactorSelection(strategy = StrategyKeys.PHONE_CODE)
     assertTrue(helper.showUseAnotherMethod(factor))
   }
 
   @Test
   fun `showUseAnotherMethod with email_code strategy returns true`() {
-    val factor = Factor(strategy = StrategyKeys.EMAIL_CODE)
+    val factor = FactorSelection(strategy = StrategyKeys.EMAIL_CODE)
     assertTrue(helper.showUseAnotherMethod(factor))
   }
 
   @Test
   fun `showUseAnotherMethod with totp strategy returns true`() {
-    val factor = Factor(strategy = "totp")
+    val factor = FactorSelection(strategy = "totp")
     assertTrue(helper.showUseAnotherMethod(factor))
   }
 

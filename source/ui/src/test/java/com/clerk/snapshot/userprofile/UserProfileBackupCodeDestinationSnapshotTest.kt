@@ -37,7 +37,7 @@ class UserProfileBackupCodeDestinationSnapshotTest : BaseSnapshotTest() {
     }
     val entry = assertNotNull(provider(destination))
 
-    paparazzi.snapshot {
+    snapshot {
       Box(modifier = Modifier.size(width = 412.dp, height = 915.dp)) { entry.Content() }
     }
   }

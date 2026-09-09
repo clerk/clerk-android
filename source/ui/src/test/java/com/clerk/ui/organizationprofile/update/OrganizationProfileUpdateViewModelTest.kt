@@ -1,22 +1,14 @@
 package com.clerk.ui.organizationprofile.update
 
 import app.cash.turbine.test
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.deleteLogo
-import com.clerk.api.organizations.reload
-import com.clerk.api.organizations.update
-import com.clerk.api.organizations.updateLogo
+import com.clerk.api.*
+import com.clerk.testing.mockClerk
+import com.clerk.testing.testCoreError
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
-import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -27,16 +19,14 @@ import kotlinx.coroutines.test.runTest
 @OptIn(ExperimentalCoroutinesApi::class)
 class OrganizationProfileUpdateViewModelTest {
 
+  @get:org.junit.Rule val temporaryFolder = org.junit.rules.TemporaryFolder()
+
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
-  @BeforeTest
-  fun setUp() {
-    mockkStatic("com.clerk.api.organizations.OrganizationKt")
-  }
+  @BeforeTest fun setUp() {}
 
   @AfterTest
   fun tearDown() {
-    unmockkStatic("com.clerk.api.organizations.OrganizationKt")
     unmockkAll()
   }
 
@@ -45,11 +35,11 @@ class OrganizationProfileUpdateViewModelTest {
     val organization = organization()
     val updatedOrganization = organization("updated")
     val reloadedOrganization = organization("reloaded")
-    coEvery { organization.update(name = "Acme Labs", slug = "acme-labs") } returns
-      ClerkResult.success(updatedOrganization)
-    coEvery { updatedOrganization.reload() } returns ClerkResult.success(reloadedOrganization)
+    coEvery { organization.update(UpdateOrganizationParams("Acme Labs", "acme-labs")) } returns
+      updatedOrganization
+    coEvery { organization.reload() } returns reloadedOrganization
 
-    val viewModel = OrganizationProfileUpdateViewModel()
+    val viewModel = OrganizationProfileUpdateViewModel(mockClerk())
     viewModel.state.test {
       assertEquals(OrganizationProfileUpdateViewModel.State.Idle, awaitItem())
       viewModel.save(
@@ -61,7 +51,7 @@ class OrganizationProfileUpdateViewModelTest {
       )
       assertEquals(OrganizationProfileUpdateViewModel.State.Loading, awaitItem())
       assertEquals(
-        OrganizationProfileUpdateViewModel.State.Success(reloadedOrganization),
+        OrganizationProfileUpdateViewModel.State.Success(organization),
         awaitItem(),
       )
     }
@@ -73,14 +63,13 @@ class OrganizationProfileUpdateViewModelTest {
     val updatedOrganization = organization("updated")
     val logoOrganization = organization("logo")
     val reloadedOrganization = organization("reloaded")
-    val logoFile = mockk<File>()
-    coEvery { organization.update(name = "Acme Labs", slug = "acme-labs") } returns
-      ClerkResult.success(updatedOrganization)
-    coEvery { updatedOrganization.updateLogo(logoFile) } returns
-      ClerkResult.success(logoOrganization)
-    coEvery { logoOrganization.reload() } returns ClerkResult.success(reloadedOrganization)
+    val logoFile = temporaryFolder.newFile("logo.png").apply { writeBytes(byteArrayOf(1, 2, 3)) }
+    coEvery { organization.update(UpdateOrganizationParams("Acme Labs", "acme-labs")) } returns
+      updatedOrganization
+    coEvery { organization.setLogo(any()) } returns logoOrganization
+    coEvery { organization.reload() } returns reloadedOrganization
 
-    val viewModel = OrganizationProfileUpdateViewModel()
+    val viewModel = OrganizationProfileUpdateViewModel(mockClerk())
     viewModel.state.test {
       assertEquals(OrganizationProfileUpdateViewModel.State.Idle, awaitItem())
       viewModel.save(
@@ -92,12 +81,12 @@ class OrganizationProfileUpdateViewModelTest {
       )
       assertEquals(OrganizationProfileUpdateViewModel.State.Loading, awaitItem())
       assertEquals(
-        OrganizationProfileUpdateViewModel.State.Success(reloadedOrganization),
+        OrganizationProfileUpdateViewModel.State.Success(organization),
         awaitItem(),
       )
     }
 
-    coVerify(exactly = 1) { updatedOrganization.updateLogo(logoFile) }
+    coVerify(exactly = 1) { organization.setLogo(any()) }
   }
 
   @Test
@@ -106,12 +95,12 @@ class OrganizationProfileUpdateViewModelTest {
     val updatedOrganization = organization("updated")
     val logoOrganization = organization("logo")
     val reloadedOrganization = organization("reloaded")
-    coEvery { organization.update(name = "Acme Labs", slug = null) } returns
-      ClerkResult.success(updatedOrganization)
-    coEvery { updatedOrganization.deleteLogo() } returns ClerkResult.success(logoOrganization)
-    coEvery { logoOrganization.reload() } returns ClerkResult.success(reloadedOrganization)
+    coEvery { organization.update(UpdateOrganizationParams("Acme Labs", null)) } returns
+      updatedOrganization
+    coEvery { organization.setLogo(SetOrganizationLogoParams(null)) } returns logoOrganization
+    coEvery { organization.reload() } returns reloadedOrganization
 
-    val viewModel = OrganizationProfileUpdateViewModel()
+    val viewModel = OrganizationProfileUpdateViewModel(mockClerk())
     viewModel.state.test {
       assertEquals(OrganizationProfileUpdateViewModel.State.Idle, awaitItem())
       viewModel.save(
@@ -123,21 +112,21 @@ class OrganizationProfileUpdateViewModelTest {
       )
       assertEquals(OrganizationProfileUpdateViewModel.State.Loading, awaitItem())
       assertEquals(
-        OrganizationProfileUpdateViewModel.State.Success(reloadedOrganization),
+        OrganizationProfileUpdateViewModel.State.Success(organization),
         awaitItem(),
       )
     }
 
-    coVerify(exactly = 1) { updatedOrganization.deleteLogo() }
+    coVerify(exactly = 1) { organization.setLogo(SetOrganizationLogoParams(null)) }
   }
 
   @Test
   fun `save failure emits error state`() = runTest {
     val organization = organization()
-    coEvery { organization.update(name = "Acme Labs", slug = "acme-labs") } returns
-      ClerkResult.Failure(ClerkErrorResponse(errors = listOf(Error(longMessage = "boom"))))
+    coEvery { organization.update(UpdateOrganizationParams("Acme Labs", "acme-labs")) } throws
+      testCoreError("boom")
 
-    val viewModel = OrganizationProfileUpdateViewModel()
+    val viewModel = OrganizationProfileUpdateViewModel(mockClerk())
     viewModel.state.test {
       assertEquals(OrganizationProfileUpdateViewModel.State.Idle, awaitItem())
       viewModel.save(
@@ -158,10 +147,10 @@ class OrganizationProfileUpdateViewModelTest {
   @Test
   fun `clearError resets error state to idle`() = runTest {
     val organization = organization()
-    coEvery { organization.update(name = "Acme Labs", slug = "acme-labs") } returns
-      ClerkResult.Failure(ClerkErrorResponse(errors = listOf(Error(longMessage = "boom"))))
+    coEvery { organization.update(UpdateOrganizationParams("Acme Labs", "acme-labs")) } throws
+      testCoreError("boom")
 
-    val viewModel = OrganizationProfileUpdateViewModel()
+    val viewModel = OrganizationProfileUpdateViewModel(mockClerk())
     viewModel.state.test {
       assertEquals(OrganizationProfileUpdateViewModel.State.Idle, awaitItem())
       viewModel.save(

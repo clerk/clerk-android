@@ -21,7 +21,7 @@ class CustomRowSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun customRowWithResourceIcon() {
-    paparazzi.snapshot {
+    snapshot {
       ClerkMaterialTheme {
         Column(
           modifier = Modifier.fillMaxWidth().background(ClerkMaterialTheme.colors.background)
@@ -52,7 +52,7 @@ class CustomRowSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun customRowWithVectorIcon() {
-    paparazzi.snapshot {
+    snapshot {
       ClerkMaterialTheme {
         Column(
           modifier = Modifier.fillMaxWidth().background(ClerkMaterialTheme.colors.background)

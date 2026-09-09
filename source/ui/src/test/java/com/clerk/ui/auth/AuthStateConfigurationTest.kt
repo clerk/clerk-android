@@ -135,7 +135,10 @@ class AuthStateConfigurationTest {
 
   @Test
   fun unsafeMetadataIsAvailableOnAuthState() {
-    val metadata = mapOf("plan" to "pro")
+    val metadata =
+      kotlinx.serialization.json.buildJsonObject {
+        put("plan", kotlinx.serialization.json.JsonPrimitive("pro"))
+      }
 
     val authState =
       createAuthState(identifierConfig = AuthIdentifierConfig(unsafeMetadata = metadata))
@@ -155,12 +158,20 @@ class AuthStateConfigurationTest {
     authState.applyIdentifierConfig(
       AuthIdentifierConfig(
         initialIdentifier = "seed@example.com",
-        unsafeMetadata = mapOf("plan" to "pro"),
+        unsafeMetadata =
+          kotlinx.serialization.json.buildJsonObject {
+            put("plan", kotlinx.serialization.json.JsonPrimitive("pro"))
+          },
       )
     )
 
     assertEquals("edited@example.com", authState.authStartIdentifier)
-    assertEquals(mapOf("plan" to "pro"), authState.unsafeMetadata)
+    assertEquals(
+      kotlinx.serialization.json.buildJsonObject {
+        put("plan", kotlinx.serialization.json.JsonPrimitive("pro"))
+      },
+      authState.unsafeMetadata,
+    )
     assertEquals(version, authState.identifierConfigVersion)
   }
 
@@ -169,6 +180,7 @@ class AuthStateConfigurationTest {
     identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
   ): AuthState {
     return AuthState(
+      clerk = com.clerk.testing.mockClerk(),
       backStack = NavBackStack(AuthDestination.AuthStart),
       sharedPreferences = sharedPreferences,
       identifierConfig = identifierConfig,

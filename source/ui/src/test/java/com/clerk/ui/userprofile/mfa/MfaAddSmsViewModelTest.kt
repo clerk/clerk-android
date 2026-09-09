@@ -1,16 +1,13 @@
 package com.clerk.ui.userprofile.mfa
 
 import app.cash.turbine.test
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.phonenumber.PhoneNumber
-import com.clerk.api.phonenumber.setReservedForSecondFactor
+import com.clerk.api.*
+import com.clerk.api.PhoneNumber
+import com.clerk.testing.mockClerk
+import com.clerk.testing.testCoreError
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -23,38 +20,37 @@ class MfaAddSmsViewModelTest {
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
-  @BeforeTest
-  fun setUp() {
-    mockkStatic("com.clerk.api.phonenumber.PhoneNumberKt")
-  }
+  @BeforeTest fun setUp() {}
 
-  @AfterTest
-  fun tearDown() {
-    unmockkStatic("com.clerk.api.phonenumber.PhoneNumberKt")
-  }
+  @AfterTest fun tearDown() {}
 
   @Test
   fun reserveForSecondFactor_success_setsSuccessState() = runTest {
-    val phoneNumber = mockk<PhoneNumber>()
-    coEvery { phoneNumber.setReservedForSecondFactor(true) } returns
-      ClerkResult.success(phoneNumber)
+    val phoneNumber = mockk<PhoneNumber>(relaxed = true)
+    coEvery { phoneNumber.backupCodes() } returns null
+    coEvery {
+      phoneNumber.setReservedForSecondFactor(SetReservedForSecondFactorParams(true))
+    } returns phoneNumber
 
-    val viewModel = MfaAddSmsViewModel()
+    val viewModel = MfaAddSmsViewModel(mockClerk())
     viewModel.state.test {
       assertEquals(MfaAddSmsViewModel.State.Idle, awaitItem())
       viewModel.reserveForSecondFactor(phoneNumber)
       assertEquals(MfaAddSmsViewModel.State.Loading, awaitItem())
-      assertEquals(MfaAddSmsViewModel.State.Success(phoneNumber), awaitItem())
+      assertEquals(MfaAddSmsViewModel.State.Success(phoneNumber, null), awaitItem())
     }
   }
 
   @Test
   fun reserveForSecondFactor_failure_setsErrorState() = runTest {
-    val phoneNumber = mockk<PhoneNumber>()
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "fail")))
-    coEvery { phoneNumber.setReservedForSecondFactor(true) } returns ClerkResult.Failure(error)
+    val phoneNumber = mockk<PhoneNumber>(relaxed = true)
+    coEvery { phoneNumber.backupCodes() } returns null
+    val error = testCoreError("fail")
+    coEvery {
+      phoneNumber.setReservedForSecondFactor(SetReservedForSecondFactorParams(true))
+    } throws error
 
-    val viewModel = MfaAddSmsViewModel()
+    val viewModel = MfaAddSmsViewModel(mockClerk())
     viewModel.state.test {
       assertEquals(MfaAddSmsViewModel.State.Idle, awaitItem())
       viewModel.reserveForSecondFactor(phoneNumber)

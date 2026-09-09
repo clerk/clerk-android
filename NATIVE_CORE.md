@@ -1,6 +1,6 @@
 # TypeScript core prerelease
 
-The API module now builds generated Kotlin resources from `NativeCore`, using the bundled QuickJS runtime and JavaScript asset. The authentication roots derive from `SignInFutureResource` and `SignUpFutureResource`. The former native domain implementation is excluded from the API module. The complete Compose UI module now compiles against generated resources, including authentication, profile, organizations, account controls and session tasks. Example applications, test-target migration and device UI journeys are the next verification gates.
+The API module now builds generated Kotlin resources from `NativeCore`, using the bundled QuickJS runtime and JavaScript asset. The authentication roots derive from `SignInFutureResource` and `SignUpFutureResource`. The former native domain implementation is excluded from the API module. The complete Compose UI module now compiles against generated resources, including authentication, profile, organizations, account controls and session tasks. The prebuilt sample retains one connected core, and the UI test target uses generated resources. Remaining sample migrations and live device UI journeys are verification gates.
 
 ```kotlin
 val clerk = Clerk.connect(
@@ -25,6 +25,12 @@ Supply the retained instance with `ClerkProvider(clerk, theme = theme) { ... }` 
 Authentication models call generated future methods, and `AuthView` explicitly finalizes completed attempts before presenting source-reported session tasks. Identifier fallback and Google One Tap transfer remain in the shared core. Saved navigation holds UI factor selections and form prefills, never live resource handles. Use `LocalClerk.isAuthFlowComplete` to include pending prebuilt presentation steps when choosing authenticated content.
 
 Profile and organization actions call generated resources directly and catch structured exceptions. Organization lists translate page selections into the source pagination parameters; pending organization selection uses the core's current session. Device lists use `User.getSessions()` and `SessionWithActivities`; account deletion delegates cleanup to the source `User.delete()`. Previews decode fixtures produced by the TypeScript state serializer rather than constructing independent native domain objects.
+
+## UI verification
+
+Run `./gradlew :source:ui:testDebugUnitTest` with JDK 21. The migrated target retains all test files and passes 490 behavior tests across 94 suites, including assertions that execute after snapshot rendering. `:source:ui:connectedDebugAndroidTest` also verifies that removing a screen or replacing its core cancels the screen-owned model work.
+
+`./gradlew :source:ui:verifyPaparazziDebug` currently reports 21 existing golden-image failures. An isolated, unchanged checkout of `main` at `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f` reproduces the same 21 failures; all 21 actual rendered PNG files match that baseline byte for byte. No golden files were replaced. This baseline comparison distinguishes preserved rendering from the repository's outstanding golden updates; the golden verification task itself is not green.
 
 ## Credential continuity
 

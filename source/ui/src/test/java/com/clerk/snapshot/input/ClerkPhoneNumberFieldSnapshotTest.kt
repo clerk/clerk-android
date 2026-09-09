@@ -7,12 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.input.ClerkPhoneNumberField
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
 
@@ -20,7 +19,7 @@ class ClerkPhoneNumberFieldSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun testClerkPhoneNumberField() {
-    paparazzi.snapshot {
+    snapshot {
       ClerkMaterialTheme {
         Column(
           modifier =
@@ -42,8 +41,8 @@ class ClerkPhoneNumberFieldSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun testClerkPhoneNumberFieldDarkMode() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(colors = DefaultColors.dark)
+    snapshot {
       ClerkMaterialTheme {
         Column(
           modifier =

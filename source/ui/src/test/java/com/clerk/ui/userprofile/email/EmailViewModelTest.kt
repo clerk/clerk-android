@@ -1,23 +1,14 @@
 package com.clerk.ui.userprofile.email
 
 import app.cash.turbine.test
-import com.clerk.api.Clerk
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.emailaddress.delete
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.user.User
-import com.clerk.api.user.User.UpdateParams
-import com.clerk.api.user.update
+import com.clerk.api.*
+import com.clerk.testing.mockClerk
+import com.clerk.testing.testCoreError
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -27,21 +18,18 @@ import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EmailViewModelTest {
+  private val clerk = mockClerk()
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
   @BeforeTest
   fun setUp() {
-    mockkObject(Clerk)
-    every { Clerk.user } returns null
-    mockkStatic("com.clerk.api.user.UserKt")
-    mockkStatic("com.clerk.api.emailaddress.EmailAddressKt")
+    every { clerk.user } returns null
   }
 
   @AfterTest
   fun tearDown() {
-    unmockkStatic("com.clerk.api.emailaddress.EmailAddressKt")
-    unmockkStatic("com.clerk.api.user.UserKt")
+
     unmockkAll()
   }
 
@@ -49,10 +37,10 @@ class EmailViewModelTest {
   fun setAsPrimary_success_emitsSuccessState() = runTest {
     val user = mockk<User>()
     val email = mockk<EmailAddress>(relaxed = true)
-    every { Clerk.user } returns user
-    coEvery { user.update(any<UpdateParams>()) } returns ClerkResult.success(user)
+    every { clerk.user } returns user
+    coEvery { user.update(any<UpdateUserParams>()) } returns user
 
-    val viewModel = EmailViewModel()
+    val viewModel = EmailViewModel(clerk)
     viewModel.state.test {
       assertEquals(EmailViewModel.State.Idle, awaitItem())
       viewModel.setAsPrimary(email)
@@ -65,11 +53,11 @@ class EmailViewModelTest {
   fun setAsPrimary_failure_emitsFailureState() = runTest {
     val user = mockk<User>()
     val email = mockk<EmailAddress>(relaxed = true)
-    every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "oops")))
-    coEvery { user.update(any<UpdateParams>()) } returns ClerkResult.Failure(error)
+    every { clerk.user } returns user
+    val error = testCoreError("oops")
+    coEvery { user.update(any<UpdateUserParams>()) } throws error
 
-    val viewModel = EmailViewModel()
+    val viewModel = EmailViewModel(clerk)
     viewModel.state.test {
       assertEquals(EmailViewModel.State.Idle, awaitItem())
       viewModel.setAsPrimary(email)
@@ -81,9 +69,9 @@ class EmailViewModelTest {
   @Test
   fun remove_success_emitsRemoveSuccessState() = runTest {
     val email = mockk<EmailAddress>()
-    coEvery { email.delete() } returns ClerkResult.success(mockk())
+    coEvery { email.destroy() } returns mockk()
 
-    val viewModel = EmailViewModel()
+    val viewModel = EmailViewModel(clerk)
     viewModel.state.test {
       assertEquals(EmailViewModel.State.Idle, awaitItem())
       viewModel.remove(email)
@@ -95,10 +83,10 @@ class EmailViewModelTest {
   @Test
   fun remove_failure_emitsFailureState() = runTest {
     val email = mockk<EmailAddress>()
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "remove")))
-    coEvery { email.delete() } returns ClerkResult.Failure(error)
+    val error = testCoreError("remove")
+    coEvery { email.destroy() } throws error
 
-    val viewModel = EmailViewModel()
+    val viewModel = EmailViewModel(clerk)
     viewModel.state.test {
       assertEquals(EmailViewModel.State.Idle, awaitItem())
       viewModel.remove(email)

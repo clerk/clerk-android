@@ -15,6 +15,7 @@ internal class UserProfileMfaViewModel(private val clerk: Clerk) : ViewModel() {
   val state = _state.asStateFlow()
 
   fun makeDefaultSecondFactor(phoneNumber: PhoneNumber?) = perform {
+    if (clerk.user == null) throw CoreException("no_user", "User does not exist")
     val phone =
       phoneNumber
         ?: throw CoreException("phone_not_found", "This phone number is no longer available.")

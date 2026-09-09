@@ -1,14 +1,14 @@
 package com.clerk.ui.organizationswitcher
 
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.session.Session
+import com.clerk.api.OrganizationMembership
+import com.clerk.api.Session
+import com.clerk.testing.mockSession
+import io.mockk.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlinx.serialization.json.JsonNull
 
 class OrganizationSwitcherBehaviorTest {
 
@@ -67,14 +67,9 @@ class OrganizationSwitcherBehaviorTest {
   }
 
   private fun session(activeOrganizationId: String?): Session {
-    return Session(
-      id = "sess_123",
-      expireAt = 1,
-      lastActiveAt = 1,
-      lastActiveOrganizationId = activeOrganizationId,
-      createdAt = 1,
-      updatedAt = 1,
-    )
+    val session = mockSession()
+    every { session.lastActiveOrganizationId } returns activeOrganizationId
+    return session
   }
 
   private fun membership(
@@ -82,25 +77,10 @@ class OrganizationSwitcherBehaviorTest {
     organizationId: String = "org_123",
     name: String = "Acme",
   ): OrganizationMembership {
-    return OrganizationMembership(
-      id = id,
-      publicMetadata = JsonNull,
-      role = "org:admin",
-      roleName = "Admin",
-      organization =
-        Organization(
-          id = organizationId,
-          name = name,
-          slug = null,
-          imageUrl = "",
-          maxAllowedMemberships = 0,
-          adminDeleteEnabled = true,
-          createdAt = 1,
-          updatedAt = 1,
-          publicMetadata = JsonNull,
-        ),
-      createdAt = 1,
-      updatedAt = 1,
-    )
+    val membership = mockk<OrganizationMembership>(relaxed = true)
+    every { membership.id } returns id
+    every { membership.organization.id } returns organizationId
+    every { membership.organization.name } returns name
+    return membership
   }
 }

@@ -1,8 +1,7 @@
 package com.clerk.snapshot.userprofile
 
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.userprofile.security.biometriccredential.UserProfileBiometricCredentialsSectionImpl
 import org.junit.Test
@@ -11,7 +10,7 @@ class UserProfileBiometricCredentialsSectionSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun biometricCredentialsSectionEnabled_Light() {
-    paparazzi.snapshot {
+    snapshot {
       UserProfileBiometricCredentialsSectionImpl(
         isEnabled = true,
         isLoading = false,
@@ -22,7 +21,7 @@ class UserProfileBiometricCredentialsSectionSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun biometricCredentialsSectionDisabled_Light() {
-    paparazzi.snapshot {
+    snapshot {
       UserProfileBiometricCredentialsSectionImpl(
         isEnabled = false,
         isLoading = false,
@@ -33,10 +32,10 @@ class UserProfileBiometricCredentialsSectionSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun biometricCredentialsSectionEnabled_Dark() {
-    val previousTheme = Clerk.customTheme
+    val previousTheme = snapshotTheme
     try {
-      Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
-      paparazzi.snapshot {
+      snapshotTheme = ClerkTheme(colors = DefaultColors.dark)
+      snapshot {
         UserProfileBiometricCredentialsSectionImpl(
           isEnabled = true,
           isLoading = false,
@@ -44,7 +43,7 @@ class UserProfileBiometricCredentialsSectionSnapshotTest : BaseSnapshotTest() {
         )
       }
     } finally {
-      Clerk.customTheme = previousTheme
+      snapshotTheme = previousTheme
     }
   }
 }

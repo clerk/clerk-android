@@ -7,13 +7,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.clerk.api.network.model.userdata.PublicUserData
-import com.clerk.api.organizations.OrganizationDomain
-import com.clerk.api.organizations.OrganizationInvitation
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.organizations.OrganizationMembershipRequest
-import com.clerk.api.organizations.Role
+import com.clerk.api.*
 import com.clerk.base.BaseSnapshotTest
+import com.clerk.testing.*
 import com.clerk.ui.R
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationActions
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationContent
@@ -31,25 +27,24 @@ import com.clerk.ui.organizationprofile.members.OrganizationMembersActions
 import com.clerk.ui.organizationprofile.members.OrganizationMembersContent
 import com.clerk.ui.organizationprofile.members.OrganizationMembersState
 import com.clerk.ui.organizationprofile.members.OrganizationMembersTab
-import com.clerk.ui.organizationprofile.previewOrganizationProfileMembership
-import com.clerk.ui.organizationprofile.previewOrganizationProfileOrganization
 import com.clerk.ui.organizationprofile.root.OrganizationProfileRootView
 import com.clerk.ui.theme.ClerkMaterialTheme
+import io.mockk.*
+import java.time.Instant
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.serialization.json.JsonNull
 import org.junit.Test
 
 class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationProfileRoot() {
-    paparazzi.snapshot {
+    snapshot {
       ClerkMaterialTheme {
         Box(modifier = Modifier.size(740.dp).background(ClerkMaterialTheme.colors.background)) {
           OrganizationProfileRootView(
             modifier = Modifier.fillMaxSize(),
-            organization = previewOrganizationProfileOrganization(),
-            membership = previewOrganizationProfileMembership(),
+            organization = snapshotOrganization(),
+            membership = snapshotMembership(),
             onBackPressed = {},
             onUpdateProfile = {},
             onAction = {},
@@ -61,13 +56,13 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationProfileRootWithCustomRows() {
-    paparazzi.snapshot {
+    snapshot {
       ClerkMaterialTheme {
         Box(modifier = Modifier.size(740.dp).background(ClerkMaterialTheme.colors.background)) {
           OrganizationProfileRootView(
             modifier = Modifier.fillMaxSize(),
-            organization = previewOrganizationProfileOrganization(),
-            membership = previewOrganizationProfileMembership(),
+            organization = snapshotOrganization(),
+            membership = snapshotMembership(),
             onBackPressed = {},
             onUpdateProfile = {},
             onAction = {},
@@ -98,10 +93,10 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationMembersLoading() {
-    paparazzi.snapshot {
+    snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          viewerMembership = previewOrganizationProfileMembership(),
+          viewerMembership = snapshotMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
@@ -116,10 +111,10 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationMembersMembersTab() {
-    paparazzi.snapshot {
+    snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          viewerMembership = previewOrganizationProfileMembership(),
+          viewerMembership = snapshotMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
@@ -136,10 +131,10 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationMembersInvitationsTab() {
-    paparazzi.snapshot {
+    snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          viewerMembership = previewOrganizationProfileMembership(),
+          viewerMembership = snapshotMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
@@ -156,10 +151,10 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationMembersInvitationsEmptyState() {
-    paparazzi.snapshot {
+    snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          viewerMembership = previewOrganizationProfileMembership(),
+          viewerMembership = snapshotMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
@@ -173,10 +168,10 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationMembersRequestsTab() {
-    paparazzi.snapshot {
+    snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          viewerMembership = previewOrganizationProfileMembership(),
+          viewerMembership = snapshotMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
@@ -192,10 +187,10 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationMembersRequestsEmptyState() {
-    paparazzi.snapshot {
+    snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          viewerMembership = previewOrganizationProfileMembership(),
+          viewerMembership = snapshotMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
@@ -209,10 +204,10 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationMembersEmptyState() {
-    paparazzi.snapshot {
+    snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          viewerMembership = previewOrganizationProfileMembership(),
+          viewerMembership = snapshotMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
@@ -226,10 +221,10 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationMembersSearchEmptyState() {
-    paparazzi.snapshot {
+    snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          viewerMembership = previewOrganizationProfileMembership(),
+          viewerMembership = snapshotMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
@@ -244,10 +239,10 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationMembersSearchLoading() {
-    paparazzi.snapshot {
+    snapshot {
       MembersSnapshotSurface {
         OrganizationMembersContent(
-          viewerMembership = previewOrganizationProfileMembership(),
+          viewerMembership = snapshotMembership(),
           state =
             OrganizationMembersState(
               availableTabs = allMembersTabs,
@@ -263,7 +258,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationVerifiedDomainsLoading() {
-    paparazzi.snapshot {
+    snapshot {
       DomainsSnapshotSurface {
         OrganizationVerifiedDomainsContent(
           state =
@@ -281,7 +276,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationVerifiedDomainsList() {
-    paparazzi.snapshot {
+    snapshot {
       DomainsSnapshotSurface {
         OrganizationVerifiedDomainsContent(
           state =
@@ -309,7 +304,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationVerifiedDomainsEmptyState() {
-    paparazzi.snapshot {
+    snapshot {
       DomainsSnapshotSurface {
         OrganizationVerifiedDomainsContent(
           state =
@@ -326,7 +321,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationVerifiedDomainsAddDomain() {
-    paparazzi.snapshot {
+    snapshot {
       DomainsSnapshotSurface {
         OrganizationVerifiedDomainsContent(
           state =
@@ -346,7 +341,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
   @Test
   fun organizationVerifiedDomainsVerifyEmail() {
     val domain = sampleDomain("dom_1", "example.com", verified = false)
-    paparazzi.snapshot {
+    snapshot {
       DomainsSnapshotSurface {
         OrganizationVerifiedDomainsContent(
           state =
@@ -366,7 +361,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
   @Test
   fun organizationVerifiedDomainsVerifyCode() {
     val domain = sampleDomain("dom_1", "example.com", verified = false)
-    paparazzi.snapshot {
+    snapshot {
       DomainsSnapshotSurface {
         OrganizationVerifiedDomainsContent(
           state =
@@ -390,7 +385,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
   @Test
   fun organizationVerifiedDomainsEnrollmentMode() {
     val domain = sampleDomain("dom_1", "example.com", enrollmentMode = "automatic_suggestion")
-    paparazzi.snapshot {
+    snapshot {
       DomainsSnapshotSurface {
         OrganizationVerifiedDomainsContent(
           state =
@@ -399,7 +394,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
               canReadDomains = true,
               canManageDomains = true,
               flow = OrganizationVerifiedDomainsFlow.EnrollmentMode(domain),
-              selectedEnrollmentMode = OrganizationDomain.EnrollmentMode.ManualInvitation,
+              selectedEnrollmentMode = OrganizationEnrollmentMode.ManualInvitation,
             ),
           actions = noOpDomainActions,
         )
@@ -410,7 +405,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
   @Test
   fun organizationVerifiedDomainsDeleteConfirmation() {
     val domain = sampleDomain("dom_1", "example.com")
-    paparazzi.snapshot {
+    snapshot {
       DomainsSnapshotSurface {
         OrganizationVerifiedDomainsContent(
           state =
@@ -428,7 +423,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationVerifiedDomainsErrorState() {
-    paparazzi.snapshot {
+    snapshot {
       DomainsSnapshotSurface {
         OrganizationVerifiedDomainsContent(
           state =
@@ -448,7 +443,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationActionLeaveDisabled() {
-    paparazzi.snapshot {
+    snapshot {
       ActionSnapshotSurface {
         OrganizationProfileActionConfirmationContent(
           action = OrganizationProfileConfirmationAction.LeaveOrganization,
@@ -462,7 +457,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationActionDeleteReady() {
-    paparazzi.snapshot {
+    snapshot {
       ActionSnapshotSurface {
         OrganizationProfileActionConfirmationContent(
           action = OrganizationProfileConfirmationAction.DeleteOrganization,
@@ -476,7 +471,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationActionLeaveLoading() {
-    paparazzi.snapshot {
+    snapshot {
       ActionSnapshotSurface {
         OrganizationProfileActionConfirmationContent(
           action = OrganizationProfileConfirmationAction.LeaveOrganization,
@@ -494,7 +489,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationActionDeleteError() {
-    paparazzi.snapshot {
+    snapshot {
       ActionSnapshotSurface {
         OrganizationProfileActionConfirmationContent(
           action = OrganizationProfileConfirmationAction.DeleteOrganization,
@@ -518,26 +513,7 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     )
 
   private val sampleRoles =
-    listOf(
-      Role(
-        id = "role_admin",
-        key = "org:admin",
-        name = "Admin",
-        description = "Admin",
-        permissions = emptyList(),
-        createdAt = 1,
-        updatedAt = 1,
-      ),
-      Role(
-        id = "role_member",
-        key = "org:member",
-        name = "Member",
-        description = "Member",
-        permissions = emptyList(),
-        createdAt = 1,
-        updatedAt = 1,
-      ),
-    )
+    listOf(snapshotRole("org:admin", "Admin"), snapshotRole("org:member", "Member"))
 
   private val noOpMembersActions =
     OrganizationMembersActions(
@@ -588,68 +564,53 @@ class OrganizationProfileSnapshotTest : BaseSnapshotTest() {
     firstName: String,
     lastName: String,
   ): OrganizationMembership {
-    return OrganizationMembership(
-      id = id,
-      publicMetadata = JsonNull,
-      role = "org:member",
-      roleName = "Member",
-      permissions = emptyList(),
-      publicUserData = samplePublicUserData(id, firstName, lastName),
-      organization = previewOrganizationProfileOrganization(),
-      createdAt = SAMPLE_JOINED_AT,
-      updatedAt = 1,
-    )
+    val member = snapshotMembership(roleName = "Member")
+    every { member.id } returns id
+    every { member.permissions } returns emptyList()
+    every { member.publicUserData } returns samplePublicUserData(id, firstName, lastName)
+    every { member.createdAt } returns Instant.ofEpochMilli(SAMPLE_JOINED_AT)
+    return member
   }
 
-  private fun sampleInvitation(id: String): OrganizationInvitation {
-    return OrganizationInvitation(
-      id = id,
-      emailAddress = "new.member@example.com",
-      organizationId = "org_acme",
-      publicMetadata = JsonNull,
-      role = "org:member",
-      status = OrganizationInvitation.Status.Pending,
-      createdAt = 1,
-      updatedAt = 1,
-    )
-  }
+  private fun sampleInvitation(id: String): OrganizationInvitation =
+    mockk(relaxed = true) {
+      every { this@mockk.id } returns id
+      every { emailAddress } returns "new.member@example.com"
+      every { role } returns "org:member"
+      every { status } returns OrganizationInvitationStatus.Pending
+    }
 
-  private fun sampleRequest(id: String): OrganizationMembershipRequest {
-    return OrganizationMembershipRequest(
-      id = id,
-      organizationId = "org_acme",
-      publicUserData = samplePublicUserData(id, "Grace", "Hopper"),
-      status = "pending",
-      createdAt = 1,
-      updatedAt = 1,
-    )
-  }
+  private fun sampleRequest(id: String): OrganizationMembershipRequest =
+    mockk(relaxed = true) {
+      every { this@mockk.id } returns id
+      every { publicUserData } returns samplePublicUserData(id, "Grace", "Hopper")
+      every { status } returns OrganizationInvitationStatus.Pending
+    }
 
   private fun sampleDomain(
     id: String,
     name: String,
     verified: Boolean = true,
     enrollmentMode: String = "manual_invitation",
-  ): OrganizationDomain {
-    return OrganizationDomain(
-      id = id,
-      name = name,
-      organizationId = "org_acme",
-      enrollmentMode = enrollmentMode,
-      verification =
-        OrganizationDomain.Verification(
-          status = if (verified) "verified" else "unverified",
-          strategy = "email_code",
-          attempts = 0,
-          expireAt = null,
-        ),
-      affiliationEmailAddress = null,
-      totalPendingInvitations = 0,
-      createdAt = 1,
-      updatedAt = 1,
-      totalPendingSuggestions = 0,
-    )
-  }
+  ): OrganizationDomain =
+    mockk(relaxed = true) {
+      every { this@mockk.id } returns id
+      every { this@mockk.name } returns name
+      every { this@mockk.enrollmentMode } returns
+        when (enrollmentMode) {
+          "automatic_suggestion" -> OrganizationEnrollmentMode.AutomaticSuggestion
+          "automatic_invitation" -> OrganizationEnrollmentMode.AutomaticInvitation
+          else -> OrganizationEnrollmentMode.ManualInvitation
+        }
+      every { verification } returns
+        OrganizationDomainVerification(
+          if (verified) OrganizationDomainVerificationStatus.Verified
+          else OrganizationDomainVerificationStatus.Unverified,
+          0.0,
+          Instant.parse("2030-01-01T00:00:00Z"),
+        )
+      every { affiliationEmailAddress } returns null
+    }
 
   private fun samplePublicUserData(
     id: String,

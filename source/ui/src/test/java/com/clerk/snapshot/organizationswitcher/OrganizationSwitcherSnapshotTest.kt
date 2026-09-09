@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.*
 import com.clerk.base.BaseSnapshotTest
+import com.clerk.testing.*
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
@@ -18,22 +18,22 @@ import com.clerk.ui.organizationswitcher.OrganizationSwitcherButton
 import com.clerk.ui.organizationswitcher.OrganizationSwitcherCustomTrigger
 import com.clerk.ui.organizationswitcher.OrganizationSwitcherDisplayMode
 import com.clerk.ui.organizationswitcher.OrganizationSwitcherOverviewSheetContent
-import com.clerk.ui.organizationswitcher.previewOrganizationMembership
-import com.clerk.ui.organizationswitcher.previewOrganizationSwitcherUser
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.DefaultColors
+import io.mockk.*
 import org.junit.Test
 
 class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationSwitcherNormalActiveOrganization() {
-    Clerk.customTheme = ClerkTheme(DefaultColors.light)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(DefaultColors.light)
+    snapshot {
       SwitcherSnapshotSurface {
         OrganizationSwitcherButton(
           modifier = Modifier.fillMaxWidth(),
-          membership = previewOrganizationMembership(),
+          membership = snapshotMembership(),
           isLoading = false,
           onClick = {},
         )
@@ -43,11 +43,11 @@ class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationSwitcherCompactActiveOrganization() {
-    Clerk.customTheme = ClerkTheme(DefaultColors.light)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(DefaultColors.light)
+    snapshot {
       SwitcherSnapshotSurface {
         OrganizationSwitcherButton(
-          membership = previewOrganizationMembership(),
+          membership = snapshotMembership(),
           displayMode = OrganizationSwitcherDisplayMode.Compact,
           isLoading = false,
           onClick = {},
@@ -58,8 +58,8 @@ class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationSwitcherLoading() {
-    Clerk.customTheme = ClerkTheme(DefaultColors.light)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(DefaultColors.light)
+    snapshot {
       SwitcherSnapshotSurface {
         OrganizationSwitcherButton(
           modifier = Modifier.fillMaxWidth(),
@@ -73,13 +73,13 @@ class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationSwitcherNoActiveOrganization() {
-    Clerk.customTheme = ClerkTheme(DefaultColors.light)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(DefaultColors.light)
+    snapshot {
       SwitcherSnapshotSurface {
         OrganizationSwitcherButton(
           modifier = Modifier.fillMaxWidth(),
           membership = null,
-          user = previewOrganizationSwitcherUser(),
+          user = snapshotUser(),
           isLoading = false,
           onClick = {},
         )
@@ -89,8 +89,8 @@ class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationSwitcherCustomTrigger() {
-    Clerk.customTheme = ClerkTheme(DefaultColors.light)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(DefaultColors.light)
+    snapshot {
       SwitcherSnapshotSurface {
         OrganizationSwitcherCustomTrigger(isLoading = false, onClick = {}) {
           Text(text = "Switch account", color = ClerkMaterialTheme.colors.foreground)
@@ -101,12 +101,12 @@ class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationSwitcherOverviewSheet() {
-    Clerk.customTheme = ClerkTheme(DefaultColors.light)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(DefaultColors.light)
+    snapshot {
       ClerkMaterialTheme {
         Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
           OrganizationSwitcherOverviewSheetContent(
-            membership = previewOrganizationMembership(),
+            membership = snapshotMembership(),
             onManageOrganization = {},
             onSwitchAccount = {},
           )
@@ -117,8 +117,8 @@ class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationSwitcherAccountListSheet() {
-    Clerk.customTheme = ClerkTheme(DefaultColors.light)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(DefaultColors.light)
+    snapshot {
       ClerkMaterialTheme {
         Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
           OrganizationSwitcherAccountListSheetContent(
@@ -130,7 +130,7 @@ class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
                 memberships = sampleMemberships,
                 membershipsTotalCount = sampleMemberships.size,
               ),
-            user = previewOrganizationSwitcherUser(),
+            user = snapshotUser(),
             activeOrganizationId = null,
             showPersonalAccount = true,
             showCreateOrganization = true,
@@ -144,13 +144,13 @@ class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun organizationSwitcherAccountListSheetLoading() {
-    Clerk.customTheme = ClerkTheme(DefaultColors.light)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(DefaultColors.light)
+    snapshot {
       ClerkMaterialTheme {
         Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
           OrganizationSwitcherAccountListSheetContent(
             state = OrganizationAccountListState(isLoading = true),
-            user = previewOrganizationSwitcherUser(),
+            user = snapshotUser(),
             activeOrganizationId = null,
             showPersonalAccount = true,
             showCreateOrganization = false,
@@ -177,17 +177,17 @@ class OrganizationSwitcherSnapshotTest : BaseSnapshotTest() {
   private companion object {
     val sampleMemberships =
       listOf(
-        previewOrganizationMembership(
+        snapshotMembership(
           organizationId = "org_acme",
           organizationName = "Acme Inc.",
           roleName = "Admin",
         ),
-        previewOrganizationMembership(
+        snapshotMembership(
           organizationId = "org_mosaic",
           organizationName = "Mosaic Labs",
           roleName = "Member",
         ),
-        previewOrganizationMembership(
+        snapshotMembership(
           organizationId = "org_clerk",
           organizationName = "Clerk",
           roleName = "Owner",

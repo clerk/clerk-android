@@ -2,8 +2,7 @@ package com.clerk.ui.auth
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.clerk.api.Constants
-import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.OAuthProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -23,7 +22,7 @@ class LastUsedAuthTest {
     context = ApplicationProvider.getApplicationContext()
     val prefs =
       context.getSharedPreferences(
-        Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
+        "clerk_preferences",
         Context.MODE_PRIVATE,
       )
     prefs.edit().clear().commit()
@@ -35,21 +34,21 @@ class LastUsedAuthTest {
       LastUsedAuth.from(
         lastAuthenticationStrategy = "oauth_google",
         enabledFirstFactorAttributes = listOf("email_address"),
-        authenticatableSocialProviders = listOf(OAuthProvider.GOOGLE),
+        authenticatableSocialProviders = listOf(OAuthProvider.Google),
         storedIdentifierType = null,
       )
 
     assertTrue(result is LastUsedAuth.Social)
-    assertEquals(OAuthProvider.GOOGLE, (result as LastUsedAuth.Social).provider)
+    assertEquals(OAuthProvider.Google, (result as LastUsedAuth.Social).provider)
   }
 
   @Test
   fun fromPreservesCustomSocialProviderStrategy() {
-    val customProvider = OAuthProvider.custom("oauth_custom_patreon")
+    val customProvider = OAuthProvider.Unrecognized("custom_patreon")
 
     val result =
       LastUsedAuth.from(
-        lastAuthenticationStrategy = customProvider.strategy,
+        lastAuthenticationStrategy = "oauth_${customProvider.rawValue}",
         enabledFirstFactorAttributes = listOf("email_address"),
         authenticatableSocialProviders = listOf(customProvider),
         storedIdentifierType = null,
@@ -64,7 +63,7 @@ class LastUsedAuthTest {
       LastUsedAuth.from(
         lastAuthenticationStrategy = "oauth_google",
         enabledFirstFactorAttributes = listOf("email_address"),
-        authenticatableSocialProviders = listOf(OAuthProvider.FACEBOOK),
+        authenticatableSocialProviders = listOf(OAuthProvider.Facebook),
         storedIdentifierType = null,
       )
 
@@ -77,7 +76,7 @@ class LastUsedAuthTest {
       LastUsedAuth.from(
         lastAuthenticationStrategy = "phone_code",
         enabledFirstFactorAttributes = listOf("phone_number"),
-        authenticatableSocialProviders = listOf(OAuthProvider.GOOGLE),
+        authenticatableSocialProviders = listOf(OAuthProvider.Google),
         storedIdentifierType = null,
       )
 
@@ -90,7 +89,7 @@ class LastUsedAuthTest {
       LastUsedAuth.from(
         lastAuthenticationStrategy = "email_code",
         enabledFirstFactorAttributes = listOf("email_address"),
-        authenticatableSocialProviders = listOf(OAuthProvider.GOOGLE),
+        authenticatableSocialProviders = listOf(OAuthProvider.Google),
         storedIdentifierType = null,
       )
 
@@ -103,7 +102,7 @@ class LastUsedAuthTest {
       LastUsedAuth.from(
         lastAuthenticationStrategy = "password",
         enabledFirstFactorAttributes = listOf("email_address"),
-        authenticatableSocialProviders = listOf(OAuthProvider.GOOGLE),
+        authenticatableSocialProviders = listOf(OAuthProvider.Google),
         storedIdentifierType = IdentifierType.Email,
       )
 
@@ -116,7 +115,7 @@ class LastUsedAuthTest {
       LastUsedAuth.from(
         lastAuthenticationStrategy = "password",
         enabledFirstFactorAttributes = listOf("username"),
-        authenticatableSocialProviders = listOf(OAuthProvider.GOOGLE),
+        authenticatableSocialProviders = listOf(OAuthProvider.Google),
         storedIdentifierType = IdentifierType.Username,
       )
 
@@ -129,7 +128,7 @@ class LastUsedAuthTest {
       LastUsedAuth.from(
         lastAuthenticationStrategy = "phone_code",
         enabledFirstFactorAttributes = listOf("phone_number", "email_address"),
-        authenticatableSocialProviders = listOf(OAuthProvider.GOOGLE),
+        authenticatableSocialProviders = listOf(OAuthProvider.Google),
         storedIdentifierType = null,
       )
 
@@ -155,7 +154,7 @@ class LastUsedAuthTest {
       LastUsedAuth.from(
         lastAuthenticationStrategy = "   ",
         enabledFirstFactorAttributes = listOf("email_address"),
-        authenticatableSocialProviders = listOf(OAuthProvider.GOOGLE),
+        authenticatableSocialProviders = listOf(OAuthProvider.Google),
         storedIdentifierType = null,
       )
 
@@ -163,7 +162,7 @@ class LastUsedAuthTest {
       LastUsedAuth.from(
         lastAuthenticationStrategy = "magic_link",
         enabledFirstFactorAttributes = listOf("email_address"),
-        authenticatableSocialProviders = listOf(OAuthProvider.GOOGLE),
+        authenticatableSocialProviders = listOf(OAuthProvider.Google),
         storedIdentifierType = null,
       )
 
@@ -175,7 +174,7 @@ class LastUsedAuthTest {
   fun identifierStorageStoreRetrieveClearRoundTrip() {
     val prefs =
       context.getSharedPreferences(
-        Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
+        "clerk_preferences",
         Context.MODE_PRIVATE,
       )
     val key = identifierStorageKey()

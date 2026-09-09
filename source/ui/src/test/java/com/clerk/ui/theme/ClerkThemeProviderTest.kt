@@ -1,8 +1,6 @@
 package com.clerk.ui.theme
 
 import androidx.compose.ui.graphics.Color
-import com.clerk.api.ui.ClerkColors
-import com.clerk.api.ui.ClerkTheme
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

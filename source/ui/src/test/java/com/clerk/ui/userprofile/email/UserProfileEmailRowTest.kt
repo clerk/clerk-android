@@ -5,10 +5,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.network.model.verification.Verification
+import com.clerk.api.EmailAddress
+import com.clerk.api.VerificationStatus
 import com.clerk.base.BaseSnapshotTest
+import com.clerk.testing.mockVerification
 import com.clerk.ui.theme.ClerkMaterialTheme
+import io.mockk.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -16,15 +18,15 @@ class UserProfileEmailRowTest : BaseSnapshotTest() {
 
   @Test
   fun navigationTransition_rendersWithoutInteractiveState() {
-    paparazzi.snapshot {
+    snapshot {
       ClerkMaterialTheme {
         UserProfileEmailRow(
           emailAddress =
-            EmailAddress(
-              id = "email_1",
-              emailAddress = "user@example.com",
-              verification = Verification(Verification.Status.VERIFIED),
-            ),
+            mockk<EmailAddress>(relaxed = true) {
+              every { id } returns "email_1"
+              every { emailAddress } returns "user@example.com"
+              every { verification } returns mockVerification(VerificationStatus.Verified)
+            },
           isInteractive = false,
           onError = {},
           onVerify = {},
@@ -39,7 +41,7 @@ class UserProfileEmailRowTest : BaseSnapshotTest() {
     val callbackVersions = mutableListOf<Int>()
     var recompositionTrigger by mutableIntStateOf(0)
 
-    paparazzi.snapshot {
+    snapshot {
       val callbackVersion = recompositionTrigger
       ReportEmailRowError(EmailViewModel.State.Failure("Unable to update email")) {
         reportedErrors += it

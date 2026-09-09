@@ -19,7 +19,6 @@ internal class UserProfileChangePasswordViewModel(private val clerk: Clerk) : Vi
     newPassword: String,
     signOutOfOtherSessions: Boolean,
   ) {
-    _state.value = State.Loading
     viewModelScope.launch {
       runUiOperation {
           val user = clerk.user ?: throw CoreException("no_user", "User does not exist")

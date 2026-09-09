@@ -24,8 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -40,8 +38,8 @@ class ClerkThemeSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun clerkDefaultTheme() {
-    Clerk.customTheme = null
-    paparazzi.snapshot {
+    snapshotTheme = null
+    snapshot {
       ClerkMaterialTheme {
         val colors = LocalComposeColors.current
         Column {
@@ -82,8 +80,8 @@ class ClerkThemeSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun clerkDefaultThemeComputedColors() {
-    Clerk.customTheme = null
-    paparazzi.snapshot {
+    snapshotTheme = null
+    snapshot {
       ClerkMaterialTheme {
         val computedColors = LocalComputedColors.current
         Column {
@@ -134,7 +132,7 @@ class ClerkThemeSnapshotTest : BaseSnapshotTest() {
     val observedColors = mutableListOf<ClerkThemeColors>()
     val observedColorSchemes = mutableListOf<androidx.compose.material3.ColorScheme>()
 
-    paparazzi.snapshot {
+    snapshot {
       var recomposition by remember { mutableIntStateOf(0) }
       val customTheme =
         if (recomposition >= 0) ClerkTheme(colors = DefaultColors.clerk) else ClerkTheme()

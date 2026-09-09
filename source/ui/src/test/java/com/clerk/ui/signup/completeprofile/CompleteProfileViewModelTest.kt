@@ -1,9 +1,11 @@
 package com.clerk.ui.signup.completeprofile
 
-import com.clerk.api.signup.SignUp
+import com.clerk.api.*
+import io.mockk.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlinx.serialization.json.JsonPrimitive
 
 class CompleteProfileViewModelTest {
 
@@ -64,15 +66,12 @@ class CompleteProfileViewModelTest {
   }
 
   private fun signUp(requiredFields: List<String>, optionalFields: List<String>): SignUp {
-    return SignUp(
-      id = "sua_123",
-      status = SignUp.Status.MISSING_REQUIREMENTS,
-      requiredFields = requiredFields,
-      optionalFields = optionalFields,
-      missingFields = requiredFields,
-      unverifiedFields = emptyList(),
-      verifications = emptyMap(),
-      passwordEnabled = false,
-    )
+    val signUp = mockk<SignUp>(relaxed = true)
+    every { signUp.requiredFields } returns
+      requiredFields.map { SignUpField.fromJson(JsonPrimitive(it), mockk(relaxed = true)) }
+    every { signUp.optionalFields } returns
+      optionalFields.map { SignUpField.fromJson(JsonPrimitive(it), mockk(relaxed = true)) }
+    every { signUp.missingFields } returns signUp.requiredFields
+    return signUp
   }
 }

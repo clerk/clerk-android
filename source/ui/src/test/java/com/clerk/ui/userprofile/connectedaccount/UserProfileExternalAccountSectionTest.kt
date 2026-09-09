@@ -7,9 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.clerk.api.externalaccount.ExternalAccount
+import com.clerk.api.ExternalAccount
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.theme.ClerkMaterialTheme
+import io.mockk.*
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.toImmutableList
@@ -21,20 +22,14 @@ class UserProfileExternalAccountSectionTest : BaseSnapshotTest() {
     val externalAccounts =
       (0 until 20)
         .map { index ->
-          ExternalAccount(
-            id = "external_account_$index",
-            identificationId = "identification_$index",
-            provider = "oauth_google",
-            providerUserId = "provider_user_$index",
-            emailAddress = "user+$index@example.com",
-            approvedScopes = "email profile",
-            createdAt = index.toLong(),
-          )
+          mockk<ExternalAccount>(relaxed = true) {
+            every { id } returns "external_account_$index"
+          }
         }
         .toImmutableList()
     val composedAccountIds = mutableSetOf<String>()
 
-    paparazzi.snapshot {
+    snapshot {
       ClerkMaterialTheme {
         LazyColumn(modifier = Modifier.fillMaxWidth().height(240.dp)) {
           userProfileExternalAccountSection(

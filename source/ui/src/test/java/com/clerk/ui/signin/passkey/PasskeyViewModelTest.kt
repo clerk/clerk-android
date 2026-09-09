@@ -1,13 +1,13 @@
 package com.clerk.ui.signin.passkey
 
 import app.cash.turbine.test
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.signin.SignIn
+import com.clerk.api.*
+import com.clerk.testing.*
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -18,12 +18,14 @@ import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PasskeyViewModelTest {
+  private val clerk = mockClerk()
+  private val signIn = mockSignIn(SignInStatus.NeedsFirstFactor)
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
   @BeforeTest
   fun setUp() {
-    mockkObject(SignIn.Companion)
+    every { clerk.signIn } returns signIn
   }
 
   @AfterTest
@@ -33,10 +35,9 @@ class PasskeyViewModelTest {
 
   @Test
   fun authenticate_cancellation_resets_to_idle() = runTest {
-    coEvery { SignIn.authenticateWithGoogleCredential(any()) } returns
-      ClerkResult.unknownFailure(credentialFlowThrowable("UserCancelled"))
+    coEvery { signIn.passkey(any()) } throws CoreException("user_cancelled")
 
-    val viewModel = PasskeyViewModel()
+    val viewModel = PasskeyViewModel(clerk)
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
       viewModel.authenticate()
@@ -47,10 +48,13 @@ class PasskeyViewModelTest {
 
   @Test
   fun authenticate_missing_activity_surfaces_retry_message() = runTest {
-    coEvery { SignIn.authenticateWithGoogleCredential(any()) } returns
-      ClerkResult.unknownFailure(credentialFlowThrowable("MissingActivity"))
+    coEvery { signIn.passkey(any()) } throws
+      CoreException(
+        "missing_activity",
+        "Authentication requires an active screen. Try again from the app.",
+      )
 
-    val viewModel = PasskeyViewModel()
+    val viewModel = PasskeyViewModel(clerk)
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
       viewModel.authenticate()
@@ -66,10 +70,9 @@ class PasskeyViewModelTest {
 
   @Test
   fun authenticate_success_emits_sign_in_success() = runTest {
-    val signIn = mockk<SignIn>(relaxed = true)
-    coEvery { SignIn.authenticateWithGoogleCredential(any()) } returns ClerkResult.success(signIn)
+    coEvery { signIn.passkey(any()) } returns mockk(relaxed = true)
 
-    val viewModel = PasskeyViewModel()
+    val viewModel = PasskeyViewModel(clerk)
     viewModel.state.test {
       assertEquals(AuthenticationViewState.Idle, awaitItem())
       viewModel.authenticate()
@@ -77,10 +80,4 @@ class PasskeyViewModelTest {
       assertEquals(AuthenticationViewState.Success.SignIn(signIn), awaitItem())
     }
   }
-
-  private fun credentialFlowThrowable(simpleName: String): Throwable =
-    Class.forName("com.clerk.api.credentials.CredentialFlowException\$$simpleName")
-      .getDeclaredConstructor()
-      .apply { isAccessible = true }
-      .newInstance() as Throwable
 }

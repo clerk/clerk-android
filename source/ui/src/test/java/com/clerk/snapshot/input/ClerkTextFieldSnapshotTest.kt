@@ -18,7 +18,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun testClerkTextFieldUnfocused() {
-    paparazzi.snapshot {
+    snapshot {
       ClerkMaterialTheme {
         Column(
           modifier =
@@ -88,7 +88,7 @@ class ClerkTextFieldSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun testClerkTextFieldError() {
-    paparazzi.snapshot {
+    snapshot {
       ClerkMaterialTheme {
         Column(
           modifier =

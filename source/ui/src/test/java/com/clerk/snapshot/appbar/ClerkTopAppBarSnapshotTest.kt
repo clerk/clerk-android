@@ -8,40 +8,27 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkDesign
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.composition.LocalClerkLogoContent
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.theme.ClerkDesign
 import com.clerk.ui.theme.ClerkMaterialTheme
-import io.mockk.every
-import io.mockk.mockkObject
-import io.mockk.unmockkAll
-import org.junit.After
-import org.junit.Before
+import com.clerk.ui.theme.ClerkTheme
 import org.junit.Test
 
 class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
-
-  @Before
-  fun setUpLogo() {
-    mockkObject(Clerk)
-    every { Clerk.organizationLogoUrl } returns WIDE_LOGO_DATA_URI
-  }
-
-  @After
-  fun tearDownLogo() {
-    unmockkAll()
-  }
-
   @Test
   fun authTopBar_preservesWideLogoAspectRatio() {
-    paparazzi.snapshot {
+    snapshot {
       Box(Modifier.size(width = 360.dp, height = 72.dp)) {
         ClerkMaterialTheme {
-          ClerkTopAppBar(onBackPressed = {}, hasLogo = true, hasBackButton = true)
+          ClerkTopAppBar(
+            onBackPressed = {},
+            hasLogo = true,
+            hasBackButton = true,
+            logoUrl = WIDE_LOGO_DATA_URI,
+          )
         }
       }
     }
@@ -49,7 +36,7 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun authTopBar_respectsLogoMaxHeightOverride() {
-    paparazzi.snapshot {
+    snapshot {
       Box(Modifier.size(width = 360.dp, height = 96.dp)) {
         ClerkMaterialTheme {
           ClerkTopAppBar(
@@ -67,7 +54,7 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun authTopBar_rendersCustomLogoWithoutSdkSizing() {
-    paparazzi.snapshot {
+    snapshot {
       Box(Modifier.size(width = 360.dp, height = 96.dp)) {
         ClerkMaterialTheme {
           CompositionLocalProvider(
@@ -76,7 +63,12 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
                 Box(Modifier.size(width = 144.dp, height = 44.dp).background(Color.Red))
               }
           ) {
-            ClerkTopAppBar(onBackPressed = {}, hasLogo = true, hasBackButton = true)
+            ClerkTopAppBar(
+              onBackPressed = {},
+              hasLogo = true,
+              hasBackButton = true,
+              logoUrl = WIDE_LOGO_DATA_URI,
+            )
           }
         }
       }
@@ -85,7 +77,7 @@ class ClerkTopAppBarSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun profileTopBar_placesTrailingActionUsingAndroidSpacing() {
-    paparazzi.snapshot {
+    snapshot {
       Box(Modifier.size(width = 412.dp, height = 72.dp)) {
         ClerkMaterialTheme {
           ClerkTopAppBar(

@@ -1,22 +1,15 @@
 package com.clerk.ui.userprofile.security.delete
 
 import app.cash.turbine.test
+import com.clerk.api.*
 import com.clerk.api.Clerk
-import com.clerk.api.biometriccredential.BiometricCredentials
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.user.User
-import com.clerk.api.user.delete
+import com.clerk.api.User
+import com.clerk.testing.testCoreError
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
-import io.mockk.verify
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -26,19 +19,18 @@ import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DeleteAccountViewModelTest {
+  private val clerk = mockk<Clerk>(relaxed = true)
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
   @BeforeTest
   fun setUp() {
-    mockkObject(Clerk)
-    every { Clerk.user } returns null
-    mockkStatic("com.clerk.api.user.UserKt")
+    every { clerk.user } returns null
   }
 
   @AfterTest
   fun tearDown() {
-    unmockkStatic("com.clerk.api.user.UserKt")
+
     unmockkAll()
   }
 
@@ -46,42 +38,27 @@ class DeleteAccountViewModelTest {
   fun deleteAccount_success_setsSuccessState() = runTest {
     val user = mockk<User>()
     every { user.id } returns "user_1"
-    every { Clerk.user } returns user
-    coEvery { user.delete() } returns ClerkResult.success(mockk())
-    mockkObject(BiometricCredentials)
-    every { BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1") } returns 1
+    every { clerk.user } returns user
+    coEvery { user.delete() } returns mockk()
 
-    val viewModel = DeleteAccountViewModel()
+    val viewModel = DeleteAccountViewModel(clerk)
     viewModel.state.test {
       assertEquals(DeleteAccountViewModel.State.Idle, awaitItem())
       viewModel.deleteAccount()
       assertEquals(DeleteAccountViewModel.State.Loading, awaitItem())
       assertEquals(DeleteAccountViewModel.State.Success, awaitItem())
-    }
-    verify(exactly = 1) {
-      BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1")
     }
   }
 
   @Test
-  fun deleteAccount_cleanupFailure_stillSetsSuccessState() = runTest {
-    val user = mockk<User>()
-    every { user.id } returns "user_1"
-    every { Clerk.user } returns user
-    coEvery { user.delete() } returns ClerkResult.success(mockk())
-    mockkObject(BiometricCredentials)
-    every { BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1") } throws
-      IllegalStateException("cleanup failed")
-
-    val viewModel = DeleteAccountViewModel()
+  fun deleteAccount_withoutUser_setsErrorState() = runTest {
+    every { clerk.user } returns null
+    val viewModel = DeleteAccountViewModel(clerk)
     viewModel.state.test {
       assertEquals(DeleteAccountViewModel.State.Idle, awaitItem())
       viewModel.deleteAccount()
       assertEquals(DeleteAccountViewModel.State.Loading, awaitItem())
-      assertEquals(DeleteAccountViewModel.State.Success, awaitItem())
-    }
-    verify(exactly = 1) {
-      BiometricCredentials.forgetLocalCredentialsAfterAccountDeletion("user_1")
+      assertEquals(DeleteAccountViewModel.State.Error("User does not exist"), awaitItem())
     }
   }
 
@@ -89,11 +66,11 @@ class DeleteAccountViewModelTest {
   fun deleteAccount_failure_setsErrorState() = runTest {
     val user = mockk<User>()
     every { user.id } returns "user_1"
-    every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
-    coEvery { user.delete() } returns ClerkResult.Failure(error)
+    every { clerk.user } returns user
+    val error = testCoreError("boom")
+    coEvery { user.delete() } throws error
 
-    val viewModel = DeleteAccountViewModel()
+    val viewModel = DeleteAccountViewModel(clerk)
     viewModel.state.test {
       assertEquals(DeleteAccountViewModel.State.Idle, awaitItem())
       viewModel.deleteAccount()

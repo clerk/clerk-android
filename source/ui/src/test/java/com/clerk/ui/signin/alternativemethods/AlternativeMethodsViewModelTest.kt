@@ -1,8 +1,7 @@
 package com.clerk.ui.signin.alternativemethods
 
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.signin.SignIn
-import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.*
+import com.clerk.testing.*
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.signin.authenticateWithRedirect
 import com.clerk.ui.userprofile.MainDispatcherRule
@@ -21,6 +20,7 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AlternativeMethodsViewModelTest {
+  private val clerk = mockClerk()
 
   @get:Rule val dispatcherRule = MainDispatcherRule()
 
@@ -36,12 +36,12 @@ class AlternativeMethodsViewModelTest {
 
   @Test
   fun `OAuth cancellation leaves alternative methods idle`() = runTest {
-    val signIn = SignIn(id = "sign_in_existing", status = SignIn.Status.NEEDS_FIRST_FACTOR)
-    coEvery { authenticateWithRedirect(signIn, OAuthProvider.GITHUB, true) } returns
-      ClerkResult.unknownFailure(ssoCancellation())
-    val viewModel = AlternativeMethodsViewModel()
+    val signIn = mockSignIn(SignInStatus.NeedsFirstFactor)
+    coEvery { authenticateWithRedirect(clerk, OAuthProvider.Github, true) } throws
+      CoreException("user_cancelled")
+    val viewModel = AlternativeMethodsViewModel(clerk)
 
-    viewModel.signInWithProvider(OAuthProvider.GITHUB, signIn = signIn)
+    viewModel.signInWithProvider(OAuthProvider.Github, signIn = signIn)
     advanceUntilIdle()
 
     assertEquals(AuthenticationViewState.Idle, viewModel.state.value)
@@ -49,18 +49,12 @@ class AlternativeMethodsViewModelTest {
 
   @Test
   fun `missing sign in returns to auth start`() = runTest {
-    val viewModel = AlternativeMethodsViewModel()
+    val viewModel = AlternativeMethodsViewModel(clerk)
 
-    viewModel.signInWithProvider(OAuthProvider.GITHUB, signIn = null)
+    viewModel.signInWithProvider(OAuthProvider.Github, signIn = null)
     advanceUntilIdle()
 
     assertEquals(AuthenticationViewState.NotStarted, viewModel.state.value)
     coVerify(exactly = 0) { authenticateWithRedirect(any(), any(), any()) }
   }
-
-  private fun ssoCancellation(): Throwable =
-    Class.forName("com.clerk.api.sso.SSOCancellationException")
-      .getDeclaredConstructor(String::class.java)
-      .apply { isAccessible = true }
-      .newInstance("Authentication cancelled") as Throwable
 }

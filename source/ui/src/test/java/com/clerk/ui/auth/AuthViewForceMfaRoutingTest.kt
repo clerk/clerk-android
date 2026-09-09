@@ -2,8 +2,7 @@ package com.clerk.ui.auth
 
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.session.SessionTaskKey
+import com.clerk.api.SessionTaskKey
 import com.clerk.ui.core.common.StrategyKeys
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -40,7 +39,7 @@ class AuthViewForceMfaRoutingTest {
   fun `routes to reset password session task when task is pending`() {
     val shouldRoute =
       shouldRouteToPendingSessionTask(
-        taskKey = SessionTaskKey.RESET_PASSWORD,
+        taskKey = SessionTaskKey.ResetPassword,
         top = AuthDestination.AuthStart,
       )
 
@@ -51,7 +50,7 @@ class AuthViewForceMfaRoutingTest {
   fun `routes to choose organization session task when task is pending`() {
     val shouldRoute =
       shouldRouteToPendingSessionTask(
-        taskKey = SessionTaskKey.CHOOSE_ORGANIZATION,
+        taskKey = SessionTaskKey.ChooseOrganization,
         top = AuthDestination.AuthStart,
       )
 
@@ -62,7 +61,7 @@ class AuthViewForceMfaRoutingTest {
   fun `does not reroute when already on reset password session task destination`() {
     val shouldRoute =
       shouldRouteToPendingSessionTask(
-        taskKey = SessionTaskKey.RESET_PASSWORD,
+        taskKey = SessionTaskKey.ResetPassword,
         top = AuthDestination.SessionTaskResetPassword,
       )
 
@@ -73,7 +72,7 @@ class AuthViewForceMfaRoutingTest {
   fun `does not reroute from create organization while choose organization task is pending`() {
     val shouldRoute =
       shouldRouteToPendingSessionTask(
-        taskKey = SessionTaskKey.CHOOSE_ORGANIZATION,
+        taskKey = SessionTaskKey.ChooseOrganization,
         top = AuthDestination.SessionTaskCreateOrganization(),
       )
 
@@ -92,9 +91,9 @@ class AuthViewForceMfaRoutingTest {
 
   @Test
   fun `forgot password factor selection pushes the selected first factor`() {
-    val passwordFactor = Factor(strategy = StrategyKeys.PASSWORD)
+    val passwordFactor = FactorSelection(strategy = StrategyKeys.PASSWORD)
     val emailCodeFactor =
-      Factor(
+      FactorSelection(
         strategy = StrategyKeys.EMAIL_CODE,
         emailAddressId = "email_123",
         safeIdentifier = "sam@clerk.dev",

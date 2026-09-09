@@ -55,7 +55,7 @@ internal fun AuthStateProvider(
   content: @Composable () -> Unit,
 ) {
   val clerk = LocalClerk.current
-  val logoUrl = clerk.environment.displayConfig.logoImageUrl
+  val logoUrl = clerk.environment.displayConfig.logoImageUrl.takeIf { it.isNotBlank() }
   val context = LocalContext.current.applicationContext
   val sharedPreferences = remember(context) { authSharedPreferences(context) }
   val authState =

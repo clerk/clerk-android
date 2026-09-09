@@ -14,7 +14,7 @@ class AuthStateEffectsTest : BaseSnapshotTest() {
     val authState = mockk<AuthState>(relaxed = true)
     val snackbarHostState = SnackbarHostState()
 
-    paparazzi.snapshot {
+    snapshot {
       AuthStateEffects(
         authState = authState,
         state = AuthenticationViewState.Error("Invalid password"),

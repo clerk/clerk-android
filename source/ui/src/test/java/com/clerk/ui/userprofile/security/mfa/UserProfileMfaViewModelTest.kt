@@ -1,21 +1,15 @@
 package com.clerk.ui.userprofile.security.mfa
 
+import com.clerk.api.*
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.phonenumber.PhoneNumber
-import com.clerk.api.phonenumber.makeDefaultSecondFactor
-import com.clerk.api.user.User
-import com.clerk.api.user.createBackupCodes
+import com.clerk.api.PhoneNumber
+import com.clerk.api.User
+import com.clerk.testing.testCoreError
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -26,21 +20,18 @@ import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserProfileMfaViewModelTest {
+  private val clerk = mockk<Clerk>(relaxed = true)
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
   @BeforeTest
   fun setUp() {
-    mockkObject(Clerk)
-    every { Clerk.user } returns null
-    mockkStatic("com.clerk.api.phonenumber.PhoneNumberKt")
-    mockkStatic("com.clerk.api.user.UserKt")
+    every { clerk.user } returns null
   }
 
   @AfterTest
   fun tearDown() {
-    unmockkStatic("com.clerk.api.user.UserKt")
-    unmockkStatic("com.clerk.api.phonenumber.PhoneNumberKt")
+
     unmockkAll()
   }
 
@@ -48,11 +39,11 @@ class UserProfileMfaViewModelTest {
   fun makeDefaultSecondFactor_failure_setsErrorState() = runTest {
     val user = mockk<User>()
     val phone = mockk<PhoneNumber>()
-    every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "fail")))
-    coEvery { phone.makeDefaultSecondFactor() } returns ClerkResult.Failure(error)
+    every { clerk.user } returns user
+    val error = testCoreError("fail")
+    coEvery { phone.makeDefaultSecondFactor() } throws error
 
-    val viewModel = UserProfileMfaViewModel()
+    val viewModel = UserProfileMfaViewModel(clerk)
 
     advanceUntilIdle()
 
@@ -64,9 +55,9 @@ class UserProfileMfaViewModelTest {
 
   @Test
   fun makeDefaultSecondFactor_noUser_setsErrorState() = runTest {
-    every { Clerk.user } returns null
+    every { clerk.user } returns null
 
-    val viewModel = UserProfileMfaViewModel()
+    val viewModel = UserProfileMfaViewModel(clerk)
 
     viewModel.makeDefaultSecondFactor(mockk())
     advanceUntilIdle()
@@ -77,11 +68,11 @@ class UserProfileMfaViewModelTest {
   @Test
   fun regenerateBackupCodes_failure_setsErrorState() = runTest {
     val user = mockk<User>()
-    every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "boom")))
-    coEvery { user.createBackupCodes() } returns ClerkResult.Failure(error)
+    every { clerk.user } returns user
+    val error = testCoreError("boom")
+    coEvery { user.createBackupCode() } throws error
 
-    val viewModel = UserProfileMfaViewModel()
+    val viewModel = UserProfileMfaViewModel(clerk)
 
     viewModel.regenerateBackupCodes()
     advanceUntilIdle()

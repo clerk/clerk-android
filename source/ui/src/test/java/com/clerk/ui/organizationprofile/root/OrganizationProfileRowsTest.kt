@@ -1,9 +1,8 @@
 package com.clerk.ui.organizationprofile.root
 
-import com.clerk.api.organizations.OrganizationSystemPermission
+import com.clerk.api.*
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileRow
-import com.clerk.ui.organizationprofile.previewOrganizationProfileMembership
-import com.clerk.ui.organizationprofile.previewOrganizationProfileOrganization
+import io.mockk.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -15,8 +14,8 @@ class OrganizationProfileRowsTest {
       previewOrganizationProfileMembership(
         permissions =
           listOf(
-            OrganizationSystemPermission.READ_MEMBERSHIPS,
-            OrganizationSystemPermission.READ_DOMAINS,
+            "org:sys_memberships:read",
+            "org:sys_domains:read",
           )
       )
 
@@ -32,8 +31,8 @@ class OrganizationProfileRowsTest {
       previewOrganizationProfileMembership(
         permissions =
           listOf(
-            OrganizationSystemPermission.READ_MEMBERSHIPS,
-            OrganizationSystemPermission.READ_DOMAINS,
+            "org:sys_memberships:read",
+            "org:sys_domains:read",
           )
       )
 
@@ -49,7 +48,7 @@ class OrganizationProfileRowsTest {
     val membership =
       previewOrganizationProfileMembership(
         organization = organization,
-        permissions = listOf(OrganizationSystemPermission.DELETE_PROFILE),
+        permissions = listOf("org:sys_profile:delete"),
       )
 
     assertEquals(
@@ -68,7 +67,7 @@ class OrganizationProfileRowsTest {
     val membership =
       previewOrganizationProfileMembership(
         organization = organization,
-        permissions = listOf(OrganizationSystemPermission.DELETE_PROFILE),
+        permissions = listOf("org:sys_profile:delete"),
       )
 
     assertEquals(
@@ -79,5 +78,18 @@ class OrganizationProfileRowsTest {
         adminDeleteEnabled = false,
       ),
     )
+  }
+
+  private fun previewOrganizationProfileOrganization(): Organization =
+    mockk(relaxed = true) { every { adminDeleteEnabled } returns true }
+
+  private fun previewOrganizationProfileMembership(
+    organization: Organization = previewOrganizationProfileOrganization(),
+    permissions: List<String>,
+  ): OrganizationMembership {
+    val membership = mockk<OrganizationMembership>(relaxed = true)
+    every { membership.organization } returns organization
+    every { membership.permissions } returns permissions
+    return membership
   }
 }

@@ -51,7 +51,8 @@ internal fun ClerkTopAppBar(
   title: String? = null,
   backgroundColor: Color? = null, // sensible default
   clerkTheme: ClerkTheme? = null,
-  logoUrl: String? = LocalClerk.currentOrNull?.environment?.displayConfig?.logoImageUrl,
+  logoUrl: String? =
+    LocalClerk.currentOrNull?.environment?.displayConfig?.logoImageUrl?.takeIf { it.isNotBlank() },
   contentPadding: PaddingValues = PaddingValues(),
   trailingContent: (@Composable () -> Unit)? = null,
 ) {

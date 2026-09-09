@@ -6,7 +6,7 @@ import org.junit.Test
 
 class CollectFieldHelperTest {
 
-  private val helper = CollectFieldHelper()
+  private val helper = CollectFieldHelper(com.clerk.testing.mockClerk())
 
   @Test
   fun fieldIsOptionalReturnsFalseWhenFieldIsRequired() {

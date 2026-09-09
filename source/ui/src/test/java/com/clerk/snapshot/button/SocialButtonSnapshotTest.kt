@@ -9,16 +9,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.clerk.api.Clerk
-import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.setLogoUrl
-import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.OAuthProvider
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.core.button.social.ClerkSocialButton
 import com.clerk.ui.core.button.social.ClerkSocialRow
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.DefaultColors
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Test
@@ -27,10 +25,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun socialButtonSnapshotTestLight() {
-    Clerk.customTheme = null
-    val provider = OAuthProvider.GOOGLE
-    provider.setLogoUrl(null)
-    paparazzi.snapshot {
+    snapshotTheme = null
+    val provider = OAuthProvider.Google
+    snapshot {
       ClerkMaterialTheme {
         Column(
           Modifier.fillMaxSize().background(ClerkMaterialTheme.colors.background).padding(dp12),
@@ -47,10 +44,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun socialButtonSnapshotTestDark() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
-    val provider = OAuthProvider.GOOGLE
-    provider.setLogoUrl(null)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(colors = DefaultColors.dark)
+    val provider = OAuthProvider.Google
+    snapshot {
       ClerkMaterialTheme {
         Column(
           Modifier.fillMaxSize().background(ClerkMaterialTheme.colors.background).padding(dp12),
@@ -67,10 +63,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun socialButtonSnapshotTestDarkShortForm() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
-    val provider = OAuthProvider.GOOGLE
-    provider.setLogoUrl(null)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(colors = DefaultColors.dark)
+    val provider = OAuthProvider.Google
+    snapshot {
       ClerkMaterialTheme {
         Column(
           Modifier.width(200.dp).background(ClerkMaterialTheme.colors.background).padding(dp12),
@@ -87,10 +82,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun socialButtonSnapshotTestLightShortForm() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.light)
-    val provider = OAuthProvider.GOOGLE
-    provider.setLogoUrl(null)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(colors = DefaultColors.light)
+    val provider = OAuthProvider.Google
+    snapshot {
       ClerkMaterialTheme {
         Column(
           Modifier.width(200.dp).background(ClerkMaterialTheme.colors.background).padding(dp12),
@@ -107,10 +101,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun socialRowSnapshotTestLight() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.light)
-    val provider = OAuthProvider.GOOGLE
-    provider.setLogoUrl(null)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(colors = DefaultColors.light)
+    val provider = OAuthProvider.Google
+    snapshot {
       ClerkMaterialTheme {
         ClerkSocialRow(
           providers = persistentListOf(provider, provider, provider, provider, provider)
@@ -121,10 +114,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun socialRowSnapshotTestLightTwoProviders() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.light)
-    val provider = OAuthProvider.GOOGLE
-    provider.setLogoUrl(null)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(colors = DefaultColors.light)
+    val provider = OAuthProvider.Google
+    snapshot {
       ClerkMaterialTheme {
         ClerkSocialRow(providers = persistentListOf(provider, provider))
       }
@@ -133,10 +125,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun socialRowSnapshotTestLightThreeProviders() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.light)
-    val provider = OAuthProvider.GOOGLE
-    provider.setLogoUrl(null)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(colors = DefaultColors.light)
+    val provider = OAuthProvider.Google
+    snapshot {
       ClerkMaterialTheme {
         ClerkSocialRow(providers = persistentListOf(provider, provider, provider))
       }
@@ -145,10 +136,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun socialRowSnapshotTestLightFourProviders() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.light)
-    val provider = OAuthProvider.GOOGLE
-    provider.setLogoUrl(null)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(colors = DefaultColors.light)
+    val provider = OAuthProvider.Google
+    snapshot {
       ClerkMaterialTheme {
         ClerkSocialRow(providers = persistentListOf(provider, provider, provider, provider))
       }
@@ -157,10 +147,9 @@ class SocialButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun socialRowSnapshotTestDark() {
-    Clerk.customTheme = ClerkTheme(colors = DefaultColors.dark)
-    val provider = OAuthProvider.GOOGLE
-    provider.setLogoUrl(null)
-    paparazzi.snapshot {
+    snapshotTheme = ClerkTheme(colors = DefaultColors.dark)
+    val provider = OAuthProvider.Google
+    snapshot {
       ClerkMaterialTheme {
         Column(
           modifier =

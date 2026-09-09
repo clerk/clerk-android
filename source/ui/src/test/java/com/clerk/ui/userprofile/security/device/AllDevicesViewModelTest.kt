@@ -1,24 +1,15 @@
 package com.clerk.ui.userprofile.security.device
 
 import app.cash.turbine.test
-import com.clerk.api.Clerk
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.session.Session
-import com.clerk.api.session.Session.SessionStatus
-import com.clerk.api.session.SessionActivity
-import com.clerk.api.session.isThisDevice
-import com.clerk.api.user.User
-import com.clerk.api.user.activeSessions
+import com.clerk.api.*
+import com.clerk.testing.mockSession
+import com.clerk.testing.testCoreError
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
+import java.time.Instant
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -28,22 +19,19 @@ import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AllDevicesViewModelTest {
+  private val clerk = mockk<Clerk>(relaxed = true)
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
   @BeforeTest
   fun setUp() {
-    mockkObject(Clerk)
-    every { Clerk.user } returns null
-    every { Clerk.session } returns null
-    mockkStatic("com.clerk.api.session.SessionKt")
-    mockkStatic("com.clerk.api.user.UserKt")
+    every { clerk.user } returns null
+    every { clerk.session } returns null
   }
 
   @AfterTest
   fun tearDown() {
-    unmockkStatic("com.clerk.api.session.SessionKt")
-    unmockkStatic("com.clerk.api.user.UserKt")
+
     unmockkAll()
   }
 
@@ -54,15 +42,12 @@ class AllDevicesViewModelTest {
     val otherRecent = session(id = "other", lastActiveAt = 200L)
     val older = session(id = "older", lastActiveAt = 50L)
 
-    every { Clerk.user } returns user
-    every { Clerk.session } returns currentSession
-    every { currentSession.isThisDevice } returns true
-    every { otherRecent.isThisDevice } returns false
-    every { older.isThisDevice } returns false
-    coEvery { user.activeSessions() } returns
-      ClerkResult.success(listOf(older, otherRecent, currentSession))
+    every { clerk.user } returns user
+    every { clerk.session } returns mockSession(id = "current")
+    every { clerk.session } returns mockSession(id = "current")
+    coEvery { user.getSessions() } returns listOf(older, otherRecent, currentSession)
 
-    val viewModel = AllDevicesViewModel()
+    val viewModel = AllDevicesViewModel(clerk)
     viewModel.state.test {
       var item = awaitItem()
       if (item is AllDevicesViewModel.State.Idle) item = awaitItem()
@@ -75,11 +60,11 @@ class AllDevicesViewModelTest {
   @Test
   fun activeSessions_failure_setsErrorState() = runTest {
     val user = mockk<User>()
-    every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "bad")))
-    coEvery { user.activeSessions() } returns ClerkResult.Failure(error)
+    every { clerk.user } returns user
+    val error = testCoreError("bad")
+    coEvery { user.getSessions() } throws error
 
-    val viewModel = AllDevicesViewModel()
+    val viewModel = AllDevicesViewModel(clerk)
     viewModel.state.test {
       var item = awaitItem()
       if (item is AllDevicesViewModel.State.Idle) item = awaitItem()
@@ -88,22 +73,16 @@ class AllDevicesViewModelTest {
     }
   }
 
-  private fun session(id: String, lastActiveAt: Long): Session =
-    Session(
-      id = id,
-      status = SessionStatus.ACTIVE,
-      expireAt = 0L,
-      abandonAt = null,
-      lastActiveAt = lastActiveAt,
-      latestActivity = SessionActivity(id = "activity-$id"),
-      lastActiveOrganizationId = null,
-      actor = null,
-      user = null,
-      publicUserData = null,
-      factorVerificationAge = null,
-      createdAt = 0L,
-      updatedAt = 0L,
-      tasks = emptyList(),
-      lastActiveToken = null,
-    )
+  private fun session(
+    id: String,
+    lastActiveAt: Long,
+    hasActivity: Boolean = true,
+  ): SessionWithActivities {
+    val session = mockk<SessionWithActivities>(relaxed = true)
+    every { session.id } returns id
+    every { session.status } returns "active"
+    every { session.lastActiveAt } returns Instant.ofEpochMilli(lastActiveAt)
+    every { session.latestActivity } returns mockk<SessionActivity>(relaxed = true)
+    return session
+  }
 }

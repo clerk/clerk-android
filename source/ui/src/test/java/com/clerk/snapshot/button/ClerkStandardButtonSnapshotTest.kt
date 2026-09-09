@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.base.BaseSnapshotTest
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
@@ -18,6 +16,7 @@ import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.ClerkButtonWithPressedState
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.DefaultColors
 import org.junit.Test
 
@@ -25,8 +24,8 @@ class ClerkStandardButtonSnapshotTest : BaseSnapshotTest() {
 
   @Test
   fun clerkButtonGallery() {
-    paparazzi.snapshot {
-      Clerk.customTheme = ClerkTheme(colors = DefaultColors.clerk)
+    snapshotTheme = ClerkTheme(colors = DefaultColors.clerk)
+    snapshot {
       ClerkMaterialTheme {
         Column(
           modifier =

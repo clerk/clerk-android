@@ -1,69 +1,33 @@
 package com.clerk.ui.signin
 
-import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.model.verification.Verification
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.authenticateWithPreparedRedirect
-import com.clerk.api.signin.prepareFirstFactor
-import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.OAuthResult
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockkStatic
-import io.mockk.slot
-import io.mockk.unmockkAll
+import com.clerk.api.*
+import com.clerk.testing.*
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertSame
+import org.junit.Assert.*
 import org.junit.Test
 
 class SignInRedirectTest {
-
-  @After
-  fun tearDown() {
-    unmockkAll()
-  }
+  @After fun tearDown() = unmockkAll()
 
   @Test
-  fun `redirect reuses the current sign in attempt`() = runTest {
-    mockkStatic("com.clerk.api.signin.SignInKt")
-    mockkStatic("com.clerk.api.signin.SignInExtensionsKt")
-    val currentSignIn =
-      SignIn(
-        id = "sign_in_existing",
-        status = SignIn.Status.NEEDS_FIRST_FACTOR,
-        identifier = "user@example.com",
-        supportedFirstFactors = listOf(Factor(strategy = "password")),
+  fun redirectUsesTheCurrentCoreAndPreservesProviderAndTransfer() = runTest {
+    val clerk = mockClerk()
+    val signIn = mockSignIn(SignInStatus.NeedsFirstFactor)
+    every { clerk.signIn } returns signIn
+    val response = MobileAuthenticationResult.Case1(MobileAuthCallbackResultCase1(signIn))
+    coEvery { clerk.authenticateWithSSO(any()) } returns response
+    val result = authenticateWithRedirect(clerk, OAuthProvider.Github, true)
+    assertSame(response, result)
+    coVerify(exactly = 1) {
+      clerk.authenticateWithSSO(
+        match {
+          it.strategy.rawValue == "oauth_github" &&
+            it.start == MobileSSOParamsStart.SignIn &&
+            it.transferable == true
+        }
       )
-    val externalRedirectUrl = "https://oauth.example.com/start"
-    val preparedSignIn =
-      currentSignIn.copy(
-        firstFactorVerification =
-          Verification(
-            strategy = OAuthProvider.GITHUB.strategy,
-            externalVerificationRedirectUrl = externalRedirectUrl,
-          )
-      )
-    val oauthResult = OAuthResult(signIn = preparedSignIn)
-    val prepareParams = slot<SignIn.PrepareFirstFactorParams>()
-
-    coEvery { currentSignIn.prepareFirstFactor(capture(prepareParams)) } returns
-      ClerkResult.success(preparedSignIn)
-    coEvery { preparedSignIn.authenticateWithPreparedRedirect(transferable = true) } returns
-      ClerkResult.success(oauthResult)
-
-    val result =
-      authenticateWithRedirect(
-        signIn = currentSignIn,
-        provider = OAuthProvider.GITHUB,
-        transferable = true,
-      )
-
-    assertSame(oauthResult, (result as ClerkResult.Success).value)
-    assertEquals(OAuthProvider.GITHUB.strategy, prepareParams.captured.strategy)
-    coVerify(exactly = 1) { currentSignIn.prepareFirstFactor(any()) }
-    coVerify(exactly = 1) { preparedSignIn.authenticateWithPreparedRedirect(transferable = true) }
+    }
   }
 }

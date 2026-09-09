@@ -24,7 +24,6 @@ internal class UserProfilePasskeyViewModel(private val clerk: Clerk) : ViewModel
   }
 
   fun createPasskey() {
-    _state.value = State.Loading
     viewModelScope.launch {
       runUiOperation {
           val user = clerk.user ?: throw CoreException("no_user", "User does not exist")
