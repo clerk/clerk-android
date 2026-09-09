@@ -1,56 +1,36 @@
 package com.clerk.ui.auth
 
-import app.cash.turbine.test
-import com.clerk.api.Clerk
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error as ClerkError
-import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.model.verification.Verification
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.authenticateWithPreparedRedirect
-import com.clerk.api.signin.prepareFirstFactor
-import com.clerk.api.signup.SignUp
-import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.OAuthResult
-import com.clerk.api.sso.ResultType
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
-import io.mockk.slot
-import io.mockk.unmockkAll
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
+import com.clerk.api.*
+import com.clerk.testing.mockClerk
+import com.clerk.testing.testCoreError
+import io.mockk.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.test.*
+import kotlinx.serialization.json.*
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Unit tests for AuthViewModel focusing on testable state management and logic.
- *
- * This test suite uses Turbine for testing StateFlow emissions and MockK for mocking dependencies.
- * The tests focus on the ViewModel's behavior, state transitions, and logic that can be tested
- * without complex static method mocking.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
-
-  private val testDispatcher = StandardTestDispatcher()
+  private val dispatcher = StandardTestDispatcher()
+  private lateinit var clerk: Clerk
   private lateinit var viewModel: AuthStartViewModel
+  private val signIn = mockk<SignIn>(relaxed = true)
+  private val signUp = mockk<SignUp>(relaxed = true)
+  private val signInResult = MobileAuthenticationResult.Case1(MobileAuthCallbackResultCase1(signIn))
+  private val signUpResult = MobileAuthenticationResult.Case2(MobileAuthCallbackResultCase2(signUp))
 
   @Before
   fun setUp() {
-    Dispatchers.setMain(testDispatcher)
-    viewModel = AuthStartViewModel(ioDispatcher = testDispatcher)
+    Dispatchers.setMain(dispatcher)
+    clerk = mockClerk()
+    every { clerk.signIn } returns signIn
+    every { signIn.supportedFirstFactors } returns emptyList()
+    coEvery { clerk.startAuthentication(any()) } returns signInResult
+    coEvery { clerk.authenticateWithSSO(any()) } returns signInResult
+    viewModel = AuthStartViewModel(clerk)
   }
 
   @After
@@ -59,440 +39,254 @@ class AuthViewModelTest {
     unmockkAll()
   }
 
-  @Test
-  fun initialStateShouldBeIdle() = runTest {
-    viewModel.state.test { assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem()) }
+  private fun start(
+    mode: AuthMode = AuthMode.SignIn,
+    identifier: String = "test@example.com",
+    phone: String? = null,
+    metadata: JsonObject? = null,
+  ) {
+    viewModel.startAuth(mode, phone != null, phone.orEmpty(), identifier, metadata)
+  }
+
+  private fun finish() = dispatcher.scheduler.advanceUntilIdle()
+
+  private fun identifierParams(): MobileIdentifierParams {
+    val params = slot<MobileIdentifierParams>()
+    coVerify(exactly = 1) { clerk.startAuthentication(capture(params)) }
+    return params.captured
+  }
+
+  private fun socialParams(): MobileSSOParams {
+    val params = slot<MobileSSOParams>()
+    coVerify(exactly = 1) { clerk.authenticateWithSSO(capture(params)) }
+    return params.captured
   }
 
   @Test
-  fun startAuthWithSignInOrUpModeShouldInitiateSignInOrUpFlow() = runTest {
-    // Avoid real API calls
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.apiFailure(null)
-
-    // Verify state transitions when starting SignInOrUp
-    viewModel.state.test {
-      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
-
-      viewModel.startAuth(
-        authMode = AuthMode.SignInOrUp,
-        isPhoneNumberFieldActive = false,
-        phoneNumber = "",
-        identifier = "test@example.com",
-      )
-
-      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
-      coVerify(timeout = 1_000, exactly = 1) { SignIn.create(any<SignIn.CreateParams.Strategy>()) }
-      cancelAndIgnoreRemainingEvents()
-    }
+  fun initialStateShouldBeIdle() {
+    assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
   }
 
   @Test
-  fun startAuthWithSignInModeShouldSurfaceApiFailure() = runTest {
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.apiFailure(
-        ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "Couldn't find your account.")))
-      )
-
-    viewModel.state.test {
-      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
-
-      viewModel.startAuth(
-        authMode = AuthMode.SignIn,
-        isPhoneNumberFieldActive = false,
-        phoneNumber = "",
-        identifier = "test@example.com",
-      )
-
-      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
-      assertEquals(AuthStartViewModel.AuthState.Error("Couldn't find your account."), awaitItem())
-    }
+  fun startAuthWithSignInOrUpModeShouldInitiateSignInOrUpFlow() {
+    start(AuthMode.SignInOrUp)
+    assertEquals(AuthStartViewModel.AuthState.Loading, viewModel.state.value)
+    finish()
+    assertEquals(MobileIdentifierParamsMode.SignInOrUp, identifierParams().mode)
+    assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), viewModel.state.value)
   }
 
   @Test
-  fun startAuthWithSignInModeShouldSurfaceUnknownFailure() = runTest {
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.unknownFailure(IllegalStateException("Network unavailable"))
-
-    viewModel.state.test {
-      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
-
-      viewModel.startAuth(
-        authMode = AuthMode.SignIn,
-        isPhoneNumberFieldActive = false,
-        phoneNumber = "",
-        identifier = "test@example.com",
-      )
-
-      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
-      assertEquals(
-        AuthStartViewModel.AuthState.Error("Error occurred with unknown message."),
-        awaitItem(),
-      )
-    }
+  fun startAuthWithSignInModeShouldSurfaceApiFailure() {
+    coEvery { clerk.startAuthentication(any()) } throws testCoreError("Couldn't find your account.")
+    start()
+    finish()
+    assertEquals(
+      AuthStartViewModel.AuthState.Error("Couldn't find your account."),
+      viewModel.state.value,
+    )
   }
 
   @Test
-  fun automaticPasskeySignInUsesPasskeyStrategy() = runTest {
-    val signIn = SignIn(id = "sign_in_123")
-    mockkObject(SignIn.Companion)
-    coEvery {
-      SignIn.create(
-        any<SignIn.CreateParams.Strategy.Passkey>(),
-        preferImmediatelyAvailableCredentials = true,
-      )
-    } returns ClerkResult.success(signIn)
+  fun startAuthWithSignInModeShouldSurfaceUnknownFailure() {
+    coEvery { clerk.startAuthentication(any()) } throws IllegalStateException("Network unavailable")
+    start()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Error("Network unavailable"), viewModel.state.value)
+  }
 
-    viewModel.state.test {
-      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
-
-      viewModel.startAutomaticPasskeySignIn()
-
-      assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), awaitItem())
-      coVerify(exactly = 1) {
-        SignIn.create(
-          any<SignIn.CreateParams.Strategy.Passkey>(),
+  @Test
+  fun automaticPasskeySignInUsesPasskeyStrategy() {
+    coEvery { signIn.passkey(any()) } returns mockk(relaxed = true)
+    viewModel.startAutomaticPasskeySignIn()
+    finish()
+    coVerify {
+      signIn.passkey(
+        SignInPasskeyParams(
+          flow = SignInPasskeyParamsFlow.Discoverable,
           preferImmediatelyAvailableCredentials = true,
         )
-      }
+      )
     }
+    assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), viewModel.state.value)
   }
 
   @Test
-  fun automaticPasskeySignInSuppressesNoSavedCredentialError() = runTest {
-    val noSavedCredentialException =
-      Class.forName("com.clerk.api.credentials.CredentialFlowException\$NoSavedCredential")
-        .getDeclaredConstructor()
-        .newInstance() as Throwable
-    mockkObject(SignIn.Companion)
-    coEvery {
-      SignIn.create(
-        any<SignIn.CreateParams.Strategy.Passkey>(),
-        preferImmediatelyAvailableCredentials = true,
-      )
-    } returns ClerkResult.unknownFailure(noSavedCredentialException)
-
-    viewModel.state.test {
-      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
-
-      viewModel.startAutomaticPasskeySignIn()
-
-      testDispatcher.scheduler.advanceUntilIdle()
-      coVerify(exactly = 1) {
-        SignIn.create(
-          any<SignIn.CreateParams.Strategy.Passkey>(),
-          preferImmediatelyAvailableCredentials = true,
-        )
-      }
-      expectNoEvents()
-    }
+  fun automaticPasskeySignInSuppressesNoSavedCredentialError() {
+    coEvery { signIn.passkey(any()) } throws
+      CoreException("no_saved_credential", passkeyStage = "gettingCredential")
+    viewModel.startAutomaticPasskeySignIn()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
   }
 
   @Test
-  fun automaticPasskeySignInSuppressesUserCancelledError() = runTest {
-    val userCancelledException =
-      Class.forName("com.clerk.api.credentials.CredentialFlowException\$UserCancelled")
-        .getDeclaredConstructor()
-        .newInstance() as Throwable
-    mockkObject(SignIn.Companion)
-    coEvery {
-      SignIn.create(
-        any<SignIn.CreateParams.Strategy.Passkey>(),
-        preferImmediatelyAvailableCredentials = true,
-      )
-    } returns ClerkResult.unknownFailure(userCancelledException)
-
-    viewModel.state.test {
-      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
-
-      viewModel.startAutomaticPasskeySignIn()
-
-      testDispatcher.scheduler.advanceUntilIdle()
-      coVerify(exactly = 1) {
-        SignIn.create(
-          any<SignIn.CreateParams.Strategy.Passkey>(),
-          preferImmediatelyAvailableCredentials = true,
-        )
-      }
-      expectNoEvents()
-    }
+  fun automaticPasskeySignInSuppressesUserCancelledError() {
+    coEvery { signIn.passkey(any()) } throws
+      CoreException("user_cancelled", passkeyStage = "attemptingFirstFactor")
+    viewModel.startAutomaticPasskeySignIn()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
   }
 
   @Test
-  fun automaticPasskeySignInSurfacesApiErrors() = runTest {
-    mockkObject(SignIn.Companion)
-    coEvery {
-      SignIn.create(
-        any<SignIn.CreateParams.Strategy.Passkey>(),
-        preferImmediatelyAvailableCredentials = true,
-      )
-    } returns
-      ClerkResult.apiFailure(
-        ClerkErrorResponse(errors = listOf(ClerkError(longMessage = "Passkey failed")))
-      )
+  fun automaticPasskeySignInSurfacesApiErrors() {
+    coEvery { signIn.passkey(any()) } throws
+      CoreException("passkey_failed", "Passkey failed", passkeyStage = "attemptingFirstFactor")
+    viewModel.startAutomaticPasskeySignIn()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Error("Passkey failed"), viewModel.state.value)
+  }
 
-    viewModel.state.test {
-      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
+  @Test
+  fun automaticPasskeySignInDoesNotDuplicatePendingRequest() {
+    coEvery { signIn.passkey(any()) } coAnswers { awaitCancellation() }
+    viewModel.startAutomaticPasskeySignIn()
+    dispatcher.scheduler.runCurrent()
+    viewModel.startAutomaticPasskeySignIn()
+    dispatcher.scheduler.runCurrent()
+    coVerify(exactly = 1) { signIn.passkey(any()) }
+    viewModel.cancelAutomaticPasskeySignIn()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
+  }
 
-      viewModel.startAutomaticPasskeySignIn()
-
-      assertEquals(AuthStartViewModel.AuthState.Error("Passkey failed"), awaitItem())
-    }
+  @Test
+  fun explicitAuthenticationCancelsAutomaticPasskey() {
+    var cancelled = false
+    coEvery { signIn.passkey(any()) } coAnswers
+      {
+        try {
+          awaitCancellation()
+        } finally {
+          cancelled = true
+        }
+      }
+    viewModel.startAutomaticPasskeySignIn()
+    dispatcher.scheduler.runCurrent()
+    start()
+    finish()
+    assertTrue(cancelled)
+    assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), viewModel.state.value)
   }
 
   @Test
   fun oauthResultWithSignInResultTypeShouldSetCorrectSuccessState() {
-    // Test the OAuth result processing logic
-    val mockSignIn = mockk<SignIn>(relaxed = true)
-    val mockOAuthResult =
-      mockk<OAuthResult> {
-        every { resultType } returns ResultType.SIGN_IN
-        every { signIn } returns mockSignIn
-        every { signUp } returns null
-      }
-
-    // Simulate the OAuth result processing (this logic is extracted from the ViewModel)
-    val expectedState =
-      when (mockOAuthResult.resultType) {
-        ResultType.SIGN_IN ->
-          AuthStartViewModel.AuthState.OAuthState.SignInSuccess(signIn = mockOAuthResult.signIn!!)
-        ResultType.SIGN_UP ->
-          AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(signUp = mockOAuthResult.signUp!!)
-        ResultType.UNKNOWN ->
-          AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
-      }
-
-    assertTrue(
-      "Should create success state with SignIn",
-      expectedState is AuthStartViewModel.AuthState.OAuthState.SignInSuccess,
-    )
+    viewModel.authenticateWithSocialProvider(OAuthProvider.Google)
+    assertEquals(AuthStartViewModel.AuthState.OAuthState.Loading, viewModel.state.value)
+    finish()
     assertEquals(
-      mockSignIn,
-      (expectedState as AuthStartViewModel.AuthState.OAuthState.SignInSuccess).signIn,
+      AuthStartViewModel.AuthState.OAuthState.SignInSuccess(signIn),
+      viewModel.state.value,
     )
   }
 
   @Test
   fun oauthResultWithSignUpResultTypeShouldSetCorrectSuccessState() {
-    // Test the OAuth result processing logic
-    val mockSignUp = mockk<SignUp>(relaxed = true)
-    val mockOAuthResult =
-      mockk<OAuthResult> {
-        every { resultType } returns ResultType.SIGN_UP
-        every { signUp } returns mockSignUp
-      }
-
-    // Simulate the OAuth result processing
-    val expectedState =
-      when (mockOAuthResult.resultType) {
-        ResultType.SIGN_IN ->
-          AuthStartViewModel.AuthState.OAuthState.SignInSuccess(signIn = mockOAuthResult.signIn!!)
-        ResultType.SIGN_UP ->
-          AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(signUp = mockOAuthResult.signUp!!)
-        ResultType.UNKNOWN ->
-          AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
-      }
-
-    assertTrue(
-      "Should create success state with SignUp",
-      expectedState is AuthStartViewModel.AuthState.OAuthState.SignUpSuccess,
-    )
+    coEvery { clerk.authenticateWithSSO(any()) } returns signUpResult
+    viewModel.authenticateWithSocialProvider(OAuthProvider.Google)
+    finish()
     assertEquals(
-      mockSignUp,
-      (expectedState as AuthStartViewModel.AuthState.OAuthState.SignUpSuccess).signUp,
+      AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(signUp),
+      viewModel.state.value,
     )
   }
 
   @Test
-  fun oauthResultWithUnknownResultTypeShouldSetErrorState() {
-    // Test the OAuth result processing logic
-    val mockOAuthResult =
-      mockk<OAuthResult> {
-        every { resultType } returns ResultType.UNKNOWN
-        every { signIn } returns null
-        every { signUp } returns null
-      }
-
-    // Simulate the OAuth result processing
-    val expectedState =
-      when (mockOAuthResult.resultType) {
-        ResultType.SIGN_IN ->
-          AuthStartViewModel.AuthState.OAuthState.SignInSuccess(signIn = mockOAuthResult.signIn!!)
-        ResultType.SIGN_UP ->
-          AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(signUp = mockOAuthResult.signUp!!)
-        ResultType.UNKNOWN ->
-          AuthStartViewModel.AuthState.OAuthState.Error("Unknown result type from OAuth provider")
-      }
-
-    assertTrue(
-      "Should create error state for unknown result type",
-      expectedState is AuthStartViewModel.AuthState.OAuthState.Error,
-    )
+  fun invalidOAuthResultShouldSetErrorState() {
+    // Invalid wire unions fail in the generated decoder before reaching presentation.
+    coEvery { clerk.authenticateWithSSO(any()) } throws
+      CoreException("protocol_error", "Invalid authentication result")
+    viewModel.authenticateWithSocialProvider(OAuthProvider.Google)
+    finish()
     assertEquals(
-      "Unknown result type from OAuth provider",
-      (expectedState as AuthStartViewModel.AuthState.OAuthState.Error).message,
+      AuthStartViewModel.AuthState.OAuthState.Error("Invalid authentication result"),
+      viewModel.state.value,
     )
   }
 
   @Test
   fun signUpParamsShouldBeCreatedCorrectlyBasedOnInputType() {
-    // Test the sign-up parameter creation logic
-    val emailIdentifier = "test@example.com"
-    val usernameIdentifier = "testuser"
-    val phoneNumber = "+1234567890"
+    start(AuthMode.SignUp, "testuser")
+    finish()
+    val params = identifierParams()
+    assertEquals(MobileIdentifierParamsMode.SignUp, params.mode)
+    assertEquals(MobileIdentifierParamsIdentifierType.Username, params.identifierType)
+    assertEquals("testuser", params.identifier)
+  }
 
-    // Test email recognition (this tests the private isEmailAddress extension)
-    assertTrue(
-      "Should recognize email format",
-      emailIdentifier.contains("@") && emailIdentifier.contains("."),
+  @Test
+  fun startAuthWithSignUpPassesUnsafeMetadataToCore() {
+    val metadata = buildJsonObject {
+      put("test", "test")
+      putJsonObject("nested") { put("active", true) }
+    }
+    coEvery { clerk.startAuthentication(any()) } returns signUpResult
+    start(AuthMode.SignUp, metadata = metadata)
+    finish()
+    assertEquals(metadata, identifierParams().unsafeMetadata)
+    assertEquals(AuthStartViewModel.AuthState.Success.SignUpSuccess(signUp), viewModel.state.value)
+  }
+
+  @Test
+  fun signInOrUpFallbackPreservesMetadataAndPhoneSelection() {
+    val metadata = buildJsonObject { put("source", "prebuilt") }
+    // Account discovery and transfer are owned by the TypeScript core.
+    coEvery { clerk.startAuthentication(any()) } returns signUpResult
+    start(AuthMode.SignInOrUp, phone = "+1234567890", metadata = metadata)
+    finish()
+    val params = identifierParams()
+    assertEquals(metadata, params.unsafeMetadata)
+    assertEquals("+1234567890", params.identifier)
+    assertEquals(MobileIdentifierParamsIdentifierType.PhoneNumber, params.identifierType)
+    assertEquals(AuthStartViewModel.AuthState.Success.SignUpSuccess(signUp), viewModel.state.value)
+  }
+
+  private fun enterpriseFactor() {
+    every { signIn.identifier } returns "user@example.com"
+    every { signIn.supportedFirstFactors } returns
+      listOf(SignInFirstFactor.Case8(EnterpriseSSOFactor(enterpriseConnectionId = "sso_123")))
+  }
+
+  @Test
+  fun enterpriseSSODetectionShouldStartCoreBrowserFlow() {
+    enterpriseFactor()
+    start()
+    finish()
+    val params = socialParams()
+    assertEquals(SignInSSOParamsStrategy.EnterpriseSso, params.strategy)
+    assertEquals("sso_123", params.enterpriseConnectionId)
+    assertEquals("user@example.com", params.identifier)
+    assertEquals(false, params.transferable)
+    assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), viewModel.state.value)
+  }
+
+  @Test
+  fun identifierResolutionShouldUseEmailWhenPhoneInactive() {
+    start()
+    finish()
+    assertEquals("test@example.com", identifierParams().identifier)
+    assertEquals(
+      MobileIdentifierParamsIdentifierType.EmailAddress,
+      identifierParams().identifierType,
     )
-    assertTrue("Should not recognize username as email", !usernameIdentifier.contains("@"))
-
-    // Test parameter creation logic
-    val emailParams =
-      if (emailIdentifier.matches(Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"))) {
-        "email"
-      } else {
-        "username"
-      }
-
-    val usernameParams =
-      if (usernameIdentifier.matches(Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"))) {
-        "email"
-      } else {
-        "username"
-      }
-
-    assertEquals("email", emailParams)
-    assertEquals("username", usernameParams)
-  }
-
-  @Test
-  fun startAuthWithSignUpPassesUnsafeMetadataToSignUpCreate() = runTest {
-    val paramsSlot = slot<SignUp.CreateParams>()
-    val mockSignUp = mockk<SignUp>(relaxed = true)
-    mockkObject(SignUp.Companion)
-    coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
-
-    viewModel.state.test {
-      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
-
-      viewModel.startAuth(
-        authMode = AuthMode.SignUp,
-        isPhoneNumberFieldActive = false,
-        phoneNumber = "",
-        identifier = "test@example.com",
-        unsafeMetadata = mapOf("test" to "test", "nested" to mapOf("active" to true)),
-      )
-
-      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
-      assertEquals(AuthStartViewModel.AuthState.Success.SignUpSuccess(mockSignUp), awaitItem())
-    }
-
-    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
-    val params = paramsSlot.captured as SignUp.CreateParams.Standard
-    val unsafeMetadata = requireNotNull(params.unsafeMetadata)
-    assertEquals("test@example.com", params.emailAddress)
-    assertEquals("test", unsafeMetadata.getValue("test"))
-    assertEquals(mapOf("active" to true), unsafeMetadata.getValue("nested"))
-  }
-
-  @Test
-  fun signInOrUpFallbackPassesUnsafeMetadataToSignUpCreate() = runTest {
-    val paramsSlot = slot<SignUp.CreateParams>()
-    val mockSignUp = mockk<SignUp>(relaxed = true)
-    mockkObject(SignIn.Companion)
-    mockkObject(SignUp.Companion)
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.apiFailure(
-        ClerkErrorResponse(errors = listOf(ClerkError(code = "form_identifier_not_found")))
-      )
-    coEvery { SignUp.create(any<SignUp.CreateParams>()) } returns ClerkResult.success(mockSignUp)
-
-    viewModel.state.test {
-      assertEquals(AuthStartViewModel.AuthState.Idle, awaitItem())
-
-      viewModel.startAuth(
-        authMode = AuthMode.SignInOrUp,
-        isPhoneNumberFieldActive = true,
-        phoneNumber = "+1234567890",
-        identifier = "test@example.com",
-        unsafeMetadata = mapOf("source" to "prebuilt"),
-      )
-
-      assertEquals(AuthStartViewModel.AuthState.Loading, awaitItem())
-      assertEquals(AuthStartViewModel.AuthState.Success.SignUpSuccess(mockSignUp), awaitItem())
-    }
-
-    coVerify(timeout = 1_000, exactly = 1) { SignUp.create(capture(paramsSlot)) }
-    val params = paramsSlot.captured as SignUp.CreateParams.Standard
-    val unsafeMetadata = requireNotNull(params.unsafeMetadata)
-    assertEquals("+1234567890", params.phoneNumber)
-    assertEquals("prebuilt", unsafeMetadata.getValue("source"))
-  }
-
-  @Test
-  fun enterpriseSSODetectionShouldWorkCorrectly() {
-    // Test the enterprise SSO detection logic directly
-    val ssoStrategy = "enterprise_sso"
-    val passwordStrategy = "password"
-
-    // Test the requiresEnterpriseSSO logic that the ViewModel uses
-    val requiresSSO = ssoStrategy == "enterprise_sso"
-    val doesNotRequireSSO = passwordStrategy == "enterprise_sso"
-
-    assertTrue("Should detect enterprise SSO requirement", requiresSSO)
-    assertTrue("Should not detect enterprise SSO for password", !doesNotRequireSSO)
-
-    // Test with nullable strategy (edge case)
-    val nullStrategy: String? = null
-    val requiresSSOWithNull = nullStrategy == "enterprise_sso"
-    assertTrue("Should not require SSO with null strategy", !requiresSSOWithNull)
-  }
-
-  @Test
-  fun identifierResolutionShouldWorkCorrectly() {
-    // Test the identifier resolution logic used in startAuth
-    val identifier = "test@example.com"
-    val phoneNumber = "+1234567890"
-
-    // Test phone number field active
-    val resolvedIdentifierWhenPhoneActive = if (true) phoneNumber else identifier
-    assertEquals(phoneNumber, resolvedIdentifierWhenPhoneActive)
-
-    // Test phone number field not active
-    val resolvedIdentifierWhenPhoneNotActive = if (false) phoneNumber else identifier
-    assertEquals(identifier, resolvedIdentifierWhenPhoneNotActive)
   }
 
   @Test
   fun authModeEnumShouldHaveCorrectValues() {
-    // Test that all AuthMode values are available
-    val signIn = AuthMode.SignIn
-    val signUp = AuthMode.SignUp
-    val signInOrUp = AuthMode.SignInOrUp
-
-    assertEquals("SignIn", signIn.name)
-    assertEquals("SignUp", signUp.name)
-    assertEquals("SignInOrUp", signInOrUp.name)
+    assertEquals(listOf("SignIn", "SignUp", "SignInOrUp"), AuthMode.entries.map { it.name })
   }
 
   @Test
   fun authModeTransferabilityShouldMatchFlowMode() {
-    assertEquals(false, AuthMode.SignIn.transferable)
-    assertEquals(true, AuthMode.SignUp.transferable)
-    assertEquals(true, AuthMode.SignInOrUp.transferable)
+    assertFalse(AuthMode.SignIn.transferable)
+    assertTrue(AuthMode.SignUp.transferable)
+    assertTrue(AuthMode.SignInOrUp.transferable)
   }
 
   @Test
-  fun emailRegexPatternShouldWorkCorrectly() {
-    // Test email validation regex pattern (same as used in the ViewModel)
-    val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
-
-    val validEmails =
+  fun emailInputClassificationShouldWorkCorrectly() {
+    val emails =
       listOf(
         "test@example.com",
         "user.name@domain.co.uk",
@@ -500,8 +294,7 @@ class AuthViewModelTest {
         "simple@test.com",
         "user_name@test-domain.org",
       )
-
-    val invalidEmails =
+    val usernames =
       listOf(
         "testexample.com",
         "@example.com",
@@ -511,228 +304,101 @@ class AuthViewModelTest {
         "test.domain.com",
         "test@@domain.com",
       )
-
-    validEmails.forEach { email -> assertTrue("$email should be valid", emailRegex.matches(email)) }
-
-    invalidEmails.forEach { email ->
-      assertTrue("$email should be invalid", !emailRegex.matches(email))
+    (emails + usernames).forEach { value ->
+      clearMocks(clerk, answers = false, childMocks = false)
+      start(identifier = value)
+      finish()
+      assertEquals(
+        if (value in emails) MobileIdentifierParamsIdentifierType.EmailAddress
+        else MobileIdentifierParamsIdentifierType.Username,
+        identifierParams().identifierType,
+      )
     }
   }
 
   @Test
   fun oauthProviderShouldHaveExpectedValues() {
-    // Test that OAuth providers work correctly with our ViewModel
-    val google = OAuthProvider.GOOGLE
-    val facebook = OAuthProvider.FACEBOOK
-
-    assertEquals("GOOGLE", google.name)
-    assertEquals("FACEBOOK", facebook.name)
-
-    // Test that we can use these in our ViewModel logic
-    val testProviders = listOf(google, facebook)
-    assertTrue("Should contain Google", testProviders.contains(OAuthProvider.GOOGLE))
-    assertTrue("Should contain Facebook", testProviders.contains(OAuthProvider.FACEBOOK))
+    assertEquals("google", OAuthProvider.Google.rawValue)
+    assertEquals("facebook", OAuthProvider.Facebook.rawValue)
   }
 
   @Test
-  fun googleSocialAuthUsesBrowserRedirectWhenOneTapIsNotPreferred() = runTest {
-    mockkObject(SignIn.Companion)
-    val mockSignIn = mockk<SignIn>(relaxed = true)
-
-    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns
-      ClerkResult.success(OAuthResult(signIn = mockSignIn))
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
-      ClerkResult.success(OAuthResult(signIn = mockSignIn))
-
-    viewModel.authenticateWithSocialProvider(
-      provider = OAuthProvider.GOOGLE,
-      transferable = true,
-      preferGoogleOneTap = false,
-    )
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify(exactly = 0) { SignIn.authenticateWithGoogleOneTap(any()) }
-    coVerify(exactly = 1) { SignIn.authenticateWithRedirect(any(), true) }
+  fun googleSocialAuthUsesBrowserRedirectWhenOneTapIsNotPreferred() {
+    viewModel.authenticateWithSocialProvider(OAuthProvider.Google, preferGoogleOneTap = false)
+    finish()
+    assertEquals(false, socialParams().preferGoogleOneTap)
+    assertEquals("oauth_google", socialParams().strategy.rawValue)
   }
 
   @Test
-  fun customSocialAuthPreservesProviderStrategy() = runTest {
-    val paramsSlot = slot<SignIn.AuthenticateWithRedirectParams>()
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
-      ClerkResult.success(OAuthResult(signIn = mockk(relaxed = true)))
-
+  fun customSocialAuthPreservesProviderStrategy() {
     viewModel.authenticateWithSocialProvider(
-      provider = OAuthProvider.custom("oauth_custom_patreon"),
+      OAuthProvider.Unrecognized("custom_patreon"),
       preferGoogleOneTap = false,
     )
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify(exactly = 1) { SignIn.authenticateWithRedirect(capture(paramsSlot), true) }
-    val params = paramsSlot.captured as SignIn.AuthenticateWithRedirectParams.OAuth
-    assertEquals("oauth_custom_patreon", params.provider.strategy)
+    finish()
+    assertEquals("oauth_custom_patreon", socialParams().strategy.rawValue)
   }
 
   @Test
-  fun socialOAuthCancellationReturnsToIdle() = runTest {
-    val cancellation =
-      Class.forName("com.clerk.api.sso.SSOCancellationException")
-        .getDeclaredConstructor(String::class.java)
-        .apply { isAccessible = true }
-        .newInstance("Authentication cancelled") as Throwable
-    mockkObject(SignIn.Companion)
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
-      ClerkResult.unknownFailure(cancellation)
-
-    viewModel.authenticateWithSocialProvider(
-      provider = OAuthProvider.GITHUB,
-      preferGoogleOneTap = false,
-    )
-
-    assertEquals(AuthStartViewModel.AuthState.OAuthState.Loading, viewModel.state.value)
-    testDispatcher.scheduler.advanceUntilIdle()
+  fun socialOAuthCancellationReturnsToIdle() {
+    coEvery { clerk.authenticateWithSSO(any()) } throws CoreException("user_cancelled")
+    viewModel.authenticateWithSocialProvider(OAuthProvider.Github)
+    finish()
     assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
   }
 
   @Test
-  fun enterpriseSSOCancellationReturnsToIdle() = runTest {
-    val cancellation =
-      Class.forName("com.clerk.api.sso.SSOCancellationException")
-        .getDeclaredConstructor(String::class.java)
-        .apply { isAccessible = true }
-        .newInstance("Authentication cancelled") as Throwable
-    val signIn =
-      SignIn(
-        id = "sign_in_enterprise",
-        status = SignIn.Status.NEEDS_FIRST_FACTOR,
-        identifier = "user@example.com",
-        supportedFirstFactors =
-          listOf(Factor(strategy = "enterprise_sso", safeIdentifier = "user@example.com")),
-      )
-    val preparedSignIn =
-      signIn.copy(
-        firstFactorVerification =
-          Verification(
-            strategy = "enterprise_sso",
-            externalVerificationRedirectUrl = "https://sso.example.com/start",
-          )
-      )
-    mockkObject(SignIn.Companion)
-    mockkStatic("com.clerk.api.signin.SignInKt")
-    mockkStatic("com.clerk.api.signin.SignInExtensionsKt")
-    coEvery { SignIn.create(any<SignIn.CreateParams.Strategy>()) } returns
-      ClerkResult.success(signIn)
-    coEvery {
-      signIn.prepareFirstFactor(any<SignIn.PrepareFirstFactorParams.EnterpriseSSO>())
-    } returns ClerkResult.success(preparedSignIn)
-    coEvery { preparedSignIn.authenticateWithPreparedRedirect(any()) } returns
-      ClerkResult.unknownFailure(cancellation)
-
-    viewModel.startAuth(
-      authMode = AuthMode.SignIn,
-      isPhoneNumberFieldActive = false,
-      phoneNumber = "",
-      identifier = "user@example.com",
-    )
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify(exactly = 1) { preparedSignIn.authenticateWithPreparedRedirect(false) }
+  fun enterpriseSSOCancellationReturnsToIdle() {
+    enterpriseFactor()
+    coEvery { clerk.authenticateWithSSO(any()) } throws CoreException("user_cancelled")
+    start()
+    finish()
+    assertEquals(false, socialParams().transferable)
     assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
   }
 
   @Test
-  fun socialOAuthCanStartWithSignUp() = runTest {
-    mockkObject(SignIn.Companion)
-    mockkObject(SignUp.Companion)
-    val mockSignUp = mockk<SignUp>(relaxed = true)
+  fun socialOAuthCanStartWithSignUp() {
+    coEvery { clerk.authenticateWithSSO(any()) } returns signUpResult
+    viewModel.authenticateWithSocialProvider(OAuthProvider.Google, startOAuthWithSignUp = true)
+    finish()
+    assertEquals(MobileSSOParamsStart.SignUp, socialParams().start)
+    assertEquals(
+      AuthStartViewModel.AuthState.OAuthState.SignUpSuccess(signUp),
+      viewModel.state.value,
+    )
+  }
 
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
-      ClerkResult.success(OAuthResult(signIn = mockk(relaxed = true)))
-    coEvery { SignUp.authenticateWithRedirect(any()) } returns
-      ClerkResult.success(OAuthResult(signUp = mockSignUp))
-
+  @Test
+  fun socialOAuthSignUpPassesUnsafeMetadata() {
+    val metadata = buildJsonObject { put("source", "social") }
     viewModel.authenticateWithSocialProvider(
-      provider = OAuthProvider.GOOGLE,
-      transferable = true,
-      preferGoogleOneTap = false,
+      OAuthProvider.Google,
       startOAuthWithSignUp = true,
+      unsafeMetadata = metadata,
     )
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify(exactly = 1) { SignUp.authenticateWithRedirect(any()) }
-    coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
+    finish()
+    assertEquals(metadata, socialParams().unsafeMetadata)
   }
 
   @Test
-  fun socialOAuthSignUpPassesUnsafeMetadata() = runTest {
-    val paramsSlot = slot<SignUp.AuthenticateWithRedirectParams>()
-    val mockSignUp = mockk<SignUp>(relaxed = true)
-    mockkObject(SignUp.Companion)
-    coEvery { SignUp.authenticateWithRedirect(any()) } returns
-      ClerkResult.success(OAuthResult(signUp = mockSignUp))
-
-    viewModel.authenticateWithSocialProvider(
-      provider = OAuthProvider.GOOGLE,
-      transferable = true,
-      preferGoogleOneTap = false,
-      startOAuthWithSignUp = true,
-      unsafeMetadata = mapOf("source" to "social"),
-    )
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify(exactly = 1) { SignUp.authenticateWithRedirect(capture(paramsSlot)) }
-    val params = paramsSlot.captured as SignUp.AuthenticateWithRedirectParams.OAuth
-    val unsafeMetadata = requireNotNull(params.unsafeMetadata)
-    assertEquals("social", unsafeMetadata.getValue("source"))
+  fun googleSocialAuthPassesOneTapPreferenceToCore() {
+    viewModel.authenticateWithSocialProvider(OAuthProvider.Google, preferGoogleOneTap = true)
+    finish()
+    assertEquals(true, socialParams().preferGoogleOneTap)
+    assertEquals(true, socialParams().transferable)
   }
 
   @Test
-  fun googleSocialAuthUsesOneTapWhenPreferredAndEnabled() = runTest {
-    mockkObject(Clerk)
-    every { Clerk.isGoogleOneTapEnabled } returns true
-    mockkObject(SignIn.Companion)
-    val mockSignIn = mockk<SignIn>(relaxed = true)
-
-    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns
-      ClerkResult.success(OAuthResult(signIn = mockSignIn))
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
-      ClerkResult.success(OAuthResult(signIn = mockSignIn))
-
-    viewModel.authenticateWithSocialProvider(
-      provider = OAuthProvider.GOOGLE,
-      transferable = true,
-      preferGoogleOneTap = true,
+  fun googleSocialAuthAcceptsCoreBrowserFallbackResult() {
+    // Capability availability and One Tap fallback are exercised in mobile-runtime SSO tests.
+    viewModel.authenticateWithSocialProvider(OAuthProvider.Google, preferGoogleOneTap = true)
+    finish()
+    coVerify(exactly = 1) { clerk.authenticateWithSSO(any()) }
+    assertEquals(
+      AuthStartViewModel.AuthState.OAuthState.SignInSuccess(signIn),
+      viewModel.state.value,
     )
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
-    coVerify(exactly = 0) { SignIn.authenticateWithRedirect(any(), any()) }
-  }
-
-  @Test
-  fun googleSocialAuthFallsBackToBrowserRedirectWhenOneTapHasNoGoogleAccount() = runTest {
-    mockkObject(Clerk)
-    every { Clerk.isGoogleOneTapEnabled } returns true
-    mockkObject(SignIn.Companion)
-    val mockSignIn = mockk<SignIn>(relaxed = true)
-    val noGoogleAccountException =
-      Class.forName("com.clerk.api.credentials.CredentialFlowException\$NoGoogleAccount")
-        .getDeclaredConstructor()
-        .newInstance() as Throwable
-
-    coEvery { SignIn.authenticateWithGoogleOneTap(any()) } returns
-      ClerkResult.unknownFailure(noGoogleAccountException)
-    coEvery { SignIn.authenticateWithRedirect(any(), any()) } returns
-      ClerkResult.success(OAuthResult(signIn = mockSignIn))
-
-    viewModel.authenticateWithSocialProvider(
-      provider = OAuthProvider.GOOGLE,
-      transferable = true,
-      preferGoogleOneTap = true,
-    )
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify(exactly = 1) { SignIn.authenticateWithGoogleOneTap(true) }
-    coVerify(exactly = 1) { SignIn.authenticateWithRedirect(any(), true) }
   }
 }

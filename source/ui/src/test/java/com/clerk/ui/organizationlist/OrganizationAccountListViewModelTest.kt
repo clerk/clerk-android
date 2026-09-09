@@ -1,28 +1,13 @@
 package com.clerk.ui.organizationlist
 
-import com.clerk.api.network.ClerkPaginatedResponse
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.organizations.OrganizationCreationDefaults
-import com.clerk.api.organizations.OrganizationSuggestion
-import com.clerk.api.organizations.PublicOrganizationData
-import com.clerk.api.organizations.UserOrganizationInvitation
-import com.clerk.api.organizations.accept
-import com.clerk.api.session.Session
-import com.clerk.api.user.User
-import com.clerk.api.user.getOrganizationCreationDefaults
-import com.clerk.api.user.getOrganizationInvitations
-import com.clerk.api.user.getOrganizationMemberships
-import com.clerk.api.user.getOrganizationSuggestions
-import com.clerk.ui.organizationswitcher.previewOrganizationMembership
+import com.clerk.api.*
+import com.clerk.testing.mockClerk
+import com.clerk.testing.testCoreError
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -41,18 +26,10 @@ class OrganizationAccountListViewModelTest {
   private val dispatcher = UnconfinedTestDispatcher()
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule(dispatcher)
 
-  @BeforeTest
-  fun setUp() {
-    mockkStatic("com.clerk.api.user.UserKt")
-    mockkStatic("com.clerk.api.organizations.UserOrganizationInvitationKt")
-    mockkStatic("com.clerk.api.organizations.OrganizationSuggestionKt")
-  }
+  @BeforeTest fun setUp() {}
 
   @AfterTest
   fun tearDown() {
-    unmockkStatic("com.clerk.api.user.UserKt")
-    unmockkStatic("com.clerk.api.organizations.UserOrganizationInvitationKt")
-    unmockkStatic("com.clerk.api.organizations.OrganizationSuggestionKt")
     unmockkAll()
   }
 
@@ -62,19 +39,37 @@ class OrganizationAccountListViewModelTest {
     val membership = membership("org_acme")
     val invitation = invitation("inv_1", organizationId = "org_invited")
     val suggestion = suggestion("sug_1", organizationId = "org_suggested")
-    val defaults = OrganizationCreationDefaults(form = OrganizationCreationDefaults.Form("Acme"))
-    coEvery { user.getOrganizationMemberships(limit = 2, offset = 0) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(membership), totalCount = 1))
-    coEvery { user.getOrganizationInvitations(limit = 2, offset = 0, status = "pending") } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(invitation), totalCount = 1))
+    val defaults = mockk<OrganizationCreationDefaults>(relaxed = true)
+    coEvery {
+      user.getOrganizationMemberships(
+        GetUserOrganizationMembershipParams(pageSize = 2.0, initialPage = 1.0)
+      )
+    } returns
+      ClerkPaginatedResponseOrganizationMembership(data = listOf(membership), totalCount = 1.0)
+    coEvery {
+      user.getOrganizationInvitations(
+        GetUserOrganizationInvitationsParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status = OrganizationInvitationStatus.Pending,
+        )
+      )
+    } returns
+      ClerkPaginatedResponseUserOrganizationInvitation(data = listOf(invitation), totalCount = 1.0)
     coEvery {
       user.getOrganizationSuggestions(
-        limit = 2,
-        offset = 0,
-        statuses = listOf("pending", "accepted"),
+        GetUserOrganizationSuggestionsParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status =
+            GetUserOrganizationSuggestionsParamsStatus.Case3(
+              listOf(OrganizationSuggestionStatus.Pending, OrganizationSuggestionStatus.Accepted)
+            ),
+        )
       )
-    } returns ClerkResult.success(ClerkPaginatedResponse(data = listOf(suggestion), totalCount = 1))
-    coEvery { user.getOrganizationCreationDefaults() } returns ClerkResult.success(defaults)
+    } returns
+      ClerkPaginatedResponseOrganizationSuggestion(data = listOf(suggestion), totalCount = 1.0)
+    coEvery { user.getOrganizationCreationDefaults() } returns defaults
 
     val viewModel = testViewModel(user = user, fetchDefaults = true)
     viewModel.load()
@@ -92,17 +87,32 @@ class OrganizationAccountListViewModelTest {
   @Test
   fun `load failure marks initial load as failed`() = runTest {
     val user = user()
-    coEvery { user.getOrganizationMemberships(limit = 2, offset = 0) } returns
-      ClerkResult.Failure(ClerkErrorResponse(errors = listOf(Error(longMessage = "boom"))))
-    coEvery { user.getOrganizationInvitations(limit = 2, offset = 0, status = "pending") } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    coEvery {
+      user.getOrganizationMemberships(
+        GetUserOrganizationMembershipParams(pageSize = 2.0, initialPage = 1.0)
+      )
+    } throws testCoreError("boom")
+    coEvery {
+      user.getOrganizationInvitations(
+        GetUserOrganizationInvitationsParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status = OrganizationInvitationStatus.Pending,
+        )
+      )
+    } returns ClerkPaginatedResponseUserOrganizationInvitation(data = emptyList(), totalCount = 0.0)
     coEvery {
       user.getOrganizationSuggestions(
-        limit = 2,
-        offset = 0,
-        statuses = listOf("pending", "accepted"),
+        GetUserOrganizationSuggestionsParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status =
+            GetUserOrganizationSuggestionsParamsStatus.Case3(
+              listOf(OrganizationSuggestionStatus.Pending, OrganizationSuggestionStatus.Accepted)
+            ),
+        )
       )
-    } returns ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    } returns ClerkPaginatedResponseOrganizationSuggestion(data = emptyList(), totalCount = 0.0)
 
     val viewModel = testViewModel(user = user)
     viewModel.load()
@@ -121,30 +131,64 @@ class OrganizationAccountListViewModelTest {
     val invitation2 = invitation("inv_2", organizationId = "org_inv_2")
     val suggestion1 = suggestion("sug_1", organizationId = "org_sug_1")
     val suggestion2 = suggestion("sug_2", organizationId = "org_sug_2")
-    coEvery { user.getOrganizationMemberships(limit = 2, offset = 0) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(membership1), totalCount = 2))
-    coEvery { user.getOrganizationMemberships(limit = 2, offset = 1) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(membership2), totalCount = 2))
-    coEvery { user.getOrganizationInvitations(limit = 2, offset = 0, status = "pending") } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(invitation1), totalCount = 2))
-    coEvery { user.getOrganizationInvitations(limit = 2, offset = 1, status = "pending") } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(invitation2), totalCount = 2))
     coEvery {
-      user.getOrganizationSuggestions(
-        limit = 2,
-        offset = 0,
-        statuses = listOf("pending", "accepted"),
+      user.getOrganizationMemberships(
+        GetUserOrganizationMembershipParams(pageSize = 2.0, initialPage = 1.0)
       )
     } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(suggestion1), totalCount = 2))
+      ClerkPaginatedResponseOrganizationMembership(data = listOf(membership1), totalCount = 2.0)
     coEvery {
-      user.getOrganizationSuggestions(
-        limit = 2,
-        offset = 1,
-        statuses = listOf("pending", "accepted"),
+      user.getOrganizationMemberships(
+        GetUserOrganizationMembershipParams(pageSize = 2.0, initialPage = 1.5)
       )
     } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(suggestion2), totalCount = 2))
+      ClerkPaginatedResponseOrganizationMembership(data = listOf(membership2), totalCount = 2.0)
+    coEvery {
+      user.getOrganizationInvitations(
+        GetUserOrganizationInvitationsParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status = OrganizationInvitationStatus.Pending,
+        )
+      )
+    } returns
+      ClerkPaginatedResponseUserOrganizationInvitation(data = listOf(invitation1), totalCount = 2.0)
+    coEvery {
+      user.getOrganizationInvitations(
+        GetUserOrganizationInvitationsParams(
+          pageSize = 2.0,
+          initialPage = 1.5,
+          status = OrganizationInvitationStatus.Pending,
+        )
+      )
+    } returns
+      ClerkPaginatedResponseUserOrganizationInvitation(data = listOf(invitation2), totalCount = 2.0)
+    coEvery {
+      user.getOrganizationSuggestions(
+        GetUserOrganizationSuggestionsParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status =
+            GetUserOrganizationSuggestionsParamsStatus.Case3(
+              listOf(OrganizationSuggestionStatus.Pending, OrganizationSuggestionStatus.Accepted)
+            ),
+        )
+      )
+    } returns
+      ClerkPaginatedResponseOrganizationSuggestion(data = listOf(suggestion1), totalCount = 2.0)
+    coEvery {
+      user.getOrganizationSuggestions(
+        GetUserOrganizationSuggestionsParams(
+          pageSize = 2.0,
+          initialPage = 1.5,
+          status =
+            GetUserOrganizationSuggestionsParamsStatus.Case3(
+              listOf(OrganizationSuggestionStatus.Pending, OrganizationSuggestionStatus.Accepted)
+            ),
+        )
+      )
+    } returns
+      ClerkPaginatedResponseOrganizationSuggestion(data = listOf(suggestion2), totalCount = 2.0)
 
     val viewModel = testViewModel(user = user)
     viewModel.load()
@@ -162,17 +206,32 @@ class OrganizationAccountListViewModelTest {
   @Test
   fun `empty loaded resources without create enabled can show empty help`() = runTest {
     val user = user(canCreateOrganization = false)
-    coEvery { user.getOrganizationMemberships(limit = 2, offset = 0) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
-    coEvery { user.getOrganizationInvitations(limit = 2, offset = 0, status = "pending") } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    coEvery {
+      user.getOrganizationMemberships(
+        GetUserOrganizationMembershipParams(pageSize = 2.0, initialPage = 1.0)
+      )
+    } returns ClerkPaginatedResponseOrganizationMembership(data = emptyList(), totalCount = 0.0)
+    coEvery {
+      user.getOrganizationInvitations(
+        GetUserOrganizationInvitationsParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status = OrganizationInvitationStatus.Pending,
+        )
+      )
+    } returns ClerkPaginatedResponseUserOrganizationInvitation(data = emptyList(), totalCount = 0.0)
     coEvery {
       user.getOrganizationSuggestions(
-        limit = 2,
-        offset = 0,
-        statuses = listOf("pending", "accepted"),
+        GetUserOrganizationSuggestionsParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status =
+            GetUserOrganizationSuggestionsParamsStatus.Case3(
+              listOf(OrganizationSuggestionStatus.Pending, OrganizationSuggestionStatus.Accepted)
+            ),
+        )
       )
-    } returns ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    } returns ClerkPaginatedResponseOrganizationSuggestion(data = emptyList(), totalCount = 0.0)
 
     val viewModel = testViewModel(user = user)
     viewModel.load()
@@ -183,8 +242,8 @@ class OrganizationAccountListViewModelTest {
   @Test
   fun `acceptInvitation replaces invitation and marks organization selectable`() = runTest {
     val pending = invitation("inv_1", organizationId = "org_invited")
-    val accepted = pending.copy(status = "accepted")
-    coEvery { pending.accept() } returns ClerkResult.success(accepted)
+    val accepted = invitation("inv_1", organizationId = "org_invited", status = "accepted")
+    coEvery { pending.accept() } returns accepted
 
     val viewModel = testViewModel()
     viewModel.setState(
@@ -208,11 +267,19 @@ class OrganizationAccountListViewModelTest {
   fun `accepted invitation does not count toward next pending invitation offset`() = runTest {
     val user = user()
     val pending = invitation("inv_1", organizationId = "org_invited")
-    val accepted = pending.copy(status = "accepted")
+    val accepted = invitation("inv_1", organizationId = "org_invited", status = "accepted")
     val nextPending = invitation("inv_2", organizationId = "org_next")
-    coEvery { pending.accept() } returns ClerkResult.success(accepted)
-    coEvery { user.getOrganizationInvitations(limit = 2, offset = 0, status = "pending") } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(nextPending), totalCount = 1))
+    coEvery { pending.accept() } returns accepted
+    coEvery {
+      user.getOrganizationInvitations(
+        GetUserOrganizationInvitationsParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status = OrganizationInvitationStatus.Pending,
+        )
+      )
+    } returns
+      ClerkPaginatedResponseUserOrganizationInvitation(data = listOf(nextPending), totalCount = 1.0)
 
     val viewModel = testViewModel(user = user)
     viewModel.setState(
@@ -237,8 +304,8 @@ class OrganizationAccountListViewModelTest {
   @Test
   fun `acceptSuggestion replaces suggestion with accepted result`() = runTest {
     val pending = suggestion("sug_1", organizationId = "org_suggested", status = "pending")
-    val accepted = pending.copy(status = "accepted")
-    coEvery { pending.accept() } returns ClerkResult.success(accepted)
+    val accepted = suggestion("sug_1", organizationId = "org_suggested", status = "accepted")
+    coEvery { pending.accept() } returns accepted
 
     val viewModel = testViewModel()
     viewModel.setState(
@@ -273,33 +340,25 @@ class OrganizationAccountListViewModelTest {
     return mockk { every { createOrganizationEnabled } returns canCreateOrganization }
   }
 
-  private fun membership(organizationId: String) =
-    previewOrganizationMembership(
-      organizationId = organizationId,
-      organizationName = organizationId,
-    )
+  private fun membership(organizationId: String): OrganizationMembership {
+    val membership = mockk<OrganizationMembership>(relaxed = true)
+    every { membership.id } returns "mem_$organizationId"
+    every { membership.organization.id } returns organizationId
+    return membership
+  }
 
   private fun invitation(
     id: String,
     organizationId: String,
     status: String = "pending",
   ): UserOrganizationInvitation {
-    return UserOrganizationInvitation(
-      id = id,
-      emailAddress = "user@example.com",
-      publicOrganizationData =
-        UserOrganizationInvitation.PublicOrganizationData(
-          id = organizationId,
-          name = organizationId,
-          imageUrl = null,
-          hasImage = false,
-        ),
-      publicMetadata = "{}",
-      role = "org:member",
-      status = status,
-      createdAt = 0L,
-      updatedAt = 0L,
-    )
+    val invitation = mockk<UserOrganizationInvitation>(relaxed = true)
+    every { invitation.id } returns id
+    every { invitation.publicOrganizationData.id } returns organizationId
+    every { invitation.status } returns
+      if (status == "accepted") OrganizationInvitationStatus.Accepted
+      else OrganizationInvitationStatus.Pending
+    return invitation
   }
 
   private fun suggestion(
@@ -307,20 +366,13 @@ class OrganizationAccountListViewModelTest {
     organizationId: String,
     status: String = "pending",
   ): OrganizationSuggestion {
-    return OrganizationSuggestion(
-      id = id,
-      publicOrganizationData =
-        PublicOrganizationData(
-          id = organizationId,
-          name = organizationId,
-          imageUrl = null,
-          hasImage = false,
-          slug = null,
-        ),
-      status = status,
-      createdAt = 1,
-      updatedAt = 1,
-    )
+    val suggestion = mockk<OrganizationSuggestion>(relaxed = true)
+    every { suggestion.id } returns id
+    every { suggestion.publicOrganizationData.id } returns organizationId
+    every { suggestion.status } returns
+      if (status == "accepted") OrganizationSuggestionStatus.Accepted
+      else OrganizationSuggestionStatus.Pending
+    return suggestion
   }
 
   private class TestOrganizationAccountListViewModel(
@@ -328,7 +380,12 @@ class OrganizationAccountListViewModelTest {
     private val testSession: Session?,
     private val fetchDefaults: Boolean,
     dispatcher: CoroutineDispatcher,
-  ) : OrganizationAccountListViewModel(pageSize = 2, workDispatcher = dispatcher) {
+  ) :
+    OrganizationAccountListViewModel(
+      mockClerk(testUser),
+      pageSize = 2,
+      workDispatcher = dispatcher,
+    ) {
     fun setState(state: OrganizationAccountListState) {
       mutableState.value = state
     }

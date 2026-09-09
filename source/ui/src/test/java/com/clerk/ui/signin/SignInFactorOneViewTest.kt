@@ -1,13 +1,13 @@
 package com.clerk.ui.signin
 
 import com.clerk.api.Clerk
-import com.clerk.api.auth.Auth
-import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.signin.SignIn
+import com.clerk.api.SignIn
+import com.clerk.api.VerificationStatus
+import com.clerk.testing.*
+import com.clerk.ui.auth.FactorSelection
 import com.clerk.ui.core.common.StrategyKeys
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -15,14 +15,9 @@ import org.junit.Before
 import org.junit.Test
 
 class SignInFactorOneViewTest {
+  private val clerk = mockk<Clerk>(relaxed = true)
 
-  private val mockAuth = mockk<Auth>(relaxed = true)
-
-  @Before
-  fun setUp() {
-    mockkObject(Clerk)
-    every { Clerk.auth } returns mockAuth
-  }
+  @Before fun setUp() {}
 
   @After
   fun tearDown() {
@@ -31,59 +26,65 @@ class SignInFactorOneViewTest {
 
   @Test
   fun resolveFirstFactorShouldKeepSelectedEmailCodeWhenEmailLinkIsSupported() {
-    every { mockAuth.currentSignIn } returns
-      SignIn(
+    every { clerk.signIn } returns
+      signIn(
         id = "sign_in_123",
         identifier = null,
         supportedFirstFactors =
           listOf(
-            Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
-            Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
+            FactorSelection(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
+            FactorSelection(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
           ),
       )
 
     val resolved =
-      resolveFirstFactor(Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"))
+      resolveFirstFactor(
+        clerk,
+        FactorSelection(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
+      )
 
     assertEquals(StrategyKeys.EMAIL_CODE, resolved.strategy)
   }
 
   @Test
   fun resolveFirstFactorShouldKeepFallbackWhenEmailLinkIsNotSupported() {
-    every { mockAuth.currentSignIn } returns
-      SignIn(
+    every { clerk.signIn } returns
+      signIn(
         id = "sign_in_123",
         identifier = null,
         supportedFirstFactors =
-          listOf(Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")),
+          listOf(FactorSelection(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")),
       )
 
-    val fallback = Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
-    val resolved = resolveFirstFactor(fallback)
+    val fallback = FactorSelection(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123")
+    val resolved = resolveFirstFactor(clerk, fallback)
 
     assertEquals(fallback, resolved)
   }
 
   @Test
   fun resolveFirstFactorShouldKeepPreparedEmailCodeSelectionForEmailIdentifier() {
-    every { mockAuth.currentSignIn } returns
-      SignIn(
+    every { clerk.signIn } returns
+      signIn(
         id = "sign_in_123",
         identifier = "sam@clerk.dev",
         supportedFirstFactors =
           listOf(
-            Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
-            Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
+            FactorSelection(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
+            FactorSelection(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
           ),
         firstFactorVerification =
-          com.clerk.api.network.model.verification.Verification(
-            status = com.clerk.api.network.model.verification.Verification.Status.UNVERIFIED,
+          mockVerification(
+            status = VerificationStatus.Unverified,
             strategy = StrategyKeys.EMAIL_CODE,
           ),
       )
 
     val resolved =
-      resolveFirstFactor(Factor(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"))
+      resolveFirstFactor(
+        clerk,
+        FactorSelection(strategy = StrategyKeys.EMAIL_CODE, emailAddressId = "email_123"),
+      )
 
     assertEquals(StrategyKeys.EMAIL_CODE, resolved.strategy)
   }
@@ -91,44 +92,45 @@ class SignInFactorOneViewTest {
   @Test
   fun resolveFirstFactorShouldKeepSupportedFallbackWhenPasswordIsPrepared() {
     val emailCodeFactor =
-      Factor(
+      FactorSelection(
         strategy = StrategyKeys.EMAIL_CODE,
         emailAddressId = "email_123",
         safeIdentifier = "sam@clerk.dev",
       )
-    every { mockAuth.currentSignIn } returns
-      SignIn(
+    every { clerk.signIn } returns
+      signIn(
         id = "sign_in_123",
         identifier = "sam@clerk.dev",
-        supportedFirstFactors = listOf(Factor(strategy = StrategyKeys.PASSWORD), emailCodeFactor),
+        supportedFirstFactors =
+          listOf(FactorSelection(strategy = StrategyKeys.PASSWORD), emailCodeFactor),
         firstFactorVerification =
-          com.clerk.api.network.model.verification.Verification(
-            status = com.clerk.api.network.model.verification.Verification.Status.UNVERIFIED,
+          mockVerification(
+            status = VerificationStatus.Unverified,
             strategy = StrategyKeys.PASSWORD,
           ),
       )
 
-    val resolved = resolveFirstFactor(emailCodeFactor)
+    val resolved = resolveFirstFactor(clerk, emailCodeFactor)
 
     assertEquals(emailCodeFactor, resolved)
   }
 
   @Test
   fun resolveFirstFactorShouldKeepExplicitPasswordWhenEmailLinkIsSupported() {
-    val passwordFactor = Factor(strategy = StrategyKeys.PASSWORD)
-    every { mockAuth.currentSignIn } returns
-      SignIn(
+    val passwordFactor = FactorSelection(strategy = StrategyKeys.PASSWORD)
+    every { clerk.signIn } returns
+      signIn(
         id = "sign_in_123",
         identifier = "sam@clerk.dev",
         supportedFirstFactors =
           listOf(
             passwordFactor,
-            Factor(
+            FactorSelection(
               strategy = StrategyKeys.EMAIL_CODE,
               emailAddressId = "email_123",
               safeIdentifier = "sam@clerk.dev",
             ),
-            Factor(
+            FactorSelection(
               strategy = StrategyKeys.EMAIL_LINK,
               emailAddressId = "email_123",
               safeIdentifier = "sam@clerk.dev",
@@ -136,7 +138,7 @@ class SignInFactorOneViewTest {
           ),
       )
 
-    val resolved = resolveFirstFactor(passwordFactor)
+    val resolved = resolveFirstFactor(clerk, passwordFactor)
 
     assertEquals(passwordFactor, resolved)
   }
@@ -144,25 +146,39 @@ class SignInFactorOneViewTest {
   @Test
   fun resolveFirstFactorShouldKeepResetPasswordEmailCodeWhenEmailLinkIsSupported() {
     val resetFactor =
-      Factor(
+      FactorSelection(
         strategy = StrategyKeys.RESET_PASSWORD_EMAIL_CODE,
         emailAddressId = "email_123",
         safeIdentifier = "sam@clerk.dev",
       )
-    every { mockAuth.currentSignIn } returns
-      SignIn(
+    every { clerk.signIn } returns
+      signIn(
         id = "sign_in_123",
         identifier = "sam@clerk.dev",
         supportedFirstFactors =
           listOf(
             resetFactor,
-            Factor(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
-            Factor(strategy = StrategyKeys.PASSWORD),
+            FactorSelection(strategy = StrategyKeys.EMAIL_LINK, emailAddressId = "email_123"),
+            FactorSelection(strategy = StrategyKeys.PASSWORD),
           ),
       )
 
-    val resolved = resolveFirstFactor(resetFactor)
+    val resolved = resolveFirstFactor(clerk, resetFactor)
 
     assertEquals(resetFactor, resolved)
+  }
+
+  private fun signIn(
+    id: String,
+    identifier: String?,
+    supportedFirstFactors: List<FactorSelection>,
+    firstFactorVerification: com.clerk.api.Verification = mockVerification(),
+  ): SignIn {
+    val signIn = mockSignIn()
+    every { signIn.id } returns id
+    every { signIn.identifier } returns identifier
+    every { signIn.supportedFirstFactors } returns supportedFirstFactors.map(::firstFactor)
+    every { signIn.firstFactorVerification } returns firstFactorVerification
+    return signIn
   }
 }

@@ -4,13 +4,14 @@ import android.content.Context
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.test.core.app.ApplicationProvider
-import com.clerk.api.Constants
-import com.clerk.api.network.model.verification.Verification
-import com.clerk.api.signup.SignUp
+import com.clerk.api.*
+import com.clerk.api.SignUp
+import com.clerk.testing.mockClerk
 import com.clerk.ui.signup.collectfield.CollectField
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -30,6 +31,7 @@ class AuthStateSignUpRoutingTest {
     preferences().edit().clear().commit()
     authState =
       AuthState(
+        clerk = mockClerk(),
         mode = AuthMode.SignInOrUp,
         backStack = backStack,
         sharedPreferences = preferences(),
@@ -38,7 +40,8 @@ class AuthStateSignUpRoutingTest {
 
   @Test
   fun authStateDefaultsToSignInOrUpMode() {
-    val defaultAuthState = AuthState(backStack = backStack, sharedPreferences = preferences())
+    val defaultAuthState =
+      AuthState(clerk = mockClerk(), backStack = backStack, sharedPreferences = preferences())
 
     assertEquals(AuthMode.SignInOrUp, defaultAuthState.mode)
   }
@@ -46,42 +49,48 @@ class AuthStateSignUpRoutingTest {
   @Test
   fun authStateKeepsExplicitMode() {
     val signUpAuthState =
-      AuthState(mode = AuthMode.SignUp, backStack = backStack, sharedPreferences = preferences())
+      AuthState(
+        clerk = mockClerk(),
+        mode = AuthMode.SignUp,
+        backStack = backStack,
+        sharedPreferences = preferences(),
+      )
 
     assertEquals(AuthMode.SignUp, signUpAuthState.mode)
   }
 
   @Test
-  fun setToStepForStatusRoutesToSignUpEmailLinkWhenEmailVerificationStrategyIsEmailLink() {
-    val signUp =
-      signUp(
-        verifications =
-          mapOf(
-            "email_address" to
-              Verification(
-                status = Verification.Status.UNVERIFIED,
-                strategy = Constants.Strategy.EMAIL_LINK,
-              )
-          )
-      )
+  fun setToStepForStatusRoutesToSignUpEmailLinkWhenEmailVerificationStrategyIsEmailLink() =
+    runTest {
+      val signUp =
+        signUp(
+          verifications =
+            mapOf(
+              "email_address" to
+                verification(
+                  status = VerificationStatus.Unverified,
+                  strategy = "email_link",
+                )
+            )
+        )
 
-    authState.setToStepForStatus(signUp) {}
+      authState.setToStepForStatus(signUp) {}
 
-    verify(exactly = 1) {
-      backStack.add(AuthDestination.SignUpEmailLink(emailAddress = "sam@clerk.dev"))
+      verify(exactly = 1) {
+        backStack.add(AuthDestination.SignUpEmailLink(emailAddress = "sam@clerk.dev"))
+      }
     }
-  }
 
   @Test
-  fun setToStepForStatusRoutesToSignUpCodeWhenEmailVerificationStrategyIsEmailCode() {
+  fun setToStepForStatusRoutesToSignUpCodeWhenEmailVerificationStrategyIsEmailCode() = runTest {
     val signUp =
       signUp(
         verifications =
           mapOf(
             "email_address" to
-              Verification(
-                status = Verification.Status.UNVERIFIED,
-                strategy = Constants.Strategy.EMAIL_CODE,
+              verification(
+                status = VerificationStatus.Unverified,
+                strategy = "email_code",
               )
           )
       )
@@ -98,15 +107,15 @@ class AuthStateSignUpRoutingTest {
   }
 
   @Test
-  fun setToStepForStatusCollectsRequiredFieldsBeforeStartingEmailLinkVerification() {
+  fun setToStepForStatusCollectsRequiredFieldsBeforeStartingEmailLinkVerification() = runTest {
     val signUp =
       signUp(
         verifications =
           mapOf(
             "email_address" to
-              Verification(
-                status = Verification.Status.UNVERIFIED,
-                strategy = Constants.Strategy.EMAIL_LINK,
+              verification(
+                status = VerificationStatus.Unverified,
+                strategy = "email_link",
               )
           ),
         missingFields = listOf("password"),
@@ -121,7 +130,7 @@ class AuthStateSignUpRoutingTest {
   }
 
   @Test
-  fun setToStepForStatusDoesNotCollectOptionalMissingFields() {
+  fun setToStepForStatusDoesNotCollectOptionalMissingFields() = runTest {
     val signUp =
       signUp(
         verifications = emptyMap(),
@@ -137,29 +146,43 @@ class AuthStateSignUpRoutingTest {
   }
 
   private fun signUp(
-    verifications: Map<String, Verification?>,
+    verifications: Map<String, SignUpVerification?>,
     missingFields: List<String> = emptyList(),
     requiredFields: List<String> = listOf("email_address", "password"),
     optionalFields: List<String> = emptyList(),
     unverifiedFields: List<String> = listOf("email_address"),
   ): SignUp {
     every { backStack.add(any()) } returns true
-    return SignUp(
-      id = "sign_up_123",
-      status = SignUp.Status.MISSING_REQUIREMENTS,
-      requiredFields = requiredFields,
-      optionalFields = optionalFields,
-      missingFields = missingFields,
-      unverifiedFields = unverifiedFields,
-      verifications = verifications,
-      emailAddress = "sam@clerk.dev",
-      passwordEnabled = false,
-    )
+    val signUp = mockk<SignUp>(relaxed = true)
+    every { signUp.status } returns SignUpStatus.MissingRequirements
+    every { signUp.createdSessionId } returns null
+    fun field(value: String) =
+      SignUpField.fromJson(kotlinx.serialization.json.JsonPrimitive(value), mockk(relaxed = true))
+    every { signUp.requiredFields } returns requiredFields.map(::field)
+    every { signUp.optionalFields } returns optionalFields.map(::field)
+    every { signUp.missingFields } returns missingFields.map(::field)
+    every { signUp.unverifiedFields } returns
+      unverifiedFields.map {
+        SignUpIdentificationField.fromJson(
+          kotlinx.serialization.json.JsonPrimitive(it),
+          mockk(relaxed = true),
+        )
+      }
+    every { signUp.verifications.emailAddress } returns
+      (verifications["email_address"] ?: verification(VerificationStatus.Unverified, null))
+    every { signUp.emailAddress } returns "sam@clerk.dev"
+    return signUp
   }
+
+  private fun verification(status: VerificationStatus, strategy: String?): SignUpVerification =
+    mockk(relaxed = true) {
+      every { this@mockk.status } returns status
+      every { this@mockk.strategy } returns strategy
+    }
 
   private fun preferences() =
     context.getSharedPreferences(
-      Constants.Storage.CLERK_PREFERENCES_FILE_NAME,
+      "clerk_preferences",
       Context.MODE_PRIVATE,
     )
 }

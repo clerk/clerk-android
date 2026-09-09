@@ -1,128 +1,75 @@
 package com.clerk.ui.signin.emaillink
 
-import com.clerk.api.Clerk
-import com.clerk.api.auth.Auth
-import com.clerk.api.auth.AuthEvent
-import com.clerk.api.magiclink.NativeMagicLinkError
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.signin.SignIn
+import com.clerk.api.*
+import com.clerk.testing.*
 import com.clerk.ui.auth.AuthenticationViewState
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkAll
-import kotlinx.coroutines.Dispatchers
+import com.clerk.ui.auth.FactorSelection
+import com.clerk.ui.userprofile.MainDispatcherRule
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(RobolectricTestRunner::class)
 class SignInFactorOneEmailLinkViewModelTest {
+  @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
+  private val clerk = mockClerk()
+  private val signIn = mockSignIn(SignInStatus.NeedsFirstFactor)
+  private val revisions = MutableStateFlow(0L)
 
-  private val testDispatcher = StandardTestDispatcher()
-  private val auth = mockk<Auth>(relaxed = true)
-  private val events = MutableSharedFlow<AuthEvent>(extraBufferCapacity = 1)
-
-  @Before
-  fun setUp() {
-    Dispatchers.setMain(testDispatcher)
-    mockkObject(Clerk)
-    every { Clerk.auth } returns auth
-    every { auth.events } returns events
-    every { auth.currentSignIn } returns null
+  init {
+    every { clerk.signIn } returns signIn
+    every { clerk.context.requireRuntime().changes } returns revisions
   }
 
-  @After
-  fun tearDown() {
-    Dispatchers.resetMain()
-    unmockkAll()
-  }
+  @After fun tearDown() = unmockkAll()
 
   @Test
-  fun `sendLink surfaces backend long message for rate limits`() = runTest {
-    every { auth.currentSignIn } returns SignIn(id = "sia_123", identifier = "sam@clerk.dev")
-    coEvery { auth.startEmailLinkSignIn("sam@clerk.dev") } returns
-      ClerkResult.apiFailure(
-        NativeMagicLinkError(
-          reasonCode = "too_many_requests",
-          message = "Too many requests, retry later",
+  fun sendLinkSurfacesBackendLongMessageForRateLimits() = runTest {
+    coEvery { signIn.emailLink.sendLink(any()) } throws
+      testCoreError("Too many requests, retry later", "too_many_requests")
+    val model = SignInFactorOneEmailLinkViewModel(clerk)
+    advanceUntilIdle()
+    model.sendLink(FactorSelection("email_link", emailAddressId = "email_123"))
+    advanceUntilIdle()
+    assertEquals(AuthenticationViewState.Error("Too many requests, retry later"), model.state.value)
+    coVerify {
+      signIn.emailLink.sendLink(
+        SignInEmailLinkSendParams.Case2(
+          SignInEmailLinkSendLinkParamsCase2(emailAddressId = "email_123")
         )
       )
-
-    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
-    advanceUntilIdle()
-    viewModel.sendLink()
-    advanceUntilIdle()
-
-    assertEquals(
-      AuthenticationViewState.Error("Too many requests, retry later"),
-      viewModel.state.value,
-    )
+    }
   }
 
   @Test
-  fun `mfa sign in started event advances email link flow to second factor`() = runTest {
-    val mfaSignIn =
-      SignIn(
-        id = "sia_mfa",
-        status = SignIn.Status.NEEDS_SECOND_FACTOR,
-        identifier = "sam@clerk.dev",
-      )
-
-    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+  fun coreRevisionAdvancesEmailLinkFlowToSecondFactor() = runTest {
+    val model = SignInFactorOneEmailLinkViewModel(clerk)
     advanceUntilIdle()
-
-    events.tryEmit(AuthEvent.SignInStarted(mfaSignIn))
+    every { signIn.status } returns SignInStatus.NeedsSecondFactor
+    revisions.value++
     advanceUntilIdle()
-
-    assertEquals(AuthenticationViewState.Success.SignIn(mfaSignIn), viewModel.state.value)
+    assertEquals(AuthenticationViewState.Success.SignIn(signIn), model.state.value)
   }
 
   @Test
-  fun `resume sync advances email link flow to second factor from current sign in`() = runTest {
-    val mfaSignIn =
-      SignIn(
-        id = "sia_mfa_resume",
-        status = SignIn.Status.NEEDS_SECOND_FACTOR,
-        identifier = "sam@clerk.dev",
-      )
-    every { auth.currentSignIn } returns mfaSignIn
-
-    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+  fun resumeAdvancesEmailLinkFlowFromCurrentSignIn() = runTest {
+    val model = SignInFactorOneEmailLinkViewModel(clerk)
     advanceUntilIdle()
-
-    viewModel.onHostResumed()
-
-    assertEquals(AuthenticationViewState.Success.SignIn(mfaSignIn), viewModel.state.value)
+    every { signIn.status } returns SignInStatus.NeedsSecondFactor
+    model.onHostResumed()
+    assertEquals(AuthenticationViewState.Success.SignIn(signIn), model.state.value)
   }
 
   @Test
-  fun `first factor sign in started event does not advance email link flow`() = runTest {
-    val firstFactorSignIn =
-      SignIn(
-        id = "sia_first_factor",
-        status = SignIn.Status.NEEDS_FIRST_FACTOR,
-        identifier = "sam@clerk.dev",
-      )
-
-    val viewModel = SignInFactorOneEmailLinkViewModel(ioDispatcher = testDispatcher)
+  fun firstFactorRevisionDoesNotAdvanceEmailLinkFlow() = runTest {
+    val model = SignInFactorOneEmailLinkViewModel(clerk)
     advanceUntilIdle()
-
-    events.tryEmit(AuthEvent.SignInStarted(firstFactorSignIn))
+    revisions.value++
     advanceUntilIdle()
-
-    assertEquals(AuthenticationViewState.Idle, viewModel.state.value)
+    assertEquals(AuthenticationViewState.Idle, model.state.value)
   }
 }

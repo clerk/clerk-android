@@ -1,400 +1,279 @@
 package com.clerk.ui.signin.code
 
-import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error as ClerkApiError
-import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.prepareFirstFactor
-import com.clerk.api.signin.prepareSecondFactor
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
-import io.mockk.unmockkAll
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.clerk.api.*
+import com.clerk.testing.testCoreError
+import com.clerk.ui.auth.FactorSelection
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Before
+import org.junit.Assert.*
 import org.junit.Test
 
-/**
- * Comprehensive test suite for SignInPrepareHandler covering:
- * - Email code preparation for both regular and password reset scenarios
- * - Phone code preparation for first and second factor scenarios
- * - Phone code preparation for password reset scenarios
- * - Success and failure handling for all preparation methods
- */
-@OptIn(ExperimentalCoroutinesApi::class)
 class SignInPrepareHandlerTest {
-
-  private val mockSignIn = mockk<SignIn>(relaxed = true)
+  private val signIn = mockk<SignIn>(relaxed = true)
   private val handler = SignInPrepareHandler()
 
-  @Before
-  fun setUp() {
-    mockkStatic("com.clerk.api.signin.SignInKt")
-    mockkObject(ClerkLog)
-    every { ClerkLog.e(any()) } returns 0
-    every { ClerkLog.v(any()) } returns 0
-  }
-
-  @After
-  fun tearDown() {
-    unmockkAll()
-  }
+  @After fun tearDown() = unmockkAll()
 
   @Test
-  fun prepareForEmailCodeAsFirstFactorShouldCallPrepareFirstFactorWithEmailCodeParams() = runTest {
-    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
-    val successResult = ClerkResult.success(mockSignIn)
-
+  fun emailFirstPreservesSelectedFactor() = runTest {
+    val factor = FactorSelection("email_code", emailAddressId = "selected_email")
     coEvery {
-      mockSignIn.prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = "email_123")
+      signIn.emailCode.sendCode(
+        SignInEmailCodeSendParams.Case2(
+          SignInEmailCodeSendCodeParamsCase2(emailAddressId = "selected_email")
+        )
       )
-    } returns successResult
-
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = {})
-
-    coVerify {
-      mockSignIn.prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = "email_123")
+    } returns mockk(relaxed = true)
+    var error: String? = null
+    handler.prepareForEmailCode(signIn, factor, isSecondFactor = false, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.emailCode.sendCode(
+        SignInEmailCodeSendParams.Case2(
+          SignInEmailCodeSendCodeParamsCase2(emailAddressId = "selected_email")
+        )
       )
     }
+    assertNull(error)
   }
 
   @Test
-  fun prepareForEmailCodeAsSecondFactorShouldCallPrepareSecondFactor() = runTest {
-    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
-    val successResult = ClerkResult.success(mockSignIn)
-
-    coEvery { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") } returns successResult
-
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = true, onError = {})
-
-    coVerify { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") }
-  }
-
-  @Test
-  fun prepareForEmailCodeAsSecondFactorShouldHandleFailureGracefully() = runTest {
-    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
-    val errorResponse =
-      ClerkErrorResponse(
-        errors =
-          listOf(
-            ClerkApiError(message = "Short", longMessage = "Email second factor failed", code = "x")
-          ),
-        clerkTraceId = null,
-      )
-    val failureResult = ClerkResult.apiFailure(errorResponse)
-    var capturedMessage: String? = null
-
-    coEvery { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") } returns failureResult
-
-    handler.prepareForEmailCode(
-      mockSignIn,
-      factor,
-      isSecondFactor = true,
-      onError = { capturedMessage = it },
-    )
-
-    coVerify { mockSignIn.prepareSecondFactor(emailAddressId = "email_123") }
-    assertEquals("Email second factor failed", capturedMessage)
-  }
-
-  @Test
-  fun prepareForPhoneCodeAsFirstFactorShouldCallPrepareFirstFactorWithPhoneCodeParams() = runTest {
-    val factor = Factor(strategy = "phone_code", phoneNumberId = "phone_456")
-    val successResult = ClerkResult.success(mockSignIn)
-
+  fun emailFirstFailure() = runTest {
+    val factor = FactorSelection("email_code", emailAddressId = "selected_email")
     coEvery {
-      mockSignIn.prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = "phone_456")
+      signIn.emailCode.sendCode(
+        SignInEmailCodeSendParams.Case2(
+          SignInEmailCodeSendCodeParamsCase2(emailAddressId = "selected_email")
+        )
       )
-    } returns successResult
-
-    handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = false, onError = {})
-
-    coVerify {
-      mockSignIn.prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = "phone_456")
+    } throws testCoreError("Code could not be sent")
+    var error: String? = null
+    handler.prepareForEmailCode(signIn, factor, isSecondFactor = false, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.emailCode.sendCode(
+        SignInEmailCodeSendParams.Case2(
+          SignInEmailCodeSendCodeParamsCase2(emailAddressId = "selected_email")
+        )
       )
     }
+    assertEquals("Code could not be sent", error)
   }
 
   @Test
-  fun prepareForPhoneCodeAsSecondFactorShouldCallPrepareSecondFactor() = runTest {
-    val factor = Factor(strategy = "phone_code", phoneNumberId = "phone_789")
-    val successResult = ClerkResult.success(mockSignIn)
-
-    coEvery { mockSignIn.prepareSecondFactor("phone_789") } returns successResult
-
-    handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = true, onError = {})
-
-    coVerify { mockSignIn.prepareSecondFactor("phone_789") }
-  }
-
-  @Test
-  fun prepareForPhoneCodeAsSecondFactorShouldHandleFailureGracefully() = runTest {
-    val factor = Factor(strategy = "phone_code", phoneNumberId = "phone_789")
-    val errorResponse =
-      ClerkErrorResponse(
-        errors =
-          listOf(
-            ClerkApiError(message = "Short", longMessage = "Phone second factor failed", code = "x")
-          ),
-        clerkTraceId = null,
-      )
-    val failureResult = ClerkResult.apiFailure(errorResponse)
-    var capturedMessage: String? = null
-
-    coEvery { mockSignIn.prepareSecondFactor("phone_789") } returns failureResult
-
-    handler.prepareForPhoneCode(
-      mockSignIn,
-      factor,
-      isSecondFactor = true,
-      onError = { capturedMessage = it },
-    )
-
-    coVerify { mockSignIn.prepareSecondFactor("phone_789") }
-    assertEquals("Phone second factor failed", capturedMessage)
-  }
-
-  @Test
-  fun prepareForResetPasswordWithPhoneShouldCallPrepareFirstFactorWithResetPasswordPhoneCodeParams() =
-    runTest {
-      val factor = Factor(strategy = "reset_password_phone_code", phoneNumberId = "phone_reset_123")
-      val successResult = ClerkResult.success(mockSignIn)
-
-      coEvery {
-        mockSignIn.prepareFirstFactor(
-          SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId = "phone_reset_123")
-        )
-      } returns successResult
-
-      handler.prepareForResetPasswordWithPhone(mockSignIn, factor, onError = {})
-
-      coVerify {
-        mockSignIn.prepareFirstFactor(
-          SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId = "phone_reset_123")
-        )
-      }
+  fun emailSecondPreservesSelectedFactor() = runTest {
+    val factor = FactorSelection("email_code", emailAddressId = "selected_email")
+    coEvery {
+      signIn.mfa.sendEmailCode(SignInMFAEmailCodeSendParams(emailAddressId = "selected_email"))
+    } returns mockk(relaxed = true)
+    var error: String? = null
+    handler.prepareForEmailCode(signIn, factor, isSecondFactor = true, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.mfa.sendEmailCode(SignInMFAEmailCodeSendParams(emailAddressId = "selected_email"))
     }
+    assertNull(error)
+  }
 
   @Test
-  fun prepareForResetWithEmailCodeShouldCallPrepareFirstFactorWithResetPasswordEmailCodeParams() =
-    runTest {
-      val factor =
-        Factor(strategy = "reset_password_email_code", emailAddressId = "email_reset_456")
-      val successResult = ClerkResult.success(mockSignIn)
-
-      coEvery {
-        mockSignIn.prepareFirstFactor(
-          SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId = "email_reset_456")
-        )
-      } returns successResult
-
-      handler.prepareForResetWithEmailCode(mockSignIn, factor, onError = {})
-
-      coVerify {
-        mockSignIn.prepareFirstFactor(
-          SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId = "email_reset_456")
-        )
-      }
+  fun emailSecondFailure() = runTest {
+    val factor = FactorSelection("email_code", emailAddressId = "selected_email")
+    coEvery {
+      signIn.mfa.sendEmailCode(SignInMFAEmailCodeSendParams(emailAddressId = "selected_email"))
+    } throws testCoreError("Code could not be sent")
+    var error: String? = null
+    handler.prepareForEmailCode(signIn, factor, isSecondFactor = true, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.mfa.sendEmailCode(SignInMFAEmailCodeSendParams(emailAddressId = "selected_email"))
     }
-
-  @Test
-  fun prepareForPhoneCodeShouldHandleNullPhoneNumberId() = runTest {
-    val factor = Factor(strategy = "phone_code", phoneNumberId = null)
-
-    // This should now handle null gracefully and not throw an exception
-    handler.prepareForPhoneCode(mockSignIn, factor, isSecondFactor = false, onError = {})
-
-    // Verify that no API call was made since phoneNumberId was null
-    coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
+    assertEquals("Code could not be sent", error)
   }
 
   @Test
-  fun prepareForEmailCodeShouldHandleNullEmailAddressId() = runTest {
-    val factor = Factor(strategy = "email_code", emailAddressId = null)
-
-    // This should now handle null gracefully and not throw an exception
-    handler.prepareForEmailCode(mockSignIn, factor, isSecondFactor = false, onError = {})
-
-    // Verify that no API call was made since emailAddressId was null
-    coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
-  }
-
-  @Test
-  fun prepareForEmailCodeShouldInvokeOnErrorOnFailure() = runTest {
-    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
-    val error =
-      ClerkErrorResponse(
-        errors =
-          listOf(ClerkApiError(message = "Short", longMessage = "Long message", code = "code")),
-        clerkTraceId = null,
-      )
-    val failureResult = ClerkResult.apiFailure(error)
-
+  fun phoneFirstPreservesSelectedFactor() = runTest {
+    val factor = FactorSelection("phone_code", phoneNumberId = "selected_phone")
     coEvery {
-      mockSignIn.prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.EmailCode(emailAddressId = "email_123")
+      signIn.phoneCode.sendCode(
+        SignInPhoneCodeSendParams.Case2(
+          SignInPhoneCodeSendCodeParamsCase2(phoneNumberId = "selected_phone")
+        )
       )
-    } returns failureResult
-
-    var capturedMessage: String? = null
-    handler.prepareForEmailCode(
-      mockSignIn,
-      factor,
-      isSecondFactor = false,
-      onError = { capturedMessage = it },
-    )
-
-    assertEquals("Long message", capturedMessage)
+    } returns mockk(relaxed = true)
+    var error: String? = null
+    handler.prepareForPhoneCode(signIn, factor, isSecondFactor = false, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.phoneCode.sendCode(
+        SignInPhoneCodeSendParams.Case2(
+          SignInPhoneCodeSendCodeParamsCase2(phoneNumberId = "selected_phone")
+        )
+      )
+    }
+    assertNull(error)
   }
 
   @Test
-  fun prepareForPhoneCodeFirstFactorShouldInvokeOnErrorOnFailure() = runTest {
-    val factor = Factor(strategy = "phone_code", phoneNumberId = "phone_456")
-    val error =
-      ClerkErrorResponse(
-        errors = listOf(ClerkApiError(message = null, longMessage = null, code = "code")),
-        clerkTraceId = null,
-      )
-    val failureResult = ClerkResult.apiFailure(error)
-
+  fun phoneFirstFailure() = runTest {
+    val factor = FactorSelection("phone_code", phoneNumberId = "selected_phone")
     coEvery {
-      mockSignIn.prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.PhoneCode(phoneNumberId = "phone_456")
+      signIn.phoneCode.sendCode(
+        SignInPhoneCodeSendParams.Case2(
+          SignInPhoneCodeSendCodeParamsCase2(phoneNumberId = "selected_phone")
+        )
       )
-    } returns failureResult
-
-    var capturedMessage: String? = null
-    handler.prepareForPhoneCode(
-      mockSignIn,
-      factor,
-      isSecondFactor = false,
-      onError = { capturedMessage = it },
-    )
-
-    // Falls back to default when no message present in error
-    assertEquals("Error occurred with unknown message.", capturedMessage)
+    } throws testCoreError("Code could not be sent")
+    var error: String? = null
+    handler.prepareForPhoneCode(signIn, factor, isSecondFactor = false, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.phoneCode.sendCode(
+        SignInPhoneCodeSendParams.Case2(
+          SignInPhoneCodeSendCodeParamsCase2(phoneNumberId = "selected_phone")
+        )
+      )
+    }
+    assertEquals("Code could not be sent", error)
   }
 
   @Test
-  fun prepareForResetPasswordWithPhoneShouldInvokeOnErrorOnFailure() = runTest {
-    val factor = Factor(strategy = "reset_password_phone_code", phoneNumberId = "phone_reset_123")
-    val error =
-      ClerkErrorResponse(
-        errors = listOf(ClerkApiError(message = "Short", longMessage = null, code = "x")),
-        clerkTraceId = null,
-      )
-    val failureResult = ClerkResult.apiFailure(error)
-
+  fun phoneSecondPreservesSelectedFactor() = runTest {
+    val factor = FactorSelection("phone_code", phoneNumberId = "selected_phone")
     coEvery {
-      mockSignIn.prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.ResetPasswordPhoneCode(phoneNumberId = "phone_reset_123")
-      )
-    } returns failureResult
-
-    var capturedMessage: String? = null
-    handler.prepareForResetPasswordWithPhone(mockSignIn, factor, onError = { capturedMessage = it })
-
-    assertEquals("Short", capturedMessage)
+      signIn.mfa.sendPhoneCode(SignInMFAPhoneCodeSendParams(phoneNumberId = "selected_phone"))
+    } returns mockk(relaxed = true)
+    var error: String? = null
+    handler.prepareForPhoneCode(signIn, factor, isSecondFactor = true, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.mfa.sendPhoneCode(SignInMFAPhoneCodeSendParams(phoneNumberId = "selected_phone"))
+    }
+    assertNull(error)
   }
 
   @Test
-  fun prepareForResetWithEmailCodeShouldInvokeOnErrorOnFailure() = runTest {
-    val factor = Factor(strategy = "reset_password_email_code", emailAddressId = "email_reset_456")
-    val error =
-      ClerkErrorResponse(
-        errors = listOf(ClerkApiError(message = null, longMessage = "Long fail", code = "x")),
-        clerkTraceId = null,
-      )
-    val failureResult = ClerkResult.apiFailure(error)
-
+  fun phoneSecondFailure() = runTest {
+    val factor = FactorSelection("phone_code", phoneNumberId = "selected_phone")
     coEvery {
-      mockSignIn.prepareFirstFactor(
-        SignIn.PrepareFirstFactorParams.ResetPasswordEmailCode(emailAddressId = "email_reset_456")
+      signIn.mfa.sendPhoneCode(SignInMFAPhoneCodeSendParams(phoneNumberId = "selected_phone"))
+    } throws testCoreError("Code could not be sent")
+    var error: String? = null
+    handler.prepareForPhoneCode(signIn, factor, isSecondFactor = true, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.mfa.sendPhoneCode(SignInMFAPhoneCodeSendParams(phoneNumberId = "selected_phone"))
+    }
+    assertEquals("Code could not be sent", error)
+  }
+
+  @Test
+  fun resetEmailPreservesSelectedFactor() = runTest {
+    val factor = FactorSelection("reset_password_email_code", emailAddressId = "selected_email")
+    coEvery {
+      signIn.resetPasswordEmailCode.sendCode(
+        SignInResetPasswordEmailCodeSendParams(emailAddressId = "selected_email")
       )
-    } returns failureResult
-
-    var capturedMessage: String? = null
-    handler.prepareForResetWithEmailCode(mockSignIn, factor, onError = { capturedMessage = it })
-
-    assertEquals("Long fail", capturedMessage)
+    } returns mockk(relaxed = true)
+    var error: String? = null
+    handler.prepareForResetWithEmailCode(signIn, factor, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.resetPasswordEmailCode.sendCode(
+        SignInResetPasswordEmailCodeSendParams(emailAddressId = "selected_email")
+      )
+    }
+    assertNull(error)
   }
 
   @Test
-  fun prepareForEmailCodeWithNullIdShouldNotInvokeOnError() = runTest {
-    val factor = Factor(strategy = "email_code", emailAddressId = null)
-    var called = false
+  fun resetEmailFailure() = runTest {
+    val factor = FactorSelection("reset_password_email_code", emailAddressId = "selected_email")
+    coEvery {
+      signIn.resetPasswordEmailCode.sendCode(
+        SignInResetPasswordEmailCodeSendParams(emailAddressId = "selected_email")
+      )
+    } throws testCoreError("Code could not be sent")
+    var error: String? = null
+    handler.prepareForResetWithEmailCode(signIn, factor, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.resetPasswordEmailCode.sendCode(
+        SignInResetPasswordEmailCodeSendParams(emailAddressId = "selected_email")
+      )
+    }
+    assertEquals("Code could not be sent", error)
+  }
 
+  @Test
+  fun resetPhonePreservesSelectedFactor() = runTest {
+    val factor = FactorSelection("reset_password_phone_code", phoneNumberId = "selected_phone")
+    coEvery {
+      signIn.resetPasswordPhoneCode.sendCode(
+        SignInResetPasswordPhoneCodeSendParams(phoneNumberId = "selected_phone")
+      )
+    } returns mockk(relaxed = true)
+    var error: String? = null
+    handler.prepareForResetPasswordWithPhone(signIn, factor, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.resetPasswordPhoneCode.sendCode(
+        SignInResetPasswordPhoneCodeSendParams(phoneNumberId = "selected_phone")
+      )
+    }
+    assertNull(error)
+  }
+
+  @Test
+  fun resetPhoneFailure() = runTest {
+    val factor = FactorSelection("reset_password_phone_code", phoneNumberId = "selected_phone")
+    coEvery {
+      signIn.resetPasswordPhoneCode.sendCode(
+        SignInResetPasswordPhoneCodeSendParams(phoneNumberId = "selected_phone")
+      )
+    } throws testCoreError("Code could not be sent")
+    var error: String? = null
+    handler.prepareForResetPasswordWithPhone(signIn, factor, onError = { error = it })
+    coVerify(exactly = 1) {
+      signIn.resetPasswordPhoneCode.sendCode(
+        SignInResetPasswordPhoneCodeSendParams(phoneNumberId = "selected_phone")
+      )
+    }
+    assertEquals("Code could not be sent", error)
+  }
+
+  @Test
+  fun missingEmailIdDoesNotSendCodeOrShowAnError() = runTest {
+    var error: String? = null
+    handler.prepareForEmailCode(signIn, FactorSelection("email_code"), false) { error = it }
+    coVerify(exactly = 0) { signIn.emailCode.sendCode(any()) }
+    assertNull(error)
+  }
+
+  @Test
+  fun missingPhoneIdDoesNotSendCodeOrShowAnError() = runTest {
+    var error: String? = null
+    handler.prepareForPhoneCode(signIn, FactorSelection("phone_code"), false) { error = it }
+    coVerify(exactly = 0) { signIn.phoneCode.sendCode(any()) }
+    assertNull(error)
+  }
+
+  @Test
+  fun unavailableFirstFactorDisplaysCoreError() = runTest {
+    coEvery { signIn.emailCode.sendCode(any()) } throws
+      testCoreError("Selected sign-in method is no longer available.", "factor_not_found")
+    var error: String? = null
     handler.prepareForEmailCode(
-      mockSignIn,
-      factor,
-      isSecondFactor = false,
-      onError = { called = true },
-    )
-
-    coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
-    assertFalse(called)
+      signIn,
+      FactorSelection("email_code", emailAddressId = "removed_email"),
+      false,
+    ) {
+      error = it
+    }
+    assertEquals("Selected sign-in method is no longer available.", error)
   }
 
   @Test
-  fun prepareForPhoneCodeWithNullIdShouldNotInvokeOnError() = runTest {
-    val factor = Factor(strategy = "phone_code", phoneNumberId = null)
-    var called = false
-
-    handler.prepareForPhoneCode(
-      mockSignIn,
-      factor,
-      isSecondFactor = false,
-      onError = { called = true },
-    )
-
-    coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
-    assertFalse(called)
-  }
-
-  @Test
-  fun prepareForEmailCodeShouldSkipApiCallWhenFirstFactorIsNotSupported() = runTest {
-    every { mockSignIn.supportedFirstFactors } returns listOf(Factor(strategy = "ticket"))
-    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
-    var capturedMessage: String? = null
-
+  fun unavailableSecondFactorDisplaysCoreError() = runTest {
+    coEvery { signIn.mfa.sendEmailCode(any()) } throws
+      testCoreError("Selected sign-in method is no longer available.", "factor_not_found")
+    var error: String? = null
     handler.prepareForEmailCode(
-      inProgressSignIn = mockSignIn,
-      factor = factor,
-      isSecondFactor = false,
-      onError = { capturedMessage = it },
-    )
-
-    coVerify(exactly = 0) { mockSignIn.prepareFirstFactor(any()) }
-    assertEquals("Selected sign-in method is no longer available.", capturedMessage)
-  }
-
-  @Test
-  fun prepareForEmailCodeShouldSkipApiCallWhenSecondFactorIsNotSupported() = runTest {
-    every { mockSignIn.supportedSecondFactors } returns listOf(Factor(strategy = "totp"))
-    val factor = Factor(strategy = "email_code", emailAddressId = "email_123")
-    var capturedMessage: String? = null
-
-    handler.prepareForEmailCode(
-      inProgressSignIn = mockSignIn,
-      factor = factor,
-      isSecondFactor = true,
-      onError = { capturedMessage = it },
-    )
-
-    coVerify(exactly = 0) { mockSignIn.prepareSecondFactor(emailAddressId = any()) }
-    assertEquals("Selected sign-in method is no longer available.", capturedMessage)
+      signIn,
+      FactorSelection("email_code", emailAddressId = "removed_email"),
+      true,
+    ) {
+      error = it
+    }
+    assertEquals("Selected sign-in method is no longer available.", error)
   }
 }

@@ -1,21 +1,16 @@
 package com.clerk.ui.userprofile.email
 
 import app.cash.turbine.test
-import com.clerk.api.Clerk
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.user.User
-import com.clerk.api.user.createEmailAddress
+import com.clerk.api.CreateEmailAddressParams
+import com.clerk.api.EmailAddress
+import com.clerk.api.User
+import com.clerk.testing.mockClerk
+import com.clerk.testing.testCoreError
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -25,37 +20,30 @@ import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AddEmailViewModelTest {
+  private val clerk = mockClerk()
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
   @BeforeTest
   fun setUp() {
-    mockkObject(Clerk)
-    every { Clerk.user } returns null
-    mockkStatic("com.clerk.api.user.UserKt")
+    every { clerk.user } returns null
   }
 
   @AfterTest
   fun tearDown() {
-    unmockkStatic("com.clerk.api.user.UserKt")
+
     unmockkAll()
   }
 
   @Test
   fun addEmail_success_emitsSuccessState() = runTest {
     val user = mockk<User>()
-    every { Clerk.user } returns user
-    val emailAddress =
-      EmailAddress(
-        id = "email_id",
-        emailAddress = "user@example.com",
-        verification = null,
-        linkedTo = null,
-      )
-    coEvery { user.createEmailAddress("user@example.com") } returns
-      ClerkResult.success(emailAddress)
+    every { clerk.user } returns user
+    val emailAddress = mockk<EmailAddress>()
+    coEvery { user.createEmailAddress(CreateEmailAddressParams("user@example.com")) } returns
+      emailAddress
 
-    val viewModel = AddEmailViewModel()
+    val viewModel = AddEmailViewModel(clerk)
     viewModel.state.test {
       assertEquals(AddEmailViewModel.State.Idle, awaitItem())
       viewModel.addEmail("user@example.com")
@@ -67,11 +55,11 @@ class AddEmailViewModelTest {
   @Test
   fun addEmail_failure_emitsErrorState() = runTest {
     val user = mockk<User>()
-    every { Clerk.user } returns user
-    val error = ClerkErrorResponse(errors = listOf(Error(longMessage = "bad")))
-    coEvery { user.createEmailAddress("user@example.com") } returns ClerkResult.Failure(error)
+    every { clerk.user } returns user
+    val error = testCoreError("bad")
+    coEvery { user.createEmailAddress(CreateEmailAddressParams("user@example.com")) } throws error
 
-    val viewModel = AddEmailViewModel()
+    val viewModel = AddEmailViewModel(clerk)
     viewModel.state.test {
       assertEquals(AddEmailViewModel.State.Idle, awaitItem())
       viewModel.addEmail("user@example.com")
@@ -82,9 +70,9 @@ class AddEmailViewModelTest {
 
   @Test
   fun addEmail_withoutUser_emitsGuardError() = runTest {
-    every { Clerk.user } returns null
+    every { clerk.user } returns null
 
-    val viewModel = AddEmailViewModel()
+    val viewModel = AddEmailViewModel(clerk)
     viewModel.state.test {
       assertEquals(AddEmailViewModel.State.Idle, awaitItem())
       viewModel.addEmail("user@example.com")
@@ -95,9 +83,10 @@ class AddEmailViewModelTest {
 
   @Test
   fun addEmail_whenEmailIsImmutable_emitsErrorWithoutCallingApi() = runTest {
-    every { Clerk.isEmailImmutable } returns true
+    every { clerk.environment.userSettings.attributes } returns
+      mapOf("email_address" to mockk(relaxed = true) { every { immutable } returns true })
 
-    val viewModel = AddEmailViewModel()
+    val viewModel = AddEmailViewModel(clerk)
     viewModel.state.test {
       assertEquals(AddEmailViewModel.State.Idle, awaitItem())
       viewModel.addEmail("user@example.com")

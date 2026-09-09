@@ -2,18 +2,15 @@ package com.clerk.ui.userprofile.security.passkey.rename
 
 import app.cash.turbine.test
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.passkeys.Passkey
-import com.clerk.api.passkeys.update
-import com.clerk.api.user.User
+import com.clerk.api.Field
+import com.clerk.api.Partialtype
+import com.clerk.api.Passkey
+import com.clerk.api.User
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -23,18 +20,15 @@ import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserProfilePasskeyRenameViewModelTest {
+  private val clerk = mockk<Clerk>(relaxed = true)
 
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule()
 
-  @BeforeTest
-  fun setUp() {
-    mockkObject(Clerk)
-    mockkStatic("com.clerk.api.passkeys.PasskeyKt")
-  }
+  @BeforeTest fun setUp() {}
 
   @AfterTest
   fun tearDown() {
-    unmockkStatic("com.clerk.api.passkeys.PasskeyKt")
+
     unmockkAll()
   }
 
@@ -44,14 +38,15 @@ class UserProfilePasskeyRenameViewModelTest {
     val user = mockk<User>()
     every { passkey.id } returns "passkey_123"
     every { user.passkeys } returns listOf(passkey)
-    every { Clerk.user } returns user
-    coEvery { passkey.update(name = "Work laptop") } returns ClerkResult.success(passkey)
+    every { clerk.user } returns user
+    coEvery { passkey.update(Partialtype(name = Field.Value("Work laptop"))) } returns passkey
 
-    val viewModel = UserProfilePasskeyRenameViewModel()
+    val viewModel = UserProfilePasskeyRenameViewModel(clerk)
     viewModel.state.test {
       assertEquals(UserProfilePasskeyRenameViewModel.State.Idle, awaitItem())
 
       viewModel.renamePasskey(passkeyId = "passkey_123", newName = "Work laptop")
+      assertEquals(UserProfilePasskeyRenameViewModel.State.Loading, awaitItem())
       assertEquals(UserProfilePasskeyRenameViewModel.State.Success, awaitItem())
 
       viewModel.resetState()

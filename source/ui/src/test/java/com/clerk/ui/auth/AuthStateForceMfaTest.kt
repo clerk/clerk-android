@@ -1,189 +1,109 @@
 package com.clerk.ui.auth
 
-import com.clerk.api.session.Session
-import com.clerk.api.session.SessionTask
-import com.clerk.api.session.SessionTaskKey
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signup.SignUp
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import com.clerk.api.*
+import com.clerk.testing.*
+import io.mockk.*
+import org.junit.Assert.*
 import org.junit.Test
 
 class AuthStateForceMfaTest {
-
   @Test
-  fun `pendingSessionTaskKey returns MFA_REQUIRED when sign in completes with pending mfa task`() {
-    val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.COMPLETE)
-    val session =
-      session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("setup-mfa")))
-
-    assertEquals(SessionTaskKey.MFA_REQUIRED, signIn.pendingSessionTaskKey(session))
-  }
-
-  @Test
-  fun `pendingSessionTaskKey returns RESET_PASSWORD when sign in completes with pending reset task`() {
-    val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.COMPLETE)
-    val session =
-      session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("reset-password")))
-
-    assertEquals(SessionTaskKey.RESET_PASSWORD, signIn.pendingSessionTaskKey(session))
-  }
-
-  @Test
-  fun `pendingSessionTaskKey returns null when sign in is not complete`() {
-    val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.NEEDS_SECOND_FACTOR)
-    val session =
-      session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("mfa_required")))
-
-    assertNull(signIn.pendingSessionTaskKey(session))
-  }
-
-  @Test
-  fun `pendingSessionTaskKey returns CHOOSE_ORGANIZATION when session has choose organization task`() {
-    val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.COMPLETE)
-    val session =
-      session(
-        status = Session.SessionStatus.PENDING,
-        tasks = listOf(SessionTask("choose-organization")),
-      )
-
-    assertEquals(SessionTaskKey.CHOOSE_ORGANIZATION, signIn.pendingSessionTaskKey(session))
-  }
-
-  @Test
-  fun `pendingSessionTaskKey returns session task when session is active`() {
-    val signIn = SignIn(id = "sign_in_123", status = SignIn.Status.COMPLETE)
-    val session =
-      session(status = Session.SessionStatus.ACTIVE, tasks = listOf(SessionTask("mfa_required")))
-
-    assertEquals(SessionTaskKey.MFA_REQUIRED, signIn.pendingSessionTaskKey(session))
-  }
-
-  @Test
-  fun `pendingSessionTaskKey returns MFA_REQUIRED when sign up completes with pending mfa task`() {
-    val signUp = signUp(status = SignUp.Status.COMPLETE)
-    val session =
-      session(status = Session.SessionStatus.PENDING, tasks = listOf(SessionTask("setup_mfa")))
-
-    assertEquals(SessionTaskKey.MFA_REQUIRED, signUp.pendingSessionTaskKey(session))
-  }
-
-  @Test
-  fun `postAuthCompletionAction routes to mfa when session is unresolved for created session id`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = null,
-        hasUnresolvedCreatedSession = true,
-        shouldChooseOrganizationForCreatedSession = false,
-      )
-
-    assertEquals(PostAuthCompletionAction.ROUTE_TO_MFA, action)
-  }
-
-  @Test
-  fun `postAuthCompletionAction routes to reset password when session requires password reset`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = SessionTaskKey.RESET_PASSWORD,
-        hasUnresolvedCreatedSession = false,
-        shouldChooseOrganizationForCreatedSession = false,
-      )
-
-    assertEquals(PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD, action)
-  }
-
-  @Test
-  fun `postAuthCompletionAction routes to choose organization when session requires it`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = SessionTaskKey.CHOOSE_ORGANIZATION,
-        hasUnresolvedCreatedSession = false,
-        shouldChooseOrganizationForCreatedSession = false,
-      )
-
-    assertEquals(PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION, action)
-  }
-
-  @Test
-  fun `postAuthCompletionAction routes to choose organization for forced organization selection`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = null,
-        hasUnresolvedCreatedSession = false,
-        shouldChooseOrganizationForCreatedSession = true,
-      )
-
-    assertEquals(PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION, action)
-  }
-
-  @Test
-  fun `postAuthCompletionAction prioritizes pending task over forced organization selection`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = SessionTaskKey.RESET_PASSWORD,
-        hasUnresolvedCreatedSession = false,
-        shouldChooseOrganizationForCreatedSession = true,
-      )
-
-    assertEquals(PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD, action)
-  }
-
-  @Test
-  fun `postAuthCompletionAction completes auth when no task and no unresolved created session`() {
-    val action =
-      postAuthCompletionAction(
-        taskKey = null,
-        hasUnresolvedCreatedSession = false,
-        shouldChooseOrganizationForCreatedSession = false,
-      )
-
-    assertEquals(PostAuthCompletionAction.COMPLETE_AUTH, action)
-  }
-
-  @Test
-  fun `resolveCorrespondingSession does not fallback when created session id is present but missing`() {
-    val fallback =
-      session(id = "sess_fallback", status = Session.SessionStatus.ACTIVE, tasks = emptyList())
-    val sessions =
-      listOf(session(id = "sess_other", status = Session.SessionStatus.ACTIVE, tasks = emptyList()))
-
-    val resolved =
-      resolveCorrespondingSession(
-        createdSessionId = "sess_target",
-        sessions = sessions,
-        fallbackSession = fallback,
-      )
-
-    assertEquals(fallback, resolved)
-  }
-
-  private fun session(
-    id: String = "sess_123",
-    status: Session.SessionStatus,
-    tasks: List<SessionTask>,
-  ): Session {
-    return Session(
-      id = id,
-      status = status,
-      expireAt = 0L,
-      lastActiveAt = 0L,
-      createdAt = 0L,
-      updatedAt = 0L,
-      tasks = tasks,
+  fun pendingMfaTaskComesFromCoreSession() {
+    assertEquals(
+      SessionTaskKey.SetupMfa,
+      mockSession(task = SessionTaskKey.SetupMfa).pendingSessionTaskKey(),
     )
   }
 
-  private fun signUp(status: SignUp.Status): SignUp {
-    return SignUp(
-      id = "sign_up_123",
-      status = status,
-      requiredFields = emptyList(),
-      optionalFields = emptyList(),
-      missingFields = emptyList(),
-      unverifiedFields = emptyList(),
-      verifications = emptyMap(),
-      passwordEnabled = false,
-      createdSessionId = "sess_123",
+  @Test
+  fun pendingResetPasswordTaskComesFromCoreSession() {
+    assertEquals(
+      SessionTaskKey.ResetPassword,
+      mockSession(task = SessionTaskKey.ResetPassword).pendingSessionTaskKey(),
+    )
+  }
+
+  @Test
+  fun missingSessionHasNoInventedTask() {
+    assertNull((null as Session?).pendingSessionTaskKey())
+  }
+
+  @Test
+  fun pendingChooseOrganizationTaskComesFromCoreSession() {
+    assertEquals(
+      SessionTaskKey.ChooseOrganization,
+      mockSession(task = SessionTaskKey.ChooseOrganization).pendingSessionTaskKey(),
+    )
+  }
+
+  @Test
+  fun activeSessionStillHonorsCurrentTask() {
+    assertEquals(
+      SessionTaskKey.SetupMfa,
+      mockSession(status = SessionStatus.Active, task = SessionTaskKey.SetupMfa)
+        .pendingSessionTaskKey(),
+    )
+  }
+
+  @Test
+  fun completedSignUpResolvesItsOwnSession() {
+    val session = mockSession(status = SessionStatus.Pending, task = SessionTaskKey.SetupMfa)
+    val clerk = mockClerk()
+    every { clerk.sessions } returns listOf(session)
+    val signUp = mockk<SignUp> { every { createdSessionId } returns "sess_123" }
+    assertEquals(
+      SessionTaskKey.SetupMfa,
+      signUp.correspondingSession(clerk).pendingSessionTaskKey(),
+    )
+  }
+
+  @Test
+  fun unresolvedCreatedSessionRoutesToHelp() {
+    assertEquals(PostAuthCompletionAction.ROUTE_TO_HELP, postAuthCompletionAction(null, true))
+  }
+
+  @Test
+  fun resetPasswordRoutesToResetPassword() {
+    assertEquals(
+      PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD,
+      postAuthCompletionAction(SessionTaskKey.ResetPassword, false),
+    )
+  }
+
+  @Test
+  fun chooseOrganizationRoutesToOrganizationSelection() {
+    assertEquals(
+      PostAuthCompletionAction.ROUTE_TO_CHOOSE_ORGANIZATION,
+      postAuthCompletionAction(SessionTaskKey.ChooseOrganization, false),
+    )
+  }
+
+  @Test
+  fun unknownTaskDoesNotCompleteAuthentication() {
+    assertEquals(
+      PostAuthCompletionAction.ROUTE_TO_HELP,
+      postAuthCompletionAction(SessionTaskKey.Unrecognized("new_task"), false),
+    )
+  }
+
+  @Test
+  fun pendingTaskTakesPriorityOverUnresolvedSession() {
+    assertEquals(
+      PostAuthCompletionAction.ROUTE_TO_RESET_PASSWORD,
+      postAuthCompletionAction(SessionTaskKey.ResetPassword, true),
+    )
+  }
+
+  @Test
+  fun noTaskAndResolvedSessionAllowsCompletion() {
+    assertEquals(PostAuthCompletionAction.COMPLETE_AUTH, postAuthCompletionAction(null, false))
+  }
+
+  @Test
+  fun missingCreatedSessionNeverFallsBackToAnotherSession() {
+    val fallback = mockSession(id = "sess_fallback")
+    assertNull(
+      resolveCorrespondingSession("sess_target", listOf(mockSession(id = "sess_other")), fallback)
     )
   }
 }

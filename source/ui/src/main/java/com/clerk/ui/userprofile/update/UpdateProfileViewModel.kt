@@ -17,10 +17,16 @@ internal class UpdateProfileViewModel(private val clerk: Clerk) : ViewModel() {
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
 
-  fun removeProfileImage() = perform {
-    val user = clerk.user ?: throw CoreException("no_user", "User not authenticated")
-    user.setProfileImage(SetProfileImageParams(file = null))
-    user.reload()
+  fun removeProfileImage() {
+    val user = clerk.user
+    if (user == null) {
+      _state.value = State.Error("User not authenticated")
+      return
+    }
+    perform(errorPrefix = "Failed to delete profile image: ") {
+      user.setProfileImage(SetProfileImageParams(file = null))
+      user.reload()
+    }
   }
 
   fun uploadProfileImage(file: File) = perform {
@@ -46,12 +52,12 @@ internal class UpdateProfileViewModel(private val clerk: Clerk) : ViewModel() {
     )
   }
 
-  private fun perform(operation: suspend () -> Unit) {
+  private fun perform(errorPrefix: String = "", operation: suspend () -> Unit) {
     _state.value = State.Loading
     viewModelScope.launch {
       runUiOperation { operation() }
         .onSuccess { _state.value = State.Success }
-        .onFailure { _state.value = State.Error(it.displayMessage) }
+        .onFailure { _state.value = State.Error(errorPrefix + it.displayMessage) }
     }
   }
 

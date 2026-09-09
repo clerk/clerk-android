@@ -1,29 +1,13 @@
 package com.clerk.ui.organizationprofile.members
 
-import com.clerk.api.network.ClerkPaginatedResponse
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.model.userdata.PublicUserData
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationInvitation
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.organizations.OrganizationMembershipRequest
-import com.clerk.api.organizations.OrganizationSystemPermission
-import com.clerk.api.organizations.Role
-import com.clerk.api.organizations.accept
-import com.clerk.api.organizations.getInvitations
-import com.clerk.api.organizations.getMembershipRequests
-import com.clerk.api.organizations.getOrganizationMemberships
-import com.clerk.api.organizations.getRolesPaginated
-import com.clerk.api.organizations.removeMember
-import com.clerk.api.organizations.updateMembership
+import com.clerk.api.*
+import com.clerk.testing.mockClerk
+import com.clerk.testing.testCoreError
 import com.clerk.ui.userprofile.MainDispatcherRule
+import io.mockk.*
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -36,7 +20,6 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.JsonNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OrganizationMembersViewModelTest {
@@ -44,18 +27,10 @@ class OrganizationMembersViewModelTest {
   private val dispatcher = StandardTestDispatcher()
   @get:org.junit.Rule val dispatcherRule = MainDispatcherRule(dispatcher)
 
-  @BeforeTest
-  fun setUp() {
-    mockkStatic("com.clerk.api.organizations.OrganizationKt")
-    mockkStatic("com.clerk.api.organizations.OrganizationMembershipKt")
-    mockkStatic("com.clerk.api.organizations.OrganizationMembershipRequestKt")
-  }
+  @BeforeTest fun setUp() {}
 
   @AfterTest
   fun tearDown() {
-    unmockkStatic("com.clerk.api.organizations.OrganizationKt")
-    unmockkStatic("com.clerk.api.organizations.OrganizationMembershipKt")
-    unmockkStatic("com.clerk.api.organizations.OrganizationMembershipRequestKt")
     unmockkAll()
   }
 
@@ -67,24 +42,33 @@ class OrganizationMembersViewModelTest {
     val invitation = invitation("inv_1")
     val request = request("req_1")
     val roles = listOf(role("org:admin", "Admin"), role("org:member", "Member"))
-    coEvery { organization.getRolesPaginated() } returns
-      ClerkResult.success(
-        ClerkPaginatedResponse(data = roles, totalCount = 2, hasRoleSetMigration = true)
-      )
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
-      ClerkResult.success(
-        ClerkPaginatedResponse(data = listOf(member), totalCount = 1, hasRoleSetMigration = true)
-      )
+    coEvery { organization.getRoles() } returns
+      GetRolesResponse(data = roles, totalCount = 2.0, hasRoleSetMigration = true)
+
+    coEvery {
+      organization.getMemberships(GetMembersParams(query = null, pageSize = 2.0, initialPage = 1.0))
+    } returns ClerkPaginatedResponseOrganizationMembership(data = listOf(member), totalCount = 1.0)
+
     coEvery {
       organization.getInvitations(
-        limit = 2,
-        offset = 0,
-        status = OrganizationInvitation.Status.Pending,
+        GetInvitationsParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status = listOf(OrganizationInvitationStatus.Pending),
+        )
       )
-    } returns ClerkResult.success(ClerkPaginatedResponse(data = listOf(invitation), totalCount = 1))
+    } returns
+      ClerkPaginatedResponseOrganizationInvitation(data = listOf(invitation), totalCount = 1.0)
     coEvery {
-      organization.getMembershipRequests(limit = 2, offset = 0, status = "pending")
-    } returns ClerkResult.success(ClerkPaginatedResponse(data = listOf(request), totalCount = 1))
+      organization.getMembershipRequests(
+        GetMembershipRequestParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status = OrganizationInvitationStatus.Pending,
+        )
+      )
+    } returns
+      ClerkPaginatedResponseOrganizationMembershipRequest(data = listOf(request), totalCount = 1.0)
 
     val viewModel = viewModel(pageSize = 2)
     viewModel.load(organization = organization, membership = viewer, domainsEnabled = true)
@@ -113,8 +97,9 @@ class OrganizationMembersViewModelTest {
     val organization = organization()
     val viewer = viewerMembership()
     stubManageResources(organization)
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    coEvery {
+      organization.getMemberships(GetMembersParams(query = null, pageSize = 2.0, initialPage = 1.0))
+    } returns ClerkPaginatedResponseOrganizationMembership(data = emptyList(), totalCount = 0.0)
 
     val viewModel = viewModel(pageSize = 2)
     viewModel.load(
@@ -135,10 +120,12 @@ class OrganizationMembersViewModelTest {
     val first = member("mem_1", "Ada", "Lovelace")
     val second = member("mem_2", "Grace", "Hopper")
     stubManageResources(organization)
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 1, offset = 0) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(first), totalCount = 2))
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 1, offset = 1) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(second), totalCount = 2))
+    coEvery {
+      organization.getMemberships(GetMembersParams(query = null, pageSize = 1.0, initialPage = 1.0))
+    } returns ClerkPaginatedResponseOrganizationMembership(data = listOf(first), totalCount = 2.0)
+    coEvery {
+      organization.getMemberships(GetMembersParams(query = null, pageSize = 1.0, initialPage = 2.0))
+    } returns ClerkPaginatedResponseOrganizationMembership(data = listOf(second), totalCount = 2.0)
 
     val viewModel = viewModel(pageSize = 1)
     viewModel.load(organization = organization, membership = viewer, domainsEnabled = true)
@@ -154,15 +141,18 @@ class OrganizationMembersViewModelTest {
   @Test
   fun `member search is debounced and skips duplicate rapid requests`() = runTest {
     val organization = organization()
-    val viewer =
-      viewerMembership(permissions = listOf(OrganizationSystemPermission.READ_MEMBERSHIPS))
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    val viewer = viewerMembership(permissions = listOf("org:sys_memberships:read"))
     coEvery {
-      organization.getOrganizationMemberships(query = "ada", limit = 2, offset = 0)
+      organization.getMemberships(GetMembersParams(query = null, pageSize = 2.0, initialPage = 1.0))
+    } returns ClerkPaginatedResponseOrganizationMembership(data = emptyList(), totalCount = 0.0)
+    coEvery {
+      organization.getMemberships(
+        GetMembersParams(query = "ada", pageSize = 2.0, initialPage = 1.0)
+      )
     } returns
-      ClerkResult.success(
-        ClerkPaginatedResponse(data = listOf(member("mem_1", "Ada")), totalCount = 1)
+      ClerkPaginatedResponseOrganizationMembership(
+        data = listOf(member("mem_1", "Ada")),
+        totalCount = 1.0,
       )
 
     val viewModel = viewModel(pageSize = 2)
@@ -175,13 +165,17 @@ class OrganizationMembersViewModelTest {
     assertTrue(viewModel.state.value.isSearchingMembers)
     advanceTimeBy(299)
     coVerify(exactly = 0) {
-      organization.getOrganizationMemberships(query = "ada", limit = 2, offset = 0)
+      organization.getMemberships(
+        GetMembersParams(query = "ada", pageSize = 2.0, initialPage = 1.0)
+      )
     }
     advanceTimeBy(1)
     advanceUntilIdle()
 
     coVerify(exactly = 1) {
-      organization.getOrganizationMemberships(query = "ada", limit = 2, offset = 0)
+      organization.getMemberships(
+        GetMembersParams(query = "ada", pageSize = 2.0, initialPage = 1.0)
+      )
     }
     assertEquals("ada", viewModel.state.value.memberQuery)
     assertEquals("Ada", viewModel.state.value.members.first().publicUserData?.firstName)
@@ -191,15 +185,18 @@ class OrganizationMembersViewModelTest {
   @Test
   fun `submitMemberSearch runs current query immediately and cancels debounce`() = runTest {
     val organization = organization()
-    val viewer =
-      viewerMembership(permissions = listOf(OrganizationSystemPermission.READ_MEMBERSHIPS))
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+    val viewer = viewerMembership(permissions = listOf("org:sys_memberships:read"))
     coEvery {
-      organization.getOrganizationMemberships(query = "ada", limit = 2, offset = 0)
+      organization.getMemberships(GetMembersParams(query = null, pageSize = 2.0, initialPage = 1.0))
+    } returns ClerkPaginatedResponseOrganizationMembership(data = emptyList(), totalCount = 0.0)
+    coEvery {
+      organization.getMemberships(
+        GetMembersParams(query = "ada", pageSize = 2.0, initialPage = 1.0)
+      )
     } returns
-      ClerkResult.success(
-        ClerkPaginatedResponse(data = listOf(member("mem_1", "Ada")), totalCount = 1)
+      ClerkPaginatedResponseOrganizationMembership(
+        data = listOf(member("mem_1", "Ada")),
+        totalCount = 1.0,
       )
 
     val viewModel = viewModel(pageSize = 2)
@@ -214,7 +211,9 @@ class OrganizationMembersViewModelTest {
     advanceUntilIdle()
 
     coVerify(exactly = 1) {
-      organization.getOrganizationMemberships(query = "ada", limit = 2, offset = 0)
+      organization.getMemberships(
+        GetMembersParams(query = "ada", pageSize = 2.0, initialPage = 1.0)
+      )
     }
     assertEquals("Ada", viewModel.state.value.members.first().publicUserData?.firstName)
     assertFalse(viewModel.state.value.isSearchingMembers)
@@ -226,18 +225,19 @@ class OrganizationMembersViewModelTest {
     val viewer = viewerMembership()
     val member = member("mem_1", "Ada")
     stubManageResources(organization)
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
-      ClerkResult.success(
-        ClerkPaginatedResponse(data = listOf(member), totalCount = 1, hasRoleSetMigration = true)
-      )
+    coEvery {
+      organization.getMemberships(GetMembersParams(query = null, pageSize = 2.0, initialPage = 1.0))
+    } returns ClerkPaginatedResponseOrganizationMembership(data = listOf(member), totalCount = 1.0)
 
+    coEvery { organization.getRoles() } returns
+      GetRolesResponse(hasRoleSetMigration = true, data = emptyList(), totalCount = 0.0)
     val viewModel = viewModel(pageSize = 2)
     viewModel.load(organization = organization, membership = viewer, domainsEnabled = true)
     advanceUntilIdle()
     viewModel.updateMemberRole(member, "org:admin")
     advanceUntilIdle()
 
-    coVerify(exactly = 0) { member.updateMembership(userId = "user_mem_1", role = "org:admin") }
+    coVerify(exactly = 0) { member.update(UpdateOrganizationMembershipParams(role = "org:admin")) }
     assertEquals(listOf(member), viewModel.state.value.members)
   }
 
@@ -247,9 +247,10 @@ class OrganizationMembersViewModelTest {
     val viewer = viewerMembership()
     val member = member("mem_1", "Ada")
     stubManageResources(organization)
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = listOf(member), totalCount = 1))
-    coEvery { organization.removeMember(userId = "user_mem_1") } returns ClerkResult.success(member)
+    coEvery {
+      organization.getMemberships(GetMembersParams(query = null, pageSize = 2.0, initialPage = 1.0))
+    } returns ClerkPaginatedResponseOrganizationMembership(data = listOf(member), totalCount = 1.0)
+    coEvery { organization.removeMember(userId = "user_mem_1") } returns member
 
     val viewModel = viewModel(pageSize = 2)
     viewModel.load(organization = organization, membership = viewer, domainsEnabled = true)
@@ -269,12 +270,20 @@ class OrganizationMembersViewModelTest {
     val viewer = viewerMembership()
     val request = request("req_1")
     stubManageResources(organization)
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
-      ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
     coEvery {
-      organization.getMembershipRequests(limit = 2, offset = 0, status = "pending")
-    } returns ClerkResult.success(ClerkPaginatedResponse(data = listOf(request), totalCount = 1))
-    coEvery { request.accept() } returns ClerkResult.success(request.copy(status = "accepted"))
+      organization.getMemberships(GetMembersParams(query = null, pageSize = 2.0, initialPage = 1.0))
+    } returns ClerkPaginatedResponseOrganizationMembership(data = emptyList(), totalCount = 0.0)
+    coEvery {
+      organization.getMembershipRequests(
+        GetMembershipRequestParams(
+          pageSize = 2.0,
+          initialPage = 1.0,
+          status = OrganizationInvitationStatus.Pending,
+        )
+      )
+    } returns
+      ClerkPaginatedResponseOrganizationMembershipRequest(data = listOf(request), totalCount = 1.0)
+    coEvery { request.accept() } returns request
 
     val viewModel = viewModel(pageSize = 2)
     viewModel.load(organization = organization, membership = viewer, domainsEnabled = true)
@@ -289,10 +298,10 @@ class OrganizationMembersViewModelTest {
   @Test
   fun `load failure stores error message`() = runTest {
     val organization = organization()
-    val viewer =
-      viewerMembership(permissions = listOf(OrganizationSystemPermission.READ_MEMBERSHIPS))
-    coEvery { organization.getOrganizationMemberships(query = null, limit = 2, offset = 0) } returns
-      ClerkResult.Failure(ClerkErrorResponse(errors = listOf(Error(longMessage = "boom"))))
+    val viewer = viewerMembership(permissions = listOf("org:sys_memberships:read"))
+    coEvery {
+      organization.getMemberships(GetMembersParams(query = null, pageSize = 2.0, initialPage = 1.0))
+    } throws testCoreError("boom")
 
     val viewModel = viewModel(pageSize = 2)
     viewModel.load(organization = organization, membership = viewer, domainsEnabled = false)
@@ -303,57 +312,37 @@ class OrganizationMembersViewModelTest {
   }
 
   private fun viewModel(pageSize: Int): OrganizationMembersViewModel {
-    return OrganizationMembersViewModel(pageSize = pageSize, dispatcher = dispatcher)
+    return OrganizationMembersViewModel(mockClerk(), pageSize = pageSize, dispatcher = dispatcher)
   }
 
   private fun stubManageResources(organization: Organization) {
-    coEvery { organization.getRolesPaginated() } returns
-      ClerkResult.success(
-        ClerkPaginatedResponse(
-          data = listOf(role("org:admin", "Admin"), role("org:member", "Member")),
-          totalCount = 2,
-        )
+    coEvery { organization.getRoles() } returns
+      GetRolesResponse(
+        data = listOf(role("org:admin", "Admin"), role("org:member", "Member")),
+        totalCount = 2.0,
       )
+
     coEvery {
-      organization.getInvitations(
-        limit = any(),
-        offset = any(),
-        status = OrganizationInvitation.Status.Pending,
-      )
-    } returns ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+      organization.getInvitations(any())
+    } returns ClerkPaginatedResponseOrganizationInvitation(data = emptyList(), totalCount = 0.0)
     coEvery {
-      organization.getMembershipRequests(limit = any(), offset = any(), status = "pending")
-    } returns ClerkResult.success(ClerkPaginatedResponse(data = emptyList(), totalCount = 0))
+      organization.getMembershipRequests(any())
+    } returns
+      ClerkPaginatedResponseOrganizationMembershipRequest(data = emptyList(), totalCount = 0.0)
   }
 
-  private fun organization(
-    maxAllowedMemberships: Int = 0,
-    membersCount: Int? = null,
-    pendingCount: Int? = null,
-  ): Organization {
-    return Organization(
-      id = "org_123",
-      name = "Acme",
-      slug = "acme",
-      imageUrl = "",
-      membersCount = membersCount,
-      pendingInvitationsCount = pendingCount,
-      maxAllowedMemberships = maxAllowedMemberships,
-      adminDeleteEnabled = true,
-      createdAt = 1,
-      updatedAt = 1,
-      publicMetadata = JsonNull,
-    )
-  }
+  private fun organization(): Organization =
+    mockk(relaxed = true) {
+      every { id } returns "org_123"
+      every { name } returns "Acme"
+    }
 
   private fun viewerMembership(
-    permissions: List<OrganizationSystemPermission> =
-      listOf(
-        OrganizationSystemPermission.READ_MEMBERSHIPS,
-        OrganizationSystemPermission.MANAGE_MEMBERSHIPS,
-      )
+    permissions: List<String> = listOf("org:sys_memberships:read", "org:sys_memberships:manage")
   ): OrganizationMembership {
-    return member("viewer", "Viewer").copy(permissions = permissions.map { it.value })
+    val viewer = member("viewer", "Viewer")
+    every { viewer.permissions } returns permissions
+    return viewer
   }
 
   private fun member(
@@ -362,68 +351,34 @@ class OrganizationMembersViewModelTest {
     lastName: String? = null,
     role: String = "org:member",
   ): OrganizationMembership {
-    return OrganizationMembership(
-      id = id,
-      publicMetadata = JsonNull,
-      role = role,
-      roleName = if (role == "org:admin") "Admin" else "Member",
-      permissions = emptyList(),
-      publicUserData =
-        PublicUserData(
-          firstName = firstName,
-          lastName = lastName,
-          imageUrl = "",
-          hasImage = false,
-          identifier = "${firstName.lowercase()}@example.com",
-          userId = "user_$id",
-        ),
-      organization = organization(),
-      createdAt = 1,
-      updatedAt = 1,
-    )
+    val member = mockk<OrganizationMembership>(relaxed = true)
+    every { member.id } returns id
+    every { member.role } returns role
+    every { member.permissions } returns emptyList()
+    val user = mockk<PublicUserData>(relaxed = true)
+    every { user.userId } returns "user_$id"
+    every { user.firstName } returns firstName
+    every { user.lastName } returns lastName
+    every { member.publicUserData } returns user
+    return member
   }
 
   private fun invitation(id: String): OrganizationInvitation {
-    return OrganizationInvitation(
-      id = id,
-      emailAddress = "$id@example.com",
-      organizationId = "org_123",
-      publicMetadata = JsonNull,
-      role = "org:member",
-      status = OrganizationInvitation.Status.Pending,
-      createdAt = 1,
-      updatedAt = 1,
-    )
+    val invitation = mockk<OrganizationInvitation>(relaxed = true)
+    every { invitation.id } returns id
+    return invitation
   }
 
   private fun request(id: String): OrganizationMembershipRequest {
-    return OrganizationMembershipRequest(
-      id = id,
-      organizationId = "org_123",
-      publicUserData =
-        PublicUserData(
-          firstName = "Request",
-          lastName = id,
-          imageUrl = "",
-          hasImage = false,
-          identifier = "$id@example.com",
-          userId = "user_$id",
-        ),
-      status = "pending",
-      createdAt = 1,
-      updatedAt = 1,
-    )
+    val request = mockk<OrganizationMembershipRequest>(relaxed = true)
+    every { request.id } returns id
+    return request
   }
 
   private fun role(key: String, name: String): Role {
-    return Role(
-      id = key,
-      key = key,
-      name = name,
-      description = name,
-      permissions = emptyList(),
-      createdAt = 1,
-      updatedAt = 1,
-    )
+    val role = mockk<Role>(relaxed = true)
+    every { role.key } returns key
+    every { role.name } returns name
+    return role
   }
 }
