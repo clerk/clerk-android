@@ -27,6 +27,7 @@ android {
     release { isMinifyEnabled = false }
   }
   compileOptions {
+    isCoreLibraryDesugaringEnabled = true
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
@@ -97,6 +98,7 @@ dokka {
 }
 
 dependencies {
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
   api(projects.clerk.source.api)
 
   implementation(platform(libs.compose.bom))
@@ -134,6 +136,10 @@ dependencies {
   testImplementation(projects.clerk.source.api)
 
   testRuntimeOnly(libs.paparazzi)
+
+  androidTestImplementation("androidx.test:runner:1.7.0")
+  androidTestImplementation("androidx.test.ext:junit:1.3.0")
+  androidTestImplementation(libs.androidx.ui.test.junit4)
 
   dokkaPlugin(libs.versioning.plugin)
 
