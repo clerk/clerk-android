@@ -2,44 +2,52 @@ package com.clerk.ui.organizationprofile.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Clerk
-import com.clerk.api.Organization
-import com.clerk.api.Session
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.organizations.updateLogo
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.organizationprofile.*
 import java.io.File
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-internal class OrganizationCreateFlowViewModel : ViewModel() {
+internal class OrganizationCreateFlowViewModel(private val clerk: Clerk) : ViewModel() {
 
   private val _state = MutableStateFlow(OrganizationCreateFlowState())
   val state = _state.asStateFlow()
 
   fun createOrganization(name: String, slug: String?, logoFile: File?) {
-    val sessionId = Clerk.session?.id
+    val sessionId = clerk.session?.id
     if (sessionId == null) {
       _state.value = _state.value.copy(errorMessage = "Session does not exist")
       return
     }
     if (_state.value.isLoading) return
-
     _state.value = _state.value.copy(isLoading = true, errorMessage = null)
-    viewModelScope.launch(Dispatchers.IO) {
-      Organization.create(name = name, slug = slug)
-        .onSuccess { organization ->
-          val organizationWithLogo = uploadLogoIfNeeded(organization, logoFile)
-          setActiveOrganization(sessionId = sessionId, organization = organizationWithLogo)
+    viewModelScope.launch {
+      runUiOperation {
+          val organization = clerk.createOrganization(CreateOrganizationParams(name, slug))
+          if (logoFile != null)
+            runUiOperation { organization.setLogo(logoFile.organizationLogoInput()) }
+          if (clerk.session?.id != sessionId) throw CoreException("session_changed")
+          clerk.setActive(
+            MobileSetActiveParams(
+              session = Field.Value(MobileSetActiveParamsSession.Case1(sessionId)),
+              organization = Field.Value(MobileSetActiveParamsOrganization.Case1(organization.id)),
+            )
+          )
+          organization
         }
-        .onFailure { failure ->
-          withContext(Dispatchers.Main) {
-            _state.value = _state.value.copy(isLoading = false, errorMessage = failure.errorMessage)
-          }
+        .onSuccess { organization ->
+          _state.value =
+            _state.value.copy(
+              isLoading = false,
+              createdOrganization = organization,
+              completedSession = clerk.session,
+            )
+        }
+        .onFailure {
+          _state.value = _state.value.copy(isLoading = false, errorMessage = it.displayMessage)
         }
     }
   }
@@ -50,38 +58,6 @@ internal class OrganizationCreateFlowViewModel : ViewModel() {
 
   fun clearError() {
     _state.value = _state.value.copy(errorMessage = null)
-  }
-
-  private suspend fun uploadLogoIfNeeded(
-    organization: Organization,
-    logoFile: File?,
-  ): Organization {
-    if (logoFile == null) return organization
-
-    return when (val result = organization.updateLogo(logoFile)) {
-      is com.clerk.api.network.serialization.ClerkResult.Success -> result.value
-      is com.clerk.api.network.serialization.ClerkResult.Failure -> organization
-    }
-  }
-
-  private suspend fun setActiveOrganization(sessionId: String, organization: Organization) {
-    Clerk.auth
-      .setActive(sessionId = sessionId, organizationId = organization.id)
-      .onSuccess {
-        withContext(Dispatchers.Main) {
-          _state.value =
-            _state.value.copy(
-              isLoading = false,
-              createdOrganization = organization,
-              completedSession = it,
-            )
-        }
-      }
-      .onFailure { failure ->
-        withContext(Dispatchers.Main) {
-          _state.value = _state.value.copy(isLoading = false, errorMessage = failure.errorMessage)
-        }
-      }
   }
 }
 

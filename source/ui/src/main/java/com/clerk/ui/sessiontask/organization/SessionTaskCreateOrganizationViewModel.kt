@@ -2,47 +2,48 @@ package com.clerk.ui.sessiontask.organization
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Clerk
-import com.clerk.api.Organization
-import com.clerk.api.Session
-import com.clerk.api.SessionTaskKey
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.organizations.updateLogo
-import com.clerk.api.session.pendingTaskKey
-import com.clerk.ui.core.common.ClerkLog
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.organizationprofile.*
 import java.io.File
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-internal class SessionTaskCreateOrganizationViewModel : ViewModel() {
+internal class SessionTaskCreateOrganizationViewModel(private val clerk: Clerk) : ViewModel() {
 
   private val _state = MutableStateFlow(SessionTaskCreateOrganizationState())
   val state = _state.asStateFlow()
 
   fun createOrganization(name: String, slug: String?, logoFile: File?) {
-    val sessionId = currentTaskSessionId()
+    val sessionId =
+      clerk.session?.takeIf { it.currentTask?.key == SessionTaskKey.ChooseOrganization }?.id
     if (sessionId == null) {
       _state.value = _state.value.copy(errorMessage = "Session does not exist")
       return
     }
     if (_state.value.isLoading) return
-
     _state.value = _state.value.copy(isLoading = true, errorMessage = null)
-    viewModelScope.launch(Dispatchers.IO) {
-      Organization.create(name = name, slug = slug)
-        .onSuccess { organization ->
-          uploadLogoIfNeeded(organization = organization, logoFile = logoFile)
-          setActiveOrganization(sessionId = sessionId, organizationId = organization.id)
+    viewModelScope.launch {
+      runUiOperation {
+          val organization = clerk.createOrganization(CreateOrganizationParams(name, slug))
+          if (logoFile != null)
+            runUiOperation { organization.setLogo(logoFile.organizationLogoInput()) }
+          if (clerk.session?.id != sessionId) throw CoreException("session_changed")
+          clerk.setActive(
+            MobileSetActiveParams(
+              session = Field.Value(MobileSetActiveParamsSession.Case1(sessionId)),
+              organization = Field.Value(MobileSetActiveParamsOrganization.Case1(organization.id)),
+            )
+          )
+          organization
         }
-        .onFailure { failure ->
-          withContext(Dispatchers.Main) {
-            _state.value = _state.value.copy(isLoading = false, errorMessage = failure.errorMessage)
-          }
+        .onSuccess { organization ->
+          _state.value = _state.value.copy(isLoading = false, completedSession = clerk.session)
+        }
+        .onFailure {
+          _state.value = _state.value.copy(isLoading = false, errorMessage = it.displayMessage)
         }
     }
   }
@@ -53,46 +54,6 @@ internal class SessionTaskCreateOrganizationViewModel : ViewModel() {
 
   fun clearError() {
     _state.value = _state.value.copy(errorMessage = null)
-  }
-
-  private fun currentTaskSessionId(): String? {
-    val clientSession =
-      runCatching {
-          val client = Clerk.client
-          val pendingChooseOrganizationSession =
-            client.sessions.firstOrNull { it.pendingTaskKey == SessionTaskKey.CHOOSE_ORGANIZATION }
-          val lastActiveSession =
-            client.lastActiveSessionId?.let { lastActiveSessionId ->
-              client.sessions.firstOrNull { it.id == lastActiveSessionId }
-            }
-          pendingChooseOrganizationSession ?: lastActiveSession
-        }
-        .getOrNull()
-
-    return clientSession?.id ?: Clerk.session?.id
-  }
-
-  private suspend fun uploadLogoIfNeeded(organization: Organization, logoFile: File?) {
-    if (logoFile == null) return
-
-    organization.updateLogo(logoFile).onFailure {
-      ClerkLog.e("Failed to set organization logo: ${it.errorMessage}")
-    }
-  }
-
-  private suspend fun setActiveOrganization(sessionId: String, organizationId: String) {
-    Clerk.auth
-      .setActive(sessionId = sessionId, organizationId = organizationId)
-      .onSuccess {
-        withContext(Dispatchers.Main) {
-          _state.value = _state.value.copy(isLoading = false, completedSession = it)
-        }
-      }
-      .onFailure { failure ->
-        withContext(Dispatchers.Main) {
-          _state.value = _state.value.copy(isLoading = false, errorMessage = failure.errorMessage)
-        }
-      }
   }
 }
 

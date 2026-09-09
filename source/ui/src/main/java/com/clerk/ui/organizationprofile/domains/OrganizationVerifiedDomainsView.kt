@@ -34,14 +34,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.Organization
 import com.clerk.api.OrganizationDomain
+import com.clerk.api.OrganizationEnrollmentMode
 import com.clerk.api.OrganizationMembership
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -57,6 +59,7 @@ import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
+import com.clerk.ui.organizationprofile.*
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.DefaultColors
 import kotlinx.collections.immutable.toImmutableList
@@ -67,16 +70,20 @@ internal fun OrganizationVerifiedDomainsView(
   membership: OrganizationMembership?,
   onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: OrganizationVerifiedDomainsViewModel = viewModel(),
+  viewModel: OrganizationVerifiedDomainsViewModel = clerkViewModel {
+    OrganizationVerifiedDomainsViewModel(it)
+  },
 ) {
+  val clerk = LocalClerk.current
+
   val state by viewModel.state.collectAsState()
 
   LaunchedEffect(organization.id, membership?.id) {
     viewModel.load(
       organization = organization,
       membership = membership,
-      domainsEnabled = Clerk.organizationDomainsIsEnabled,
-      enrollmentModes = Clerk.organizationDomainEnrollmentModes,
+      domainsEnabled = clerk.environment.organizationSettings.domains.enabled,
+      enrollmentModes = clerk.environment.organizationSettings.domains.enrollmentModes,
     )
   }
 
@@ -382,6 +389,8 @@ private fun DeleteDomainContent(
 
 @Composable
 private fun AddDomainRow(showTopDivider: Boolean, onClick: () -> Unit) {
+  val clerk = LocalClerk.current
+
   Surface(
     modifier = Modifier.fillMaxWidth().clickable { onClick() },
     color = ClerkMaterialTheme.colors.background,
@@ -490,14 +499,14 @@ private fun DomainStatusBadge(domain: OrganizationDomain) {
     if (!domain.isVerified) {
       stringResource(R.string.unverified)
     } else {
-      when (domain.enrollmentModeType) {
-        OrganizationDomain.EnrollmentMode.ManualInvitation ->
+      when (domain.enrollmentMode) {
+        OrganizationEnrollmentMode.ManualInvitation ->
           stringResource(R.string.no_automatic_enrollment)
-        OrganizationDomain.EnrollmentMode.AutomaticInvitation ->
+        OrganizationEnrollmentMode.AutomaticInvitation ->
           stringResource(R.string.automatic_invitations)
-        OrganizationDomain.EnrollmentMode.AutomaticSuggestion ->
+        OrganizationEnrollmentMode.AutomaticSuggestion ->
           stringResource(R.string.automatic_suggestions)
-        is OrganizationDomain.EnrollmentMode.Unknown -> domain.enrollmentMode
+        else -> domain.enrollmentMode.rawValue
       }
     }
   val color =
@@ -534,7 +543,7 @@ private fun DomainStatusBadge(domain: OrganizationDomain) {
 
 @Composable
 private fun EnrollmentModeOptionRow(
-  mode: OrganizationDomain.EnrollmentMode,
+  mode: OrganizationEnrollmentMode,
   selected: Boolean,
   enabled: Boolean,
   onClick: () -> Unit,
@@ -639,28 +648,25 @@ private fun organizationVerifiedDomainsTitle(flow: OrganizationVerifiedDomainsFl
 }
 
 @Composable
-private fun OrganizationDomain.EnrollmentMode.title(): String {
+private fun OrganizationEnrollmentMode.title(): String {
   return when (this) {
-    OrganizationDomain.EnrollmentMode.ManualInvitation ->
-      stringResource(R.string.no_automatic_enrollment)
-    OrganizationDomain.EnrollmentMode.AutomaticInvitation ->
-      stringResource(R.string.automatic_invitations)
-    OrganizationDomain.EnrollmentMode.AutomaticSuggestion ->
-      stringResource(R.string.automatic_suggestions)
-    is OrganizationDomain.EnrollmentMode.Unknown -> rawValue
+    OrganizationEnrollmentMode.ManualInvitation -> stringResource(R.string.no_automatic_enrollment)
+    OrganizationEnrollmentMode.AutomaticInvitation -> stringResource(R.string.automatic_invitations)
+    OrganizationEnrollmentMode.AutomaticSuggestion -> stringResource(R.string.automatic_suggestions)
+    else -> rawValue
   }
 }
 
 @Composable
-private fun OrganizationDomain.EnrollmentMode.description(): String {
+private fun OrganizationEnrollmentMode.description(): String {
   return when (this) {
-    OrganizationDomain.EnrollmentMode.ManualInvitation ->
+    OrganizationEnrollmentMode.ManualInvitation ->
       stringResource(R.string.no_automatic_enrollment_description)
-    OrganizationDomain.EnrollmentMode.AutomaticInvitation ->
+    OrganizationEnrollmentMode.AutomaticInvitation ->
       stringResource(R.string.automatic_invitations_description)
-    OrganizationDomain.EnrollmentMode.AutomaticSuggestion ->
+    OrganizationEnrollmentMode.AutomaticSuggestion ->
       stringResource(R.string.automatic_suggestions_description)
-    is OrganizationDomain.EnrollmentMode.Unknown -> rawValue
+    else -> rawValue
   }
 }
 

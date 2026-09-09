@@ -29,7 +29,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.OrganizationCreationDefaults
 import com.clerk.api.OrganizationMembership
 import com.clerk.api.OrganizationSuggestion
@@ -43,6 +42,8 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp14
@@ -66,11 +67,15 @@ internal fun SessionTaskChooseOrganizationView(
   onAuthComplete: () -> Unit,
   onCreateOrganization: (OrganizationCreationDefaults?, Boolean) -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: SessionTaskChooseOrganizationViewModel = viewModel(),
+  viewModel: SessionTaskChooseOrganizationViewModel = clerkViewModel {
+    SessionTaskChooseOrganizationViewModel(it)
+  },
 ) {
+  val clerk = LocalClerk.current
+
   val state by viewModel.state.collectAsStateWithLifecycle()
-  val clerkUser by Clerk.userFlow.collectAsStateWithLifecycle()
-  val clerkSession by Clerk.sessionFlow.collectAsStateWithLifecycle()
+  val clerkUser = clerk.user
+  val clerkSession = clerk.session
   val authState = LocalAuthState.current
 
   LaunchedEffect(clerkUser?.id, clerkSession?.id) { viewModel.load() }
@@ -300,9 +305,10 @@ private fun SuggestionRow(
     name = suggestion.publicOrganizationData.name,
     imageUrl = suggestion.publicOrganizationData.imageUrl,
     subtitle =
-      if (suggestion.status == ACCEPTED_STATUS) stringResource(R.string.pending_approval) else null,
+      if (suggestion.status.rawValue == ACCEPTED_STATUS) stringResource(R.string.pending_approval)
+      else null,
     action = {
-      if (suggestion.status != ACCEPTED_STATUS) {
+      if (suggestion.status.rawValue != ACCEPTED_STATUS) {
         PillActionButton(
           text = stringResource(R.string.request_to_join),
           isLoading = isLoading,

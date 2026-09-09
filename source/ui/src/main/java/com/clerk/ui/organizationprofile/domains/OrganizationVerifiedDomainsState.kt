@@ -1,6 +1,7 @@
 package com.clerk.ui.organizationprofile.domains
 
 import com.clerk.api.OrganizationDomain
+import com.clerk.api.OrganizationEnrollmentMode
 
 internal sealed interface OrganizationVerifiedDomainsFlow {
   data object DomainsList : OrganizationVerifiedDomainsFlow
@@ -32,9 +33,9 @@ internal data class OrganizationVerifiedDomainsState(
   val domainName: String = "",
   val affiliationEmailLocalPart: String = "",
   val verificationCode: String = "",
-  val enrollmentModeOptions: List<OrganizationDomain.EnrollmentMode> = defaultEnrollmentModeOptions,
-  val selectedEnrollmentMode: OrganizationDomain.EnrollmentMode =
-    OrganizationDomain.EnrollmentMode.ManualInvitation,
+  val enrollmentModeOptions: List<OrganizationEnrollmentMode> = defaultEnrollmentModeOptions,
+  val selectedEnrollmentMode: OrganizationEnrollmentMode =
+    OrganizationEnrollmentMode.ManualInvitation,
 ) {
   val canLoadDomains: Boolean
     get() = domainsEnabled && (canReadDomains || canManageDomains)
@@ -71,29 +72,23 @@ internal data class OrganizationVerifiedDomainsActions(
   val onVerificationCodeChanged: (String) -> Unit,
   val onVerifyCode: (OrganizationDomain) -> Unit,
   val onResendVerificationCode: (OrganizationDomain, String) -> Unit,
-  val onSelectEnrollmentMode: (OrganizationDomain.EnrollmentMode) -> Unit,
+  val onSelectEnrollmentMode: (OrganizationEnrollmentMode) -> Unit,
   val onUpdateEnrollmentMode: (OrganizationDomain) -> Unit,
   val onDeleteDomain: (OrganizationDomain) -> Unit,
 )
 
 internal val defaultEnrollmentModeOptions =
   listOf(
-    OrganizationDomain.EnrollmentMode.ManualInvitation,
-    OrganizationDomain.EnrollmentMode.AutomaticInvitation,
-    OrganizationDomain.EnrollmentMode.AutomaticSuggestion,
+    OrganizationEnrollmentMode.ManualInvitation,
+    OrganizationEnrollmentMode.AutomaticInvitation,
+    OrganizationEnrollmentMode.AutomaticSuggestion,
   )
 
 internal fun enrollmentModeOptions(
-  rawModes: List<String>
-): List<OrganizationDomain.EnrollmentMode> {
-  val options = rawModes.mapNotNull { rawMode ->
-    when (val mode = OrganizationDomain.EnrollmentMode.fromValue(rawMode)) {
-      is OrganizationDomain.EnrollmentMode.Unknown -> null
-      else -> mode
-    }
-  }
-  return (defaultEnrollmentModeOptions + options).distinct()
-}
+  modes: List<OrganizationEnrollmentMode>
+): List<OrganizationEnrollmentMode> =
+  (defaultEnrollmentModeOptions + modes.filterNot { it is OrganizationEnrollmentMode.Unrecognized })
+    .distinct()
 
 internal const val CREATE_DOMAIN_MUTATION_ID = "create-domain"
 internal const val SEND_CODE_MUTATION_ID = "send-code"

@@ -21,14 +21,15 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.Organization
 import com.clerk.api.OrganizationCreationDefaults
 import com.clerk.api.User
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
@@ -103,11 +104,15 @@ internal fun OrganizationListViewImpl(
   onDismissRequest: (() -> Unit)? = null,
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
   onAccountSelected: ((String?) -> Unit)? = null,
-  viewModel: OrganizationAccountListViewModel = viewModel(),
+  viewModel: OrganizationAccountListViewModel = clerkViewModel {
+    OrganizationAccountListViewModel(it)
+  },
 ) {
+  val clerk = LocalClerk.current
+
   val state by viewModel.state.collectAsStateWithLifecycle()
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
-  val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
+  val user = clerk.user
+  val session = clerk.session
   val snackbarHostState = remember { SnackbarHostState() }
   val telemetry = LocalTelemetryCollector.current
   val createFlowState = remember { OrganizationListCreateFlowState() }
@@ -130,7 +135,9 @@ internal fun OrganizationListViewImpl(
       callbacks = callbacks,
     )
   val showPersonalAccount =
-    user != null && !hidePersonalAccount && !Clerk.organizationSelectionIsForced
+    user != null &&
+      !hidePersonalAccount &&
+      !clerk.environment.organizationSettings.forceOrganizationSelection
 
   LaunchedEffect(user?.id, session?.id) {
     viewModel.reset()

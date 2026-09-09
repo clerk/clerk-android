@@ -14,13 +14,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.api.Clerk
-import com.clerk.api.session.requiresForcedMfa
+import com.clerk.api.SessionTaskKey
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
@@ -39,16 +39,29 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun SessionTaskMfaView(modifier: Modifier = Modifier, onAuthComplete: () -> Unit) {
-  val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  var flowStep by remember { mutableStateOf<FlowStep>(FlowStep.ChooseMethod) }
+  val clerk = LocalClerk.current
 
-  LaunchedEffect(session?.requiresForcedMfa) {
-    if (session?.requiresForcedMfa == false) {
+  val session = clerk.session
+  var flowStep by remember { mutableStateOf<FlowStep>(FlowStep.ChooseMethod) }
+  val user = clerk.user
+  LaunchedEffect(
+    session?.id,
+    user?.totpEnabled,
+    user?.phoneNumbers?.map { it.reservedForSecondFactor },
+  ) {
+    if (session?.currentTask?.key == SessionTaskKey.SetupMfa) runUiOperation { session.reload() }
+  }
+
+  LaunchedEffect(session?.id, session?.currentTask) {
+    if (session != null && session.currentTask?.key != SessionTaskKey.SetupMfa) {
       onAuthComplete()
     }
   }
 
-  if (!Clerk.mfaPhoneCodeIsEnabled && !Clerk.mfaAuthenticatorAppIsEnabled) {
+  if (
+    !(clerk.environment.userSettings.attributes["phone_number"]?.usedForSecondFactor == true) &&
+      !(clerk.environment.userSettings.attributes["authenticator_app"]?.enabled == true)
+  ) {
     SignInGetHelpView(modifier = modifier)
     return
   }
@@ -102,6 +115,8 @@ private fun SessionTaskMfaStepContainer(
 
 @Composable
 private fun ChooseMethodStep(modifier: Modifier = Modifier, onFlowStepChange: (FlowStep) -> Unit) {
+  val clerk = LocalClerk.current
+
   ClerkThemedAuthScaffold(
     modifier = modifier,
     title = stringResource(R.string.set_up_two_step_verification),
@@ -113,8 +128,10 @@ private fun ChooseMethodStep(modifier: Modifier = Modifier, onFlowStepChange: (F
     hasLogo = false,
   ) {
     SessionTaskMfaMethodButtons(
-      mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
-      mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
+      mfaPhoneCodeIsEnabled =
+        (clerk.environment.userSettings.attributes["phone_number"]?.usedForSecondFactor == true),
+      mfaAuthenticatorAppIsEnabled =
+        (clerk.environment.userSettings.attributes["authenticator_app"]?.enabled == true),
       onClick = { onFlowStepChange(FlowStep.AddMfa(it)) },
     )
   }

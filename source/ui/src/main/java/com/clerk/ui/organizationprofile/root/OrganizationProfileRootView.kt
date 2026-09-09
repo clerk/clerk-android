@@ -12,10 +12,12 @@ import androidx.compose.ui.res.stringResource
 import com.clerk.api.Organization
 import com.clerk.api.OrganizationMembership
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
+import com.clerk.ui.organizationprofile.*
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRowView
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileListRow
@@ -57,7 +59,12 @@ internal fun OrganizationProfileRootView(
         OrganizationProfileSectionRows(
           rows =
             buildOrganizationProfileRenderedRows(
-              builtInRows = organizationProfileRows(membership = membership),
+              builtInRows =
+                organizationProfileRows(
+                  membership = membership,
+                  domainsEnabled =
+                    LocalClerk.current.environment.organizationSettings.domains.enabled,
+                ),
               section = OrganizationProfileSection.Profile,
               customRows = customRows,
             ),
@@ -70,7 +77,12 @@ internal fun OrganizationProfileRootView(
           rows =
             buildOrganizationProfileRenderedRows(
               builtInRows =
-                organizationProfileActionRows(organization = organization, membership = membership),
+                organizationProfileActionRows(
+                  organization = organization,
+                  membership = membership,
+                  adminDeleteEnabled =
+                    LocalClerk.current.environment.organizationSettings.actions.adminDelete,
+                ),
               section = OrganizationProfileSection.Actions,
               customRows = customRows,
             ),

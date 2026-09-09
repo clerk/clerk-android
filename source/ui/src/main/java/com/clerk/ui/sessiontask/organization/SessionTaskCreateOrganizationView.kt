@@ -16,10 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.auth.handleSessionTaskCompletion
 import com.clerk.ui.core.composition.LocalAuthState
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
@@ -36,8 +37,12 @@ internal fun SessionTaskCreateOrganizationView(
   showBackButton: Boolean,
   onAuthComplete: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: SessionTaskCreateOrganizationViewModel = viewModel(),
+  viewModel: SessionTaskCreateOrganizationViewModel = clerkViewModel {
+    SessionTaskCreateOrganizationViewModel(it)
+  },
 ) {
+  val clerk = LocalClerk.current
+
   val state by viewModel.state.collectAsStateWithLifecycle()
   val authState = LocalAuthState.current
   val defaultName = creationDefaults?.name.orEmpty()
@@ -71,7 +76,7 @@ internal fun SessionTaskCreateOrganizationView(
         OrganizationProfileFormView(
           initialName = defaultName,
           initialSlug = defaultSlug,
-          slugEnabled = Clerk.organizationSlugIsEnabled,
+          slugEnabled = !clerk.environment.organizationSettings.slug.disabled,
           autoGenerateSlug = true,
           useAvatarLogoUpload = true,
           submitText = stringResource(R.string.continue_text),

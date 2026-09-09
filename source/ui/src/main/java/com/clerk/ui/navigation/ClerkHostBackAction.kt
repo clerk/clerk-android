@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.clerk.api.FrameworkIntegrationApi
 
 /**
  * Supplies the back affordance for the root screen of a Clerk component embedded in a host's own
@@ -26,7 +25,6 @@ import com.clerk.api.FrameworkIntegrationApi
  * This surface exists for Clerk's own framework integrations and may change without notice in minor
  * releases.
  */
-@FrameworkIntegrationApi
 @Composable
 fun ClerkHostBackActionProvider(onHostBack: () -> Unit, content: @Composable () -> Unit) {
   CompositionLocalProvider(LocalClerkHostBackAction provides onHostBack, content = content)

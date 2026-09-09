@@ -65,7 +65,7 @@ internal data class OrganizationAccountListState(
 
   val pendingInvitationsCount: Int
     get() = invitations.count {
-      it.status != ACCEPTED_INVITATION_STATUS &&
+      it.status != com.clerk.api.OrganizationInvitationStatus.Accepted &&
         it.publicOrganizationData.id !in acceptedInvitationOrganizationIds
     }
 }

@@ -2,21 +2,16 @@ package com.clerk.ui.organizationprofile.update
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Organization
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.flatMap
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.organizations.deleteLogo
-import com.clerk.api.organizations.reload
-import com.clerk.api.organizations.update
-import com.clerk.api.organizations.updateLogo
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.organizationprofile.*
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class OrganizationProfileUpdateViewModel : ViewModel() {
+internal class OrganizationProfileUpdateViewModel(private val clerk: Clerk) : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
@@ -32,15 +27,17 @@ internal class OrganizationProfileUpdateViewModel : ViewModel() {
 
     _state.value = State.Loading
     viewModelScope.launch {
-      organization
-        .update(name = name, slug = slug)
-        .flatMap { updated ->
-          applyLogoChange(updated, logoFile = logoFile, removeLogo = removeLogo)
+      runUiOperation {
+          organization.update(UpdateOrganizationParams(name, slug))
+          when {
+            logoFile != null -> organization.setLogo(logoFile.organizationLogoInput())
+            removeLogo -> organization.setLogo(SetOrganizationLogoParams(null))
+          }
+          organization.reload()
         }
-        .flatMap { updated -> updated.reload() }
-        .onSuccess { _state.value = State.Success(it) }
+        .onSuccess { _state.value = State.Success(organization) }
         .onFailure {
-          _state.value = State.Error("Failed to update organization: ${it.errorMessage}")
+          _state.value = State.Error("Failed to update organization: ${it.displayMessage}")
         }
     }
   }
@@ -52,17 +49,6 @@ internal class OrganizationProfileUpdateViewModel : ViewModel() {
   fun clearError() {
     if (_state.value is State.Error) _state.value = State.Idle
   }
-
-  private suspend fun applyLogoChange(
-    organization: Organization,
-    logoFile: File?,
-    removeLogo: Boolean,
-  ) =
-    when {
-      logoFile != null -> organization.updateLogo(logoFile)
-      removeLogo -> organization.deleteLogo()
-      else -> com.clerk.api.network.serialization.ClerkResult.success(organization)
-    }
 
   sealed interface State {
     data object Idle : State

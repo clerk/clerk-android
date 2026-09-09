@@ -30,7 +30,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.clerk.api.OrganizationSuggestion
 import com.clerk.api.User
 import com.clerk.api.UserOrganizationInvitation
-import com.clerk.api.user.fullName
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.AvatarType
@@ -189,7 +188,7 @@ private fun LazyListScope.invitationsSection(
   items(count = state.invitations.size, key = { state.invitations[it].id }) { index ->
     val invitation = state.invitations[index]
     val isAccepted =
-      invitation.status == ACCEPTED_STATUS ||
+      invitation.status.rawValue == ACCEPTED_STATUS ||
         invitation.publicOrganizationData.id in state.acceptedInvitationOrganizationIds
     InvitationRow(
       invitation = invitation,
@@ -330,9 +329,10 @@ private fun SuggestionRow(
     name = suggestion.publicOrganizationData.name,
     imageUrl = suggestion.publicOrganizationData.imageUrl,
     subtitle =
-      if (suggestion.status == ACCEPTED_STATUS) stringResource(R.string.pending_approval) else null,
+      if (suggestion.status.rawValue == ACCEPTED_STATUS) stringResource(R.string.pending_approval)
+      else null,
     action = {
-      if (suggestion.status != ACCEPTED_STATUS) {
+      if (suggestion.status.rawValue != ACCEPTED_STATUS) {
         PillActionButton(
           text = stringResource(R.string.request_to_join),
           isLoading = isLoading,
@@ -522,7 +522,8 @@ private fun LoadMoreButton(
 }
 
 private fun User.displayName(): String {
-  return fullName()
+  return fullName
+    .orEmpty()
     .ifBlank { username.orEmpty() }
     .ifBlank { primaryEmailAddress?.emailAddress.orEmpty() }
 }

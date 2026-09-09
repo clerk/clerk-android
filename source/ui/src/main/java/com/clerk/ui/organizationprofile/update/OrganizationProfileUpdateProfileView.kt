@@ -11,9 +11,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.Organization
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
@@ -26,8 +27,12 @@ internal fun OrganizationProfileUpdateProfileView(
   organization: Organization,
   onBackPressed: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: OrganizationProfileUpdateViewModel = viewModel(),
+  viewModel: OrganizationProfileUpdateViewModel = clerkViewModel {
+    OrganizationProfileUpdateViewModel(it)
+  },
 ) {
+  val clerk = LocalClerk.current
+
   val state by viewModel.state.collectAsState()
   val errorMessage = (state as? OrganizationProfileUpdateViewModel.State.Error)?.message
 
@@ -56,7 +61,7 @@ internal fun OrganizationProfileUpdateProfileView(
             initialSlug = organization.slug,
             initialLogoUrl = organization.imageUrl,
             initialHasLogo = organization.hasImage,
-            slugEnabled = Clerk.organizationSlugIsEnabled,
+            slugEnabled = !clerk.environment.organizationSettings.slug.disabled,
             submitText = stringResource(R.string.save),
             isLoading = state is OrganizationProfileUpdateViewModel.State.Loading,
             onSubmit = { submit ->

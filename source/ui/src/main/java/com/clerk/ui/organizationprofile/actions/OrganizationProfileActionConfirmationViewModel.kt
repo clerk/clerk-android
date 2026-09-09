@@ -2,27 +2,16 @@ package com.clerk.ui.organizationprofile.actions
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.DeletedObject
-import com.clerk.api.Organization
-import com.clerk.api.OrganizationMembership
-import com.clerk.api.network.model.client.Client
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.organizations.delete
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.organizationprofile.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class OrganizationProfileActionConfirmationViewModel(
-  private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
-  private val refreshClient: suspend () -> ClerkResult<Client, ClerkErrorResponse> = {
-    Client.get()
-  },
-) : ViewModel() {
+internal class OrganizationProfileActionConfirmationViewModel(private val clerk: Clerk) :
+  ViewModel() {
 
   private val mutableState = MutableStateFlow(OrganizationProfileActionConfirmationState())
   val state = mutableState.asStateFlow()
@@ -45,16 +34,21 @@ internal class OrganizationProfileActionConfirmationViewModel(
     }
 
     mutableState.value = current.copy(isLoading = true, errorMessage = null)
-    viewModelScope.launch(dispatcher) {
-      when (val result = performAction(action, organization, membership)) {
-        is ClerkResult.Success -> {
-          runCatching { refreshClient() }
+    viewModelScope.launch {
+      runUiOperation {
+          when (action) {
+            OrganizationProfileConfirmationAction.LeaveOrganization ->
+              requireNotNull(membership).destroy()
+            OrganizationProfileConfirmationAction.DeleteOrganization -> organization.destroy()
+          }
+        }
+        .onSuccess {
           mutableState.value = mutableState.value.copy(isLoading = false, isComplete = true)
         }
-        is ClerkResult.Failure ->
+        .onFailure {
           mutableState.value =
-            mutableState.value.copy(isLoading = false, errorMessage = result.errorMessage)
-      }
+            mutableState.value.copy(isLoading = false, errorMessage = it.displayMessage)
+        }
     }
   }
 
@@ -64,23 +58,6 @@ internal class OrganizationProfileActionConfirmationViewModel(
 
   fun clearError() {
     mutableState.value = mutableState.value.copy(errorMessage = null)
-  }
-
-  private suspend fun performAction(
-    action: OrganizationProfileConfirmationAction,
-    organization: Organization,
-    membership: OrganizationMembership?,
-  ): ClerkResult<DeletedObject, ClerkErrorResponse> =
-    when (action) {
-      OrganizationProfileConfirmationAction.LeaveOrganization ->
-        membership?.delete() ?: missingMembershipFailure()
-      OrganizationProfileConfirmationAction.DeleteOrganization -> organization.delete()
-    }
-
-  private fun missingMembershipFailure(): ClerkResult.Failure<ClerkErrorResponse> {
-    return ClerkResult.Failure(
-      ClerkErrorResponse(errors = listOf(Error(longMessage = MISSING_MEMBERSHIP_ERROR)))
-    )
   }
 }
 

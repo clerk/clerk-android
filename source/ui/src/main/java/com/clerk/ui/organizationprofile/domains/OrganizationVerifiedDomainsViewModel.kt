@@ -4,19 +4,10 @@ package com.clerk.ui.organizationprofile.domains
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Clerk
-import com.clerk.api.Organization
-import com.clerk.api.OrganizationDomain
-import com.clerk.api.OrganizationMembership
-import com.clerk.api.network.ClerkPaginatedResponse
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.organizations.createDomain
-import com.clerk.api.organizations.delete
-import com.clerk.api.organizations.getDomains
-import com.clerk.api.organizations.sendEmailCode
-import com.clerk.api.organizations.updateEnrollmentMode
-import com.clerk.api.organizations.verifyCode
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.organizationprofile.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class OrganizationVerifiedDomainsViewModel(
+  private val clerk: Clerk,
   private val pageSize: Int = DEFAULT_PAGE_SIZE,
   private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
@@ -38,8 +30,9 @@ internal class OrganizationVerifiedDomainsViewModel(
   fun load(
     organization: Organization,
     membership: OrganizationMembership?,
-    domainsEnabled: Boolean = Clerk.organizationDomainsIsEnabled,
-    enrollmentModes: List<String> = Clerk.organizationDomainEnrollmentModes,
+    domainsEnabled: Boolean = clerk.environment.organizationSettings.domains.enabled,
+    enrollmentModes: List<OrganizationEnrollmentMode> =
+      clerk.environment.organizationSettings.domains.enrollmentModes,
   ) {
     this.organization = organization
     this.membership = membership
@@ -85,7 +78,7 @@ internal class OrganizationVerifiedDomainsViewModel(
       organization = currentOrganization,
       membership = membership,
       domainsEnabled = domainsEnabled,
-      enrollmentModes = Clerk.organizationDomainEnrollmentModes,
+      enrollmentModes = clerk.environment.organizationSettings.domains.enrollmentModes,
     )
   }
 
@@ -120,8 +113,8 @@ internal class OrganizationVerifiedDomainsViewModel(
     val current = mutableState.value
     if (!current.canManageDomains || !domain.isVerified) return
     val selected =
-      domain.enrollmentModeType.takeIf {
-        it !is OrganizationDomain.EnrollmentMode.Unknown && it in current.enrollmentModeOptions
+      domain.enrollmentMode.takeIf {
+        it !is OrganizationEnrollmentMode.Unrecognized && it in current.enrollmentModeOptions
       } ?: current.enrollmentModeOptions.first()
     mutableState.value =
       current.copy(
@@ -165,22 +158,23 @@ internal class OrganizationVerifiedDomainsViewModel(
     mutableState.value =
       current.copy(activeMutationId = CREATE_DOMAIN_MUTATION_ID, errorMessage = null)
     viewModelScope.launch(dispatcher) {
-      when (val result = currentOrganization.createDomain(name = name)) {
-        is ClerkResult.Success -> {
-          upsertDomain(result.value)
+      runUiOperation { currentOrganization.createDomain(name) }
+        .onSuccess { result ->
+          upsertDomain(result)
           mutableState.value =
             mutableState.value.copy(
               activeMutationId = null,
               domainName = "",
               affiliationEmailLocalPart =
-                result.value.affiliationEmailAddress?.substringBefore("@").orEmpty(),
+                result.affiliationEmailAddress?.substringBefore("@").orEmpty(),
               flow =
-                if (result.value.isVerified) OrganizationVerifiedDomainsFlow.DomainsList
-                else OrganizationVerifiedDomainsFlow.VerifyEmail(result.value),
+                if (result.isVerified) OrganizationVerifiedDomainsFlow.DomainsList
+                else OrganizationVerifiedDomainsFlow.VerifyEmail(result),
             )
         }
-        is ClerkResult.Failure -> mutationFailed(result.errorMessage)
-      }
+        .onFailure { failure ->
+          mutationFailed(failure.displayMessage)
+        }
     }
   }
 
@@ -210,9 +204,11 @@ internal class OrganizationVerifiedDomainsViewModel(
     mutableState.value =
       current.copy(activeMutationId = VERIFY_CODE_MUTATION_ID, errorMessage = null)
     viewModelScope.launch(dispatcher) {
-      when (val result = domain.verifyCode(code = code)) {
-        is ClerkResult.Success -> {
-          upsertDomain(result.value)
+      runUiOperation {
+          domain.attemptAffiliationVerification(AttemptAffiliationVerificationParams(code))
+        }
+        .onSuccess { result ->
+          upsertDomain(result)
           mutableState.value =
             mutableState.value.copy(
               activeMutationId = null,
@@ -220,8 +216,9 @@ internal class OrganizationVerifiedDomainsViewModel(
               flow = OrganizationVerifiedDomainsFlow.DomainsList,
             )
         }
-        is ClerkResult.Failure -> mutationFailed(result.errorMessage)
-      }
+        .onFailure { failure ->
+          mutationFailed(failure.displayMessage)
+        }
     }
   }
 
@@ -230,7 +227,7 @@ internal class OrganizationVerifiedDomainsViewModel(
     sendEmailCode(domain = domain, emailAddress = emailAddress, nextFlow = false)
   }
 
-  fun selectEnrollmentMode(mode: OrganizationDomain.EnrollmentMode) {
+  fun selectEnrollmentMode(mode: OrganizationEnrollmentMode) {
     if (mode !in mutableState.value.enrollmentModeOptions) return
     mutableState.value = mutableState.value.copy(selectedEnrollmentMode = mode)
   }
@@ -242,19 +239,20 @@ internal class OrganizationVerifiedDomainsViewModel(
     mutableState.value =
       current.copy(activeMutationId = UPDATE_ENROLLMENT_MUTATION_ID, errorMessage = null)
     viewModelScope.launch(dispatcher) {
-      when (
-        val result = domain.updateEnrollmentMode(enrollmentMode = current.selectedEnrollmentMode)
-      ) {
-        is ClerkResult.Success -> {
-          upsertDomain(result.value)
+      runUiOperation {
+          domain.updateEnrollmentMode(UpdateEnrollmentModeParams(current.selectedEnrollmentMode))
+        }
+        .onSuccess { result ->
+          upsertDomain(result)
           mutableState.value =
             mutableState.value.copy(
               activeMutationId = null,
               flow = OrganizationVerifiedDomainsFlow.DomainsList,
             )
         }
-        is ClerkResult.Failure -> mutationFailed(result.errorMessage)
-      }
+        .onFailure { failure ->
+          mutationFailed(failure.displayMessage)
+        }
     }
   }
 
@@ -264,8 +262,8 @@ internal class OrganizationVerifiedDomainsViewModel(
     mutableState.value =
       mutableState.value.copy(activeMutationId = DELETE_DOMAIN_MUTATION_ID, errorMessage = null)
     viewModelScope.launch(dispatcher) {
-      when (val result = domain.delete()) {
-        is ClerkResult.Success -> {
+      runUiOperation { domain.delete() }
+        .onSuccess { result ->
           mutableState.value =
             mutableState.value.copy(
               activeMutationId = null,
@@ -274,8 +272,9 @@ internal class OrganizationVerifiedDomainsViewModel(
               totalCount = (mutableState.value.totalCount - 1).coerceAtLeast(0),
             )
         }
-        is ClerkResult.Failure -> mutationFailed(result.errorMessage)
-      }
+        .onFailure { failure ->
+          mutationFailed(failure.displayMessage)
+        }
     }
   }
 
@@ -290,20 +289,29 @@ internal class OrganizationVerifiedDomainsViewModel(
 
     mutableState.value = current.copy(isLoadingMore = !reset, errorMessage = null)
     val offset = if (reset) 0 else current.domains.size
-    when (val result = currentOrganization.getDomains(limit = pageSize, offset = offset)) {
-      is ClerkResult.Success -> applyDomainPage(page = result.value, append = !reset)
-      is ClerkResult.Failure ->
+    runUiOperation {
+        currentOrganization.getDomains(
+          GetDomainsParams(
+            initialPage = offset.toDouble() / pageSize + 1,
+            pageSize = pageSize.toDouble(),
+          )
+        )
+      }
+      .onSuccess { result ->
+        applyDomainPage(page = result, append = !reset)
+      }
+      .onFailure { failure ->
         mutableState.value =
-          mutableState.value.copy(isLoadingMore = false, errorMessage = result.errorMessage)
-    }
+          mutableState.value.copy(isLoadingMore = false, errorMessage = failure.displayMessage)
+      }
   }
 
-  private fun applyDomainPage(page: ClerkPaginatedResponse<OrganizationDomain>, append: Boolean) {
+  private fun applyDomainPage(page: ClerkPaginatedResponseOrganizationDomain, append: Boolean) {
     val domains = if (append) mutableState.value.domains + page.data else page.data
     mutableState.value =
       mutableState.value.copy(
         domains = domains,
-        totalCount = page.totalCount,
+        totalCount = page.totalCount.toInt(),
         hasNextPage = domains.size < page.totalCount,
         isLoadingMore = false,
       )
@@ -313,9 +321,11 @@ internal class OrganizationVerifiedDomainsViewModel(
     mutableState.value =
       mutableState.value.copy(activeMutationId = SEND_CODE_MUTATION_ID, errorMessage = null)
     viewModelScope.launch(dispatcher) {
-      when (val result = domain.sendEmailCode(affiliationEmailAddress = emailAddress)) {
-        is ClerkResult.Success -> {
-          upsertDomain(result.value)
+      runUiOperation {
+          domain.prepareAffiliationVerification(PrepareAffiliationVerificationParams(emailAddress))
+        }
+        .onSuccess { result ->
+          upsertDomain(result)
           mutableState.value =
             mutableState.value.copy(
               activeMutationId = null,
@@ -323,7 +333,7 @@ internal class OrganizationVerifiedDomainsViewModel(
               flow =
                 if (nextFlow) {
                   OrganizationVerifiedDomainsFlow.VerifyCode(
-                    domain = result.value,
+                    domain = result,
                     emailAddress = emailAddress,
                   )
                 } else {
@@ -331,8 +341,9 @@ internal class OrganizationVerifiedDomainsViewModel(
                 },
             )
         }
-        is ClerkResult.Failure -> mutationFailed(result.errorMessage)
-      }
+        .onFailure { failure ->
+          mutationFailed(failure.displayMessage)
+        }
     }
   }
 

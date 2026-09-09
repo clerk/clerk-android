@@ -21,11 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.Organization
 import com.clerk.api.OrganizationCreationDefaults
+import com.clerk.api.OrganizationCreationDefaultsAdvisory
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
@@ -49,7 +51,9 @@ internal fun OrganizationCreateFlowView(
   skipInvitationScreen: Boolean = false,
   onInviteMembers: ((Organization) -> Unit)? = null,
   onBackPressed: (() -> Unit)? = null,
-  viewModel: OrganizationCreateFlowViewModel = viewModel(),
+  viewModel: OrganizationCreateFlowViewModel = clerkViewModel {
+    OrganizationCreateFlowViewModel(it)
+  },
 ) {
   val state by viewModel.state.collectAsState()
   var inviteOrganization by remember { mutableStateOf<Organization?>(null) }
@@ -123,6 +127,8 @@ private fun CreateOrganizationFormContent(
   onSubmit: (com.clerk.ui.organizationprofile.form.OrganizationProfileFormSubmit) -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  val clerk = LocalClerk.current
+
   val defaultName = creationDefaults?.form?.name.orEmpty()
   val defaultSlug = creationDefaults?.form?.slug ?: createOrganizationSlug(defaultName)
 
@@ -138,7 +144,7 @@ private fun CreateOrganizationFormContent(
       OrganizationProfileFormView(
         initialName = defaultName,
         initialSlug = defaultSlug,
-        slugEnabled = Clerk.organizationSlugIsEnabled,
+        slugEnabled = !clerk.environment.organizationSettings.slug.disabled,
         autoGenerateSlug = true,
         useAvatarLogoUpload = true,
         submitText = stringResource(R.string.create_organization),
@@ -166,7 +172,7 @@ private fun CreateOrganizationHeader() {
 }
 
 @Composable
-private fun AdvisoryText(advisory: OrganizationCreationDefaults.Advisory) {
+private fun AdvisoryText(advisory: OrganizationCreationDefaultsAdvisory) {
   val message =
     when (advisory.code) {
       "organization_already_exists" ->
@@ -191,4 +197,4 @@ private fun AdvisoryText(advisory: OrganizationCreationDefaults.Advisory) {
 private fun shouldShowPostCreateInviteStep(
   organization: Organization,
   skipInvitationScreen: Boolean,
-): Boolean = !skipInvitationScreen && organization.maxAllowedMemberships != 1
+): Boolean = !skipInvitationScreen && organization.maxAllowedMemberships != 1.0

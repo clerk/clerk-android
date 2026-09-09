@@ -40,21 +40,15 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.clerk.api.Clerk
-import com.clerk.api.Session
-import com.clerk.api.User
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.session.pendingTaskKey
-import com.clerk.api.session.requiresForcedMfa
-import com.clerk.api.user.fullName
-import com.clerk.telemetry.TelemetryCollector
+import com.clerk.api.*
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthView
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.dimens.dp12
@@ -65,6 +59,7 @@ import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.core.telemetry.TelemetryEvents
+import com.clerk.ui.organizationprofile.*
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
@@ -123,12 +118,14 @@ private fun UserButtonPresenter(
   customDestination: (@Composable (String) -> Unit)?,
   onRequiresForcedMfaClick: (() -> Unit)?,
 ) {
-  val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  val sessionUser by Clerk.userFlow.collectAsStateWithLifecycle()
-  val effectiveSession = session ?: Clerk.session
+  val clerk = LocalClerk.current
+
+  val session = clerk.session
+  val sessionUser = clerk.user
+  val effectiveSession = session ?: clerk.session
   val resolved = resolvedUserButtonState(effectiveSession, sessionUser, treatPendingAsSignedOut)
-  val requiresForcedMfa = effectiveSession?.requiresForcedMfa == true
-  val hasPendingNonMfaTask = effectiveSession?.pendingTaskKey != null && !requiresForcedMfa
+  val requiresForcedMfa = effectiveSession?.currentTask?.key == SessionTaskKey.SetupMfa
+  val hasPendingNonMfaTask = effectiveSession?.currentTask != null && !requiresForcedMfa
   val user = resolved.user
   val telemetry = LocalTelemetryCollector.current
   var showProfile by rememberSaveable { mutableStateOf(false) }
@@ -190,13 +187,11 @@ private fun resolvedUserButtonState(
   sessionUser: User?,
   treatPendingAsSignedOut: Boolean,
 ): ResolvedUserButtonState {
+
   return resolveUserButtonState(
     sessionExists = effectiveSession != null,
     sessionUser = sessionUser ?: effectiveSession?.user,
-    activeUser =
-      effectiveSession?.takeIf { it.status == Session.SessionStatus.ACTIVE }?.user
-        ?: Clerk.activeUser
-        ?: Clerk.user,
+    activeUser = effectiveSession?.takeIf { it.status == SessionStatus.Active }?.user,
     treatPendingAsSignedOut = treatPendingAsSignedOut,
   )
 }
@@ -209,7 +204,7 @@ private fun ObserveUserButtonState(
   hasPendingNonMfaTask: Boolean,
   requiresForcedMfa: Boolean,
   authMode: UserButtonAuthMode?,
-  telemetry: TelemetryCollector,
+  telemetry: TelemetryCollector?,
   onDismissPendingSessionSheet: () -> Unit,
   onDismissAuth: () -> Unit,
 ) {
@@ -399,6 +394,8 @@ private fun PendingSessionAccountSheetHost(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PendingSessionAccountSheet(user: User, session: Session, onDismissRequest: () -> Unit) {
+  val clerk = LocalClerk.current
+
   ClerkMaterialTheme {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -433,16 +430,17 @@ private fun PendingSessionAccountSheet(user: User, session: Session, onDismissRe
             isSigningOut = true
             errorMessage = null
             scope.launch {
-              when (val result = Clerk.auth.signOut(sessionId = session.id)) {
-                is ClerkResult.Success -> {
+              runUiOperation { clerk.signOut(MobileSignOutOptions(sessionId = session.id)) }
+                .onSuccess { result ->
                   sheetState.hide()
                   onDismissRequest()
                 }
-                is ClerkResult.Failure -> {
-                  isSigningOut = false
-                  errorMessage = result.errorMessage
+                .onFailure { failure ->
+                  {
+                    isSigningOut = false
+                    errorMessage = failure.displayMessage
+                  }
                 }
-              }
             }
           },
         )
@@ -609,7 +607,7 @@ internal fun shouldShowUserButton(
   }
 }
 
-private fun User.displayName(): String = fullName().ifBlank { username.orEmpty() }
+private fun User.displayName(): String = fullName.orEmpty().ifBlank { username.orEmpty() }
 
 private fun Session.displayIdentifier(user: User): String? {
   return publicUserData?.identifier?.takeIf { it.isNotBlank() }

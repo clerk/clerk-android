@@ -1,6 +1,6 @@
 # TypeScript core prerelease
 
-The API module now builds generated Kotlin resources from `NativeCore`, using the bundled QuickJS runtime and JavaScript asset. The authentication roots derive from `SignInFutureResource` and `SignUpFutureResource`. The former native domain implementation is excluded from the API module; Compose migration is in progress: profile and authentication screens use the generated instance; organization and session-task screens still need migration before the UI module can build.
+The API module now builds generated Kotlin resources from `NativeCore`, using the bundled QuickJS runtime and JavaScript asset. The authentication roots derive from `SignInFutureResource` and `SignUpFutureResource`. The former native domain implementation is excluded from the API module. The complete Compose UI module now compiles against generated resources, including authentication, profile, organizations, account controls and session tasks. Example applications, test-target migration and device UI journeys are the next verification gates.
 
 ```kotlin
 val clerk = Clerk.connect(
@@ -24,7 +24,7 @@ Supply the retained instance with `ClerkProvider(clerk, theme = theme) { ... }` 
 
 Authentication models call generated future methods, and `AuthView` explicitly finalizes completed attempts before presenting source-reported session tasks. Identifier fallback and Google One Tap transfer remain in the shared core. Saved navigation holds UI factor selections and form prefills, never live resource handles. Use `LocalClerk.isAuthFlowComplete` to include pending prebuilt presentation steps when choosing authenticated content.
 
-Profile actions call generated resources directly and catch structured exceptions. Device lists use `User.getSessions()` and `SessionWithActivities`; account deletion delegates cleanup to the source `User.delete()`. Previews decode fixtures produced by the TypeScript state serializer rather than constructing independent native domain objects.
+Profile and organization actions call generated resources directly and catch structured exceptions. Organization lists translate page selections into the source pagination parameters; pending organization selection uses the core's current session. Device lists use `User.getSessions()` and `SessionWithActivities`; account deletion delegates cleanup to the source `User.delete()`. Previews decode fixtures produced by the TypeScript state serializer rather than constructing independent native domain objects.
 
 ## Credential continuity
 

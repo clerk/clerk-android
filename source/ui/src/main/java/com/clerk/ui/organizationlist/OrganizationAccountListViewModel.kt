@@ -2,25 +2,10 @@ package com.clerk.ui.organizationlist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Clerk
-import com.clerk.api.OrganizationCreationDefaults
-import com.clerk.api.OrganizationMembership
-import com.clerk.api.OrganizationSuggestion
-import com.clerk.api.Session
-import com.clerk.api.User
-import com.clerk.api.UserOrganizationInvitation
-import com.clerk.api.network.ClerkPaginatedResponse
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.organizations.accept
-import com.clerk.api.user.getOrganizationCreationDefaults
-import com.clerk.api.user.getOrganizationInvitations
-import com.clerk.api.user.getOrganizationMemberships
-import com.clerk.api.user.getOrganizationSuggestions
-import com.clerk.ui.core.common.ClerkLog
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.organizationprofile.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -32,6 +17,7 @@ import kotlinx.coroutines.withContext
 
 @Suppress("TooManyFunctions")
 internal open class OrganizationAccountListViewModel(
+  protected val clerk: Clerk,
   private val pageSize: Int = DEFAULT_PAGE_SIZE,
   private val workDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
@@ -66,11 +52,11 @@ internal open class OrganizationAccountListViewModel(
               mutableState.value.copy(
                 isLoading = false,
                 memberships = loadResult.memberships.data,
-                membershipsTotalCount = loadResult.memberships.totalCount,
+                membershipsTotalCount = loadResult.memberships.totalCount.toInt(),
                 invitations = loadResult.invitations.data,
-                invitationsTotalCount = loadResult.invitations.totalCount,
+                invitationsTotalCount = loadResult.invitations.totalCount.toInt(),
                 suggestions = loadResult.suggestions.data,
-                suggestionsTotalCount = loadResult.suggestions.totalCount,
+                suggestionsTotalCount = loadResult.suggestions.totalCount.toInt(),
                 creationDefaults = loadResult.creationDefaults,
                 hasLoadedInitialResources = true,
                 errorMessage = null,
@@ -100,15 +86,21 @@ internal open class OrganizationAccountListViewModel(
 
     mutableState.value = current.copy(isLoadingMoreMemberships = true, errorMessage = null)
     viewModelScope.launch(workDispatcher) {
-      user
-        .getOrganizationMemberships(limit = pageSize, offset = current.memberships.size)
+      runUiOperation {
+          user.getOrganizationMemberships(
+            GetUserOrganizationMembershipParams(
+              pageSize = pageSize.toDouble(),
+              initialPage = current.memberships.size.toDouble() / pageSize + 1,
+            )
+          )
+        }
         .onSuccess { response ->
           withContext(Dispatchers.Main) {
             val latest = mutableState.value
             mutableState.value =
               latest.copy(
                 memberships = latest.memberships + response.data,
-                membershipsTotalCount = response.totalCount,
+                membershipsTotalCount = response.totalCount.toInt(),
                 isLoadingMoreMemberships = false,
               )
           }
@@ -118,7 +110,7 @@ internal open class OrganizationAccountListViewModel(
             mutableState.value =
               mutableState.value.copy(
                 isLoadingMoreMemberships = false,
-                errorMessage = failure.errorMessage,
+                errorMessage = failure.displayMessage,
               )
           }
         }
@@ -132,19 +124,22 @@ internal open class OrganizationAccountListViewModel(
 
     mutableState.value = current.copy(isLoadingMoreInvitations = true, errorMessage = null)
     viewModelScope.launch(workDispatcher) {
-      user
-        .getOrganizationInvitations(
-          limit = pageSize,
-          offset = current.pendingInvitationsCount,
-          status = PENDING_STATUS,
-        )
+      runUiOperation {
+          user.getOrganizationInvitations(
+            GetUserOrganizationInvitationsParams(
+              pageSize = pageSize.toDouble(),
+              initialPage = current.pendingInvitationsCount.toDouble() / pageSize + 1,
+              status = OrganizationInvitationStatus.Pending,
+            )
+          )
+        }
         .onSuccess { response ->
           withContext(Dispatchers.Main) {
             val latest = mutableState.value
             mutableState.value =
               latest.copy(
                 invitations = latest.invitations + response.data,
-                invitationsTotalCount = response.totalCount,
+                invitationsTotalCount = response.totalCount.toInt(),
                 isLoadingMoreInvitations = false,
               )
           }
@@ -154,7 +149,7 @@ internal open class OrganizationAccountListViewModel(
             mutableState.value =
               mutableState.value.copy(
                 isLoadingMoreInvitations = false,
-                errorMessage = failure.errorMessage,
+                errorMessage = failure.displayMessage,
               )
           }
         }
@@ -168,19 +163,22 @@ internal open class OrganizationAccountListViewModel(
 
     mutableState.value = current.copy(isLoadingMoreSuggestions = true, errorMessage = null)
     viewModelScope.launch(workDispatcher) {
-      user
-        .getOrganizationSuggestions(
-          limit = pageSize,
-          offset = current.suggestions.size,
-          statuses = SUGGESTION_STATUSES,
-        )
+      runUiOperation {
+          user.getOrganizationSuggestions(
+            GetUserOrganizationSuggestionsParams(
+              pageSize = pageSize.toDouble(),
+              initialPage = current.suggestions.size.toDouble() / pageSize + 1,
+              status = SUGGESTION_STATUSES,
+            )
+          )
+        }
         .onSuccess { response ->
           withContext(Dispatchers.Main) {
             val latest = mutableState.value
             mutableState.value =
               latest.copy(
                 suggestions = latest.suggestions + response.data,
-                suggestionsTotalCount = response.totalCount,
+                suggestionsTotalCount = response.totalCount.toInt(),
                 isLoadingMoreSuggestions = false,
               )
           }
@@ -190,7 +188,7 @@ internal open class OrganizationAccountListViewModel(
             mutableState.value =
               mutableState.value.copy(
                 isLoadingMoreSuggestions = false,
-                errorMessage = failure.errorMessage,
+                errorMessage = failure.displayMessage,
               )
           }
         }
@@ -208,8 +206,15 @@ internal open class OrganizationAccountListViewModel(
     mutableState.value =
       mutableState.value.copy(activeActionId = PERSONAL_ACCOUNT_ACTION_ID, errorMessage = null)
     viewModelScope.launch(workDispatcher) {
-      Clerk.auth
-        .setActive(sessionId = session.id)
+      runUiOperation {
+          clerk.setActive(
+            MobileSetActiveParams(
+              session = Field.Value(MobileSetActiveParamsSession.Case1(session.id)),
+              organization = Field.Null,
+            )
+          )
+          clerk.session?.takeIf { it.id == session.id } ?: throw CoreException("session_changed")
+        }
         .onSuccess { selectedSession ->
           withContext(Dispatchers.Main) {
             mutableState.value =
@@ -220,7 +225,7 @@ internal open class OrganizationAccountListViewModel(
         .onFailure { failure ->
           withContext(Dispatchers.Main) {
             mutableState.value =
-              mutableState.value.copy(activeActionId = null, errorMessage = failure.errorMessage)
+              mutableState.value.copy(activeActionId = null, errorMessage = failure.displayMessage)
           }
         }
     }
@@ -237,8 +242,15 @@ internal open class OrganizationAccountListViewModel(
     mutableState.value =
       mutableState.value.copy(activeActionId = organizationId, errorMessage = null)
     viewModelScope.launch(workDispatcher) {
-      Clerk.auth
-        .setActive(sessionId = session.id, organizationId = organizationId)
+      runUiOperation {
+          clerk.setActive(
+            MobileSetActiveParams(
+              session = Field.Value(MobileSetActiveParamsSession.Case1(session.id)),
+              organization = Field.Value(MobileSetActiveParamsOrganization.Case1(organizationId)),
+            )
+          )
+          clerk.session?.takeIf { it.id == session.id } ?: throw CoreException("session_changed")
+        }
         .onSuccess { selectedSession ->
           withContext(Dispatchers.Main) {
             mutableState.value =
@@ -264,8 +276,7 @@ internal open class OrganizationAccountListViewModel(
       mutableState.value.copy(activeActionId = invitation.id, errorMessage = null)
 
     viewModelScope.launch(workDispatcher) {
-      invitation
-        .accept()
+      runUiOperation { invitation.accept() }
         .onSuccess { accepted ->
           withContext(Dispatchers.Main) {
             val latest = mutableState.value
@@ -286,7 +297,7 @@ internal open class OrganizationAccountListViewModel(
         .onFailure { failure ->
           withContext(Dispatchers.Main) {
             mutableState.value =
-              mutableState.value.copy(activeActionId = null, errorMessage = failure.errorMessage)
+              mutableState.value.copy(activeActionId = null, errorMessage = failure.displayMessage)
           }
         }
     }
@@ -298,8 +309,7 @@ internal open class OrganizationAccountListViewModel(
       mutableState.value.copy(activeActionId = suggestion.id, errorMessage = null)
 
     viewModelScope.launch(workDispatcher) {
-      suggestion
-        .accept()
+      runUiOperation { suggestion.accept() }
         .onSuccess { accepted ->
           withContext(Dispatchers.Main) {
             val latest = mutableState.value
@@ -314,7 +324,7 @@ internal open class OrganizationAccountListViewModel(
         .onFailure { failure ->
           withContext(Dispatchers.Main) {
             mutableState.value =
-              mutableState.value.copy(activeActionId = null, errorMessage = failure.errorMessage)
+              mutableState.value.copy(activeActionId = null, errorMessage = failure.displayMessage)
           }
         }
     }
@@ -328,9 +338,9 @@ internal open class OrganizationAccountListViewModel(
     mutableState.value = mutableState.value.copy(errorMessage = null)
   }
 
-  protected open fun currentUser(): User? = Clerk.user
+  protected open fun currentUser(): User? = clerk.user
 
-  protected open fun currentSession(): Session? = Clerk.session
+  protected open fun currentSession(): Session? = clerk.session
 
   protected open fun missingUserState(
     current: OrganizationAccountListState
@@ -339,76 +349,65 @@ internal open class OrganizationAccountListViewModel(
   }
 
   protected open fun shouldFetchCreationDefaults(user: User): Boolean {
-    return user.createOrganizationEnabled == true && Clerk.organizationCreationDefaultsIsEnabled
+    return user.createOrganizationEnabled == true &&
+      clerk.environment.organizationSettings.organizationCreationDefaults.enabled
   }
 
-  protected open fun organizationSelectionErrorMessage(
-    failure: ClerkResult.Failure<ClerkErrorResponse>
-  ): String {
-    val code = failure.error?.errors?.firstOrNull()?.code
+  protected open fun organizationSelectionErrorMessage(failure: Throwable): String {
+    val code = (failure as? CoreException)?.errors?.firstOrNull()?.code
     if (code in ORGANIZATION_MEMBERSHIP_ERROR_CODES) {
       return "You are no longer a member of this organization. Please choose another one."
     }
-    return failure.errorMessage
+    return failure.displayMessage
   }
 
-  private suspend fun loadInitialResources(user: User): InitialLoadResult = coroutineScope {
-    val memberships = async { user.getOrganizationMemberships(limit = pageSize, offset = 0) }
-    val invitations = async {
-      user.getOrganizationInvitations(limit = pageSize, offset = 0, status = PENDING_STATUS)
-    }
-    val suggestions = async {
-      user.getOrganizationSuggestions(limit = pageSize, offset = 0, statuses = SUGGESTION_STATUSES)
-    }
-    val creationDefaults = async {
-      if (shouldFetchCreationDefaults(user)) user.getOrganizationCreationDefaults() else null
-    }
-
-    val membershipsResult = memberships.await()
-    val invitationsResult = invitations.await()
-    val suggestionsResult = suggestions.await()
-    val creationDefaultsResult = creationDefaults.await()
-
-    val failure =
-      listOf(membershipsResult, invitationsResult, suggestionsResult)
-        .filterIsInstance<ClerkResult.Failure<ClerkErrorResponse>>()
-        .firstOrNull()
-
-    if (failure != null) {
-      InitialLoadResult.Failure(failure.errorMessage)
-    } else {
-      InitialLoadResult.Success(
-        memberships =
-          (membershipsResult as ClerkResult.Success<ClerkPaginatedResponse<OrganizationMembership>>)
-            .value,
-        invitations =
-          (invitationsResult
-              as ClerkResult.Success<ClerkPaginatedResponse<UserOrganizationInvitation>>)
-            .value,
-        suggestions =
-          (suggestionsResult as ClerkResult.Success<ClerkPaginatedResponse<OrganizationSuggestion>>)
-            .value,
-        creationDefaults = creationDefaultsResult?.creationDefaultsOrNull(),
-      )
-    }
-  }
-
-  private fun ClerkResult<OrganizationCreationDefaults, ClerkErrorResponse>
-    .creationDefaultsOrNull(): OrganizationCreationDefaults? {
-    return when (this) {
-      is ClerkResult.Success -> value
-      is ClerkResult.Failure -> {
-        ClerkLog.e("Failed to fetch organization creation defaults: $errorMessage")
-        null
+  private suspend fun loadInitialResources(user: User): InitialLoadResult {
+    return runUiOperation {
+        coroutineScope {
+          val memberships = async {
+            user.getOrganizationMemberships(
+              GetUserOrganizationMembershipParams(pageSize = pageSize.toDouble(), initialPage = 1.0)
+            )
+          }
+          val invitations = async {
+            user.getOrganizationInvitations(
+              GetUserOrganizationInvitationsParams(
+                pageSize = pageSize.toDouble(),
+                initialPage = 1.0,
+                status = OrganizationInvitationStatus.Pending,
+              )
+            )
+          }
+          val suggestions = async {
+            user.getOrganizationSuggestions(
+              GetUserOrganizationSuggestionsParams(
+                pageSize = pageSize.toDouble(),
+                initialPage = 1.0,
+                status = SUGGESTION_STATUSES,
+              )
+            )
+          }
+          val defaults = async {
+            if (shouldFetchCreationDefaults(user))
+              runUiOperation { user.getOrganizationCreationDefaults() }.getOrNull()
+            else null
+          }
+          InitialLoadResult.Success(
+            memberships.await(),
+            invitations.await(),
+            suggestions.await(),
+            defaults.await(),
+          )
+        }
       }
-    }
+      .getOrElse { InitialLoadResult.Failure(it.displayMessage) }
   }
 
   private sealed interface InitialLoadResult {
     data class Success(
-      val memberships: ClerkPaginatedResponse<OrganizationMembership>,
-      val invitations: ClerkPaginatedResponse<UserOrganizationInvitation>,
-      val suggestions: ClerkPaginatedResponse<OrganizationSuggestion>,
+      val memberships: ClerkPaginatedResponseOrganizationMembership,
+      val invitations: ClerkPaginatedResponseUserOrganizationInvitation,
+      val suggestions: ClerkPaginatedResponseOrganizationSuggestion,
       val creationDefaults: OrganizationCreationDefaults?,
     ) : InitialLoadResult
 
@@ -419,7 +418,10 @@ internal open class OrganizationAccountListViewModel(
     const val DEFAULT_PAGE_SIZE = 10
     const val PENDING_STATUS = "pending"
     const val SESSION_MISSING_MESSAGE = "Session does not exist"
-    val SUGGESTION_STATUSES = listOf("pending", "accepted")
+    val SUGGESTION_STATUSES =
+      GetUserOrganizationSuggestionsParamsStatus.Case3(
+        listOf(OrganizationSuggestionStatus.Pending, OrganizationSuggestionStatus.Accepted)
+      )
     val ORGANIZATION_MEMBERSHIP_ERROR_CODES =
       setOf("organization_not_found_or_unauthorized", "not_a_member_in_organization")
   }

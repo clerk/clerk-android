@@ -57,7 +57,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.api.Organization
 import com.clerk.api.OrganizationInvitation
 import com.clerk.api.OrganizationMembership
@@ -71,6 +70,8 @@ import com.clerk.ui.core.avatar.AvatarView
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -88,6 +89,7 @@ import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
+import com.clerk.ui.organizationprofile.*
 import com.clerk.ui.theme.ClerkMaterialTheme
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -106,15 +108,17 @@ internal fun OrganizationMembersView(
   initialTab: OrganizationMembersTab? = null,
   refreshKey: Int = 0,
   onInviteMembers: (() -> Unit)? = null,
-  viewModel: OrganizationMembersViewModel = viewModel(),
+  viewModel: OrganizationMembersViewModel = clerkViewModel { OrganizationMembersViewModel(it) },
 ) {
+  val clerk = LocalClerk.current
+
   val state by viewModel.state.collectAsState()
 
   LaunchedEffect(organization.id, membership?.id, initialTab, refreshKey) {
     viewModel.load(
       organization = organization,
       membership = membership,
-      domainsEnabled = Clerk.organizationDomainsIsEnabled,
+      domainsEnabled = clerk.environment.organizationSettings.domains.enabled,
       initialTab = initialTab,
     )
   }
@@ -505,7 +509,10 @@ private fun CurrentMemberBadge() {
 private fun MemberDetails(membership: OrganizationMembership, isViewer: Boolean) {
   val identifier = membership.publicUserData?.identifier.orEmpty()
   val joinedLabel =
-    stringResource(R.string.joined_date, formattedMembershipDate(membership.createdAt))
+    stringResource(
+      R.string.joined_date,
+      formattedMembershipDate(membership.createdAt.toEpochMilli()),
+    )
   if (identifier.isNotBlank()) {
     MemberDetailText(text = identifier)
   }

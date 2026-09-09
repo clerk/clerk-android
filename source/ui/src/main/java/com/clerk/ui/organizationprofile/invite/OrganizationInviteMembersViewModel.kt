@@ -2,19 +2,15 @@ package com.clerk.ui.organizationprofile.invite
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Clerk
-import com.clerk.api.Organization
-import com.clerk.api.Role
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.organizations.bulkCreateInvitations
-import com.clerk.api.organizations.getRoles
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.organizationprofile.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class OrganizationInviteMembersViewModel : ViewModel() {
+internal class OrganizationInviteMembersViewModel(private val clerk: Clerk) : ViewModel() {
 
   private val _state = MutableStateFlow(OrganizationInviteMembersState())
   val state = _state.asStateFlow()
@@ -22,8 +18,7 @@ internal class OrganizationInviteMembersViewModel : ViewModel() {
   fun loadRoles(organization: Organization) {
     _state.value = _state.value.copy(isLoadingRoles = true, errorMessage = null)
     viewModelScope.launch {
-      organization
-        .getRoles()
+      runUiOperation { organization.getRoles().data }
         .onSuccess { roles ->
           _state.value =
             _state.value.copy(
@@ -38,7 +33,7 @@ internal class OrganizationInviteMembersViewModel : ViewModel() {
               isLoadingRoles = false,
               roles = emptyList(),
               selectedRoleKey = null,
-              errorMessage = "Failed to load organization roles: ${it.errorMessage}",
+              errorMessage = "Failed to load organization roles: ${it.displayMessage}",
             )
         }
     }
@@ -54,8 +49,7 @@ internal class OrganizationInviteMembersViewModel : ViewModel() {
 
     _state.value = _state.value.copy(isSubmitting = true, errorMessage = null)
     viewModelScope.launch {
-      organization
-        .bulkCreateInvitations(emailAddresses = emailAddresses, role = roleKey)
+      runUiOperation { organization.inviteMembers(InviteMembersParams(emailAddresses, roleKey)) }
         .onSuccess {
           _state.value =
             _state.value.copy(isSubmitting = false, completion = OrganizationInviteCompletion.Sent)
@@ -64,7 +58,7 @@ internal class OrganizationInviteMembersViewModel : ViewModel() {
           _state.value =
             _state.value.copy(
               isSubmitting = false,
-              errorMessage = "Failed to send invitations: ${it.errorMessage}",
+              errorMessage = "Failed to send invitations: ${it.displayMessage}",
             )
         }
     }
@@ -79,7 +73,7 @@ internal class OrganizationInviteMembersViewModel : ViewModel() {
   }
 
   private fun defaultSelectedRoleKey(roles: List<Role>): String? {
-    val defaultRole = Clerk.organizationDefaultRoleKey
+    val defaultRole = clerk.environment.organizationSettings.domains.defaultRole
     return roles.firstOrNull { it.key == defaultRole }?.key ?: roles.singleOrNull()?.key
   }
 }

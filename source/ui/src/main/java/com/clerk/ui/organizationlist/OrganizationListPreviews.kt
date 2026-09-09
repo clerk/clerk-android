@@ -10,8 +10,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.clerk.api.OrganizationSuggestion
-import com.clerk.api.organizations.PublicOrganizationData
 import com.clerk.ui.R
+import com.clerk.ui.core.preview.ClerkPreview
+import com.clerk.ui.core.preview.previewResource
 import com.clerk.ui.organizationswitcher.previewOrganizationMembership
 import com.clerk.ui.organizationswitcher.previewOrganizationSwitcherUser
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -19,30 +20,32 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 @PreviewLightDark
 @Composable
 private fun OrganizationListLoadedPreview() {
-  PreviewSurface {
-    OrganizationAccountListContent(
-      state =
-        OrganizationAccountListState(
-          isLoading = false,
-          hasLoadedInitialResources = true,
-          canCreateOrganization = true,
-          memberships = previewMemberships,
-          membershipsTotalCount = previewMemberships.size,
-          suggestions = listOf(previewSuggestion()),
-          suggestionsTotalCount = 1,
-        ),
-      user = previewOrganizationSwitcherUser(),
-      activeOrganizationId = "org_acme",
-      header =
-        OrganizationAccountListHeader(
-          title = stringResource(R.string.choose_an_account),
-          subtitle = stringResource(R.string.select_the_account_with_which_you_wish_to_continue),
-        ),
-      showPersonalAccount = true,
-      showSelectedAccessory = true,
-      contentPadding = PaddingValues(24.dp),
-      actions = previewActions(),
-    )
+  ClerkPreview("profile") {
+    PreviewSurface {
+      OrganizationAccountListContent(
+        state =
+          OrganizationAccountListState(
+            isLoading = false,
+            hasLoadedInitialResources = true,
+            canCreateOrganization = true,
+            memberships = previewMemberships(),
+            membershipsTotalCount = previewMemberships().size,
+            suggestions = listOf(previewSuggestion()),
+            suggestionsTotalCount = 1,
+          ),
+        user = previewOrganizationSwitcherUser(),
+        activeOrganizationId = "org_acme",
+        header =
+          OrganizationAccountListHeader(
+            title = stringResource(R.string.choose_an_account),
+            subtitle = stringResource(R.string.select_the_account_with_which_you_wish_to_continue),
+          ),
+        showPersonalAccount = true,
+        showSelectedAccessory = true,
+        contentPadding = PaddingValues(24.dp),
+        actions = previewActions(),
+      )
+    }
   }
 }
 
@@ -59,36 +62,11 @@ private fun PreviewSurface(content: @Composable () -> Unit) {
   }
 }
 
-private val previewMemberships =
-  listOf(
-    previewOrganizationMembership(
-      organizationId = "org_acme",
-      organizationName = "Acme Inc.",
-      roleName = "Admin",
-    ),
-    previewOrganizationMembership(
-      organizationId = "org_mosaic",
-      organizationName = "Mosaic Labs",
-      roleName = "Member",
-    ),
-  )
+@Composable private fun previewMemberships() = listOf(previewOrganizationMembership())
 
-private fun previewSuggestion(): OrganizationSuggestion {
-  return OrganizationSuggestion(
-    id = "sug_1",
-    publicOrganizationData =
-      PublicOrganizationData(
-        id = "org_suggested",
-        hasImage = false,
-        imageUrl = "",
-        name = "Suggested Labs",
-        slug = "suggested",
-      ),
-    status = "pending",
-    createdAt = 1,
-    updatedAt = 1,
-  )
-}
+@Composable
+private fun previewSuggestion(): OrganizationSuggestion =
+  previewResource("OrganizationSuggestion") as OrganizationSuggestion
 
 private fun previewActions(): OrganizationAccountListActions {
   return OrganizationAccountListActions(

@@ -41,16 +41,16 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.SubcomposeAsyncImage
-import com.clerk.api.Clerk
 import com.clerk.api.Organization
 import com.clerk.api.OrganizationCreationDefaults
 import com.clerk.api.OrganizationMembership
 import com.clerk.api.User
-import com.clerk.api.user.fullName
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarType
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp2
@@ -267,10 +267,14 @@ internal fun OrganizationSwitcherImpl(
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
   organizationProfileCustomRows: List<OrganizationProfileCustomRow> = emptyList(),
   organizationProfileCustomDestination: (@Composable (String) -> Unit)? = null,
-  viewModel: OrganizationAccountListViewModel = viewModel(),
+  viewModel: OrganizationAccountListViewModel = clerkViewModel {
+    OrganizationAccountListViewModel(it)
+  },
 ) {
-  val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val clerk = LocalClerk.current
+
+  val session = clerk.session
+  val user = clerk.user
   val state by viewModel.state.collectAsStateWithLifecycle()
   var sheetDestination by rememberSaveable {
     mutableStateOf<OrganizationSwitcherSheetDestination?>(null)
@@ -281,7 +285,10 @@ internal fun OrganizationSwitcherImpl(
   var postCreateInviteOrganization by remember { mutableStateOf<Organization?>(null) }
 
   val activeMembership = activeOrganizationMembership(user, session, state.memberships)
-  val showPersonalAccount = user != null && !hidePersonal && !Clerk.organizationSelectionIsForced
+  val showPersonalAccount =
+    user != null &&
+      !hidePersonal &&
+      !clerk.environment.organizationSettings.forceOrganizationSelection
   val dismissActiveSheet = { sheetDestination = null }
   val clearErrorAction = remember(viewModel) { { viewModel.clearError() } }
   val manageOrganizationAction =
@@ -325,7 +332,7 @@ internal fun OrganizationSwitcherImpl(
     shouldShowOrganizationSwitcher(
       hasUser = user != null,
       hasSession = session != null,
-      organizationsEnabled = Clerk.organizationIsEnabled,
+      organizationsEnabled = clerk.environment.organizationSettings.enabled,
     )
 
   if (shouldShow) {
@@ -397,10 +404,14 @@ private fun OrganizationSwitcherSheetImpl(
   onCreateOrganization: ((OrganizationCreationDefaults?) -> Unit)? = null,
   organizationProfileCustomRows: List<OrganizationProfileCustomRow> = emptyList(),
   organizationProfileCustomDestination: (@Composable (String) -> Unit)? = null,
-  viewModel: OrganizationAccountListViewModel = viewModel(),
+  viewModel: OrganizationAccountListViewModel = clerkViewModel {
+    OrganizationAccountListViewModel(it)
+  },
 ) {
-  val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val clerk = LocalClerk.current
+
+  val session = clerk.session
+  val user = clerk.user
   val state by viewModel.state.collectAsStateWithLifecycle()
   var sheetDestination by rememberSaveable {
     mutableStateOf<OrganizationSwitcherSheetDestination?>(
@@ -413,7 +424,10 @@ private fun OrganizationSwitcherSheetImpl(
   var postCreateInviteOrganization by remember { mutableStateOf<Organization?>(null) }
 
   val activeMembership = activeOrganizationMembership(user, session, state.memberships)
-  val showPersonalAccount = user != null && !hidePersonal && !Clerk.organizationSelectionIsForced
+  val showPersonalAccount =
+    user != null &&
+      !hidePersonal &&
+      !clerk.environment.organizationSettings.forceOrganizationSelection
   val dismissActiveSheet = { sheetDestination = null }
   val clearErrorAction = remember(viewModel) { { viewModel.clearError() } }
   val manageOrganizationAction =
@@ -1006,7 +1020,8 @@ private fun organizationSwitcherTriggerContent(
 }
 
 private fun User.displayName(): String {
-  return fullName()
+  return fullName
+    .orEmpty()
     .ifBlank { username.orEmpty() }
     .ifBlank { primaryEmailAddress?.emailAddress.orEmpty() }
 }

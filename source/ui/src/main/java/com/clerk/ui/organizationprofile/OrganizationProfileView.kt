@@ -14,16 +14,15 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.clerk.api.Clerk
 import com.clerk.api.Organization
 import com.clerk.api.OrganizationMembership
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
@@ -79,17 +78,21 @@ fun OrganizationProfileView(
   onDismiss: (() -> Unit)? = null,
   onComplete: (() -> Unit)? = null,
 ) {
+  val clerk = LocalClerk.current
+
   ClerkThemeOverrideProvider(clerkTheme) {
     TelemetryProvider {
       val backStack = rememberNavBackStack(OrganizationProfileDestination.Root)
-      val session by Clerk.sessionFlow.collectAsStateWithLifecycle()
-      val user by Clerk.userFlow.collectAsStateWithLifecycle()
-      val membership = Clerk.organizationMembership
-      val organization = membership?.organization ?: Clerk.organization
+      val session = clerk.session
+      val user = clerk.user
+      val membership =
+        clerk.user?.organizationMemberships?.firstOrNull {
+          it.organization.id == clerk.organization?.id
+        }
+      val organization = membership?.organization ?: clerk.organization
       val dismissHandler = rememberDismissHandler(onDismiss)
       val completeHandler = onComplete ?: dismissHandler
 
-      LaunchedEffect(Unit) { Clerk.refreshClient() }
       OrganizationProfileEffects(
         organizationId = organization?.id,
         onComplete = completeHandler,
@@ -115,7 +118,12 @@ fun OrganizationProfileView(
       }
 
       LaunchedEffect(session?.id, user?.id) {
-        if (Clerk.organizationMembership == null && Clerk.organization == null) completeHandler()
+        if (
+          clerk.user?.organizationMemberships?.firstOrNull {
+            it.organization.id == clerk.organization?.id
+          } == null && clerk.organization == null
+        )
+          completeHandler()
       }
     }
   }

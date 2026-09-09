@@ -25,6 +25,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
@@ -40,7 +41,9 @@ internal fun OrganizationProfileActionConfirmationView(
   onBackPressed: () -> Unit,
   onSuccess: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: OrganizationProfileActionConfirmationViewModel = viewModel(),
+  viewModel: OrganizationProfileActionConfirmationViewModel = clerkViewModel {
+    OrganizationProfileActionConfirmationViewModel(it)
+  },
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
 

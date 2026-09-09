@@ -1,10 +1,10 @@
 package com.clerk.ui.organizationprofile.members
 
-import com.clerk.api.Clerk
 import com.clerk.api.OrganizationInvitation
 import com.clerk.api.OrganizationMembership
 import com.clerk.api.OrganizationMembershipRequest
 import com.clerk.api.Role
+import com.clerk.ui.organizationprofile.*
 
 internal enum class OrganizationMembersTab {
   Members,
@@ -53,7 +53,7 @@ internal data class OrganizationMembersActions(
 
 internal fun organizationMembersAvailableTabs(
   membership: OrganizationMembership?,
-  domainsEnabled: Boolean = Clerk.organizationDomainsIsEnabled,
+  domainsEnabled: Boolean,
 ): List<OrganizationMembersTab> {
   return buildList {
     if (membership?.canReadMemberships == true || membership?.canManageMemberships == true) {

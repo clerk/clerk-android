@@ -42,6 +42,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -62,7 +63,9 @@ internal fun OrganizationInviteMembersView(
   organization: Organization,
   onComplete: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: OrganizationInviteMembersViewModel = viewModel(),
+  viewModel: OrganizationInviteMembersViewModel = clerkViewModel {
+    OrganizationInviteMembersViewModel(it)
+  },
 ) {
   val state by viewModel.state.collectAsState()
   var emailInput by rememberSaveable { mutableStateOf("") }
