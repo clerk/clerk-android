@@ -123,6 +123,41 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
 
 @RunWith(AndroidJUnit4::class)
 class PackagedCoreTest {
+  @Test fun completedSignInSurvivesClientRefreshUntilExplicitFinalization() = runBlocking {
+    withContext(Dispatchers.Main.immediate) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val base = PackagedFixtures(instrumentation.context)
+      val created = base.fixtures.getValue("session")
+      val current = JsonObject(created.jsonObject + ("id" to JsonPrimitive("sess_previous")))
+      val attempt = JsonObject(base.fixtures.getValue("signIn").jsonObject + mapOf("status" to JsonPrimitive("complete"), "created_session_id" to JsonPrimitive("sess_native")))
+      val client = JsonObject(base.fixtures.getValue("authenticatedClient").jsonObject + mapOf(
+        "sessions" to JsonArray(listOf(current, created)), "last_active_session_id" to JsonPrimitive("sess_previous"), "sign_in" to attempt))
+      base.clientResponse = client
+      val capabilities = object : NativeCapabilities {
+        override val supported = base.supported
+        override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
+          if (capability != "http" || !URI(arguments.jsonObject.getValue("url").requireString()).path.endsWith("/sessions/sess_previous"))
+            return base.perform(capability, arguments)
+          return buildJsonObject {
+            put("status", 200); put("headers", buildJsonObject {})
+            put("body", buildJsonObject { put("response", current); put("client", JsonObject(client + ("sign_in" to JsonNull))) }.toString())
+          }
+        }
+      }
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+      try {
+        val signIn = clerk.signIn
+        check(signIn.status.rawValue == "complete" && clerk.session?.id == "sess_previous")
+        clerk.session!!.reload()
+        check(clerk.signIn === signIn && signIn.status.rawValue == "complete")
+        check(signIn.createdSessionId == "sess_native" && clerk.session?.id == "sess_previous")
+        signIn.finalize()
+        check(clerk.session?.id == "sess_native")
+      } finally { clerk.close() }
+    }
+  }
+
   @Test fun credentialRotationRejectsResponsesIssuedWithThePreviousCredential() = runBlocking {
     withContext(Dispatchers.Main.immediate) {
       val instrumentation = InstrumentationRegistry.getInstrumentation()
