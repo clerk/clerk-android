@@ -42,3 +42,8 @@ passes eight tests after repackaging (the new format case failed before it).
 The separate packaged-core class passes eleven tests. Apple passes 59 iOS
 Simulator and 62 macOS contract tests, including its added legacy-metadata
 storage check. These are scoped suites, not a complete release acceptance claim.
+
+The subsequent core pin `617418e19c` adds an optional Apple installation-marker
+capability. Android does not advertise it, so its existing encrypted metadata
+and cleanup behavior remain in use. The repackaged Android contract class passes
+11 tests with that capability absent.
