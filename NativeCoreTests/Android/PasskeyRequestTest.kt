@@ -1,0 +1,42 @@
+package com.clerk.api
+
+import androidx.credentials.GetPublicKeyCredentialOption
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.serialization.json.*
+import org.junit.Assert.*
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class PasskeyRequestTest {
+  @Test fun assertionRequestUsesCredentialManagerWebAuthnEncodingAndPromptPreference() {
+    val request = AndroidPasskeyRequests.get(Json.parseToJsonElement("""{
+      "challenge":{"base64url":"AQID"},"rpId":"example.com","timeout":60000,
+      "allowCredentials":[{"type":"public-key","id":{"base64url":"BAUG"}}],
+      "conditionalUI":false,"preferImmediatelyAvailableCredentials":true
+    }"""))
+    assertTrue(request.preferImmediatelyAvailableCredentials)
+    val option = request.credentialOptions.single() as GetPublicKeyCredentialOption
+    val webAuthn = Json.parseToJsonElement(option.requestJson).jsonObject
+    assertEquals(JsonPrimitive("AQID"), webAuthn["challenge"])
+    assertEquals(JsonPrimitive("BAUG"), webAuthn.getValue("allowCredentials").jsonArray.single().jsonObject["id"])
+    assertEquals(JsonPrimitive("example.com"), webAuthn["rpId"])
+    assertEquals(JsonPrimitive(60000), webAuthn["timeout"])
+    assertFalse(webAuthn.containsKey("conditionalUI"))
+    assertFalse(webAuthn.containsKey("preferImmediatelyAvailableCredentials"))
+  }
+
+  @Test fun registrationRequestEncodesUserHandleAndExcludedCredentialsForAndroid() {
+    val request = AndroidPasskeyRequests.create(Json.parseToJsonElement("""{
+      "challenge":{"base64url":"AQID"},"rp":{"id":"example.com","name":"Example"},
+      "user":{"id":{"base64url":"BAUG"},"name":"person@example.com","displayName":"Person"},
+      "pubKeyCredParams":[{"type":"public-key","alg":-7}],
+      "excludeCredentials":[{"type":"public-key","id":{"base64url":"BwgJ"}}]
+    }"""))
+    val webAuthn = Json.parseToJsonElement(request.requestJson).jsonObject
+    assertEquals(JsonPrimitive("AQID"), webAuthn["challenge"])
+    assertEquals(JsonPrimitive("BAUG"), webAuthn.getValue("user").jsonObject["id"])
+    assertEquals(JsonPrimitive("BwgJ"), webAuthn.getValue("excludeCredentials").jsonArray.single().jsonObject["id"])
+    assertEquals(JsonPrimitive(-7), webAuthn.getValue("pubKeyCredParams").jsonArray.single().jsonObject["alg"])
+  }
+}

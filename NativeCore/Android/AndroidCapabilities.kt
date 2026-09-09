@@ -1,7 +1,6 @@
 package com.clerk.api
 
 import android.app.Activity
-import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.CreatePublicKeyCredentialResponse
 import androidx.credentials.CustomCredential
 import androidx.credentials.exceptions.NoCredentialException
@@ -11,7 +10,6 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import java.util.UUID
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.CreateCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialCancellationException
@@ -99,10 +97,10 @@ public class AndroidCapabilities(
     val manager = CredentialManager.create(context)
     try {
       val json = if (capability == "passkeys.create") {
-        val response = manager.createCredential(context, CreatePublicKeyCredentialRequest(arguments.toString())) as? CreatePublicKeyCredentialResponse ?: throw CoreException("invalid_credential_response")
+        val response = manager.createCredential(context, AndroidPasskeyRequests.create(arguments)) as? CreatePublicKeyCredentialResponse ?: throw CoreException("invalid_credential_response")
         response.registrationResponseJson
       } else if (capability == "passkeys.get") {
-        val response = manager.getCredential(context, GetCredentialRequest(listOf(GetPublicKeyCredentialOption(arguments.toString()))))
+        val response = manager.getCredential(context, AndroidPasskeyRequests.get(arguments))
         (response.credential as? PublicKeyCredential)?.authenticationResponseJson ?: throw CoreException("invalid_credential_response")
       } else throw CoreException("capability_unavailable")
       Json.parseToJsonElement(json)
