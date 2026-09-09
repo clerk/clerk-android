@@ -10,12 +10,12 @@ import kotlinx.serialization.json.*
 
 public enum class CoreFailureKind { Clerk, Rejection, Bridge, Cancelled }
 
-public class CoreException(public val code: String, override val message: String = "The operation could not be completed.", public val details: JsonElement? = null, public val kind: CoreFailureKind = CoreFailureKind.Bridge, public val errors: List<ClerkAPIError> = emptyList(), public val passkeyStage: String? = null) : Exception(message) {
+public class CoreException(public val code: String, override val message: String = "The operation could not be completed.", public val details: JsonElement? = null, public val kind: CoreFailureKind = CoreFailureKind.Bridge, public val errors: List<ClerkAPIError> = emptyList(), public val passkeyStage: String? = null, public val status: Int? = null, public val retryAfter: Double? = null, public val clerkTraceId: String? = null) : Exception(message) {
   override fun getLocalizedMessage(): String = errors.firstOrNull()?.let { it.longMessage ?: it.message } ?: message
   internal companion object {
     fun fromJson(value: JsonElement, runtime: CoreRuntime): CoreException {
       val v = value.jsonObject
-      return CoreException(v.getValue("code").requireString(), v["message"]?.requireString() ?: "The operation could not be completed.", v["errors"], CoreFailureKind.entries.firstOrNull { it.name.equals(v["kind"]?.requireString(), ignoreCase = true) } ?: CoreFailureKind.Bridge, v["errors"]?.jsonArray?.map { ClerkAPIError.fromJson(it, runtime) } ?: emptyList(), v["passkeyStage"]?.requireString())
+      return CoreException(v.getValue("code").requireString(), v["message"]?.requireString() ?: "The operation could not be completed.", v["errors"], CoreFailureKind.entries.firstOrNull { it.name.equals(v["kind"]?.requireString(), ignoreCase = true) } ?: CoreFailureKind.Bridge, v["errors"]?.jsonArray?.map { ClerkAPIError.fromJson(it, runtime) } ?: emptyList(), v["passkeyStage"]?.requireString(), v["status"]?.jsonPrimitive?.intOrNull, v["retryAfter"]?.jsonPrimitive?.doubleOrNull, v["clerkTraceId"]?.requireString())
     }
   }
 }

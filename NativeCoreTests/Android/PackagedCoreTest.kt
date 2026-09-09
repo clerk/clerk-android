@@ -21,6 +21,8 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
   var credential: String? = null
   var signedOut = false
   var nextAuthError: JsonElement? = null
+  var nextAuthErrorStatus = 422
+  var nextAuthErrorHeaders = buildJsonObject {}
   var clientReads = 0
   val requests = mutableListOf<JsonObject>()
   override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
@@ -56,7 +58,7 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
     val url = URI(args.getValue("url").requireString())
     if (url.path.contains("sign_ins")) nextAuthError?.let { failure ->
       nextAuthError = null
-      return buildJsonObject { put("status", 422); put("headers", buildJsonObject {}); put("body", failure.toString()) }
+      return buildJsonObject { put("status", nextAuthErrorStatus); put("headers", nextAuthErrorHeaders); put("body", failure.toString()) }
     }
     var raw = false
     var client: JsonElement? = null
@@ -147,6 +149,32 @@ class PackagedCoreTest {
         check(requestedLocale() == locale)
         clerk.signUp.create(SignUpCreateParams(emailAddress = "test@example.com", locale = "de-DE"))
         check(requestedLocale() == "de-DE")
+      } finally { clerk.close() }
+    }
+  }
+
+  @Test fun structuredErrorsPreserveServerStatusRetryAndTrace() = runBlocking {
+    withTimeout(30000) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val capabilities = PackagedFixtures(instrumentation.context)
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+      try {
+        capabilities.nextAuthErrorStatus = 429
+        capabilities.nextAuthErrorHeaders = buildJsonObject { put("retry-after", "7") }
+        capabilities.nextAuthError = Json.parseToJsonElement("""{"clerk_trace_id":"fixture-trace-123","errors":[{"code":"rate_limited","message":"Short message","long_message":"Try again later","meta":{"param_name":"identifier","password":"must-not-cross"}},{"code":"second_error","message":"Another error"}]}""")
+        try {
+          clerk.signIn.create(SignInCreateParams(identifier = "test@example.com"))
+          error("Expected a structured Clerk error")
+        } catch (error: CoreException) {
+          check(error.kind == CoreFailureKind.Clerk)
+          check(error.status == 429 && error.retryAfter == 7.0)
+          check(error.clerkTraceId == "fixture-trace-123")
+          check(error.errors.size == 2 && error.errors.first().meta?.paramName == "identifier")
+          check(error.localizedMessage == "Try again later")
+          check(!error.details.toString().contains("must-not-cross"))
+          check(clerk.session == null)
+        }
       } finally { clerk.close() }
     }
   }
