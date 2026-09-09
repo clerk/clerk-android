@@ -38,6 +38,12 @@ The secure adapter encrypts an atomic, non-backed-up file with Android Keystore 
 
 Run `./gradlew :source:api:connectedDebugAndroidTest` with an emulator or device. Instrumentation executes the packaged AAR asset and JNI library, tests generated SSO/reset/finalize/token/sign-out behavior, and exercises previous-format encrypted storage migration, scoping and durable clears. It uses an isolated test application. A real old-major application upgrade with a signed-in account remains a release gate.
 
+The opt-in `com.clerk.api.LiveStartupTest` accepts a development publishable key
+through the `clerkLivePublishableKey` instrumentation argument. It exercises the
+packaged engine and production HTTP adapter with memory-only credential storage,
+allows only GET `/v1/environment` and `/v1/client`, and asserts a loaded, signed-out
+owner. Without the argument it skips; sign-in and OS prompts are outside its scope.
+
 ## Native email links
 
 Email-link preparation uses the configured callback URL and saves its PKCE verifier in a separate secure record scoped to the instance. The TypeScript core validates the saved record, expiration and callback before completing it. Forward incoming URLs to `clerk.handleAuthCallback`. It returns the generated sign-in or sign-up resource without activating a session; custom interfaces must explicitly finalize a complete result. The callback also remains available as `clerk.authCallback` until `clearAuthCallback(id)` consumes it. `AuthView` consumes this record and finalizes as part of its existing presentation flow.
@@ -62,9 +68,9 @@ The [separate migration guide](Documentation/Migration/README.md) records the au
 
 Run `scripts/benchmark-native-core.sh OUTPUT_JSON` to collect raw fresh-engine startup and generated local-reset timings against the packaged deterministic fixture. The reset check verifies invalidation and the absence of HTTP. The first startup sample is separate from subsequent fresh engines in the same warm process. These are not cold-app or live-network timings.
 
-The Android script builds and installs the isolated debug instrumentation APK. Set `ANDROID_SERIAL` when multiple devices are connected. The report includes sampled process PSS and native heap allocation, including the test runner and libraries. Debug emulator measurements do not set release-device budgets.
+The Android script defaults to a release library in the isolated instrumentation APK; set `CLERK_BENCHMARK_BUILD_TYPE=debug` for debug measurements. Set `ANDROID_SERIAL` when multiple devices are connected. The report includes sampled process PSS and native heap allocation, including the test runner and libraries. Emulator measurements do not establish compliance with release-device budgets.
 
-Record the OS/device, build mode, core revision/hash and packaged artifact sizes with each run. Agree release startup, memory, size and call-overhead budgets before treating measurements as a go/no-go gate.
+Record the OS/device, build mode, core revision/hash and packaged artifact sizes with each run. The provisional release budgets and required physical-device measurement protocol are in [Documentation/Performance.md](Documentation/Performance.md).
 
 Release performance limits and outstanding measurements are recorded in [the performance budgets](Documentation/Performance.md).
 
