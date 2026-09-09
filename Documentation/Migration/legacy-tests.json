@@ -1,0 +1,3128 @@
+{
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "method": "Source test declarations; parameterized cases are not expanded and helper functions may be included. Counts do not measure behavioral coverage.",
+  "files": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/DeviceIdGeneratorTest.kt",
+      "sha256": "2dab51340410c6698477fef349bddd4664e2dbc6fd15f232e50d0c558f579983",
+      "category": "configuration",
+      "cases": [
+        {
+          "name": "initialize and getDeviceId returns existing device ID when one exists",
+          "line": 42
+        },
+        {
+          "name": "initialize is thread safe and generates only one device ID",
+          "line": 59
+        },
+        {
+          "name": "getDeviceId automatically initializes when not previously initialized",
+          "line": 104
+        },
+        {
+          "name": "consecutive calls to getDeviceId return same ID with caching",
+          "line": 118
+        },
+        {
+          "name": "device IDs are cached and reused after initialization",
+          "line": 134
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/attestation/DeviceAttestationHelperTest.kt",
+      "sha256": "9da6364c8c0b4860f3f8f0db811ef410b06dd4ba36c9b9d09778a92e70d7be7f",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "prepareIntegrityTokenProvider throws exception when cloudProjectNumber is null",
+          "line": 56
+        },
+        {
+          "name": "attestDevice throws exception when token provider is null",
+          "line": 67
+        },
+        {
+          "name": "performAssertion calls device attestation API",
+          "line": 88
+        },
+        {
+          "name": "performAssertion throws exception when applicationId is null",
+          "line": 106
+        },
+        {
+          "name": "getHashedClientId generates correct SHA-256 hash",
+          "line": 120
+        },
+        {
+          "name": "getHashedClientId handles different input values consistently",
+          "line": 134
+        },
+        {
+          "name": "getHashedClientId produces different hashes for different inputs",
+          "line": 158
+        },
+        {
+          "name": "getHashedClientId uses cache for performance",
+          "line": 172
+        },
+        {
+          "name": "clearCache resets helper state",
+          "line": 187
+        },
+        {
+          "name": "scope is properly configured",
+          "line": 206
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/auth/AuthHandleTest.kt",
+      "sha256": "7d8f7f6f782b7ffc7752a265456d5a9f5f287eeb654702f1d5a2df32ad2d2f79",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "handle completes native magic link callback without SSO fallback",
+          "line": 45
+        },
+        {
+          "name": "handle completes SSO callback when URI is Clerk scheme and not magic link",
+          "line": 60
+        },
+        {
+          "name": "handle completes hosted auth callback before SSO fallback",
+          "line": 76
+        },
+        {
+          "name": "handle returns false for non Clerk URIs",
+          "line": 92
+        },
+        {
+          "name": "handle returns false for null URI",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/auth/AuthOtpTest.kt",
+      "sha256": "c4ffcc0b7a89c507348408167cd30c3b8f4a8069de909f93450247ce709e1bd0",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signInWithOtp for email creates email code flow instead of native email link",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/auth/AuthStartHostedAuthTest.kt",
+      "sha256": "01352fa6258f397c190ba7126b0f17377d4b121a2e1a2eb3a1184f4fbe6a426f",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "startHostedAuth activates the created session via setActive",
+          "line": 43
+        },
+        {
+          "name": "startHostedAuth succeeds under forced organization selection using the applied session",
+          "line": 64
+        },
+        {
+          "name": "startHostedAuth propagates hosted auth failures without activation",
+          "line": 82
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/auth/AuthTest.kt",
+      "sha256": "9374564829f8a4dc5326499de5a4a8c7cd74d045a91f64c35a87a99b4e5bacf4",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signUpWithGoogleOneTap delegates to transferable Google One Tap flow",
+          "line": 65
+        },
+        {
+          "name": "signUpWithOAuth delegates to sign-up redirect flow",
+          "line": 79
+        },
+        {
+          "name": "signUp forwards unsafe metadata",
+          "line": 109
+        },
+        {
+          "name": "signUpWithGoogleOneTap emits auth error event on failure",
+          "line": 138
+        },
+        {
+          "name": "signInWithOtp email creates sign in with strategy without preparing first factor",
+          "line": 174
+        },
+        {
+          "name": "signInWithOtp phone creates sign in with strategy without preparing first factor",
+          "line": 196
+        },
+        {
+          "name": "sessions exposes all sessions on the current client",
+          "line": 218
+        },
+        {
+          "name": "signOut with session ID removes only that session locally",
+          "line": 233
+        },
+        {
+          "name": "setActive updates the active session locally",
+          "line": 262
+        },
+        {
+          "name": "setActive sends select org intent with active organization id",
+          "line": 291
+        },
+        {
+          "name": "setActive no-ops personal account selection when organization selection is forced",
+          "line": 320
+        },
+        {
+          "name": "setActive restores active session when response client sync clears local sessions",
+          "line": 346
+        },
+        {
+          "name": "setActive keeps active session when follow-up client refresh omits it",
+          "line": 380
+        },
+        {
+          "name": "setActive keeps active session when follow-up refresh returns stale lastActiveSessionId",
+          "line": 407
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/biometriccredential/BiometricCredentialKeyManagerTest.kt",
+      "sha256": "4542be5c1ed719c9672c24cf3df1c1496ef4a5e1d1c7a6bd1e018db57f44d41e",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "raw ES256 signature converts DER encoded signature",
+          "line": 11
+        },
+        {
+          "name": "raw ES256 signature pads short DER integers",
+          "line": 22
+        },
+        {
+          "name": "raw ES256 signature rejects malformed DER",
+          "line": 34
+        },
+        {
+          "name": "raw ES256 signature rejects high-bit DER integer without sign padding",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/biometriccredential/BiometricCredentialLocalStoreTest.kt",
+      "sha256": "3c84b727a9a2c452dab09adda2b8db53ca3a313d6fae4b3dbbc9307c8072c4b0",
+      "category": "secure-persistence",
+      "cases": [
+        {
+          "name": "save and load round trips credentials",
+          "line": 37
+        },
+        {
+          "name": "save replaces an existing credential with the same id",
+          "line": 46
+        },
+        {
+          "name": "all filters by app identifier",
+          "line": 55
+        },
+        {
+          "name": "delete removes only the matching credential",
+          "line": 63
+        },
+        {
+          "name": "malformed storage payload is cleared instead of crashing",
+          "line": 74
+        },
+        {
+          "name": "malformed record is dropped while valid records load",
+          "line": 82
+        },
+        {
+          "name": "matches ignores case and whitespace in identifier hints",
+          "line": 93
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/biometriccredential/BiometricCredentialSerializationTest.kt",
+      "sha256": "ce6541e8e69b62fefb55501e9b533c19a93a922e9bf9a93d629dade7767c2ec1",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "serializer preserves the public descriptor name",
+          "line": 17
+        },
+        {
+          "name": "biometric credential decodes from snake_case json",
+          "line": 25
+        },
+        {
+          "name": "biometric credential preserves unknown platform and status values",
+          "line": 61
+        },
+        {
+          "name": "biometric credential challenge decodes from snake_case json",
+          "line": 100
+        },
+        {
+          "name": "verification decodes biometric credential challenge",
+          "line": 126
+        },
+        {
+          "name": "auth config decodes native settings",
+          "line": 152
+        },
+        {
+          "name": "auth config defaults native settings when absent",
+          "line": 176
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/biometriccredential/BiometricCredentialsTest.kt",
+      "sha256": "b0266dccdd6d37e66f74b0ad0bc391f1a0d2c3270233d112295404cbb8b7393d",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "enrollment cleanup preserves credentials belonging to another user",
+          "line": 71
+        },
+        {
+          "name": "client failures use the biometric credential error code",
+          "line": 86
+        },
+        {
+          "name": "failed account cleanup remains queued until retry succeeds",
+          "line": 96
+        },
+        {
+          "name": "failed key deletion retains credential and queued cleanup until retry succeeds",
+          "line": 113
+        },
+        {
+          "name": "biometric credential sign in includes the configured locale",
+          "line": 131
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/configuration/ConfigurationManagerAuthRaceTest.kt",
+      "sha256": "da49793be93f2b27147cde606307192909929810e0e3d2b391251d498ddf95ee",
+      "category": "configuration",
+      "cases": [
+        {
+          "name": "hasPendingAuthFlow returns true when SSO authentication is pending",
+          "line": 30
+        },
+        {
+          "name": "hasPendingAuthFlow returns true when external account connection is pending",
+          "line": 39
+        },
+        {
+          "name": "hasPendingAuthFlow returns true when hosted auth is pending",
+          "line": 48
+        },
+        {
+          "name": "hasPendingAuthFlow returns false when no auth flow is pending",
+          "line": 57
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/configuration/ConfigurationManagerForegroundRefreshTest.kt",
+      "sha256": "a108302301b2e1a0dfc69995692d1ac03aa5d582ab8ee40580a04b1ae3c7d52a",
+      "category": "core-lifecycle",
+      "cases": [
+        {
+          "name": "foreground refresh runs when no options are provided",
+          "line": 12
+        },
+        {
+          "name": "foreground refresh runs by default",
+          "line": 17
+        },
+        {
+          "name": "foreground refresh is skipped when disabled via withForegroundRefreshDisabled",
+          "line": 22
+        },
+        {
+          "name": "withCustomHeaders preserves a disabled foreground refresh",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/configuration/connectivity/NetworkConnectivityMonitorTest.kt",
+      "sha256": "d6ebc1c536e39467720b43b329507f77cd134224edc63a68b92873366815860e",
+      "category": "core-lifecycle",
+      "cases": [
+        {
+          "name": "initial connectivity state is true by default",
+          "line": 51
+        },
+        {
+          "name": "configure sets up connectivity monitoring and checks initial state",
+          "line": 67
+        },
+        {
+          "name": "configure detects initial offline state correctly",
+          "line": 106
+        },
+        {
+          "name": "isCurrentlyConnected checks latest connectivity",
+          "line": 127
+        },
+        {
+          "name": "stop unregisters network callback and cleans up resources",
+          "line": 148
+        },
+        {
+          "name": "callback is invoked when connectivity is restored after being offline",
+          "line": 173
+        },
+        {
+          "name": "callback is not invoked when network is lost but still has other connection",
+          "line": 215
+        },
+        {
+          "name": "multiple configure calls only update callback without re-registering",
+          "line": 257
+        },
+        {
+          "name": "resetForTesting resets all state",
+          "line": 288
+        },
+        {
+          "name": "network capabilities change triggers state update",
+          "line": 313
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/hostedauth/HostedAuthCallbackTest.kt",
+      "sha256": "717004750f84bdea35ff604e07aea4a309f3e14cf146fde63b1959c28d6eab60",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "validateAcceptsMatchingCallback",
+          "line": 17
+        },
+        {
+          "name": "validateRejectsStateMismatch",
+          "line": 32
+        },
+        {
+          "name": "validateRejectsDuplicateStateParameter",
+          "line": 42
+        },
+        {
+          "name": "validateRejectsDuplicateNonceParameter",
+          "line": 53
+        },
+        {
+          "name": "validateRejectsBlankNonce",
+          "line": 64
+        },
+        {
+          "name": "validateRejectsMissingCreatedSessionId",
+          "line": 72
+        },
+        {
+          "name": "authenticationUriAcceptsHttpsUrl",
+          "line": 79
+        },
+        {
+          "name": "authenticationUriRejectsHttpUrl",
+          "line": 86
+        },
+        {
+          "name": "authenticationUriRejectsUserInfo",
+          "line": 93
+        },
+        {
+          "name": "authenticationUriRejectsOpaqueUri",
+          "line": 101
+        },
+        {
+          "name": "authenticationUriRejectsWrongObjectType",
+          "line": 108
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/hostedauth/HostedAuthPkceTest.kt",
+      "sha256": "b53ee2f285e330b37660c139b1951195ef22323db582f064e68abab3a86bafad",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "generatedStateUsesSecureRandomBytes",
+          "line": 13
+        },
+        {
+          "name": "generatedPkceUsesS256WithUrlSafeEncoding",
+          "line": 20
+        },
+        {
+          "name": "codeChallengeMatchesRfc7636S256Vector",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/hostedauth/HostedAuthRedirectUrlTest.kt",
+      "sha256": "ebaf55b7f093cf431eb36418626407c4d4bd15f960078501d73fe8177402bd3c",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "callbackUriMatchesCanonicalRedirectUrl",
+          "line": 13
+        },
+        {
+          "name": "callbackUriMatchesCaseInsensitiveSchemeAndAuthority",
+          "line": 20
+        },
+        {
+          "name": "callbackUriRejectsDifferentScheme",
+          "line": 27
+        },
+        {
+          "name": "callbackUriRejectsDifferentHost",
+          "line": 34
+        },
+        {
+          "name": "callbackUriRejectsDifferentAuthority",
+          "line": 41
+        },
+        {
+          "name": "callbackUriRejectsDifferentPort",
+          "line": 48
+        },
+        {
+          "name": "callbackUriRejectsDifferentPath",
+          "line": 57
+        },
+        {
+          "name": "callbackUriRejectsHostWhenExpectedRedirectHasNoHost",
+          "line": 64
+        },
+        {
+          "name": "callbackUriMatchesTripleSlashRedirectUrl",
+          "line": 71
+        },
+        {
+          "name": "callbackUriRejectsAddedSlash",
+          "line": 78
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/hostedauth/HostedAuthServiceTest.kt",
+      "sha256": "1b8ddc8812794360d77d96c0821a7e41db0190a7f3785ca15f1789f988ef7f5d",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "startRejectsSecondConcurrentFlow",
+          "line": 75
+        },
+        {
+          "name": "cancelWhileBrowserOpenFailsTheFlow",
+          "line": 91
+        },
+        {
+          "name": "cancelBeforeLaunchSkipsTheBrowser",
+          "line": 105
+        },
+        {
+          "name": "startRejectsHttpRedirectUrlsBeforeCreatingHostedAuth",
+          "line": 124
+        },
+        {
+          "name": "startRetriesCreateOnceAfterUnauthorizedWithSameRequest",
+          "line": 136
+        },
+        {
+          "name": "startRetriesCreateAtMostOnce",
+          "line": 179
+        },
+        {
+          "name": "startDoesNotRetryCreateAfterNonUnauthorizedFailure",
+          "line": 198
+        },
+        {
+          "name": "startDoesNotRetryCreateAfterUnrelatedUnauthorizedFailure",
+          "line": 217
+        },
+        {
+          "name": "completeDoesNotRetryRedemptionAfterUnauthorized",
+          "line": 236
+        },
+        {
+          "name": "concurrentCompleteCallsRedeemExactlyOnce",
+          "line": 251
+        },
+        {
+          "name": "forgedCallbackDoesNotCompletePendingFlow",
+          "line": 285
+        },
+        {
+          "name": "completeAppliesRedeemedClientLocally",
+          "line": 313
+        },
+        {
+          "name": "completeAppliesClientButFailsWhenCreatedSessionIsMissing",
+          "line": 329
+        },
+        {
+          "name": "completeRejectsStaleRedeemedClient",
+          "line": 346
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/integration/AuthIntegrationTests.kt",
+      "sha256": "51e4cae331ac4ea153f53095cc0239e5445e9a517853b74901d5bf5831a90380",
+      "category": "live-service-gate",
+      "cases": [
+        {
+          "name": "sign up and sign in with email codes",
+          "line": 33
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/integration/EnvironmentIntegrationTests.kt",
+      "sha256": "5bf3a7ad6607d8ff55dde266d90cfc5ce61de9665836d3bf9cdbd32386c91325",
+      "category": "live-service-gate",
+      "cases": [
+        {
+          "name": "SDK initializes and fetches environment from real Clerk instance",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/integration/IntegrationTestHelpers.kt",
+      "sha256": "72d48649a2fd91016b43532630e656350bd4f4fbad22a5a0b679e72a57bda2bc",
+      "category": "live-service-gate",
+      "cases": []
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/log/ClerkLogTest.kt",
+      "sha256": "64614968e9c6e6e2fd40c62fdbf7114f562c7cd144b200e913d3bc68ffdef8a5",
+      "category": "diagnostics-and-packaging",
+      "cases": [
+        {
+          "name": "debug logs are suppressed when debug mode is disabled",
+          "line": 24
+        },
+        {
+          "name": "debug logs are emitted when debug mode is enabled",
+          "line": 37
+        },
+        {
+          "name": "verbose logs are suppressed when debug mode is disabled",
+          "line": 50
+        },
+        {
+          "name": "verbose logs are emitted when debug mode is enabled",
+          "line": 63
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/log/SafeUriLogTest.kt",
+      "sha256": "85f9ff194f7fdafedae04652a4a17d22e3d31ee57c85fa4b2e6eb5e39e45c65d",
+      "category": "diagnostics-and-packaging",
+      "cases": [
+        {
+          "name": "describe includes URI shape but redacts parameter values",
+          "line": 14
+        },
+        {
+          "name": "describe parses fragment keys",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/magiclink/MagicLinkDeepLinkParserTest.kt",
+      "sha256": "915b1d24565e0fc5bc3360944af349c23affd9ec190c13efb49a215651c31992",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "parses flow_id and approval_token from query",
+          "line": 14
+        },
+        {
+          "name": "parses flow_id and approval_token from fragment",
+          "line": 26
+        },
+        {
+          "name": "missing flow_id returns deterministic reason code",
+          "line": 38
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/magiclink/NativeMagicLinkErrorMappingTest.kt",
+      "sha256": "74c5c3ed5f955dcd5df3a73a7d419ea8e0a93c9aaebfe6b7d61bb0194fd11048",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "maps known backend error codes deterministically",
+          "line": 14
+        },
+        {
+          "name": "unknown backend errors preserve backend error code",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/magiclink/NativeMagicLinkServiceTest.kt",
+      "sha256": "408bc17a966d51317cf406a743fd7eff9954d7871615b829630ebbdf602f68c5",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "complete response decodes ticket payload",
+          "line": 87
+        },
+        {
+          "name": "complete response decodes sign-up payload",
+          "line": 103
+        },
+        {
+          "name": "end-to-end native magic link flow completes with ticket sign-in",
+          "line": 131
+        },
+        {
+          "name": "send email link prepares existing sign-in and stores pending flow",
+          "line": 164
+        },
+        {
+          "name": "native magic link sign-in with mfa returns in-progress sign in without activating session",
+          "line": 228
+        },
+        {
+          "name": "sign-up native email-link prepare stores PKCE verifier and completes from response",
+          "line": 266
+        },
+        {
+          "name": "sign-up native email-link completion does not emit completed event for incomplete sign-up",
+          "line": 316
+        },
+        {
+          "name": "complete rejects callback for different pending flow id",
+          "line": 401
+        },
+        {
+          "name": "complete keeps pending flow when callback flow id does not match",
+          "line": 423
+        },
+        {
+          "name": "complete does not clear a newer pending flow saved before old completion finishes",
+          "line": 441
+        },
+        {
+          "name": "complete returns activation failure when created session cannot be activated",
+          "line": 475
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/magiclink/PersistentPendingNativeMagicLinkStoreTest.kt",
+      "sha256": "975cab3e07442b4960f947ad2379e0520e860d7a32f47a0f6af3a3b3902ad25c",
+      "category": "secure-persistence",
+      "cases": [
+        {
+          "name": "save persists flow across store instances",
+          "line": 28
+        },
+        {
+          "name": "load clears corrupted payload",
+          "line": 46
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/magiclink/PkceUtilTest.kt",
+      "sha256": "6980501e7b295d6918655d077d3ff36880bce6d33fdbe6295c64fd840d5e3ae2",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "generatePair returns verifier and challenge in base64url format",
+          "line": 13
+        },
+        {
+          "name": "challenge matches verifier using S256",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/ClerkPaginatedResponseTest.kt",
+      "sha256": "f00781f2b245b337605eba720238a1de6194f4bb06446ddbe8ace37403ea8a60",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "decodes role set migration flag when present",
+          "line": 11
+        },
+        {
+          "name": "hasRoleSetMigration is null when omitted",
+          "line": 30
+        },
+        {
+          "name": "decodes paginated organization roles",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/api/BiometricCredentialApiTest.kt",
+      "sha256": "b3503277e70238972286fbe0a2d209ca538ac23abaa51657164bdd16a9633694",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "list requests biometric credentials for the current user",
+          "line": 26
+        },
+        {
+          "name": "prepareEnrollment sends platform and public key jwk",
+          "line": 40
+        },
+        {
+          "name": "attemptEnrollment sends signed challenge",
+          "line": 63
+        },
+        {
+          "name": "validateSignInCredential posts against the client",
+          "line": 85
+        },
+        {
+          "name": "revoke deletes the biometric credential",
+          "line": 98
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/api/ClientApiTest.kt",
+      "sha256": "0be95564582963dd78f21646b4b71c38e0aca356bb9e6a639ec67c4f4b763e37",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "createHostedAuth posts PKCE state redirect and mode as form fields",
+          "line": 29
+        },
+        {
+          "name": "createHostedAuth omits optional mode",
+          "line": 60
+        },
+        {
+          "name": "redeemHostedAuth posts verifier and nonce in form body",
+          "line": 77
+        },
+        {
+          "name": "setActive request includes select org intent and organization id",
+          "line": 106
+        },
+        {
+          "name": "setActive request sends empty organization id when clearing active organization",
+          "line": 125
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/api/OrganizationApiTest.kt",
+      "sha256": "180b3bed7023fc17b75fbd45faa24c8cc71b3c87efb08f62a95a804c5970b04d",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "revokeOrganizationInvitation uses invitation revoke route",
+          "line": 15
+        },
+        {
+          "name": "getMembershipRequests uses membership requests route",
+          "line": 23
+        },
+        {
+          "name": "organization mutating endpoints include clerk session id query",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/api/UserApiTest.kt",
+      "sha256": "485c96e889a6b45182763fcdea4d0769ba91187f82bd1f8ef8ef7b1f6b9f26ea",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "create email address defaults to active session id",
+          "line": 21
+        },
+        {
+          "name": "passkey endpoints include clerk session id query",
+          "line": 64
+        },
+        {
+          "name": "mfa endpoints include clerk session id query",
+          "line": 83
+        },
+        {
+          "name": "external account linking endpoints include clerk session id query",
+          "line": 96
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/middleware/incoming/ClientSyncingMiddlewareTest.kt",
+      "sha256": "51edc06a6649c1cb435ea2b580d300d371faae9cd49b5db512ef828bc17c236d",
+      "category": "core-state-and-network",
+      "cases": [
+        {
+          "name": "intercept emits SignUpCompleted when sign up response is complete",
+          "line": 48
+        },
+        {
+          "name": "intercept holds registered auth flow before syncing completed sign in client",
+          "line": 108
+        },
+        {
+          "name": "intercept holds registered auth flow before syncing completed sign up client",
+          "line": 140
+        },
+        {
+          "name": "intercept clears Clerk client when response client is explicit null",
+          "line": 174
+        },
+        {
+          "name": "intercept does not clear Clerk client when null client piggyback accompanies response",
+          "line": 212
+        },
+        {
+          "name": "intercept syncs piggybacked client from hosted auth creation",
+          "line": 256
+        },
+        {
+          "name": "intercept does not sync piggybacked client when request no longer owns the flow",
+          "line": 298
+        },
+        {
+          "name": "intercept leaves manually synced client response unapplied",
+          "line": 342
+        },
+        {
+          "name": "intercept hydrates direct client response with server date",
+          "line": 392
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/middleware/incoming/DeviceTokenSavingMiddlewareTest.kt",
+      "sha256": "bf8b7f91d8425ada73402a41df15b3348769e4d8da70f7fa63fa41840b91c4df",
+      "category": "core-state-and-network",
+      "cases": [
+        {
+          "name": "response token replaces token used by request",
+          "line": 38
+        },
+        {
+          "name": "flow response token is saved even when response guard rejects client sync",
+          "line": 48
+        },
+        {
+          "name": "response started with stale token cannot overwrite shared token",
+          "line": 64
+        },
+        {
+          "name": "response without token leaves stored token unchanged",
+          "line": 74
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/middleware/outgoing/RequestLoggingMiddlewareTest.kt",
+      "sha256": "6f4df6d5f67f87c19d64c12ce1a033ee95615d6d668c4234b34b3e30fa4e1620",
+      "category": "core-state-and-network",
+      "cases": [
+        {
+          "name": "sensitive request bypasses body logging",
+          "line": 16
+        },
+        {
+          "name": "ordinary request uses body logging",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/middleware/outgoing/VersioningUserAgentMiddlewareTest.kt",
+      "sha256": "a928cd240aa381ec650a674fc18834d3e29c629547f42a620fb2bbf36af2b7c9",
+      "category": "core-state-and-network",
+      "cases": [
+        {
+          "name": "intercept adds client id and authorization for normal requests",
+          "line": 50
+        },
+        {
+          "name": "intercept omits client id and strips internal header for marked requests",
+          "line": 59
+        },
+        {
+          "name": "intercept sets custom headers",
+          "line": 77
+        },
+        {
+          "name": "intercept custom headers replace existing header values",
+          "line": 89
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/model/environment/AuthConfigTest.kt",
+      "sha256": "8c5b80919652d2f43fa1f5ca22cacd34530363eb63e503336df958c97f789c6d",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "decodes session minter flag",
+          "line": 10
+        },
+        {
+          "name": "defaults session minter to false when omitted",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/model/environment/DisplayConfigSerializationTest.kt",
+      "sha256": "d0bbbf2a8998ca721b687122b0b79c017e61196907cb6f376f9fcd169de0d821",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "show dev mode warning deserializes correctly",
+          "line": 12
+        },
+        {
+          "name": "show dev mode warning defaults to false",
+          "line": 19
+        },
+        {
+          "name": "support email deserializes correctly",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/model/environment/EnvironmentPasskeyFirstFactorTest.kt",
+      "sha256": "6ddfd521c03a69f6741b89b47f26f4b1c87a853ddce9f3003230e01c292e5fc6",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "enabled when passkey is a first factor",
+          "line": 53
+        },
+        {
+          "name": "disabled when passkey is registration only",
+          "line": 61
+        },
+        {
+          "name": "disabled when passkey attribute is disabled",
+          "line": 69
+        },
+        {
+          "name": "disabled when passkey attribute is absent",
+          "line": 77
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/model/environment/OrganizationSettingsSerializationTest.kt",
+      "sha256": "b9e312a6abefaaa6554b97c8de6655c87e65da1d8e7af5d4b2ed5fc2badb036b",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "decodes missing organization settings fields with defaults",
+          "line": 12
+        },
+        {
+          "name": "decodes null organization settings children with defaults",
+          "line": 26
+        },
+        {
+          "name": "decodes complete organization settings payload",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/model/environment/UserSettingsSerializationTest.kt",
+      "sha256": "7d4c25168c60a60f177199c08e5a793d3311cb29a13c899d1f0d1e15e090dc75",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "testAttributesConfig_deserialize_withImmutable_present",
+          "line": 16
+        },
+        {
+          "name": "testAttributesConfig_deserialize_withoutImmutable",
+          "line": 25
+        },
+        {
+          "name": "testAttributesConfig_other_fields_still_deserialize_whenImmutable_changes",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/serialization/ClerkApiResultConverterFactoryTest.kt",
+      "sha256": "6ab3a43b31f02eaf5d8e579eb10bc463b652f5b5b10c905ba8b8466ca6a27ca9",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "responseBodyConverter returns null for non-ClerkResult types",
+          "line": 35
+        },
+        {
+          "name": "responseBodyConverter returns converter for parameterized ClerkResult types",
+          "line": 48
+        },
+        {
+          "name": "responseBodyConverter handles Environment type without wrapping",
+          "line": 68
+        },
+        {
+          "name": "responseBodyConverter handles List of Session without wrapping",
+          "line": 92
+        },
+        {
+          "name": "shouldWrapInClientPiggybackedResponse returns false for List of Session",
+          "line": 113
+        },
+        {
+          "name": "ClerkApiResultConverter handles null delegate response",
+          "line": 130
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/serialization/ClerkResultTest.kt",
+      "sha256": "1e8b37b5a96a55baedfd634e3f125f595bed28b0c2cd97b4bb375809a7b5a0a0",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "errorMessage describes IO failures while offline",
+          "line": 28
+        },
+        {
+          "name": "errorMessage keeps generic fallback for IO failures while connected",
+          "line": 40
+        },
+        {
+          "name": "errorMessage keeps generic fallback for non-IO failures while offline",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/network/serialization/MergePatchTest.kt",
+      "sha256": "50a1b8ba0abc3f845073b00391fb164b829d94af410a777d830bd5f01dbedf11",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "added keys appear verbatim",
+          "line": 16
+        },
+        {
+          "name": "keys absent from desired become null (RFC 7396)",
+          "line": 27
+        },
+        {
+          "name": "changed primitive values are overwritten",
+          "line": 38
+        },
+        {
+          "name": "unchanged values are skipped",
+          "line": 46
+        },
+        {
+          "name": "nested objects recurse and emit only changed sub-keys",
+          "line": 59
+        },
+        {
+          "name": "removed nested key is nulled, siblings untouched",
+          "line": 83
+        },
+        {
+          "name": "type mismatch returns desired verbatim",
+          "line": 99
+        },
+        {
+          "name": "null desired is passed through verbatim",
+          "line": 106
+        },
+        {
+          "name": "desired empty object clears every existing key",
+          "line": 112
+        },
+        {
+          "name": "empty current returns desired verbatim",
+          "line": 126
+        },
+        {
+          "name": "arrays are treated as atomic values (replace, not merge)",
+          "line": 136
+        },
+        {
+          "name": "applying the patch reproduces desired (round-trip sanity check)",
+          "line": 157
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/organizations/OrganizationCreationDefaultsTest.kt",
+      "sha256": "4f971562cece1c1db7760700eaf56b10ab48bfe1ef38de27ac86ad884a9d93a3",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "decodes partial organization creation defaults",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/organizations/OrganizationDomainTest.kt",
+      "sha256": "2b551fc5763a31caddf36ccfcce0e1d5fb8ada089272f05818f2300b61c1e385",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "enrollmentModeType maps known enrollment modes",
+          "line": 12
+        },
+        {
+          "name": "enrollmentModeType preserves unknown enrollment modes",
+          "line": 26
+        },
+        {
+          "name": "isVerified reflects verification status",
+          "line": 36
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/organizations/OrganizationMembershipTest.kt",
+      "sha256": "9f8f6168acf3847bd812380b1d8a9b027228604343b2616b09995fd1f67e1638",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "permission helpers read raw and system permission keys",
+          "line": 11
+        },
+        {
+          "name": "permission helpers return false for missing permissions",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/organizations/UserOrganizationInvitationTest.kt",
+      "sha256": "b8db150ac9884172732b24027167f29eae2fb4485df108b7796fcc69fea3bcc1",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "decodes invitation timestamps and metadata objects",
+          "line": 10
+        },
+        {
+          "name": "decodes invitation timestamps from epoch seconds",
+          "line": 43
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/passkeys/PasskeyAuthenticationServiceTest.kt",
+      "sha256": "4be6dcb691b51264a27b4d9672fddf8f408356f4df053571974b7cdb7a6696b7",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signInWithPasskey succeeds with public key credential",
+          "line": 99
+        },
+        {
+          "name": "signInWithPasskey handles password credential",
+          "line": 128
+        },
+        {
+          "name": "signInWithPasskey can prefer immediately available credentials",
+          "line": 151
+        },
+        {
+          "name": "authenticateWithPasskey uses second factor endpoints for an in-progress sign in",
+          "line": 174
+        },
+        {
+          "name": "signInWithPasskey returns error when SignIn creation fails",
+          "line": 219
+        },
+        {
+          "name": "signInWithPasskey handles NoCredentialException",
+          "line": 244
+        },
+        {
+          "name": "automatic signInWithPasskey clears suppressed current sign in",
+          "line": 269
+        },
+        {
+          "name": "automatic signInWithPasskey clears sign in on ProviderUnavailable",
+          "line": 298
+        },
+        {
+          "name": "automatic signInWithPasskey clears sign in on MissingActivity",
+          "line": 327
+        },
+        {
+          "name": "automatic signInWithPasskey clears sign in on GetCredentialUnknownException",
+          "line": 354
+        },
+        {
+          "name": "signInWithPasskey handles cancellation without generic failure",
+          "line": 381
+        },
+        {
+          "name": "automatic credential flow suppresses user cancellation",
+          "line": 401
+        },
+        {
+          "name": "automatic credential flow suppresses no saved credential",
+          "line": 408
+        },
+        {
+          "name": "automatic credential flow suppresses provider unavailable",
+          "line": 415
+        },
+        {
+          "name": "automatic credential flow suppresses missing activity",
+          "line": 422
+        },
+        {
+          "name": "automatic credential flow suppresses unclassified credential ceremony failures",
+          "line": 429
+        },
+        {
+          "name": "automatic credential flow does not suppress non-credential failures",
+          "line": 436
+        },
+        {
+          "name": "signInWithPasskey fails when no activity is available",
+          "line": 443
+        },
+        {
+          "name": "signInWithPasskey returns error for unknown credential type",
+          "line": 457
+        },
+        {
+          "name": "verifySessionWithPasskey returns clear error when prepared verification nonce is missing",
+          "line": 481
+        },
+        {
+          "name": "verifySessionWithPasskey uses second factor endpoints when requested",
+          "line": 506
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/passkeys/PasskeyCreationServiceTest.kt",
+      "sha256": "58a520e4e94946bfe13f9a8b7ca76eb6d650373f05ff238e4cab6b1a943d694e",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "createPasskey succeeds when all operations are successful",
+          "line": 71
+        },
+        {
+          "name": "createPasskey handles initial API failure gracefully",
+          "line": 117
+        },
+        {
+          "name": "createPasskey uses correct request JSON",
+          "line": 139
+        },
+        {
+          "name": "parsePasskeyDataDirectFromBundle processes bundle correctly",
+          "line": 188
+        },
+        {
+          "name": "createPasskey handles cancellation without surfacing unknown failure",
+          "line": 241
+        },
+        {
+          "name": "createPasskey fails when no activity is available",
+          "line": 259
+        },
+        {
+          "name": "createPasskey handles verification failure gracefully",
+          "line": 270
+        },
+        {
+          "name": "parsePasskeyDataDirectFromBundle throws when bundle is missing JSON",
+          "line": 323
+        },
+        {
+          "name": "createPasskey handles credential manager exception",
+          "line": 352
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/passkeys/PasskeyCredentialManagerTest.kt",
+      "sha256": "e0cfafa7e5cf0c735b4a3d6143bfd56dd8941ef8db07f7f46f15fcdb609cfd0f",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "PasskeyCredentialManagerImpl can be used as PasskeyCredentialManager interface",
+          "line": 16
+        },
+        {
+          "name": "createCredential method exists and can be called",
+          "line": 24
+        },
+        {
+          "name": "getCredential method exists and can be called",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/passkeys/PasskeyHelperTest.kt",
+      "sha256": "c965809858a1e1547429b26a564d282223f5843b5aa6a90288370178afc817e8",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "getDomain returns domain without www prefix",
+          "line": 28
+        },
+        {
+          "name": "getDomain returns domain without protocol and path",
+          "line": 40
+        },
+        {
+          "name": "getDomain returns empty string when host is null",
+          "line": 52
+        },
+        {
+          "name": "getDomain handles malformed URL gracefully",
+          "line": 64
+        },
+        {
+          "name": "GetPasskeyRequest serializes correctly",
+          "line": 76
+        },
+        {
+          "name": "PublicKeyCredentialData holds correct data",
+          "line": 99
+        },
+        {
+          "name": "constants have expected values",
+          "line": 122
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/passkeys/PasskeyServiceTest.kt",
+      "sha256": "3d66f552c7c424289cfff831b75d5c733408e1b9260dd06e5b1a106f7938610d",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signInWithPasskey delegates to PasskeyAuthenticationService with empty list",
+          "line": 43
+        },
+        {
+          "name": "signInWithPasskey delegates to PasskeyAuthenticationService with credential IDs",
+          "line": 67
+        },
+        {
+          "name": "signInWithPasskey can prefer immediately available credentials",
+          "line": 93
+        },
+        {
+          "name": "authenticateWithPasskey delegates an existing sign in",
+          "line": 116
+        },
+        {
+          "name": "signInWithPasskey returns error when PasskeyAuthenticationService fails",
+          "line": 138
+        },
+        {
+          "name": "createPasskey delegates to PasskeyCreationService",
+          "line": 170
+        },
+        {
+          "name": "createPasskey returns error when PasskeyCreationService fails",
+          "line": 184
+        },
+        {
+          "name": "createPasskey handles unknown failure from PasskeyCreationService",
+          "line": 205
+        },
+        {
+          "name": "signInWithPasskey with large credential list delegates correctly",
+          "line": 220
+        },
+        {
+          "name": "signInWithPasskey handles unknown failure from PasskeyAuthenticationService",
+          "line": 245
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/passkeys/PasskeyWebAuthnRequestTest.kt",
+      "sha256": "20cdd20f96ed74352fe7ef56fb814f3f9133581f00e4f6f1cfd8fa3c7d98017a",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "createWebAuthnRequest uses nested server relying party id",
+          "line": 19
+        },
+        {
+          "name": "createWebAuthnRequest uses top level server relying party id",
+          "line": 29
+        },
+        {
+          "name": "createWebAuthnRequest uses server allowed credentials",
+          "line": 39
+        },
+        {
+          "name": "createWebAuthnRequest prefers explicit allowed credential ids over server list",
+          "line": 80
+        },
+        {
+          "name": "createWebAuthnRequest falls back to Clerk domain without server relying party id",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ClerkAttachActivityTest.kt",
+      "sha256": "760cc3cc5795850fa26399500436a975642a9830ec7e8622683ad592ceb51b72",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "attachActivity seeds credentialActivity",
+          "line": 36
+        },
+        {
+          "name": "attachActivity holds Activity weakly",
+          "line": 46
+        },
+        {
+          "name": "credentialActivity returns null when no activity attached",
+          "line": 64
+        },
+        {
+          "name": "Context findActivityOrNull walks ContextWrapper chain",
+          "line": 91
+        },
+        {
+          "name": "Context findActivityOrNull returns null when no Activity in chain",
+          "line": 105
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ClerkAuthFlowTest.kt",
+      "sha256": "038cba4ab51cbbed625c13fe2a361e3adb59d4153dfc0c826441ddcd40eba21a",
+      "category": "core-state-and-network",
+      "cases": [
+        {
+          "name": "isAuthFlowComplete is false when signed out",
+          "line": 33
+        },
+        {
+          "name": "isAuthFlowComplete requires an active session with a user",
+          "line": 39
+        },
+        {
+          "name": "completed authentication holds registered auth flow until post-auth completes",
+          "line": 56
+        },
+        {
+          "name": "active client refresh does not hold registered auth flow",
+          "line": 78
+        },
+        {
+          "name": "registerAuthFlow ignores an existing active user session",
+          "line": 93
+        },
+        {
+          "name": "closing older registration does not clear newer auth flow",
+          "line": 106
+        },
+        {
+          "name": "restored pending session keeps auth flow held after activation",
+          "line": 123
+        },
+        {
+          "name": "closing auth flow registration clears pending hold",
+          "line": 141
+        },
+        {
+          "name": "reset clears registered auth flow before a subsequent completed sign in",
+          "line": 155
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ClerkClientFlowTest.kt",
+      "sha256": "e0b70f1086e75c5ca1888816303752319e43e891459e10afc233bfbe8c1f80a4",
+      "category": "core-state-and-network",
+      "cases": [
+        {
+          "name": "updateClient updates clientFlow with latest client",
+          "line": 22
+        },
+        {
+          "name": "refreshClient fetches and updates clientFlow",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ClerkConfigurationSwitchTest.kt",
+      "sha256": "2846f1dc88762c915c944f27c68cd260d429006e8647e375de5e80a79518f3f0",
+      "category": "core-state-and-network",
+      "cases": [
+        {
+          "name": "reset clears local configuration and runtime auth state while preserving device id",
+          "line": 65
+        },
+        {
+          "name": "switchConfiguration resets and configures the new tenant synchronously",
+          "line": 105
+        },
+        {
+          "name": "initialize after configuration is a no-op and does not partially mutate options",
+          "line": 127
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ClerkDevelopmentModeWarningTest.kt",
+      "sha256": "95ad4b02f7f998fc5a1a2cf2531e99c562b02e36dcd3abaeb1cdc5a79b289b61",
+      "category": "presentation-and-values",
+      "cases": [
+        {
+          "name": "shouldShowDevelopmentModeWarning returns true for development with warning enabled",
+          "line": 16
+        },
+        {
+          "name": "shouldShowDevelopmentModeWarning returns false for production",
+          "line": 28
+        },
+        {
+          "name": "shouldShowDevelopmentModeWarning returns false when warning disabled",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ClerkDeviceTokenUpdateTest.kt",
+      "sha256": "b7a18cd4d53bc77fadf1783079e206796b125b67bdeb529c166a9f266e652a86",
+      "category": "core-state-and-network",
+      "cases": [
+        {
+          "name": "updateDeviceToken fails when Clerk has not been initialized",
+          "line": 62
+        },
+        {
+          "name": "updateDeviceToken rejects blank tokens",
+          "line": 74
+        },
+        {
+          "name": "clearDeviceToken fails when Clerk has not been initialized",
+          "line": 85
+        },
+        {
+          "name": "updateDeviceToken persists token and refreshes client state without default client lookup",
+          "line": 98
+        },
+        {
+          "name": "clearDeviceToken removes token and refreshes client state without default client lookup",
+          "line": 140
+        },
+        {
+          "name": "reinitialize remains a no-op when Clerk is already initialized",
+          "line": 177
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ClerkOfflineCacheTest.kt",
+      "sha256": "d237123c6506556a2d197703c74f1eecb52d7a35107e0f88f829bdc6c6afe95c",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "client and environment updates persist a complete snapshot",
+          "line": 63
+        },
+        {
+          "name": "environment without a client does not persist an incomplete snapshot",
+          "line": 81
+        },
+        {
+          "name": "reset clears cached state",
+          "line": 91
+        },
+        {
+          "name": "initialize restores complete state and readiness before network refresh",
+          "line": 100
+        },
+        {
+          "name": "failed offline refresh keeps restored state ready",
+          "line": 115
+        },
+        {
+          "name": "cache for another configuration is ignored",
+          "line": 137
+        },
+        {
+          "name": "corrupted cached state is ignored",
+          "line": 149
+        },
+        {
+          "name": "fresh refresh replaces restored state and persisted snapshot",
+          "line": 161
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ClerkOrganizationTest.kt",
+      "sha256": "1bc797f31cd7f025ed71d799549c79d8995ef31f4d0c5d091959b6800ebf64b3",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "organizationMembership returns membership matching active organization id",
+          "line": 24
+        },
+        {
+          "name": "organizationMembership returns null when no active organization id exists",
+          "line": 42
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ClerkTest.kt",
+      "sha256": "14a8b709757f8ab2494e0f1f82cebc1ef696609fb7dbc257b1437b315eb63a33",
+      "category": "core-state-and-network",
+      "cases": [
+        {
+          "name": "session returns null when client is not initialized",
+          "line": 210
+        },
+        {
+          "name": "session returns null when client has multiple sessions and no last active session ID",
+          "line": 222
+        },
+        {
+          "name": "session returns null when no sessions match active session ID",
+          "line": 241
+        },
+        {
+          "name": "session returns matching session when client has session",
+          "line": 259
+        },
+        {
+          "name": "sessionsFlow exposes all sessions from current client",
+          "line": 277
+        },
+        {
+          "name": "updateClient preserves previous active session when refreshed client omits active id",
+          "line": 292
+        },
+        {
+          "name": "updateClient preserves previous active session when refreshed client references missing active id",
+          "line": 314
+        },
+        {
+          "name": "updateClient activates sole session when refreshed client omits active id",
+          "line": 336
+        },
+        {
+          "name": "multiSessionModeIsEnabled mirrors inverse of single session environment flag",
+          "line": 354
+        },
+        {
+          "name": "user returns null when no active session exists",
+          "line": 373
+        },
+        {
+          "name": "user returns user when session exists",
+          "line": 385
+        },
+        {
+          "name": "isSignedIn returns false when no session exists",
+          "line": 404
+        },
+        {
+          "name": "isSignedIn returns true when session exists",
+          "line": 416
+        },
+        {
+          "name": "currentSignIn returns null when client is not initialized",
+          "line": 434
+        },
+        {
+          "name": "currentSignIn returns sign in when client is initialized",
+          "line": 446
+        },
+        {
+          "name": "currentSignUp returns null when client is not initialized",
+          "line": 459
+        },
+        {
+          "name": "currentSignUp returns sign up when client is initialized",
+          "line": 471
+        },
+        {
+          "name": "logoUrl returns null when environment is not initialized",
+          "line": 484
+        },
+        {
+          "name": "logoUrl returns logo URL when environment is initialized",
+          "line": 496
+        },
+        {
+          "name": "applicationName returns null when environment is not initialized",
+          "line": 510
+        },
+        {
+          "name": "applicationName returns name when environment is initialized",
+          "line": 522
+        },
+        {
+          "name": "supportEmail returns configured address when environment is initialized",
+          "line": 536
+        },
+        {
+          "name": "supportEmail ignores blank configured address",
+          "line": 547
+        },
+        {
+          "name": "socialProviders returns empty map when environment is not initialized",
+          "line": 555
+        },
+        {
+          "name": "socialProviders returns providers when environment is initialized",
+          "line": 567
+        },
+        {
+          "name": "identifier flags return false when environment is not initialized",
+          "line": 581
+        },
+        {
+          "name": "identifier flags return environment values when initialized",
+          "line": 592
+        },
+        {
+          "name": "debugMode is false by default",
+          "line": 608
+        },
+        {
+          "name": "clearSessionAndUserState nulls both sessionFlow and userFlow",
+          "line": 617
+        },
+        {
+          "name": "updateClient emits SessionChanged and SignedIn when session appears",
+          "line": 647
+        },
+        {
+          "name": "clearSessionAndUserState emits SessionChanged and SignedOut when session is cleared",
+          "line": 671
+        },
+        {
+          "name": "session property returns sessionFlow value",
+          "line": 695
+        },
+        {
+          "name": "user property returns userFlow value",
+          "line": 715
+        },
+        {
+          "name": "updateSessionAndUserState updates both flows correctly",
+          "line": 736
+        },
+        {
+          "name": "session returns matching session even when status is pending",
+          "line": 761
+        },
+        {
+          "name": "user returns user even when session is pending",
+          "line": 782
+        },
+        {
+          "name": "isSignedIn returns true for pending session",
+          "line": 802
+        },
+        {
+          "name": "activeSession returns null when session is pending",
+          "line": 820
+        },
+        {
+          "name": "activeSession returns session when status is active",
+          "line": 840
+        },
+        {
+          "name": "activeUser returns null when session is pending",
+          "line": 860
+        },
+        {
+          "name": "activeUser returns user when session is active",
+          "line": 880
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ProxyUrlConfigurationTest.kt",
+      "sha256": "81a71a6f0f1560628df7b8ebd3970b88b281cd9d7bcf7cfba548a245d43c50f1",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "proxyUrl is passed from options and used for base url",
+          "line": 51
+        },
+        {
+          "name": "customHeaders are passed from options and used for api configuration",
+          "line": 66
+        },
+        {
+          "name": "fallback to publishableKey extraction when proxyUrl is not provided",
+          "line": 80
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/PublishableKeyHelperTest.kt",
+      "sha256": "e18efd193e1bc84c4b3ec0c8f186334fad9ec3917957503f345c6f1e1d2117c9",
+      "category": "configuration",
+      "cases": [
+        {
+          "name": "extractApiUrl with valid test key returns correct URL",
+          "line": 26
+        },
+        {
+          "name": "extractApiUrl with valid live key returns correct URL",
+          "line": 40
+        },
+        {
+          "name": "extractApiUrl with empty decoded string throws ClerkClientError",
+          "line": 54
+        },
+        {
+          "name": "extractApiUrl with no prefix still works correctly",
+          "line": 68
+        },
+        {
+          "name": "extractApiUrl with single character domain returns https prefix only",
+          "line": 81
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/SharedSessionSyncConfigTest.kt",
+      "sha256": "eb6a446be1a8c4fa3736320149578c7dd627a2451a2297810245f153b661e8a9",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "shared session sync is opt in",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ToOAuthProvidersListTest.kt",
+      "sha256": "7edc3f49d65e0e810d3f5d920ea2f22f9e9f098c33beace7bb002e140a8247e6",
+      "category": "presentation-and-values",
+      "cases": [
+        {
+          "name": "returns only enabled and authenticatable providers",
+          "line": 28
+        },
+        {
+          "name": "returns empty list when no providers are enabled and authenticatable",
+          "line": 44
+        },
+        {
+          "name": "returns empty list for empty map",
+          "line": 57
+        },
+        {
+          "name": "returns all providers when all are enabled and authenticatable",
+          "line": 66
+        },
+        {
+          "name": "preserves distinct custom provider strategies",
+          "line": 81
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/session/SessionDeleteTest.kt",
+      "sha256": "9af839b5064d6b0351021b3cd32ad8a65978868c532d8d345a6b17f318d50446",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "delete removes only the target session",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/session/SessionTaskTest.kt",
+      "sha256": "aab7dac038d8cd385c436f02884d02e8469907e610eed1d22e248f558464c1d2",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "parsedKey maps mfa required keys",
+          "line": 11
+        },
+        {
+          "name": "parsedKey maps reset password keys",
+          "line": 19
+        },
+        {
+          "name": "parsedKey maps choose organization keys",
+          "line": 25
+        },
+        {
+          "name": "requiresForcedMfa is true for pending session with mfa task",
+          "line": 31
+        },
+        {
+          "name": "requiresForcedMfa is true for active session with mfa task",
+          "line": 40
+        },
+        {
+          "name": "pendingTaskKey returns choose organization for active session with choose organization task",
+          "line": 49
+        },
+        {
+          "name": "requiresForcedMfa is false when pending session has no mfa task",
+          "line": 60
+        },
+        {
+          "name": "pendingTaskKey preserves current pending task order",
+          "line": 73
+        },
+        {
+          "name": "pendingTaskKey prefers current task when present",
+          "line": 85
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/session/SessionTokenFetcherTest.kt",
+      "sha256": "8636f4eec0593bf9d0069d5d7786e45471daf0c8eace21c7a576c1a41eb6c490",
+      "category": "core-lifecycle",
+      "cases": [
+        {
+          "name": "getToken returns cached token if valid and cache not skipped",
+          "line": 90
+        },
+        {
+          "name": "getToken fetches from network if cache is empty",
+          "line": 109
+        },
+        {
+          "name": "getToken fetches from network if cached token is expired",
+          "line": 132
+        },
+        {
+          "name": "getToken uses template in API call when provided",
+          "line": 156
+        },
+        {
+          "name": "getToken bypasses cached result when skipCache is true",
+          "line": 178
+        },
+        {
+          "name": "session minter passes previous token and forces origin for forced refresh",
+          "line": 200
+        },
+        {
+          "name": "getToken returns null when API call fails",
+          "line": 239
+        },
+        {
+          "name": "getToken clears local session state when token endpoint returns unauthorized",
+          "line": 264
+        },
+        {
+          "name": "getToken clears local session state when token endpoint returns authentication invalid",
+          "line": 282
+        },
+        {
+          "name": "getToken does not clear local session state for non-session unauthorized errors",
+          "line": 301
+        },
+        {
+          "name": "getToken uses custom expiration buffer",
+          "line": 320
+        },
+        {
+          "name": "getToken handles JWT parsing exception gracefully",
+          "line": 346
+        },
+        {
+          "name": "getToken handles concurrent requests properly",
+          "line": 368
+        },
+        {
+          "name": "concurrent waiters share a null token result without retrying",
+          "line": 400
+        },
+        {
+          "name": "forced refreshes return their own responses while cache retains canonical token",
+          "line": 427
+        },
+        {
+          "name": "reset fences a late forced refresh response from the previous runtime",
+          "line": 476
+        },
+        {
+          "name": "reset releases shared token waiters with null",
+          "line": 503
+        },
+        {
+          "name": "getToken handles API exception gracefully",
+          "line": 531
+        },
+        {
+          "name": "tokenCacheKey generates correct key without template",
+          "line": 546
+        },
+        {
+          "name": "tokenCacheKey generates correct key with template",
+          "line": 558
+        },
+        {
+          "name": "different sessions get different cache keys",
+          "line": 571
+        },
+        {
+          "name": "getToken returns null for pending session",
+          "line": 606
+        },
+        {
+          "name": "getToken uses pending status from current client snapshot",
+          "line": 620
+        },
+        {
+          "name": "getToken uses active status from current client snapshot",
+          "line": 636
+        },
+        {
+          "name": "getToken proceeds normally for active session",
+          "line": 658
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/session/SessionVerificationTest.kt",
+      "sha256": "75d3bfe2bcb3c6d81f3c66f8dab82419301a25ee0b973c27f4bfd2310d61716e",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "session verification decodes supported factor metadata",
+          "line": 29
+        },
+        {
+          "name": "start verification forwards level to session api",
+          "line": 73
+        },
+        {
+          "name": "send email code prepares email first factor",
+          "line": 91
+        },
+        {
+          "name": "send phone code prepares phone first factor",
+          "line": 109
+        },
+        {
+          "name": "verify with email code attempts first factor",
+          "line": 127
+        },
+        {
+          "name": "verify with phone code attempts first factor",
+          "line": 145
+        },
+        {
+          "name": "start enterprise sso prepares first factor",
+          "line": 163
+        },
+        {
+          "name": "start enterprise sso uses default redirect url",
+          "line": 192
+        },
+        {
+          "name": "verify with password attempts first factor",
+          "line": 219
+        },
+        {
+          "name": "send mfa phone code prepares second factor",
+          "line": 237
+        },
+        {
+          "name": "verify with mfa phone code attempts second factor",
+          "line": 255
+        },
+        {
+          "name": "verify with passkey delegates to passkey service",
+          "line": 273
+        },
+        {
+          "name": "verify with passkey delegates second factor level to passkey service",
+          "line": 300
+        },
+        {
+          "name": "verify with totp attempts second factor",
+          "line": 326
+        },
+        {
+          "name": "verify with backup code attempts second factor",
+          "line": 344
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/session/TokenFreshnessTest.kt",
+      "sha256": "13e0b2117d9f1dc2b4cae0feeb766a1b9e3fbe26fa97ffdbd1c15b54eaf9d4b9",
+      "category": "core-lifecycle",
+      "cases": [
+        {
+          "name": "keeps token with higher origin issued at",
+          "line": 25
+        },
+        {
+          "name": "uses issued at to break equal origin issued at",
+          "line": 35
+        },
+        {
+          "name": "replaces an expired existing token",
+          "line": 45
+        },
+        {
+          "name": "accepts incoming token when organization changes",
+          "line": 55
+        },
+        {
+          "name": "keeps decodable existing token when incoming cannot be decoded",
+          "line": 65
+        },
+        {
+          "name": "malformed token does not match session context",
+          "line": 75
+        },
+        {
+          "name": "token without session id does not match session context",
+          "line": 80
+        },
+        {
+          "name": "cache cannot be rolled back by a stale response",
+          "line": 87
+        },
+        {
+          "name": "out of order cache writes retain the freshest response",
+          "line": 103
+        },
+        {
+          "name": "hydration preserves canonical token on a timestamp tie",
+          "line": 121
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncCoordinatorTest.kt",
+      "sha256": "961f0743fa465a4f96d7c5868612c9466fdcb6242892c6116ed66bb2a6feb600",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "public reload behavior applies newer sibling client without echoing notification",
+          "line": 38
+        },
+        {
+          "name": "newer sibling clear removes local auth state",
+          "line": 61
+        },
+        {
+          "name": "stale sibling snapshot is rejected and repaired from local state",
+          "line": 78
+        },
+        {
+          "name": "local client change publishes opaque revision",
+          "line": 100
+        },
+        {
+          "name": "sibling device token is copied into encrypted local storage",
+          "line": 117
+        },
+        {
+          "name": "local device token changes publish set and cleared revisions",
+          "line": 147
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncProviderTest.kt",
+      "sha256": "924f7d096c8b17bd1ec41292224c00b192b57a2c0619ed98fb7a0cd100d35981",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "provider is discoverable only while shared session sync is enabled",
+          "line": 35
+        },
+        {
+          "name": "enabled provider exposes read-only snapshot",
+          "line": 49
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncPublicApiTest.kt",
+      "sha256": "5a5fb1404430e6012577ecc591fb7530f8d393b532cb7269fd43c2d858d1658a",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "reloadFromSharedStorage applies persisted matching snapshot",
+          "line": 38
+        },
+        {
+          "name": "enabled config exposes a companion getter to published aar consumers",
+          "line": 70
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncSnapshotTest.kt",
+      "sha256": "08bafe3750b52f4fbdb0044475255618ec5739b7699f3c2f3b930600390cc273",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "newer server fetch applies",
+          "line": 9
+        },
+        {
+          "name": "older server fetch is rejected even with newer client updated at",
+          "line": 20
+        },
+        {
+          "name": "equal fetch uses client updated at as tie breaker",
+          "line": 31
+        },
+        {
+          "name": "equal fetch does not resurrect client over clear",
+          "line": 42
+        },
+        {
+          "name": "newer clear applies",
+          "line": 53
+        },
+        {
+          "name": "matching snapshot is ignored",
+          "line": 63
+        },
+        {
+          "name": "snapshot codec round trips typed state",
+          "line": 75
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signin/SignInAuthenticateWithRedirectTest.kt",
+      "sha256": "2a15e00522b410877777b1e59fe222affa5427a4d91cf861e53a4801e772ab8e",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "authenticateWithRedirect uses OAuth provider strategy",
+          "line": 26
+        },
+        {
+          "name": "authenticateWithRedirect preserves custom OAuth provider strategy",
+          "line": 64
+        },
+        {
+          "name": "authenticateWithRedirect uses Enterprise SSO strategy",
+          "line": 101
+        },
+        {
+          "name": "authenticateWithPreparedRedirect continues prepared external verification",
+          "line": 137
+        },
+        {
+          "name": "authenticateWithPreparedRedirect fails when external verification URL is missing",
+          "line": 167
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signin/SignInCreateTest.kt",
+      "sha256": "c700a3da564b156713002fa08144cc78d1ed365b6c7b5d3a5c878d64cf102ac4",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "create with passkey strategy delegates to PasskeyService",
+          "line": 24
+        },
+        {
+          "name": "passkey strategy preserves legacy jvm constructor and copy signatures",
+          "line": 51
+        },
+        {
+          "name": "create with biometric credential strategy forwards prompt configuration",
+          "line": 59
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signin/SignInExtensionsTest.kt",
+      "sha256": "8b2acd39bf52f873ed156418469b6bae8e8c8ba48462c3a6c1b90f8e7801e85f",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "startingFirstFactor prefers password for email identifier when password is preferred",
+          "line": 38
+        },
+        {
+          "name": "startingFirstFactor prefers email_link for email identifier when otp is preferred",
+          "line": 58
+        },
+        {
+          "name": "startingFirstFactor does not force email_link for non-email identifiers",
+          "line": 77
+        },
+        {
+          "name": "startingFirstFactor chooses matching email_link when preferred password is unavailable",
+          "line": 96
+        },
+        {
+          "name": "startingFirstFactor does not use unrelated email_link for username sign-ins",
+          "line": 121
+        },
+        {
+          "name": "startingFirstFactor matches prepared factor by identifier when strategies repeat",
+          "line": 140
+        },
+        {
+          "name": "startingFirstFactor uses preferred password over prepared email_code",
+          "line": 169
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signin/SignInPrepareFirstFactorParamsMapTest.kt",
+      "sha256": "b0adcc87f71ebcda3a1607992be51a03d0b9077eb7f971bc435b51b7b54c867c",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "reset password email code maps email address id using snake case",
+          "line": 10
+        },
+        {
+          "name": "reset password phone code maps phone number id using snake case",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signin/SignInPrepareFirstFactorTest.kt",
+      "sha256": "0b12bbcfe542a03fff127d43ac5a55778cce280fb993a1dc12a82082b535a546",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "oauth first factor can be prepared from needs identifier status",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signin/SignInSerializationTest.kt",
+      "sha256": "342d61b9779662d83b43f5450403882e5ccad318b808aacce779f3f7e27eb9c6",
+      "category": "serialization-and-errors",
+      "cases": [
+        {
+          "name": "serializer preserves the public descriptor name",
+          "line": 12
+        },
+        {
+          "name": "sign in decodes known status values",
+          "line": 17
+        },
+        {
+          "name": "sign in preserves unknown status values",
+          "line": 26
+        },
+        {
+          "name": "client preserves an unknown nested sign in status",
+          "line": 61
+        },
+        {
+          "name": "copying with a different status uses its serialized value",
+          "line": 82
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signout/SignOutServiceTest.kt",
+      "sha256": "c93b53bf8803e5ca554194c845faf04539bb8333a173f771cb5eb24d332b217c",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signOut clears device token on successful server sign-out",
+          "line": 115
+        },
+        {
+          "name": "signOut clears device token even when server sign-out fails",
+          "line": 139
+        },
+        {
+          "name": "signOut clears session and user state on successful sign-out",
+          "line": 166
+        },
+        {
+          "name": "signOut clears session and user state even when server sign-out fails",
+          "line": 189
+        },
+        {
+          "name": "signOut succeeds when no session exists",
+          "line": 211
+        },
+        {
+          "name": "signOut preserves device ID while clearing device token",
+          "line": 235
+        },
+        {
+          "name": "signOut refreshes client after local sign-out cleanup",
+          "line": 257
+        },
+        {
+          "name": "signOut tolerates client refresh failure",
+          "line": 269
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signup/SignUpAuthenticateWithRedirectTest.kt",
+      "sha256": "9856e7d29d90235ab7954707d7230dd44942cdfc5561d3ff5afc6d0575110076",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "authenticateWithRedirect uses sign-up redirect flow for OAuth provider",
+          "line": 27
+        },
+        {
+          "name": "authenticateWithRedirect preserves custom OAuth provider strategy",
+          "line": 64
+        },
+        {
+          "name": "authenticateWithRedirect forwards unsafe metadata",
+          "line": 99
+        },
+        {
+          "name": "redirect params map transform unsafe metadata to json",
+          "line": 138
+        },
+        {
+          "name": "redirect params map preserves custom OAuth provider strategy",
+          "line": 152
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signup/SignUpCreateParamsTest.kt",
+      "sha256": "f4a4f60311cb79693ca4a389a5ba10868580139f1c270d445d1ecfc6e1289223",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "standard create params include unsafe metadata when provided",
+          "line": 10
+        },
+        {
+          "name": "standard create params exclude unsafe metadata when omitted",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signup/SignUpEmailVerificationStrategyTest.kt",
+      "sha256": "717397e660d35ded93d8bdbcc44776db61ffeb6a36cdc50af1b8097bdbab91e1",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "emailVerificationStrategyUsesActiveVerificationStrategyWhenPresent",
+          "line": 61
+        },
+        {
+          "name": "emailVerificationStrategyFallsBackToEnvironmentStrategiesWhenNoActiveStrategyExists",
+          "line": 79
+        },
+        {
+          "name": "prepareVerificationMapsNativeEmailLinkPkceFields",
+          "line": 101
+        },
+        {
+          "name": "sendCodeUsesEmailLinkWhenEmailLinkVerificationIsSupported",
+          "line": 122
+        },
+        {
+          "name": "sendCodeFallsBackToEmailCodeWhenEmailLinkVerificationIsNotSupported",
+          "line": 142
+        },
+        {
+          "name": "sendCodeUsesPhoneCodeForPhoneVerification",
+          "line": 158
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signup/SignUpFieldCollectionTest.kt",
+      "sha256": "8c436fe977b9691465f1ffe5c17c6a396c26b0c3b7b9a0e703ee46e5543fc880",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "firstFieldToCollect ignores optional missing fields",
+          "line": 10
+        },
+        {
+          "name": "firstFieldToCollect returns null when only optional fields are missing",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/ExternalAccountServiceTest.kt",
+      "sha256": "35bec5337ac421f1ba31bf13b36f33a66c4114cba38c41caf845ca179fb6d1e6",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "hasPendingExternalAccountConnection returns false initially",
+          "line": 110
+        },
+        {
+          "name": "cancelPendingExternalAccountConnection clears state",
+          "line": 115
+        },
+        {
+          "name": "completeExternalConnection handles no pending connection gracefully",
+          "line": 124
+        },
+        {
+          "name": "completeExternalConnection handles missing external account",
+          "line": 133
+        },
+        {
+          "name": "cancelPendingExternalAccountConnection completes with cancellation error",
+          "line": 146
+        },
+        {
+          "name": "connectExternalAccount launches authorization through non-exported manager",
+          "line": 156
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/GoogleSignInServiceTest.kt",
+      "sha256": "67a94b61697bc707ec241b33a2f8a05296b77d1c5cd7aba9d015bab82be987a2",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signInWithGoogle succeeds when authentication is successful",
+          "line": 86
+        },
+        {
+          "name": "signInWithGoogle creates account when external_account_not_found error occurs",
+          "line": 114
+        },
+        {
+          "name": "signInWithGoogle transfers created sign-up back to sign-in when external account exists",
+          "line": 151
+        },
+        {
+          "name": "signInWithGoogle returns error when authentication fails with other error",
+          "line": 197
+        },
+        {
+          "name": "signInWithGoogle returns error when credential type is unsupported",
+          "line": 230
+        },
+        {
+          "name": "signInWithGoogle returns error when GetCredentialException is thrown",
+          "line": 250
+        },
+        {
+          "name": "signInWithGoogle classifies missing Google account",
+          "line": 266
+        },
+        {
+          "name": "signInWithGoogle classifies user cancellation",
+          "line": 278
+        },
+        {
+          "name": "signInWithGoogle verifies correct SignUp CreateParams are used",
+          "line": 290
+        },
+        {
+          "name": "signUpWithGoogle transfers existing external account to sign-in",
+          "line": 323
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/OAuthProviderTest.kt",
+      "sha256": "88329430e6e6465b8235c35785540a51c8c3e91b5a09cd5bfca99e676e33c069",
+      "category": "presentation-and-values",
+      "cases": [
+        {
+          "name": "fromStrategy preserves a custom OAuth strategy",
+          "line": 24
+        },
+        {
+          "name": "custom providers with different keys remain distinct",
+          "line": 33
+        },
+        {
+          "name": "custom provider reads configured name and logo by exact strategy",
+          "line": 41
+        },
+        {
+          "name": "serialization preserves built-in format and custom strategy",
+          "line": 50
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/RedirectConfigurationTest.kt",
+      "sha256": "9592286edb2df7dc36bc793cdc39c1741f0d615af636502ab1614e5a28bd1dc2",
+      "category": "configuration",
+      "cases": [
+        {
+          "name": "defaultRedirectUrl_usesCallbackHost",
+          "line": 17
+        },
+        {
+          "name": "legacyRedirectUrl_keepsOauthHost",
+          "line": 24
+        },
+        {
+          "name": "redirectUrlsReflectTheCurrentApplicationId",
+          "line": 31
+        },
+        {
+          "name": "defaultRedirectUrl_doesNotThrowWhenApplicationIdIsUnset",
+          "line": 40
+        },
+        {
+          "name": "emailLinkRedirectUrl_usesProxyPortWhenConfigured",
+          "line": 47
+        },
+        {
+          "name": "emailLinkRedirectUrl_omitsStandardHttpsPort",
+          "line": 58
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOExtensionsTest.kt",
+      "sha256": "836762bb8e634e9ee859742e6ee80874ce9e1dcc5baf6aa4937f5ff7b618fc2f",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signInToOAuthResult preserves unknown transport failure",
+          "line": 15
+        },
+        {
+          "name": "signUpToOAuthResult preserves unknown transport failure",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOManagerActivityTest.kt",
+      "sha256": "70407f2627701bae68ed50cf0bbcc892d70e3796f503d0736026de07981ce693",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "authorizationComplete_setsResultOk_whenDataPresent",
+          "line": 46
+        },
+        {
+          "name": "callbackIntent_completesWithoutAuthorizationStarted",
+          "line": 66
+        },
+        {
+          "name": "errorCodeOnlyCallback_completesWithoutAuthorizationStarted",
+          "line": 84
+        },
+        {
+          "name": "newAuthorizationIntent_restartsManagerWithNewUrl",
+          "line": 102
+        },
+        {
+          "name": "authorizationCanceled_setsResultCanceled_whenNoData",
+          "line": 124
+        },
+        {
+          "name": "authorizationUrl_isNotTreatedAsCallback_whenBrowserIsDismissed",
+          "line": 145
+        },
+        {
+          "name": "hostedAuthCallback_callsOnlyHostedAuthService",
+          "line": 167
+        },
+        {
+          "name": "hostedAuthCallback_reattachesAfterConfigurationChange",
+          "line": 199
+        },
+        {
+          "name": "authorizationComplete_isCalledOnlyOnce_whenResumedTwice",
+          "line": 240
+        },
+        {
+          "name": "authorizationComplete_setsResultOk_evenWhenServiceThrows",
+          "line": 261
+        },
+        {
+          "name": "externalConnectionFlow_callsOnlyCompleteExternalConnection",
+          "line": 287
+        },
+        {
+          "name": "completionStarted_persistsAcrossConfigurationChange",
+          "line": 311
+        },
+        {
+          "name": "nativeMagicLinkFailure_setsResultCanceled",
+          "line": 342
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOReceiverActivityManifestTest.kt",
+      "sha256": "ad42a61a1399e8504ed29ec86356abbf5b1ffdd9c4bc43db8225394a6d111668",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "canonicalHostedAuthCallbackResolvesToSsoReceiverActivity",
+          "line": 16
+        },
+        {
+          "name": "legacyOauthHostResolvesToSsoReceiverActivity",
+          "line": 28
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOReceiverActivityTest.kt",
+      "sha256": "2045422e6139df84fb325d3bb08f549ab1b0785e00b7aabf0a62911f7c575ca8",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "invalidHostedAuthCallbackIsNotForwarded",
+          "line": 30
+        },
+        {
+          "name": "validHostedAuthCallbackIsForwardedToManager",
+          "line": 43
+        },
+        {
+          "name": "unrecognizedExplicitIntentIsNotForwardedToManager",
+          "line": 56
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOServiceAuthenticateWithRedirectTest.kt",
+      "sha256": "18d26fd31559ca97be54077ae9efc8e057fca47c52b6ce794b3bfeee64626608",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "authenticateWithRedirect creates sign in then prepares OAuth first factor",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOServiceCancellationTest.kt",
+      "sha256": "2a145f148cdc36a97e02b1049a491345f44bbd6cb621d92795ca663a46e667ee",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "cancelPendingAuthentication returns typed cancellation failure",
+          "line": 45
+        },
+        {
+          "name": "callback without success marker returns cancellation instead of starting sign up",
+          "line": 59
+        },
+        {
+          "name": "provider error callback returns cancellation instead of starting sign up",
+          "line": 75
+        },
+        {
+          "name": "explicit external account not found marker still transfers to sign up",
+          "line": 92
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOServiceTest.kt",
+      "sha256": "597515fd2c826f670976d28a5c62082edb829db264c9616fc5b64464ffa0e4b8",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "hasPendingAuthentication returns false initially",
+          "line": 123
+        },
+        {
+          "name": "hasPendingExternalAccountConnection returns false initially",
+          "line": 128
+        },
+        {
+          "name": "cancelPendingAuthentication clears state",
+          "line": 133
+        },
+        {
+          "name": "authenticateWithRedirect returns failure when API call fails",
+          "line": 142
+        },
+        {
+          "name": "completeAuthenticateWithRedirect handles no pending authentication gracefully",
+          "line": 157
+        },
+        {
+          "name": "completeExternalConnection handles no pending connection gracefully",
+          "line": 169
+        },
+        {
+          "name": "completeExternalConnection handles missing external account",
+          "line": 178
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/storage/StorageHelperTest.kt",
+      "sha256": "fbc886db161ddebb4f074ce4952e75d929b880baf399a76b33de89a69d61da73",
+      "category": "secure-persistence",
+      "cases": [
+        {
+          "name": "initialize called concurrently from multiple threads initializes exactly once with no exceptions",
+          "line": 63
+        },
+        {
+          "name": "saveValue with empty string does not write to SharedPreferences",
+          "line": 107
+        },
+        {
+          "name": "saveValue stores encrypted value in SharedPreferences",
+          "line": 127
+        },
+        {
+          "name": "saveValue with empty string when no existing value does not write to SharedPreferences",
+          "line": 142
+        },
+        {
+          "name": "loadValue migrates legacy plaintext values to encrypted storage",
+          "line": 155
+        },
+        {
+          "name": "loadValue deletes malformed encrypted values and returns null",
+          "line": 172
+        },
+        {
+          "name": "after initialize isInitialized returns true and values can be saved loaded and deleted",
+          "line": 198
+        },
+        {
+          "name": "multiple save and load operations work correctly after initialization",
+          "line": 232
+        },
+        {
+          "name": "load save and delete never throw when racing with initialize",
+          "line": 262
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/ui/ClerkTypographyDefaultsTest.kt",
+      "sha256": "7f242be537c3304f4a4f2228fa0b12d536ed0b16e11e65a7ff7593bd0f6e1f30",
+      "category": "presentation-and-values",
+      "cases": [
+        {
+          "name": "default returns Clerk typography defaults",
+          "line": 11
+        },
+        {
+          "name": "default helper matches zero-arg constructor",
+          "line": 21
+        },
+        {
+          "name": "builder allows overriding individual slots",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/ui/ClerkTypographyTest.kt",
+      "sha256": "37e30cc51f29d97d7936e5669d645a792c6b9f5c8bfa8eb7f9f48612659256e2",
+      "category": "presentation-and-values",
+      "cases": [
+        {
+          "name": "zero-arg constructor returns Clerk defaults",
+          "line": 10
+        },
+        {
+          "name": "named overrides preserve other defaults",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/user/UpdateMetadataOverloadTest.kt",
+      "sha256": "feddeec2c421f4b42c4a39ed82144c5b86dc83d1503a4ef13161578a706ea860",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "JsonObject overload issues a single PATCH me_metadata with stringified body",
+          "line": 59
+        },
+        {
+          "name": "empty JsonObject overload sends empty-object payload (no special handling)",
+          "line": 74
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/user/UserOAuthProviderTest.kt",
+      "sha256": "dc38219d6ffa0d39dcb3f20a1105f46bb6b77e44bd4d0e1ac5683b37f4d1dcac",
+      "category": "presentation-and-values",
+      "cases": [
+        {
+          "name": "create external account params preserve custom strategy",
+          "line": 24
+        },
+        {
+          "name": "connecting one custom provider does not hide another",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/user/UserTest.kt",
+      "sha256": "39869ce22fef5ba05ea95ddca73be439c998b9a6cb9f05883e3486b1e04e1431",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "UpdateParams should include unsafeMetadata when provided",
+          "line": 19
+        },
+        {
+          "name": "UpdateParams should exclude unsafeMetadata when null",
+          "line": 36
+        },
+        {
+          "name": "UpdateParams should include all metadata types when provided",
+          "line": 54
+        },
+        {
+          "name": "UpdateParams should only include unsafeMetadata when only it is provided",
+          "line": 84
+        },
+        {
+          "name": "UpdateParams serialization should include unsafe_metadata field",
+          "line": 100
+        },
+        {
+          "name": "UpdateParams with empty unsafeMetadata should be handled correctly",
+          "line": 117
+        },
+        {
+          "name": "UpdateParams with complex nested unsafeMetadata should be preserved",
+          "line": 135
+        },
+        {
+          "name": "UpdateMetadataParams should include unsafe_metadata when provided",
+          "line": 154
+        },
+        {
+          "name": "UpdateMetadataParams should exclude unsafe_metadata when null",
+          "line": 165
+        },
+        {
+          "name": "UpdateMetadataParams should serialize with snake_case",
+          "line": 174
+        },
+        {
+          "name": "UpdateMetadataParams should preserve empty-object payload",
+          "line": 187
+        },
+        {
+          "name": "phoneNumbersAvailableForMfa excludes last first factor phone",
+          "line": 200
+        },
+        {
+          "name": "phoneNumbersAvailableForMfa includes phone when verified email exists",
+          "line": 209
+        },
+        {
+          "name": "phoneNumbersAvailableForMfa excludes phone when only alternative phone is reserved",
+          "line": 222
+        },
+        {
+          "name": "phoneNumbersAvailableForMfa includes verified phones when another remains available",
+          "line": 238
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/user/UserUpdateRoutingTest.kt",
+      "sha256": "763ec75adde8416b9d992cdf37648446de4e204042545d984d14620f7d1ee424",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "no metadata routes to a single PATCH me",
+          "line": 64
+        },
+        {
+          "name": "only metadata reloads then issues a PATCH me_metadata with the computed patch",
+          "line": 82
+        },
+        {
+          "name": "mixed metadata and non-metadata fields issue PATCH me then PATCH me_metadata in order",
+          "line": 112
+        },
+        {
+          "name": "malformed metadata returns ClerkResult Failure and issues no network calls",
+          "line": 139
+        },
+        {
+          "name": "identical metadata skips the metadata PATCH",
+          "line": 150
+        },
+        {
+          "name": "identical metadata with non-metadata fields returns the PATCH me response",
+          "line": 164
+        },
+        {
+          "name": "reloads before diffing so server-side mutations are not lost",
+          "line": 196
+        }
+      ]
+    }
+  ]
+}

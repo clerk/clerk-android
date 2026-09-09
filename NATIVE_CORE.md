@@ -53,3 +53,7 @@ The adapters preserve the previous Secure Enclave / Android Keystore key names a
 ## Bundle and engine updates
 
 From a clean JavaScript checkout run `node packages/mobile-runtime/pack.mjs IOS_REPOSITORY ANDROID_REPOSITORY`. The script rebuilds the bundle and pins the source commit, contract and bundle SHA-256. Commit generated Kotlin and assets together, review `NativeCore/public-api.txt`, and run the native tests. QuickJS-ng is vendored at v0.15.1, commit `fd0a0210b7be00957751871e7e01b8291268fc29`; preserve its license and run all ABI tests when updating. Remote executable-code updates are not supported.
+
+## Previous native API
+
+The [separate migration guide](Documentation/Migration/README.md) records the audited main baseline, old public declarations, call changes, unavailable features, and the legacy-test coverage audit. The old native test trees remain pending their explicit assertion-level migration.
