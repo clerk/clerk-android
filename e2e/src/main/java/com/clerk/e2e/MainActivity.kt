@@ -1,9 +1,6 @@
 package com.clerk.e2e
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,26 +31,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.api.Clerk
-import com.clerk.api.user.User
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.User
 import com.clerk.ui.auth.AuthView
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.userprofile.UserProfileView
 
 private const val TEST_PHONE_E164 = "+15555550100"
 
-class MainActivity : ComponentActivity() {
-  private val viewModel: E2EViewModel by viewModels()
+class MainActivity : E2EActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent { E2EApp(viewModel) }
+    setClerkContent {
+      val owner = LocalClerk.current
+      val model = viewModel { E2EViewModel(owner) }
+      E2EApp(model)
+    }
   }
 }
 
 @Composable
 private fun E2EApp(viewModel: E2EViewModel) {
-  val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val clerk = LocalClerk.current
+  val isInitialized = clerk.loaded
+  val user = clerk.user.takeIf { LocalClerk.isAuthFlowComplete }
   val customOtpState by viewModel.customOtpState.collectAsStateWithLifecycle()
   var route by rememberSaveable { mutableStateOf(E2ERoute.Home) }
 
@@ -74,6 +76,14 @@ private fun E2EApp(viewModel: E2EViewModel) {
     Surface(modifier = Modifier.fillMaxSize()) {
       when {
         !isInitialized -> LoadingScreen()
+        clerk.session?.currentTask != null || customOtpState == CustomOtpState.RequiresCompletion ->
+          AuthView(
+            isDismissible = false,
+            onAuthComplete = {
+              viewModel.resetCustomOtpState()
+              route = E2ERoute.CustomProfile
+            },
+          )
         route == E2ERoute.Home ->
           HomeScreen(
             user = user,
@@ -159,7 +169,8 @@ private fun CustomOtpSignInScreen(
 ) {
   var phoneNumber by rememberSaveable { mutableStateOf("") }
   var code by rememberSaveable { mutableStateOf("") }
-  val awaitingCode = state == CustomOtpState.AwaitingCode
+  val awaitingCode =
+    state == CustomOtpState.AwaitingCode || (state as? CustomOtpState.Error)?.awaitingCode == true
 
   E2EColumn {
     Text("Custom OTP Sign In", style = MaterialTheme.typography.headlineSmall)

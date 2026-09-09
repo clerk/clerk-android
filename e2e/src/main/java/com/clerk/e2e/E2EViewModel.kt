@@ -3,15 +3,17 @@ package com.clerk.e2e
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.error.ClerkErrorResponse
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.verifyCode
-import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.attemptVerification
-import com.clerk.api.signup.sendEmailCode
-import com.clerk.api.signup.sendPhoneCode
+import com.clerk.api.CoreException
+import com.clerk.api.SessionStatus
+import com.clerk.api.SignInCreateParams
+import com.clerk.api.SignInPhoneCodeVerifyParams
+import com.clerk.api.SignInStatus
+import com.clerk.api.SignUpCreateParams
+import com.clerk.api.SignUpEmailCodeVerifyParams
+import com.clerk.api.SignUpIdentificationField
+import com.clerk.api.SignUpPhoneCodeVerifyParams
+import com.clerk.api.SignUpStatus
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -19,7 +21,7 @@ import kotlinx.coroutines.launch
 private const val US_PHONE_NUMBER_DIGIT_COUNT = 10
 private const val US_PHONE_NUMBER_WITH_COUNTRY_CODE_DIGIT_COUNT = 11
 
-class E2EViewModel : ViewModel() {
+class E2EViewModel(private val clerk: Clerk) : ViewModel() {
   private companion object {
     const val TEST_PASSWORD = "Trailblaze424242!"
   }
@@ -33,153 +35,78 @@ class E2EViewModel : ViewModel() {
     _customOtpState.value = CustomOtpState.Idle
   }
 
-  fun submitCustomOtpPhone(phoneNumber: String) {
+  private fun operation(block: suspend () -> Unit) {
     _customOtpState.value = CustomOtpState.Loading
     viewModelScope.launch {
-      val normalizedPhoneNumber = phoneNumber.normalizedUsTestPhoneNumber()
-      when (val result = Clerk.auth.signInWithOtp { phone = normalizedPhoneNumber }) {
-        is ClerkResult.Success -> {
-          customOtpMode = CustomOtpMode.SignIn
-          _customOtpState.value = CustomOtpState.AwaitingCode
-        }
-        is ClerkResult.Failure -> {
-          if (result.hasErrorCode("form_identifier_not_found")) {
-            createCustomOtpTestUser(normalizedPhoneNumber)
-          } else {
-            _customOtpState.value = CustomOtpState.Error(result.errorMessage)
-          }
-        }
+      try {
+        block()
+      } catch (error: CancellationException) {
+        throw error
+      } catch (error: Exception) {
+        _customOtpState.value = CustomOtpState.Error(error.localizedMessage, customOtpMode != null)
       }
     }
   }
 
-  fun verifyCustomOtpCode(code: String) {
-    _customOtpState.value = CustomOtpState.Loading
-    viewModelScope.launch {
-      when (customOtpMode) {
-        CustomOtpMode.SignIn -> verifyCustomSignInCode(code)
-        CustomOtpMode.SignUp -> verifyCustomSignUpCode(code)
-        null -> _customOtpState.value = CustomOtpState.Error("No OTP flow is in progress.")
+  fun submitCustomOtpPhone(phoneNumber: String) = operation {
+    customOtpMode = null
+    val normalized = phoneNumber.normalizedUsTestPhoneNumber()
+    try {
+      clerk.signIn.create(SignInCreateParams(identifier = normalized))
+      clerk.signIn.phoneCode.sendCode()
+      customOtpMode = CustomOtpMode.SignIn
+    } catch (error: CoreException) {
+      if (error.errors.none { it.code == "form_identifier_not_found" }) throw error
+      val identifier = normalized.testIdentifier()
+      clerk.signUp.create(
+        SignUpCreateParams(
+          phoneNumber = normalized,
+          emailAddress = "android-e2e-$identifier+clerk_test@example.com",
+          username = "android_e2e_$identifier",
+          password = TEST_PASSWORD,
+        )
+      )
+      clerk.signUp.verifications.sendPhoneCode()
+      customOtpMode = CustomOtpMode.SignUp
+    }
+    _customOtpState.value = CustomOtpState.AwaitingCode
+  }
+
+  fun verifyCustomOtpCode(code: String) = operation {
+    when (customOtpMode) {
+      CustomOtpMode.SignIn -> {
+        val attempt = clerk.signIn
+        attempt.phoneCode.verifyCode(SignInPhoneCodeVerifyParams(code))
+        if (attempt.status == SignInStatus.Complete) attempt.finalize()
       }
-    }
-  }
-
-  private suspend fun createCustomOtpTestUser(phoneNumber: String) {
-    val testIdentifier = phoneNumber.testIdentifier()
-    when (
-      val signUpResult =
-        Clerk.auth.signUp {
-          phone = phoneNumber
-          email = "android-e2e-$testIdentifier+clerk_test@example.com"
-          username = "android_e2e_$testIdentifier"
-          password = TEST_PASSWORD
-        }
-    ) {
-      is ClerkResult.Success -> {
-        when (val prepareResult = signUpResult.value.sendPhoneCode()) {
-          is ClerkResult.Success -> {
-            customOtpMode = CustomOtpMode.SignUp
-            _customOtpState.value = CustomOtpState.AwaitingCode
-          }
-          is ClerkResult.Failure -> {
-            _customOtpState.value = CustomOtpState.Error(prepareResult.errorMessage)
-          }
-        }
-      }
-      is ClerkResult.Failure ->
-        _customOtpState.value = CustomOtpState.Error(signUpResult.errorMessage)
-    }
-  }
-
-  private suspend fun verifyCustomSignInCode(code: String) {
-    val signIn = Clerk.auth.currentSignIn
-    if (signIn == null) {
-      _customOtpState.value = CustomOtpState.Error("No sign-in is in progress.")
-      return
-    }
-
-    when (val result = signIn.verifyCode(code)) {
-      is ClerkResult.Success -> {
-        val verifiedSignIn = result.value
-        if (verifiedSignIn.status != SignIn.Status.COMPLETE) {
-          _customOtpState.value =
-            CustomOtpState.Error("Sign-in requires another step: ${verifiedSignIn.status}.")
-          return
-        }
-
-        activateSession(verifiedSignIn.createdSessionId)
-      }
-      is ClerkResult.Failure -> _customOtpState.value = CustomOtpState.Error(result.errorMessage)
-    }
-  }
-
-  private suspend fun verifyCustomSignUpCode(code: String) {
-    val signUp = Clerk.auth.currentSignUp
-    if (signUp == null) {
-      _customOtpState.value = CustomOtpState.Error("No sign-up is in progress.")
-      return
-    }
-
-    when (
-      val result = signUp.attemptVerification(SignUp.AttemptVerificationParams.PhoneCode(code))
-    ) {
-      is ClerkResult.Success -> completeVerifiedSignUp(result.value, code)
-      is ClerkResult.Failure -> _customOtpState.value = CustomOtpState.Error(result.errorMessage)
-    }
-  }
-
-  private suspend fun completeVerifiedSignUp(signUp: SignUp, code: String) {
-    if (signUp.status == SignUp.Status.COMPLETE) {
-      activateSession(signUp.createdSessionId)
-      return
-    }
-
-    if (signUp.unverifiedFields.contains("email_address")) {
-      verifySignUpEmail(signUp, code)
-      return
-    }
-
-    _customOtpState.value = CustomOtpState.Error("Sign-up requires another step: ${signUp.status}.")
-  }
-
-  private suspend fun verifySignUpEmail(signUp: SignUp, code: String) {
-    when (val prepareResult = signUp.sendEmailCode()) {
-      is ClerkResult.Success -> {
-        when (
-          val result =
-            prepareResult.value.attemptVerification(
-              SignUp.AttemptVerificationParams.EmailCode(code)
-            )
+      CustomOtpMode.SignUp -> {
+        val attempt = clerk.signUp
+        attempt.verifications.verifyPhoneCode(SignUpPhoneCodeVerifyParams(code))
+        // E2E-only identifiers use Clerk test verification codes for both channels.
+        if (
+          attempt.status != SignUpStatus.Complete &&
+            SignUpIdentificationField.EmailAddress in attempt.unverifiedFields
         ) {
-          is ClerkResult.Success -> completeVerifiedSignUp(result.value, code)
-          is ClerkResult.Failure ->
-            _customOtpState.value = CustomOtpState.Error(result.errorMessage)
+          attempt.verifications.sendEmailCode()
+          attempt.verifications.verifyEmailCode(SignUpEmailCodeVerifyParams(code))
         }
+        if (attempt.status == SignUpStatus.Complete) attempt.finalize()
       }
-      is ClerkResult.Failure ->
-        _customOtpState.value = CustomOtpState.Error(prepareResult.errorMessage)
+      null -> error("No OTP flow is in progress.")
     }
+    _customOtpState.value =
+      if (
+        clerk.session?.status == SessionStatus.Active &&
+          clerk.session?.currentTask == null &&
+          clerk.user != null
+      )
+        CustomOtpState.SignedIn
+      else CustomOtpState.RequiresCompletion
   }
 
-  private suspend fun activateSession(createdSessionId: String?) {
-    if (createdSessionId == null) {
-      _customOtpState.value = CustomOtpState.SignedIn
-      return
-    }
-
-    when (val result = Clerk.auth.setActive(createdSessionId)) {
-      is ClerkResult.Success -> _customOtpState.value = CustomOtpState.SignedIn
-      is ClerkResult.Failure -> _customOtpState.value = CustomOtpState.Error(result.errorMessage)
-    }
-  }
-
-  fun signOut() {
-    viewModelScope.launch {
-      when (val result = Clerk.auth.signOut()) {
-        is ClerkResult.Success -> resetCustomOtpState()
-        is ClerkResult.Failure -> _customOtpState.value = CustomOtpState.Error(result.errorMessage)
-      }
-    }
+  fun signOut() = operation {
+    clerk.signOut()
+    resetCustomOtpState()
   }
 }
 
@@ -192,16 +119,14 @@ sealed interface CustomOtpState {
 
   data object SignedIn : CustomOtpState
 
-  data class Error(val message: String?) : CustomOtpState
+  data object RequiresCompletion : CustomOtpState
+
+  data class Error(val message: String?, val awaitingCode: Boolean = false) : CustomOtpState
 }
 
 private enum class CustomOtpMode {
   SignIn,
   SignUp,
-}
-
-private fun ClerkResult.Failure<ClerkErrorResponse>.hasErrorCode(code: String): Boolean {
-  return error?.errors?.any { it.code == code } == true
 }
 
 private fun String.normalizedUsTestPhoneNumber(): String {
