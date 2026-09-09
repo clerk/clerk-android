@@ -65,3 +65,5 @@ Run `scripts/benchmark-native-core.sh OUTPUT_JSON` to collect raw fresh-engine s
 The Android script builds and installs the isolated debug instrumentation APK. Set `ANDROID_SERIAL` when multiple devices are connected. The report includes sampled process PSS and native heap allocation, including the test runner and libraries. Debug emulator measurements do not set release-device budgets.
 
 Record the OS/device, build mode, core revision/hash and packaged artifact sizes with each run. Agree release startup, memory, size and call-overhead budgets before treating measurements as a go/no-go gate.
+
+Release performance limits and outstanding measurements are recorded in [the performance budgets](Documentation/Performance.md).
