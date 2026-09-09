@@ -27,7 +27,7 @@ internal object AndroidPasskeyRequests {
     is JsonObject -> {
       if (value.keys == setOf("base64url")) {
         val encoded = value.getValue("base64url").requireString()
-        if (!encoded.matches(Regex("[A-Za-z0-9_-]*"))) throw CoreException("invalid_credential_options")
+        if (!encoded.matches(Regex("[A-Za-z0-9_-]+"))) throw CoreException("invalid_credential_options")
         JsonPrimitive(encoded)
       } else JsonObject(value.mapValues { (_, item) -> binaryStrings(item) })
     }

@@ -9,6 +9,23 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class PasskeyRequestTest {
+  @Test fun malformedCredentialIDsFailBeforeCredentialManagerPresentation() {
+    for (encoded in listOf("", "!!!")) {
+      val arguments = buildJsonObject {
+        put("rpId", "example.com")
+        put("challenge", buildJsonObject { put("base64url", "AQID") })
+        put("allowCredentials", buildJsonArray {
+          add(buildJsonObject {
+            put("type", "public-key")
+            put("id", buildJsonObject { put("base64url", encoded) })
+          })
+        })
+      }
+      val error = assertThrows(CoreException::class.java) { AndroidPasskeyRequests.get(arguments) }
+      assertEquals("invalid_credential_options", error.code)
+    }
+  }
+
   @Test fun assertionRequestUsesCredentialManagerWebAuthnEncodingAndPromptPreference() {
     val request = AndroidPasskeyRequests.get(Json.parseToJsonElement("""{
       "challenge":{"base64url":"AQID"},"rpId":"example.com","timeout":60000,
