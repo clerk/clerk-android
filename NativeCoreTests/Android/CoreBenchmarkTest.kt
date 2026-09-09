@@ -1,5 +1,6 @@
 package com.clerk.api
 
+import android.os.Bundle
 import android.os.Build
 import android.os.Debug
 import android.os.SystemClock
@@ -56,7 +57,7 @@ class CoreBenchmarkTest {
         put("device", "${Build.MANUFACTURER} ${Build.MODEL}")
         put("abis", JsonArray(Build.SUPPORTED_ABIS.map(::JsonPrimitive)))
         put("engine", "QuickJS-ng v0.15.1")
-        put("buildType", "debug instrumentation")
+        put("buildType", if (com.clerk.sdk.BuildConfig.DEBUG) "debug instrumentation" else "release library in instrumentation")
         put("coreRevision", BundledCore.coreRevision)
         put("bundleSHA256", BundledCore.sha256)
         put("fixture", "packaged FAPI JSON; in-memory HTTP and storage; no service or platform prompts")
@@ -68,10 +69,11 @@ class CoreBenchmarkTest {
         put("localResetSummary", summary(calls))
         put("processMemorySamples", JsonArray(memory))
         put("memoryDefinition", "process-wide sampled Android Debug.MemoryInfo PSS and native heap; includes test runner and libraries, not isolated engine memory")
-        put("limitations", JsonArray(listOf("repeated fresh engines in one warm process", "first startup sample reported separately", "not a cold application launch", "fixture timing excludes real HTTP and secure storage", "debug instrumentation results are not release-device budgets", "no agreed performance budgets").map(::JsonPrimitive)))
+        put("limitations", JsonArray(listOf("repeated fresh engines in one warm process", "first startup sample reported separately", "not a cold application launch", "fixture timing excludes real HTTP and secure storage", "instrumentation results include the test runner and are not cold-app measurements", "compare against documented release budgets on physical devices").map(::JsonPrimitive)))
       }
       val output = File(instrumentation.targetContext.filesDir, "clerk-core-benchmark.json")
       output.writeText(report.toString())
+      instrumentation.sendStatus(0, Bundle().apply { putString("clerkBenchmarkReport", report.toString()) })
       println("BENCHMARK: ${startup.size} starts, ${calls.size} local resets; ${output.name}")
     }
   }

@@ -30,6 +30,7 @@ extensions.configure<com.android.build.api.dsl.LibraryExtension> {
     consumerProguardFiles("consumer-rules.pro")
   }
 
+  testBuildType = providers.gradleProperty("clerkTestBuildType").getOrElse("debug")
   testOptions { unitTests.isIncludeAndroidResources = true }
 
   buildTypes {
