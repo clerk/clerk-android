@@ -13,10 +13,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.Clerk
 
 @Composable
-fun SignInView(viewModel: SignInViewModel = viewModel()) {
+fun SignInView(clerk: Clerk, viewModel: SignInViewModel = viewModel { SignInViewModel(clerk) }) {
+  val error by viewModel.error.collectAsStateWithLifecycle()
 
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
@@ -25,6 +28,7 @@ fun SignInView(viewModel: SignInViewModel = viewModel()) {
     verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
   ) {
     Text("Sign In")
+    error?.let { Text(it) }
     TextField(value = email, onValueChange = { email = it }, placeholder = { Text("Email") })
     TextField(
       value = password,

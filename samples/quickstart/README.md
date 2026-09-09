@@ -1,6 +1,6 @@
 # Clerk Android Quickstart Sample
 
-This sample app demonstrates the basic integration of Clerk authentication in an Android application. It provides a simple example of user sign-up, sign-in, and profile management using the Clerk Android SDK.
+This sample demonstrates custom email/password sign-in, password sign-up, email-code verification, and sign-out with the generated Kotlin API. The `prebuilt-ui` sample covers additional factors, profile management, and required session tasks.
 
 ## Clerk Dashboard Setup
 
@@ -13,7 +13,7 @@ This sample app demonstrates the basic integration of Clerk authentication in an
 2. **Configure Authentication Methods**
    - In your Clerk dashboard, go to **User & Authentication** → **Email, Phone, Username**
    - Make sure **Email** authentication is enabled
-   - Under Sign in options enable **Email verification code**, **Phone number**, and **Password**
+   - Enable **Email verification code** and **Password**. This sample does not collect phone numbers or additional required profile fields.
 
 3. **Get Your Publishable Key**
    - Navigate to **Developers** → **API Keys**
@@ -36,6 +36,14 @@ This sample app demonstrates the basic integration of Clerk authentication in an
    
    > ⚠️ **Important**: Replace `pk_test_your_publishable_key_here` with your actual publishable key from the Clerk dashboard.
 
+
+## Generated API ownership
+
+`MainApplication` retains one `Clerk.connect(...)` result across Activity recreation. `MainViewModel` observes `clerk.changes`; screens receive that same instance explicitly. Enable core library desugaring as shown in this sample's Gradle configuration.
+
+The custom flow calls `clerk.signIn.password(...)` or `clerk.signUp.create(...)`, verifies email through `signUp.verifications`, and calls `finalize()` only after the attempt is complete. Finalization can leave a pending session task. The sample reports that state and keeps authenticated content gated; use the `prebuilt-ui` sample to complete those tasks. API failures are displayed in the form.
+
+Incoming callback URLs are forwarded to `handleAuthCallback()`. That operation itself does not activate a session; a custom email-link flow must inspect the returned resource and finalize it when complete. Email-link and browser sign-in screens are outside this sample's scope.
 
 ## How to Run
 

@@ -1,54 +1,68 @@
 package com.clerk.quickstart.signup
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.auth.types.VerificationType
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signup.SignUp
-import com.clerk.api.signup.sendCode
-import com.clerk.api.signup.verifyCode
+import com.clerk.api.CoreException
+import com.clerk.api.SignUp
+import com.clerk.api.SignUpCreateParams
+import com.clerk.api.SignUpEmailCodeVerifyParams
+import com.clerk.api.SignUpIdentificationField
+import com.clerk.api.SignUpStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class SignUpViewModel : ViewModel() {
+class SignUpViewModel(private val clerk: Clerk) : ViewModel() {
   private val _uiState = MutableStateFlow<SignUpUiState>(SignUpUiState.SignedOut)
   val uiState = _uiState.asStateFlow()
+  private val _error = MutableStateFlow<String?>(null)
+  val error = _error.asStateFlow()
+  private var attempt: SignUp? = null
 
   fun signUp(email: String, password: String) {
     viewModelScope.launch {
-      Clerk.auth
-        .signUp {
-          this.email = email
-          this.password = password
+      try {
+        _error.value = null
+        clerk.signUp.create(SignUpCreateParams(emailAddress = email, password = password))
+        val signUp = clerk.signUp
+        attempt = signUp
+        if (signUp.status == SignUpStatus.Complete) {
+          signUp.finalize()
+          _uiState.value = SignUpUiState.Success
+        } else if (SignUpIdentificationField.EmailAddress in signUp.unverifiedFields) {
+          signUp.verifications.sendEmailCode()
+          _uiState.value = SignUpUiState.NeedsVerification
+        } else {
+          showRemainingRequirements()
         }
-        .onSuccess {
-          if (it.status == SignUp.Status.COMPLETE) {
-            _uiState.value = SignUpUiState.Success
-          } else {
-            _uiState.value = SignUpUiState.NeedsVerification
-            it.sendCode { this.email = email }
-          }
-        }
-        .onFailure {
-          Log.e("SignUpViewModel", "${it.errorMessage}", it.throwable)
-          _uiState.value = SignUpUiState.SignedOut
-        }
+      } catch (error: CoreException) {
+        _error.value = error.errors.firstOrNull()?.longMessage ?: error.message
+      }
     }
   }
 
   fun verify(code: String) {
-    val inProgressSignUp = Clerk.auth.currentSignUp ?: return
+    val signUp = attempt ?: return
     viewModelScope.launch {
-      inProgressSignUp
-        .verifyCode(code, VerificationType.EMAIL)
-        .onSuccess { _uiState.value = SignUpUiState.Success }
-        .onFailure { Log.e("SignUpViewModel", "${it.errorMessage}", it.throwable) }
+      try {
+        _error.value = null
+        signUp.verifications.verifyEmailCode(SignUpEmailCodeVerifyParams(code))
+        if (signUp.status == SignUpStatus.Complete) {
+          signUp.finalize()
+          _uiState.value = SignUpUiState.Success
+        } else {
+          showRemainingRequirements()
+        }
+      } catch (error: CoreException) {
+        _error.value = error.errors.firstOrNull()?.longMessage ?: error.message
+      }
     }
+  }
+
+  private fun showRemainingRequirements() {
+    _error.value =
+      "Additional account details are required. Use the prebuilt-ui sample for this flow."
   }
 }
 

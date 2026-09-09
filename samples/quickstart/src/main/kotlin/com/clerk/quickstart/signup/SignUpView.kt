@@ -15,15 +15,18 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.Clerk
 
 @Composable
-fun SignUpView(viewModel: SignUpViewModel = viewModel()) {
+fun SignUpView(clerk: Clerk, viewModel: SignUpViewModel = viewModel { SignUpViewModel(clerk) }) {
+  val error by viewModel.error.collectAsStateWithLifecycle()
   val state by viewModel.uiState.collectAsStateWithLifecycle()
   Column(
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
   ) {
     Text("Sign Up")
+    error?.let { Text(it) }
     if (state is SignUpUiState.NeedsVerification) {
       var code by remember { mutableStateOf("") }
       TextField(value = code, onValueChange = { code = it })

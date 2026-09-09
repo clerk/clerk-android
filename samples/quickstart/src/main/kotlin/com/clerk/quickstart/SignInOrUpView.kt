@@ -13,11 +13,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.clerk.api.Clerk
 import com.clerk.quickstart.signin.SignInView
 import com.clerk.quickstart.signup.SignUpView
 
 @Composable
-fun SignInOrUpView() {
+fun SignInOrUpView(clerk: Clerk) {
   var isSignUp by remember { mutableStateOf(true) }
 
   Column(
@@ -26,9 +27,9 @@ fun SignInOrUpView() {
     verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
   ) {
     if (isSignUp) {
-      SignUpView()
+      SignUpView(clerk)
     } else {
-      SignInView()
+      SignInView(clerk)
     }
 
     Button(onClick = { isSignUp = !isSignUp }) {
