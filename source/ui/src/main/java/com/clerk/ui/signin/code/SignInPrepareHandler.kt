@@ -11,7 +11,13 @@ internal class SignInPrepareHandler {
     factor: FactorSelection,
     onError: (String) -> Unit,
   ) {
-    runUiOperation { inProgressSignIn.resetPasswordEmailCode.sendCode() }
+    runUiOperation {
+        inProgressSignIn.resetPasswordEmailCode.sendCode(
+          SignInResetPasswordEmailCodeSendParams(
+            emailAddressId = requireNotNull(factor.emailAddressId)
+          )
+        )
+      }
       .onFailure { onError(it.displayMessage) }
   }
 
@@ -20,7 +26,13 @@ internal class SignInPrepareHandler {
     factor: FactorSelection,
     onError: (String) -> Unit,
   ) {
-    runUiOperation { inProgressSignIn.resetPasswordPhoneCode.sendCode() }
+    runUiOperation {
+        inProgressSignIn.resetPasswordPhoneCode.sendCode(
+          SignInResetPasswordPhoneCodeSendParams(
+            phoneNumberId = requireNotNull(factor.phoneNumberId)
+          )
+        )
+      }
       .onFailure { onError(it.displayMessage) }
   }
 
@@ -31,7 +43,10 @@ internal class SignInPrepareHandler {
     onError: (String) -> Unit,
   ) {
     runUiOperation {
-        if (isSecondFactor) inProgressSignIn.mfa.sendPhoneCode()
+        if (isSecondFactor)
+          inProgressSignIn.mfa.sendPhoneCode(
+            SignInMFAPhoneCodeSendParams(phoneNumberId = requireNotNull(factor.phoneNumberId))
+          )
         else
           inProgressSignIn.phoneCode.sendCode(
             SignInPhoneCodeSendParams.Case2(
@@ -51,7 +66,10 @@ internal class SignInPrepareHandler {
     onError: (String) -> Unit,
   ) {
     runUiOperation {
-        if (isSecondFactor) inProgressSignIn.mfa.sendEmailCode()
+        if (isSecondFactor)
+          inProgressSignIn.mfa.sendEmailCode(
+            SignInMFAEmailCodeSendParams(emailAddressId = requireNotNull(factor.emailAddressId))
+          )
         else
           inProgressSignIn.emailCode.sendCode(
             SignInEmailCodeSendParams.Case2(
