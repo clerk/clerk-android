@@ -36,6 +36,8 @@ Valid test/live keys, whitespace, malformed keys, invalid callback routes, and s
 
 ## Core lifecycle and token policy
 
+The [token cache invalidation regression](token-cache-invalidation.md) records the reproduced cache-clear race and generated QuickJS checks. Legacy token tests remain retained for their separate assertion audit.
+
 Replacement owner / evidence: JavaScript packages/mobile-runtime/test/protocol.test.mjs; clerk-js SessionTokenCache/Session tests; native lifecycle adapters.
 
 Background/foreground notifications delegate reload and token policy to TypeScript. Do not migrate native polling or token-cache algorithms. Process death, native cancellation and all foreground failure paths still require platform evidence.
