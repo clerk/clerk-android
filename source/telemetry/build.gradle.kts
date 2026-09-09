@@ -71,7 +71,6 @@ kotlin {
         implementation(libs.ktor.client.okhttp)
         implementation(libs.ktor.serialization.kotlinx.json)
         implementation(libs.okhttp)
-        implementation(projects.source.api)
       }
     }
 
