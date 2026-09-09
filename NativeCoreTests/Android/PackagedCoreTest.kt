@@ -5,14 +5,16 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.net.URI
 import java.util.Base64
+import java.security.MessageDigest
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import org.junit.Test
 import org.junit.runner.RunWith
 
 private class PackagedFixtures(context: Context) : NativeCapabilities {
-  override val supported = setOf("http", "storage", "timer", "random", "browser", "passkeys")
+  override val supported = setOf("http", "storage", "timer", "random", "browser", "passkeys", "authStorage", "crypto.sha256")
   private val fixtures = Json.parseToJsonElement(context.assets.open("fapi.json").bufferedReader().use { it.readText() }).jsonObject
+  var authRecord: String? = null
   var credential: String? = null
   var signedOut = false
   var nextAuthError: JsonElement? = null
@@ -21,6 +23,10 @@ private class PackagedFixtures(context: Context) : NativeCapabilities {
   override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
     val args = arguments.jsonObject
     when (capability) {
+      "authStorage.read" -> return authRecord?.let(::JsonPrimitive) ?: JsonNull
+      "authStorage.write" -> { authRecord = args.getValue("value").requireString(); return JsonNull }
+      "authStorage.remove" -> { authRecord = null; return JsonNull }
+      "crypto.sha256" -> return JsonPrimitive(Base64.getUrlEncoder().withoutPadding().encodeToString(MessageDigest.getInstance("SHA-256").digest(args.getValue("value").requireString().toByteArray())))
       "storage.read" -> return credential?.let(::JsonPrimitive) ?: JsonNull
       "storage.write" -> { credential = args.getValue("value").requireString(); return JsonNull }
       "storage.remove" -> { credential = null; return JsonNull }
@@ -37,6 +43,7 @@ private class PackagedFixtures(context: Context) : NativeCapabilities {
     var raw = false
     var client: JsonElement? = null
     val response = when {
+      url.path.endsWith("/magic_links/complete") -> JsonObject(fixtures.getValue("signUp").jsonObject + mapOf("status" to JsonPrimitive("complete"), "created_session_id" to JsonPrimitive("sess_native")))
       url.path.endsWith("/environment") -> fixtures.getValue("environment")
       url.path.endsWith("/client") -> fixtures.getValue(if (++clientReads > 1 && !signedOut) "authenticatedClient" else "client")
       url.path.endsWith("/sessions") -> { signedOut = true; fixtures.getValue("client") }
@@ -94,12 +101,21 @@ class PackagedCoreTest {
         } catch (error: CoreException) {
           check(error.passkeyStage == "preparingFirstFactor" && error.errors.first().code == "passkey_verification_failed")
         }
-        clerk.signIn.sso(SignInSSOParams(MobileSSOParamsStrategy.OauthGoogle))
+        clerk.signUp.create(SignUpCreateParams(emailAddress = "test@example.com"))
+        clerk.signUp.verifications.sendEmailLink(SignUpEmailLinkSendParams())
+        check(capabilities.authRecord != null)
+        val emailResult = clerk.handleAuthCallback(URI("clerk-test://sso-callback?flow_id=sua_native&approval_token=fixture_approval"))
+        check(emailResult is MobileAuthenticationResult.Case2 && emailResult.value.signUp === clerk.signUp)
+        check(clerk.signUp.status.rawValue == "complete" && clerk.session == null && capabilities.authRecord == null)
+        clerk.clearAuthCallback(clerk.authCallback!!.id)
+        check(clerk.authCallback == null)
+        clerk.signUp.reset()
+        clerk.signIn.sso(SignInSSOParams(SignInSSOParamsStrategy.OauthGoogle))
         check(clerk.signIn.status.rawValue == "complete" && clerk.session == null)
         clerk.signUp.sso(SignUpSSOParams("oauth_google"))
         check(clerk.signUp.status.rawValue == "complete" && clerk.session == null)
         val sharedFlow = clerk.authenticateWithSSO(MobileSSOParams(
-          strategy = MobileSSOParamsStrategy.OauthGoogle,
+          strategy = SignInSSOParamsStrategy.OauthGoogle,
           start = MobileSSOParamsStart.SignIn,
           transferable = false,
         ))
@@ -111,7 +127,7 @@ class PackagedCoreTest {
         check(group.isInvalidated && capabilities.requests.size == requestCount)
         try { group.verifyCode(SignInEmailCodeVerifyParams("123456")); error("Stale group accepted") }
         catch (error: CoreException) { check(error.code == "stale_resource") }
-        clerk.signIn.sso(SignInSSOParams(MobileSSOParamsStrategy.OauthGoogle))
+        clerk.signIn.sso(SignInSSOParams(SignInSSOParamsStrategy.OauthGoogle))
         clerk.signIn.finalize()
         check(clerk.session?.status?.rawValue == "active" && clerk.user?.id == "user_native")
         check(clerk.session?.getToken()?.contains("fixture_signature") == true)

@@ -24,6 +24,12 @@ The secure adapter encrypts an atomic, non-backed-up file with Android Keystore 
 
 Run `./gradlew :source:api:connectedDebugAndroidTest` with an emulator or device. Instrumentation executes the packaged AAR asset and JNI library, tests generated SSO/reset/finalize/token/sign-out behavior, and exercises previous-format encrypted storage migration, scoping and durable clears. It uses an isolated test application. A real old-major application upgrade with a signed-in account remains a release gate.
 
+## Native email links
+
+Email-link preparation uses the configured callback URL and saves its PKCE verifier in a separate secure record scoped to the instance. The TypeScript core validates the saved record, expiration and callback before completing it. Forward incoming URLs to `clerk.handleAuthCallback`. It returns the generated sign-in or sign-up resource without activating a session; custom interfaces must explicitly finalize a complete result. The callback also remains available as `clerk.authCallback` until `clearAuthCallback(id)` consumes it. `AuthView` consumes this record and finalizes as part of its existing presentation flow.
+
+Pending links survive process restart. The previous iOS pending-link record requires a matching `LegacyKeychainConfiguration.publishableKey`; Android uses the matching cached publishable key or explicit `legacyPublishableKey`. Clearing a pending link leaves the client credential intact. Android callers can supply `magicLinkAttestation` when their instance requires an attestation provider.
+
 ## Bundle and engine updates
 
 From a clean JavaScript checkout run `node packages/mobile-runtime/pack.mjs IOS_REPOSITORY ANDROID_REPOSITORY`. The script rebuilds the bundle and pins the source commit, contract and bundle SHA-256. Commit generated Kotlin and assets together, review `NativeCore/public-api.txt`, and run the native tests. QuickJS-ng is vendored at v0.15.1, commit `fd0a0210b7be00957751871e7e01b8291268fc29`; preserve its license and run all ABI tests when updating. Remote executable-code updates are not supported.

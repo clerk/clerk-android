@@ -12,6 +12,7 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.Base64
+import java.security.MessageDigest
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.Dispatchers
@@ -30,15 +31,18 @@ public class AndroidCapabilities(
   private val storage: CredentialStorage,
   private val activity: (() -> Activity?)? = null,
   private val browser: BrowserAuthentication? = null,
+  private val authStorage: CredentialStorage? = null,
+  private val magicLinkAttestation: (suspend () -> String?)? = null,
 ) : NativeCapabilities {
   private val origin = frontendAPI.toHttpUrl().also { if (it.scheme != "https" || it.username.isNotEmpty() || it.password.isNotEmpty()) throw CoreException("invalid_frontend_api") }
   private val http = OkHttpClient.Builder().cookieJar(CookieJar.NO_COOKIES).cache(null)
     .followRedirects(false).followSslRedirects(false).build()
-  override val supported: Set<String> get() = setOf("http", "storage", "timer", "random") +
+  override val supported: Set<String> get() = setOf("http", "storage", "timer", "random", "crypto.sha256") + (if (magicLinkAttestation != null) setOf("magicLink.attestation") else emptySet()) + (if (authStorage != null) setOf("authStorage") else emptySet()) +
     (if (browser != null) setOf("browser") else emptySet()) + (if (activity != null) setOf("passkeys") else emptySet())
 
   override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
     val args = arguments.jsonObject
+    if (capability == "magicLink.attestation") return (magicLinkAttestation ?: throw CoreException("capability_unavailable"))()?.let(::JsonPrimitive) ?: JsonNull
     if (capability == "timer") { delay(args.getValue("milliseconds").jsonPrimitive.long.coerceIn(0, Int.MAX_VALUE.toLong())); return JsonNull }
     if (capability == "browser") return browser?.open(args.getValue("url").requireString(), args.getValue("callbackUrl").requireString()) ?: throw CoreException("capability_unavailable")
     if (capability.startsWith("passkeys.")) return passkey(capability, arguments)
@@ -48,6 +52,17 @@ public class AndroidCapabilities(
         "storage.read" -> storage.read()?.let(::JsonPrimitive) ?: JsonNull
         "storage.write" -> { storage.write(args.getValue("value").requireString()); JsonNull }
         "storage.remove" -> { storage.remove(); JsonNull }
+        else -> throw CoreException("capability_unavailable")
+      }
+    }
+    if (capability == "crypto.sha256") return JsonPrimitive(Base64.getUrlEncoder().withoutPadding().encodeToString(MessageDigest.getInstance("SHA-256").digest(args.getValue("value").requireString().toByteArray(Charsets.UTF_8))))
+    if (capability.startsWith("authStorage.")) {
+      if (args["scope"] != JsonPrimitive(publishableKey) || args["key"] != JsonPrimitive("magicLink")) throw CoreException("invalid_storage_scope")
+      val storage = authStorage ?: throw CoreException("capability_unavailable")
+      return when (capability) {
+        "authStorage.read" -> storage.read()?.let(::JsonPrimitive) ?: JsonNull
+        "authStorage.write" -> { storage.write(args.getValue("value").requireString()); JsonNull }
+        "authStorage.remove" -> { storage.remove(); JsonNull }
         else -> throw CoreException("capability_unavailable")
       }
     }

@@ -32,11 +32,13 @@ public class AndroidCredentialStorage(
   context: Context,
   private val publishableKey: String,
   private val legacyPublishableKey: String? = null,
+  private val purpose: Purpose = Purpose.CLIENT,
 ) : CredentialStorage {
+  public enum class Purpose(internal val suffix: String) { CLIENT("credential"), MAGIC_LINK("magicLink") }
   private val application = context.applicationContext
   private val hash = instanceHash(publishableKey)
   private val alias = "${application.packageName}.clerk.core.v2.$hash"
-  private val file = AtomicFile(File(application.noBackupFilesDir, "clerk-core/$hash.credential"))
+  private val file = AtomicFile(File(application.noBackupFilesDir, "clerk-core/$hash.${purpose.suffix}"))
   private val mutex = Mutex()
 
   override suspend fun read(): String? = withContext(Dispatchers.IO) {
@@ -76,6 +78,12 @@ public class AndroidCredentialStorage(
     fun read(name: String): String? {
       val stored = preferences.getString(name, null) ?: return null
       return if (stored.startsWith("clerk:v1:")) decrypt(stored.removePrefix("clerk:v1:"), "clerk_preferences.master_key") else stored
+    }
+    if (purpose == Purpose.MAGIC_LINK) {
+      val cached = read("CACHED_CLERK_STATE")?.let { Json.parseToJsonElement(it).jsonObject }
+      if (cached != null && cached["publishable_key"] != JsonPrimitive(publishableKey)) return null
+      if (cached == null && legacyPublishableKey != publishableKey) return null
+      return read("PENDING_NATIVE_MAGIC_LINK_FLOW")
     }
     val snapshot = read("SHARED_SESSION_SYNC_SNAPSHOT")
     if (snapshot != null) {

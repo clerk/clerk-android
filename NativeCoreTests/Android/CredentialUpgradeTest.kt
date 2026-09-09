@@ -45,6 +45,25 @@ class CredentialUpgradeTest {
     Unit
   }
 
+  @Test fun magicLinkUsesSeparateEncryptedRecordAndPreservesClientOnClear() = runBlocking {
+    val key = "fixture-" + UUID.randomUUID()
+    val record = "{\"codeVerifier\":\"fixture-pkce\"}"
+    preferences.edit().clear().putString("CACHED_CLERK_STATE", encrypted(buildJsonObject { put("publishable_key", key) }.toString()))
+      .putString("DEVICE_TOKEN", encrypted("client-fixture"))
+      .putString("PENDING_NATIVE_MAGIC_LINK_FLOW", encrypted(record)).commit()
+    val client = AndroidCredentialStorage(context, key)
+    val magic = AndroidCredentialStorage(context, key, purpose = AndroidCredentialStorage.Purpose.MAGIC_LINK)
+    check(client.read() == "client-fixture")
+    check(magic.read() == record)
+    check(AndroidCredentialStorage(context, key, purpose = AndroidCredentialStorage.Purpose.MAGIC_LINK).read() == record)
+    check(AndroidCredentialStorage(context, "$key-other", purpose = AndroidCredentialStorage.Purpose.MAGIC_LINK).read() == null)
+    magic.remove()
+    check(AndroidCredentialStorage(context, key, purpose = AndroidCredentialStorage.Purpose.MAGIC_LINK).read() == null)
+    check(client.read() == "client-fixture")
+    preferences.edit().clear().commit()
+    Unit
+  }
+
   @Test fun scopedClearNeverFallsBackToLegacyToken() = runBlocking {
     val key = "fixture-" + UUID.randomUUID()
     val snapshot = buildJsonObject {
