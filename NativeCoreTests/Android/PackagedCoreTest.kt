@@ -130,6 +130,27 @@ class PackagedCoreTest {
     }
   }
 
+  @Test fun authRequestsUseDeviceLocaleAndAllowExplicitSignUpLocale() = runBlocking {
+    withTimeout(30000) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val capabilities = PackagedFixtures(instrumentation.context)
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+      fun requestedLocale(): String? = capabilities.requests.last().getValue("body").requireString()
+        .split("&").map { it.split("=", limit = 2) }.firstOrNull { it[0] == "locale" }
+        ?.getOrNull(1)?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+      try {
+        val locale = java.util.Locale.getDefault().toLanguageTag()
+        clerk.signIn.create(SignInCreateParams(identifier = "test@example.com"))
+        check(requestedLocale() == locale)
+        clerk.signUp.create(SignUpCreateParams(emailAddress = "test@example.com"))
+        check(requestedLocale() == locale)
+        clerk.signUp.create(SignUpCreateParams(emailAddress = "test@example.com", locale = "de-DE"))
+        check(requestedLocale() == "de-DE")
+      } finally { clerk.close() }
+    }
+  }
+
   @Test fun generatedApiUsesPackagedCore() = runBlocking {
     withTimeout(30000) {
       val instrumentation = InstrumentationRegistry.getInstrumentation()

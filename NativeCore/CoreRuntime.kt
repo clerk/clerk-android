@@ -132,6 +132,7 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
       transport.send(buildJsonObject {
         put("kind", "init"); put("id", id)
         put("configuration", buildJsonObject {
+          put("locale", java.util.Locale.getDefault().toLanguageTag())
           put("publishableKey", publishableKey); put("callbackUrl", callbackUrl); put("platform", platform)
           put("protocolVersion", GeneratedBindings.protocolVersion); put("contractHash", GeneratedBindings.contractHash)
           put("capabilities", JsonArray(capabilities.map(::JsonPrimitive)))
