@@ -10,6 +10,9 @@ The [configuration helper assertion audit](configuration-test-audit.md) records
 the reviewed publishable-key and callback defaults, including intentionally
 rejected legacy key formats. Configuration race tests remain a separate audit.
 
+The [storage assertion audit](storage-test-audit.md) records the actual snapshot
+encoding and the reproduced first-write Keystore race, with passing replacements.
+
 ## Configuration validation
 
 Replacement owner / evidence: NativeCoreContractTests/ClerkConfigurationTests.swift (iOS); NativeCoreTests/Unit/ClerkConfigurationTest.kt (Android).

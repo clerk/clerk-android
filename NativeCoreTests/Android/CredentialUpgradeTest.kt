@@ -3,15 +3,21 @@ package com.clerk.api
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.util.AtomicFile
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.security.KeyStore
+import java.io.File
 import java.util.Base64
 import java.util.UUID
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,6 +26,80 @@ import org.junit.runner.RunWith
 class CredentialUpgradeTest {
   private val context = InstrumentationRegistry.getInstrumentation().targetContext
   private val preferences get() = context.getSharedPreferences("clerk_preferences", Context.MODE_PRIVATE)
+  private fun cleanup(key: String) {
+    val hash = instanceHash(key)
+    for (purpose in AndroidCredentialStorage.Purpose.entries) {
+      AtomicFile(File(context.noBackupFilesDir, "clerk-core/$hash.${purpose.suffix}")).delete()
+    }
+    KeyStore.getInstance("AndroidKeyStore").apply { load(null); deleteEntry("${context.packageName}.clerk.core.v2.$hash") }
+  }
+
+  @Test fun concurrentFirstWritesPreserveEveryCredentialPurpose() = runBlocking {
+    repeat(6) {
+      val key = "fixture-concurrent-" + UUID.randomUUID()
+      try {
+        coroutineScope {
+          val start = CompletableDeferred<Unit>()
+          val writes = AndroidCredentialStorage.Purpose.entries.map { purpose ->
+            async {
+              start.await()
+              AndroidCredentialStorage(context, key, purpose = purpose).write("fixture-${purpose.name}")
+            }
+          }
+          start.complete(Unit)
+          writes.awaitAll()
+        }
+        for (purpose in AndroidCredentialStorage.Purpose.entries) {
+          check(AndroidCredentialStorage(context, key, purpose = purpose).read() == "fixture-${purpose.name}")
+        }
+      } finally { cleanup(key) }
+    }
+    Unit
+  }
+
+  @Test fun independentStorageObjectsSerializeWritesToTheSameAtomicFile() = runBlocking {
+    val key = "fixture-shared-file-" + UUID.randomUUID()
+    try {
+      AndroidCredentialStorage(context, key).write("initial")
+      repeat(4) {
+        val values = (1..12).map { "fixture-value-$it" }
+        coroutineScope {
+          val start = CompletableDeferred<Unit>()
+          val writes = values.map { value -> async {
+            start.await()
+            AndroidCredentialStorage(context, key).write(value)
+          } }
+          start.complete(Unit)
+          writes.awaitAll()
+        }
+        check(AndroidCredentialStorage(context, key).read() in values)
+      }
+      AndroidCredentialStorage(context, key).remove()
+      check(AndroidCredentialStorage(context, key).read() == null)
+    } finally { cleanup(key) }
+    Unit
+  }
+
+  @Test fun scopedSnapshotUsesThePreviousMajorsSnakeCaseAndOmittedSchemaDefault() = runBlocking {
+    for (includeSchema in listOf(false, true)) {
+      val key = "fixture-snapshot-" + UUID.randomUUID()
+      try {
+        val snapshot = buildJsonObject {
+          if (includeSchema) put("schema_version", 1)
+          put("instance_id", instanceHash(key))
+          put("device_token", buildJsonObject {
+            put("state", "set"); put("version", "fixture-v1"); put("changed_at_millis", 1700000000000)
+            put("value", "snapshot-credential")
+          })
+        }
+        preferences.edit().clear().putString("SHARED_SESSION_SYNC_SNAPSHOT", encrypted(snapshot.toString()))
+          .putString("DEVICE_TOKEN", encrypted("older-credential")).commit()
+        check(AndroidCredentialStorage(context, key).read() == "snapshot-credential")
+        check(AndroidCredentialStorage(context, key).read() == "snapshot-credential")
+      } finally { cleanup(key); preferences.edit().clear().commit() }
+    }
+    Unit
+  }
   private fun encrypted(value: String): String {
     val alias = "clerk_preferences.master_key"
     val keys = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
@@ -85,9 +165,9 @@ class CredentialUpgradeTest {
   @Test fun scopedClearNeverFallsBackToLegacyToken() = runBlocking {
     val key = "fixture-" + UUID.randomUUID()
     val snapshot = buildJsonObject {
-      put("schemaVersion", 1); put("instanceId", instanceHash(key))
-      put("deviceToken", buildJsonObject { put("state", "cleared") })
-      put("auth", buildJsonObject { put("state", "cleared") })
+      put("instance_id", instanceHash(key))
+      put("device_token", buildJsonObject { put("state", "cleared"); put("version", "device-clear"); put("changed_at_millis", 1700000000000) })
+      put("auth", buildJsonObject { put("state", "cleared"); put("version", "auth-clear") })
     }
     preferences.edit().clear().putString("SHARED_SESSION_SYNC_SNAPSHOT", encrypted(snapshot.toString()))
       .putString("DEVICE_TOKEN", encrypted("must-not-restore")).commit()

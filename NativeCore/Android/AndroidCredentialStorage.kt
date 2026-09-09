@@ -39,7 +39,14 @@ public class AndroidCredentialStorage(
   private val hash = instanceHash(publishableKey)
   private val alias = "${application.packageName}.clerk.core.v2.$hash"
   private val file = AtomicFile(File(application.noBackupFilesDir, "clerk-core/$hash.${purpose.suffix}"))
-  private val mutex = Mutex()
+  private val mutex = fileLocks[(file.baseFile.absolutePath.hashCode() and Int.MAX_VALUE) % fileLocks.size]
+
+  private companion object {
+    // AtomicFile does not synchronize independent instances pointing at one file.
+    // A bounded lock set also avoids retaining every historical publishable key.
+    val fileLocks = Array(32) { Mutex() }
+    val keyCreationLock = Any()
+  }
 
   override suspend fun read(): String? = withContext(Dispatchers.IO) {
     mutex.withLock {
@@ -93,9 +100,10 @@ public class AndroidCredentialStorage(
     val snapshot = read("SHARED_SESSION_SYNC_SNAPSHOT")
     if (snapshot != null) {
       val value = Json.parseToJsonElement(snapshot).jsonObject
-      if (value["schemaVersion"] != JsonPrimitive(1) || value["instanceId"] != JsonPrimitive(hash)) return null
+      // ClerkApi.json used SnakeCase and omitted fields holding their defaults.
+      if ((value["schema_version"] ?: JsonPrimitive(1)) != JsonPrimitive(1) || value["instance_id"] != JsonPrimitive(hash)) return null
       val auth = value["auth"]?.takeUnless { it == JsonNull }?.jsonObject
-      val device = value["deviceToken"]?.takeUnless { it == JsonNull }?.jsonObject
+      val device = value["device_token"]?.takeUnless { it == JsonNull }?.jsonObject
       if (auth?.get("state") == JsonPrimitive("cleared") || device?.get("state") == JsonPrimitive("cleared")) return null
       if (device?.get("state") == JsonPrimitive("set")) return device["value"]?.takeUnless { it == JsonNull }?.requireString()
       return null
@@ -110,11 +118,13 @@ public class AndroidCredentialStorage(
     val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
     (store.getKey(name, null) as? SecretKey)?.let { return it }
     if (!create) throw CoreException("legacy_credential_key_unavailable")
-    return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").run {
-      init(KeyGenParameterSpec.Builder(name, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-        .setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-        .setRandomizedEncryptionRequired(true).setUserAuthenticationRequired(false).build())
-      generateKey()
+    return synchronized(keyCreationLock) {
+      (store.getKey(name, null) as? SecretKey) ?: KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").run {
+        init(KeyGenParameterSpec.Builder(name, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+          .setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+          .setRandomizedEncryptionRequired(true).setUserAuthenticationRequired(false).build())
+        generateKey()
+      }
     }
   }
 
