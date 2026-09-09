@@ -6,6 +6,10 @@ The old tests are still retained while assertion-level platform and coverage mig
 
 Native UI presentation tests are outside this inventory and remain in their existing test target. The migration changes resource calls and owner injection, not the intended screen layout or interaction behavior.
 
+The [configuration helper assertion audit](configuration-test-audit.md) records
+the reviewed publishable-key and callback defaults, including intentionally
+rejected legacy key formats. Configuration race tests remain a separate audit.
+
 ## Configuration validation
 
 Replacement owner / evidence: NativeCoreContractTests/ClerkConfigurationTests.swift (iOS); NativeCoreTests/Unit/ClerkConfigurationTest.kt (Android).
@@ -209,4 +213,3 @@ Hosted portal authentication, live shared-session/watch replication, proxy confi
 | [source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncProviderTest.kt](https://github.com/clerk/clerk-android/blob/1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f/source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncProviderTest.kt) | 2 |
 | [source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncPublicApiTest.kt](https://github.com/clerk/clerk-android/blob/1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f/source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncPublicApiTest.kt) | 2 |
 | [source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncSnapshotTest.kt](https://github.com/clerk/clerk-android/blob/1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f/source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncSnapshotTest.kt) | 7 |
-

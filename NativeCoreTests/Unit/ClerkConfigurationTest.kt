@@ -29,8 +29,8 @@ class ClerkConfigurationTest {
   }
 
   @Test fun invalidPublishableKeysAlwaysProduceStructuredErrors() {
-    val malformed = listOf("", "invalid", "pk_test_!!!") + listOf(
-      "", "clerk.example.com", "user@clerk.example.com$", "clerk.example.com/path$",
+    val malformed = listOf("", "   ", "invalid", "pk_invalid_something", "pk_test_!!!", Base64.getEncoder().encodeToString("clerk.example.com$".toByteArray())) + listOf(
+      "", "x", "clerk.example.com", "clerk.example.comx", "user@clerk.example.com$", "clerk.example.com/path$",
       "clerk.example.com?query$", "clerk.example.com#fragment$", "bad host$", "[broken$",
     ).map { key(it) }
     for (value in malformed) rejects("invalid_publishable_key") {
