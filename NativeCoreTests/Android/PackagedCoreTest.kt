@@ -20,6 +20,7 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
   var authRecord: String? = null
   var credential: String? = null
   var signedOut = false
+  var environmentResponse: JsonElement? = null
   var clientResponse: JsonElement? = null
   var sessionReloadResponse: JsonElement? = null
   var signInFirstFactors: JsonElement? = null
@@ -71,7 +72,7 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
     val response = when {
       url.path.endsWith("/magic_links/complete") -> JsonObject(fixtures.getValue("signUp").jsonObject + mapOf("status" to JsonPrimitive("complete"), "created_session_id" to JsonPrimitive("sess_native")))
       url.path.endsWith("/environment") -> {
-        val environment = fixtures.getValue("environment").jsonObject
+        val environment = (environmentResponse ?: fixtures.getValue("environment")).jsonObject
         JsonObject(environment + ("auth_config" to JsonObject(environment.getValue("auth_config").jsonObject + ("native_settings" to buildJsonObject { put("api_enabled", true); put("trusted_device_sign_in_enabled", true) }))))
       }
       url.path.endsWith("/biometric_credentials/prepare") -> biometricChallenge
@@ -238,6 +239,36 @@ class PackagedCoreTest {
             check(returned === original)
             if (status == "pending") check(returned.currentTask?.key?.rawValue == "choose-organization")
           }
+        } finally { clerk.close() }
+      }
+    }
+  }
+
+  @Test fun missingAndPartialOrganizationSettingsDoNotPreventStartup() = runBlocking {
+    withContext(Dispatchers.Main.immediate) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      val cases = listOf(null, buildJsonObject {}, buildJsonObject { put("enabled", true) }, buildJsonObject { put("enabled", true); put("force_organization_selection", true) })
+      for (settings in cases) {
+        val capabilities = PackagedFixtures(instrumentation.context)
+        val environment = capabilities.fixtures.getValue("environment").jsonObject.toMutableMap()
+        if (settings == null) environment.remove("organization_settings") else environment["organization_settings"] = settings
+        capabilities.environmentResponse = JsonObject(environment)
+        val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+        try {
+          val values = clerk.environment.organizationSettings
+          check(values.enabled == (settings?.get("enabled") == JsonPrimitive(true)))
+          check(values.forceOrganizationSelection == (settings?.get("force_organization_selection") == JsonPrimitive(true)))
+          check(!values.domains.enabled)
+          check(values.domains.defaultRole == null)
+          check(values.maxAllowedMemberships == 1.0)
+          val original = clerk.environment
+          environment["organization_settings"] = buildJsonObject { put("enabled", true); put("force_organization_selection", true) }
+          capabilities.environmentResponse = JsonObject(environment)
+          val refreshed = original.reload()
+          check(refreshed === original)
+          check(clerk.environment.organizationSettings.forceOrganizationSelection == true)
+          check(clerk.session == null)
         } finally { clerk.close() }
       }
     }
