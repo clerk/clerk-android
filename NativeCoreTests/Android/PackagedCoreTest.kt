@@ -211,9 +211,11 @@ class PackagedCoreTest {
         clerk.clearAuthCallback(clerk.authCallback!!.id)
         check(clerk.authCallback == null)
         clerk.signUp.reset()
-        clerk.signIn.sso(SignInSSOParams(SignInSSOParamsStrategy.OauthGoogle))
+        clerk.signIn.sso(SignInSSOParams(SignInSSOParamsStrategy.OauthGoogle, oidcPrompt = "consent"))
+        check(capabilities.requests.any { it["body"]?.jsonPrimitive?.content?.contains("oidc_prompt=consent") == true })
         check(clerk.signIn.status.rawValue == "complete" && clerk.session == null)
-        clerk.signUp.sso(SignUpSSOParams("oauth_google"))
+        clerk.signUp.sso(SignUpSSOParams("oauth_google", oidcPrompt = "login"))
+        check(capabilities.requests.any { it["body"]?.jsonPrimitive?.content?.contains("oidc_prompt=login") == true })
         check(clerk.signUp.status.rawValue == "complete" && clerk.session == null)
         val sharedFlow = clerk.authenticateWithSSO(MobileSSOParams(
           strategy = SignInSSOParamsStrategy.OauthGoogle,
