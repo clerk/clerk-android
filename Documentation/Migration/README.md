@@ -122,3 +122,7 @@ Apps depending on these surfaces must remain on the previous major until their m
 [The test audit](test-audit.md) assigns each old test category a replacement owner and names unresolved proofs. Preserve Compose presentation assertions. Run the current native JVM tests, packaged QuickJS instrumentation, and migrated UI suite separately; removed Retrofit/DTO tests are not evidence that the new resource behavior passed.
 
 Before general release, validate a signed-in old-major app upgraded in place; real browser/passkey/biometric prompts; minSdk and all packaged ABIs; both directions of Expo/native state changes; and startup, memory, artifact size and call overhead against agreed budgets. Publish a supported-profile decision and bounded previous-major maintenance policy with the prerelease.
+
+## Removed implementation
+
+The replaced native domain source tree has been deleted from this major. The linked baseline and hashed source inventory preserve its public declarations for migration review. The generated `NativeCore` target is the implementation; no old native authentication fallback is packaged. Legacy test files remain for the unfinished assertion-level audit and are not claimed to run against the new API.
