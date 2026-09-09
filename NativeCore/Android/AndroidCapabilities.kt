@@ -15,10 +15,18 @@ import androidx.credentials.exceptions.CreateCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.charset.CharacterCodingException
 import java.util.Base64
 import java.security.MessageDigest
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -29,7 +37,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 
-public class AndroidCapabilities(
+public class AndroidCapabilities internal constructor(
   private val publishableKey: String,
   frontendAPI: String,
   private val storage: CredentialStorage,
@@ -38,10 +46,21 @@ public class AndroidCapabilities(
   private val authStorage: CredentialStorage? = null,
   private val magicLinkAttestation: (suspend () -> String?)? = null,
   private val biometrics: AndroidBiometricCapabilities? = null,
+  private val http: OkHttpClient,
 ) : NativeCapabilities {
   private val origin = frontendAPI.toHttpUrl().also { if (it.scheme != "https" || it.username.isNotEmpty() || it.password.isNotEmpty()) throw CoreException("invalid_frontend_api") }
-  private val http = OkHttpClient.Builder().cookieJar(CookieJar.NO_COOKIES).cache(null)
-    .followRedirects(false).followSslRedirects(false).build()
+  public constructor(
+    publishableKey: String,
+    frontendAPI: String,
+    storage: CredentialStorage,
+    activity: (() -> Activity?)? = null,
+    browser: BrowserAuthentication? = null,
+    authStorage: CredentialStorage? = null,
+    magicLinkAttestation: (suspend () -> String?)? = null,
+    biometrics: AndroidBiometricCapabilities? = null,
+  ) : this(publishableKey, frontendAPI, storage, activity, browser, authStorage, magicLinkAttestation, biometrics,
+    OkHttpClient.Builder().cookieJar(CookieJar.NO_COOKIES).cache(null)
+      .followRedirects(false).followSslRedirects(false).build())
   override val supported: Set<String> get() = setOf("http", "storage", "timer", "random", "crypto.sha256") + (if (biometrics != null) setOf("biometrics") else emptySet()) + (if (magicLinkAttestation != null) setOf("magicLink.attestation") else emptySet()) + (if (authStorage != null) setOf("authStorage") else emptySet()) +
     (if (browser != null) setOf("browser") else emptySet()) + (if (activity != null) setOf("passkeys", "googleIdentity") else emptySet())
 
@@ -132,32 +151,45 @@ public class AndroidCapabilities(
     else if (method !in setOf("GET", "HEAD")) ByteArray(0).toRequestBody(null) else null
     var request = builder.method(method, body).build()
     repeat(6) { redirects ->
-      val response = http.newCall(request).await()
-      response.use {
-        val destination = response.header("location")?.let(request.url::resolve)
-        if (response.code in setOf(301, 302, 303, 307, 308) && destination != null) {
-          if (!sameOrigin(destination) || redirects == 5) throw CoreException("invalid_http_redirect")
-          val next = request.newBuilder().url(destination)
-          if (response.code == 303 || response.code in setOf(301, 302) && request.method == "POST") next.get().removeHeader("content-type")
-          request = next.build()
-        } else {
-          val output = ByteArrayOutputStream()
-          response.body.byteStream().use { input ->
-            val chunk = ByteArray(8192)
-            while (true) {
-              val count = input.read(chunk)
-              if (count < 0) break
-              if (output.size() + count > 16 * 1024 * 1024) throw CoreException("response_too_large")
-              output.write(chunk, 0, count)
+      val call = http.newCall(request)
+      // Keep cancellation connected through body consumption, not only until headers.
+      val requestJob = currentCoroutineContext().job
+      val cancellation = launch(start = CoroutineStart.UNDISPATCHED) {
+        try { awaitCancellation() } finally { if (requestJob.isCancelled) call.cancel() }
+      }
+      try {
+        val response = call.await()
+        response.use {
+          val destination = response.header("location")?.let(request.url::resolve)
+          if (response.code in setOf(301, 302, 303, 307, 308) && destination != null) {
+            if (!sameOrigin(destination) || redirects == 5) throw CoreException("invalid_http_redirect")
+            val next = request.newBuilder().url(destination)
+            if (response.code == 303 || response.code in setOf(301, 302) && request.method == "POST") next.get().removeHeader("content-type")
+            request = next.build()
+          } else {
+            val output = ByteArrayOutputStream()
+            response.body.byteStream().use { input ->
+              val chunk = ByteArray(8192)
+              while (true) {
+                val count = input.read(chunk)
+                if (count < 0) break
+                if (output.size() + count > 16 * 1024 * 1024) throw CoreException("response_too_large")
+                output.write(chunk, 0, count)
+              }
+            }
+            return@withContext buildJsonObject {
+              put("status", response.code)
+              put("headers", buildJsonObject { response.headers.names().forEach { name -> if (!name.equals("set-cookie", true)) put(name.lowercase(), response.header(name).orEmpty()) } })
+              val body = try { Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(output.toByteArray())).toString() }
+                catch (_: CharacterCodingException) { throw CoreException("invalid_http_response") }
+              put("body", body)
             }
           }
-          return@withContext buildJsonObject {
-            put("status", response.code)
-            put("headers", buildJsonObject { response.headers.names().forEach { name -> if (!name.equals("set-cookie", true)) put(name.lowercase(), response.header(name).orEmpty()) } })
-            put("body", output.toString(Charsets.UTF_8.name()))
-          }
         }
-      }
+      } catch (_: IOException) {
+        currentCoroutineContext().ensureActive()
+        throw CoreException("network_error")
+      } finally { cancellation.cancel() }
     }
     throw CoreException("invalid_http_redirect")
   }

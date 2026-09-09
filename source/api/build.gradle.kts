@@ -16,8 +16,8 @@ extensions.configure<com.android.build.api.dsl.LibraryExtension> {
     res.directories.clear()
     manifest.srcFile("../../NativeCore/Android/AndroidManifest.xml")
   }
-  sourceSets.getByName("test").kotlin.directories.apply { clear(); add("../../NativeCoreTests/Unit") }
-  sourceSets.getByName("androidTest").kotlin.directories.apply { clear(); add("../../NativeCoreTests/Android") }
+  sourceSets.getByName("test").kotlin.directories.apply { clear(); add("../../NativeCoreTests/Unit"); add("../../NativeCoreTests/Common") }
+  sourceSets.getByName("androidTest").kotlin.directories.apply { clear(); add("../../NativeCoreTests/Android"); add("../../NativeCoreTests/Common") }
   sourceSets.getByName("androidTest").assets.directories.add("../../NativeCoreTests/Fixtures")
   externalNativeBuild { cmake { path = file("../../NativeCore/cpp/CMakeLists.txt"); version = "3.22.1" } }
   compileOptions { isCoreLibraryDesugaringEnabled = true }

@@ -12,6 +12,8 @@ rejected legacy key formats. Configuration race tests remain a separate audit.
 
 The [storage assertion audit](storage-test-audit.md) records the actual snapshot
 encoding and the reproduced first-write Keystore race, with passing replacements.
+The [HTTP host audit](http-test-audit.md) records reproduced response-body
+cancellation and UTF-8 defects and separates the old header/logging assertions.
 
 ## Configuration validation
 
