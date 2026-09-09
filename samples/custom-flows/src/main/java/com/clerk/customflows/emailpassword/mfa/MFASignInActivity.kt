@@ -1,8 +1,6 @@
 package com.clerk.customflows.emailpassword.mfa
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,13 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.clerk.customflows.CustomFlowActivity
 
-class MFASignInActivity : ComponentActivity() {
-  val viewModel: MFASignInViewModel by viewModels()
+class MFASignInActivity : CustomFlowActivity() {
+  val viewModel: MFASignInViewModel by viewModels {
+    viewModelFactory { initializer { MFASignInViewModel(clerk, feedback) } }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent {
+    setClerkContent {
       val state by viewModel.uiState.collectAsStateWithLifecycle()
       MFASignInView(state = state, onSubmit = viewModel::submit, onVerify = viewModel::verify)
     }

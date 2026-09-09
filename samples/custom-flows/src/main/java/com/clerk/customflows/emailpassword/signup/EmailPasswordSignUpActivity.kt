@@ -1,8 +1,6 @@
 package com.clerk.customflows.emailpassword.signup
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,14 +20,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.clerk.customflows.CustomFlowActivity
 
-class EmailPasswordSignUpActivity : ComponentActivity() {
+class EmailPasswordSignUpActivity : CustomFlowActivity() {
 
-  val viewModel: EmailPasswordSignUpViewModel by viewModels()
+  val viewModel: EmailPasswordSignUpViewModel by viewModels {
+    viewModelFactory { initializer { EmailPasswordSignUpViewModel(clerk, feedback) } }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent {
+    setClerkContent {
       val state by viewModel.uiState.collectAsStateWithLifecycle()
       EmailPasswordSignInView(
         state = state,

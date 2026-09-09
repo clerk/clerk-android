@@ -1,61 +1,41 @@
 package com.clerk.customflows.emailpassword.mfa
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.auth.types.MfaType
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.verifyMfaCode
+import com.clerk.api.SignIn
+import com.clerk.api.SignInPasswordParams
+import com.clerk.api.SignInPasswordParamsCase1
+import com.clerk.api.SignInStatus
+import com.clerk.api.SignInTOTPVerifyParams
+import com.clerk.customflows.CustomFlowFeedback
+import com.clerk.customflows.CustomFlowViewModel
+import com.clerk.ui.auth.AuthMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
-class MFASignInViewModel : ViewModel() {
+class MFASignInViewModel(clerk: Clerk, feedback: CustomFlowFeedback) :
+  CustomFlowViewModel(clerk, feedback) {
   private val _uiState = MutableStateFlow<UiState>(UiState.Unverified)
   val uiState = _uiState.asStateFlow()
 
-  fun submit(email: String, password: String) {
-    viewModelScope.launch {
-      Clerk.auth
-        .signInWithPassword {
-          identifier = email
-          this.password = password
-        }
-        .onSuccess {
-          if (it.status == SignIn.Status.NEEDS_SECOND_FACTOR) {
-            // Display TOTP Form
-            _uiState.value = UiState.NeedsSecondFactor
-          } else {
-            // If the status is not needsSecondFactor, check why. User may need to
-            // complete different steps.
-          }
-        }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+  init {
+    observeSession { signedIn ->
+      _uiState.value = if (signedIn) UiState.Verified else UiState.Unverified
     }
   }
 
-  fun verify(code: String) {
-    val inProgressSignIn = Clerk.auth.currentSignIn ?: return
-    viewModelScope.launch {
-      inProgressSignIn
-        .verifyMfaCode(code, MfaType.TOTP)
-        .onSuccess {
-          if (it.status == SignIn.Status.COMPLETE) {
-            // User is now signed in and verified.
-            // You can navigate to the next screen or perform other actions.
-            _uiState.value = UiState.Verified
-          }
-        }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+  fun submit(email: String, password: String) = runOperation {
+    clerk.signIn.password(SignInPasswordParams.Case1(SignInPasswordParamsCase1(password, email)))
+    when (clerk.signIn.status) {
+      SignInStatus.Complete -> clerk.signIn.finalize()
+      SignInStatus.NeedsSecondFactor -> _uiState.value = UiState.NeedsSecondFactor
+      else -> feedback.continuation.value = AuthMode.SignIn
     }
+  }
+
+  fun verify(code: String) = runOperation {
+    clerk.signIn.mfa.verifyTOTP(SignInTOTPVerifyParams(code))
+    if (clerk.signIn.status == SignInStatus.Complete) clerk.signIn.finalize()
+    else feedback.continuation.value = AuthMode.SignIn
   }
 
   sealed interface UiState {

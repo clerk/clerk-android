@@ -1,63 +1,39 @@
 package com.clerk.customflows.otp.signin
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.verifyCode
+import com.clerk.api.SignIn
+import com.clerk.api.SignInPhoneCodeSendCodeParamsCase1
+import com.clerk.api.SignInPhoneCodeSendParams
+import com.clerk.api.SignInPhoneCodeVerifyParams
+import com.clerk.api.SignInStatus
+import com.clerk.customflows.CustomFlowFeedback
+import com.clerk.customflows.CustomFlowViewModel
+import com.clerk.ui.auth.AuthMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.launch
 
-class SMSOTPSignInViewModel : ViewModel() {
+class SMSOTPSignInViewModel(clerk: Clerk, feedback: CustomFlowFeedback) :
+  CustomFlowViewModel(clerk, feedback) {
   private val _uiState = MutableStateFlow<UiState>(UiState.Unverified)
   val uiState = _uiState.asStateFlow()
 
   init {
-    combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
-        _uiState.value =
-          when {
-            !isInitialized -> UiState.Loading
-            user == null -> UiState.Unverified
-            else -> UiState.Verified
-          }
-      }
-      .launchIn(viewModelScope)
-  }
-
-  fun submit(phoneNumber: String) {
-    viewModelScope.launch {
-      Clerk.auth
-        .signInWithOtp { phone = phoneNumber }
-        .onSuccess { _uiState.value = UiState.Verifying }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
+    observeSession { signedIn ->
+      _uiState.value = if (signedIn) UiState.Verified else UiState.Unverified
     }
   }
 
-  fun verify(code: String) {
-    val inProgressSignIn = Clerk.auth.currentSignIn ?: return
-    viewModelScope.launch {
-      inProgressSignIn
-        .verifyCode(code)
-        .onSuccess {
-          if (it.status == SignIn.Status.COMPLETE) {
-            _uiState.value = UiState.Verified
-          } else {
-            // The user may need to complete further steps
-          }
-        }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-        }
-    }
+  fun submit(phoneNumber: String) = runOperation {
+    clerk.signIn.phoneCode.sendCode(
+      SignInPhoneCodeSendParams.Case1(SignInPhoneCodeSendCodeParamsCase1(phoneNumber = phoneNumber))
+    )
+    _uiState.value = UiState.Verifying
+  }
+
+  fun verify(code: String) = runOperation {
+    clerk.signIn.phoneCode.verifyCode(SignInPhoneCodeVerifyParams(code))
+    if (clerk.signIn.status == SignInStatus.Complete) clerk.signIn.finalize()
+    else feedback.continuation.value = AuthMode.SignIn
   }
 
   sealed interface UiState {

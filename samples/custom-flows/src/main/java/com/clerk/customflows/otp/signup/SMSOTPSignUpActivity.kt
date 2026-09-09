@@ -1,8 +1,6 @@
 package com.clerk.customflows.otp.signup
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,13 +19,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.clerk.customflows.CustomFlowActivity
 
-class SMSOTPSignUpActivity : ComponentActivity() {
-  val viewModel: SMSOTPSignUpViewModel by viewModels()
+class SMSOTPSignUpActivity : CustomFlowActivity() {
+  val viewModel: SMSOTPSignUpViewModel by viewModels {
+    viewModelFactory { initializer { SMSOTPSignUpViewModel(clerk, feedback) } }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent {
+    setClerkContent {
       val state by viewModel.uiState.collectAsStateWithLifecycle()
       SMSOTPSignUpView(state, viewModel::submit, viewModel::verify)
     }

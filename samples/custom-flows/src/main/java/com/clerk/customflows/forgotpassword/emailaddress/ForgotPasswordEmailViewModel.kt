@@ -1,99 +1,51 @@
 package com.clerk.customflows.forgotpassword.emailaddress
 
-import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signin.resetPassword
-import com.clerk.api.signin.sendResetPasswordCode
-import com.clerk.api.signin.verifyCode
+import com.clerk.api.SignIn
+import com.clerk.api.SignInCreateParams
+import com.clerk.api.SignInEmailCodeVerifyParams
+import com.clerk.api.SignInResetPasswordSubmitParams
+import com.clerk.api.SignInStatus
+import com.clerk.customflows.CustomFlowFeedback
+import com.clerk.customflows.CustomFlowViewModel
+import com.clerk.ui.auth.AuthMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.launch
 
-class ForgotPasswordEmailViewModel : ViewModel() {
+class ForgotPasswordEmailViewModel(clerk: Clerk, feedback: CustomFlowFeedback) :
+  CustomFlowViewModel(clerk, feedback) {
   private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
   val uiState = _uiState.asStateFlow()
 
   init {
-    combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
-        _uiState.value =
-          when {
-            !isInitialized -> UiState.Loading
-            user != null -> UiState.Complete
-            else -> UiState.SignedOut
-          }
-      }
-      .launchIn(viewModelScope)
-  }
-
-  fun createSignIn(email: String) {
-    viewModelScope.launch {
-      Clerk.auth
-        .signIn { this.email = email }
-        .onSuccess { signIn ->
-          signIn
-            .sendResetPasswordCode { this.email = email }
-            .onSuccess { updateStateFromStatus(it.status) }
-            .onFailure {
-              Log.e(ForgotPasswordEmailViewModel::class.simpleName, it.errorMessage, it.throwable)
-            }
-        }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-          Log.e(ForgotPasswordEmailViewModel::class.simpleName, it.errorMessage, it.throwable)
-        }
+    observeSession { signedIn ->
+      _uiState.value = if (signedIn) UiState.Complete else UiState.SignedOut
     }
   }
 
-  fun verify(code: String) {
-    val inProgressSignIn = Clerk.auth.currentSignIn ?: return
-    viewModelScope.launch {
-      inProgressSignIn
-        .verifyCode(code)
-        .onSuccess { updateStateFromStatus(it.status) }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-          Log.e(ForgotPasswordEmailViewModel::class.simpleName, it.errorMessage, it.throwable)
-        }
-    }
+  fun createSignIn(email: String) = runOperation {
+    clerk.signIn.create(SignInCreateParams(identifier = email))
+    clerk.signIn.resetPasswordEmailCode.sendCode()
+    updateStateFromStatus()
   }
 
-  fun setNewPassword(password: String) {
-    val inProgressSignIn = Clerk.auth.currentSignIn ?: return
-    viewModelScope.launch {
-      inProgressSignIn
-        .resetPassword(password)
-        .onSuccess { updateStateFromStatus(it.status) }
-        .onFailure {
-          // See https://clerk.com/docs/custom-flows/error-handling
-          // for more info on error handling
-          Log.e(ForgotPasswordEmailViewModel::class.simpleName, it.errorMessage, it.throwable)
-        }
-    }
+  fun verify(code: String) = runOperation {
+    clerk.signIn.resetPasswordEmailCode.verifyCode(SignInEmailCodeVerifyParams(code))
+    updateStateFromStatus()
   }
 
-  fun updateStateFromStatus(status: SignIn.Status) {
-    val state =
-      when (status) {
-        SignIn.Status.COMPLETE -> UiState.Complete
-        SignIn.Status.NEEDS_FIRST_FACTOR -> UiState.NeedsFirstFactor
-        SignIn.Status.NEEDS_SECOND_FACTOR -> UiState.NeedsSecondFactor
-        SignIn.Status.NEEDS_NEW_PASSWORD -> UiState.NeedsNewPassword
-        else -> {
-          UiState.SignedOut
-        }
-      }
+  fun setNewPassword(password: String) = runOperation {
+    clerk.signIn.resetPasswordEmailCode.submitPassword(SignInResetPasswordSubmitParams(password))
+    updateStateFromStatus()
+  }
 
-    _uiState.value = state
+  private suspend fun updateStateFromStatus() {
+    when (clerk.signIn.status) {
+      SignInStatus.Complete -> clerk.signIn.finalize()
+      SignInStatus.NeedsFirstFactor -> _uiState.value = UiState.NeedsFirstFactor
+      SignInStatus.NeedsNewPassword -> _uiState.value = UiState.NeedsNewPassword
+      else -> feedback.continuation.value = AuthMode.SignIn
+    }
   }
 
   sealed interface UiState {

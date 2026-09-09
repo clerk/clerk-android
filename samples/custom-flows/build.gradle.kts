@@ -28,6 +28,7 @@ android {
   }
 
   compileOptions {
+    isCoreLibraryDesugaringEnabled = true
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
@@ -50,6 +51,8 @@ dependencies {
   implementation(libs.core.ktx)
   implementation(libs.material3)
   implementation(projects.source.api)
+  implementation(projects.source.ui)
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 
   debugImplementation(libs.androidx.ui.test.manifest)
   debugImplementation(libs.androidx.ui.tooling)

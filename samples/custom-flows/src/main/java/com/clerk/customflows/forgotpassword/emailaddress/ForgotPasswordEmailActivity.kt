@@ -1,8 +1,6 @@
 package com.clerk.customflows.forgotpassword.emailaddress
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
 import androidx.compose.foundation.layout.Box
@@ -23,14 +21,19 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.api.Clerk
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.clerk.customflows.CustomFlowActivity
+import com.clerk.ui.core.composition.LocalClerk
 
-class ForgotPasswordEmailActivity : ComponentActivity() {
-  val viewModel: ForgotPasswordEmailViewModel by viewModels()
+class ForgotPasswordEmailActivity : CustomFlowActivity() {
+  val viewModel: ForgotPasswordEmailViewModel by viewModels {
+    viewModelFactory { initializer { ForgotPasswordEmailViewModel(clerk, feedback) } }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent {
+    setClerkContent {
       val state by viewModel.uiState.collectAsStateWithLifecycle()
       ForgotPasswordView(
         state,
@@ -53,7 +56,7 @@ fun ForgotPasswordView(
   Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
     when (state) {
       ForgotPasswordEmailViewModel.UiState.Complete -> {
-        Text("Active session: ${Clerk.session?.id}")
+        Text("Active session: ${LocalClerk.current.session?.id}")
       }
 
       ForgotPasswordEmailViewModel.UiState.NeedsFirstFactor -> {

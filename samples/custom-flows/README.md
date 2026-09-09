@@ -2,6 +2,16 @@
 
 This sample app demonstrates advanced authentication flows using the Clerk Android SDK. It showcases how to implement custom authentication patterns including multi-factor authentication, OAuth integration, password reset flows, and user profile management.
 
+## Generated core ownership
+
+`CustomFlowsApplication` retains one connected `Clerk` and the current Activity used by native browser and credential prompts. Each form receives that owner through its ViewModel; `CustomFlowActivity` handles startup, retry, callback errors and remaining authentication steps. Its superclass contains presentation and lifecycle plumbing, not authentication endpoints.
+
+Verification and password submissions use generated resource methods. A complete attempt explicitly calls `finalize()`; the example only reports an authenticated user after an active session has no pending task. Additional factors, missing sign-up fields and session tasks continue in `AuthView` with the same owner. The MFA form demonstrates TOTP. OAuth uses the core's transfer-aware SSO operation.
+
+The default registered callback is `com.clerk.customflows.clerk://oauth/callback`. The SDK callback Activity forwards restored links to the application's launcher, and the sample forwards them to the core after connection. Configure the sample's development publishable key and platform association as required by the selected authentication methods.
+
+The APK build proves source integration. Real-service authentication, system prompts and signed-in upgrades still need device verification.
+
 ## Clerk Dashboard Setup
 
 1. **Create a Clerk Application**

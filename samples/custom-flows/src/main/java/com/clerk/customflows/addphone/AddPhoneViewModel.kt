@@ -1,74 +1,38 @@
 package com.clerk.customflows.addphone
 
-import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.clerk.api.AttemptPhoneNumberVerificationParams
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.flatMap
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.phonenumber.PhoneNumber
-import com.clerk.api.phonenumber.attemptVerification
-import com.clerk.api.phonenumber.prepareVerification
-import com.clerk.api.user.createPhoneNumber
+import com.clerk.api.CreatePhoneNumberParams
+import com.clerk.api.PhoneNumber
+import com.clerk.api.VerificationStatus
+import com.clerk.customflows.CustomFlowFeedback
+import com.clerk.customflows.CustomFlowViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.launch
 
-class AddPhoneViewModel : ViewModel() {
+class AddPhoneViewModel(clerk: Clerk, feedback: CustomFlowFeedback) :
+  CustomFlowViewModel(clerk, feedback) {
   private val _uiState = MutableStateFlow<UiState>(UiState.NeedsVerification)
   val uiState = _uiState.asStateFlow()
 
   init {
-    combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
-        _uiState.value =
-          when {
-            !isInitialized -> UiState.Loading
-            user == null -> UiState.SignedOut
-            else -> UiState.NeedsVerification
-          }
-      }
-      .launchIn(viewModelScope)
-  }
-
-  fun createPhoneNumber(phoneNumber: String) {
-    val user = requireNotNull(Clerk.userFlow.value)
-
-    // Add an unverified phone number to the user,
-    // then send the user an SMS with the verification code
-    viewModelScope.launch {
-      user
-        .createPhoneNumber(phoneNumber)
-        .flatMap { it.prepareVerification() }
-        .onSuccess {
-          // Update the state to show that the phone number has been created
-          // and that the user needs to verify the phone number
-          _uiState.value = UiState.Verifying(it)
-        }
-        .onFailure {
-          Log.e(
-            "AddPhoneViewModel",
-            "Failed to create phone number and prepare verification: ${it.errorMessage}",
-          )
-        }
+    observeSession { signedIn ->
+      _uiState.value = if (signedIn) UiState.NeedsVerification else UiState.SignedOut
     }
   }
 
-  fun verifyCode(code: String, newPhoneNumber: PhoneNumber) {
-    viewModelScope.launch {
-      newPhoneNumber
-        .attemptVerification(code)
-        .onSuccess {
-          // Update the state to show that the phone number has been verified
-          _uiState.value = UiState.Verified
-        }
-        .onFailure {
-          Log.e("AddPhoneViewModel", "Failed to verify phone number: ${it.errorMessage}")
-        }
-    }
+  fun createPhoneNumber(phoneNumber: String) = runOperation {
+    val user = requireNotNull(clerk.user) { "Sign in before adding a contact method." }
+    val resource = user.createPhoneNumber(CreatePhoneNumberParams(phoneNumber = phoneNumber))
+    resource.prepareVerification()
+    _uiState.value = UiState.Verifying(resource)
+  }
+
+  fun verifyCode(code: String, newPhoneNumber: PhoneNumber) = runOperation {
+    val resource = newPhoneNumber.attemptVerification(AttemptPhoneNumberVerificationParams(code))
+    if (resource.verification.status == VerificationStatus.Verified)
+      _uiState.value = UiState.Verified
+    else feedback.error.value = "This contact method still needs verification."
   }
 
   sealed interface UiState {

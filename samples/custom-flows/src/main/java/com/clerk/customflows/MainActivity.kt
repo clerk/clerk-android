@@ -2,8 +2,6 @@ package com.clerk.customflows
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.clerk.customflows.addemail.AddEmailActivity
 import com.clerk.customflows.addphone.AddPhoneActivity
 import com.clerk.customflows.emailpassword.mfa.MFASignInActivity
@@ -40,13 +40,15 @@ import com.clerk.customflows.otp.signin.SMSOTPSignInActivity
 import com.clerk.customflows.otp.signup.SMSOTPSignUpActivity
 import com.clerk.customflows.ui.theme.ClerkTheme
 
-class MainActivity : ComponentActivity() {
-  val viewModel: MainViewModel by viewModels()
+class MainActivity : CustomFlowActivity() {
+  val viewModel: MainViewModel by viewModels {
+    viewModelFactory { initializer { MainViewModel(clerk, feedback) } }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
-    setContent {
+    setClerkContent {
       val state by viewModel.uiState.collectAsStateWithLifecycle()
       ClerkTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
