@@ -13,13 +13,15 @@ import org.junit.runner.RunWith
 
 internal class PackagedFixtures(context: Context) : NativeCapabilities {
   override val supported = setOf("http", "storage", "timer", "random", "browser", "passkeys", "authStorage", "crypto.sha256", "biometrics")
-  private val fixtures = Json.parseToJsonElement(context.assets.open("fapi.json").bufferedReader().use { it.readText() }).jsonObject
+  val fixtures = Json.parseToJsonElement(context.assets.open("fapi.json").bufferedReader().use { it.readText() }).jsonObject
   var biometricRecords: String? = null
   var biometricCleanup: String? = null
   var biometricSignCount = 0
   var authRecord: String? = null
   var credential: String? = null
   var signedOut = false
+  var clientResponse: JsonElement? = null
+  var sessionReloadResponse: JsonElement? = null
   var signInFirstFactors: JsonElement? = null
   var nextAuthError: JsonElement? = null
   var nextAuthErrorStatus = 422
@@ -61,6 +63,9 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
       nextAuthError = null
       return buildJsonObject { put("status", nextAuthErrorStatus); put("headers", nextAuthErrorHeaders); put("body", failure.toString()) }
     }
+    if (url.path.endsWith("/sessions/sess_native")) sessionReloadResponse?.let { payload ->
+      return buildJsonObject { put("status", 200); put("headers", buildJsonObject {}); put("body", payload.toString()) }
+    }
     var raw = false
     var client: JsonElement? = null
     val response = when {
@@ -73,7 +78,7 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
       url.path.endsWith("/biometric_credentials/attempt") -> buildJsonObject {
         put("id", "td_native"); put("object", "trusted_device"); put("platform", "android"); put("app_identifier", "com.example.native"); put("name", JsonNull); put("algorithm", "ES256"); put("status", "active"); put("created_at", System.currentTimeMillis()); put("updated_at", System.currentTimeMillis()); put("last_used_at", JsonNull); put("revoked_at", JsonNull)
       }
-      url.path.endsWith("/client") -> fixtures.getValue(if (++clientReads > 1 && !signedOut) "authenticatedClient" else "client")
+      url.path.endsWith("/client") -> { ++clientReads; clientResponse ?: fixtures.getValue(if (clientReads > 1 && !signedOut) "authenticatedClient" else "client") }
       url.path.endsWith("/sessions") -> { signedOut = true; fixtures.getValue("client") }
       url.path.endsWith("/tokens") -> { raw = true; fixtures.getValue("token") }
       url.path.endsWith("/touch") -> { client = fixtures.getValue("authenticatedClient"); fixtures.getValue("session") }
@@ -203,6 +208,38 @@ class PackagedCoreTest {
         check(factors.any { it.strategy == "oauth_future_provider" })
         check(clerk.session == null)
       } finally { clerk.close() }
+    }
+  }
+
+  @Test fun sessionReloadReturnsReadableStateAfterTheOwnerStopsSelectingIt() = runBlocking {
+    withContext(Dispatchers.Main.immediate) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      for (status in listOf("active", "pending", "expired")) {
+        val capabilities = PackagedFixtures(instrumentation.context)
+        capabilities.clientResponse = capabilities.fixtures.getValue("authenticatedClient")
+        val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+        try {
+          val original = requireNotNull(clerk.session)
+          val tasks = if (status == "pending") JsonArray(listOf(buildJsonObject { put("key", "choose-organization") })) else JsonArray(emptyList())
+          val session = JsonObject(capabilities.fixtures.getValue("session").jsonObject + mapOf("status" to JsonPrimitive(status), "tasks" to tasks))
+          val client = JsonObject(capabilities.fixtures.getValue("authenticatedClient").jsonObject + ("sessions" to JsonArray(listOf(session))))
+          capabilities.sessionReloadResponse = buildJsonObject { put("response", session); put("client", client) }
+          val returned = original.reload()
+          check(returned.id == "sess_native")
+          check(returned.status.rawValue == status)
+          check(!returned.isInvalidated)
+          if (status == "expired") {
+            check(clerk.session == null)
+            check(original.isInvalidated)
+            check(original !== returned)
+          } else {
+            check(clerk.session === original)
+            check(returned === original)
+            if (status == "pending") check(returned.currentTask?.key?.rawValue == "choose-organization")
+          }
+        } finally { clerk.close() }
+      }
     }
   }
 
