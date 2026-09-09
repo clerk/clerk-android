@@ -237,6 +237,13 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
         .onFailure { fail(it as? Exception ?: CoreException("runtime_unavailable")) }
     }
   }
+  internal fun setNetworkOnline(online: Boolean) {
+    scope.launch {
+      if (!isAvailable) return@launch
+      runCatching { transport.send(buildJsonObject { put("kind", "connectivity"); put("online", online) }) }
+        .onFailure { fail(it as? Exception ?: CoreException("runtime_unavailable")) }
+    }
+  }
   internal fun addTeardown(action: () -> Unit) { teardown += action }
   override fun close() {
     scope.launch {

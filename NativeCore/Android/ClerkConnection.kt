@@ -46,7 +46,12 @@ public suspend fun Clerk.Companion.connect(
   return connect(context, configuration, capabilities)
 }
 
-public suspend fun Clerk.Companion.connect(context: Context, configuration: ClerkConfiguration, capabilities: NativeCapabilities): Clerk = withContext(Dispatchers.Main.immediate) {
+public suspend fun Clerk.Companion.connect(context: Context, configuration: ClerkConfiguration, capabilities: NativeCapabilities): Clerk =
+  connectCore(context, configuration, capabilities) { runtime ->
+    observeNetworkConnectivity(runtime) { receive -> subscribeNetworkConnectivity(context, receive) }
+  }
+
+internal suspend fun connectCore(context: Context, configuration: ClerkConfiguration, capabilities: NativeCapabilities, observeConnectivity: (CoreRuntime) -> Unit): Clerk = withContext(Dispatchers.Main.immediate) {
   val bundle = withContext(Dispatchers.IO) { context.assets.open("clerk-core.js").use { it.readBytes() } }
   val transport = QuickJSTransport(capabilities)
   val runtime = CoreRuntime(transport)
@@ -54,6 +59,7 @@ public suspend fun Clerk.Companion.connect(context: Context, configuration: Cler
     transport.start(bundle, BundledCore.sha256)
     runtime.initialize(configuration.publishableKey, configuration.callbackUrl, "android", capabilities.supported)
     observeApplicationLifecycle(runtime)
+    observeConnectivity(runtime)
     runtime.resource(runtime.roots["clerk"] ?: throw CoreException("missing_clerk_root")) as Clerk
   } catch (error: Exception) { runtime.close(); throw error }
 }

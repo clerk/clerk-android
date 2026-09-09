@@ -56,6 +56,45 @@ class LifecycleContractTest {
     }
   }
 
+  @Test fun networkRestorationRefreshesTheOwnerAndStopsAfterClose() = runBlocking {
+    withContext(Dispatchers.Main.immediate) {
+      val fixtures = PackagedFixtures(InstrumentationRegistry.getInstrumentation().context)
+      var receive: ((Boolean) -> Unit)? = null
+      var stopped = false
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      val clerk = connectCore(InstrumentationRegistry.getInstrumentation().targetContext,
+        ClerkConfiguration(key, "clerk-test://sso-callback"), fixtures) { runtime ->
+        observeNetworkConnectivity(runtime) { callback ->
+          receive = callback
+          val stop: () -> Unit = { stopped = true }
+          stop
+        }
+      }
+      val runtime = clerk.context.requireRuntime()
+      try {
+        val report = requireNotNull(receive)
+        runtime.setApplicationActive(true)
+        delay(30)
+        val before = fixtures.clientReads
+        report(false)
+        report(true)
+        eventually { fixtures.clientReads > before }
+        eventually { clerk.sessions.any { it.id == "sess_native" } }
+        assertNull(clerk.session)
+        val after = fixtures.clientReads
+        report(true)
+        delay(30)
+        assertEquals(after, fixtures.clientReads)
+        clerk.close()
+        eventually { stopped }
+        report(false)
+        report(true)
+        delay(30)
+        assertEquals(after, fixtures.clientReads)
+      } finally { clerk.close() }
+    }
+  }
+
   @Test fun failedForegroundReloadDoesNotDisableTheOwnerAndCanRecover() = runBlocking {
     withContext(Dispatchers.Main.immediate) {
       val fixtures = PackagedFixtures(InstrumentationRegistry.getInstrumentation().context)
@@ -80,7 +119,7 @@ class LifecycleContractTest {
       try {
         failReload = true
         owner.lifecycle.currentState = Lifecycle.State.STARTED
-        eventually { runtime.lastLifecycleError != null }
+        eventually { runtime.lastLifecycleError.value != null }
         assertTrue(runtime.isAvailable)
         clerk.signIn.reset()
         assertNull(clerk.session)
