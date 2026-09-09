@@ -1,5 +1,12 @@
 # Shared client response ordering
 
+The shared transport also requires a returned or stored client credential before
+hydrating a native client snapshot. `canonicalClientRequiresANewOrRestoredCredential`
+reproduced an active fixture session being exposed without either credential,
+then passed with the bundle pinned to TypeScript commit `2122fc015f`. It checks
+both rejected credentialless startup (`missing_client_credential`) and successful
+startup with a restored credential when HTTP responses omit the header.
+
 The pinned TypeScript core now protects client state from an older HTTP reply
 arriving after a newer accepted response. The native audit reproduced two
 generated `Session.reload()` calls where the newer response reported a pending

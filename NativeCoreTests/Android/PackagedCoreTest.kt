@@ -123,6 +123,38 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
 
 @RunWith(AndroidJUnit4::class)
 class PackagedCoreTest {
+  @Test fun canonicalClientRequiresANewOrRestoredCredential() = runBlocking {
+    withContext(Dispatchers.Main.immediate) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      for (credential in listOf(null, "restored-client-credential")) {
+        val base = PackagedFixtures(instrumentation.context)
+        base.credential = credential
+        base.clientResponse = base.fixtures.getValue("authenticatedClient")
+        val capabilities = object : NativeCapabilities {
+          override val supported = base.supported
+          override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
+            val result = base.perform(capability, arguments)
+            return if (capability == "http") JsonObject(result.jsonObject + ("headers" to buildJsonObject {})) else result
+          }
+        }
+        if (credential == null) {
+          try {
+            val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+            clerk.close()
+            error("Expected credentialless client initialization to fail")
+          } catch (error: CoreException) {
+            check(error.code == "missing_client_credential")
+          }
+        } else {
+          val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+          try { check(clerk.session?.status?.rawValue == "active") } finally { clerk.close() }
+        }
+        check(base.credential == credential)
+      }
+    }
+  }
+
   @Test fun previousNativeEmailLinkCallbackFormsCompleteWithoutActivation() = runBlocking {
     withTimeout(30000) {
       val instrumentation = InstrumentationRegistry.getInstrumentation()
