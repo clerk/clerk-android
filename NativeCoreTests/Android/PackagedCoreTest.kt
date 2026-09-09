@@ -212,6 +212,58 @@ class PackagedCoreTest {
     }
   }
 
+  @Test fun olderClientResponseCannotRemoveANewerPendingTaskOrCredential() = runBlocking {
+    withContext(Dispatchers.Main.immediate) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val base = PackagedFixtures(instrumentation.context)
+      val client = JsonObject(base.fixtures.getValue("authenticatedClient").jsonObject + mapOf(
+        "object" to JsonPrimitive("client"), "updated_at" to JsonPrimitive(1700000000000L)))
+      base.clientResponse = client
+      val started = CompletableDeferred<Unit>()
+      val release = CompletableDeferred<Unit>()
+      var calls = 0
+      val capabilities = object : NativeCapabilities {
+        override val supported = base.supported
+        override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
+          if (capability != "http" || !URI(arguments.jsonObject.getValue("url").requireString()).path.endsWith("/sessions/sess_native"))
+            return base.perform(capability, arguments)
+          val older = ++calls == 1
+          if (older) { started.complete(Unit); release.await() }
+          val active = base.fixtures.getValue("session").jsonObject
+          val session = if (older) active else JsonObject(active + mapOf(
+            "status" to JsonPrimitive("pending"), "tasks" to JsonArray(listOf(buildJsonObject { put("key", "choose-organization") }))))
+          val nextClient = JsonObject(client + mapOf("sessions" to JsonArray(listOf(session)),
+            "updated_at" to JsonPrimitive(if (older) 1700000000000L else 1700000001000L)))
+          return buildJsonObject {
+            put("status", 200)
+            put("headers", buildJsonObject {
+              put("date", if (older) "Wed, 09 Sep 2026 16:00:00 GMT" else "Wed, 09 Sep 2026 16:00:01 GMT")
+              put("authorization", if (older) "older-response-credential" else "newer-response-credential")
+            })
+            put("body", buildJsonObject { put("response", session); put("client", nextClient) }.toString())
+          }
+        }
+      }
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+      try {
+        val session = requireNotNull(clerk.session)
+        val older = async { runCatching { session.reload() } }
+        withTimeout(3000) { started.await() }
+        session.reload()
+        check(clerk.session?.status?.rawValue == "pending")
+        check(clerk.session?.currentTask?.key?.rawValue == "choose-organization")
+        release.complete(Unit)
+        check((older.await().exceptionOrNull() as? CoreException)?.code == "stale_client_response")
+        check(clerk.session === session)
+        check(session.status.rawValue == "pending" && session.currentTask?.key?.rawValue == "choose-organization")
+        check(base.credential == "newer-response-credential")
+        session.reload()
+        check(session.status.rawValue == "pending")
+      } finally { release.complete(Unit); clerk.close() }
+    }
+  }
+
   @Test fun sessionReloadReturnsReadableStateAfterTheOwnerStopsSelectingIt() = runBlocking {
     withContext(Dispatchers.Main.immediate) {
       val instrumentation = InstrumentationRegistry.getInstrumentation()
