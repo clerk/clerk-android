@@ -436,10 +436,8 @@ private fun PendingSessionAccountSheet(user: User, session: Session, onDismissRe
                   onDismissRequest()
                 }
                 .onFailure { failure ->
-                  {
-                    isSigningOut = false
-                    errorMessage = failure.displayMessage
-                  }
+                  isSigningOut = false
+                  errorMessage = failure.displayMessage
                 }
             }
           },
