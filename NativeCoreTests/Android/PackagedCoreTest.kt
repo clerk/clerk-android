@@ -11,7 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 private class PackagedFixtures(context: Context) : NativeCapabilities {
-  override val supported = setOf("http", "storage", "timer", "random", "browser")
+  override val supported = setOf("http", "storage", "timer", "random", "browser", "passkeys")
   private val fixtures = Json.parseToJsonElement(context.assets.open("fapi.json").bufferedReader().use { it.readText() }).jsonObject
   var credential: String? = null
   var signedOut = false
@@ -86,6 +86,13 @@ class PackagedCoreTest {
           check(error.errors.first().code == "form_identifier_not_found")
           check(error.errors.first().meta?.paramName == "identifier")
           check(error.localizedMessage == "No account was found for this identifier.")
+        }
+        capabilities.nextAuthError = Json.parseToJsonElement("""{"errors":[{"code":"passkey_verification_failed","message":"Credential rejected"}]}""")
+        try {
+          clerk.signIn.passkey(SignInPasskeyParams(flow = SignInPasskeyParamsFlow.Discoverable))
+          error("Expected passkey preparation failure")
+        } catch (error: CoreException) {
+          check(error.passkeyStage == "preparingFirstFactor" && error.errors.first().code == "passkey_verification_failed")
         }
         clerk.signIn.sso(SignInSSOParams(MobileSSOParamsStrategy.OauthGoogle))
         check(clerk.signIn.status.rawValue == "complete" && clerk.session == null)
