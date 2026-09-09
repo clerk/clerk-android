@@ -3,6 +3,12 @@ package com.clerk.api
 import android.app.Activity
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.CreatePublicKeyCredentialResponse
+import androidx.credentials.CustomCredential
+import androidx.credentials.exceptions.NoCredentialException
+import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import java.util.UUID
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
@@ -39,7 +45,7 @@ public class AndroidCapabilities(
   private val http = OkHttpClient.Builder().cookieJar(CookieJar.NO_COOKIES).cache(null)
     .followRedirects(false).followSslRedirects(false).build()
   override val supported: Set<String> get() = setOf("http", "storage", "timer", "random", "crypto.sha256") + (if (biometrics != null) setOf("biometrics") else emptySet()) + (if (magicLinkAttestation != null) setOf("magicLink.attestation") else emptySet()) + (if (authStorage != null) setOf("authStorage") else emptySet()) +
-    (if (browser != null) setOf("browser") else emptySet()) + (if (activity != null) setOf("passkeys") else emptySet())
+    (if (browser != null) setOf("browser") else emptySet()) + (if (activity != null) setOf("passkeys", "googleIdentity") else emptySet())
 
   override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
     if (capability.startsWith("biometrics.")) return biometrics?.perform(capability, arguments) ?: throw CoreException("capability_unavailable")
@@ -47,6 +53,7 @@ public class AndroidCapabilities(
     if (capability == "magicLink.attestation") return (magicLinkAttestation ?: throw CoreException("capability_unavailable"))()?.let(::JsonPrimitive) ?: JsonNull
     if (capability == "timer") { delay(args.getValue("milliseconds").jsonPrimitive.long.coerceIn(0, Int.MAX_VALUE.toLong())); return JsonNull }
     if (capability == "browser") return browser?.open(args.getValue("url").requireString(), args.getValue("callbackUrl").requireString()) ?: throw CoreException("capability_unavailable")
+    if (capability == "googleIdentity") return googleIdentity(args)
     if (capability.startsWith("passkeys.")) return passkey(capability, arguments)
     if (capability.startsWith("storage.")) {
       if (args["scope"] != JsonPrimitive(publishableKey) || args["key"] != JsonPrimitive("client")) throw CoreException("invalid_storage_scope")
@@ -70,6 +77,21 @@ public class AndroidCapabilities(
     }
     if (capability != "http") throw CoreException("capability_unavailable")
     return request(args)
+  }
+
+  private suspend fun googleIdentity(arguments: JsonObject): JsonElement = withContext(Dispatchers.Main.immediate) {
+    val context = activity?.invoke()?.takeUnless { it.isFinishing || it.isDestroyed } ?: throw CoreException("presentation_unavailable")
+    val clientId = arguments.getValue("clientId").requireString().takeIf { it.isNotBlank() } ?: throw CoreException("invalid_credential_options")
+    val option = GetGoogleIdOption.Builder().setFilterByAuthorizedAccounts(false).setAutoSelectEnabled(true)
+      .setNonce(UUID.randomUUID().toString()).setServerClientId(clientId).build()
+    try {
+      val credential = CredentialManager.create(context).getCredential(context, GetCredentialRequest(listOf(option))).credential
+      if (credential !is CustomCredential || credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) throw CoreException("invalid_credential_response")
+      val token = GoogleIdTokenCredential.createFrom(credential.data).idToken
+      buildJsonObject { put("token", token) }
+    } catch (_: GetCredentialCancellationException) { throw CoreException("user_cancelled") }
+    catch (_: NoCredentialException) { throw CoreException("google_account_unavailable") }
+    catch (_: GetCredentialProviderConfigurationException) { throw CoreException("credential_provider_unavailable") }
   }
 
   private suspend fun passkey(capability: String, arguments: JsonElement): JsonElement = withContext(Dispatchers.Main.immediate) {

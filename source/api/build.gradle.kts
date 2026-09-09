@@ -99,6 +99,7 @@ dependencies {
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
   implementation(libs.androidx.browser)
   implementation(libs.androidx.biometric)
+  implementation(libs.google.identity)
   implementation(libs.androidx.credentials)
   implementation(libs.androidx.playServicesAuth)
   implementation(libs.androidx.lifecycle.process)
