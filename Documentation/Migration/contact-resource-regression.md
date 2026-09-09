@@ -1,0 +1,3 @@
+# Generated contact deletion regression
+
+The packaged core at revision `72d26867810ed582b9432efc6f4bca90591fd6e6` fixes generated contact deletion: a successful `deleted: true` receipt no longer overwrites a held email, phone or external-account resource with missing fields. The server's updated client still removes the contact from the projected user before completion. Kotlin `ContactResourceTest` exercises all three generated deletions on the packaged QuickJS runtime, checks the updated collections and held values, and executes another operation afterward. This is fixture evidence, not a live account mutation. The core gzip is 234,297 bytes; earlier application-footprint reports remain pinned to their recorded source revision.

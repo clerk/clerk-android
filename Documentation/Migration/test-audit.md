@@ -4,6 +4,8 @@ Baseline: `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. This is a file-level owner
 
 The old tests are still retained while assertion-level platform and coverage migration is incomplete. No file in this inventory is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The lists below identify where that decision belongs and explicitly preserve unresolved gates.
 
+The [packaged contact deletion regression](contact-resource-regression.md) records the shared deletion-receipt projection fix and its Kotlin/QuickJS verification. This does not retire unaudited Android legacy contact tests.
+
 Native UI presentation tests are outside this inventory and remain in their existing test target. The migration changes resource calls and owner injection, not the intended screen layout or interaction behavior.
 
 The [configuration helper assertion audit](configuration-test-audit.md) records
