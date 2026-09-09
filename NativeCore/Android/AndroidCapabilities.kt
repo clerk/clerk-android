@@ -33,14 +33,16 @@ public class AndroidCapabilities(
   private val browser: BrowserAuthentication? = null,
   private val authStorage: CredentialStorage? = null,
   private val magicLinkAttestation: (suspend () -> String?)? = null,
+  private val biometrics: AndroidBiometricCapabilities? = null,
 ) : NativeCapabilities {
   private val origin = frontendAPI.toHttpUrl().also { if (it.scheme != "https" || it.username.isNotEmpty() || it.password.isNotEmpty()) throw CoreException("invalid_frontend_api") }
   private val http = OkHttpClient.Builder().cookieJar(CookieJar.NO_COOKIES).cache(null)
     .followRedirects(false).followSslRedirects(false).build()
-  override val supported: Set<String> get() = setOf("http", "storage", "timer", "random", "crypto.sha256") + (if (magicLinkAttestation != null) setOf("magicLink.attestation") else emptySet()) + (if (authStorage != null) setOf("authStorage") else emptySet()) +
+  override val supported: Set<String> get() = setOf("http", "storage", "timer", "random", "crypto.sha256") + (if (biometrics != null) setOf("biometrics") else emptySet()) + (if (magicLinkAttestation != null) setOf("magicLink.attestation") else emptySet()) + (if (authStorage != null) setOf("authStorage") else emptySet()) +
     (if (browser != null) setOf("browser") else emptySet()) + (if (activity != null) setOf("passkeys") else emptySet())
 
   override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
+    if (capability.startsWith("biometrics.")) return biometrics?.perform(capability, arguments) ?: throw CoreException("capability_unavailable")
     val args = arguments.jsonObject
     if (capability == "magicLink.attestation") return (magicLinkAttestation ?: throw CoreException("capability_unavailable"))()?.let(::JsonPrimitive) ?: JsonNull
     if (capability == "timer") { delay(args.getValue("milliseconds").jsonPrimitive.long.coerceIn(0, Int.MAX_VALUE.toLong())); return JsonNull }

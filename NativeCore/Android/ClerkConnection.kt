@@ -34,8 +34,13 @@ public suspend fun Clerk.Companion.connect(
   storage: CredentialStorage = AndroidCredentialStorage(context, configuration.publishableKey, configuration.legacyPublishableKey),
   authStorage: CredentialStorage = AndroidCredentialStorage(context, configuration.publishableKey, configuration.legacyPublishableKey, AndroidCredentialStorage.Purpose.MAGIC_LINK),
   magicLinkAttestation: (suspend () -> String?)? = null,
+  biometrics: AndroidBiometricCapabilities = AndroidBiometricCapabilities(
+    context, configuration.publishableKey,
+    AndroidCredentialStorage(context, configuration.publishableKey, configuration.legacyPublishableKey, AndroidCredentialStorage.Purpose.BIOMETRIC_CREDENTIALS),
+    AndroidCredentialStorage(context, configuration.publishableKey, configuration.legacyPublishableKey, AndroidCredentialStorage.Purpose.BIOMETRIC_CLEANUP), activity,
+  ),
 ): Clerk {
-  val capabilities = AndroidCapabilities(configuration.publishableKey, configuration.frontendAPI, storage, activity, activity?.let(::BrowserAuthentication), authStorage, magicLinkAttestation)
+  val capabilities = AndroidCapabilities(configuration.publishableKey, configuration.frontendAPI, storage, activity, activity?.let(::BrowserAuthentication), authStorage, magicLinkAttestation, biometrics)
   return connect(context, configuration, capabilities)
 }
 

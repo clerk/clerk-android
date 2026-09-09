@@ -12,8 +12,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 private class PackagedFixtures(context: Context) : NativeCapabilities {
-  override val supported = setOf("http", "storage", "timer", "random", "browser", "passkeys", "authStorage", "crypto.sha256")
+  override val supported = setOf("http", "storage", "timer", "random", "browser", "passkeys", "authStorage", "crypto.sha256", "biometrics")
   private val fixtures = Json.parseToJsonElement(context.assets.open("fapi.json").bufferedReader().use { it.readText() }).jsonObject
+  var biometricRecords: String? = null
+  var biometricCleanup: String? = null
+  var biometricSignCount = 0
   var authRecord: String? = null
   var credential: String? = null
   var signedOut = false
@@ -23,6 +26,21 @@ private class PackagedFixtures(context: Context) : NativeCapabilities {
   override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
     val args = arguments.jsonObject
     when (capability) {
+      "biometrics.appIdentifier" -> return JsonPrimitive("com.example.native")
+      "biometrics.storage.read" -> return (if (args["key"] == JsonPrimitive("credentials")) biometricRecords else biometricCleanup)?.let(::JsonPrimitive) ?: JsonNull
+      "biometrics.storage.write" -> {
+        if (args["key"] == JsonPrimitive("credentials")) biometricRecords = args.getValue("value").requireString()
+        else biometricCleanup = args.getValue("value").requireString()
+        return JsonNull
+      }
+      "biometrics.supports", "biometrics.hasKey" -> return JsonPrimitive(true)
+      "biometrics.deleteKey" -> return JsonNull
+      "biometrics.createKey" -> return buildJsonObject { put("localKeyId", "tdlk_native"); put("publicKeyJwk", "{\"kty\":\"EC\"}") }
+      "biometrics.sign" -> {
+        biometricSignCount++
+        check(args["clientData"] == JsonPrimitive("native_fixture_client_data"))
+        return buildJsonObject { put("clientData", "native_fixture_client_data"); put("signature", "native_fixture_signature"); put("algorithm", "ES256") }
+      }
       "authStorage.read" -> return authRecord?.let(::JsonPrimitive) ?: JsonNull
       "authStorage.write" -> { authRecord = args.getValue("value").requireString(); return JsonNull }
       "authStorage.remove" -> { authRecord = null; return JsonNull }
@@ -44,7 +62,14 @@ private class PackagedFixtures(context: Context) : NativeCapabilities {
     var client: JsonElement? = null
     val response = when {
       url.path.endsWith("/magic_links/complete") -> JsonObject(fixtures.getValue("signUp").jsonObject + mapOf("status" to JsonPrimitive("complete"), "created_session_id" to JsonPrimitive("sess_native")))
-      url.path.endsWith("/environment") -> fixtures.getValue("environment")
+      url.path.endsWith("/environment") -> {
+        val environment = fixtures.getValue("environment").jsonObject
+        JsonObject(environment + ("auth_config" to JsonObject(environment.getValue("auth_config").jsonObject + ("native_settings" to buildJsonObject { put("api_enabled", true); put("trusted_device_sign_in_enabled", true) }))))
+      }
+      url.path.endsWith("/biometric_credentials/prepare") -> biometricChallenge
+      url.path.endsWith("/biometric_credentials/attempt") -> buildJsonObject {
+        put("id", "td_native"); put("object", "trusted_device"); put("platform", "android"); put("app_identifier", "com.example.native"); put("name", JsonNull); put("algorithm", "ES256"); put("status", "active"); put("created_at", System.currentTimeMillis()); put("updated_at", System.currentTimeMillis()); put("last_used_at", JsonNull); put("revoked_at", JsonNull)
+      }
       url.path.endsWith("/client") -> fixtures.getValue(if (++clientReads > 1 && !signedOut) "authenticatedClient" else "client")
       url.path.endsWith("/sessions") -> { signedOut = true; fixtures.getValue("client") }
       url.path.endsWith("/tokens") -> { raw = true; fixtures.getValue("token") }
@@ -64,6 +89,12 @@ private class PackagedFixtures(context: Context) : NativeCapabilities {
           resource["status"] = JsonPrimitive("complete")
           resource["created_session_id"] = JsonPrimitive("sess_native")
         }
+        if (args["body"]?.jsonPrimitive?.content?.contains("trusted_device") == true) {
+          if (url.path.endsWith("/attempt_first_factor")) {
+            check(args.getValue("body").requireString().contains("native_fixture_signature"))
+            resource["status"] = JsonPrimitive("complete"); resource["created_session_id"] = JsonPrimitive("sess_native")
+          } else resource["first_factor_verification"] = JsonObject(resource.getValue("first_factor_verification").jsonObject + ("trusted_device_challenge" to biometricChallenge))
+        }
         JsonObject(resource)
       }
     }
@@ -74,6 +105,10 @@ private class PackagedFixtures(context: Context) : NativeCapabilities {
       put("body", body.toString())
     }
   }
+  private val biometricChallenge get() = buildJsonObject {
+    put("object", "trusted_device_challenge"); put("challenge", "native_fixture_nonce"); put("challenge_id", "tdc_native"); put("trusted_device_id", "td_native"); put("client_data", "native_fixture_client_data"); put("expires_at", System.currentTimeMillis() + 600000); put("algorithm", "ES256")
+  }
+
 }
 
 @RunWith(AndroidJUnit4::class)
@@ -136,8 +171,13 @@ class PackagedCoreTest {
         val reservedPhone = phone.setReservedForSecondFactor(SetReservedForSecondFactorParams(true))
         check(reservedPhone === phone && phone.reservedForSecondFactor)
         check(phone.backupCodes() == listOf("fixture-recovery-code"))
+        check(clerk.biometricCredentials.canEnroll)
+        val biometric = clerk.biometricCredentials.enroll(BiometricCredentialEnrollmentParams(identifierHint = "test@example.com"))
+        check(biometric.id == "td_native" && capabilities.biometricRecords != null)
         clerk.signOut()
         check(clerk.session == null && clerk.user == null)
+        clerk.signIn.biometricCredential()
+        check(clerk.signIn.status.rawValue == "complete" && clerk.session == null && capabilities.biometricSignCount == 2)
       } finally { withContext(Dispatchers.Main) { clerk.close() } }
     }
   }

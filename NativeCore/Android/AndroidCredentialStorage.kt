@@ -34,7 +34,7 @@ public class AndroidCredentialStorage(
   private val legacyPublishableKey: String? = null,
   private val purpose: Purpose = Purpose.CLIENT,
 ) : CredentialStorage {
-  public enum class Purpose(internal val suffix: String) { CLIENT("credential"), MAGIC_LINK("magicLink") }
+  public enum class Purpose(internal val suffix: String) { CLIENT("credential"), MAGIC_LINK("magicLink"), BIOMETRIC_CREDENTIALS("biometricCredentials"), BIOMETRIC_CLEANUP("biometricCleanup") }
   private val application = context.applicationContext
   private val hash = instanceHash(publishableKey)
   private val alias = "${application.packageName}.clerk.core.v2.$hash"
@@ -79,11 +79,16 @@ public class AndroidCredentialStorage(
       val stored = preferences.getString(name, null) ?: return null
       return if (stored.startsWith("clerk:v1:")) decrypt(stored.removePrefix("clerk:v1:"), "clerk_preferences.master_key") else stored
     }
-    if (purpose == Purpose.MAGIC_LINK) {
+    if (purpose != Purpose.CLIENT) {
       val cached = read("CACHED_CLERK_STATE")?.let { Json.parseToJsonElement(it).jsonObject }
       if (cached != null && cached["publishable_key"] != JsonPrimitive(publishableKey)) return null
       if (cached == null && legacyPublishableKey != publishableKey) return null
-      return read("PENDING_NATIVE_MAGIC_LINK_FLOW")
+      return read(when (purpose) {
+        Purpose.MAGIC_LINK -> "PENDING_NATIVE_MAGIC_LINK_FLOW"
+        Purpose.BIOMETRIC_CREDENTIALS -> "TRUSTED_DEVICE_CREDENTIALS"
+        Purpose.BIOMETRIC_CLEANUP -> "PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP"
+        Purpose.CLIENT -> error("Unexpected client storage purpose")
+      })
     }
     val snapshot = read("SHARED_SESSION_SYNC_SNAPSHOT")
     if (snapshot != null) {

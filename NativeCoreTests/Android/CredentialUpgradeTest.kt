@@ -64,6 +64,24 @@ class CredentialUpgradeTest {
     Unit
   }
 
+  @Test fun biometricMetadataAndPendingCleanupMigrateSeparatelyFromTheClient() = runBlocking {
+    val key = "fixture-" + UUID.randomUUID()
+    preferences.edit().clear().putString("CACHED_CLERK_STATE", encrypted(buildJsonObject { put("publishable_key", key) }.toString()))
+      .putString("DEVICE_TOKEN", encrypted("client-fixture"))
+      .putString("TRUSTED_DEVICE_CREDENTIALS", encrypted("fixture-biometric-metadata"))
+      .putString("PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP", encrypted("[\"deleted-user\"]")).commit()
+    val biometric = AndroidCredentialStorage(context, key, purpose = AndroidCredentialStorage.Purpose.BIOMETRIC_CREDENTIALS)
+    val cleanup = AndroidCredentialStorage(context, key, purpose = AndroidCredentialStorage.Purpose.BIOMETRIC_CLEANUP)
+    check(biometric.read() == "fixture-biometric-metadata")
+    check(cleanup.read() == "[\"deleted-user\"]")
+    check(AndroidCredentialStorage(context, key).read() == "client-fixture")
+    biometric.remove()
+    check(AndroidCredentialStorage(context, key, purpose = AndroidCredentialStorage.Purpose.BIOMETRIC_CREDENTIALS).read() == null)
+    check(AndroidCredentialStorage(context, "$key-other", purpose = AndroidCredentialStorage.Purpose.BIOMETRIC_CREDENTIALS).read() == null)
+    preferences.edit().clear().commit()
+    Unit
+  }
+
   @Test fun scopedClearNeverFallsBackToLegacyToken() = runBlocking {
     val key = "fixture-" + UUID.randomUUID()
     val snapshot = buildJsonObject {
