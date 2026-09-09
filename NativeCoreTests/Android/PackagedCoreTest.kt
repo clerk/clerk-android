@@ -213,6 +213,12 @@ class PackagedCoreTest {
       val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
       val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
       try {
+        for (request in capabilities.requests) {
+          val headers = request.getValue("headers").jsonObject
+          check(headers["x-android-sdk-version"] == JsonPrimitive(CLERK_SDK_VERSION))
+          check(headers["x-mobile"] == JsonPrimitive("1"))
+          check(request.getValue("url").requireString().contains("_is_native=1"))
+        }
         capabilities.nextAuthError = Json.parseToJsonElement("""{"errors":[{"code":"form_identifier_not_found","message":"Account not found","long_message":"No account was found for this identifier.","meta":{"param_name":"identifier"}}]}""")
         try {
           clerk.signIn.create(SignInCreateParams(identifier = "missing@example.com"))

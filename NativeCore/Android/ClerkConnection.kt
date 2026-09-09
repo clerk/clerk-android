@@ -57,7 +57,7 @@ internal suspend fun connectCore(context: Context, configuration: ClerkConfigura
   val runtime = CoreRuntime(transport)
   try {
     transport.start(bundle, BundledCore.sha256)
-    runtime.initialize(configuration.publishableKey, configuration.callbackUrl, "android", capabilities.supported)
+    runtime.initialize(configuration.publishableKey, configuration.callbackUrl, "android", capabilities.supported, sdkVersion = CLERK_SDK_VERSION)
     observeApplicationLifecycle(runtime)
     observeConnectivity(runtime)
     runtime.resource(runtime.roots["clerk"] ?: throw CoreException("missing_clerk_root")) as Clerk

@@ -124,7 +124,7 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
   }
   internal fun stateIfPresent(handle: ResourceHandle): Any? = snapshot.states[handle]
   public fun isInvalidated(handle: ResourceHandle): Boolean = !snapshot.available || handle !in snapshot.states
-  public suspend fun initialize(publishableKey: String, callbackUrl: String, platform: String, capabilities: Set<String>): Unit = withContext(dispatcher) {
+  public suspend fun initialize(publishableKey: String, callbackUrl: String, platform: String, capabilities: Set<String>, sdkVersion: String? = null): Unit = withContext(dispatcher) {
     val id = UUID.randomUUID().toString()
     val result = CompletableDeferred<JsonElement>()
     pending[id] = { outcome -> outcome.fold(result::complete, result::completeExceptionally) }
@@ -133,6 +133,7 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
         put("kind", "init"); put("id", id)
         put("configuration", buildJsonObject {
           put("locale", java.util.Locale.getDefault().toLanguageTag())
+          sdkVersion?.let { put("sdkVersion", it) }
           put("publishableKey", publishableKey); put("callbackUrl", callbackUrl); put("platform", platform)
           put("protocolVersion", GeneratedBindings.protocolVersion); put("contractHash", GeneratedBindings.contractHash)
           put("capabilities", JsonArray(capabilities.map(::JsonPrimitive)))
