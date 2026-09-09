@@ -6,4 +6,12 @@ The generated `Session.clearCache()` now prevents pending token requests from up
 
 The source cache regression and generated embedded checks also fail before the fix and pass afterward. All 229 embedded-core tests and 195 focused source tests across `Session`, `tokenCache`, and `tokenFreshness` pass. The 11 existing `PackagedCoreTest` instrumentation tests also pass in a separate run. The package pins core `35639cd01a43caced4eb948891e404bff43271dd`, SHA-256 `0282374e1419ee72a7e8718fa7bd2936442e00f92dbecf125262f13b55462549`, with unchanged generated signatures.
 
-These fixture checks do not establish background-refresh invalidation, cancellation across callers sharing one token request, or old-major signed-in upgrades. No unaudited Android legacy test is retired.
+These fixture checks do not establish cancellation across callers sharing one token request or old-major signed-in upgrades. No unaudited Android legacy test is retired.
+
+## Proactive refresh follow-up
+
+Proactive refresh previously registered its token only after its HTTP response, bypassing the first fix's capture point. The source now checks the cache generation captured when refresh starts before caching or dispatching that token. Refresh tracking also uses the generation, so an invalidated request cannot block a newer lifetime's refresh or release its in-flight marker.
+
+The two new `TokenInvalidationTest` cases explicitly foreground the fixture runtime, advance one host refresh timer, and suspend its response across a cache clear. They check both an empty cache and a fetched replacement token. Both fail on the prior bundle by returning the invalidated token. These controlled timer fixtures do not claim real OS suspension coverage.
+
+The shared follow-up passes 231 embedded-core tests and 198 focused token/session source tests, including overlapping refresh lifetimes. Android passes all four token invalidation tests and all 11 existing packaged-core tests in separate API 36 emulator runs. Its packaged revision is `750f50cf8b67f6251c3b5a4776d87cc90be680a8`, SHA-256 `fc41a7eee1663d8cc2016d3f1cc52fcca92fc58f68c1e5416a5a441406c05e59`, with unchanged generated public signatures.
