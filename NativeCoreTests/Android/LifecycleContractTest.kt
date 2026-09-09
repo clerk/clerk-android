@@ -6,6 +6,7 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.net.URI
+import java.lang.ref.WeakReference
 import java.util.Base64
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
@@ -27,6 +28,44 @@ class LifecycleContractTest {
 
   private suspend fun eventually(condition: () -> Boolean) = withTimeout(3000) {
     while (!condition()) delay(5)
+  }
+
+  // Keep the weak-reference read off the coroutine frame that requests collection.
+  private fun isCollected(reference: WeakReference<CoreRuntime>) = reference.get() == null
+
+  private suspend fun abandonOwner(fixtures: NativeCapabilities, owner: Owner, stopped: () -> Unit): WeakReference<CoreRuntime> {
+    val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+    val clerk = connectCore(InstrumentationRegistry.getInstrumentation().targetContext,
+      ClerkConfiguration(key, "clerk-test://sso-callback"), fixtures) { runtime ->
+      observeNetworkConnectivity(runtime) { stopped }
+    }
+    val runtime = clerk.context.requireRuntime()
+    observeApplicationLifecycle(runtime, owner.lifecycle)
+    return WeakReference(runtime)
+  }
+
+  @Test fun releasingTheLastOwnerUnsubscribesLifecycleAndConnectivity() = runBlocking {
+    withContext(Dispatchers.Main.immediate) {
+      val fixtures = PackagedFixtures(InstrumentationRegistry.getInstrumentation().context)
+      val owner = Owner()
+      owner.lifecycle.currentState = Lifecycle.State.CREATED
+      var stopped = false
+      val reference = abandonOwner(fixtures, owner) { stopped = true }
+      try {
+        withTimeout(5000) {
+          while (!isCollected(reference)) { System.gc(); delay(20) }
+        }
+        // Collection and cleanup are asynchronous; observe the OS boundary outcome.
+        eventually { stopped && owner.lifecycle.observerCount == 0 }
+        val reads = fixtures.clientReads
+        owner.lifecycle.currentState = Lifecycle.State.STARTED
+        delay(30)
+        assertEquals(reads, fixtures.clientReads)
+      } finally {
+        reference.get()?.close()
+        owner.lifecycle.currentState = Lifecycle.State.DESTROYED
+      }
+    }
   }
 
   @Test fun lifecycleEventsRefreshResourcesAndStopAfterClose() = runBlocking {

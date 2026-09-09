@@ -57,21 +57,47 @@ public class ResourceContext internal constructor(runtime: CoreRuntime, private 
 
 private object RuntimeCleanup {
   private val queue = java.lang.ref.ReferenceQueue<CoreRuntime>()
-  private class Cleanup(runtime: CoreRuntime, val transport: CoreTransport, val revisions: MutableStateFlow<Long>) : WeakReference<CoreRuntime>(runtime, queue)
+  class Cleanup(runtime: CoreRuntime, private val transport: CoreTransport, private val revisions: MutableStateFlow<Long>, private val dispatcher: CoroutineDispatcher) : WeakReference<CoreRuntime>(runtime, queue) {
+    private val actions = mutableListOf<() -> Unit>()
+    private var closed = false
+
+    fun add(action: () -> Unit) {
+      if (closed) runCatching(action) else actions += action
+    }
+
+    // Both explicit close and collection run these actions on the owner's dispatcher.
+    // The record must never retain the runtime whose collection it observes.
+    fun close(): Boolean {
+      if (closed) return false
+      closed = true
+      pending.remove(this)
+      clear()
+      val cleanup = actions.toList()
+      actions.clear()
+      cleanup.forEach { runCatching(it) }
+      runCatching { transport.close() }
+      return true
+    }
+
+    fun collected() {
+      CoroutineScope(dispatcher).launch {
+        if (close()) revisions.value += 1
+      }
+    }
+  }
   private val pending = java.util.concurrent.ConcurrentHashMap.newKeySet<Cleanup>()
   init {
     Thread({
       while (true) {
         try {
           val cleanup = queue.remove() as Cleanup
-          pending.remove(cleanup)
-          cleanup.transport.close()
-          cleanup.revisions.value += 1
+          cleanup.collected()
         } catch (_: InterruptedException) { return@Thread }
       }
     }, "Clerk runtime cleanup").apply { isDaemon = true; start() }
   }
-  fun register(runtime: CoreRuntime, transport: CoreTransport, revisions: MutableStateFlow<Long>) { pending.add(Cleanup(runtime, transport, revisions)) }
+  fun register(runtime: CoreRuntime, transport: CoreTransport, revisions: MutableStateFlow<Long>, dispatcher: CoroutineDispatcher): Cleanup =
+    Cleanup(runtime, transport, revisions, dispatcher).also(pending::add)
 }
 
 internal object ResourceCleanup {
@@ -103,7 +129,7 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
   private val revisions = MutableStateFlow(-1L)
   private val lifecycleErrors = MutableStateFlow<CoreException?>(null)
   public val lastLifecycleError: StateFlow<CoreException?> = lifecycleErrors.asStateFlow()
-  private val teardown = mutableListOf<() -> Unit>()
+  private val cleanup: RuntimeCleanup.Cleanup
   public val changes: StateFlow<Long> = revisions.asStateFlow()
   public val revision: Long get() = snapshot.revision
   public val epoch: Long get() = snapshot.epoch
@@ -112,7 +138,7 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
   init {
     val owner = WeakReference(this)
     transport.receive = { message -> owner.get()?.let { runtime -> runtime.scope.launch { runtime.receive(message) } } }
-    RuntimeCleanup.register(this, transport, revisions)
+    cleanup = RuntimeCleanup.register(this, transport, revisions, dispatcher)
   }
   @Synchronized public fun resource(handle: ResourceHandle): CoreResource {
     if (!isAvailable || handle !in (projecting ?: snapshot.states.keys)) throw CoreException("stale_resource")
@@ -245,12 +271,11 @@ public class CoreRuntime(private val transport: CoreTransport, private val dispa
         .onFailure { fail(it as? Exception ?: CoreException("runtime_unavailable")) }
     }
   }
-  internal fun addTeardown(action: () -> Unit) { teardown += action }
+  internal fun addTeardown(action: () -> Unit) { cleanup.add(action) }
   override fun close() {
     scope.launch {
-      teardown.forEach { it() }; teardown.clear()
       runCatching { transport.send(buildJsonObject { put("kind", "dispose") }) }
-      transport.close()
+      cleanup.close()
       fail(CoreException("runtime_disposed"))
       snapshot = snapshot.copy(states = emptyMap(), roots = emptyMap())
       resources.clear()
