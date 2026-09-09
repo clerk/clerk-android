@@ -28,14 +28,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
-import com.clerk.api.session.Session
+import com.clerk.api.BiometricCredentialSelectionParams
+import com.clerk.api.BiometricCredentialUnavailableReason
+import com.clerk.api.SessionWithActivities
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp10
 import com.clerk.ui.core.error.ClerkErrorSnackbar
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.security.biometriccredential.UserProfileBiometricCredentialsSection
@@ -52,21 +56,42 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun UserProfileSecurityView() {
-  LaunchedEffect(Unit) { Clerk.refreshClient() }
+  val clerk = LocalClerk.current
+  var biometricDeviceAvailable by remember(clerk, clerk.user?.id) { mutableStateOf(false) }
+  LaunchedEffect(clerk, clerk.user?.id) {
+    runUiOperation { clerk.user?.reload() }
+    val availability =
+      runUiOperation {
+          clerk.biometricCredentials.localAvailability(
+            BiometricCredentialSelectionParams(currentUser = true)
+          )
+        }
+        .getOrNull()
+    biometricDeviceAvailable =
+      availability?.let {
+        it.isAvailable ||
+          it.unavailableReason in
+            setOf(
+              BiometricCredentialUnavailableReason.NoLocalCredential,
+              BiometricCredentialUnavailableReason.LocalKeyMissing,
+              BiometricCredentialUnavailableReason.ServerCredentialMissing,
+              BiometricCredentialUnavailableReason.ServerCredentialRevoked,
+            )
+      } ?: false
+  }
   UserProfileSecurityViewImpl(
-    isPasswordEnabled = Clerk.passwordIsEnabled,
-    isPasskeyEnabled = Clerk.passkeyIsEnabled,
-    isMfaEnabled = Clerk.mfaIsEnabled,
-    isDeleteSelfEnabled = Clerk.deleteSelfIsEnabled,
-    isBiometricCredentialEnabled =
-      Clerk.biometricSignInIsEnabled &&
-        Clerk.biometricCredentials.deviceSupportsBiometricAuthentication,
+    isPasswordEnabled = (clerk.environment.userSettings.attributes["password"]?.enabled == true),
+    isPasskeyEnabled = (clerk.environment.userSettings.attributes["passkey"]?.enabled == true),
+    isMfaEnabled =
+      clerk.environment.userSettings.attributes.values.any { it.enabled && it.usedForSecondFactor },
+    isDeleteSelfEnabled = clerk.environment.userSettings.actions.deleteSelf,
+    isBiometricCredentialEnabled = clerk.biometricCredentials.canEnroll && biometricDeviceAvailable,
   )
 }
 
 @Composable
 private fun UserProfileSecurityViewImpl(
-  viewModel: UserProfileSecurityViewModel = viewModel(),
+  viewModel: UserProfileSecurityViewModel = clerkViewModel { UserProfileSecurityViewModel(it) },
   isPasswordEnabled: Boolean = false,
   isPasskeyEnabled: Boolean = false,
   isMfaEnabled: Boolean = false,
@@ -119,7 +144,7 @@ private fun UserProfileSecurityMainContent(
   isDeleteSelfEnabled: Boolean,
   isBiometricCredentialEnabled: Boolean,
   snackbarHostState: SnackbarHostState,
-  sessions: ImmutableList<Session>,
+  sessions: ImmutableList<SessionWithActivities>,
 ) {
   val userProfileState = LocalUserProfileState.current
   val coroutineScope = rememberCoroutineScope()
@@ -291,13 +316,15 @@ private fun BottomSheetContent(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    UserProfileSecurityViewImpl(
-      isPasskeyEnabled = true,
-      isPasswordEnabled = true,
-      isMfaEnabled = true,
-      isDeleteSelfEnabled = true,
-    )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      UserProfileSecurityViewImpl(
+        isPasskeyEnabled = true,
+        isPasswordEnabled = true,
+        isMfaEnabled = true,
+        isDeleteSelfEnabled = true,
+      )
+    }
   }
 }
 
@@ -307,5 +334,5 @@ internal data class SecurityContentConfiguration(
   val isMfaEnabled: Boolean = true,
   val isDeleteSelfEnabled: Boolean = true,
   val isBiometricCredentialEnabled: Boolean = false,
-  val sessions: ImmutableList<Session> = persistentListOf(),
+  val sessions: ImmutableList<SessionWithActivities> = persistentListOf(),
 )

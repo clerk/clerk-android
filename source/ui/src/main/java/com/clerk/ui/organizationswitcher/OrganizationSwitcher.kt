@@ -42,13 +42,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.SubcomposeAsyncImage
 import com.clerk.api.Clerk
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationCreationDefaults
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.ui.ClerkTheme
-import com.clerk.api.user.User
+import com.clerk.api.Organization
+import com.clerk.api.OrganizationCreationDefaults
+import com.clerk.api.OrganizationMembership
+import com.clerk.api.User
 import com.clerk.api.user.fullName
-import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarType
 import com.clerk.ui.core.composition.LocalTelemetryCollector
@@ -61,6 +59,7 @@ import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.core.telemetry.TelemetryEvents
 import com.clerk.ui.organizationlist.OrganizationAccountListActions
 import com.clerk.ui.organizationlist.OrganizationAccountListState
 import com.clerk.ui.organizationlist.OrganizationAccountListViewModel
@@ -69,6 +68,7 @@ import com.clerk.ui.organizationprofile.create.OrganizationCreateFlowView
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRow
 import com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersView
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 /**
@@ -608,7 +608,7 @@ private fun OrganizationSwitcherEffects(
   val telemetry = LocalTelemetryCollector.current
   LaunchedEffect(userId, sessionId) { onSessionChanged() }
   LaunchedEffect(userId) {
-    if (hasUser) telemetry.record(TelemetryEvents.viewDidAppear("OrganizationSwitcher"))
+    if (hasUser) telemetry?.record(TelemetryEvents.viewDidAppear("OrganizationSwitcher"))
   }
 }
 

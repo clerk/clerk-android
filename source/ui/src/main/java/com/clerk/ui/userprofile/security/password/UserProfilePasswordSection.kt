@@ -15,16 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp32
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 
@@ -41,7 +41,8 @@ internal fun UserProfilePasswordSectionImpl(
   modifier: Modifier = Modifier,
   onClick: (PasswordAction) -> Unit,
 ) {
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val clerk = LocalClerk.current
+  val user = clerk.user
   val isPasswordEnabled = user?.passwordEnabled == true
   ClerkMaterialTheme {
     Column(
@@ -90,12 +91,14 @@ internal fun UserProfilePasswordSectionImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
-    Box(
-      modifier =
-        Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
-    ) {
-      UserProfilePasswordSectionImpl(onClick = {})
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
+      Box(
+        modifier =
+          Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
+      ) {
+        UserProfilePasswordSectionImpl(onClick = {})
+      }
     }
   }
 }
@@ -103,12 +106,14 @@ private fun Preview() {
 @PreviewLightDark
 @Composable
 private fun PreviewAddPassword() {
-  ClerkMaterialTheme {
-    Box(
-      modifier =
-        Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
-    ) {
-      UserProfilePasswordSectionImpl(onClick = {})
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      Box(
+        modifier =
+          Modifier.fillMaxWidth().background(color = ClerkMaterialTheme.colors.muted).padding(dp24)
+      ) {
+        UserProfilePasswordSectionImpl(onClick = {})
+      }
     }
   }
 }

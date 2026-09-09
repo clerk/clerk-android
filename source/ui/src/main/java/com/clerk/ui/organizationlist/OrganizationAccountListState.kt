@@ -1,10 +1,10 @@
 package com.clerk.ui.organizationlist
 
-import com.clerk.api.organizations.OrganizationCreationDefaults
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.organizations.OrganizationSuggestion
-import com.clerk.api.organizations.UserOrganizationInvitation
-import com.clerk.api.session.Session
+import com.clerk.api.OrganizationCreationDefaults
+import com.clerk.api.OrganizationMembership
+import com.clerk.api.OrganizationSuggestion
+import com.clerk.api.Session
+import com.clerk.api.UserOrganizationInvitation
 
 internal const val PERSONAL_ACCOUNT_ACTION_ID = "personal_account"
 
@@ -64,11 +64,10 @@ internal data class OrganizationAccountListState(
     get() = isLoadingMoreMemberships || isLoadingMoreInvitations || isLoadingMoreSuggestions
 
   val pendingInvitationsCount: Int
-    get() =
-      invitations.count {
-        it.status != ACCEPTED_INVITATION_STATUS &&
-          it.publicOrganizationData.id !in acceptedInvitationOrganizationIds
-      }
+    get() = invitations.count {
+      it.status != ACCEPTED_INVITATION_STATUS &&
+        it.publicOrganizationData.id !in acceptedInvitationOrganizationIds
+    }
 }
 
 private const val ACCEPTED_INVITATION_STATUS = "accepted"

@@ -1,7 +1,7 @@
 package com.clerk.ui.userprofile.security
 
 import androidx.compose.runtime.Composable
-import com.clerk.api.Clerk
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.userprofile.account.UserProfileDeleteAccountConfirmationView
 import com.clerk.ui.userprofile.mfa.UserProfileAddMfaBottomSheetContent
 import com.clerk.ui.userprofile.mfa.UserProfileAddMfaView
@@ -65,9 +65,16 @@ internal fun AddMfaSheet(type: BottomSheetType.AddMfa, callbacks: BottomSheetCal
 
 @Composable
 internal fun ChooseMfaSheet(callbacks: BottomSheetCallbacks) {
+  val clerk = LocalClerk.current
   UserProfileAddMfaBottomSheetContent(
-    mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,
-    mfaAuthenticatorAppIsEnabled = Clerk.mfaAuthenticatorAppIsEnabled,
+    mfaPhoneCodeIsEnabled =
+      (clerk.environment.userSettings.attributes["phone_number"]?.let {
+        it.enabled && it.usedForSecondFactor
+      } == true),
+    mfaAuthenticatorAppIsEnabled =
+      (clerk.environment.userSettings.attributes["authenticator_app"]?.let {
+        it.enabled && it.usedForSecondFactor
+      } == true),
     onClick = callbacks.onClickMfaType,
   )
 }

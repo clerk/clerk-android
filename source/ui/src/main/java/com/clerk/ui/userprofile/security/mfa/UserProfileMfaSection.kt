@@ -10,13 +10,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.clerk.api.Clerk
-import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.PhoneNumber
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
@@ -26,10 +27,11 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun UserProfileMfaSection(modifier: Modifier = Modifier, onAdd: () -> Unit) {
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val clerk = LocalClerk.current
+  val user = clerk.user
   UserProfileMfaSectionImpl(
     modifier = modifier,
-    mfaItems = buildMfaItemList(user?.phoneNumbers.orEmpty()),
+    mfaItems = buildMfaItemList(clerk, user?.phoneNumbers.orEmpty()),
     onAdd = onAdd,
   )
 }
@@ -74,7 +76,10 @@ private fun UserProfileMfaSectionImpl(
   }
 }
 
-private fun buildMfaItemList(phoneNumbers: List<PhoneNumber>): ImmutableList<MfaItem> {
+private fun buildMfaItemList(
+  clerk: Clerk,
+  phoneNumbers: List<PhoneNumber>,
+): ImmutableList<MfaItem> {
   val mfaPhoneNumbers =
     phoneNumbers
       .filter { it.reservedForSecondFactor }
@@ -84,21 +89,29 @@ private fun buildMfaItemList(phoneNumbers: List<PhoneNumber>): ImmutableList<Mfa
 
   val items: ImmutableList<MfaItem> =
     buildList {
-        if (Clerk.mfaPhoneCodeIsEnabled) {
+        if (
+          (clerk.environment.userSettings.attributes["phone_number"]?.let {
+            it.enabled && it.usedForSecondFactor
+          } == true)
+        ) {
           mfaPhoneNumbers.forEach {
             add(
               MfaItem(
                 style = Style.Sms(it),
-                isDefault = it.defaultSecondFactor && Clerk.user?.totpEnabled == false,
+                isDefault = it.defaultSecondFactor && clerk.user?.totpEnabled == false,
               )
             )
           }
         }
-        if (Clerk.user?.totpEnabled == true) {
+        if (clerk.user?.totpEnabled == true) {
           add(MfaItem(style = Style.AuthenticatorApp, isDefault = true))
         }
-        if (Clerk.mfaBackupCodeIsEnabled) {
-          if (Clerk.user?.backupCodeEnabled == true) {
+        if (
+          (clerk.environment.userSettings.attributes["backup_code"]?.let {
+            it.enabled && it.usedForSecondFactor
+          } == true)
+        ) {
+          if (clerk.user?.backupCodeEnabled == true) {
             add(MfaItem(style = Style.BackupCodes))
           }
         }
@@ -112,13 +125,15 @@ private data class MfaItem(val style: Style, val isDefault: Boolean = false)
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileMfaSectionImpl(
-    mfaItems =
-      persistentListOf(
-        MfaItem(style = Style.AuthenticatorApp, isDefault = true),
-        MfaItem(style = Style.Sms(PhoneNumber(id = "1", "+15555550100")), isDefault = false),
-        MfaItem(style = Style.BackupCodes),
-      ),
-    onAdd = {},
-  )
+  ClerkPreview { clerk ->
+    UserProfileMfaSectionImpl(
+      mfaItems =
+        persistentListOf(
+          MfaItem(style = Style.AuthenticatorApp, isDefault = true),
+          MfaItem(style = Style.Sms(clerk.user!!.phoneNumbers[0]), isDefault = false),
+          MfaItem(style = Style.BackupCodes),
+        ),
+      onAdd = {},
+    )
+  }
 }

@@ -3,6 +3,9 @@ package com.clerk.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.OAuthProvider
+import com.clerk.api.SignIn
+import com.clerk.api.SignUp
 import com.clerk.api.biometriccredential.BiometricCredentialKeyManagerException
 import com.clerk.api.credentials.resolvedCredentialFlowMessage
 import com.clerk.api.credentials.shouldFallbackToOAuthFromGoogleOneTap
@@ -13,12 +16,9 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.SignIn
 import com.clerk.api.signin.authenticateWithPreparedRedirect
 import com.clerk.api.signin.prepareFirstFactor
 import com.clerk.api.signin.startingFirstFactor
-import com.clerk.api.signup.SignUp
-import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
@@ -273,7 +273,7 @@ internal class AuthStartViewModel(private val ioDispatcher: CoroutineDispatcher 
   ) {
     cancelAutomaticPasskeySignIn()
     _state.value = AuthState.OAuthState.Loading
-    if (preferGoogleOneTap && provider == OAuthProvider.GOOGLE && Clerk.isGoogleOneTapEnabled) {
+    if (preferGoogleOneTap && provider == OAuthProvider.Google && Clerk.isGoogleOneTapEnabled) {
       handleGoogleOneTap(provider, transferable, startOAuthWithSignUp, unsafeMetadata)
     } else {
       authenticateWithOAuthProvider(provider, transferable, startOAuthWithSignUp, unsafeMetadata)

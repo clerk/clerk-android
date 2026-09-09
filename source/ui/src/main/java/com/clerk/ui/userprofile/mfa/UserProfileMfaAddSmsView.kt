@@ -28,14 +28,13 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.rememberNavBackStack
-import com.clerk.api.Clerk
-import com.clerk.api.phonenumber.PhoneNumber
-import com.clerk.api.user.phoneNumbersAvailableForMfa
+import com.clerk.api.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkTextButton
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp10
 import com.clerk.ui.core.dimens.dp12
@@ -43,16 +42,17 @@ import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.CountryCodeUtils
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.UserProfileStateProvider
+import com.clerk.ui.userprofile.availablePhoneNumbersForMfa
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import com.clerk.ui.util.formattedAsPhoneNumberIfPossible
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -63,9 +63,9 @@ internal fun UserProfileMfaAddSmsView(
   modifier: Modifier = Modifier,
   onAddPhoneNumber: () -> Unit,
 ) {
+  val clerk = LocalClerk.current
   val availablePhoneNumbers =
-    remember(Clerk.user) { Clerk.user?.phoneNumbersAvailableForMfa() ?: emptyList() }
-      .sortedBy { it.createdAt }
+    clerk.user?.availablePhoneNumbersForMfa.orEmpty().sortedBy { it.createdAt }
 
   UserProfileMfaAddSmsViewImpl(
     modifier = modifier,
@@ -109,7 +109,7 @@ private fun UserProfileMfaAddSmsViewImpl(
   onDismiss: () -> Unit,
   onError: (String) -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: MfaAddSmsViewModel = viewModel(),
+  viewModel: MfaAddSmsViewModel = clerkViewModel { MfaAddSmsViewModel(it) },
   onAddPhoneNumber: () -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -125,17 +125,8 @@ private fun UserProfileMfaAddSmsViewImpl(
         viewModel.resetState()
       }
       is MfaAddSmsViewModel.State.Success -> {
-        if (
-          (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes != null &&
-            (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes?.isNotEmpty() ==
-              true
-        ) {
-          onNavigateToBackupCodes(
-            (state as MfaAddSmsViewModel.State.Success).phoneNumber.backupCodes!!
-          )
-        } else {
-          onDismiss()
-        }
+        val codes = (state as MfaAddSmsViewModel.State.Success).backupCodes
+        if (!codes.isNullOrEmpty()) onNavigateToBackupCodes(codes) else onDismiss()
         selectedNumber = null
         viewModel.resetState()
       }
@@ -313,28 +304,30 @@ internal fun CountryIndicator(region: String, flagEmoji: String, modifier: Modif
 @PreviewLightDark
 @Composable
 private fun PreviewMfaRow() {
-  ClerkMaterialTheme {
-    Column(
-      modifier =
-        Modifier.fillMaxWidth()
-          .background(color = ClerkMaterialTheme.colors.background)
-          .padding(dp8),
-      verticalArrangement = Arrangement.spacedBy(dp12),
-    ) {
-      AddMfaSmsRow(
-        flag = "🇺🇸",
-        regionCode = "US",
-        "+13012370655",
-        selected = true,
-        onSelected = {},
-      )
-      AddMfaSmsRow(
-        flag = "🇺🇸",
-        regionCode = "US",
-        "+13012370655",
-        selected = false,
-        onSelected = {},
-      )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      Column(
+        modifier =
+          Modifier.fillMaxWidth()
+            .background(color = ClerkMaterialTheme.colors.background)
+            .padding(dp8),
+        verticalArrangement = Arrangement.spacedBy(dp12),
+      ) {
+        AddMfaSmsRow(
+          flag = "🇺🇸",
+          regionCode = "US",
+          "+13012370655",
+          selected = true,
+          onSelected = {},
+        )
+        AddMfaSmsRow(
+          flag = "🇺🇸",
+          regionCode = "US",
+          "+13012370655",
+          selected = false,
+          onSelected = {},
+        )
+      }
     }
   }
 }
@@ -342,23 +335,20 @@ private fun PreviewMfaRow() {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  PreviewUserProfileStateProvider {
-    ClerkMaterialTheme {
-      var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
-      UserProfileMfaAddSmsContent(
-        availablePhoneNumbers =
-          persistentListOf(
-            PhoneNumber(id = "1", phoneNumber = "+13012370655"),
-            PhoneNumber(id = "2", "+15246462566"),
-            PhoneNumber(id = "3", "+306912345678"),
-          ),
-        onDismiss = {},
-        onAddPhoneNumber = {},
-        selectedNumber = selectedNumber,
-        onSelectedNumberChange = { selectedNumber = it },
-        isLoading = false,
-        onReserveForSecondFactor = {},
-      )
+  ClerkPreview { clerk ->
+    PreviewUserProfileStateProvider {
+      ClerkMaterialTheme {
+        var selectedNumber by remember { mutableStateOf<PhoneNumber?>(null) }
+        UserProfileMfaAddSmsContent(
+          availablePhoneNumbers = clerk.user!!.phoneNumbers.toImmutableList(),
+          onDismiss = {},
+          onAddPhoneNumber = {},
+          selectedNumber = selectedNumber,
+          onSelectedNumberChange = { selectedNumber = it },
+          isLoading = false,
+          onReserveForSecondFactor = {},
+        )
+      }
     }
   }
 }
@@ -366,8 +356,10 @@ private fun Preview() {
 @PreviewLightDark
 @Composable
 private fun PreviewEmptyState() {
-  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
-  UserProfileStateProvider(backStack = backStack) {
-    ClerkMaterialTheme { EmptyState(onAddPhoneNumber = {}) }
+  ClerkPreview { clerk ->
+    val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
+    UserProfileStateProvider(backStack = backStack) {
+      ClerkMaterialTheme { EmptyState(onAddPhoneNumber = {}) }
+    }
   }
 }

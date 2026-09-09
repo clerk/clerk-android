@@ -43,19 +43,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.clerk.api.Clerk
-import com.clerk.api.user.User
-import com.clerk.api.user.fullName
+import com.clerk.api.MobileSignOutOptions
+import com.clerk.api.User
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
 import com.clerk.ui.core.button.standard.buildButtonTokens
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.composition.LocalClerkLogoContent
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -93,12 +93,13 @@ internal fun ClerkThemedAuthScaffold(
   showSignedInUserButton: Boolean = true,
   content: @Composable () -> Unit,
 ) {
-  val user = Clerk.userFlow.collectAsStateWithLifecycle().value
-  val session = Clerk.sessionFlow.collectAsStateWithLifecycle().value
+  val clerk = LocalClerk.current
+  val user = clerk.user
+  val session = clerk.session
   val shouldShowLogo =
     shouldShowInstanceLogo(
       hasLogo = hasLogo,
-      organizationLogoUrl = Clerk.organizationLogoUrl,
+      organizationLogoUrl = clerk.environment.displayConfig.logoImageUrl,
       hasCustomLogo = LocalClerkLogoContent.current != null,
     )
   var showSignedInAccountSheet by remember { mutableStateOf(false) }
@@ -251,7 +252,7 @@ private fun signedInTrailingContent(
 }
 
 private fun User?.displayName(): String {
-  return this?.fullName().orEmpty().takeIf { it.isNotBlank() } ?: this?.username.orEmpty()
+  return this?.fullName.orEmpty().orEmpty().takeIf { it.isNotBlank() } ?: this?.username.orEmpty()
 }
 
 @Composable
@@ -286,6 +287,7 @@ private fun AuthSignedInAccountSheet(
   displayIdentifier: String,
   onDismissRequest: () -> Unit,
 ) {
+  val clerk = LocalClerk.current
   val context = LocalContext.current
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   val scope = rememberCoroutineScope()
@@ -309,9 +311,9 @@ private fun AuthSignedInAccountSheet(
       Spacers.Vertical.Spacer12()
       HorizontalDivider(color = ClerkMaterialTheme.computedColors.border)
       SignOutActionRow {
-        val sessionId = Clerk.session?.id ?: return@SignOutActionRow
+        val sessionId = clerk.session?.id ?: return@SignOutActionRow
         scope.launch {
-          Clerk.auth.signOut(sessionId = sessionId)
+          runUiOperation { clerk.signOut(MobileSignOutOptions(sessionId)) }
           sheetState.hide()
           onDismissRequest()
         }

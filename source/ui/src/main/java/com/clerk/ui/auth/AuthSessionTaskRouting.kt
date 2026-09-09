@@ -2,11 +2,11 @@ package com.clerk.ui.auth
 
 import androidx.navigation3.runtime.NavKey
 import com.clerk.api.Clerk
-import com.clerk.api.session.Session
-import com.clerk.api.session.SessionTaskKey
+import com.clerk.api.Session
+import com.clerk.api.SessionTaskKey
+import com.clerk.api.SignIn
+import com.clerk.api.SignUp
 import com.clerk.api.session.pendingTaskKey
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signup.SignUp
 
 internal fun SignIn.pendingSessionTaskKey(
   session: Session? = this.correspondingSession()

@@ -45,16 +45,14 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.clerk.api.Clerk
+import com.clerk.api.Session
+import com.clerk.api.User
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.session.Session
 import com.clerk.api.session.pendingTaskKey
 import com.clerk.api.session.requiresForcedMfa
-import com.clerk.api.ui.ClerkTheme
-import com.clerk.api.user.User
 import com.clerk.api.user.fullName
 import com.clerk.telemetry.TelemetryCollector
-import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthView
 import com.clerk.ui.core.composition.LocalTelemetryCollector
@@ -66,7 +64,9 @@ import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.telemetry.TelemetryEvents
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.UserProfileView
 import com.clerk.ui.userprofile.custom.UserProfileCustomRow
@@ -214,7 +214,7 @@ private fun ObserveUserButtonState(
   onDismissAuth: () -> Unit,
 ) {
   LaunchedEffect(shouldShowButton, user?.id) {
-    if (shouldShowButton) telemetry.record(TelemetryEvents.viewDidAppear("UserButton"))
+    if (shouldShowButton) telemetry?.record(TelemetryEvents.viewDidAppear("UserButton"))
   }
   LaunchedEffect(hasPendingNonMfaTask) { if (!hasPendingNonMfaTask) onDismissPendingSessionSheet() }
   DismissAuthWhenMfaResolved(

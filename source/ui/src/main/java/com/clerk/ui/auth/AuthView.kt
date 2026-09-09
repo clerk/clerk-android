@@ -19,13 +19,10 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
+import com.clerk.api.OrganizationCreationDefaults
+import com.clerk.api.SessionTaskKey
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.organizations.OrganizationCreationDefaults
-import com.clerk.api.session.SessionTaskKey
 import com.clerk.api.session.pendingTaskKey
-import com.clerk.api.ui.ClerkTheme
-import com.clerk.telemetry.TelemetryEvents
-import com.clerk.telemetry.telemetryPayload
 import com.clerk.ui.auth.biometriccredential.BiometricCredentialEnrollmentView
 import com.clerk.ui.core.composition.AuthStateProvider
 import com.clerk.ui.core.composition.ClerkLogoProvider
@@ -33,6 +30,8 @@ import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.footer.DevelopmentModeWarningBackground
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
+import com.clerk.ui.core.telemetry.TelemetryEvents
+import com.clerk.ui.core.telemetry.telemetryPayload
 import com.clerk.ui.navigation.clerkNavigationForwardTransition
 import com.clerk.ui.navigation.clerkNavigationPopTransition
 import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
@@ -52,6 +51,7 @@ import com.clerk.ui.signup.collectfield.CollectField
 import com.clerk.ui.signup.collectfield.SignUpCollectFieldView
 import com.clerk.ui.signup.completeprofile.SignUpCompleteProfileView
 import com.clerk.ui.signup.emaillink.SignUpEmailLinkView
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import java.util.UUID
 import kotlinx.serialization.Serializable
@@ -88,7 +88,7 @@ private val authViewProcessIdentifier = UUID.randomUUID().toString()
  * @param logo Replaces the logo shown by authentication screens. When provided, it takes precedence
  *   over the dashboard-configured logo and the [ClerkTheme.design] logo sizing — the SDK applies no
  *   sizing or spacing, so you are responsible for its layout and accessibility. To only change the
- *   size of the dashboard-configured logo, set [com.clerk.api.ui.ClerkDesign.logoMaxHeight]
+ *   size of the dashboard-configured logo, set [com.clerk.ui.theme.ClerkDesign.logoMaxHeight]
  *   instead.
  */
 @Composable
@@ -389,7 +389,7 @@ private fun NavKey?.satisfiesPendingSessionTask(
 private fun TrackScreenLoaded(mode: String) {
   val telemetryCollector = LocalTelemetryCollector.current
   LaunchedEffect(Unit) {
-    telemetryCollector.record(
+    telemetryCollector?.record(
       TelemetryEvents.viewDidAppear(
         viewName = "AuthView",
         payload = telemetryPayload("mode" to mode),

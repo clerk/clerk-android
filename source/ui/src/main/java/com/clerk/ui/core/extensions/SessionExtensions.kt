@@ -1,7 +1,7 @@
 package com.clerk.ui.core.extensions
 
-import com.clerk.api.session.Session
-import com.clerk.api.session.SessionActivity
+import com.clerk.api.SessionActivity
+import com.clerk.api.SessionWithActivities
 import com.clerk.ui.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -31,8 +31,8 @@ internal val SessionActivity.locationFormatted
 internal val SessionActivity.ipAndLocationFormatted
   get() = joinNonNull(ipAddress, "(${locationFormatted})")
 
-internal val Session.lastActiveRelativeTime
-  get() = formattedRelativeDateTime(this.lastActiveAt)
+internal val SessionWithActivities.lastActiveRelativeTime
+  get() = formattedRelativeDateTime(this.lastActiveAt.toEpochMilli())
 
 private fun joinNonNull(vararg parts: String?, separator: String = " ") =
   parts.filterNotNull().joinToString(separator)

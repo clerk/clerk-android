@@ -13,17 +13,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
-import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 internal fun LazyListScope.userProfilePhoneSection(
+  clerk: Clerk,
   phoneNumbers: ImmutableList<PhoneNumber>,
   onError: (String) -> Unit,
   onAddPhoneNumberClick: () -> Unit,
@@ -51,7 +53,7 @@ internal fun LazyListScope.userProfilePhoneSection(
       isInteractive = isInteractive,
     )
   }
-  if (!Clerk.isPhoneNumberImmutable) {
+  if (clerk.environment.userSettings.attributes["phone_number"]?.immutable != true) {
     item(key = "user_profile_phone_add") {
       UserProfileButtonRow(
         text = stringResource(R.string.add_phone_number),
@@ -64,23 +66,18 @@ internal fun LazyListScope.userProfilePhoneSection(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
-      LazyColumn(modifier = Modifier.fillMaxWidth()) {
-        userProfilePhoneSection(
-          onError = {},
-          onAddPhoneNumberClick = {},
-          onVerify = {},
-          phoneNumbers =
-            persistentListOf(
-              PhoneNumber(
-                id = "phone_1",
-                phoneNumber = "15555550101",
-                reservedForSecondFactor = true,
-              ),
-              PhoneNumber(id = "phone_2", phoneNumber = "447911123456"),
-            ),
-        )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      Box(modifier = Modifier.background(color = ClerkMaterialTheme.colors.background)) {
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+          userProfilePhoneSection(
+            clerk = clerk,
+            onError = {},
+            onAddPhoneNumberClick = {},
+            onVerify = {},
+            phoneNumbers = clerk.user!!.phoneNumbers.toImmutableList(),
+          )
+        }
       }
     }
   }

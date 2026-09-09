@@ -12,12 +12,12 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.api.Clerk
 import com.clerk.api.Constants
-import com.clerk.api.session.Session
-import com.clerk.api.session.SessionTaskKey
-import com.clerk.api.signin.SignIn
+import com.clerk.api.Session
+import com.clerk.api.SessionTaskKey
+import com.clerk.api.SignIn
+import com.clerk.api.SignUp
 import com.clerk.api.signin.startingFirstFactor
 import com.clerk.api.signin.startingSecondFactor
-import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.emailVerificationStrategy
 import com.clerk.api.signup.firstFieldToCollect
 import com.clerk.api.signup.firstFieldToVerify

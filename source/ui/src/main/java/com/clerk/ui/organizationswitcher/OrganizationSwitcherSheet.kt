@@ -37,8 +37,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.user.User
+import com.clerk.api.OrganizationMembership
+import com.clerk.api.User
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.dimens.dp1

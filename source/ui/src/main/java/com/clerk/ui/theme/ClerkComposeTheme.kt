@@ -16,10 +16,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkColors
-import com.clerk.api.ui.ClerkDesign
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.theme.colors.ComputedColors
 import com.clerk.ui.theme.colors.isDark
 import com.materialkolor.ktx.darken
@@ -105,14 +101,14 @@ internal fun ClerkThemeOverrideProvider(clerkTheme: ClerkTheme?, content: @Compo
  * This theme provider automatically configures Material3's [MaterialTheme] with colors derived from
  * your Clerk theme, ensuring seamless integration between Clerk and Material components.
  *
- * @param clerkTheme The Clerk theme to apply. If null, uses any provided override or the globally
- *   configured theme from [Clerk.customTheme].
+ * @param clerkTheme The Clerk theme to apply. If null, uses any provided override or the theme
+ *   supplied by ClerkProvider.
  * @param content The composable content that will have access to the themed values.
  */
 @Composable
 internal fun ClerkMaterialTheme(clerkTheme: ClerkTheme? = null, content: @Composable () -> Unit) {
   val overrideTheme = LocalClerkThemeOverride.current
-  val resolvedTheme = clerkTheme ?: overrideTheme ?: Clerk.customTheme
+  val resolvedTheme = clerkTheme ?: overrideTheme
 
   ClerkThemeProvider(theme = resolvedTheme) {
     val colors = ClerkThemeProviderAccess.colors

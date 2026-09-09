@@ -98,7 +98,6 @@ dokka {
 
 dependencies {
   api(projects.clerk.source.api)
-  api(projects.source.telemetry)
 
   implementation(platform(libs.compose.bom))
   implementation(libs.activity.compose)

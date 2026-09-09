@@ -18,22 +18,21 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
-import com.clerk.telemetry.TelemetryEvents
 import com.clerk.ui.auth.AuthView
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.core.navigation.pop
 import com.clerk.ui.core.navigation.rememberDismissHandler
+import com.clerk.ui.core.telemetry.TelemetryEvents
 import com.clerk.ui.navigation.LocalClerkHostBackAction
 import com.clerk.ui.navigation.clerkNavigationForwardAlphaSpec
 import com.clerk.ui.navigation.clerkNavigationForwardEnterTransform
@@ -43,6 +42,7 @@ import com.clerk.ui.navigation.clerkNavigationPopAlphaSpec
 import com.clerk.ui.navigation.clerkNavigationPopTransition
 import com.clerk.ui.navigation.clerkNavigationSlideProgressSpec
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.userprofile.account.UserProfileAccountSwitcherSheet
 import com.clerk.ui.userprofile.account.UserProfileAccountView
@@ -107,10 +107,11 @@ fun UserProfileView(
   onDismiss: (() -> Unit)? = null,
   isDismissible: Boolean = true,
 ) {
+  val clerk = LocalClerk.current
   ClerkThemeOverrideProvider(clerkTheme) {
     val backStack = rememberNavBackStack(UserProfileDestination.UserProfileAccount)
     var showDetail by rememberSaveable { mutableStateOf(false) }
-    val user by Clerk.userFlow.collectAsStateWithLifecycle()
+    val user = clerk.user
     var showAccountSwitcher by rememberSaveable { mutableStateOf(false) }
     var showAuth by rememberSaveable { mutableStateOf(false) }
     val dismissHandler = rememberDismissHandler(onDismiss)
@@ -122,8 +123,8 @@ fun UserProfileView(
       }
 
       LaunchedEffect(Unit) {
-        telemetry.record(TelemetryEvents.viewDidAppear("UserProfileView"))
-        Clerk.refreshClient()
+        telemetry?.record(TelemetryEvents.viewDidAppear("UserProfileView"))
+        runUiOperation { clerk.user?.reload() }
       }
       LaunchedEffect(user?.id, showAuth, dismissHandler) {
         if (user == null && !showAuth) {

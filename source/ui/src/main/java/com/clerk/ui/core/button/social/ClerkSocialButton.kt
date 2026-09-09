@@ -39,11 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
-import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.logoUrl
-import com.clerk.api.sso.providerName
-import com.clerk.api.sso.setLogoUrl
-import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.OAuthProvider
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
@@ -51,8 +47,11 @@ import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp6
 import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.extensions.logoUrl
+import com.clerk.ui.core.extensions.providerName
 import com.clerk.ui.core.extensions.withDarkVariant
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import kotlinx.collections.immutable.persistentListOf
 
 private const val DISABLED_ICON_ALPHA = 0.5f
@@ -276,7 +275,7 @@ private fun SocialButtonIcon(
   contentDescription: String?,
 ) {
   val iconAlpha = if (isEnabled) 1f else DISABLED_ICON_ALPHA
-  val isGoogleProvider = provider == OAuthProvider.GOOGLE
+  val isGoogleProvider = provider == OAuthProvider.Google
   val model = provider.logoUrl?.takeUnless { it.isBlank() }?.withDarkVariant(isSystemInDarkTheme())
   val fallbackImagePainter = if (isGoogleProvider) painterResource(R.drawable.ic_google) else null
 
@@ -332,8 +331,7 @@ private fun SocialButtonIcon(
 @PreviewLightDark
 @Composable
 private fun PreviewSocialButton() {
-  val provider = OAuthProvider.GOOGLE
-  provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
+  val provider = OAuthProvider.Google
   ClerkMaterialTheme {
     Column(
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp12),
@@ -370,8 +368,7 @@ private fun PreviewSocialButton() {
 @PreviewLightDark
 @Composable
 private fun PreviewSocialRow() {
-  val provider = OAuthProvider.GOOGLE
-  provider.setLogoUrl(null) // Ensure consistent preview if logo URL changes
+  val provider = OAuthProvider.Google
   ClerkMaterialTheme {
     Column(
       Modifier.background(ClerkMaterialTheme.colors.background).padding(dp8),
@@ -380,12 +377,12 @@ private fun PreviewSocialRow() {
       ClerkSocialRow(
         persistentListOf(
           provider,
-          OAuthProvider.APPLE,
-          OAuthProvider.HUGGING_FACE,
-          OAuthProvider.LINEAR,
-          OAuthProvider.LINEAR,
-          OAuthProvider.LINEAR,
-          OAuthProvider.LINEAR,
+          OAuthProvider.Apple,
+          OAuthProvider.Huggingface,
+          OAuthProvider.Linear,
+          OAuthProvider.Linear,
+          OAuthProvider.Linear,
+          OAuthProvider.Linear,
         )
       )
     }

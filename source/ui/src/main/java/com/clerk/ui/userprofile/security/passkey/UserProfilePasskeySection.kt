@@ -12,25 +12,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
-import com.clerk.api.passkeys.Passkey
+import com.clerk.api.Passkey
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun UserProfilePasskeySection(onError: (String?) -> Unit, modifier: Modifier = Modifier) {
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val clerk = LocalClerk.current
+  val user = clerk.user
   val sortedPasskeys = user?.passkeys?.sortedBy { it.createdAt }.orEmpty().toImmutableList()
   UserProfilePasskeySectionImpl(passkeys = sortedPasskeys, modifier = modifier, onError = onError)
 }
@@ -40,7 +41,7 @@ private fun UserProfilePasskeySectionImpl(
   passkeys: ImmutableList<Passkey>,
   onError: (String?) -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: UserProfilePasskeyViewModel = viewModel(),
+  viewModel: UserProfilePasskeyViewModel = clerkViewModel { UserProfilePasskeyViewModel(it) },
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
   val userProfileState = LocalUserProfileState.current
@@ -75,7 +76,7 @@ private fun UserProfilePasskeySectionImpl(
               userProfileState.navigateTo(
                 UserProfileDestination.RenamePasskeyView(
                   passkeyId = passkey.id,
-                  passkeyName = passkey.name,
+                  passkeyName = passkey.name.orEmpty(),
                 )
               )
             },
@@ -96,31 +97,10 @@ private fun UserProfilePasskeySectionImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfilePasskeySectionImpl(
-    onError = {},
-    passkeys =
-      persistentListOf(
-        Passkey(
-          id = "1",
-          name = "1Password",
-          createdAt = 1760649770226,
-          updatedAt = 1760649779603,
-          lastUsedAt = 1760649779603,
-        ),
-        Passkey(
-          id = "2",
-          name = "1Password",
-          createdAt = 1760649770226,
-          updatedAt = 1760649779603,
-          lastUsedAt = 1760649779603,
-        ),
-        Passkey(
-          id = "1",
-          name = "Google chrome",
-          createdAt = 1760649770226,
-          updatedAt = 1760649779603,
-          lastUsedAt = 1760649779603,
-        ),
-      ),
-  )
+  ClerkPreview { clerk ->
+    UserProfilePasskeySectionImpl(
+      onError = {},
+      passkeys = clerk.user!!.passkeys.toImmutableList(),
+    )
+  }
 }

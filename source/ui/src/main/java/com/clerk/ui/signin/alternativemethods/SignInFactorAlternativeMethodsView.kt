@@ -11,12 +11,11 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.OAuthProvider
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.alternativeFirstFactors
 import com.clerk.api.signin.alternativeSecondFactors
-import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.toOAuthProvidersList
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthStateEffects
@@ -29,6 +28,7 @@ import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.password.forgot.AlternativeFactorList
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.util.TextIconHelper
 import kotlinx.collections.immutable.ImmutableList
@@ -149,7 +149,7 @@ private fun Preview() {
           Factor(strategy = StrategyKeys.PHONE_CODE),
         ),
       providers =
-        persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
+        persistentListOf(OAuthProvider.Google, OAuthProvider.Apple, OAuthProvider.Facebook),
     )
   }
 }

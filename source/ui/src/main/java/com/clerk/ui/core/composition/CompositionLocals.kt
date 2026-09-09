@@ -9,10 +9,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import com.clerk.api.Clerk
-import com.clerk.telemetry.ClerkTelemetryEnvironment
-import com.clerk.telemetry.TelemetryCollector
-import com.clerk.telemetry.TelemetryModule
+import com.clerk.api.TelemetryCollector
 import com.clerk.ui.auth.AuthIdentifierConfig
 import com.clerk.ui.auth.AuthMode
 import com.clerk.ui.auth.AuthState
@@ -22,8 +19,7 @@ import com.clerk.ui.auth.authSharedPreferences
 internal val LocalAuthState = staticCompositionLocalOf<AuthState> { error("No AuthState provided") }
 
 @SuppressLint("ComposeCompositionLocalUsage")
-internal val LocalTelemetryCollector =
-  staticCompositionLocalOf<TelemetryCollector> { error("No telemetry provided") }
+internal val LocalTelemetryCollector = staticCompositionLocalOf<TelemetryCollector?> { null }
 
 /**
  * Custom logo content that replaces the SDK-managed logo in authentication screens. When non-null,
@@ -44,17 +40,8 @@ internal fun ClerkLogoProvider(logo: (@Composable () -> Unit)?, content: @Compos
 }
 
 @Composable
-private fun rememberTelemetryCollector(): TelemetryCollector {
-  val context = LocalContext.current.applicationContext
-
-  val environment = remember { ClerkTelemetryEnvironment() }
-
-  return remember { TelemetryModule.createCollector(context = context, environment = environment) }
-}
-
-@Composable
 internal fun TelemetryProvider(
-  telemetryCollector: TelemetryCollector = rememberTelemetryCollector(),
+  telemetryCollector: TelemetryCollector? = LocalClerk.current.telemetry,
   content: @Composable () -> Unit,
 ) {
   CompositionLocalProvider(LocalTelemetryCollector provides telemetryCollector) { content() }
@@ -67,22 +54,22 @@ internal fun AuthStateProvider(
   identifierConfig: AuthIdentifierConfig = AuthIdentifierConfig(),
   content: @Composable () -> Unit,
 ) {
+  val clerk = LocalClerk.current
+  val logoUrl = clerk.environment.displayConfig.logoImageUrl
   val context = LocalContext.current.applicationContext
   val sharedPreferences = remember(context) { authSharedPreferences(context) }
   val authState =
-    remember(backStack, sharedPreferences, mode) {
+    remember(clerk, backStack, sharedPreferences, mode) {
       AuthState(
         mode = mode,
         backStack = backStack,
         sharedPreferences = sharedPreferences,
         identifierConfig = identifierConfig,
-        organizationLogoUrl = Clerk.organizationLogoUrlFlow.value,
+        organizationLogoUrl = logoUrl,
       )
     }
 
   LaunchedEffect(identifierConfig) { authState.applyIdentifierConfig(identifierConfig) }
-  LaunchedEffect(authState) {
-    Clerk.organizationLogoUrlFlow.collect { authState.updateOrganizationLogoUrl(it) }
-  }
+  LaunchedEffect(authState, logoUrl) { authState.updateOrganizationLogoUrl(logoUrl) }
   TelemetryProvider { CompositionLocalProvider(LocalAuthState provides authState) { content() } }
 }

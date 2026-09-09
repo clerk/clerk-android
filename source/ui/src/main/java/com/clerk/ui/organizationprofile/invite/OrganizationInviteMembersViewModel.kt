@@ -3,11 +3,11 @@ package com.clerk.ui.organizationprofile.invite
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.Organization
+import com.clerk.api.Role
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.Role
 import com.clerk.api.organizations.bulkCreateInvitations
 import com.clerk.api.organizations.getRoles
 import kotlinx.coroutines.flow.MutableStateFlow

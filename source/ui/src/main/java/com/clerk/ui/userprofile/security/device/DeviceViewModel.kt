@@ -2,33 +2,23 @@ package com.clerk.ui.userprofile.security.device
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.session.Session
-import com.clerk.api.session.revoke
-import com.clerk.api.user.activeSessions
-import kotlinx.coroutines.Dispatchers
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-internal class DeviceViewModel : ViewModel() {
+internal class DeviceViewModel(private val clerk: Clerk) : ViewModel() {
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
 
-  fun signOut(session: Session) {
+  fun signOut(session: SessionWithActivities) {
     _state.value = State.Loading
-    viewModelScope.launch(Dispatchers.IO) {
-      session
-        .revoke()
-        .onSuccess {
-          Clerk.user?.activeSessions()
-          withContext(Dispatchers.Main) { _state.value = State.Success }
-        }
-        .onFailure { withContext(Dispatchers.Main) { _state.value = State.Error(it.errorMessage) } }
+    viewModelScope.launch {
+      runUiOperation { session.revoke() }
+        .onSuccess { _state.value = State.Success }
+        .onFailure { _state.value = State.Error(it.displayMessage) }
     }
   }
 

@@ -1,10 +1,10 @@
 package com.clerk.ui.organizationprofile.members
 
 import com.clerk.api.Clerk
-import com.clerk.api.organizations.OrganizationInvitation
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.organizations.OrganizationMembershipRequest
-import com.clerk.api.organizations.Role
+import com.clerk.api.OrganizationInvitation
+import com.clerk.api.OrganizationMembership
+import com.clerk.api.OrganizationMembershipRequest
+import com.clerk.api.Role
 
 internal enum class OrganizationMembersTab {
   Members,

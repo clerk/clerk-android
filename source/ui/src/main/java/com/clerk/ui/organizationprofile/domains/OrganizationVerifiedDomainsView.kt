@@ -35,9 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationDomain
-import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.Organization
+import com.clerk.api.OrganizationDomain
+import com.clerk.api.OrganizationMembership
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration

@@ -3,6 +3,7 @@ package com.clerk.ui.userprofile.mfa
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.userprofile.totp.UserProfileMfaAddTotpView
 import com.clerk.ui.userprofile.verify.Mode
 import kotlinx.serialization.Serializable
@@ -59,15 +60,17 @@ internal data class AddMfaCallbacks(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileAddMfaView(
-    viewType = ViewType.Sms,
-    callbacks =
-      AddMfaCallbacks(
-        onDismiss = {},
-        onNavigateToBackupCodes = {},
-        onError = {},
-        onAddPhoneNumber = {},
-        onVerify = {},
-      ),
-  )
+  ClerkPreview { clerk ->
+    UserProfileAddMfaView(
+      viewType = ViewType.Sms,
+      callbacks =
+        AddMfaCallbacks(
+          onDismiss = {},
+          onNavigateToBackupCodes = {},
+          onError = {},
+          onAddPhoneNumber = {},
+          onVerify = {},
+        ),
+    )
+  }
 }

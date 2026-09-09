@@ -5,13 +5,13 @@ package com.clerk.ui.organizationprofile.members
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.Organization
+import com.clerk.api.OrganizationInvitation
+import com.clerk.api.OrganizationMembership
+import com.clerk.api.OrganizationMembershipRequest
 import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationInvitation
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.organizations.OrganizationMembershipRequest
 import com.clerk.api.organizations.accept
 import com.clerk.api.organizations.getInvitations
 import com.clerk.api.organizations.getMembershipRequests

@@ -7,8 +7,8 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.clerk.api.Clerk
-import com.clerk.api.network.model.environment.UserSettings
-import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.OAuthProvider
+import com.clerk.api.UserSettings
 import com.clerk.ui.R
 
 private const val EMAIL_ADDRESS = "email_address"

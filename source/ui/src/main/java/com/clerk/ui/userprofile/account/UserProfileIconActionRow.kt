@@ -26,6 +26,7 @@ import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -48,7 +49,8 @@ internal fun UserProfileIconActionRow(
           .background(color = backgroundColor)
           .clickable(
             interactionSource = interactionSource,
-            indication = ripple(color = ClerkMaterialTheme.colors.mutedForeground.copy(alpha = 0.1f)),
+            indication =
+              ripple(color = ClerkMaterialTheme.colors.mutedForeground.copy(alpha = 0.1f)),
             role = Role.Button,
             onClick = onClick,
           )
@@ -75,10 +77,16 @@ internal fun UserProfileIconActionRow(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    Column(modifier = Modifier.fillMaxWidth()) {
-      UserProfileIconActionRow(iconResId = R.drawable.ic_user, text = "Profile", onClick = {})
-      UserProfileIconActionRow(iconResId = R.drawable.ic_security, text = "Security", onClick = {})
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      Column(modifier = Modifier.fillMaxWidth()) {
+        UserProfileIconActionRow(iconResId = R.drawable.ic_user, text = "Profile", onClick = {})
+        UserProfileIconActionRow(
+          iconResId = R.drawable.ic_security,
+          text = "Security",
+          onClick = {},
+        )
+      }
     }
   }
 }

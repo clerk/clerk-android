@@ -11,9 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.OAuthProvider
 import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.theme.ClerkTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -105,19 +105,19 @@ fun ClerkSocialRow(
 private fun Preview() {
   Column(verticalArrangement = Arrangement.spacedBy(dp8)) {
     // One provider: full button with text
-    ClerkSocialRow(providers = persistentListOf(OAuthProvider.GOOGLE))
+    ClerkSocialRow(providers = persistentListOf(OAuthProvider.Google))
 
     // Multiple providers: icon-only layout
-    ClerkSocialRow(providers = persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK))
+    ClerkSocialRow(providers = persistentListOf(OAuthProvider.Google, OAuthProvider.Facebook))
 
     // Four providers: 2x2 icon grid
     ClerkSocialRow(
       providers =
         persistentListOf(
-          OAuthProvider.GOOGLE,
-          OAuthProvider.APPLE,
-          OAuthProvider.FACEBOOK,
-          OAuthProvider.GITHUB,
+          OAuthProvider.Google,
+          OAuthProvider.Apple,
+          OAuthProvider.Facebook,
+          OAuthProvider.Github,
         )
     )
   }

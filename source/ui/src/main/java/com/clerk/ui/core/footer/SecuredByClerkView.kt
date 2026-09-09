@@ -14,9 +14,8 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.api.Clerk
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.theme.ClerkMaterialTheme
 
@@ -25,11 +24,13 @@ internal fun SecuredByClerkView(
   modifier: Modifier = Modifier,
   hideWhenDevelopmentModeWarning: Boolean = true,
 ) {
-  val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
+  val isInitialized = LocalClerk.current.loaded
   val shouldHideForDevelopmentMode =
-    hideWhenDevelopmentModeWarning && isInitialized && Clerk.shouldShowDevelopmentModeWarning
+    hideWhenDevelopmentModeWarning &&
+      isInitialized &&
+      LocalClerk.current.environment.displayConfig.showDevModeWarning
 
-  if (Clerk.isBranded && !shouldHideForDevelopmentMode) {
+  if (LocalClerk.current.environment.displayConfig.branded && !shouldHideForDevelopmentMode) {
     ClerkMaterialTheme {
       Row(
         modifier = Modifier.then(modifier),

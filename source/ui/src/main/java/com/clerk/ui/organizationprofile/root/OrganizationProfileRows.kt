@@ -1,8 +1,8 @@
 package com.clerk.ui.organizationprofile.root
 
 import com.clerk.api.Clerk
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.Organization
+import com.clerk.api.OrganizationMembership
 import com.clerk.ui.organizationprofile.custom.OrganizationProfileRow
 
 internal fun organizationProfileRows(

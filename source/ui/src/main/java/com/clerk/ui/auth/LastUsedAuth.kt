@@ -2,7 +2,7 @@ package com.clerk.ui.auth
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.clerk.api.sso.OAuthProvider
+import com.clerk.api.OAuthProvider
 import com.clerk.ui.core.common.StrategyKeys
 
 internal sealed class LastUsedAuth {

@@ -2,14 +2,14 @@ package com.clerk.ui.organizationprofile.actions
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.DeletedObject
+import com.clerk.api.Organization
+import com.clerk.api.OrganizationMembership
 import com.clerk.api.network.model.client.Client
-import com.clerk.api.network.model.deleted.DeletedObject
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.delete
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers

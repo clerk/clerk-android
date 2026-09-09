@@ -3,6 +3,12 @@ package com.clerk.ui.organizationlist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.OrganizationCreationDefaults
+import com.clerk.api.OrganizationMembership
+import com.clerk.api.OrganizationSuggestion
+import com.clerk.api.Session
+import com.clerk.api.User
+import com.clerk.api.UserOrganizationInvitation
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.error.ClerkErrorResponse
@@ -10,13 +16,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.organizations.OrganizationCreationDefaults
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.organizations.OrganizationSuggestion
-import com.clerk.api.organizations.UserOrganizationInvitation
 import com.clerk.api.organizations.accept
-import com.clerk.api.session.Session
-import com.clerk.api.user.User
 import com.clerk.api.user.getOrganizationCreationDefaults
 import com.clerk.api.user.getOrganizationInvitations
 import com.clerk.api.user.getOrganizationMemberships

@@ -1,10 +1,10 @@
 package com.clerk.ui.auth
 
 import com.clerk.api.Clerk
+import com.clerk.api.Session
+import com.clerk.api.SignIn
+import com.clerk.api.SignUp
 import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.session.Session
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signup.SignUp
 import com.clerk.api.sso.SSOCancellationException
 import com.clerk.ui.signin.code.VerificationState
 import kotlinx.coroutines.flow.MutableStateFlow

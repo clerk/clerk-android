@@ -36,9 +36,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
@@ -48,6 +47,7 @@ import com.clerk.ui.core.dimens.dp36
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp96
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 
 @Composable
 internal fun AvatarView(
@@ -240,7 +240,7 @@ internal fun OrganizationAvatar(
   shape: Shape? = null,
   size: AvatarSize = AvatarSize.MEDIUM,
   clerkTheme: ClerkTheme? = null,
-  imageUrl: String? = Clerk.organizationLogoUrl,
+  imageUrl: String? = LocalClerk.currentOrNull?.environment?.displayConfig?.logoImageUrl,
 ) {
   ClerkMaterialTheme(clerkTheme = clerkTheme) {
     AvatarView(
@@ -259,7 +259,7 @@ internal fun OrganizationLogo(
   maxWidth: Dp? = null,
   height: Dp? = null,
   clerkTheme: ClerkTheme? = null,
-  imageUrl: String? = Clerk.organizationLogoUrl,
+  imageUrl: String? = LocalClerk.currentOrNull?.environment?.displayConfig?.logoImageUrl,
 ) {
   val url = imageUrl
   ClerkMaterialTheme(clerkTheme = clerkTheme) {

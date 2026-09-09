@@ -2,14 +2,9 @@ package com.clerk.ui.userprofile.email
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.Clerk
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.user.createEmailAddress
-import com.clerk.ui.core.common.guardUser
-import kotlinx.coroutines.Dispatchers
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -17,24 +12,24 @@ import kotlinx.coroutines.launch
 private const val ADD_EMAIL_IMMUTABLE_MESSAGE =
   "Email addresses cannot be changed for this application."
 
-internal class AddEmailViewModel : ViewModel() {
+internal class AddEmailViewModel(private val clerk: Clerk) : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
 
   fun addEmail(email: String) {
-    if (Clerk.isEmailImmutable) {
+    if (clerk.environment.userSettings.attributes["email_address"]?.immutable == true) {
       _state.value = State.Error(ADD_EMAIL_IMMUTABLE_MESSAGE)
       return
     }
     _state.value = State.Loading
-    guardUser(userDoesNotExist = { _state.value = State.Error("No current user found") }) { user ->
-      viewModelScope.launch(Dispatchers.IO) {
-        user
-          .createEmailAddress(email)
-          .onSuccess { _state.value = State.Success(it) }
-          .onFailure { _state.value = State.Error(it.errorMessage) }
-      }
+    viewModelScope.launch {
+      runUiOperation {
+          val user = clerk.user ?: throw CoreException("no_user", "No current user found")
+          user.createEmailAddress(CreateEmailAddressParams(email))
+        }
+        .onSuccess { _state.value = State.Success(it) }
+        .onFailure { _state.value = State.Error(it.displayMessage) }
     }
   }
 

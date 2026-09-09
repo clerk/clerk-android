@@ -15,11 +15,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.DefaultColors
 
 @Composable
@@ -53,7 +54,9 @@ internal fun UserProfileButtonRow(
 @Preview
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
-    UserProfileButtonRow(text = "Button Row") {}
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
+      UserProfileButtonRow(text = "Button Row") {}
+    }
   }
 }

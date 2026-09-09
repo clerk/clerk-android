@@ -23,18 +23,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
-import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.PhoneNumber
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
@@ -50,7 +51,7 @@ internal fun UserProfileMfaRow(
   modifier: Modifier = Modifier,
   isDefault: Boolean = false,
   title: String? = null,
-  viewModel: UserProfileMfaViewModel = viewModel(),
+  viewModel: UserProfileMfaViewModel = clerkViewModel { UserProfileMfaViewModel(it) },
 ) {
   val hasHeader = isDefault || title != null
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -183,6 +184,7 @@ private fun MfaMoreMenu(
   onMakeDefaultSecondFactor: (PhoneNumber?) -> Unit,
   onRegenerateBackupCodes: () -> Unit,
 ) {
+  val clerk = LocalClerk.current
   ItemMoreMenu(
     dropDownItems =
       persistentListOf(
@@ -197,7 +199,7 @@ private fun MfaMoreMenu(
           text = stringResource(R.string.set_as_default),
           isHidden =
             style !is Style.Sms ||
-              (Clerk.user?.totpEnabled != true && style.phoneNumber.defaultSecondFactor),
+              (clerk.user?.totpEnabled != true && style.phoneNumber.defaultSecondFactor),
         ),
         DropDownItem(
           id = MfaAction.Regenerate,
@@ -225,15 +227,17 @@ private fun MfaMoreMenu(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  PreviewUserProfileStateProvider {
-    ClerkMaterialTheme {
-      Column {
-        UserProfileMfaRow(style = Style.AuthenticatorApp, isDefault = true)
-        UserProfileMfaRow(
-          style = Style.Sms(phoneNumber = PhoneNumber(id = "1", phoneNumber = "+15555550100")),
-          title = "Primary",
-        )
-        UserProfileMfaRow(style = Style.BackupCodes)
+  ClerkPreview { clerk ->
+    PreviewUserProfileStateProvider {
+      ClerkMaterialTheme {
+        Column {
+          UserProfileMfaRow(style = Style.AuthenticatorApp, isDefault = true)
+          UserProfileMfaRow(
+            style = Style.Sms(phoneNumber = clerk.user!!.phoneNumbers[0]),
+            title = "Primary",
+          )
+          UserProfileMfaRow(style = Style.BackupCodes)
+        }
       }
     }
   }

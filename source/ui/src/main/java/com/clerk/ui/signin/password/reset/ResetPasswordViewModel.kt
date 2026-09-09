@@ -2,13 +2,13 @@ package com.clerk.ui.signin.password.reset
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.User
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.client.Client
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.resetPassword
-import com.clerk.api.user.User
 import com.clerk.api.user.updatePassword
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.guardSignIn

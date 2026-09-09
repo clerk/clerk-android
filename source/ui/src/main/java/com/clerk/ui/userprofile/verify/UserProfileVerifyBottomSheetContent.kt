@@ -5,24 +5,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.EmailAddress
+import com.clerk.api.PhoneNumber
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkCodeInputField
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.code.VerificationState as CodeVerificationState
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
-import kotlinx.serialization.Serializable
 
 @Composable
 internal fun UserProfileVerifyBottomSheetContent(
@@ -44,7 +43,7 @@ private fun UserProfileVerifyBottomSheetContentImpl(
   mode: VerifyBottomSheetMode,
   onVerified: (List<String>?) -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: UserProfileVerifyViewModel = viewModel(),
+  viewModel: UserProfileVerifyViewModel = clerkViewModel { UserProfileVerifyViewModel(it) },
   onDismiss: () -> Unit,
 ) {
 
@@ -116,28 +115,28 @@ private fun prepareCode(mode: VerifyBottomSheetMode, viewModel: UserProfileVerif
 @PreviewLightDark
 @Composable
 private fun Preview() {
-
-  ClerkMaterialTheme {
-    UserProfileVerifyBottomSheetContent(
-      mode =
-        VerifyBottomSheetMode.Email(
-          emailAddress = EmailAddress(id = "id", emailAddress = "user@email.com")
-        ),
-      onDismiss = {},
-      onVerified = {},
-    )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      UserProfileVerifyBottomSheetContent(
+        mode = VerifyBottomSheetMode.Email(emailAddress = clerk.user!!.emailAddresses[0]),
+        onDismiss = {},
+        onVerified = {},
+      )
+    }
   }
 }
 
 @PreviewLightDark
 @Composable
 private fun PreviewTotp() {
-  ClerkMaterialTheme {
-    UserProfileVerifyBottomSheetContent(
-      mode = VerifyBottomSheetMode.Totp,
-      onVerified = {},
-      onDismiss = {},
-    )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      UserProfileVerifyBottomSheetContent(
+        mode = VerifyBottomSheetMode.Totp,
+        onVerified = {},
+        onDismiss = {},
+      )
+    }
   }
 }
 
@@ -170,12 +169,10 @@ private fun VerifyBottomSheetMode.instructionString(): String {
   }
 }
 
-@Immutable
-@Serializable
 internal sealed interface VerifyBottomSheetMode {
-  @Serializable data class Email(val emailAddress: EmailAddress) : VerifyBottomSheetMode
+  data class Email(val emailAddress: EmailAddress) : VerifyBottomSheetMode
 
-  @Serializable data class Phone(val phoneNumber: PhoneNumber) : VerifyBottomSheetMode
+  data class Phone(val phoneNumber: PhoneNumber) : VerifyBottomSheetMode
 
-  @Serializable data object Totp : VerifyBottomSheetMode
+  data object Totp : VerifyBottomSheetMode
 }

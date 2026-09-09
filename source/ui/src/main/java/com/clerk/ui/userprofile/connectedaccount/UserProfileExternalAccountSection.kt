@@ -12,15 +12,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.externalaccount.ExternalAccount
+import com.clerk.api.ExternalAccount
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 internal fun LazyListScope.userProfileExternalAccountSection(
   externalAccounts: ImmutableList<ExternalAccount>,
@@ -64,38 +65,16 @@ internal fun LazyListScope.userProfileExternalAccountSection(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
-      LazyColumn(modifier = Modifier.fillMaxWidth()) {
-        userProfileExternalAccountSection(
-          onError = {},
-          onClickAddAccount = {},
-          externalAccounts =
-            persistentListOf(
-              ExternalAccount(
-                id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
-                identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
-                provider = "oauth_google",
-                providerUserId = "102662613248529322762",
-                emailAddress = "sam@clerk.dev",
-                approvedScopes =
-                  "email https://www.googleapis.com/auth/userinfo.email" +
-                    " https://www.googleapis.com/auth/userinfo.profile openid profile",
-                createdAt = 1L,
-              ),
-              ExternalAccount(
-                id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0L",
-                identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77f",
-                provider = "oauth_linear",
-                providerUserId = "102662613248529322762",
-                emailAddress = "sam@clerk.dev",
-                approvedScopes =
-                  "email https://www.googleapis.com/auth/userinfo.email" +
-                    " https://www.googleapis.com/auth/userinfo.profile openid profile",
-                createdAt = 1L,
-              ),
-            ),
-        )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+          userProfileExternalAccountSection(
+            onError = {},
+            onClickAddAccount = {},
+            externalAccounts = clerk.user!!.externalAccounts.toImmutableList(),
+          )
+        }
       }
     }
   }

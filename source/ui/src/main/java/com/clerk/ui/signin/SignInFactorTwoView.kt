@@ -4,13 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.signin.backupcode.SignInFactorTwoBackupCodeView
 import com.clerk.ui.signin.code.SignInFactorCodeView
 import com.clerk.ui.signin.help.SignInGetHelpView
 import com.clerk.ui.signin.passkey.SignInFactorTwoPasskeyView
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 /**

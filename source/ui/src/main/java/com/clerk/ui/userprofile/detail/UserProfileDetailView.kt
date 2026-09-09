@@ -23,18 +23,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.currentStateAsState
-import com.clerk.api.Clerk
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.externalaccount.ExternalAccount
-import com.clerk.api.network.model.verification.Verification
-import com.clerk.api.phonenumber.PhoneNumber
-import com.clerk.api.user.User
+import com.clerk.api.EmailAddress
+import com.clerk.api.ExternalAccount
+import com.clerk.api.PhoneNumber
+import com.clerk.api.User
+import com.clerk.api.VerificationStatus
 import com.clerk.ui.R
 import com.clerk.ui.core.appbar.ClerkTopAppBar
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.error.ClerkErrorSnackbar
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
@@ -65,12 +66,13 @@ internal fun UserProfileDetailViewWithBackHandler(
 
 @Composable
 private fun UserProfileDetailViewContent(modifier: Modifier, onBackPressed: (() -> Unit)? = null) {
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val clerk = LocalClerk.current
+  val user = clerk.user
   val destinationLifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
   val isNavigationSettled = destinationLifecycleState == Lifecycle.State.RESUMED
   LaunchedEffect(isNavigationSettled) {
     if (isNavigationSettled) {
-      Clerk.refreshClient()
+      runUiOperation { clerk.user?.reload() }
     }
   }
   UserProfileDetailViewImpl(
@@ -93,6 +95,7 @@ private fun UserProfileDetailViewImpl(
   onBackPressed: (() -> Unit)? = null,
   modifier: Modifier = Modifier,
 ) {
+  val clerk = LocalClerk.current
   val snackbarHostState = remember { SnackbarHostState() }
   val userProfileState = LocalUserProfileState.current
   val listState = rememberLazyListState()
@@ -120,7 +123,10 @@ private fun UserProfileDetailViewImpl(
         actions =
           ProfileContentActions(
             onShowBottomSheet = { type ->
-              if (type == BottomSheetMode.EmailAddress && Clerk.isEmailImmutable) {
+              if (
+                type == BottomSheetMode.EmailAddress &&
+                  (clerk.environment.userSettings.attributes["email_address"]?.immutable == true)
+              ) {
                 scope.launch { snackbarHostState.showSnackbar(EMAIL_IMMUTABLE_SNACKBAR_MESSAGE) }
               } else {
                 bottomSheetType = type
@@ -159,15 +165,20 @@ private fun ProfileContent(
   isNavigationSettled: Boolean,
   actions: ProfileContentActions,
 ) {
+  val clerk = LocalClerk.current
   LazyColumn(
     state = listState,
     modifier =
       Modifier.fillMaxSize().background(ClerkMaterialTheme.colors.background).padding(innerPadding),
   ) {
     val showEmailSection =
-      Clerk.isEmailEnabled && !(Clerk.isEmailImmutable && data.emailAddresses.isEmpty())
+      (clerk.environment.userSettings.attributes["email_address"]?.enabled == true) &&
+        !((clerk.environment.userSettings.attributes["email_address"]?.immutable == true) &&
+          data.emailAddresses.isEmpty())
     val showPhoneSection =
-      Clerk.isPhoneNumberEnabled && !(Clerk.isPhoneNumberImmutable && data.phoneNumbers.isEmpty())
+      (clerk.environment.userSettings.attributes["phone_number"]?.enabled == true) &&
+        !((clerk.environment.userSettings.attributes["phone_number"]?.immutable == true) &&
+          data.phoneNumbers.isEmpty())
 
     item(key = "user_profile_detail_top_divider") {
       HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
@@ -175,6 +186,7 @@ private fun ProfileContent(
     if (showEmailSection) {
       item(key = "user_profile_detail_email_spacing") { Spacers.Vertical.Spacer32() }
       userProfileEmailSection(
+        clerk = clerk,
         emailAddresses = data.emailAddresses,
         isInteractive = isNavigationSettled,
         onError = actions.onError,
@@ -188,6 +200,7 @@ private fun ProfileContent(
     if (showPhoneSection) {
       item(key = "user_profile_detail_phone_spacing") { Spacers.Vertical.Spacer16() }
       userProfilePhoneSection(
+        clerk = clerk,
         phoneNumbers = data.phoneNumbers,
         isInteractive = isNavigationSettled,
         onError = actions.onError,
@@ -227,11 +240,9 @@ internal sealed interface BottomSheetMode {
 
   data object EmailAddress : BottomSheetMode
 
-  data class VerifyEmailAddress(val emailAddress: com.clerk.api.emailaddress.EmailAddress) :
-    BottomSheetMode
+  data class VerifyEmailAddress(val emailAddress: com.clerk.api.EmailAddress) : BottomSheetMode
 
-  data class VerifyPhoneNumber(val phoneNumber: com.clerk.api.phonenumber.PhoneNumber) :
-    BottomSheetMode
+  data class VerifyPhoneNumber(val phoneNumber: com.clerk.api.PhoneNumber) : BottomSheetMode
 
   data class BackupCodes(val backupCodes: List<String>) : BottomSheetMode
 }
@@ -239,52 +250,15 @@ internal sealed interface BottomSheetMode {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  PreviewUserProfileStateProvider {
-    ClerkMaterialTheme {
-      UserProfileDetailViewImpl(
-        emailAddresses =
-          persistentListOf(
-            EmailAddress(
-              id = "email_1",
-              emailAddress = "sam@clerk.dev",
-              verification = Verification(Verification.Status.UNVERIFIED),
-            ),
-            EmailAddress(
-              id = "email_2",
-              emailAddress = "sam+ext@clerk.com",
-              verification = Verification(Verification.Status.VERIFIED),
-              linkedTo = listOf(EmailAddress.LinkedEntity("email_1", type = "OAUTH")),
-            ),
-          ),
-        persistentListOf(
-          PhoneNumber(id = "phone_1", phoneNumber = "15555550100", reservedForSecondFactor = true),
-          PhoneNumber(id = "phone_2", phoneNumber = "15555550101"),
-        ),
-        persistentListOf(
-          ExternalAccount(
-            id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0L",
-            identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77f",
-            provider = "oauth_google",
-            providerUserId = "102662613248529322762",
-            emailAddress = "sam@clerk.dev",
-            approvedScopes =
-              "email https://www.googleapis.com/auth/userinfo.email" +
-                " https://www.googleapis.com/auth/userinfo.profile openid profile",
-            createdAt = 1L,
-          ),
-          ExternalAccount(
-            id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
-            identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
-            provider = "oauth_linear",
-            providerUserId = "102662613248529322762",
-            emailAddress = "sam@clerk.dev",
-            approvedScopes =
-              "email https://www.googleapis.com/auth/userinfo.email" +
-                " https://www.googleapis.com/auth/userinfo.profile openid profile",
-            createdAt = 1L,
-          ),
-        ),
-      )
+  ClerkPreview { clerk ->
+    PreviewUserProfileStateProvider {
+      ClerkMaterialTheme {
+        UserProfileDetailViewImpl(
+          emailAddresses = clerk.user!!.emailAddresses.toImmutableList(),
+          clerk.user!!.phoneNumbers.toImmutableList(),
+          clerk.user!!.externalAccounts.toImmutableList(),
+        )
+      }
     }
   }
 }
@@ -292,7 +266,8 @@ private fun Preview() {
 internal fun User?.sortedEmailAddresses(): ImmutableList<EmailAddress> {
   return this?.emailAddresses
     ?.sortedWith(
-      compareByDescending<EmailAddress> { it == primaryEmailAddress }.thenBy { it.createdAt ?: 0L }
+      compareByDescending<EmailAddress> { it == primaryEmailAddress }
+        .thenBy { it.createdAt ?: java.time.Instant.EPOCH }
     )
     ?.toImmutableList() ?: persistentListOf()
 }
@@ -300,7 +275,8 @@ internal fun User?.sortedEmailAddresses(): ImmutableList<EmailAddress> {
 internal fun User?.sortedPhoneNumbers(): ImmutableList<PhoneNumber> {
   return this?.phoneNumbers
     ?.sortedWith(
-      compareByDescending<PhoneNumber> { it == primaryPhoneNumber }.thenBy { it.createdAt ?: 0L }
+      compareByDescending<PhoneNumber> { it == primaryPhoneNumber }
+        .thenBy { it.createdAt ?: java.time.Instant.EPOCH }
     )
     ?.toImmutableList() ?: persistentListOf()
 }
@@ -310,7 +286,7 @@ internal fun User?.sortedExternalAccounts(): ImmutableList<ExternalAccount> {
   return this?.externalAccounts
     ?.filter { account ->
       val verification = account.verification
-      verification?.status == Verification.Status.VERIFIED || verification?.error != null
+      verification?.status == VerificationStatus.Verified || verification?.error != null
     }
     ?.sortedBy { it.createdAt }
     ?.toImmutableList() ?: persistentListOf()

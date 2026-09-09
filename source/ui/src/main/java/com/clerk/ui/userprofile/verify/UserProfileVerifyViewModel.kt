@@ -2,24 +2,14 @@ package com.clerk.ui.userprofile.verify
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.emailaddress.attemptVerification
-import com.clerk.api.emailaddress.prepareVerification
-import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.phonenumber.PhoneNumber
-import com.clerk.api.phonenumber.attemptVerification
-import com.clerk.api.phonenumber.prepareVerification
-import com.clerk.api.user.attemptTotpVerification
-import com.clerk.ui.core.common.guardUser
-import kotlinx.coroutines.Dispatchers
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class UserProfileVerifyViewModel : ViewModel() {
+internal class UserProfileVerifyViewModel(private val clerk: Clerk) : ViewModel() {
 
   private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
   val state = _state.asStateFlow()
@@ -30,31 +20,36 @@ internal class UserProfileVerifyViewModel : ViewModel() {
 
   fun preparePhoneNumber(phoneNumber: PhoneNumber) {
     _state.value = AuthState.Loading
-    viewModelScope.launch(Dispatchers.IO) {
-      phoneNumber
-        .prepareVerification()
+    viewModelScope.launch {
+      runUiOperation { phoneNumber.prepareVerification() }
         .onSuccess { _state.value = AuthState.Success }
-        .onFailure { _state.value = AuthState.Error(it.errorMessage) }
+        .onFailure { _state.value = AuthState.Error(it.displayMessage) }
     }
   }
 
   fun prepareEmailAddress(emailAddress: EmailAddress) {
     _state.value = AuthState.Loading
-    viewModelScope.launch(Dispatchers.IO) {
-      emailAddress
-        .prepareVerification(EmailAddress.PrepareVerificationParams.EmailCode())
+    viewModelScope.launch {
+      runUiOperation {
+          emailAddress.prepareVerification(
+            PrepareEmailAddressVerificationParams.Case1(
+              EmailAddressPrepareVerificationParamsCase1()
+            )
+          )
+        }
         .onSuccess { _state.value = AuthState.Success }
-        .onFailure { _state.value = AuthState.Error(it.errorMessage) }
+        .onFailure { _state.value = AuthState.Error(it.displayMessage) }
     }
   }
 
   fun attemptEmailAddress(emailAddress: EmailAddress, code: String) {
     _verificationTextState.value = VerificationTextState.Verifying
-    viewModelScope.launch(Dispatchers.IO) {
-      emailAddress
-        .attemptVerification(code)
+    viewModelScope.launch {
+      runUiOperation {
+          emailAddress.attemptVerification(AttemptEmailAddressVerificationParams(code))
+        }
         .onSuccess { _verificationTextState.value = VerificationTextState.Verified() }
-        .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
+        .onFailure { _verificationTextState.value = VerificationTextState.Error(it.displayMessage) }
     }
   }
 
@@ -65,32 +60,22 @@ internal class UserProfileVerifyViewModel : ViewModel() {
 
   fun attemptPhoneNumber(phoneNumber: PhoneNumber, code: String) {
     _verificationTextState.value = VerificationTextState.Verifying
-    viewModelScope.launch(Dispatchers.IO) {
-      phoneNumber
-        .attemptVerification(code)
+    viewModelScope.launch {
+      runUiOperation { phoneNumber.attemptVerification(AttemptPhoneNumberVerificationParams(code)) }
         .onSuccess { _verificationTextState.value = VerificationTextState.Verified() }
-        .onFailure { _verificationTextState.value = VerificationTextState.Error(it.errorMessage) }
+        .onFailure { _verificationTextState.value = VerificationTextState.Error(it.displayMessage) }
     }
   }
 
   fun attemptTotp(code: String) {
     _verificationTextState.value = VerificationTextState.Verifying
-    guardUser(
-      userDoesNotExist = {
-        _verificationTextState.value = VerificationTextState.Error("User does not exist")
-      }
-    ) { user ->
-      viewModelScope.launch(Dispatchers.IO) {
-        user
-          .attemptTotpVerification(code)
-          .onSuccess {
-            _verificationTextState.value = VerificationTextState.Verified(it.backupCodes)
-          }
-          .onFailure {
-            ClerkLog.e("Error attempting TOTP verification ${it.errorMessage}")
-            _verificationTextState.value = VerificationTextState.Error(it.errorMessage)
-          }
-      }
+    viewModelScope.launch {
+      runUiOperation {
+          val user = clerk.user ?: throw CoreException("no_user", "User does not exist")
+          user.verifyTOTP(VerifyTOTPParams(code))
+        }
+        .onSuccess { _verificationTextState.value = VerificationTextState.Verified(it.backupCodes) }
+        .onFailure { _verificationTextState.value = VerificationTextState.Error(it.displayMessage) }
     }
   }
 

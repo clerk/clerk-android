@@ -22,7 +22,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthStateEffects
 import com.clerk.ui.auth.PreviewAuthStateProvider
@@ -34,6 +33,7 @@ import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.util.EmailAppLauncher
 import kotlinx.coroutines.launch

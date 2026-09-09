@@ -3,19 +3,19 @@ package com.clerk.ui.userprofile.verify
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.EmailAddress
+import com.clerk.api.PhoneNumber
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkCodeInputField
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.signin.code.VerificationState as CodeVerificationState
@@ -24,7 +24,6 @@ import com.clerk.ui.userprofile.LocalUserProfileState
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.UserProfileDestination
 import com.clerk.ui.userprofile.security.Origin
-import kotlinx.serialization.Serializable
 
 @Composable
 fun UserProfileVerifyView(mode: Mode, modifier: Modifier = Modifier) {
@@ -35,7 +34,7 @@ fun UserProfileVerifyView(mode: Mode, modifier: Modifier = Modifier) {
 private fun UserProfileVerifyViewImpl(
   mode: Mode,
   modifier: Modifier = Modifier,
-  viewModel: UserProfileVerifyViewModel = viewModel(),
+  viewModel: UserProfileVerifyViewModel = clerkViewModel { UserProfileVerifyViewModel(it) },
 ) {
 
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -118,11 +117,11 @@ private fun prepareCode(mode: Mode, viewModel: UserProfileVerifyViewModel) {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  PreviewUserProfileStateProvider {
-    ClerkMaterialTheme {
-      UserProfileVerifyView(
-        mode = Mode.Email(emailAddress = EmailAddress(id = "id", emailAddress = "user@email.com"))
-      )
+  ClerkPreview { clerk ->
+    PreviewUserProfileStateProvider {
+      ClerkMaterialTheme {
+        UserProfileVerifyView(mode = Mode.Email(emailAddress = clerk.user!!.emailAddresses[0]))
+      }
     }
   }
 }
@@ -130,7 +129,11 @@ private fun Preview() {
 @PreviewLightDark
 @Composable
 private fun PreviewTotp() {
-  PreviewUserProfileStateProvider { ClerkMaterialTheme { UserProfileVerifyView(mode = Mode.Totp) } }
+  ClerkPreview { clerk ->
+    PreviewUserProfileStateProvider {
+      ClerkMaterialTheme { UserProfileVerifyView(mode = Mode.Totp) }
+    }
+  }
 }
 
 private fun Mode.showResend(): Boolean {
@@ -170,12 +173,10 @@ private fun Mode.instructionString(): String {
   }
 }
 
-@Immutable
-@Serializable
 sealed interface Mode {
-  @Serializable data class Email(val emailAddress: EmailAddress) : Mode
+  data class Email(val emailAddress: EmailAddress) : Mode
 
-  @Serializable data class Phone(val phoneNumber: PhoneNumber) : Mode
+  data class Phone(val phoneNumber: PhoneNumber) : Mode
 
-  @Serializable data object Totp : Mode
+  data object Totp : Mode
 }

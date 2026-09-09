@@ -2,11 +2,11 @@ package com.clerk.ui.auth.biometriccredential
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.clerk.api.BiometricCredentialAvailability
 import com.clerk.api.Clerk
-import com.clerk.api.biometriccredential.BiometricCredentialAvailability
+import com.clerk.api.Session
+import com.clerk.api.User
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.session.Session
-import com.clerk.api.user.User
 
 /** Decides whether the post-auth biometric credential enrollment prompt should be offered. */
 internal object BiometricCredentialEnrollmentPrompt {

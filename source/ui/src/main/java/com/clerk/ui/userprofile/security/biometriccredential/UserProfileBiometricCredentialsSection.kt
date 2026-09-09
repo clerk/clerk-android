@@ -20,12 +20,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 /** Security-screen section with a toggle for biometric (biometric-credential) sign-in. */
@@ -33,11 +34,14 @@ import com.clerk.ui.theme.ClerkMaterialTheme
 internal fun UserProfileBiometricCredentialsSection(
   onError: (String?) -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: UserProfileBiometricCredentialViewModel = viewModel(),
+  viewModel: UserProfileBiometricCredentialViewModel = clerkViewModel {
+    UserProfileBiometricCredentialViewModel(it)
+  },
 ) {
+  val clerk = LocalClerk.current
   val state by viewModel.state.collectAsStateWithLifecycle()
 
-  LaunchedEffect(Unit) { viewModel.refreshAvailability() }
+  LaunchedEffect(clerk.user?.id, clerk.session?.id) { viewModel.refreshAvailability() }
 
   LaunchedEffect(state.error) {
     state.error?.let {
@@ -48,7 +52,9 @@ internal fun UserProfileBiometricCredentialsSection(
 
   val promptTitle = stringResource(R.string.sign_in_with_biometrics)
   val promptSubtitle =
-    Clerk.applicationName?.let { stringResource(R.string.app_uses_biometrics_to_sign_you_in, it) }
+    clerk.environment.displayConfig.applicationName
+      .takeIf { it.isNotBlank() }
+      ?.let { stringResource(R.string.app_uses_biometrics_to_sign_you_in, it) }
       ?: stringResource(R.string.use_biometrics_to_sign_in)
 
   UserProfileBiometricCredentialsSectionImpl(
@@ -123,9 +129,11 @@ internal fun UserProfileBiometricCredentialsSectionImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileBiometricCredentialsSectionImpl(
-    isEnabled = true,
-    isLoading = false,
-    onCheckedChange = {},
-  )
+  ClerkPreview { clerk ->
+    UserProfileBiometricCredentialsSectionImpl(
+      isEnabled = true,
+      isLoading = false,
+      onCheckedChange = {},
+    )
+  }
 }

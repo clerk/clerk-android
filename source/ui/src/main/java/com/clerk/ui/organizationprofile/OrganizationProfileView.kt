@@ -22,14 +22,13 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.clerk.api.Clerk
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.ui.ClerkTheme
-import com.clerk.telemetry.TelemetryEvents
+import com.clerk.api.Organization
+import com.clerk.api.OrganizationMembership
 import com.clerk.ui.core.composition.LocalTelemetryCollector
 import com.clerk.ui.core.composition.TelemetryProvider
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.core.navigation.rememberDismissHandler
+import com.clerk.ui.core.telemetry.TelemetryEvents
 import com.clerk.ui.navigation.clerkNavigationForwardTransition
 import com.clerk.ui.navigation.clerkNavigationPopTransition
 import com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationView
@@ -45,6 +44,7 @@ import com.clerk.ui.organizationprofile.members.OrganizationMembersView
 import com.clerk.ui.organizationprofile.root.OrganizationProfileAction
 import com.clerk.ui.organizationprofile.root.OrganizationProfileRootView
 import com.clerk.ui.organizationprofile.update.OrganizationProfileUpdateProfileView
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
@@ -190,7 +190,7 @@ private fun OrganizationProfileEffects(
   val telemetry = LocalTelemetryCollector.current
   LaunchedEffect(organizationId) {
     if (hasOrganization) {
-      telemetry.record(TelemetryEvents.viewDidAppear("OrganizationProfileView"))
+      telemetry?.record(TelemetryEvents.viewDidAppear("OrganizationProfileView"))
     } else {
       onComplete()
     }

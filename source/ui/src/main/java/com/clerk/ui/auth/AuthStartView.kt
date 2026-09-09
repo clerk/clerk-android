@@ -27,12 +27,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.clerk.api.BiometricCredentialValidationResult
 import com.clerk.api.Clerk
-import com.clerk.api.biometriccredential.BiometricCredentialValidationResult
+import com.clerk.api.OAuthProvider
+import com.clerk.api.Session
 import com.clerk.api.log.ClerkLog
-import com.clerk.api.session.Session
-import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.LastUsedAuthBadgeOverlay
 import com.clerk.ui.core.button.social.ClerkSocialButton
@@ -51,6 +50,7 @@ import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.navigation.rememberDismissHandler
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import kotlinx.collections.immutable.toImmutableList
 
@@ -497,7 +497,7 @@ private fun Preview() {
   authViewHelper.setTestValues(
     enabledFirstFactorAttributes = listOf("email_address", "phone_number", "username"),
     applicationName = "Acme Co",
-    socialProviders = listOf(OAuthProvider.GOOGLE, OAuthProvider.APPLE, OAuthProvider.FACEBOOK),
+    socialProviders = listOf(OAuthProvider.Google, OAuthProvider.Apple, OAuthProvider.Facebook),
   )
 
   PreviewAuthStateProvider {

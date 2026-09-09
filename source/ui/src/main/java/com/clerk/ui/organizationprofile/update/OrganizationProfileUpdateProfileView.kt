@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
-import com.clerk.api.organizations.Organization
+import com.clerk.api.Organization
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp16

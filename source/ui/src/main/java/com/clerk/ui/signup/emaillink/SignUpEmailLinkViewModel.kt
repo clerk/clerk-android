@@ -3,11 +3,11 @@ package com.clerk.ui.signup.emaillink
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.SignUp
 import com.clerk.api.auth.AuthEvent
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signup.SignUp
 import com.clerk.api.signup.prepareVerification
 import com.clerk.ui.auth.AuthenticationViewState
 import kotlinx.coroutines.CoroutineDispatcher

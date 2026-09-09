@@ -2,17 +2,14 @@ package com.clerk.ui.userprofile.security.password
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.user.User
-import com.clerk.api.user.updatePassword
-import com.clerk.ui.core.common.guardUser
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class UserProfileChangePasswordViewModel : ViewModel() {
+internal class UserProfileChangePasswordViewModel(private val clerk: Clerk) : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
@@ -22,19 +19,16 @@ internal class UserProfileChangePasswordViewModel : ViewModel() {
     newPassword: String,
     signOutOfOtherSessions: Boolean,
   ) {
-    guardUser(userDoesNotExist = { _state.value = State.Error("User does not exist") }) { user ->
-      viewModelScope.launch {
-        user
-          .updatePassword(
-            User.UpdatePasswordParams(
-              currentPassword = currentPassword,
-              newPassword = newPassword,
-              signOutOfOtherSessions = signOutOfOtherSessions,
-            )
+    _state.value = State.Loading
+    viewModelScope.launch {
+      runUiOperation {
+          val user = clerk.user ?: throw CoreException("no_user", "User does not exist")
+          user.updatePassword(
+            UpdateUserPasswordParams(newPassword, currentPassword, signOutOfOtherSessions)
           )
-          .onSuccess { _state.value = State.Success }
-          .onFailure { error -> _state.value = State.Error(error.errorMessage) }
-      }
+        }
+        .onSuccess { _state.value = State.Success }
+        .onFailure { _state.value = State.Error(it.displayMessage) }
     }
   }
 

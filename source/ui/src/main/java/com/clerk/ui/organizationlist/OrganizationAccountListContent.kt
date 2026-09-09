@@ -27,9 +27,9 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import com.clerk.api.organizations.OrganizationSuggestion
-import com.clerk.api.organizations.UserOrganizationInvitation
-import com.clerk.api.user.User
+import com.clerk.api.OrganizationSuggestion
+import com.clerk.api.User
+import com.clerk.api.UserOrganizationInvitation
 import com.clerk.api.user.fullName
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize

@@ -8,10 +8,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import com.clerk.api.ui.ClerkColors
-import com.clerk.api.ui.ClerkDesign
-import com.clerk.api.ui.ClerkTheme
-import com.clerk.api.ui.ClerkTypographyDefaults
 
 internal object DefaultColors {
   val light =

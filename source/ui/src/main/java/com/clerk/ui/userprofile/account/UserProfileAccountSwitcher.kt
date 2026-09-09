@@ -24,17 +24,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.ClerkResult
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.session.Session
-import com.clerk.api.user.User
-import com.clerk.api.user.fullName
+import com.clerk.api.*
+import com.clerk.api.Session
+import com.clerk.api.User
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.AvatarType
 import com.clerk.ui.core.avatar.AvatarView
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp2
@@ -52,9 +51,10 @@ internal fun UserProfileAccountSwitcherSheet(
   onAddAccount: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  val clerk = LocalClerk.current
   ClerkMaterialTheme {
-    val sessions by Clerk.sessionsFlow.collectAsStateWithLifecycle()
-    val currentSession by Clerk.sessionFlow.collectAsStateWithLifecycle()
+    val sessions = clerk.sessions
+    val currentSession = clerk.session
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     var loadingActionId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -95,23 +95,26 @@ internal fun UserProfileAccountSwitcherSheet(
                 loadingActionId = session.id
                 errorMessage = null
                 scope.launch {
-                  when (
-                    val result =
-                      Clerk.auth.setActive(
-                        sessionId = session.id,
-                        organizationId = session.lastActiveOrganizationId,
+                  runUiOperation {
+                      clerk.setActive(
+                        MobileSetActiveParams(
+                          session = Field.Value(MobileSetActiveParamsSession.Case1(session.id)),
+                          organization =
+                            session.lastActiveOrganizationId?.let {
+                              Field.Value(MobileSetActiveParamsOrganization.Case1(it))
+                            } ?: Field.Null,
+                        )
                       )
-                  ) {
-                    is ClerkResult.Success -> {
+                    }
+                    .onSuccess {
                       loadingActionId = null
                       sheetState.hide()
                       onDismissRequest()
                     }
-                    is ClerkResult.Failure -> {
+                    .onFailure {
                       loadingActionId = null
-                      errorMessage = result.errorMessage
+                      errorMessage = it.displayMessage
                     }
-                  }
                 }
               },
             )
@@ -139,17 +142,16 @@ internal fun UserProfileAccountSwitcherSheet(
             loadingActionId = SIGN_OUT_ALL_ACTION_ID
             errorMessage = null
             scope.launch {
-              when (val result = Clerk.auth.signOut()) {
-                is ClerkResult.Success -> {
+              runUiOperation { clerk.signOut() }
+                .onSuccess {
                   loadingActionId = null
                   sheetState.hide()
                   onDismissRequest()
                 }
-                is ClerkResult.Failure -> {
+                .onFailure {
                   loadingActionId = null
-                  errorMessage = result.errorMessage
+                  errorMessage = it.displayMessage
                 }
-              }
             }
           },
         )
@@ -251,7 +253,7 @@ private fun AccountActionRow(
   }
 }
 
-private fun User.displayName(): String = fullName().ifBlank { username.orEmpty() }
+private fun User.displayName(): String = fullName.orEmpty().ifBlank { username.orEmpty() }
 
 private fun Session.displayIdentifier(user: User): String? {
   return publicUserData?.identifier?.takeIf { it.isNotBlank() }

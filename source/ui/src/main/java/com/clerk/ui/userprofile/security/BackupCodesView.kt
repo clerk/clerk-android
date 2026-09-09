@@ -31,13 +31,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.log.ClerkLog
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp6
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import java.io.File
@@ -165,7 +165,7 @@ private fun saveLinesToFileCompat(
       )
       .show()
   } catch (e: Exception) {
-    ClerkLog.e("Failed to save file: ${e.message}")
+    android.util.Log.e("ClerkUI", "Failed to save backup codes file.")
     Toast.makeText(
         context,
         context.getString(R.string.failed_to_save_file, e.message),
@@ -216,23 +216,25 @@ internal enum class MfaType {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    BackupCodesView(
-      onDismiss = {},
-      codes =
-        persistentListOf(
-          "jsdwz752",
-          "abxkq983",
-          "abxkq983",
-          "mpltk294",
-          "mpltk294",
-          "qwert678",
-          "dj2b5ugx",
-          "xyztj501",
-          "qwert678",
-          "4nb52vql",
-        ),
-      mfaType = MfaType.AuthenticatorApp,
-    )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      BackupCodesView(
+        onDismiss = {},
+        codes =
+          persistentListOf(
+            "jsdwz752",
+            "abxkq983",
+            "abxkq983",
+            "mpltk294",
+            "mpltk294",
+            "qwert678",
+            "dj2b5ugx",
+            "xyztj501",
+            "qwert678",
+            "4nb52vql",
+          ),
+        mfaType = MfaType.AuthenticatorApp,
+      )
+    }
   }
 }

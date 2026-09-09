@@ -23,14 +23,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.input.PasswordKeyboardOptions
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
@@ -61,7 +62,9 @@ private fun UserProfileNewPasswordViewImpl(
   onPasswordChanged: () -> Unit,
   onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: UserProfileChangePasswordViewModel = viewModel(),
+  viewModel: UserProfileChangePasswordViewModel = clerkViewModel {
+    UserProfileChangePasswordViewModel(it)
+  },
   onError: (String) -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -175,13 +178,15 @@ private fun SignOutOtherDevicesContent(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    UserProfileNewPasswordViewImpl(
-      passwordAction = PasswordAction.Add,
-      "MySecretPassword123",
-      onError = {},
-      onPasswordChanged = {},
-      onDismiss = {},
-    )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      UserProfileNewPasswordViewImpl(
+        passwordAction = PasswordAction.Add,
+        "MySecretPassword123",
+        onError = {},
+        onPasswordChanged = {},
+        onDismiss = {},
+      )
+    }
   }
 }

@@ -3,12 +3,12 @@ package com.clerk.ui.organizationprofile.create
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.Organization
+import com.clerk.api.Session
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.updateLogo
-import com.clerk.api.session.Session
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -11,12 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.passkeys.Passkey
+import com.clerk.api.Passkey
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.extensions.formattedRelativeDateTime
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -26,7 +27,7 @@ internal fun UserProfilePasskeyRow(
   passkey: Passkey,
   onClickRename: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: UserProfilePasskeyViewModel = viewModel(),
+  viewModel: UserProfilePasskeyViewModel = clerkViewModel { UserProfilePasskeyViewModel(it) },
 ) {
   ClerkMaterialTheme {
     Row(
@@ -38,19 +39,23 @@ internal fun UserProfilePasskeyRow(
     ) {
       Column(modifier = Modifier) {
         Text(
-          text = passkey.name,
+          text = passkey.name.orEmpty(),
           style = ClerkMaterialTheme.typography.bodyLarge,
           color = ClerkMaterialTheme.colors.foreground,
         )
         Spacers.Vertical.Spacer4()
         Text(
-          text = stringResource(R.string.created, formattedRelativeDateTime(passkey.createdAt)),
+          text =
+            stringResource(
+              R.string.created,
+              formattedRelativeDateTime(passkey.createdAt.toEpochMilli()),
+            ),
           style = ClerkMaterialTheme.typography.bodyMedium,
           color = ClerkMaterialTheme.colors.mutedForeground,
         )
         passkey.lastUsedAt?.let {
           Text(
-            text = stringResource(R.string.last_used, formattedRelativeDateTime(it)),
+            text = stringResource(R.string.last_used, formattedRelativeDateTime(it.toEpochMilli())),
             style = ClerkMaterialTheme.typography.bodyMedium,
             color = ClerkMaterialTheme.colors.mutedForeground,
           )
@@ -86,15 +91,10 @@ internal enum class PasskeyActions {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfilePasskeyRow(
-    onClickRename = {},
-    passkey =
-      Passkey(
-        id = "1",
-        name = "1Password",
-        createdAt = 1760649770226,
-        updatedAt = 1760649779603,
-        lastUsedAt = 1760649779603,
-      ),
-  )
+  ClerkPreview { clerk ->
+    UserProfilePasskeyRow(
+      onClickRename = {},
+      passkey = clerk.user!!.passkeys[0],
+    )
+  }
 }

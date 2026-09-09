@@ -26,18 +26,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.AvatarType
 import com.clerk.ui.core.avatar.AvatarView
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -53,10 +53,11 @@ internal fun UserProfileUpdateProfileView(modifier: Modifier = Modifier) {
 @Composable
 private fun UserProfileUpdateProfileViewImpl(
   modifier: Modifier = Modifier,
-  viewModel: UpdateProfileViewModel = viewModel(),
+  viewModel: UpdateProfileViewModel = clerkViewModel { UpdateProfileViewModel(it) },
 ) {
+  val clerk = LocalClerk.current
   val userProfileState = LocalUserProfileState.current
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
+  val user = clerk.user
   val state by viewModel.state.collectAsState()
   val errorMessage = (state as? UpdateProfileViewModel.State.Error)?.message
   LaunchedEffect(state) {
@@ -138,15 +139,18 @@ private fun ProfileFields(
   isLoading: Boolean,
   onSave: (firstName: String?, lastName: String?, username: String?) -> Unit,
 ) {
-  val user by Clerk.userFlow.collectAsStateWithLifecycle()
-  var username by rememberSaveable { mutableStateOf(user?.username) }
-  var firstName by rememberSaveable { mutableStateOf(user?.firstName) }
-  var lastName by rememberSaveable { mutableStateOf(user?.lastName) }
+  val clerk = LocalClerk.current
+  val user = clerk.user
+  var username by rememberSaveable(user?.id) { mutableStateOf(user?.username) }
+  var firstName by rememberSaveable(user?.id) { mutableStateOf(user?.firstName) }
+  var lastName by rememberSaveable(user?.id) { mutableStateOf(user?.lastName) }
   Column(
     modifier = Modifier.fillMaxWidth().padding(horizontal = dp18),
     verticalArrangement = Arrangement.spacedBy(dp24),
   ) {
-    val usernameIsEditable = Clerk.isUserNameEnabled && !Clerk.isUsernameImmutable
+    val usernameIsEditable =
+      (clerk.environment.userSettings.attributes["username"]?.enabled == true) &&
+        !(clerk.environment.userSettings.attributes["username"]?.immutable == true)
 
     if (usernameIsEditable) {
       ClerkTextField(
@@ -156,21 +160,25 @@ private fun ProfileFields(
       )
     }
 
-    if (Clerk.isFirstNameEnabled) {
+    if ((clerk.environment.userSettings.attributes["first_name"]?.enabled == true)) {
       ClerkTextField(
         value = firstName.orEmpty(),
         onValueChange = { firstName = it },
         label = stringResource(R.string.first_name),
       )
     }
-    if (Clerk.isLastNameEnabled) {
+    if ((clerk.environment.userSettings.attributes["last_name"]?.enabled == true)) {
       ClerkTextField(
         value = lastName.orEmpty(),
         onValueChange = { lastName = it },
         label = stringResource(R.string.last_name),
       )
     }
-    if (Clerk.isFirstNameEnabled || Clerk.isLastNameEnabled || usernameIsEditable) {
+    if (
+      (clerk.environment.userSettings.attributes["first_name"]?.enabled == true) ||
+        (clerk.environment.userSettings.attributes["last_name"]?.enabled == true) ||
+        usernameIsEditable
+    ) {
       ClerkButton(
         isEnabled = true,
         isLoading = isLoading,
@@ -185,7 +193,9 @@ private fun ProfileFields(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileUpdateProfileViewImpl()
+  ClerkPreview { clerk ->
+    UserProfileUpdateProfileViewImpl()
+  }
 }
 
 private const val IMAGE_COMPRESSION = 100

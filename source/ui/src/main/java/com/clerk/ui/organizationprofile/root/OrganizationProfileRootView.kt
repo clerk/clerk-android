@@ -9,8 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.Organization
+import com.clerk.api.OrganizationMembership
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1

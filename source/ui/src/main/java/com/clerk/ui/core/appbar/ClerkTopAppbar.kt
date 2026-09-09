@@ -26,11 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.Clerk
-import com.clerk.api.ui.ClerkDesign
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.OrganizationLogo
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.core.composition.LocalClerkLogoContent
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp24
@@ -39,7 +37,9 @@ import com.clerk.ui.core.dimens.dp68
 import com.clerk.ui.core.dimens.dp8
 import com.clerk.ui.core.extensions.withMediumWeight
 import com.clerk.ui.navigation.LocalClerkHostBackAction
+import com.clerk.ui.theme.ClerkDesign
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 
 @Composable
 internal fun ClerkTopAppBar(
@@ -51,7 +51,7 @@ internal fun ClerkTopAppBar(
   title: String? = null,
   backgroundColor: Color? = null, // sensible default
   clerkTheme: ClerkTheme? = null,
-  logoUrl: String? = Clerk.organizationLogoUrl,
+  logoUrl: String? = LocalClerk.currentOrNull?.environment?.displayConfig?.logoImageUrl,
   contentPadding: PaddingValues = PaddingValues(),
   trailingContent: (@Composable () -> Unit)? = null,
 ) {

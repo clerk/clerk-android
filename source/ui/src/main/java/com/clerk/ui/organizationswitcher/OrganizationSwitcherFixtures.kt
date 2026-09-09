@@ -1,8 +1,8 @@
 package com.clerk.ui.organizationswitcher
 
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.user.User
+import com.clerk.api.Organization
+import com.clerk.api.OrganizationMembership
+import com.clerk.api.User
 import kotlinx.serialization.json.JsonNull
 
 internal fun previewOrganizationMembership(

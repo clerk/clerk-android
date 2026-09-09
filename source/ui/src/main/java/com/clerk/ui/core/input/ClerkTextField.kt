@@ -35,13 +35,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 
 /**
  * A customizable text input field component following Clerk's design system.
@@ -148,39 +148,37 @@ private fun textFieldLabel(
   isFocused: Boolean,
   value: String,
   isError: Boolean,
-): (@Composable () -> Unit)? =
-  label?.let { text ->
-    {
-      val labelStyle =
-        if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
-        else MaterialTheme.typography.bodyLarge
-      val labelColor =
-        when {
-          isError -> ClerkMaterialTheme.colors.danger
-          isFocused -> ClerkMaterialTheme.colors.primary
-          else -> ClerkMaterialTheme.colors.mutedForeground
-        }
-      Text(text = text, style = labelStyle, color = labelColor)
-    }
+): (@Composable () -> Unit)? = label?.let { text ->
+  {
+    val labelStyle =
+      if (isFocused || value.isNotEmpty()) ClerkMaterialTheme.typography.bodySmall
+      else MaterialTheme.typography.bodyLarge
+    val labelColor =
+      when {
+        isError -> ClerkMaterialTheme.colors.danger
+        isFocused -> ClerkMaterialTheme.colors.primary
+        else -> ClerkMaterialTheme.colors.mutedForeground
+      }
+    Text(text = text, style = labelStyle, color = labelColor)
   }
+}
 
 @Composable
 private fun supportingTextContent(
   supportingText: String?,
   isError: Boolean,
-): (@Composable () -> Unit)? =
-  supportingText?.let { support ->
-    {
-      Text(
-        modifier = Modifier.padding(top = dp4),
-        text = support,
-        style = ClerkMaterialTheme.typography.bodySmall,
-        color =
-          if (isError) ClerkMaterialTheme.colors.danger
-          else ClerkMaterialTheme.colors.mutedForeground,
-      )
-    }
+): (@Composable () -> Unit)? = supportingText?.let { support ->
+  {
+    Text(
+      modifier = Modifier.padding(top = dp4),
+      text = support,
+      style = ClerkMaterialTheme.typography.bodySmall,
+      color =
+        if (isError) ClerkMaterialTheme.colors.danger
+        else ClerkMaterialTheme.colors.mutedForeground,
+    )
   }
+}
 
 @Composable
 private fun TrailingIcon(

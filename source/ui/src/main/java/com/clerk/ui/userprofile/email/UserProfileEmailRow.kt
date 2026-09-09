@@ -19,20 +19,20 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.emailaddress.isPrimary
-import com.clerk.api.network.model.verification.Verification
+import com.clerk.api.EmailAddress
+import com.clerk.api.VerificationStatus
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -45,7 +45,7 @@ internal fun UserProfileEmailRow(
   onVerify: (EmailAddress) -> Unit,
   modifier: Modifier = Modifier,
   isInteractive: Boolean = true,
-  viewModel: EmailViewModel? = if (isInteractive) viewModel() else null,
+  viewModel: EmailViewModel? = if (isInteractive) clerkViewModel { EmailViewModel(it) } else null,
 ) {
 
   if (isInteractive && viewModel != null) {
@@ -62,7 +62,7 @@ internal fun UserProfileEmailRow(
         .then(modifier),
     verticalAlignment = Alignment.CenterVertically,
   ) {
-    val isPrimary = emailAddress.isPrimary
+    val isPrimary = (LocalClerk.current.user?.primaryEmailAddressId == emailAddress.id)
 
     EmailWithBadge(isPrimary, emailAddress)
     Spacer(modifier = Modifier.weight(1f))
@@ -82,10 +82,12 @@ private fun EmailRowActions(
   viewModel: EmailViewModel?,
   onVerify: (EmailAddress) -> Unit,
 ) {
-  val canRemove = !Clerk.isEmailImmutable
-  val canSetAsPrimary = !Clerk.isEmailImmutable
-  val isPrimary = emailAddress.isPrimary
-  val isVerified = emailAddress.verification?.status == Verification.Status.VERIFIED
+  val canRemove =
+    (LocalClerk.current.environment.userSettings.attributes["email_address"]?.immutable != true)
+  val canSetAsPrimary =
+    (LocalClerk.current.environment.userSettings.attributes["email_address"]?.immutable != true)
+  val isPrimary = (LocalClerk.current.user?.primaryEmailAddressId == emailAddress.id)
+  val isVerified = emailAddress.verification.status == VerificationStatus.Verified
   val shouldShowMenu = canRemove || (canSetAsPrimary && !isPrimary && isVerified) || !isVerified
 
   if (LocalInspectionMode.current || !shouldShowMenu) return
@@ -144,11 +146,11 @@ private fun EmailWithBadge(isPrimary: Boolean, emailAddress: EmailAddress) {
         Badge(text = stringResource(R.string.primary), badgeType = ClerkBadgeType.Secondary)
         Spacers.Vertical.Spacer4()
       }
-      if (emailAddress.verification?.status != Verification.Status.VERIFIED) {
+      if (emailAddress.verification.status != VerificationStatus.Verified) {
         Badge(text = stringResource(R.string.unverified), badgeType = ClerkBadgeType.Warning)
         Spacers.Vertical.Spacer4()
       }
-      if (emailAddress.linkedTo?.isNotEmpty() == true) {
+      if (emailAddress.linkedTo.isNotEmpty()) {
         Badge(text = stringResource(R.string.linked), badgeType = ClerkBadgeType.Secondary)
         Spacers.Vertical.Spacer4()
       }
@@ -171,42 +173,28 @@ internal enum class EmailAction {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    Column(
-      modifier =
-        Modifier.background(color = ClerkMaterialTheme.colors.muted).padding(vertical = dp24)
-    ) {
-      UserProfileEmailRow(
-        onError = {},
-        onVerify = {},
-        emailAddress =
-          EmailAddress(
-            id = "123",
-            emailAddress = "user@example.com",
-            verification = Verification(status = Verification.Status.VERIFIED),
-          ),
-      )
-      UserProfileEmailRow(
-        onError = {},
-        onVerify = {},
-        emailAddress =
-          EmailAddress(
-            id = "123",
-            emailAddress = "user@example.com",
-            verification = Verification(status = Verification.Status.UNVERIFIED),
-          ),
-      )
-      UserProfileEmailRow(
-        onError = {},
-        onVerify = {},
-        emailAddress =
-          EmailAddress(
-            id = "123",
-            emailAddress = "user@example.com",
-            linkedTo = listOf(EmailAddress.LinkedEntity(id = "1", type = "email")),
-            verification = Verification(status = Verification.Status.VERIFIED),
-          ),
-      )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      Column(
+        modifier =
+          Modifier.background(color = ClerkMaterialTheme.colors.muted).padding(vertical = dp24)
+      ) {
+        UserProfileEmailRow(
+          onError = {},
+          onVerify = {},
+          emailAddress = clerk.user!!.emailAddresses[0],
+        )
+        UserProfileEmailRow(
+          onError = {},
+          onVerify = {},
+          emailAddress = clerk.user!!.emailAddresses[1],
+        )
+        UserProfileEmailRow(
+          onError = {},
+          onVerify = {},
+          emailAddress = clerk.user!!.emailAddresses[0],
+        )
+      }
     }
   }
 }

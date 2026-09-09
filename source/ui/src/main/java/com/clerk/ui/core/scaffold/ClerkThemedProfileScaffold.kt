@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.appbar.ClerkTopAppBar
 import com.clerk.ui.core.composition.LocalAuthState
 import com.clerk.ui.core.composition.LocalClerkLogoContent
@@ -26,6 +25,7 @@ import com.clerk.ui.core.error.ClerkErrorSnackbar
 import com.clerk.ui.core.footer.SecuredByClerkView
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 
 @Composable
 internal fun ClerkThemedProfileScaffold(

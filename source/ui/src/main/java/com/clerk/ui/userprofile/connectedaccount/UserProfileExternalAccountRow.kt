@@ -26,25 +26,23 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import com.clerk.api.externalaccount.ExternalAccount
-import com.clerk.api.externalaccount.oauthProviderType
-import com.clerk.api.network.model.error.Error
-import com.clerk.api.network.model.verification.Verification
-import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.logoUrl
-import com.clerk.api.sso.providerName
+import com.clerk.api.ExternalAccount
+import com.clerk.api.OAuthProvider
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp2
 import com.clerk.ui.core.dimens.dp20
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp48
 import com.clerk.ui.core.dimens.dp8
+import com.clerk.ui.core.extensions.logoUrl
+import com.clerk.ui.core.extensions.providerName
 import com.clerk.ui.core.extensions.withDarkVariant
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -55,7 +53,8 @@ internal fun UserProfileExternalAccountRow(
   externalAccount: ExternalAccount,
   modifier: Modifier = Modifier,
   isInteractive: Boolean = true,
-  viewModel: AddConnectedAccountViewModel? = if (isInteractive) viewModel() else null,
+  viewModel: AddConnectedAccountViewModel? =
+    if (isInteractive) clerkViewModel { AddConnectedAccountViewModel(it) } else null,
   loadRemoteLogo: Boolean = true,
   onError: (String) -> Unit,
 ) {
@@ -103,7 +102,7 @@ internal fun UserProfileExternalAccountRow(
           onClick = {
             when (it) {
               ExternalAccountAction.Reconnect ->
-                viewModel.connectExternalAccount(externalAccount.oauthProviderType)
+                viewModel.connectExternalAccount(externalAccount.provider)
               ExternalAccountAction.Remove -> viewModel.removeConnectedAccount(externalAccount)
             }
           },
@@ -118,8 +117,7 @@ internal fun UserProfileExternalAccountRow(
 @Composable
 private fun EmailWithAccountBadge(externalAccount: ExternalAccount, loadRemoteLogo: Boolean) {
   val fallbackPainter =
-    if (externalAccount.oauthProviderType == OAuthProvider.GOOGLE)
-      painterResource(R.drawable.ic_google)
+    if (externalAccount.provider == OAuthProvider.Google) painterResource(R.drawable.ic_google)
     else painterResource(R.drawable.ic_globe)
   Column {
     Row(horizontalArrangement = Arrangement.spacedBy(dp8)) {
@@ -129,7 +127,7 @@ private fun EmailWithAccountBadge(externalAccount: ExternalAccount, loadRemoteLo
         fallbackPainter = fallbackPainter,
       )
       Text(
-        text = externalAccount.oauthProviderType.providerName,
+        text = externalAccount.provider.providerName,
         color = ClerkMaterialTheme.colors.mutedForeground,
         style = ClerkMaterialTheme.typography.bodyMedium,
       )
@@ -191,7 +189,7 @@ private fun ExternalAccountLogo(
 
 @Composable
 private fun externalAccountLogoModel(externalAccount: ExternalAccount): String? =
-  externalAccount.oauthProviderType.logoUrl?.withDarkVariant(isSystemInDarkTheme())
+  externalAccount.provider.logoUrl?.withDarkVariant(isSystemInDarkTheme())
 
 internal enum class ExternalAccountAction {
   Reconnect,
@@ -201,50 +199,25 @@ internal enum class ExternalAccountAction {
 @PreviewLightDark
 @Composable
 private fun PreviewWithError() {
-  ClerkMaterialTheme {
-    UserProfileExternalAccountRow(
-      onError = {},
-      externalAccount =
-        ExternalAccount(
-          id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
-          identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
-          provider = "oauth_google",
-          providerUserId = "102662613248529322762",
-          emailAddress = "sam@clerk.dev",
-          approvedScopes =
-            "email https://www.googleapis.com/auth/userinfo.email" +
-              " https://www.googleapis.com/auth/userinfo.profile openid profile",
-          createdAt = 1L,
-          verification =
-            Verification(
-              error =
-                Error(
-                  "This email address associated with this OAuth account is already claimed by another user."
-                )
-            ),
-        ),
-    )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      UserProfileExternalAccountRow(
+        onError = {},
+        externalAccount = clerk.user!!.externalAccounts[0],
+      )
+    }
   }
 }
 
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    UserProfileExternalAccountRow(
-      onError = {},
-      externalAccount =
-        ExternalAccount(
-          id = "eac_34o5pCBEhohJtr1Ni14YiX8aQ0K",
-          identificationId = "idn_34o5pAvdtMtjAAdeFBfTkRfs77e",
-          provider = "oauth_google",
-          providerUserId = "102662613248529322762",
-          emailAddress = "sam@clerk.dev",
-          approvedScopes =
-            "email https://www.googleapis.com/auth/userinfo.email" +
-              " https://www.googleapis.com/auth/userinfo.profile openid profile",
-          createdAt = 1L,
-        ),
-    )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      UserProfileExternalAccountRow(
+        onError = {},
+        externalAccount = clerk.user!!.externalAccounts[0],
+      )
+    }
   }
 }

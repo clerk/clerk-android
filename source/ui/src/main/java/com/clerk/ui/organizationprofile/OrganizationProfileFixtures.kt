@@ -1,7 +1,7 @@
 package com.clerk.ui.organizationprofile
 
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationMembership
+import com.clerk.api.Organization
+import com.clerk.api.OrganizationMembership
 import com.clerk.api.organizations.OrganizationSystemPermission
 import kotlinx.serialization.json.JsonNull
 

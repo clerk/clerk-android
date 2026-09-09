@@ -12,10 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 
 /**
  * A composable that displays a horizontal divider with text in the middle.

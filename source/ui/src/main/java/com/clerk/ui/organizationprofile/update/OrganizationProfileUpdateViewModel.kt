@@ -2,11 +2,11 @@ package com.clerk.ui.organizationprofile.update
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Organization
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.flatMap
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.organizations.Organization
 import com.clerk.api.organizations.deleteLogo
 import com.clerk.api.organizations.reload
 import com.clerk.api.organizations.update

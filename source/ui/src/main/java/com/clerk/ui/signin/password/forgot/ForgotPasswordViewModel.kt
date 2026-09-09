@@ -3,13 +3,13 @@ package com.clerk.ui.signin.password.forgot
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.OAuthProvider
+import com.clerk.api.SignIn
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.resetPasswordFactor
-import com.clerk.api.signin.SignIn
-import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
 import com.clerk.ui.auth.isSSOCancellation
 import com.clerk.ui.signin.authenticateWithRedirect

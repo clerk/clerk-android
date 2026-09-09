@@ -5,12 +5,12 @@ package com.clerk.ui.organizationprofile.domains
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.Organization
+import com.clerk.api.OrganizationDomain
+import com.clerk.api.OrganizationMembership
 import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.organizations.Organization
-import com.clerk.api.organizations.OrganizationDomain
-import com.clerk.api.organizations.OrganizationMembership
 import com.clerk.api.organizations.createDomain
 import com.clerk.api.organizations.delete
 import com.clerk.api.organizations.getDomains

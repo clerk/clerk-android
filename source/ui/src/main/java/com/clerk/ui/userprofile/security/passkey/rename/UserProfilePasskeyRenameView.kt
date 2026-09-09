@@ -13,10 +13,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -41,7 +42,9 @@ private fun UserProfilePasskeyRenameViewImpl(
   passkeyId: String,
   passkeyName: String,
   modifier: Modifier = Modifier,
-  viewModel: UserProfilePasskeyRenameViewModel = viewModel(),
+  viewModel: UserProfilePasskeyRenameViewModel = clerkViewModel {
+    UserProfilePasskeyRenameViewModel(it)
+  },
 ) {
   val userProfileState = LocalUserProfileState.current
   var passkeyNameInput by rememberSaveable(passkeyId) { mutableStateOf(passkeyName) }
@@ -104,7 +107,9 @@ internal fun updatedPasskeyNameOrNull(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    UserProfilePasskeyRenameView(passkeyId = "123", passkeyName = "One password")
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      UserProfilePasskeyRenameView(passkeyId = "123", passkeyName = "One password")
+    }
   }
 }

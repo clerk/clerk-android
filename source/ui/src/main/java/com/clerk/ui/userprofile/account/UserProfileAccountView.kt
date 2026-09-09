@@ -13,10 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
-import com.clerk.api.user.fullName
 import com.clerk.ui.R
 import com.clerk.ui.core.avatar.AvatarSize
 import com.clerk.ui.core.avatar.AvatarType
@@ -24,9 +20,12 @@ import com.clerk.ui.core.avatar.AvatarView
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp0
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.scaffold.ClerkThemedProfileScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
@@ -49,14 +48,15 @@ internal fun UserProfileAccountView(
   customRows: ImmutableList<UserProfileCustomRow> = persistentListOf(),
   onCustomRowClick: (routeKey: String) -> Unit = {},
 ) {
-  val sessions = Clerk.sessionsFlow.collectAsStateWithLifecycle().value
-  val multiSessionModeIsEnabled by Clerk.multiSessionModeIsEnabledFlow.collectAsStateWithLifecycle()
+  val clerk = LocalClerk.current
+  val sessions = clerk.sessions
+  val multiSessionModeIsEnabled = !clerk.environment.authConfig.singleSessionMode
 
   UserProfileAccountViewImpl(
     modifier = modifier,
-    imageUrl = Clerk.user?.imageUrl,
-    userFullName = Clerk.user?.fullName(),
-    username = Clerk.user?.username,
+    imageUrl = clerk.user?.imageUrl,
+    userFullName = clerk.user?.fullName,
+    username = clerk.user?.username,
     sessionCount = sessions.size,
     multiSessionModeIsEnabled = multiSessionModeIsEnabled,
     onClick = onClick,
@@ -81,7 +81,7 @@ private fun UserProfileAccountViewImpl(
   modifier: Modifier = Modifier,
   isDismissible: Boolean = true,
   imageUrl: String? = null,
-  viewModel: UserProfileAccountViewModel = viewModel(),
+  viewModel: UserProfileAccountViewModel = clerkViewModel { UserProfileAccountViewModel(it) },
   customRows: ImmutableList<UserProfileCustomRow> = persistentListOf(),
   onCustomRowClick: (routeKey: String) -> Unit = {},
 ) {
@@ -324,15 +324,17 @@ internal fun accountBuiltInRows(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    UserProfileAccountViewImpl(
-      userFullName = "Cameron Walker",
-      username = "cameronw",
-      sessionCount = 2,
-      multiSessionModeIsEnabled = true,
-      onClick = {},
-      onBackPressed = {},
-      onEditAvatarClick = {},
-    )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      UserProfileAccountViewImpl(
+        userFullName = "Cameron Walker",
+        username = "cameronw",
+        sessionCount = 2,
+        multiSessionModeIsEnabled = true,
+        onClick = {},
+        onBackPressed = {},
+        onEditAvatarClick = {},
+      )
+    }
   }
 }

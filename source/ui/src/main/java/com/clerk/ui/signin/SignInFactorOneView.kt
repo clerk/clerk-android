@@ -6,7 +6,6 @@ import com.clerk.api.Clerk
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.network.model.factor.isResetFactor
 import com.clerk.api.signin.startingFirstFactor
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.auth.PreviewAuthStateProvider
 import com.clerk.ui.core.common.StrategyKeys
 import com.clerk.ui.signin.code.SignInFactorCodeView
@@ -15,6 +14,7 @@ import com.clerk.ui.signin.help.SignInGetHelpView
 import com.clerk.ui.signin.passkey.SignInFactorOnePasskeyView
 import com.clerk.ui.signin.password.set.SignInFactorOnePasswordView
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 
 @Composable

@@ -5,8 +5,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.phonenumber.PhoneNumber
+import com.clerk.api.EmailAddress
+import com.clerk.api.PhoneNumber
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.connectedaccount.UserProfileAddConnectedAccountView
 import com.clerk.ui.userprofile.email.UserProfileAddEmailViewBottomSheetContent
@@ -30,11 +30,13 @@ internal fun UserProfileDetailBottomSheet(
   val scope = rememberCoroutineScope()
 
   fun programmaticDismiss() {
-    scope.launch {
-      sheetState.hide()
-    }.invokeOnCompletion {
-      onDismissRequest()
-    }
+    scope
+      .launch {
+        sheetState.hide()
+      }
+      .invokeOnCompletion {
+        onDismissRequest()
+      }
   }
 
   ModalBottomSheet(

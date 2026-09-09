@@ -2,65 +2,48 @@ package com.clerk.ui.userprofile.phone
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.phonenumber.PhoneNumber
-import com.clerk.api.phonenumber.delete
-import com.clerk.api.user.User
-import com.clerk.api.user.createPhoneNumber
-import com.clerk.api.user.update
-import com.clerk.ui.core.common.guardUser
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class UserProfileAddPhoneViewModel : ViewModel() {
+internal class UserProfileAddPhoneViewModel(private val clerk: Clerk) : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
 
   fun addPhoneNumber(phoneNumber: String) {
     _state.value = State.Loading
-    guardUser({
-      ClerkLog.e("UserProfileAddPhoneViewModel - User is null when adding phone number")
-      _state.value = State.Error("User does not exist")
-    }) { user ->
-      viewModelScope.launch {
-        user
-          .createPhoneNumber(phoneNumber)
-          .onSuccess { _state.value = State.Success(it) }
-          .onFailure { error ->
-            ClerkLog.e(
-              "UserProfileAddPhoneViewModel - Failed to add phone number: ${error.errorMessage}"
-            )
-            _state.value = State.Error(error.errorMessage)
-          }
-      }
+    viewModelScope.launch {
+      runUiOperation {
+          val user = clerk.user ?: throw CoreException("no_user", "User does not exist")
+          user.createPhoneNumber(CreatePhoneNumberParams(phoneNumber))
+        }
+        .onSuccess { _state.value = State.Success(it) }
+        .onFailure { _state.value = State.Error(it.displayMessage) }
     }
   }
 
   fun setAsPrimary(phoneNumber: PhoneNumber) {
-    guardUser({ _state.value = State.Error("User does not exist") }) { user ->
-      viewModelScope.launch {
-        user
-          .update(User.UpdateParams(primaryPhoneNumberId = phoneNumber.id))
-          .onSuccess { _state.value = State.SetPhoneAsPrimarySuccess }
-          .onFailure {
-            ClerkLog.e("Failed to update primary phone ")
-            _state.value = State.Error(it.errorMessage)
-          }
-      }
+    _state.value = State.Loading
+    viewModelScope.launch {
+      runUiOperation {
+          val user = clerk.user ?: throw CoreException("no_user", "User does not exist")
+          user.update(UpdateUserParams(primaryPhoneNumberId = Field.Value(phoneNumber.id)))
+        }
+        .onSuccess { _state.value = State.SetPhoneAsPrimarySuccess }
+        .onFailure { _state.value = State.Error(it.displayMessage) }
     }
   }
 
   fun deletePhoneNumber(phoneNumber: PhoneNumber) {
+    _state.value = State.Loading
     viewModelScope.launch {
-      phoneNumber
-        .delete()
+      runUiOperation { phoneNumber.destroy() }
         .onSuccess { _state.value = State.DeletedPhoneNumber }
-        .onFailure { _state.value = State.Error(it.errorMessage) }
+        .onFailure { _state.value = State.Error(it.displayMessage) }
     }
   }
 

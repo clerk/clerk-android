@@ -21,23 +21,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.network.model.totp.TOTPResource
-import com.clerk.api.ui.ClerkTheme
+import com.clerk.api.TOTP
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp12
 import com.clerk.ui.core.dimens.dp18
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import com.clerk.ui.userprofile.verify.Mode
+import java.time.Instant
 import kotlinx.coroutines.launch
 
 /**
@@ -64,7 +66,7 @@ internal fun UserProfileMfaAddTotpView(
 internal fun UserProfileMfaAddTotpViewImpl(
   onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: UserProfileMfaTotpViewModel = viewModel(),
+  viewModel: UserProfileMfaTotpViewModel = clerkViewModel { UserProfileMfaTotpViewModel(it) },
   previewState: UserProfileMfaTotpViewModel.State? = null,
   onVerify: (Mode) -> Unit,
 ) {
@@ -91,7 +93,7 @@ internal fun UserProfileMfaAddTotpViewImpl(
       is UserProfileMfaTotpViewModel.State.Error ->
         UserProfileMfaAddTotpError(
           message = state.message ?: stringResource(R.string.something_went_wrong_please_try_again),
-          onRetry = viewModel::createTOTPResource,
+          onRetry = viewModel::createTOTP,
         )
       is UserProfileMfaTotpViewModel.State.Success ->
         UserProfileMfaAddTotpContent(state = state, onVerify = onVerify)
@@ -222,24 +224,26 @@ private fun TextDisplayBox(text: String, modifier: Modifier = Modifier) {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  val fakeResource =
-    TOTPResource(
-      id = "totp_123",
-      secret = "JBSWY3DPEHPK3PXP",
-      uri =
-        "otpauth://totp/Example:User?secret=JBSWY3DPEHPK3PXP&issuer=Example&algorithm=SHA1&digits=6&period=30",
-      verified = false,
-      backupCodes = emptyList(),
-      createdAt = 1_700_000_000_000,
-      updatedAt = 1_700_000_000_000,
-    )
-  PreviewUserProfileStateProvider {
-    ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
-      UserProfileMfaAddTotpViewImpl(
-        previewState = UserProfileMfaTotpViewModel.State.Success(totpResource = fakeResource),
-        onDismiss = {},
-        onVerify = {},
+  ClerkPreview { clerk ->
+    val fakeResource =
+      TOTP(
+        id = "totp_123",
+        secret = "JBSWY3DPEHPK3PXP",
+        uri =
+          "otpauth://totp/Example:User?secret=JBSWY3DPEHPK3PXP&issuer=Example&algorithm=SHA1&digits=6&period=30",
+        verified = false,
+        backupCodes = emptyList(),
+        createdAt = Instant.ofEpochMilli(1_700_000_000_000),
+        updatedAt = Instant.ofEpochMilli(1_700_000_000_000),
       )
+    PreviewUserProfileStateProvider {
+      ClerkMaterialTheme(clerkTheme = ClerkTheme(colors = DefaultColors.clerk)) {
+        UserProfileMfaAddTotpViewImpl(
+          previewState = UserProfileMfaTotpViewModel.State.Success(totpResource = fakeResource),
+          onDismiss = {},
+          onVerify = {},
+        )
+      }
     }
   }
 }

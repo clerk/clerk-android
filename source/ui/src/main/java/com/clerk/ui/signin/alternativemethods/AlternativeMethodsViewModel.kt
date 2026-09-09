@@ -3,11 +3,11 @@ package com.clerk.ui.signin.alternativemethods
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
+import com.clerk.api.OAuthProvider
+import com.clerk.api.SignIn
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.SignIn
-import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.ResultType
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.isSSOCancellation

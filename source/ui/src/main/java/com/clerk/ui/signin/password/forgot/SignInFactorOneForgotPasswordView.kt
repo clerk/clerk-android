@@ -17,11 +17,10 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
+import com.clerk.api.OAuthProvider
 import com.clerk.api.network.model.factor.Factor
 import com.clerk.api.signin.alternativeFirstFactors
-import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.toOAuthProvidersList
-import com.clerk.api.ui.ClerkTheme
 import com.clerk.ui.R
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.PreviewAuthStateProvider
@@ -37,6 +36,7 @@ import com.clerk.ui.core.divider.TextDivider
 import com.clerk.ui.core.scaffold.ClerkThemedAuthScaffold
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
+import com.clerk.ui.theme.ClerkTheme
 import com.clerk.ui.theme.ClerkThemeOverrideProvider
 import com.clerk.ui.theme.DefaultColors
 import com.clerk.ui.util.TextIconHelper
@@ -189,7 +189,7 @@ private fun Preview() {
     ClerkThemeOverrideProvider(ClerkTheme(colors = DefaultColors.clerk)) {
       SignInFactorOneForgotPasswordViewImpl(
         socialProviders =
-          persistentListOf(OAuthProvider.GOOGLE, OAuthProvider.FACEBOOK, OAuthProvider.APPLE),
+          persistentListOf(OAuthProvider.Google, OAuthProvider.Facebook, OAuthProvider.Apple),
         alternativeFactors =
           persistentListOf(
             Factor(StrategyKeys.PASSWORD),

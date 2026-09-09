@@ -2,9 +2,9 @@ package com.clerk.ui.signin.code
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.SignIn
+import com.clerk.api.Verification
 import com.clerk.api.network.model.factor.Factor
-import com.clerk.api.network.model.verification.Verification
-import com.clerk.api.signin.SignIn
 import com.clerk.ui.auth.AuthenticationViewState
 import com.clerk.ui.auth.VerificationUiState
 import com.clerk.ui.auth.guardSignIn

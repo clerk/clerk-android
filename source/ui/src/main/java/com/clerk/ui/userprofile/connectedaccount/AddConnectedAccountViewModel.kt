@@ -2,46 +2,42 @@ package com.clerk.ui.userprofile.connectedaccount
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.clerk.api.externalaccount.ExternalAccount
-import com.clerk.api.externalaccount.delete
-import com.clerk.api.log.ClerkLog
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.user.User
-import com.clerk.api.user.createExternalAccount
-import com.clerk.ui.core.common.guardUser
+import com.clerk.api.*
+import com.clerk.ui.core.common.displayMessage
+import com.clerk.ui.core.common.runUiOperation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonPrimitive
 
-internal class AddConnectedAccountViewModel : ViewModel() {
+internal class AddConnectedAccountViewModel(private val clerk: Clerk) : ViewModel() {
 
   private val _state = MutableStateFlow<State>(State.Idle)
   val state = _state.asStateFlow()
 
   fun connectExternalAccount(provider: OAuthProvider) {
     _state.value = State.Loading
-    guardUser(userDoesNotExist = { _state.value = State.Error("User does not exist") }) { user ->
-      viewModelScope.launch {
-        user
-          .createExternalAccount(User.CreateExternalAccountParams(provider = provider))
-          .onSuccess { _state.value = State.Success }
-          .onFailure { _state.value = State.Error(it.errorMessage) }
-      }
+    viewModelScope.launch {
+      runUiOperation {
+          val user = clerk.user ?: throw CoreException("no_user", "User does not exist")
+          val strategy =
+            CreateExternalAccountParamsStrategy.fromJson(
+              JsonPrimitive("oauth_${provider.rawValue}"),
+              clerk.context.requireRuntime(),
+            )
+          user.createExternalAccount(CreateExternalAccountParams(strategy = strategy))
+        }
+        .onSuccess { _state.value = State.Success }
+        .onFailure { _state.value = State.Error(it.displayMessage) }
     }
   }
 
   fun removeConnectedAccount(externalAccount: ExternalAccount) {
+    _state.value = State.Loading
     viewModelScope.launch {
-      externalAccount
-        .delete()
+      runUiOperation { externalAccount.destroy() }
         .onSuccess { _state.value = State.ConnectedAccountRemoved }
-        .onFailure {
-          ClerkLog.e("Failed to remove connected account: ${it.errorMessage}")
-          _state.value = State.Error(it.errorMessage)
-        }
+        .onFailure { _state.value = State.Error(it.displayMessage) }
     }
   }
 

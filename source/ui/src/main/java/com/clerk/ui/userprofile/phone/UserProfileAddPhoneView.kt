@@ -18,12 +18,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkPhoneNumberField
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
 import com.clerk.ui.userprofile.verify.Mode
@@ -41,7 +42,7 @@ internal fun UserProfileAddPhoneView(
 private fun UserProfileAddPhoneViewImpl(
   onVerify: (Mode.Phone) -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: UserProfileAddPhoneViewModel = viewModel(),
+  viewModel: UserProfileAddPhoneViewModel = clerkViewModel { UserProfileAddPhoneViewModel(it) },
   onDismiss: () -> Unit,
 ) {
   var phoneNumber by rememberSaveable { mutableStateOf("") }
@@ -93,10 +94,11 @@ private fun UserProfileAddPhoneViewImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-
-  ClerkMaterialTheme {
-    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
-      UserProfileAddPhoneViewImpl(onVerify = {}, onDismiss = {})
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
+        UserProfileAddPhoneViewImpl(onVerify = {}, onDismiss = {})
+      }
     }
   }
 }

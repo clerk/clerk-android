@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.clerk.api.organizations.OrganizationSuggestion
+import com.clerk.api.OrganizationSuggestion
 import com.clerk.api.organizations.PublicOrganizationData
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.organizationlist.OrganizationAccountListActions

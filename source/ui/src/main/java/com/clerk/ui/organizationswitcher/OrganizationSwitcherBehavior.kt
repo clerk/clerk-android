@@ -1,8 +1,8 @@
 package com.clerk.ui.organizationswitcher
 
-import com.clerk.api.organizations.OrganizationMembership
-import com.clerk.api.session.Session
-import com.clerk.api.user.User
+import com.clerk.api.OrganizationMembership
+import com.clerk.api.Session
+import com.clerk.api.User
 
 internal fun activeOrganizationMembership(
   user: User?,

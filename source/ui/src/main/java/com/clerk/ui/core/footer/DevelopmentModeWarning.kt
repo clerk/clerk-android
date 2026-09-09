@@ -32,9 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.clerk.api.Clerk
 import com.clerk.ui.R
+import com.clerk.ui.core.composition.LocalClerk
 import com.clerk.ui.theme.ClerkMaterialTheme
 
 @Composable
@@ -205,7 +204,7 @@ private fun cellRandom(cellX: Int, cellY: Int): Double {
 
 @Composable
 private fun DevelopmentModeBranding(modifier: Modifier = Modifier) {
-  if (!Clerk.isBranded) return
+  if (!LocalClerk.current.environment.displayConfig.branded) return
 
   Row(
     modifier = modifier,
@@ -228,8 +227,8 @@ private fun DevelopmentModeBranding(modifier: Modifier = Modifier) {
 
 @Composable
 private fun shouldShowDevelopmentModeWarning(): Boolean {
-  val isInitialized by Clerk.isInitialized.collectAsStateWithLifecycle()
-  return isInitialized && Clerk.shouldShowDevelopmentModeWarning
+  val isInitialized = LocalClerk.current.loaded
+  return isInitialized && LocalClerk.current.environment.displayConfig.showDevModeWarning
 }
 
 @Composable

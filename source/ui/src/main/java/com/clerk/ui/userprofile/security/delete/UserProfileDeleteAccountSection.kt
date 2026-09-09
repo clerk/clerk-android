@@ -14,6 +14,7 @@ import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 
@@ -49,5 +50,7 @@ internal fun UserProfileDeleteAccountSection(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileDeleteAccountSection(onDeleteAccount = {})
+  ClerkPreview { clerk ->
+    UserProfileDeleteAccountSection(onDeleteAccount = {})
+  }
 }

@@ -14,15 +14,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.clerk.api.Clerk
-import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.user.unconnectedProviders
+import com.clerk.api.OAuthProvider
 import com.clerk.ui.R
 import com.clerk.ui.core.button.social.ClerkSocialRow
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
+import com.clerk.ui.userprofile.unconnectedProviders
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -32,7 +33,8 @@ internal fun UserProfileAddConnectedAccountView(
   modifier: Modifier = Modifier,
   onBackPressed: () -> Unit,
 ) {
-  val unconnectedProviders = Clerk.user?.unconnectedProviders.orEmpty()
+  val clerk = LocalClerk.current
+  val unconnectedProviders = clerk.unconnectedProviders
   UserProfileAddConnectedAccountViewImpl(
     modifier = modifier,
     unconnectedProviders = unconnectedProviders.toImmutableList(),
@@ -44,7 +46,7 @@ internal fun UserProfileAddConnectedAccountView(
 private fun UserProfileAddConnectedAccountViewImpl(
   unconnectedProviders: ImmutableList<OAuthProvider>,
   modifier: Modifier = Modifier,
-  viewModel: AddConnectedAccountViewModel = viewModel(),
+  viewModel: AddConnectedAccountViewModel = clerkViewModel { AddConnectedAccountViewModel(it) },
   onClosePressed: () -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -91,20 +93,22 @@ internal fun handleAddConnectedAccountState(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
-      val unconnectedProviders =
-        persistentListOf(
-          OAuthProvider.GOOGLE,
-          OAuthProvider.FACEBOOK,
-          OAuthProvider.APPLE,
-          OAuthProvider.BOX,
-          OAuthProvider.GITHUB,
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
+        val unconnectedProviders =
+          persistentListOf(
+            OAuthProvider.Google,
+            OAuthProvider.Facebook,
+            OAuthProvider.Apple,
+            OAuthProvider.Box,
+            OAuthProvider.Github,
+          )
+        UserProfileAddConnectedAccountViewImpl(
+          unconnectedProviders = unconnectedProviders,
+          onClosePressed = {},
         )
-      UserProfileAddConnectedAccountViewImpl(
-        unconnectedProviders = unconnectedProviders,
-        onClosePressed = {},
-      )
+      }
     }
   }
 }

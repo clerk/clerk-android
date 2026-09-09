@@ -19,14 +19,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import com.clerk.api.session.Session
-import com.clerk.api.session.SessionActivity
-import com.clerk.api.session.isThisDevice
+import com.clerk.api.SessionActivity
+import com.clerk.api.SessionWithActivities
 import com.clerk.ui.R
 import com.clerk.ui.core.badge.Badge
 import com.clerk.ui.core.badge.ClerkBadgeType
+import com.clerk.ui.core.composition.LocalClerk
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.dimens.dp4
@@ -37,13 +37,15 @@ import com.clerk.ui.core.extensions.ipAndLocationFormatted
 import com.clerk.ui.core.extensions.lastActiveRelativeTime
 import com.clerk.ui.core.menu.DropDownItem
 import com.clerk.ui.core.menu.ItemMoreMenu
+import com.clerk.ui.core.preview.ClerkPreview
+import com.clerk.ui.core.preview.previewResource
 import com.clerk.ui.theme.ClerkMaterialTheme
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun UserProfileDeviceRow(
   onError: (String?) -> Unit,
-  session: Session,
+  session: SessionWithActivities,
   modifier: Modifier = Modifier,
 ) {
   UserProfileDeviceRowImpl(session = session, modifier = modifier, onError = onError)
@@ -52,10 +54,10 @@ internal fun UserProfileDeviceRow(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserProfileDeviceRowImpl(
-  session: Session?,
+  session: SessionWithActivities?,
   modifier: Modifier = Modifier,
   forceIsThisDevice: Boolean = false,
-  viewModel: DeviceViewModel = viewModel(),
+  viewModel: DeviceViewModel = clerkViewModel { DeviceViewModel(it) },
   onError: (String?) -> Unit,
 ) {
   val state by viewModel.state.collectAsStateWithLifecycle()
@@ -105,7 +107,7 @@ private enum class DeviceAction {
 @Composable
 private fun DeviceInfoWithIcon(
   activity: SessionActivity,
-  session: Session,
+  session: SessionWithActivities,
   forceIsThisDevice: Boolean,
 ) {
   Row(
@@ -128,7 +130,7 @@ private fun DeviceInfoWithIcon(
           color = ClerkMaterialTheme.colors.foreground,
           style = ClerkMaterialTheme.typography.bodyLarge,
         )
-        if (session.isThisDevice || forceIsThisDevice) {
+        if ((session.id == LocalClerk.current.session?.id) || forceIsThisDevice) {
           Badge(text = stringResource(R.string.this_device), badgeType = ClerkBadgeType.Secondary)
         }
       }
@@ -154,26 +156,11 @@ private fun DeviceInfoWithIcon(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileDeviceRowImpl(
-    forceIsThisDevice = true,
-    onError = {},
-    session =
-      Session(
-        id = "123456",
-        expireAt = 1759976778801,
-        lastActiveAt = 1759976778801,
-        createdAt = 1759976778801,
-        updatedAt = 1759976778801,
-        latestActivity =
-          SessionActivity(
-            id = "activity_123",
-            ipAddress = "196.172.122.88",
-            isMobile = true,
-            browserName = "Chrome",
-            browserVersion = "139.0.0.0",
-            city = "San Francisco",
-            country = "CA",
-          ),
-      ),
-  )
+  ClerkPreview { clerk ->
+    UserProfileDeviceRowImpl(
+      forceIsThisDevice = true,
+      onError = {},
+      session = (previewResource("SessionWithActivities") as SessionWithActivities),
+    )
+  }
 }

@@ -12,18 +12,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.clerk.api.Clerk
-import com.clerk.api.emailaddress.EmailAddress
-import com.clerk.api.network.model.verification.Verification
+import com.clerk.api.EmailAddress
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.UserProfileButtonRow
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 internal fun LazyListScope.userProfileEmailSection(
+  clerk: Clerk,
   emailAddresses: ImmutableList<EmailAddress>,
   onError: (String) -> Unit,
   onAddEmailClick: () -> Unit,
@@ -51,7 +52,7 @@ internal fun LazyListScope.userProfileEmailSection(
       isInteractive = isInteractive,
     )
   }
-  if (!Clerk.isEmailImmutable) {
+  if (clerk.environment.userSettings.attributes["email_address"]?.immutable != true) {
     item(key = "user_profile_email_add") {
       UserProfileButtonRow(
         text = stringResource(R.string.add_email_address),
@@ -64,34 +65,19 @@ internal fun LazyListScope.userProfileEmailSection(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    LazyColumn(
-      modifier = Modifier.fillMaxWidth().background(ClerkMaterialTheme.colors.background)
-    ) {
-      userProfileEmailSection(
-        onError = {},
-        onAddEmailClick = {},
-        onVerify = {},
-        emailAddresses =
-          persistentListOf(
-            EmailAddress(
-              id = "email_1",
-              emailAddress = "user@example.com",
-              verification = Verification(status = Verification.Status.VERIFIED),
-            ),
-            EmailAddress(
-              id = "email_2",
-              emailAddress = "user@example.com",
-              verification = Verification(status = Verification.Status.UNVERIFIED),
-            ),
-            EmailAddress(
-              id = "email_3",
-              emailAddress = "user@example.com",
-              linkedTo = listOf(EmailAddress.LinkedEntity(id = "1", type = "email")),
-              verification = Verification(status = Verification.Status.VERIFIED),
-            ),
-          ),
-      )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      LazyColumn(
+        modifier = Modifier.fillMaxWidth().background(ClerkMaterialTheme.colors.background)
+      ) {
+        userProfileEmailSection(
+          clerk = clerk,
+          onError = {},
+          onAddEmailClick = {},
+          onVerify = {},
+          emailAddresses = clerk.user!!.emailAddresses.toImmutableList(),
+        )
+      }
     }
   }
 }

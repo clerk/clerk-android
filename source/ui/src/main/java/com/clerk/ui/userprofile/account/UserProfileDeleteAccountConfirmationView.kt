@@ -26,14 +26,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.ui.R
 import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.button.standard.ClerkButtonConfiguration
 import com.clerk.ui.core.button.standard.ClerkButtonDefaults
+import com.clerk.ui.core.composition.clerkViewModel
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkTextField
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.LocalUserProfileState
@@ -42,7 +43,7 @@ import com.clerk.ui.userprofile.LocalUserProfileState
 internal fun UserProfileDeleteAccountConfirmationView(
   onError: (String?) -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: UserProfileAccountViewModel = viewModel(),
+  viewModel: UserProfileAccountViewModel = clerkViewModel { UserProfileAccountViewModel(it) },
   onClose: () -> Unit,
 ) {
   val userProfileState = LocalUserProfileState.current
@@ -126,5 +127,7 @@ private fun TopBar(onClose: () -> Unit) {
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  UserProfileDeleteAccountConfirmationView(onClose = {}, onError = {})
+  ClerkPreview { clerk ->
+    UserProfileDeleteAccountConfirmationView(onClose = {}, onError = {})
+  }
 }

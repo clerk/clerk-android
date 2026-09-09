@@ -16,6 +16,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import com.clerk.ui.R
 import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp24
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.PreviewUserProfileStateProvider
@@ -80,14 +81,16 @@ internal fun UserProfileAddMfaBottomSheetContent(
 @PreviewLightDark
 @Composable
 private fun PreviewBottomSheet() {
-  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
-  UserProfileStateProvider(backStack) {
-    ClerkMaterialTheme {
-      UserProfileAddMfaBottomSheetContent(
-        mfaPhoneCodeIsEnabled = true,
-        mfaAuthenticatorAppIsEnabled = true,
-        onClick = {},
-      )
+  ClerkPreview { clerk ->
+    val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
+    UserProfileStateProvider(backStack) {
+      ClerkMaterialTheme {
+        UserProfileAddMfaBottomSheetContent(
+          mfaPhoneCodeIsEnabled = true,
+          mfaAuthenticatorAppIsEnabled = true,
+          onClick = {},
+        )
+      }
     }
   }
 }
@@ -95,13 +98,15 @@ private fun PreviewBottomSheet() {
 @PreviewLightDark
 @Composable
 private fun PreviewBottomSheetPhoneDisabled() {
-  PreviewUserProfileStateProvider {
-    ClerkMaterialTheme {
-      UserProfileAddMfaBottomSheetContent(
-        mfaPhoneCodeIsEnabled = false,
-        mfaAuthenticatorAppIsEnabled = true,
-        onClick = {},
-      )
+  ClerkPreview { clerk ->
+    PreviewUserProfileStateProvider {
+      ClerkMaterialTheme {
+        UserProfileAddMfaBottomSheetContent(
+          mfaPhoneCodeIsEnabled = false,
+          mfaAuthenticatorAppIsEnabled = true,
+          onClick = {},
+        )
+      }
     }
   }
 }
@@ -109,14 +114,16 @@ private fun PreviewBottomSheetPhoneDisabled() {
 @PreviewLightDark
 @Composable
 private fun PreviewBottomSheetAuthAppDisabled() {
-  val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
-  UserProfileStateProvider(backStack) {
-    ClerkMaterialTheme {
-      UserProfileAddMfaBottomSheetContent(
-        mfaPhoneCodeIsEnabled = true,
-        mfaAuthenticatorAppIsEnabled = false,
-        onClick = {},
-      )
+  ClerkPreview { clerk ->
+    val backStack = rememberNavBackStack(UserProfileDestination.UserProfileSecurity)
+    UserProfileStateProvider(backStack) {
+      ClerkMaterialTheme {
+        UserProfileAddMfaBottomSheetContent(
+          mfaPhoneCodeIsEnabled = true,
+          mfaAuthenticatorAppIsEnabled = false,
+          onClick = {},
+        )
+      }
     }
   }
 }

@@ -22,6 +22,7 @@ import com.clerk.ui.core.button.standard.ClerkButton
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.input.ClerkTextField
 import com.clerk.ui.core.input.PasswordKeyboardOptions
+import com.clerk.ui.core.preview.ClerkPreview
 import com.clerk.ui.core.spacers.Spacers
 import com.clerk.ui.theme.ClerkMaterialTheme
 import com.clerk.ui.userprofile.common.BottomSheetTopBar
@@ -90,13 +91,15 @@ private fun UserProfileCurrentPasswordViewImpl(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-  ClerkMaterialTheme {
-    Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
-      UserProfileCurrentPasswordViewImpl(
-        passwordAction = PasswordAction.Reset,
-        onClosePressed = {},
-        onCurrentPasswordEntered = { _, _ -> },
-      )
+  ClerkPreview { clerk ->
+    ClerkMaterialTheme {
+      Box(modifier = Modifier.background(ClerkMaterialTheme.colors.background)) {
+        UserProfileCurrentPasswordViewImpl(
+          passwordAction = PasswordAction.Reset,
+          onClosePressed = {},
+          onCurrentPasswordEntered = { _, _ -> },
+        )
+      }
     }
   }
 }

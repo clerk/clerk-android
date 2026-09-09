@@ -1,6 +1,6 @@
 # TypeScript core prerelease
 
-The API module now builds generated Kotlin resources from `NativeCore`, using the bundled QuickJS runtime and JavaScript asset. The authentication roots derive from `SignInFutureResource` and `SignUpFutureResource`. The former native domain implementation is excluded from the API module; Compose migration follows separately.
+The API module now builds generated Kotlin resources from `NativeCore`, using the bundled QuickJS runtime and JavaScript asset. The authentication roots derive from `SignInFutureResource` and `SignUpFutureResource`. The former native domain implementation is excluded from the API module; Compose migration is in progress: profile actions and shared presentation infrastructure use the generated instance; authentication and organization screens still need migration before the UI module can build.
 
 ```kotlin
 val clerk = Clerk.connect(
@@ -17,6 +17,12 @@ Import `com.clerk.api.connect`. Consumers need no JavaScript toolchain. Enable c
 Generated suspending methods publish state before completion and expose structured `CoreException` failures. A successful verification may leave additional requirements. Explicit finalization can produce a pending session; render its task. Old attempt/group handles become invalidated on reset. Cancellation does not roll back server work. Observe a resource's `changes` flow to read updated state.
 
 One owner should be retained for the application. Process lifecycle events suspend proactive token requests in background and reload the core on foreground. `CoreRuntime.lastLifecycleError` exposes recoverable reload failures. Call `clerk.close()` when permanently discarding the owner. Browser continuation state is intentionally in-memory; process death requires a fresh attempt instead of replaying an unsolicited callback.
+
+## Compose ownership
+
+Supply the retained instance with `ClerkProvider(clerk, theme = theme) { ... }` from `com.clerk.ui.core.composition`. It observes core revisions, including changes to nested resources, and supplies that same instance to UI view models. Presentation tokens now belong to `com.clerk.ui.theme`. UI telemetry uses the generated TypeScript collector.
+
+Profile actions call generated resources directly and catch structured exceptions. Device lists use `User.getSessions()` and `SessionWithActivities`; account deletion delegates cleanup to the source `User.delete()`. Previews decode fixtures produced by the TypeScript state serializer rather than constructing independent native domain objects.
 
 ## Credential continuity
 
