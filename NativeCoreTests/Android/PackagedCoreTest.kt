@@ -20,6 +20,7 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
   var authRecord: String? = null
   var credential: String? = null
   var signedOut = false
+  var signInFirstFactors: JsonElement? = null
   var nextAuthError: JsonElement? = null
   var nextAuthErrorStatus = 422
   var nextAuthErrorHeaders = buildJsonObject {}
@@ -86,6 +87,7 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
       }
       else -> {
         val resource = fixtures.getValue(if (url.path.contains("sign_ins")) "signIn" else "signUp").jsonObject.toMutableMap()
+        if (url.path.contains("sign_ins")) signInFirstFactors?.let { resource["supported_first_factors"] = it }
         if (args["method"] == JsonPrimitive("GET")) {
           check(url.rawQuery.contains("rotating_token_nonce=native_nonce"))
           resource["status"] = JsonPrimitive("complete")
@@ -175,6 +177,31 @@ class PackagedCoreTest {
           check(!error.details.toString().contains("must-not-cross"))
           check(clerk.session == null)
         }
+      } finally { clerk.close() }
+    }
+  }
+
+  @Test fun factorDiscriminantsPreserveDeviceAndRecoveryFields() = runBlocking {
+    withTimeout(30000) {
+      val instrumentation = InstrumentationRegistry.getInstrumentation()
+      val capabilities = PackagedFixtures(instrumentation.context)
+      val key = "pk_test_" + Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
+      val clerk = Clerk.connect(instrumentation.targetContext, ClerkConfiguration(key, "clerk-test://sso-callback"), capabilities)
+      try {
+        capabilities.signInFirstFactors = Json.parseToJsonElement("""[{"strategy":"phone_code","phone_number_id":"idn_phone","safe_identifier":"+15555550123","primary":true,"default":true},{"strategy":"trusted_device","trusted_device_id":"tdc_123","safe_identifier":"Test device"},{"strategy":"reset_password_phone_code","phone_number_id":"idn_reset","safe_identifier":"reset-phone"},{"strategy":"enterprise_sso","enterprise_connection_id":"ec_123","enterprise_connection_name":"Acme"},{"strategy":"oauth_future_provider"}]""")
+        clerk.signIn.create(SignInCreateParams(identifier = "test@example.com"))
+        val factors = clerk.signIn.supportedFirstFactors
+        val device = factors.first { it.strategy == "trusted_device" } as SignInFirstFactor.Case11
+        check(device.value.trustedDeviceId == Field.Value("tdc_123"))
+        check(device.value.safeIdentifier == Field.Value("Test device"))
+        val reset = factors.first { it.strategy == "reset_password_phone_code" } as SignInFirstFactor.Case9
+        check(reset.value.phoneNumberId == "idn_reset")
+        val phone = factors.first { it.strategy == "phone_code" } as SignInFirstFactor.Case3
+        check(phone.value.default == true && phone.value.primary == true)
+        val enterprise = factors.first { it.strategy == "enterprise_sso" } as SignInFirstFactor.Case8
+        check(enterprise.value.enterpriseConnectionId == "ec_123")
+        check(factors.any { it.strategy == "oauth_future_provider" })
+        check(clerk.session == null)
       } finally { clerk.close() }
     }
   }

@@ -72,6 +72,8 @@ internal fun SignInFirstFactor.selection(): FactorSelection =
         safeIdentifier = value.safeIdentifier,
         primary = value.primary,
       )
+    is SignInFirstFactor.Case11 ->
+      FactorSelection(strategy, safeIdentifier = (value.safeIdentifier as? Field.Value)?.value)
   }
 
 internal fun SignInSecondFactor.selection(): FactorSelection =
@@ -104,7 +106,9 @@ internal fun SignInSecondFactor.selection(): FactorSelection =
   }
 
 internal val SignIn.firstFactorChoices
-  get() = supportedFirstFactors.map { it.selection() }
+  // The dedicated biometric entry checks the local key and OS capability before
+  // offering sign-in. Server device factors are not generic inline factor screens.
+  get() = supportedFirstFactors.map { it.selection() }.filter { it.strategy != "trusted_device" }
 internal val SignIn.secondFactorChoices
   get() = supportedSecondFactors.map { it.selection() }
 
