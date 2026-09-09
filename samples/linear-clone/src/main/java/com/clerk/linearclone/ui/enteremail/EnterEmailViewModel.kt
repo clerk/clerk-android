@@ -1,43 +1,32 @@
 package com.clerk.linearclone.ui.enteremail
 
-import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import kotlinx.coroutines.Dispatchers
+import com.clerk.api.SignInEmailCodeSendCodeParamsCase1
+import com.clerk.api.SignInEmailCodeSendParams
+import com.clerk.linearclone.LinearFeedback
+import com.clerk.linearclone.LinearViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-class EnterEmailViewModel : ViewModel() {
-
+class EnterEmailViewModel(clerk: Clerk, feedback: LinearFeedback) :
+  LinearViewModel(clerk, feedback) {
   private val _uiState = MutableStateFlow<UiState>(UiState.SignedOut)
   val uiState = _uiState.asStateFlow()
 
-  fun prepareEmailVerification(email: String) {
-    viewModelScope.launch(Dispatchers.IO) {
-      Clerk.auth
-        .signInWithOtp { this.email = email }
-        .onSuccess {
-          withContext(Dispatchers.Main) { _uiState.value = UiState.NeedsEmailCode(email) }
-        }
-        .onFailure {
-          withContext(Dispatchers.Main) {
-            Log.e("EnterEmailViewModel", "Error preparing email verification", it.throwable)
-            _uiState.value = UiState.Error
-          }
-        }
-    }
+  fun prepareEmailVerification(email: String) = runOperation {
+    clerk.signIn.emailCode.sendCode(
+      SignInEmailCodeSendParams.Case1(SignInEmailCodeSendCodeParamsCase1(emailAddress = email))
+    )
+    _uiState.value = UiState.NeedsEmailCode(email)
+  }
+
+  fun didNavigate() {
+    _uiState.value = UiState.SignedOut
   }
 
   sealed interface UiState {
     data object SignedOut : UiState
 
     data class NeedsEmailCode(val email: String) : UiState
-
-    data object Error : UiState
   }
 }

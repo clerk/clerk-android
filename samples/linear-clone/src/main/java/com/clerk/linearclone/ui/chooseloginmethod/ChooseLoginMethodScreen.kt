@@ -20,8 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.linearclone.R
+import com.clerk.linearclone.linearViewModel
 import com.clerk.linearclone.ui.button.LinearCloneButton
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
 import com.clerk.linearclone.ui.theme.PrimaryGrey
@@ -31,10 +31,27 @@ import com.clerk.linearclone.ui.theme.PrimaryWhite
 @Composable
 fun ChooseLoginMethodScreen(
   modifier: Modifier = Modifier,
-  viewModel: ChooseLoginViewModel = viewModel(),
+  viewModel: ChooseLoginViewModel = linearViewModel { clerk, feedback ->
+    ChooseLoginViewModel(clerk, feedback)
+  },
   onClickUseEmail: () -> Unit,
 ) {
 
+  ChooseLoginMethodContent(
+    modifier = modifier,
+    onClickUseEmail = onClickUseEmail,
+    onGoogle = viewModel::authWithGoogle,
+    onPasskey = viewModel::authenticateWithPasskey,
+  )
+}
+
+@Composable
+private fun ChooseLoginMethodContent(
+  modifier: Modifier = Modifier,
+  onClickUseEmail: () -> Unit,
+  onGoogle: () -> Unit,
+  onPasskey: () -> Unit,
+) {
   Column(
     modifier =
       Modifier.fillMaxSize()
@@ -61,7 +78,7 @@ fun ChooseLoginMethodScreen(
 
     LinearCloneButton(
       backgroundColor = PrimaryPurple,
-      onClick = viewModel::authWithGoogle,
+      onClick = onGoogle,
       buttonText = stringResource(R.string.continue_with_google),
       textColor = PrimaryWhite,
       leadingIcon = R.drawable.ic_google,
@@ -75,7 +92,7 @@ fun ChooseLoginMethodScreen(
     )
     LinearCloneButton(
       backgroundColor = PrimaryGrey,
-      onClick = viewModel::authenticateWithPasskey,
+      onClick = onPasskey,
       buttonText = stringResource(R.string.continue_with_passkey),
       textColor = PrimaryWhite,
     )
@@ -85,5 +102,5 @@ fun ChooseLoginMethodScreen(
 @PreviewLightDark
 @Composable
 private fun PreviewLoginScreen() {
-  LinearCloneTheme { ChooseLoginMethodScreen(onClickUseEmail = {}) }
+  LinearCloneTheme { ChooseLoginMethodContent(onClickUseEmail = {}, onGoogle = {}, onPasskey = {}) }
 }

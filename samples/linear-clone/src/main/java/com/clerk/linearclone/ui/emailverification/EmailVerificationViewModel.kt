@@ -1,15 +1,18 @@
 package com.clerk.linearclone.ui.emailverification
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.signin.verifyCode
-import kotlinx.coroutines.launch
+import com.clerk.api.SignInEmailCodeVerifyParams
+import com.clerk.api.SignInStatus
+import com.clerk.linearclone.LinearFeedback
+import com.clerk.linearclone.LinearViewModel
+import com.clerk.ui.auth.AuthMode
 
-class EmailVerificationViewModel : ViewModel() {
-
-  fun verify(code: String) {
-    val inProgressSignIn = Clerk.auth.currentSignIn
-    viewModelScope.launch { inProgressSignIn?.verifyCode(code) }
+class EmailVerificationViewModel(clerk: Clerk, feedback: LinearFeedback) :
+  LinearViewModel(clerk, feedback) {
+  fun verify(code: String) = runOperation {
+    val attempt = clerk.signIn
+    attempt.emailCode.verifyCode(SignInEmailCodeVerifyParams(code))
+    if (attempt.status == SignInStatus.Complete) attempt.finalize()
+    else feedback.continuation.value = AuthMode.SignIn
   }
 }

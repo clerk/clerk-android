@@ -16,6 +16,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,8 +35,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.linearclone.R
+import com.clerk.linearclone.linearViewModel
 import com.clerk.linearclone.ui.button.LinearCloneButton
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
 import com.clerk.linearclone.ui.theme.PrimaryGrey
@@ -47,24 +48,25 @@ import com.clerk.linearclone.ui.theme.TextBoxColor
 fun EnterEmailScreen(
   onNavigateToLogin: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: EnterEmailViewModel = viewModel(),
+  viewModel: EnterEmailViewModel = linearViewModel { clerk, feedback ->
+    EnterEmailViewModel(clerk, feedback)
+  },
   onNavigateToEmailVerification: (String) -> Unit,
 ) {
   val state by viewModel.uiState.collectAsState()
 
-  when (state) {
-    EnterEmailViewModel.UiState.Error -> {
-      // Show error
+  LaunchedEffect(state) {
+    val next = state as? EnterEmailViewModel.UiState.NeedsEmailCode
+    if (next != null) {
+      onNavigateToEmailVerification(next.email)
+      viewModel.didNavigate()
     }
-    is EnterEmailViewModel.UiState.NeedsEmailCode ->
-      onNavigateToEmailVerification((state as EnterEmailViewModel.UiState.NeedsEmailCode).email)
-    EnterEmailViewModel.UiState.SignedOut ->
-      EnterEmailContent(
-        modifier = modifier,
-        onContinueWithEmail = viewModel::prepareEmailVerification,
-        onNavigateToLogin = onNavigateToLogin,
-      )
   }
+  EnterEmailContent(
+    modifier = modifier,
+    onContinueWithEmail = viewModel::prepareEmailVerification,
+    onNavigateToLogin = onNavigateToLogin,
+  )
 }
 
 @Composable
@@ -157,6 +159,6 @@ fun InputContent(
 @Composable
 private fun PreviewEmailEntryScreen() {
   LinearCloneTheme() {
-    EnterEmailScreen(onNavigateToLogin = {}, onNavigateToEmailVerification = {})
+    EnterEmailContent(onContinueWithEmail = {}, onNavigateToLogin = {})
   }
 }

@@ -14,14 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.linearclone.R
+import com.clerk.linearclone.linearViewModel
 import com.clerk.linearclone.ui.button.LinearCloneButton
 import com.clerk.linearclone.ui.theme.PrimaryPurple
 import com.clerk.linearclone.ui.theme.PrimaryWhite
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(
+  modifier: Modifier = Modifier,
+  viewModel: HomeViewModel = linearViewModel { clerk, feedback -> HomeViewModel(clerk, feedback) },
+) {
   val state by viewModel.uiState.collectAsState()
   val context = LocalContext.current
   when (state) {

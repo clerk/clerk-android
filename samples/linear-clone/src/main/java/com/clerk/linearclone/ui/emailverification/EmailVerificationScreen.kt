@@ -27,8 +27,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.linearclone.R
+import com.clerk.linearclone.linearViewModel
 import com.clerk.linearclone.ui.enteremail.InputContent
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
 import com.clerk.linearclone.ui.theme.PrimaryPurple
@@ -40,9 +40,26 @@ fun EmailVerificationScreen(
   email: String,
   onNavigateToLogin: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: EmailVerificationViewModel = viewModel(),
+  viewModel: EmailVerificationViewModel = linearViewModel { clerk, feedback ->
+    EmailVerificationViewModel(clerk, feedback)
+  },
 ) {
 
+  EmailVerificationContent(
+    email = email,
+    onNavigateToLogin = onNavigateToLogin,
+    modifier = modifier,
+    onVerify = viewModel::verify,
+  )
+}
+
+@Composable
+private fun EmailVerificationContent(
+  email: String,
+  onNavigateToLogin: () -> Unit,
+  modifier: Modifier = Modifier,
+  onVerify: (String) -> Unit,
+) {
   Column(
     modifier =
       Modifier.fillMaxSize()
@@ -90,7 +107,7 @@ fun EmailVerificationScreen(
       placeholder = stringResource(R.string.enter_code),
       buttonColor = PrimaryPurple,
       navigateToLogin = onNavigateToLogin,
-      onClick = viewModel::verify,
+      onClick = onVerify,
     )
   }
 }
@@ -98,5 +115,7 @@ fun EmailVerificationScreen(
 @PreviewLightDark
 @Composable
 private fun PreviewEmailEntryScreen() {
-  LinearCloneTheme { EmailVerificationScreen(onNavigateToLogin = {}, email = "sam@clerk.dev") }
+  LinearCloneTheme {
+    EmailVerificationContent(onNavigateToLogin = {}, email = "sam@clerk.dev", onVerify = {})
+  }
 }

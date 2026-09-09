@@ -10,7 +10,8 @@ plugins {
 
 android {
   namespace = "com.clerk.linearclone"
-  compileSdk = libs.versions.compileSdk.get().toInt()
+  // Navigation's lifecycle dependencies require API 37; keep target/min SDK policy unchanged.
+  compileSdk = 37
 
   defaultConfig {
     applicationId = "com.clerk.linearclone"
@@ -29,6 +30,7 @@ android {
   }
 
   compileOptions {
+    isCoreLibraryDesugaringEnabled = true
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
@@ -41,6 +43,7 @@ android {
 }
 
 dependencies {
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
   implementation(platform(libs.compose.bom))
   implementation(libs.activity.compose)
   implementation(libs.androidx.lifecycle.runtime)
@@ -55,6 +58,7 @@ dependencies {
   implementation(libs.material3)
   implementation(libs.navigation.compose)
   implementation(projects.source.api)
+  implementation(projects.source.ui)
 
   lintChecks(libs.compose.lints)
 }

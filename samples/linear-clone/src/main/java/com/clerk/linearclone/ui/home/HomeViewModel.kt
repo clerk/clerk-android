@@ -1,39 +1,21 @@
 package com.clerk.linearclone.ui.home
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.user.createPasskey
-import kotlinx.coroutines.Dispatchers
+import com.clerk.linearclone.LinearFeedback
+import com.clerk.linearclone.LinearViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-class HomeViewModel : ViewModel() {
-
+class HomeViewModel(clerk: Clerk, feedback: LinearFeedback) : LinearViewModel(clerk, feedback) {
   private val _uiState = MutableStateFlow<UiState>(UiState.SignedIn())
-
   val uiState = _uiState.asStateFlow()
 
-  fun signOut() {
-    viewModelScope.launch(Dispatchers.IO) { Clerk.auth.signOut() }
-  }
+  fun signOut() = runOperation { clerk.signOut() }
 
-  fun createPasskey() {
-    val currentUser = Clerk.userFlow.value ?: return
-    viewModelScope.launch(Dispatchers.IO) {
-      currentUser
-        .createPasskey()
-        .onSuccess {
-          withContext(Dispatchers.Main) { _uiState.value = UiState.SignedIn(PasskeyResult.Success) }
-        }
-        .onFailure {
-          withContext(Dispatchers.Main) { _uiState.value = UiState.SignedIn(PasskeyResult.Failure) }
-        }
-    }
+  fun createPasskey() = runOperation {
+    val user = clerk.user ?: error("Sign in before creating a passkey")
+    user.createPasskey()
+    _uiState.value = UiState.SignedIn(PasskeyResult.Success)
   }
 
   sealed interface UiState {

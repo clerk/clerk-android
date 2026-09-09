@@ -1,10 +1,7 @@
 package com.clerk.linearclone
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,13 +28,13 @@ import com.clerk.linearclone.ui.getstarted.GetStartedScreen
 import com.clerk.linearclone.ui.home.HomeScreen
 import com.clerk.linearclone.ui.theme.LinearCloneTheme
 
-class MainActivity : ComponentActivity() {
-  val viewModel: MainViewModel by viewModels()
+class MainActivity : LinearActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
-    setContent {
+    setClerkContent {
+      val viewModel = linearViewModel { clerk, _ -> MainViewModel(clerk) }
       val state by viewModel.uiState.collectAsState()
       val navController = rememberNavController()
 
