@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="1" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T21:33:01" hostname="localhost">
+  <testsuite name="com.clerk.api.LifecycleContractTest" tests="1" failures="0" errors="0" skipped="0" time="0.246" timestamp="2026-09-10T21:33:01" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="foregroundDuringOAuthRedemptionWaitsForAuthentication" classname="com.clerk.api.LifecycleContractTest" time="0.246" />
+  </testsuite>
+</testsuites>

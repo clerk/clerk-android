@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="8" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T21:36:11" hostname="localhost">
+  <testsuite name="com.clerk.api.BrowserHostTest" tests="8" failures="0" errors="0" skipped="0" time="0.007" timestamp="2026-09-10T21:36:11" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="mismatchedAndDuplicateCallbacksCannotCompleteAnotherRequest" classname="com.clerk.api.BrowserHostTest" time="0.002" />
+    <testcase name="concurrentPresentationDoesNotReplaceTheFirstRequest" classname="com.clerk.api.BrowserHostTest" time="0.000" />
+    <testcase name="userCancellationIsTypedAndAllowsAnotherPresentation" classname="com.clerk.api.BrowserHostTest" time="0.000" />
+    <testcase name="unavailableOrInvalidPresentationFailsBeforeLaunching" classname="com.clerk.api.BrowserHostTest" time="0.000" />
+    <testcase name="failedManagerLaunchClearsPendingState" classname="com.clerk.api.BrowserHostTest" time="0.000" />
+    <testcase name="idleCallbacksAndCancellationDoNotCreatePendingWork" classname="com.clerk.api.BrowserHostTest" time="0.000" />
+    <testcase name="coroutineCancellationReleasesThePendingPresentation" classname="com.clerk.api.BrowserHostTest" time="0.000" />
+    <testcase name="launchesExplicitNonExportedManagerWithOpaqueRequestId" classname="com.clerk.api.BrowserHostTest" time="0.005" />
+  </testsuite>
+</testsuites>

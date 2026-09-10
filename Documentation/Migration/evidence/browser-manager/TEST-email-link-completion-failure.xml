@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="1" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T21:33:50" hostname="localhost">
+  <testsuite name="com.clerk.api.EmailLinkCompletionTest" tests="1" failures="0" errors="0" skipped="0" time="0.213" timestamp="2026-09-10T21:33:50" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="signUpCannotConsumeSignInTicket" classname="com.clerk.api.EmailLinkCompletionTest" time="0.213" />
+  </testsuite>
+</testsuites>

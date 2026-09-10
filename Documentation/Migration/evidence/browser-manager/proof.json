@@ -1,0 +1,167 @@
+{
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "retired": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOManagerActivityTest.kt",
+      "sha256": "70407f2627701bae68ed50cf0bbcc892d70e3796f503d0736026de07981ce693",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "authorizationComplete_setsResultOk_whenDataPresent",
+          "line": 46
+        },
+        {
+          "name": "callbackIntent_completesWithoutAuthorizationStarted",
+          "line": 66
+        },
+        {
+          "name": "errorCodeOnlyCallback_completesWithoutAuthorizationStarted",
+          "line": 84
+        },
+        {
+          "name": "newAuthorizationIntent_restartsManagerWithNewUrl",
+          "line": 102
+        },
+        {
+          "name": "authorizationCanceled_setsResultCanceled_whenNoData",
+          "line": 124
+        },
+        {
+          "name": "authorizationUrl_isNotTreatedAsCallback_whenBrowserIsDismissed",
+          "line": 145
+        },
+        {
+          "name": "hostedAuthCallback_callsOnlyHostedAuthService",
+          "line": 167
+        },
+        {
+          "name": "hostedAuthCallback_reattachesAfterConfigurationChange",
+          "line": 199
+        },
+        {
+          "name": "authorizationComplete_isCalledOnlyOnce_whenResumedTwice",
+          "line": 240
+        },
+        {
+          "name": "authorizationComplete_setsResultOk_evenWhenServiceThrows",
+          "line": 261
+        },
+        {
+          "name": "externalConnectionFlow_callsOnlyCompleteExternalConnection",
+          "line": 287
+        },
+        {
+          "name": "completionStarted_persistsAcrossConfigurationChange",
+          "line": 311
+        },
+        {
+          "name": "nativeMagicLinkFailure_setsResultCanceled",
+          "line": 342
+        }
+      ]
+    }
+  ],
+  "runtimeRevision": "c5a8631bc8123d7fc588f8ffb5f7dca0f6192301",
+  "sources": {
+    "NativeCore/Android/BrowserAuthentication.kt": "6c14388c991621e967fc6bd3b3df490e8dd7e2a1f48788e498c1dbe55dcae01d",
+    "NativeCore/Android/AndroidManifest.xml": "50c0900e86200839d42cd6cf829142c1eec715e0a51b9964bba1c6f29c57d338",
+    "NativeCoreTests/Android/BrowserActivityLifecycleTest.kt": "87712ad2ae7d35373a311adaeb38e00478baac3db73a3411bcd6986168bcb200",
+    "NativeCoreTests/Android/BrowserHostTest.kt": "63bd39192e81b317bc50802b1aff5bf4dacaf572e67a04611c92408e59dcd6ae",
+    "NativeCoreTests/Android/BrowserCallbackContractTest.kt": "9cef3597692b200bce362d4f70ba5f1c586007e6b2fd8c459cf639ed4f38d528",
+    "NativeCoreTests/Android/BrowserSSOContractTest.kt": "7bc137011556806a77e43b2b90a2f7f295de8899eaed76ffbb90298980f3ac7c",
+    "NativeCoreTests/Android/OAuthProviderRequestTest.kt": "bd4cb71d5f1f1859d020468892120f2e2e691899f8233f2dddb79eb94ac4ff9e",
+    "NativeCoreTests/Android/LifecycleContractTest.kt": "93b5a52a733bc7edaf1f4ac72c0c6ac8601dde6c59f3c827d495f4fbc9623c8d",
+    "NativeCoreTests/Android/EmailLinkCompletionTest.kt": "ca11a29a8752f1d38d3a781b2debe4fcdec7a17a5ed3e3128323baeca602126c"
+  },
+  "reports": {
+    "BrowserActivityLifecycleTest": {
+      "file": "Documentation/Migration/evidence/callback-receiver/gate/TEST-BrowserActivityLifecycleTest.xml",
+      "sha256": "212526c2e2c5c65ca904eaf5691ff7c933ad551178c74bffae6a03dc558d7971",
+      "methods": [
+        "immediateSecondAuthorizationIsPresentedAfterFirstCallback",
+        "unrelatedCallbackCannotCompleteOrCancelPendingAuthorization",
+        "resumedManagerTreatsBrowserDismissalAsCancellation",
+        "actualReceiverDeliversCallbackToTheRunningManager",
+        "browserCallbackSurvivesDeviceRotation",
+        "manifestExposesOnlyTheCurrentDefaultCallbackRoute",
+        "unrelatedCallbackCannotCreateAnIdleBrowserPresentation"
+      ]
+    },
+    "BrowserHostTest": {
+      "file": "Documentation/Migration/evidence/callback-receiver/gate/TEST-BrowserHostTest.xml",
+      "sha256": "6d68e460b1d841658f059f79ac3cfc9c847b4b7284ce1d686a23a4ec87cc346e",
+      "methods": [
+        "mismatchedAndDuplicateCallbacksCannotCompleteAnotherRequest",
+        "concurrentPresentationDoesNotReplaceTheFirstRequest",
+        "userCancellationIsTypedAndAllowsAnotherPresentation",
+        "unavailableOrInvalidPresentationFailsBeforeLaunching",
+        "failedManagerLaunchClearsPendingState",
+        "idleCallbacksAndCancellationDoNotCreatePendingWork",
+        "coroutineCancellationReleasesThePendingPresentation",
+        "launchesExplicitNonExportedManagerWithOpaqueRequestId"
+      ]
+    },
+    "BrowserCallbackContractTest": {
+      "file": "Documentation/Migration/evidence/callback-receiver/gate/TEST-BrowserCallbackContractTest.xml",
+      "sha256": "6fc0f67c299f3a958ab7b23fe2644a7d2124256c58bd0e1a5bad62fdff7af439",
+      "methods": [
+        "nativeCallbackFailurePreservesErrorAndReconciledState",
+        "providerQueryErrorDoesNotReplaceServerState",
+        "missingSuccessMarkerReloadsRemainingServerRequirements",
+        "transferMarkerAloneCannotCreateSignUp",
+        "signInPreparationPreservesStructuredFailure"
+      ]
+    },
+    "BrowserSSOContractTest": {
+      "file": "Documentation/Migration/evidence/callback-receiver/gate/TEST-BrowserSSOContractTest.xml",
+      "sha256": "779d42327e95d861cafd0bb20ea51df3df4c41d79401ca4965dc499445172257",
+      "methods": [
+        "signInUsesGoogleBrowserStrategyAndConfiguredCallback",
+        "rejectedPreparationPreservesStructuredError",
+        "disabledBrowserTransferDoesNotCreateSignUp",
+        "cancelledSignUpDoesNotReconcileOrActivate",
+        "signUpPreservesMetadataAndBrowserStrategy",
+        "enterpriseSignInPreparesConnectionBeforeOpeningBrowser",
+        "unrelatedCallbackDoesNotSubmitNonce",
+        "signUpTransportFailureDoesNotBecomeSuccess",
+        "enterpriseSignInRefreshesPreparedRedirectOnExistingAttempt",
+        "oauthRetryDoesNotReplayStalePreparedRedirect",
+        "cancelledSignInDoesNotReconcileOrActivate",
+        "signInTransportFailureDoesNotBecomeSuccess",
+        "signUpPreservesCustomProviderStrategy",
+        "signInPreservesCustomProviderStrategy",
+        "missingRedirectLeavesAnIncompleteAttemptWithoutOpeningBrowser",
+        "browserTransferCreatesSignUpWithMetadataWithoutSecondPrompt"
+      ]
+    },
+    "OAuthProviderRequestTest": {
+      "file": "Documentation/Migration/evidence/callback-receiver/gate/TEST-OAuthProviderRequestTest.xml",
+      "sha256": "4114b1c45f86b3621acde72212350d652244dc67da9c1be0334267f6c4201be3",
+      "methods": [
+        "customExternalAccountPreservesStrategyThroughBrowserAndReload",
+        "googleExternalAccountUsesCanonicalStrategyAndReturnedResource"
+      ]
+    },
+    "LifecycleContractTest": {
+      "file": "Documentation/Migration/evidence/browser-manager/TEST-foreground-redemption.xml",
+      "sha256": "92eb058d386deac35c7e87da055e1e46c93357c3994d7c48f8df123dd77532d5",
+      "methods": [
+        "foregroundDuringOAuthRedemptionWaitsForAuthentication"
+      ]
+    },
+    "EmailLinkCompletionTest": {
+      "file": "Documentation/Migration/evidence/browser-manager/TEST-email-link-completion-failure.xml",
+      "sha256": "12afb78166cbc7aa3a15217eedba450bb4f77af8c0678c62b99639b7ed368d41",
+      "methods": [
+        "signUpCannotConsumeSignInTicket"
+      ]
+    }
+  },
+  "additionalLocalScenarios": 2,
+  "device": "API 36 arm64 emulator-5554",
+  "limitations": [
+    "Hosted-portal protocol is unavailable; no hosted-service replacement coverage is claimed.",
+    "Activity result codes and private service dispatch are intentionally removed.",
+    "The two additional core checks use fixture HTTP and native lifecycle signals, not live browser or released-app upgrade flows."
+  ]
+}

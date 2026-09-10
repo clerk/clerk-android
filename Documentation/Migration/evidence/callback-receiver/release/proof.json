@@ -1,0 +1,20 @@
+{
+  "sourceRevision": "c5a8631bc8123d7fc588f8ffb5f7dca0f6192301",
+  "locallyVerified": {
+    "aarByteEquality": true,
+    "packagingContract": "Both downloaded AARs independently passed verify-native-core-aar.py",
+    "receiverExported": true,
+    "receiverTaskAffinity": "",
+    "previousRuntimeRevision": "2ffc8206752e66e0e7575643950c56284dc7090a",
+    "changedAarEntriesFromPreviousRuntime": [
+      "AndroidManifest.xml"
+    ]
+  },
+  "artifacts": {
+    "report.json": "b42766964f588e95a05708c9fba753bf91640d6e2a05773532dba9027682c3e3",
+    "api-release-2.aar": "28c7dc78f99feea2b38e4cb665e2bcd440974074fee55656b799d158b2711bef",
+    "api-release-1.aar": "28c7dc78f99feea2b38e4cb665e2bcd440974074fee55656b799d158b2711bef",
+    "build-2.log": "cc9aa3bad4d7ffd6dd82f3c19af1dd6eef7155057e94171d72d57739d384d02c",
+    "build-1.log": "743f5b15219a12fa1ad25ccd2bb8846d880ed0ddbe44c7a121c6771152c117f4"
+  }
+}
