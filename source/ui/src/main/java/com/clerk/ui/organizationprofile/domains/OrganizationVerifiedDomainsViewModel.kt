@@ -292,7 +292,7 @@ internal class OrganizationVerifiedDomainsViewModel(
     runUiOperation {
         currentOrganization.getDomains(
           GetDomainsParams(
-            initialPage = offset.toDouble() / pageSize + 1,
+            initialPage = (offset / pageSize + 1).toDouble(),
             pageSize = pageSize.toDouble(),
           )
         )
@@ -307,7 +307,8 @@ internal class OrganizationVerifiedDomainsViewModel(
   }
 
   private fun applyDomainPage(page: ClerkPaginatedResponseOrganizationDomain, append: Boolean) {
-    val domains = if (append) mutableState.value.domains + page.data else page.data
+    val domains =
+      if (append) (mutableState.value.domains + page.data).distinctBy { it.id } else page.data
     mutableState.value =
       mutableState.value.copy(
         domains = domains,

@@ -38,6 +38,10 @@ android {
   testOptions { unitTests.isIncludeAndroidResources = true }
 }
 
+extensions.configure<com.android.build.api.dsl.LibraryExtension> {
+  sourceSets.getByName("androidTest").assets.directories.add("../../NativeCoreTests/Fixtures")
+}
+
 tasks.withType<Test>().configureEach {
   javaLauncher.set(
     project.extensions.getByType<JavaToolchainService>().launcherFor {

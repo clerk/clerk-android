@@ -90,7 +90,7 @@ internal open class OrganizationAccountListViewModel(
           user.getOrganizationMemberships(
             GetUserOrganizationMembershipParams(
               pageSize = pageSize.toDouble(),
-              initialPage = current.memberships.size.toDouble() / pageSize + 1,
+              initialPage = (current.memberships.size / pageSize + 1).toDouble(),
             )
           )
         }
@@ -99,7 +99,7 @@ internal open class OrganizationAccountListViewModel(
             val latest = mutableState.value
             mutableState.value =
               latest.copy(
-                memberships = latest.memberships + response.data,
+                memberships = (latest.memberships + response.data).distinctBy { it.id },
                 membershipsTotalCount = response.totalCount.toInt(),
                 isLoadingMoreMemberships = false,
               )
@@ -128,7 +128,7 @@ internal open class OrganizationAccountListViewModel(
           user.getOrganizationInvitations(
             GetUserOrganizationInvitationsParams(
               pageSize = pageSize.toDouble(),
-              initialPage = current.pendingInvitationsCount.toDouble() / pageSize + 1,
+              initialPage = (current.pendingInvitationsCount / pageSize + 1).toDouble(),
               status = OrganizationInvitationStatus.Pending,
             )
           )
@@ -138,7 +138,7 @@ internal open class OrganizationAccountListViewModel(
             val latest = mutableState.value
             mutableState.value =
               latest.copy(
-                invitations = latest.invitations + response.data,
+                invitations = (latest.invitations + response.data).distinctBy { it.id },
                 invitationsTotalCount = response.totalCount.toInt(),
                 isLoadingMoreInvitations = false,
               )
@@ -167,7 +167,7 @@ internal open class OrganizationAccountListViewModel(
           user.getOrganizationSuggestions(
             GetUserOrganizationSuggestionsParams(
               pageSize = pageSize.toDouble(),
-              initialPage = current.suggestions.size.toDouble() / pageSize + 1,
+              initialPage = (current.suggestions.size / pageSize + 1).toDouble(),
               status = SUGGESTION_STATUSES,
             )
           )
@@ -177,7 +177,7 @@ internal open class OrganizationAccountListViewModel(
             val latest = mutableState.value
             mutableState.value =
               latest.copy(
-                suggestions = latest.suggestions + response.data,
+                suggestions = (latest.suggestions + response.data).distinctBy { it.id },
                 suggestionsTotalCount = response.totalCount.toInt(),
                 isLoadingMoreSuggestions = false,
               )

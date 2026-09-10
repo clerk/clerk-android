@@ -239,7 +239,7 @@ internal class OrganizationMembersViewModel(
           GetMembersParams(
             query = current.memberQuery.trim().takeIf { it.isNotEmpty() },
             pageSize = pageSize.toDouble(),
-            initialPage = offset.toDouble() / pageSize + 1,
+            initialPage = (offset / pageSize + 1).toDouble(),
           )
         )
       }
@@ -260,7 +260,8 @@ internal class OrganizationMembersViewModel(
     page: ClerkPaginatedResponseOrganizationMembership,
     append: Boolean,
   ) {
-    val memberships = if (append) mutableState.value.members + page.data else page.data
+    val memberships =
+      if (append) (mutableState.value.members + page.data).distinctBy { it.id } else page.data
     mutableState.value =
       mutableState.value.copy(
         members = memberships,
@@ -281,13 +282,15 @@ internal class OrganizationMembersViewModel(
         currentOrganization.getInvitations(
           GetInvitationsParams(
             pageSize = pageSize.toDouble(),
-            initialPage = offset.toDouble() / pageSize + 1,
+            initialPage = (offset / pageSize + 1).toDouble(),
             status = listOf(OrganizationInvitationStatus.Pending),
           )
         )
       }
       .onSuccess { result ->
-        val invitations = if (reset) result.data else mutableState.value.invitations + result.data
+        val invitations =
+          if (reset) result.data
+          else (mutableState.value.invitations + result.data).distinctBy { it.id }
         mutableState.value =
           mutableState.value.copy(
             invitations = invitations,
@@ -314,13 +317,15 @@ internal class OrganizationMembersViewModel(
         currentOrganization.getMembershipRequests(
           GetMembershipRequestParams(
             pageSize = pageSize.toDouble(),
-            initialPage = offset.toDouble() / pageSize + 1,
+            initialPage = (offset / pageSize + 1).toDouble(),
             status = OrganizationInvitationStatus.Pending,
           )
         )
       }
       .onSuccess { result ->
-        val requests = if (reset) result.data else mutableState.value.requests + result.data
+        val requests =
+          if (reset) result.data
+          else (mutableState.value.requests + result.data).distinctBy { it.id }
         mutableState.value =
           mutableState.value.copy(
             requests = requests,
