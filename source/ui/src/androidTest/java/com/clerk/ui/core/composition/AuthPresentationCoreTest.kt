@@ -7,6 +7,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.clerk.api.*
 import com.clerk.ui.auth.AuthDestination
 import com.clerk.ui.auth.AuthState
+import com.clerk.ui.auth.handleSessionTaskCompletion
 import java.net.URI
 import java.util.Base64
 import java.util.UUID
@@ -262,6 +263,116 @@ class AuthPresentationCoreTest {
     }
   }
 
+  @Test
+  fun taskKeysPreserveCanonicalSpellingAndPreventPrematureCompletion() = runBlocking {
+    val cases =
+      listOf(
+        Triple("setup-mfa", SessionTaskKey.SetupMfa, AuthDestination.SessionTaskMfa),
+        Triple(
+          "reset-password",
+          SessionTaskKey.ResetPassword,
+          AuthDestination.SessionTaskResetPassword,
+        ),
+        Triple(
+          "choose-organization",
+          SessionTaskKey.ChooseOrganization,
+          AuthDestination.SessionTaskChooseOrganization,
+        ),
+      ) +
+        listOf(
+            "mfa_required",
+            "mfa-required",
+            "setup_mfa",
+            "reset_password",
+            "choose_organization",
+            "future-task",
+          )
+          .map {
+            Triple(it, SessionTaskKey.Unrecognized(it), AuthDestination.SignInGetHelp)
+          }
+    for (status in listOf("active", "pending")) {
+      verify("pending") { clerk, host ->
+        val presentation = AuthPresentationState(clerk)
+        val registration = presentation.register()
+        try {
+          val session = clerk.session!!
+          for ((key, expectedKey, destination) in cases) {
+            host.setSession(status, taskKeys = listOf(key))
+            session.reload()
+            assertSame(session, clerk.session)
+            assertEquals(status, session.status.rawValue)
+            assertEquals(listOf(expectedKey), session.tasks?.map { it.key })
+            assertEquals(expectedKey, session.currentTask?.key)
+            assertEquals(destination, com.clerk.ui.auth.pendingSessionTaskDestination(expectedKey))
+            withAuthState(clerk) { state ->
+              var completions = 0
+              assertTrue(state.setToStepForStatus(clerk.signIn) { completions++ })
+              assertEquals(destination, state.backStack.last())
+              state.completePresentation { completions++ }
+              assertEquals(0, completions)
+            }
+            presentation.complete()
+            assertFalse(presentation.isComplete)
+          }
+        } finally {
+          registration.close()
+        }
+      }
+    }
+  }
+
+  @Test
+  fun orderedTasksDriveRoutingUntilTheLastRequirementClears() = runBlocking {
+    verify("pending") { clerk, host ->
+      val presentation = AuthPresentationState(clerk)
+      val registration = presentation.register()
+      try {
+        val session = clerk.session!!
+        withAuthState(clerk) { state ->
+          var completions = 0
+          val complete = {
+            presentation.complete()
+            completions++
+            Unit
+          }
+          for ((keys, destination) in
+            listOf(
+              listOf("reset-password", "setup-mfa") to AuthDestination.SessionTaskResetPassword,
+              listOf("setup-mfa", "reset-password") to AuthDestination.SessionTaskMfa,
+              listOf("future-task", "setup-mfa") to AuthDestination.SignInGetHelp,
+              listOf("choose-organization") to AuthDestination.SessionTaskChooseOrganization,
+            )) {
+            // The old native DTO accepted a separate currentTask. The core derives it from tasks.
+            host.setSession("pending", taskKeys = keys, reportedCurrentTask = "reset-password")
+            session.reload()
+            assertSame(session, clerk.session)
+            assertEquals(keys, session.tasks?.map { it.key.rawValue })
+            assertEquals(keys.first(), session.currentTask?.key?.rawValue)
+            state.handleSessionTaskCompletion(session, complete)
+            assertEquals(destination, state.backStack.last())
+            assertFalse(presentation.isComplete)
+            assertEquals(0, completions)
+          }
+          host.setSession("pending", taskKeys = emptyList())
+          session.reload()
+          assertNull(session.currentTask)
+          state.handleSessionTaskCompletion(session, complete)
+          assertFalse(presentation.isComplete)
+          assertEquals(0, completions)
+          host.setSession("active", taskKeys = emptyList())
+          session.reload()
+          state.handleSessionTaskCompletion(session, complete)
+          assertTrue(presentation.isComplete)
+          assertEquals(1, completions)
+          state.handleSessionTaskCompletion(session, complete)
+          assertEquals(1, completions)
+        }
+      } finally {
+        registration.close()
+      }
+    }
+  }
+
   private suspend fun withAuthState(clerk: Clerk, block: suspend (AuthState) -> Unit) {
     val context = InstrumentationRegistry.getInstrumentation().targetContext
     val name = "auth-presentation-fixture-${UUID.randomUUID()}"
@@ -295,7 +406,13 @@ private class PresentationHost(
     setSession(status, hasUser)
   }
 
-  fun setSession(status: String?, hasUser: Boolean = true) {
+  fun setSession(
+    status: String?,
+    hasUser: Boolean = true,
+    taskKeys: List<String> =
+      if (status == "pending") listOf("choose-organization") else emptyList(),
+    reportedCurrentTask: String? = null,
+  ) {
     val session =
       JsonObject(
         fixtures.getValue("session").jsonObject +
@@ -303,10 +420,9 @@ private class PresentationHost(
             "status" to JsonPrimitive(status ?: "active"),
             "user" to
               if (hasUser) fixtures.getValue("session").jsonObject.getValue("user") else JsonNull,
-            "tasks" to
-              if (status == "pending")
-                JsonArray(listOf(buildJsonObject { put("key", "choose-organization") }))
-              else JsonArray(emptyList()),
+            "tasks" to JsonArray(taskKeys.map { key -> buildJsonObject { put("key", key) } }),
+            "current_task" to
+              (reportedCurrentTask?.let { key -> buildJsonObject { put("key", key) } } ?: JsonNull),
           )
       )
     val signIn =

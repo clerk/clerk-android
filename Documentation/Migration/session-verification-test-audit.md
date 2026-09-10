@@ -50,3 +50,30 @@ Source revision `ccb9d8f3d5a2089c4e573b32ec77a5bfe7816d20`, contract `fc919ded53
 Known setup-MFA/reset-password tasks and an unknown future task remain pending and retain their keys in both tasks and currentTask. This closes the three task-key decoder assertions; it does not claim live completion of those tasks or retire the broader service/cache test suite.
 
 Follow-up validation on the same packaged core: 302 embedded tests pass, macOS contract suite 76 tests and iOS Simulator 73 tests pass, and all six targeted Android revocation/task instrumentation tests pass.
+
+
+## Android assertion retirement
+
+All 15 declarations and complete mock/helper bodies in baseline `source/api/src/test/java/com/clerk/api/session/SessionVerificationTest.kt` were separately reviewed. That Android file is now retired; the earlier Swift tables above do not substitute for this review.
+
+The existing packaged `NativeCoreTests/Android/SessionVerificationTest.kt` was run independently and passes its full request/state matrix: 14 successful generated calls, one structured invalid-code error, and a successful retry. New `SessionPasskeyVerificationTest` adds two passing Android/QuickJS scenarios. Success checks first-factor preparation, the decoded challenge/RP/conditional-UI host arguments, the returned credential's serialized response, the exact attempt endpoint, and usable completed verification state. Host cancellation preserves its error code, does not submit an attempt, and leaves the selected session wrapper intact. The credential host is a fixture; these tests do not present Android Credential Manager or establish live WebAuthn acceptance.
+
+| Legacy declaration | Current disposition and evidence |
+| --- | --- |
+| `session verification decodes supported factor metadata` | The generated matrix checks returned status/level, enterprise connection ID/name, phone ID/safe identifier/primary/default, nested verification state, and the owning session. |
+| `start verification forwards level to session api` | Generated startVerification sends each of first_factor, second_factor, and multi_factor to the exact session endpoint; the returned level comes from the response. |
+| `send email code prepares email first factor` | Generated prepareFirstFactorVerification email union sends the exact strategy/email ID and returns usable state. |
+| `send phone code prepares phone first factor` | Generated prepareFirstFactorVerification phone union sends strategy/phone ID and its explicit default flag. |
+| `verify with email code attempts first factor` | Generated attemptFirstFactorVerification sends email_code/code; the matrix also checks structured 422 failure and recovery. |
+| `verify with phone code attempts first factor` | Generated phone-code attempt checks its exact body, endpoint and completed returned resource. |
+| `start enterprise sso prepares first factor` | Generated enterprise preparation checks email ID, connection ID, redirect URL and returned state. |
+| `start enterprise sso uses default redirect url` | Intentional API change: the canonical preparation contract requires redirectUrl. The generated parameter constructor has no default from a global applicationId. No native default-routing policy is recreated. |
+| `verify with password attempts first factor` | Generated password attempt checks the exact password/strategy body and completed state. |
+| `send mfa phone code prepares second factor` | Generated prepareSecondFactorVerification checks phone-code strategy/ID and needs_second_factor. |
+| `verify with mfa phone code attempts second factor` | Generated phone-code second-factor union checks its exact strategy/code and completed resource. |
+| `verify with passkey delegates to passkey service` | New packaged success/cancellation tests exercise the canonical prepare/host/attempt path. The parameterless generated method obtains credential options from the server; the old caller-supplied allowedCredentialIds argument and native PasskeyService delegation are removed. |
+| `verify with passkey delegates second factor level to passkey service` | Intentional contract change: generated verifyWithPasskey has no level argument, and the canonical implementation prepares/attempts a first factor. Passkey is not in the second-factor attempt union. The new test checks the actual first-factor path; it does not claim support for the removed second-factor override. |
+| `verify with totp attempts second factor` | Generated TOTP second-factor union checks totp/code and completed returned state. |
+| `verify with backup code attempts second factor` | Generated backup-code second-factor union checks backup_code/code and completed returned state. |
+
+The old mock identity checks asserted forwarding of a service-provided DTO, not resource identity across core revisions. Its ClerkResult wrappers, global ClerkApi mock, standalone DTO constructors and teardown belong to the removed native domain implementation. Current resource observation/identity is tested through generated bindings; those private seams are not preserved. This retirement does not cover other retained session/token/service suites.
