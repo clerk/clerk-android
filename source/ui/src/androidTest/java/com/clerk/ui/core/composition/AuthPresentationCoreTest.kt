@@ -23,6 +23,7 @@ class AuthPresentationCoreTest {
   private suspend fun verify(
     status: String?,
     hasUser: Boolean = true,
+    completedSignUp: Boolean = false,
     block: suspend (Clerk, PresentationHost) -> Unit,
   ) {
     withContext(Dispatchers.Main.immediate) {
@@ -32,7 +33,7 @@ class AuthPresentationCoreTest {
             instrumentation.context.assets.open("fapi.json").bufferedReader().use { it.readText() }
           )
           .jsonObject
-      val host = PresentationHost(fixtures, status, hasUser)
+      val host = PresentationHost(fixtures, status, hasUser, completedSignUp)
       val key =
         "pk_test_" +
           Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
@@ -223,41 +224,71 @@ class AuthPresentationCoreTest {
 
   @Test
   fun prebuiltCompletionFinalizesExactlyOnceAndWaitsForPendingTasks() = runBlocking {
-    for (status in listOf("active", "pending")) {
-      verify(null) { clerk, host ->
-        val presentation = AuthPresentationState(clerk)
-        val registration = presentation.register()
-        try {
-          assertFalse(presentation.isComplete)
-          assertEquals("complete", clerk.signIn.status.rawValue)
-          assertNull(clerk.session)
-          host.setSession(status)
-          withAuthState(clerk) { state ->
-            var completions = 0
-            val complete = {
-              presentation.complete()
-              completions++
-              Unit
+    for (signUp in listOf(false, true)) {
+      for (status in listOf("active", "pending")) {
+        verify(null, completedSignUp = signUp) { clerk, host ->
+          val presentation = AuthPresentationState(clerk)
+          val registration = presentation.register()
+          try {
+            assertFalse(presentation.isComplete)
+            assertEquals(
+              "complete",
+              if (signUp) clerk.signUp.status.rawValue else clerk.signIn.status.rawValue,
+            )
+            assertNull(clerk.session)
+            host.setSession(status)
+            withAuthState(clerk) { state ->
+              var completions = 0
+              val complete = {
+                presentation.complete()
+                completions++
+                Unit
+              }
+              if (signUp) {
+                assertTrue(state.setToStepForStatus(clerk.signUp, complete))
+                assertNull(clerk.session)
+                assertEquals(AuthDestination.SignInGetHelp, state.backStack.last())
+                assertEquals(0, completions)
+                assertFalse(presentation.isComplete)
+                val available =
+                  async(start = CoroutineStart.UNDISPATCHED) {
+                    withTimeout(5_000) {
+                      clerk.changes.first {
+                        it.sessions.any { session -> session.id == "sess_native" }
+                      }
+                    }
+                  }
+                clerk.context.requireRuntime().setApplicationActive(false)
+                clerk.context.requireRuntime().setApplicationActive(true)
+                available.await()
+                assertNull(clerk.session)
+              }
+              assertTrue(
+                if (signUp) state.setToStepForStatus(clerk.signUp, complete)
+                else state.setToStepForStatus(clerk.signIn, complete)
+              )
+              assertEquals(status, clerk.session?.status?.rawValue)
+              if (status == "pending") {
+                assertEquals(0, completions)
+                assertFalse(presentation.isComplete)
+                assertEquals(AuthDestination.SessionTaskChooseOrganization, state.backStack.last())
+                host.setSession("active")
+                clerk.session!!.reload()
+                state.completePresentation(complete)
+              }
+              assertEquals(1, completions)
+              assertTrue(presentation.isComplete)
+              val touches = host.touches
+              assertTrue(
+                if (signUp) state.setToStepForStatus(clerk.signUp, complete)
+                else state.setToStepForStatus(clerk.signIn, complete)
+              )
+              assertEquals(touches, host.touches)
+              assertEquals(1, completions)
             }
-            assertTrue(state.setToStepForStatus(clerk.signIn, complete))
-            assertEquals(status, clerk.session?.status?.rawValue)
-            if (status == "pending") {
-              assertEquals(0, completions)
-              assertFalse(presentation.isComplete)
-              assertEquals(AuthDestination.SessionTaskChooseOrganization, state.backStack.last())
-              host.setSession("active")
-              clerk.session!!.reload()
-              state.completePresentation(complete)
-            }
-            assertEquals(1, completions)
-            assertTrue(presentation.isComplete)
-            val touches = host.touches
-            assertTrue(state.setToStepForStatus(clerk.signIn, complete))
-            assertEquals(touches, host.touches)
-            assertEquals(1, completions)
+          } finally {
+            registration.close()
           }
-        } finally {
-          registration.close()
         }
       }
     }
@@ -395,6 +426,7 @@ private class PresentationHost(
   private val fixtures: JsonObject,
   status: String?,
   hasUser: Boolean,
+  private val completedSignUp: Boolean,
 ) : NativeCapabilities {
   override val supported = setOf("http", "storage", "timer", "random")
   private var credential: JsonElement = JsonNull
@@ -441,6 +473,16 @@ private class PresentationHost(
             "last_active_session_id" to
               if (status == null) JsonNull else JsonPrimitive("sess_native"),
             "sign_in" to signIn,
+            "sign_up" to
+              if (completedSignUp)
+                JsonObject(
+                  fixtures.getValue("signUp").jsonObject +
+                    mapOf(
+                      "status" to JsonPrimitive("complete"),
+                      "created_session_id" to JsonPrimitive("sess_native"),
+                    )
+                )
+              else (fixtures.getValue("client").jsonObject["sign_up"] ?: JsonNull),
           )
       )
   }

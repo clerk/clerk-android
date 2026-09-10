@@ -1,6 +1,6 @@
 # HTTP host audit
 
-This audit covers the new OkHttp host and the assertions in the old `VersioningUserAgentMiddlewareTest` (4 tests) and `RequestLoggingMiddlewareTest` (2 tests), read in full from baseline `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. Both outgoing suites are now retired after the declaration mapping below. Incoming response-state suites remain retained; this does not claim their replacement coverage.
+This audit covers the new OkHttp host and the assertions in the old `VersioningUserAgentMiddlewareTest` (4 tests) and `RequestLoggingMiddlewareTest` (2 tests), read in full from baseline `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. Both outgoing suites are now retired after the declaration mapping below. Incoming response-state suites have a separate [completed assertion audit](incoming-response-test-audit.md).
 
 ## Reproduced failures and fixes
 
@@ -34,7 +34,7 @@ reports existing incubating configuration features and Gradle 10 deprecations.
 | Sensitive request bypasses body logging | The new host does not install a body-logging interceptor or log HTTP bodies. Sensitive request tagging is removed with the old middleware. |
 | Ordinary request uses body logging | General request-body logging is not retained. This is an intentionally removed debugging behavior, not missing authentication behavior. |
 
-The incoming response-state files remain while the broader networking/state migration is incomplete. Incoming client synchronization, device-token adoption, live shared-session convergence and old API DTO tests need their own assertion review. These host tests do not prove TLS policy, real backend authentication, proxy support, or platform UI. The existing 16 MiB response bound is checked during streaming on Android; no peak-memory performance result is inferred from these tests.
+The incoming response-state files are retired in their [separate audit](incoming-response-test-audit.md). Incoming client synchronization, device-token adoption, live shared-session convergence and old API DTO tests need their own assertion review. These host tests do not prove TLS policy, real backend authentication, proxy support, or platform UI. The existing 16 MiB response bound is checked during streaming on Android; no peak-memory performance result is inferred from these tests.
 
 
 ## Outgoing middleware retirement
@@ -54,4 +54,4 @@ These tests invoke production AndroidCapabilities with an OkHttp fixture interce
 | `sensitive request bypasses body logging` | The public host has no body-logging interceptor. The sensitive-request tag and conditional logger are removed rather than recreated around the new transport. |
 | `ordinary request uses body logging` | Ordinary HTTP body logging is intentionally not retained. This is a removed debugging behavior, not a replacement test for authentication. |
 
-The four DeviceTokenSavingMiddlewareTest and nine ClientSyncingMiddlewareTest declarations were also read, but remain retained pending their separate mapping of credential adoption, removed flow guards/events, null-client envelopes and completion behavior. Hosted-auth creation and manual native synchronization are not silently declared supported by this outgoing audit.
+The four DeviceTokenSavingMiddlewareTest and nine ClientSyncingMiddlewareTest declarations are retired after their [separate mapping](incoming-response-test-audit.md) of credential adoption, removed flow guards/events, null-client envelopes and completion behavior. Hosted-auth creation and manual native synchronization remain unavailable.

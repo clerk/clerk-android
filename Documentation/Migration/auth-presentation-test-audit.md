@@ -47,3 +47,8 @@ The initial exploratory fixtures did not prove a presentation regression: attach
 The setup/teardown setters and the helper constructors for old Client, Session, and SignInCompleted values belong to the same removed model. The tests do not claim compatibility with these private seams or the old AuthEvent ordering.
 
 These are native presentation-state and packaged-resource tests. They do not establish a live provider login, real biometric enrollment prompt, full rendered AuthView journey, or a signed-in released-app upgrade.
+
+
+## Sign-up completion follow-up
+
+The prebuilt-completion matrix now exercises both sign-in and sign-up with active and pending outcomes. Its first exploratory sign-up fixture omitted the available created session and therefore did not adopt one; the UI routed to help and correctly withheld completion. The final test asserts that path, then supplies the session through actual core foreground refresh and verifies it remains unselected until generated finalization. Once adopted, pending organization tasks still block presentation completion. Repeated status processing does not touch the session again or deliver another completion callback. All nine focused presentation tests pass, including the task-key/order follow-up. This is native state/fixture-HTTP evidence, not a rendered or live-server sign-up journey.

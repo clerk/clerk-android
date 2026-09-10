@@ -182,6 +182,7 @@ class PackagedCoreTest {
             put("headers", buildJsonObject {
               put("date", if (index == 0) "Wed, 09 Sep 2026 16:00:01 GMT" else "Wed, 09 Sep 2026 16:00:02 GMT")
               if (index == 0) put("authorization", "rotated-client-credential")
+              else if (index == 1) put("authorization", "rotated-stale-client-credential")
             })
             put("body", buildJsonObject { put("response", session); put("client", JsonObject(client + ("sessions" to JsonArray(listOf(session))))) }.toString())
           }
@@ -204,6 +205,7 @@ class PackagedCoreTest {
         check(base.credential == "rotated-client-credential")
         session.reload()
         check(session.status.rawValue == "pending")
+        check(base.credential == "rotated-client-credential")
       } finally { releases.forEach { it.complete(Unit) }; clerk.close() }
     }
   }

@@ -1,0 +1,38 @@
+# Android incoming-response assertion audit
+
+All four declarations in DeviceTokenSavingMiddlewareTest and all nine in ClientSyncingMiddlewareTest were reviewed with their complete bodies, mock response builders and teardown at baseline `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. Both files are retired. Native HTTP execution does not retain the old interceptors, response tags, DTO hydration or AuthEvent emission.
+
+## Current execution evidence
+
+- The expanded `AuthPresentationCoreTest.prebuiltCompletionFinalizesExactlyOnceAndWaitsForPendingTasks` checks both sign-in and sign-up, each ending in an active session or a pending organization task. The production AuthState invokes generated finalization, waits for task completion, and emits one presentation callback; repeated status processing does not touch the session again or duplicate the callback. Sign-up with a created session ID absent from the available session list routes to help without completing. After foreground refresh supplies the session, it remains unselected until the prebuilt flow invokes finalization. All nine focused presentation tests pass.
+- Two new `ClientEnvelopeTest` cases exercise real core foreground HTTP refresh with a direct client object and with `{response: client, client: null}`. Both empty client collections clear session/user selection, invalidate the old selected-session handle, publish an empty session list through generated observation, retain the client ID, and preserve the bearer credential when Authorization is absent. A null piggyback does not suppress the canonical response.
+- The strengthened `PackagedCoreTest.credentialRotationRejectsResponsesIssuedWithThePreviousCredential` passes with a replacement token in the stale reply. The accepted response saves its rotated credential and reports a pending task; the stale reply fails with stale_client_request and cannot overwrite either. A subsequent response without Authorization preserves that credential and remains usable.
+
+These are packaged QuickJS and native presentation-state fixtures on Android 16. They do not establish live server authentication, a full rendered AuthView journey, or live shared-session synchronization. The outgoing host checks have their own [audit](http-test-audit.md). No SDK implementation or packaged bundle changed in this audit.
+
+## Device-token declarations
+
+The source owner is `packages/shared/src/mobile.ts`. Request generation and credential revision are checked before persistence; client ordering and credential writes share an acceptance queue. Native storage executes the resulting read/write/remove operations.
+
+| Legacy declaration | Disposition and evidence |
+| --- | --- |
+| `response token replaces token used by request` | The accepted first reload in the packaged rotation test saves rotated-client-credential and applies its pending-task state. No native response interceptor chooses credentials. |
+| `flow response token is saved even when response guard rejects client sync` | The private ResponseGuard protocol is removed. The shared owner checks request/credential generation and client freshness before saving a response credential. Rejected stale responses do not independently commit a token; preserving the old guard's split acceptance would add a second native policy. |
+| `response started with stale token cannot overwrite shared token` | The late response now explicitly includes rotated-stale-client-credential. It is rejected, and the accepted credential and pending session state remain unchanged. |
+| `response without token leaves stored token unchanged` | The final usable reload omits Authorization and is followed by an exact credential equality check. Both new client-envelope cases independently retain the credential when the header is absent. |
+
+## Client-state declarations
+
+| Legacy declaration | Disposition and evidence |
+| --- | --- |
+| `intercept emits SignUpCompleted when sign up response is complete` | The old AuthEvent bus and path-based event decoder are removed. The generated sign-up exposes its actual complete status; the expanded prebuilt test checks sign-up finalization and once-only application presentation completion. This is not a compatibility promise for the old event object or ordering. |
+| `intercept holds registered auth flow before syncing completed sign in client` | Packaged prebuilt sign-in completion remains held through explicit adoption/pending tasks. The [refresh/adoption test](auth-presentation-test-audit.md#refresh-and-explicit-adoption) separately checks an adopted active session remains held until presentation completion. The old pendingAuthFlowCompletion payload is removed. |
+| `intercept holds registered auth flow before syncing completed sign up client` | The expanded prebuilt sign-up cases check active and pending outcomes, blocked completion when the created session is unavailable, and a single completion callback. The old SignUpCompleted payload/ID property is replaced by generated sign-up resource state. |
+| `intercept clears Clerk client when response client is explicit null` | The arbitrary native `{client:null}` interceptor mutation is removed. The canonical resource method owns its response interpretation: generated signOut and canonical empty-client refresh clear selection, while [an empty resource response](empty-client-response.md) is not an invented sign-out. Client destruction and its explicit credential-clear marker are separately described in [client credential deletion](client-credential-clear.md). This audit does not add a generic native null-envelope reducer. |
+| `intercept does not clear Clerk client when null client piggyback accompanies response` | Intentional change: the old interceptor ignored a valid empty client response because its piggyback was null. The new packaged test verifies the canonical response is applied, selection becomes null and the credential remains available. |
+| `intercept syncs piggybacked client from hosted auth creation` | Hosted-portal creation is explicitly unavailable in the selected profile. Its endpoint/resource and native sync rule are not restored by ordinary browser OAuth support. The old hosted_auth test is retired as an unsupported protocol assertion. |
+| `intercept does not sync piggybacked client when request no longer owns the flow` | The tested hosted_auth endpoint and native ResponseGuard callback are removed. The shared generation/credential fence and stale-response test protect supported core responses; this is not a claim that the old hosted flow is available. |
+| `intercept leaves manually synced client response unapplied` | ManualClientSyncRequest and its runIfResponseCurrent callback are private removed protocols. Core response acceptance and hydration own supported resource updates, with generated snapshots applied before native method completion. No caller-managed native client DTO is introduced. |
+| `intercept hydrates direct client response with server date` | The direct-client case supplies a Date header and checks the resulting generated client/session state. The old lastClientServerFetchAtMillis field and exact timestamp setter assertion are removed. Shared sequence/date/version acceptance is covered by the [response-ordering checks](client-response-ordering.md); no second Kotlin server-clock policy is retained. |
+
+The old tests' standalone Client/Session constructors, mocked interceptor chains, reflected singleton fields, response tags and global cleanup belong to the same removed implementation. The audit accounts for their asserted outcomes without treating these private seams as new public APIs.

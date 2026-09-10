@@ -8,7 +8,7 @@ The [biometric persistence audit](biometric-persistence.md) records eight packag
 
 Baseline: `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. This is a file-level ownership and migration audit of the old native API suite, with exact test declarations retained in [legacy-tests.json](legacy-tests.json). Parameterized cases are not expanded; declarations and helper functions are not a coverage percentage.
 
-The inventory contains 105 old test/helper files. Three have been migrated, 13 have been retired after assertion review, and 89 remain while platform and coverage migration is incomplete.
+The inventory contains 105 old test/helper files. Three have been migrated, 15 have been retired after assertion review, and 87 remain while platform and coverage migration is incomplete.
 
 | Reviewed group | File disposition | Evidence |
 | --- | --- | --- |
@@ -20,6 +20,7 @@ The inventory contains 105 old test/helper files. Three have been migrated, 13 h
 | Session tasks and verification | Two retired | [Nine task declarations](session-task-test-audit.md) and [15 verification declarations](session-verification-test-audit.md#android-assertion-retirement) |
 | Storage helper and installation ID | Two retired | [All 14 declarations and Keystore integrity checks](storage-test-audit.md#integrity-and-retirement-follow-up) |
 | Outgoing HTTP middleware | Two retired | [All six declarations and native transport checks](http-test-audit.md#outgoing-middleware-retirement) |
+| Incoming response middleware | Two retired | [All 13 declarations and packaged response/completion checks](incoming-response-test-audit.md) |
 
 No retained file is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The baseline lists below preserve the full inventory and unresolved gates.
 
