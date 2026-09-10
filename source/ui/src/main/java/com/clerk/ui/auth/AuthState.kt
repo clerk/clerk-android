@@ -215,6 +215,7 @@ internal class AuthState(
     val session = clerk.session ?: return
     if (
       session.status != com.clerk.api.SessionStatus.Active ||
+        clerk.user == null ||
         session.currentTask != null ||
         completedPresentationSessionId == session.id
     )

@@ -14,14 +14,16 @@ internal class AuthPresentationState(private val clerk: Clerk) {
   private var registrations by mutableIntStateOf(0)
   private var completedSessionId by mutableStateOf<String?>(null)
   val isComplete: Boolean
-    get() =
-      clerk.session?.let {
-        it.status == SessionStatus.Active &&
-          it.currentTask == null &&
-          (registrations == 0 || completedSessionId == it.id)
-      } == true
+    get() = readySessionId()?.let { registrations == 0 || completedSessionId == it } == true
+
+  private fun readySessionId(): String? =
+    clerk.session
+      ?.takeIf { it.status == SessionStatus.Active && it.currentTask == null && clerk.user != null }
+      ?.id
 
   fun register(): AutoCloseable {
+    if (readySessionId() != null) return AutoCloseable {}
+    if (registrations == 0) completedSessionId = null
     registrations++
     var closed = false
     return AutoCloseable {
@@ -33,7 +35,7 @@ internal class AuthPresentationState(private val clerk: Clerk) {
   }
 
   fun complete() {
-    completedSessionId = clerk.session?.id
+    completedSessionId = readySessionId() ?: return
   }
 
   fun pending() {

@@ -21,6 +21,8 @@ No retained file is claimed to pass unchanged against the new API. Do not remove
 
 The [packaged contact deletion regression](contact-resource-regression.md) records the shared deletion-receipt projection fix and its Kotlin/QuickJS verification. This does not retire unaudited Android legacy contact tests.
 
+The [Compose completion-gate audit](auth-presentation-test-audit.md) records reproduced and corrected presentation failures. The old auth-flow and client-flow files remain retained for their remaining assertion dispositions.
+
 Native UI presentation tests are outside this inventory and remain in their existing test target. The migration changes resource calls and owner injection, not the intended screen layout or interaction behavior.
 
 The [configuration helper assertion audit](configuration-test-audit.md) records

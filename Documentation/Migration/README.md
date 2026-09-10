@@ -140,3 +140,5 @@ The [Apple SSO verification errors](apple-auth-errors.md) records generated Appl
 The [email-link completion audit](email-link-completion.md) records legacy flow-kind migration, incomplete callback results, cleanup/ownership checks, and generated authentication parameter coverage.
 
 The [token-only credential upgrade](token-only-credential-upgrade.md) preserves prior credentials awaiting canonical refresh while retaining explicit-clear and instance-scoping protections.
+
+[Compose completion-gate verification](auth-presentation-test-audit.md) records active-user registration, pending-task completion, and prebuilt generated finalization checks.
