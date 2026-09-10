@@ -11,6 +11,7 @@ import java.net.URI
 import java.util.Base64
 import java.util.UUID
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.*
 import org.junit.Assert.*
 import org.junit.Test
@@ -57,6 +58,41 @@ class AuthPresentationCoreTest {
       try {
         assertTrue(presentation.isComplete)
         presentation.pending()
+        assertTrue(presentation.isComplete)
+      } finally {
+        registration.close()
+      }
+    }
+  }
+
+  @Test
+  fun foregroundRefreshPublishesSessionsWithoutImplicitlyCompletingAuthentication() = runBlocking {
+    verify(null) { clerk, host ->
+      val presentation = AuthPresentationState(clerk)
+      val registration = presentation.register()
+      try {
+        assertFalse(presentation.isComplete)
+        val observed =
+          async(start = CoroutineStart.UNDISPATCHED) {
+            withTimeout(5_000) {
+              clerk.changes.first { it.sessions.any { session -> session.id == "sess_native" } }
+            }
+          }
+        host.setSession("active")
+        clerk.context.requireRuntime().setApplicationActive(false)
+        clerk.context.requireRuntime().setApplicationActive(true)
+        val published = observed.await()
+        assertEquals(listOf("sess_native"), clerk.sessions.map { it.id })
+        assertSame(clerk.sessions.single(), published.sessions.single())
+        assertNull(clerk.session)
+        assertNull(clerk.user)
+        assertFalse(presentation.isComplete)
+        val available = clerk.sessions.single()
+        clerk.signIn.finalize()
+        assertSame(available, clerk.session)
+        assertNotNull(clerk.user)
+        assertFalse(presentation.isComplete)
+        presentation.complete()
         assertTrue(presentation.isComplete)
       } finally {
         registration.close()

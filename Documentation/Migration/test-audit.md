@@ -8,7 +8,7 @@ The [biometric persistence audit](biometric-persistence.md) records eight packag
 
 Baseline: `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. This is a file-level ownership and migration audit of the old native API suite, with exact test declarations retained in [legacy-tests.json](legacy-tests.json). Parameterized cases are not expanded; declarations and helper functions are not a coverage percentage.
 
-The inventory contains 105 old test/helper files. Three have been migrated, five have been retired after assertion review, and 97 remain while platform and coverage migration is incomplete.
+The inventory contains 105 old test/helper files. Three have been migrated, seven have been retired after assertion review, and 95 remain while platform and coverage migration is incomplete.
 
 | Reviewed group | File disposition | Evidence |
 | --- | --- | --- |
@@ -16,12 +16,13 @@ The inventory contains 105 old test/helper files. Three have been migrated, five
 | Private foreground-policy suites | Two retired | [Foreground assertions and reproduced race](configuration-test-audit.md#foreground-policy-and-pending-authentication) |
 | Configuration switch and device-token suites | Two retired | [Owner-isolation audit](configuration-ownership-test-audit.md) |
 | Clerk singleton suite | One retired | [All 41 declarations and packaged projection checks](clerk-projection-test-audit.md) |
+| Auth and client flow suites | Two retired | [All 11 declarations and canonical refresh/adoption checks](auth-presentation-test-audit.md) |
 
 No retained file is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The baseline lists below preserve the full inventory and unresolved gates.
 
 The [packaged contact deletion regression](contact-resource-regression.md) records the shared deletion-receipt projection fix and its Kotlin/QuickJS verification. This does not retire unaudited Android legacy contact tests.
 
-The [Compose completion-gate audit](auth-presentation-test-audit.md) records reproduced and corrected presentation failures. The old auth-flow and client-flow files remain retained for their remaining assertion dispositions.
+The [Compose completion-gate audit](auth-presentation-test-audit.md) records reproduced and corrected presentation failures. Both old auth-flow and client-flow files are retired after all 11 declarations were mapped, including the intentional change from implicit native selection to explicit core finalization.
 
 Native UI presentation tests are outside this inventory and remain in their existing test target. The migration changes resource calls and owner injection, not the intended screen layout or interaction behavior.
 
