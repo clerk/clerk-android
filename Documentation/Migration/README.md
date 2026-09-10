@@ -126,3 +126,5 @@ Before general release, validate a signed-in old-major app upgraded in place; re
 ## Removed implementation
 
 The replaced native domain source tree has been deleted from this major. The linked baseline and hashed source inventory preserve its public declarations for migration review. The generated `NativeCore` target is the implementation; no old native authentication fallback is packaged. Legacy test files remain for the unfinished assertion-level audit and are not claimed to run against the new API.
+
+For Expo consumers, see the [D8/R8 compiler compatibility proof](../Measurements/expo-compiler-build.md). Kotlin source compiler compatibility alone does not establish that the app can process the SDK's Kotlin metadata.
