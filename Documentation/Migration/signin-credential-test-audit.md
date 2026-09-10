@@ -29,3 +29,7 @@ The credential suite also verifies cancellation causes no credential submission,
 The first biometric fixture assertion incorrectly expected the local identifier hint in the HTTP request. Source inspection confirmed the core selects the stored credential using the hint and submits its ID; the corrected test preserves that contract. No runtime fix resulted. UI tests require JDK 21; the initial Java 17 run stopped at plugin resolution before tests, then the JDK 21 run passed.
 
 These deterministic capabilities do not exercise an OS biometric/passkey prompt or a live backend. Physical-device and released-app upgrade gates remain open. This audit does not retire the separate legacy passkey-service or biometric-service suites.
+
+## Exact-revision CI
+
+Commit `492f1732ffa54b7ce8b76ade031c560be3f9043b` passes [Android test CI](https://github.com/clerk/clerk-android/actions/runs/34519227680). Downloaded XML independently confirms 12 API unit tests, 501 UI unit tests, two API 24 cases and 55 API 36 cases, all without skips. The API 36 cases include the 40-case authentication gate, twelve token cases, core/platform checks and the rendered authentication journey. Identical current-output and preserved-output XML is recorded without counting it twice. Canonical instrumentation reports, unit-report hashes and the completed workflow record are retained in [CI evidence](evidence/signin-credentials/ci/proof.json).
