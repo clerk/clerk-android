@@ -11,8 +11,8 @@ This audit reviews all ten assertions/tests in the old `configuration/connectivi
 - Closing the runtime removes the observer; later lifecycle transitions cause no further client reads.
 - A failed foreground reload exposes `lastLifecycleError` while the runtime remains available. A generated reset succeeds and a later activation can recover the available-session list.
 
-The lifecycle suite now has four tests, including connectivity restoration and
-last-owner collection, and passes on an Android 16 emulator. The failure test
+The lifecycle suite now has five tests, including connectivity restoration,
+last-owner collection, and [foreground during OAuth callback redemption](foreground-auth-recovery.md), and passes on an Android 16 emulator. The failure test
 awaits `lastLifecycleError.value`, rather than checking the non-null StateFlow
 container. These are synthetic lifecycle events with fixture HTTP, not proof of
 real process suspension/death, network reconnection, or a signed-in app upgrade.
