@@ -123,7 +123,7 @@ class OrganizationAccountListViewModelTest {
   }
 
   @Test
-  fun `loadMore appends each paginated resource type`() = runTest {
+  fun `loadMore appends and deduplicates overlapping whole pages`() = runTest {
     val user = user()
     val membership1 = membership("org_1")
     val membership2 = membership("org_2")
@@ -136,13 +136,14 @@ class OrganizationAccountListViewModelTest {
         GetUserOrganizationMembershipParams(pageSize = 2.0, initialPage = 1.0)
       )
     } returns
-      ClerkPaginatedResponseOrganizationMembership(data = listOf(membership1), totalCount = 2.0)
-    coEvery {
-      user.getOrganizationMemberships(
-        GetUserOrganizationMembershipParams(pageSize = 2.0, initialPage = 1.5)
+      ClerkPaginatedResponseOrganizationMembership(
+        data = listOf(membership1),
+        totalCount = 2.0,
+      ) andThen
+      ClerkPaginatedResponseOrganizationMembership(
+        data = listOf(membership1, membership2),
+        totalCount = 2.0,
       )
-    } returns
-      ClerkPaginatedResponseOrganizationMembership(data = listOf(membership2), totalCount = 2.0)
     coEvery {
       user.getOrganizationInvitations(
         GetUserOrganizationInvitationsParams(
@@ -152,17 +153,14 @@ class OrganizationAccountListViewModelTest {
         )
       )
     } returns
-      ClerkPaginatedResponseUserOrganizationInvitation(data = listOf(invitation1), totalCount = 2.0)
-    coEvery {
-      user.getOrganizationInvitations(
-        GetUserOrganizationInvitationsParams(
-          pageSize = 2.0,
-          initialPage = 1.5,
-          status = OrganizationInvitationStatus.Pending,
-        )
+      ClerkPaginatedResponseUserOrganizationInvitation(
+        data = listOf(invitation1),
+        totalCount = 2.0,
+      ) andThen
+      ClerkPaginatedResponseUserOrganizationInvitation(
+        data = listOf(invitation1, invitation2),
+        totalCount = 2.0,
       )
-    } returns
-      ClerkPaginatedResponseUserOrganizationInvitation(data = listOf(invitation2), totalCount = 2.0)
     coEvery {
       user.getOrganizationSuggestions(
         GetUserOrganizationSuggestionsParams(
@@ -175,21 +173,16 @@ class OrganizationAccountListViewModelTest {
         )
       )
     } returns
-      ClerkPaginatedResponseOrganizationSuggestion(data = listOf(suggestion1), totalCount = 2.0)
-    coEvery {
-      user.getOrganizationSuggestions(
-        GetUserOrganizationSuggestionsParams(
-          pageSize = 2.0,
-          initialPage = 1.5,
-          status =
-            GetUserOrganizationSuggestionsParamsStatus.Case3(
-              listOf(OrganizationSuggestionStatus.Pending, OrganizationSuggestionStatus.Accepted)
-            ),
-        )
+      ClerkPaginatedResponseOrganizationSuggestion(
+        data = listOf(suggestion1),
+        totalCount = 2.0,
+      ) andThen
+      ClerkPaginatedResponseOrganizationSuggestion(
+        data = listOf(suggestion1, suggestion2),
+        totalCount = 2.0,
       )
-    } returns
-      ClerkPaginatedResponseOrganizationSuggestion(data = listOf(suggestion2), totalCount = 2.0)
 
+    // A partial first page is fetched again as a whole page; its overlapping row stays unique.
     val viewModel = testViewModel(user = user)
     viewModel.load()
     viewModel.loadMoreMemberships()

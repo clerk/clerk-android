@@ -26,3 +26,11 @@ This is deterministic request evidence, not an observation of a live backend
 error or a visual interaction test. The same pagination arithmetic was changed
 in the related UI lists; their complete interactive journeys remain separate
 verification work.
+
+The September 10 CI run also exposed a stale JVM pagination mock that still
+expected fractional page `1.5`. Its membership, invitation and suggestion stubs
+now return an overlapping whole page on the next request, retaining assertions
+that newly returned rows are appended, prior IDs are not duplicated, and all
+three lists reach their reported end. The production pagination behavior is
+unchanged; the fixture now follows the whole-page contract already checked by
+the packaged-core tests.
