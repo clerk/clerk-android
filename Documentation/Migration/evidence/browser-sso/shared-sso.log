@@ -1,0 +1,86 @@
+TAP version 13
+# (node:67192) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+# Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+# To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: signIn.sso runs the generated operation on the real future facade without a browser global or implicit finalization
+ok 1 - signIn.sso runs the generated operation on the real future facade without a browser global or implicit finalization
+  ---
+  duration_ms: 24.069042
+  type: 'test'
+  ...
+# Subtest: signIn.sso preserves remaining requirements
+ok 2 - signIn.sso preserves remaining requirements
+  ---
+  duration_ms: 5.5455
+  type: 'test'
+  ...
+# Subtest: signIn.sso returns native cancellation through its error envelope without reconciling or activating
+ok 3 - signIn.sso returns native cancellation through its error envelope without reconciling or activating
+  ---
+  duration_ms: 4.506833
+  type: 'test'
+  ...
+# Subtest: signIn.sso rejects an unrelated callback before sending a nonce
+ok 4 - signIn.sso rejects an unrelated callback before sending a nonce
+  ---
+  duration_ms: 4.843875
+  type: 'test'
+  ...
+# Subtest: signUp.sso runs the generated operation on the real future facade without a browser global or implicit finalization
+ok 5 - signUp.sso runs the generated operation on the real future facade without a browser global or implicit finalization
+  ---
+  duration_ms: 5.307792
+  type: 'test'
+  ...
+# Subtest: signUp.sso preserves remaining requirements
+ok 6 - signUp.sso preserves remaining requirements
+  ---
+  duration_ms: 5.620875
+  type: 'test'
+  ...
+# Subtest: signUp.sso returns native cancellation through its error envelope without reconciling or activating
+ok 7 - signUp.sso returns native cancellation through its error envelope without reconciling or activating
+  ---
+  duration_ms: 4.30275
+  type: 'test'
+  ...
+# Subtest: signUp.sso rejects an unrelated callback before sending a nonce
+ok 8 - signUp.sso rejects an unrelated callback before sending a nonce
+  ---
+  duration_ms: 4.154041
+  type: 'test'
+  ...
+# Subtest: signIn.sso preserves native query nonce semantics
+ok 9 - signIn.sso preserves native query nonce semantics
+  ---
+  duration_ms: 24.426834
+  type: 'test'
+  ...
+# Subtest: signUp.sso preserves native query nonce semantics
+ok 10 - signUp.sso preserves native query nonce semantics
+  ---
+  duration_ms: 24.541291
+  type: 'test'
+  ...
+# Subtest: signIn.sso preserves the caller's raw OIDC prompt string
+ok 11 - signIn.sso preserves the caller's raw OIDC prompt string
+  ---
+  duration_ms: 37.692792
+  type: 'test'
+  ...
+# Subtest: signUp.sso preserves the caller's raw OIDC prompt string
+ok 12 - signUp.sso preserves the caller's raw OIDC prompt string
+  ---
+  duration_ms: 38.493583
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 285.887167

@@ -1,0 +1,220 @@
+{
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "sourceBase": "bca6b2ec3064c84a36baffa0fcd9eb3d3be2aca2",
+  "runtimeChanged": false,
+  "retired": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signin/SignInAuthenticateWithRedirectTest.kt",
+      "sha256": "2a15e00522b410877777b1e59fe222affa5427a4d91cf861e53a4801e772ab8e",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "authenticateWithRedirect uses OAuth provider strategy",
+          "line": 26
+        },
+        {
+          "name": "authenticateWithRedirect preserves custom OAuth provider strategy",
+          "line": 64
+        },
+        {
+          "name": "authenticateWithRedirect uses Enterprise SSO strategy",
+          "line": 101
+        },
+        {
+          "name": "authenticateWithPreparedRedirect continues prepared external verification",
+          "line": 137
+        },
+        {
+          "name": "authenticateWithPreparedRedirect fails when external verification URL is missing",
+          "line": 167
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signup/SignUpAuthenticateWithRedirectTest.kt",
+      "sha256": "9856e7d29d90235ab7954707d7230dd44942cdfc5561d3ff5afc6d0575110076",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "authenticateWithRedirect uses sign-up redirect flow for OAuth provider",
+          "line": 27
+        },
+        {
+          "name": "authenticateWithRedirect preserves custom OAuth provider strategy",
+          "line": 64
+        },
+        {
+          "name": "authenticateWithRedirect forwards unsafe metadata",
+          "line": 99
+        },
+        {
+          "name": "redirect params map transform unsafe metadata to json",
+          "line": 138
+        },
+        {
+          "name": "redirect params map preserves custom OAuth provider strategy",
+          "line": 152
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOExtensionsTest.kt",
+      "sha256": "836762bb8e634e9ee859742e6ee80874ce9e1dcc5baf6aa4937f5ff7b618fc2f",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signInToOAuthResult preserves unknown transport failure",
+          "line": 15
+        },
+        {
+          "name": "signUpToOAuthResult preserves unknown transport failure",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOServiceAuthenticateWithRedirectTest.kt",
+      "sha256": "18d26fd31559ca97be54077ae9efc8e057fca47c52b6ce794b3bfeee64626608",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "authenticateWithRedirect creates sign in then prepares OAuth first factor",
+          "line": 32
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "NativeCoreTests/Android/BrowserSSOContractTest.kt": "7bc137011556806a77e43b2b90a2f7f295de8899eaed76ffbb90298980f3ac7c"
+  },
+  "packagedReport": {
+    "file": "TEST-BrowserSSOContractTest.xml",
+    "sha256": "d75f86ad0eb2cce6f9f1783db87fe8d666c9d5fa7f941a2fedeed1ee62f2e1c4",
+    "cases": [
+      {
+        "name": "signInUsesGoogleBrowserStrategyAndConfiguredCallback",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.249"
+      },
+      {
+        "name": "rejectedPreparationPreservesStructuredError",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.165"
+      },
+      {
+        "name": "disabledBrowserTransferDoesNotCreateSignUp",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.187"
+      },
+      {
+        "name": "cancelledSignUpDoesNotReconcileOrActivate",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.179"
+      },
+      {
+        "name": "signUpPreservesMetadataAndBrowserStrategy",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.189"
+      },
+      {
+        "name": "enterpriseSignInPreparesConnectionBeforeOpeningBrowser",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.194"
+      },
+      {
+        "name": "unrelatedCallbackDoesNotSubmitNonce",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.166"
+      },
+      {
+        "name": "signUpTransportFailureDoesNotBecomeSuccess",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.164"
+      },
+      {
+        "name": "enterpriseSignInRefreshesPreparedRedirectOnExistingAttempt",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.212"
+      },
+      {
+        "name": "oauthRetryDoesNotReplayStalePreparedRedirect",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.219"
+      },
+      {
+        "name": "cancelledSignInDoesNotReconcileOrActivate",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.175"
+      },
+      {
+        "name": "signInTransportFailureDoesNotBecomeSuccess",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.166"
+      },
+      {
+        "name": "signUpPreservesCustomProviderStrategy",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.180"
+      },
+      {
+        "name": "signInPreservesCustomProviderStrategy",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.190"
+      },
+      {
+        "name": "missingRedirectLeavesAnIncompleteAttemptWithoutOpeningBrowser",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.168"
+      },
+      {
+        "name": "browserTransferCreatesSignUpWithMetadataWithoutSecondPrompt",
+        "classname": "com.clerk.api.BrowserSSOContractTest",
+        "time": "0.208"
+      }
+    ]
+  },
+  "sharedJavaScriptRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+  "sharedReport": {
+    "file": "shared-sso.log",
+    "passed": 12,
+    "sha256": "d71ffd14caff7f1fac7b6db752e4ceaa46243e77f8795a00e9c4dfe2d70bced5"
+  },
+  "authenticationGate": {
+    "cases": 63,
+    "scriptSha256": "fdc99f57d7ad8f49f63f5c8f5f4fdbbecab777f69f8a4a1bfe9b058cf21253a4",
+    "reports": [
+      {
+        "file": "gate/AuthEntryPointTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "5e3397da7273346f3c2b544e1afbe898a2576c6b0067125f457eb549aa4737aa"
+      },
+      {
+        "file": "gate/BrowserSSOContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "79118cc01a4a4ab98815860e4513b7724598da13660aac0bf66025bdb14adef7"
+      },
+      {
+        "file": "gate/GoogleIdentityContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "47f4325d4a49bfba9f1d9113664305977c7cb85ede8ab09601c12d754909517f"
+      },
+      {
+        "file": "gate/GoogleIdentityRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "321c7a3099b72372818ec56bfadde6bb5d325892d80a5daea2decf24abe47667"
+      },
+      {
+        "file": "gate/SessionSelectionContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "8216fb7ba4ae63b5c7c0b0b9c8ad19a8776c06604937a3592c91fb42a0d13b88"
+      },
+      {
+        "file": "gate/SignInCredentialContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "6d864bc9bc546daad5d048be3d0a657d7b21528b2748b407d8e95c8c802f84fd"
+      },
+      {
+        "file": "gate/SignOutContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "747d50dd5c84eafee27ce5a9479bf1a76cfb23e95a85c4417d94ebf7e764d28c"
+      },
+      {
+        "file": "gate/SignUpVerificationRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "365ffde0a3b4f47a54bb6a59f05ba79957b8c85229d2b43c457845f3f5417fcf"
+      }
+    ]
+  }
+}

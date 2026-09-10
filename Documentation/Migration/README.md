@@ -64,6 +64,8 @@ Builders and static resource factories become generated parameter objects on the
 
 Token failures throw `CoreException`; they are not converted to null. `GetTokenOptions` supports `template`, `skipCache` and `organizationId`; the old `expirationBuffer` option is removed because the shared cache owns expiration. After a 401, the refreshed client determines session selection. Pending sessions retain their tasks and use the canonical method/server outcome instead of the old Kotlin null shortcut. See the [token request migration](token-request-test-audit.md) for executed examples and intentional behavior changes.
 
+Browser SSO uses the callback configured on the retained owner. There is no public method for replaying a prepared verification URL: OAuth retries replace a pending redirect, and enterprise SSO refreshes preparation on the current attempt. A resolved SSO call can still have remaining requirements. See [browser SSO behavior and migration evidence](browser-sso-test-audit.md).
+
 Sign-out consumes the server response without a follow-up client refresh. An all-session failure clears the selected session but can leave known server sessions in `clerk.sessions`; it throws and does not prove server revocation. The client credential is retained or rotated unless the server explicitly clears it. Scoped removal of another session preserves the selected one. See [sign-out behavior and migration evidence](factor-signout-test-audit.md).
 
 Custom flow completion remains explicit:
