@@ -1,0 +1,21 @@
+{
+  "sourceRevision": "2ffc8206752e66e0e7575643950c56284dc7090a",
+  "locallyVerified": {
+    "aarByteEquality": true,
+    "packagingContract": "Both downloaded AARs independently passed verify-native-core-aar.py"
+  },
+  "sourceArchiveComparison": {
+    "localSHA256": "8ab132828193bf1583a1eb94a5fa648be6e7f60a0157df4f2180858858216b02",
+    "ciSHA256": "b27e60c53743b0cca7d209f0df111cce4d99c8de6243eea02f676890eec66d7a",
+    "identical": false,
+    "localGit": "git version 2.50.1 (Apple Git-155)",
+    "limitation": "Cross-host tar byte equality is not established. The CI source archive was not uploaded for content comparison. Exact source revision is verified from the workflow and build report."
+  },
+  "artifacts": {
+    "report.json": "fc7e915687b3e5b448c895e104299ffe9de609c938b06a3aa5687f1f0cdb96db",
+    "api-release-2.aar": "1b94508044fed2a8fa194041ecfcdc507b6777c301032f802515ad9534b60a68",
+    "api-release-1.aar": "1b94508044fed2a8fa194041ecfcdc507b6777c301032f802515ad9534b60a68",
+    "build-2.log": "aabcc14a6c65e8796913156b1cd56a24cfc4dbd41203d8f8f15f607ff89c8c9b",
+    "build-1.log": "1859fd5cd574cb6ce21beb9c99e633a552dac1bd0d8df16a0fb6301b10f37e0e"
+  }
+}
