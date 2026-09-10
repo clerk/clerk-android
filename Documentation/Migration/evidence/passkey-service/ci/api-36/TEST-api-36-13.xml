@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="6" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T22:51:06" hostname="localhost">
+  <testsuite name="com.clerk.api.SignInCredentialContractTest" tests="6" failures="0" errors="0" skipped="0" time="1.559" timestamp="2026-09-10T22:51:06" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="passkeyProviderFailureDoesNotSubmitCredential" classname="com.clerk.api.SignInCredentialContractTest" time="0.344" />
+    <testcase name="passkeyPreparationPreservesFailureStage" classname="com.clerk.api.SignInCredentialContractTest" time="0.247" />
+    <testcase name="cancelledPasskeyDoesNotSubmitCredential" classname="com.clerk.api.SignInCredentialContractTest" time="0.225" />
+    <testcase name="biometricSignInForwardsSelectionAndPrompt" classname="com.clerk.api.SignInCredentialContractTest" time="0.340" />
+    <testcase name="passkeySubmissionPreservesFailureStage" classname="com.clerk.api.SignInCredentialContractTest" time="0.207" />
+    <testcase name="passkeyForwardsOptionsAndRequiresFinalization" classname="com.clerk.api.SignInCredentialContractTest" time="0.196" />
+  </testsuite>
+</testsuites>

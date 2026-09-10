@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="3" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T22:51:11" hostname="localhost">
+  <testsuite name="com.clerk.api.SignUpVerificationRequestTest" tests="3" failures="0" errors="0" skipped="0" time="0.919" timestamp="2026-09-10T22:51:11" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="phoneCodeUsesExplicitVerificationStrategy" classname="com.clerk.api.SignUpVerificationRequestTest" time="0.342" />
+    <testcase name="emailCodeUsesExplicitVerificationStrategy" classname="com.clerk.api.SignUpVerificationRequestTest" time="0.301" />
+    <testcase name="emailLinkSendsConfiguredCallbackAndMatchingPkceChallenge" classname="com.clerk.api.SignUpVerificationRequestTest" time="0.276" />
+  </testsuite>
+</testsuites>

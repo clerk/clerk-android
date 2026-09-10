@@ -21,6 +21,8 @@ The seventeen shared cases pass against the same bundle packaged by Android: nin
 
 The CI authentication runner now includes the three native passkey request cases, two registration success/cancellation cases, six registration failure cases and two session passkey verification cases. Each suite runs separately and must produce its exact named cases; a green Gradle result alone is insufficient. The existing sign-in suite includes the added provider-failure case too.
 
+Commit `6150d833295dfcddd4e7aed3c9d40226a5f262e5` passes all four jobs in [Android test CI](https://github.com/clerk/clerk-android/actions/runs/34539035410). Downloaded XML independently verifies 556 unit cases (39 API and 517 UI) and 116 emulator cases (two on API 24 and 114 on API 36), without failures or skips. The API 36 reports contain all 99 named authentication-runner cases, including the six new registration failures, plus twelve token cases, core smoke, platform capability and the rendered authentication journey. [CI evidence](evidence/passkey-service/ci/proof.json) records the exact revision, workflow results, 22 canonical instrumentation reports and unit-report hashes. Identical backup XML is recorded without counting it twice. All fourteen native passkey-host unit cases match the named local cases.
+
 This work changes tests, CI test selection and migration evidence. The production TypeScript core, generated bindings, native hosts and packaged bundle are unchanged. Native code continues to own platform presentation and cancellation; the existing JavaScript implementation owns registration, sign-in and verification HTTP behavior.
 
 ## Every creation-service declaration
