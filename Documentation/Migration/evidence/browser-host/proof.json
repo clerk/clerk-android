@@ -1,0 +1,182 @@
+{
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "retired": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/ExternalAccountServiceTest.kt",
+      "sha256": "35bec5337ac421f1ba31bf13b36f33a66c4114cba38c41caf845ca179fb6d1e6",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "hasPendingExternalAccountConnection returns false initially",
+          "line": 110
+        },
+        {
+          "name": "cancelPendingExternalAccountConnection clears state",
+          "line": 115
+        },
+        {
+          "name": "completeExternalConnection handles no pending connection gracefully",
+          "line": 124
+        },
+        {
+          "name": "completeExternalConnection handles missing external account",
+          "line": 133
+        },
+        {
+          "name": "cancelPendingExternalAccountConnection completes with cancellation error",
+          "line": 146
+        },
+        {
+          "name": "connectExternalAccount launches authorization through non-exported manager",
+          "line": 156
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOServiceCancellationTest.kt",
+      "sha256": "2a145f148cdc36a97e02b1049a491345f44bbd6cb621d92795ca663a46e667ee",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "cancelPendingAuthentication returns typed cancellation failure",
+          "line": 45
+        },
+        {
+          "name": "callback without success marker returns cancellation instead of starting sign up",
+          "line": 59
+        },
+        {
+          "name": "provider error callback returns cancellation instead of starting sign up",
+          "line": 75
+        },
+        {
+          "name": "explicit external account not found marker still transfers to sign up",
+          "line": 92
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOServiceTest.kt",
+      "sha256": "597515fd2c826f670976d28a5c62082edb829db264c9616fc5b64464ffa0e4b8",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "hasPendingAuthentication returns false initially",
+          "line": 123
+        },
+        {
+          "name": "hasPendingExternalAccountConnection returns false initially",
+          "line": 128
+        },
+        {
+          "name": "cancelPendingAuthentication clears state",
+          "line": 133
+        },
+        {
+          "name": "authenticateWithRedirect returns failure when API call fails",
+          "line": 142
+        },
+        {
+          "name": "completeAuthenticateWithRedirect handles no pending authentication gracefully",
+          "line": 157
+        },
+        {
+          "name": "completeExternalConnection handles no pending connection gracefully",
+          "line": 169
+        },
+        {
+          "name": "completeExternalConnection handles missing external account",
+          "line": 178
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "NativeCoreTests/Android/BrowserHostTest.kt": "63bd39192e81b317bc50802b1aff5bf4dacaf572e67a04611c92408e59dcd6ae",
+    "NativeCoreTests/Android/BrowserCallbackContractTest.kt": "9cef3597692b200bce362d4f70ba5f1c586007e6b2fd8c459cf639ed4f38d528"
+  },
+  "reports": {
+    "TEST-BrowserHostTest.xml": {
+      "passed": 8,
+      "sha256": "85e5569f312f279bfe99262d0f381b637d150f7b624574d028bc2f027f0a43e6",
+      "tests": [
+        "idleCallbacksAndCancellationDoNotCreatePendingWork",
+        "launchesExplicitNonExportedManagerWithOpaqueRequestId",
+        "userCancellationIsTypedAndAllowsAnotherPresentation",
+        "coroutineCancellationReleasesThePendingPresentation",
+        "concurrentPresentationDoesNotReplaceTheFirstRequest",
+        "mismatchedAndDuplicateCallbacksCannotCompleteAnotherRequest",
+        "unavailableOrInvalidPresentationFailsBeforeLaunching",
+        "failedManagerLaunchClearsPendingState"
+      ]
+    },
+    "TEST-BrowserCallbackContractTest.xml": {
+      "passed": 5,
+      "sha256": "881d9c3753c9809e719f1901c35d274c1f3773b9777907bad9e23f8479cba9fe",
+      "tests": [
+        "missingSuccessMarkerReloadsRemainingServerRequirements",
+        "providerQueryErrorDoesNotReplaceServerState",
+        "transferMarkerAloneCannotCreateSignUp",
+        "nativeCallbackFailurePreservesErrorAndReconciledState",
+        "signInPreparationPreservesStructuredFailure"
+      ]
+    }
+  },
+  "gate": {
+    "GoogleIdentityContractTest": {
+      "passed": 16,
+      "file": "gate/GoogleIdentityContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "9194a83129f71cb6861a505f083e3f7844439a8b22220aa78f9911cc7e7c77c9"
+    },
+    "GoogleIdentityRequestTest": {
+      "passed": 3,
+      "file": "gate/GoogleIdentityRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "3c1d5fec1a284d2bf18bd3baf2a1aa5b4bc02d4783afc77a091292c10ec5bad2"
+    },
+    "AuthEntryPointTest": {
+      "passed": 5,
+      "file": "gate/AuthEntryPointTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "8dbf6851cf56a057c9c3305610144affb53c70358bafe3240789463f2bf075d7"
+    },
+    "SessionSelectionContractTest": {
+      "passed": 8,
+      "file": "gate/SessionSelectionContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "153906ecfac5d854a3229e624c4265e500e3bbcee48e67021f51bc347986532e"
+    },
+    "SignInCredentialContractTest": {
+      "passed": 5,
+      "file": "gate/SignInCredentialContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "5aa838709a3eda0f3c32ee2df179d41bf9668bbeaac3afe209740fc9906fba01"
+    },
+    "SignUpVerificationRequestTest": {
+      "passed": 3,
+      "file": "gate/SignUpVerificationRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "b51e2ab7f5a5ff5425b262b3d00c32390a1d37118f1e3b7bb587831d0fee404a"
+    },
+    "SignOutContractTest": {
+      "passed": 7,
+      "file": "gate/SignOutContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "8f07982a77bf587e6cb0908ff2a3bde12c1b921874ce49ee1c6e6f2fc6cfded8"
+    },
+    "BrowserSSOContractTest": {
+      "passed": 16,
+      "file": "gate/BrowserSSOContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "d96573213d87c426ef7b1637f76517367f7033d23c1afe88e53f127683e3d2ae"
+    },
+    "OAuthProviderRequestTest": {
+      "passed": 2,
+      "file": "gate/OAuthProviderRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "6395570bacc2ef422c521056fa178c9bc6acdd194ab10777da5ee9076adc8a18"
+    },
+    "BrowserHostTest": {
+      "passed": 8,
+      "file": "gate/BrowserHostTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "85e5569f312f279bfe99262d0f381b637d150f7b624574d028bc2f027f0a43e6"
+    },
+    "BrowserCallbackContractTest": {
+      "passed": 5,
+      "file": "gate/BrowserCallbackContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "881d9c3753c9809e719f1901c35d274c1f3773b9777907bad9e23f8479cba9fe"
+    }
+  }
+}
