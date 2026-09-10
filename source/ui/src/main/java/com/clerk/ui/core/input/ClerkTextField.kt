@@ -107,10 +107,7 @@ fun ClerkTextField(
       isError = isError,
       colors = textFieldColors,
       visualTransformation = resolvedVisualTransformation(isVisible, visualTransformation),
-      leadingIcon =
-        leadingIcon?.let { resId ->
-          { ClickableIcon(resId = resId, onClick = {}, contentDescription = null) }
-        },
+      leadingIcon = leadingIcon?.let { resId -> { TextFieldIcon(resId = resId) } },
       trailingIcon = {
         TrailingIcon(
           trailingIcon,
@@ -207,9 +204,9 @@ private fun TrailingIcon(
       }
     val tint =
       if (isError) ClerkMaterialTheme.colors.danger else ClerkMaterialTheme.colors.mutedForeground
-    ClickableIcon(
+    TextFieldIcon(
       resId = resId,
-      onClick = onClick,
+      onClick = onClick.takeIf { visualTransformation is PasswordVisualTransformation && !isError },
       tint = tint,
       contentDescription = contentDescription,
     )
@@ -230,22 +227,24 @@ private fun getTextFieldColors(): TextFieldColors =
   )
 
 /**
- * A clickable icon component used within the text field for leading and trailing icons.
+ * An icon used within the text field, optionally interactive for password visibility.
  *
  * @param resId The drawable resource ID for the icon
- * @param onClick Callback triggered when the icon is clicked
+ * @param onClick Optional callback; without one the icon is decorative
  * @param tint The color tint to apply to the icon, defaults to muted foreground color
  * @param contentDescription Content description for accessibility support
  */
 @Composable
-private fun ClickableIcon(
+private fun TextFieldIcon(
   @DrawableRes resId: Int,
-  onClick: () -> Unit,
+  onClick: (() -> Unit)? = null,
   tint: androidx.compose.ui.graphics.Color = ClerkMaterialTheme.colors.mutedForeground,
   contentDescription: String? = null,
 ) {
   Icon(
-    modifier = Modifier.size(dp24).clickable { onClick() },
+    modifier =
+      Modifier.size(dp24)
+        .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
     painter = painterResource(resId),
     contentDescription = contentDescription,
     tint = tint,
