@@ -113,7 +113,7 @@ For methods retaining their names, inspect `NativeCore/public-api.txt`: paramete
 
 The new secure store uses an app-private non-backed-up encrypted record. It imports only matching prior-format identities and preserves durable clears. The previous cached publishable key or explicit `legacyPublishableKey` establishes instance scope; a token from another instance is not adopted. See [credential continuity](../../NATIVE_CORE.md#credential-continuity).
 
-The selected prerelease profile does **not** expose the old hosted-portal authentication protocol; live shared-session ContentProvider synchronization; direct public device-token replacement; proxy/custom-header configuration; mutable global reinitialization; or persistent offline resource-cache bootstrap. The separate native `ClerkLog` and public JWT-decoding helpers are not compatibility APIs. Saved-credential import does not prove any of those live behaviors. Browser OAuth/enterprise SSO through future `sso` is a different contract from hosted authentication.
+The selected prerelease profile does **not** expose the old hosted-portal authentication protocol; live shared-session ContentProvider synchronization; direct public device-token replacement; proxy/custom-header configuration; mutable global reinitialization; or persistent offline resource-cache bootstrap. The separate native `ClerkLog` and public JWT-decoding helpers are not compatibility APIs. The old installation-ID cache and automatic `x-native-device-id` injection are also removed; saved DEVICE_ID values are not bearer credentials and are left untouched during import. Saved-credential import does not prove any of those live behaviors. Browser OAuth/enterprise SSO through future `sso` is a different contract from hosted authentication.
 
 Apps depending on these surfaces must remain on the previous major until their migration is explicitly supported. Generated signatures do not prove execution support for every optional capability. The source inventory makes removed types and methods reviewable; it is not a claim that previous-major support can end.
 
@@ -127,7 +127,7 @@ Before general release, validate a signed-in old-major app upgraded in place; re
 
 The replaced native domain source tree has been deleted from this major. The linked baseline and hashed source inventory preserve its public declarations for migration review. The generated `NativeCore` target is the implementation; no old native authentication fallback is packaged.
 
-Of the 105 old JVM test/helper files, three have been migrated, nine have been retired after assertion review, and 93 remain for the unfinished audit. The [test audit](test-audit.md) links the replacement evidence and intentional API changes. Retained files are not claimed to run against the generated API.
+Of the 105 old JVM test/helper files, three have been migrated, 11 have been retired after assertion review, and 91 remain for the unfinished audit. The [test audit](test-audit.md) links the replacement evidence and intentional API changes. Retained files are not claimed to run against the generated API.
 
 For Expo consumers, see the [D8/R8 compiler compatibility proof](../Measurements/expo-compiler-build.md). Kotlin source compiler compatibility alone does not establish that the app can process the SDK's Kotlin metadata.
 

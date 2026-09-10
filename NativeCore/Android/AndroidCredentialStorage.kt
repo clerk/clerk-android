@@ -50,7 +50,9 @@ public class AndroidCredentialStorage(
 
   override suspend fun read(): String? = withContext(Dispatchers.IO) {
     mutex.withLock {
-      if (file.baseFile.exists()) {
+      // AtomicFile.openRead() restores a committed .bak left by an interrupted write on older Android.
+      // A backup may contain a durable clear; treating it as absent would reimport stale credentials.
+      if (file.baseFile.exists() || File(file.baseFile.path + ".bak").exists()) {
         val plaintext = decrypt(file.openRead().use { it.readBytes().toString(Charsets.UTF_8) }, alias)
         val record = Json.parseToJsonElement(plaintext).jsonObject
         if (record["schemaVersion"] != JsonPrimitive(1)) throw CoreException("unsupported_credential_record")
