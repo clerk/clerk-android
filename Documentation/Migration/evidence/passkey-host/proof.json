@@ -1,0 +1,276 @@
+{
+  "legacy": {
+    "baselineRevision": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+    "files": [
+      {
+        "path": "source/api/src/test/java/com/clerk/api/passkeys/PasskeyCredentialManagerTest.kt",
+        "baselineSHA256": "e0cfafa7e5cf0c735b4a3d6143bfd56dd8941ef8db07f7f46f15fcdb609cfd0f",
+        "declarations": [
+          "PasskeyCredentialManagerImpl can be used as PasskeyCredentialManager interface",
+          "createCredential method exists and can be called",
+          "getCredential method exists and can be called"
+        ]
+      },
+      {
+        "path": "source/api/src/test/java/com/clerk/api/passkeys/PasskeyHelperTest.kt",
+        "baselineSHA256": "c965809858a1e1547429b26a564d282223f5843b5aa6a90288370178afc817e8",
+        "declarations": [
+          "getDomain returns domain without www prefix",
+          "getDomain returns domain without protocol and path",
+          "getDomain returns empty string when host is null",
+          "getDomain handles malformed URL gracefully",
+          "GetPasskeyRequest serializes correctly",
+          "PublicKeyCredentialData holds correct data",
+          "constants have expected values"
+        ]
+      }
+    ]
+  },
+  "productionRuntimeAndModuleConfigurationUnchangedFrom": "236cfc89be380329ef88a99d37933d00af995140",
+  "coreManifest": {
+    "protocolVersion": 1,
+    "hostCapabilityVersion": 1,
+    "contractHash": "0f8387f260072ba6f894442b73d50afa6bda5f1205ed3c9209f5d6b1cfba16ce",
+    "roots": {
+      "clerk": {
+        "kind": "ref",
+        "name": "Clerk"
+      },
+      "signIn": {
+        "kind": "ref",
+        "name": "SignIn"
+      },
+      "signUp": {
+        "kind": "ref",
+        "name": "SignUp"
+      },
+      "session": {
+        "kind": "ref",
+        "name": "Session"
+      },
+      "user": {
+        "kind": "ref",
+        "name": "User"
+      },
+      "organization": {
+        "kind": "ref",
+        "name": "Organization"
+      }
+    },
+    "namingPolicy": "Remove Future and trailing Resource; fail collisions.",
+    "errorPolicy": "Approved authentication error-only envelopes throw after state is applied.",
+    "coreRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+    "bundleSHA256": "406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d",
+    "bundleBytes": 1317757,
+    "thirdPartyNoticesSHA256": "e4223a282e22ea86b1215013d7e6c5f4e6f02be8d14ca2ce357ed14ba319e1e9",
+    "bundledDependencies": [
+      {
+        "name": "@clerk/clerk-js",
+        "version": "6.31.0",
+        "license": "MIT",
+        "noticeSHA256": "67ad6d13f0d5c1d8cea4143041a6498e24b9bb5a3a931dd4e4da830473935c72"
+      },
+      {
+        "name": "@clerk/mobile-runtime",
+        "version": "0.0.0",
+        "license": "MIT",
+        "noticeSHA256": "bb582cd9530e388e0c8ec87df05756e867197116a9fa2e3bb48db12785776092"
+      },
+      {
+        "name": "@clerk/native-bindings",
+        "version": "0.0.0",
+        "license": "MIT",
+        "noticeSHA256": "bb582cd9530e388e0c8ec87df05756e867197116a9fa2e3bb48db12785776092"
+      },
+      {
+        "name": "@clerk/shared",
+        "version": "4.31.0",
+        "license": "MIT",
+        "noticeSHA256": "bb582cd9530e388e0c8ec87df05756e867197116a9fa2e3bb48db12785776092"
+      },
+      {
+        "name": "@stripe/stripe-js",
+        "version": "5.6.0",
+        "license": "MIT",
+        "noticeSHA256": "6c91cb98ce48d38c68373279e439f230532fb311b321a37ce080c89e2018cc39"
+      },
+      {
+        "name": "@tanstack/query-core",
+        "version": "5.102.8",
+        "license": "MIT",
+        "noticeSHA256": "277d2a8e459713d6c596bab89ef857cb8b2433223fa9edb49ccc403a6ceb08ee"
+      },
+      {
+        "name": "@wallet-standard/app",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/base",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/core",
+        "version": "1.1.1",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/errors",
+        "version": "0.1.1",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/features",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/wallet",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "alien-signals",
+        "version": "2.0.6",
+        "license": "MIT",
+        "noticeSHA256": "906251009c3633dc7ad932e279642ef6d376924ef6bbfb1f4e562211b50c7c67"
+      },
+      {
+        "name": "browser-tabs-lock",
+        "version": "1.3.0",
+        "license": "MIT",
+        "noticeSHA256": "d9f86d92023122397b859a28e4d10b626395c1431c00e1d6734d9cd814766004"
+      },
+      {
+        "name": "core-js",
+        "version": "3.47.0",
+        "license": "MIT",
+        "noticeSHA256": "f622755d31e11722cc78d911d1d5828593b6ae013d7738e08f16ee10d5200980"
+      },
+      {
+        "name": "crypto-js",
+        "version": "4.2.0",
+        "license": "MIT",
+        "noticeSHA256": "3bae8eb6da93d9a4e2a218341cedf58b057efc339566421261f89ab03c9ed25d"
+      },
+      {
+        "name": "dequal",
+        "version": "2.0.3",
+        "license": "MIT",
+        "noticeSHA256": "d0a8e5996a99e9ea88093954e45ab673905d5fdc2d243e45622bc5ff1cf35f36"
+      },
+      {
+        "name": "glob-to-regexp",
+        "version": "0.4.1",
+        "license": "BSD-2-Clause",
+        "noticeSHA256": "91c0ac7870145461be8962b9b5ad7c103b52978a5566edfdccdb3680c4818f3f"
+      },
+      {
+        "name": "js-cookie",
+        "version": "3.0.8",
+        "license": "MIT",
+        "noticeSHA256": "c44e6a5c3e88cfd23795e66a27f1bec24cd8ab81b28425ccaaac1bc15eae32a8"
+      }
+    ],
+    "runtime": {
+      "apple": "JavaScriptCore (system)",
+      "android": "quickjs-ng v0.15.1 fd0a0210b7be00957751871e7e01b8291268fc29"
+    }
+  },
+  "sourceSHA256": {
+    "NativeCore/Android/AndroidCapabilities.kt": "39de628895928fd3118ce37ba697ac740d4c75166b939d740342389541dce425",
+    "NativeCore/Android/AndroidPasskeyRequests.kt": "b1c66ed325c93c9ace01c792f382fdfc3d57f0f27554face0e1ed7c51f6ceec2",
+    "NativeCoreTests/Unit/AndroidPasskeyHostTest.kt": "041e6ef29154221bbaa8c650ffb1d4bdb25c8a4ac4200db19b28fb512a7d38a7",
+    "NativeCoreTests/Android/PasskeyRequestTest.kt": "47bd1d731de4965820628b4e30ceee80644fbb517600edf92e188ba7fa52dd24",
+    "NativeCoreTests/Android/PasskeyRegistrationTest.kt": "90480b005c5289b3e3ab2683b6321b36688785a18016ceec6a01b3d9fcd24bdf",
+    "NativeCoreTests/Android/SessionPasskeyVerificationTest.kt": "e42472bef96af822d0673931339c0e204c7eb52ecee16cf60fc626b40ef548cc",
+    "NativeCoreTests/Android/SignInCredentialContractTest.kt": "56fa70820983fda80044bb430882c38b7e35d91fe025baa8774cd3f3d1db932b"
+  },
+  "sharedSourceSHA256": {
+    "packages/mobile-runtime/test/passkey.test.mjs": "39b1f3ef50c671785e44b946182547c31365e210e336dc27d546c2b6029a51bf",
+    "packages/mobile-runtime/test/passkey-registration.test.mjs": "28d450c501e21b832603dfc6a980628376a200e98a75063bd9b634baa505a079",
+    "packages/clerk-js/src/utils/nativeCredentials.ts": "712a85cdb09d9cc6f5ce289320e7a63c6a34bcfce1746e29c85a24c4093a6310",
+    "packages/shared/src/internal/clerk-js/passkeys.ts": "498724e84e74582dd5acd24bc9d07d9ff47e47915f7b104405953b71f1364dfc"
+  },
+  "unit": {
+    "passed": 39,
+    "classes": {
+      "AndroidHTTPCapabilityTest": 6,
+      "AndroidNetworkTest": 13,
+      "AndroidPasskeyHostTest": 14,
+      "AndroidTimerCapabilityTest": 2,
+      "ClerkConfigurationTest": 4
+    },
+    "hostMethods": [
+      "requestsPreserveWebAuthnOptionsAndReturnPublicKeyResponses",
+      "credentialTypeMismatchFailsWithoutRetrying",
+      "platformCancellationIsReportedAsUserCancelled",
+      "providerFailuresPropagateWithoutRetry",
+      "callerCancellationCancelsSystemRequestAndIgnoresLateReply",
+      "missingAndFinishedActivitiesFailBeforeCredentialRequest",
+      "unsupportedOptionsFailBeforeCredentialRequest"
+    ],
+    "hostSDKConfigurations": [
+      28,
+      36
+    ],
+    "providerBoundary": "Test provider discovery shadow; production AndroidCapabilities, request converter and AndroidX CredentialManager implementation"
+  },
+  "packaged": {
+    "passed": 12,
+    "device": "API 36 arm64 emulator-5554",
+    "cases": [
+      "com.clerk.api.PasskeyRegistrationTest#cancellationDoesNotSubmitCredential",
+      "com.clerk.api.PasskeyRegistrationTest#registrationSupportsRenameAndDeletionReceipt",
+      "com.clerk.api.PasskeyRequestTest#assertionRequestUsesCredentialManagerWebAuthnEncodingAndPromptPreference",
+      "com.clerk.api.PasskeyRequestTest#malformedCredentialIDsFailBeforeCredentialManagerPresentation",
+      "com.clerk.api.PasskeyRequestTest#registrationRequestEncodesUserHandleAndExcludedCredentialsForAndroid",
+      "com.clerk.api.SessionPasskeyVerificationTest#cancelledPasskeyVerificationDoesNotSubmitAnAttempt",
+      "com.clerk.api.SessionPasskeyVerificationTest#generatedPasskeyVerificationSubmitsTheHostCredential",
+      "com.clerk.api.SignInCredentialContractTest#biometricSignInForwardsSelectionAndPrompt",
+      "com.clerk.api.SignInCredentialContractTest#cancelledPasskeyDoesNotSubmitCredential",
+      "com.clerk.api.SignInCredentialContractTest#passkeyForwardsOptionsAndRequiresFinalization",
+      "com.clerk.api.SignInCredentialContractTest#passkeyPreparationPreservesFailureStage",
+      "com.clerk.api.SignInCredentialContractTest#passkeySubmissionPreservesFailureStage"
+    ]
+  },
+  "shared": {
+    "passed": 10,
+    "bundleByteIdenticalToAndroidAsset": true
+  },
+  "incompleteCombinedFilterAttempt": {
+    "expected": 12,
+    "observed": 3,
+    "verifierError": "Expected 12 named scenarios exactly once; found 3 cases",
+    "acceptedAfter": "Preserved the three verified PasskeyRequestTest cases and separately executed and verified the remaining two, two and five cases"
+  },
+  "limitations": [
+    "No successful physical passkey prompt or real provider/account/relying-party validation",
+    "No signed-in old-major upgrade",
+    "Remaining passkey request/service assertions not retired by this audit"
+  ],
+  "artifactSHA256": {
+    "packaged/TEST-PasskeyRegistrationTest.xml": "5d2ec80f6b894231755f2e32db1acef50cc97ec5b4b7b3fca441d1314015d601",
+    "packaged/TEST-PasskeyRequestTest.xml": "f9e3dc338df87c8c7fcbc2f1ac03b4d606caf1adee0bb62c2acf6896707bb541",
+    "packaged/TEST-SessionPasskeyVerificationTest.xml": "0f564dd3fdc5bd7e65b63f9168aa33f5b2bd4206cb41be9c2017a7c5f7d503b3",
+    "packaged/TEST-SignInCredentialContractTest.xml": "48c29f011fecbaae318bb803663704d03e4cba263b1996dadb20d478f392feb3",
+    "passkey-host-PasskeyRegistrationTest.log": "5f4730620ac16e5402794d3f0dda6c8150949ada800f815e9d8a472ef5c40b0c",
+    "passkey-host-SessionPasskeyVerificationTest.log": "f62a401fdc7644a0eeb277ed28f8b89b9dce5a73d72e2c4c0d19e4304a6aaece",
+    "passkey-host-SignInCredentialContractTest.log": "debea47ca0d8ee9bcb18f7335c16206693410cf453d4e074c6008cf912328c4c",
+    "passkey-host-all-unit.log": "ea708233ee74ee5d3dacdaa2b523787fdd62699513b737ab2a96bc6ee6b15c4f",
+    "passkey-host-packaged.log": "f62a401fdc7644a0eeb277ed28f8b89b9dce5a73d72e2c4c0d19e4304a6aaece",
+    "passkey-host-shared.log": "48e697011fff85470184ac2a6727b232bad0b210a97cfb6dc15c39530b8921bb",
+    "unit/TEST-com.clerk.api.AndroidHTTPCapabilityTest.xml": "a0d0dc308880f2143e1bd2908ce9407611abcd3606df51560513fbbb853e3fa4",
+    "unit/TEST-com.clerk.api.AndroidNetworkTest.xml": "6e7dcae7155fe07f3e16c6e8eae228604ee3ddc1cfb273ec3d6812966d72af1d",
+    "unit/TEST-com.clerk.api.AndroidPasskeyHostTest.xml": "b3def1ebf721e055bf319bb9a2aa6e2b59c98bc645339fd8924b42f565f12901",
+    "unit/TEST-com.clerk.api.AndroidTimerCapabilityTest.xml": "b3e4fba405015d008bc21bdfdae34993821b19fe468f9d5bbca46e6aca0ecda7",
+    "unit/TEST-com.clerk.api.ClerkConfigurationTest.xml": "c05d8c9226b71fb6f0588a388bc7cc07ff5fdce59009b841271d2f6238d6fac7"
+  }
+}

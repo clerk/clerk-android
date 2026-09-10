@@ -1,0 +1,83 @@
+Configuration on demand is an incubating feature.
+Type-safe project accessors is an incubating feature.
+> Task :source:api:preBuild UP-TO-DATE
+> Task :source:api:preDebugBuild UP-TO-DATE
+> Task :source:api:generateDebugBuildConfig UP-TO-DATE
+> Task :source:api:generateDebugResources UP-TO-DATE
+> Task :source:api:packageDebugResources UP-TO-DATE
+> Task :source:api:processDebugNavigationResources UP-TO-DATE
+> Task :source:api:parseDebugLocalResources UP-TO-DATE
+> Task :source:api:generateDebugRFile UP-TO-DATE
+> Task :source:api:compileDebugKotlin UP-TO-DATE
+> Task :source:api:javaPreCompileDebug UP-TO-DATE
+> Task :source:api:compileDebugJavaWithJavac UP-TO-DATE
+> Task :source:api:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :source:api:preDebugAndroidTestBuild UP-TO-DATE
+> Task :source:api:extractDeepLinksDebug UP-TO-DATE
+> Task :source:api:processDebugManifest UP-TO-DATE
+> Task :source:api:mergeDebugAndroidTestManifest UP-TO-DATE
+> Task :source:api:processDebugAndroidTestManifest UP-TO-DATE
+> Task :source:api:generateDebugAndroidTestBuildConfig UP-TO-DATE
+> Task :source:api:generateDebugAndroidTestResources UP-TO-DATE
+> Task :source:api:packageDebugAndroidTestResources UP-TO-DATE
+> Task :source:api:processDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :source:api:parseDebugAndroidTestLocalResources UP-TO-DATE
+> Task :source:api:generateDebugAndroidTestRFile UP-TO-DATE
+> Task :source:api:compileDebugAndroidTestKotlin UP-TO-DATE
+> Task :source:api:javaPreCompileDebugAndroidTest UP-TO-DATE
+> Task :source:api:compileDebugAndroidTestJavaWithJavac UP-TO-DATE
+> Task :source:api:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :source:api:generateDebugAssets UP-TO-DATE
+> Task :source:api:mergeDebugAssets UP-TO-DATE
+> Task :source:api:mergeDebugAndroidTestAssets UP-TO-DATE
+> Task :source:api:compressDebugAndroidTestAssets UP-TO-DATE
+> Task :source:api:generateDebugAndroidTestGlobalSynthetics UP-TO-DATE
+> Task :source:api:l8DexDesugarLibDebugAndroidTest UP-TO-DATE
+> Task :source:api:processDebugAndroidTestJavaRes UP-TO-DATE
+> Task :source:api:processDebugJavaRes UP-TO-DATE
+> Task :source:api:mergeDebugAndroidTestJavaResource UP-TO-DATE
+> Task :source:api:checkDebugAndroidTestDuplicateClasses UP-TO-DATE
+> Task :source:api:desugarDebugAndroidTestFileDependencies UP-TO-DATE
+> Task :source:api:mergeExtDexDebugAndroidTest UP-TO-DATE
+> Task :source:api:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :source:api:writeDebugAarMetadata UP-TO-DATE
+> Task :source:api:checkDebugAndroidTestAarMetadata UP-TO-DATE
+> Task :source:api:mergeLibDexDebugAndroidTest UP-TO-DATE
+> Task :source:api:mapDebugAndroidTestSourceSetPaths UP-TO-DATE
+> Task :source:api:compileDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :source:api:mapDebugSourceSetPaths UP-TO-DATE
+> Task :source:api:compileDebugLibraryResources UP-TO-DATE
+> Task :source:api:mergeDebugAndroidTestResources UP-TO-DATE
+> Task :source:api:processDebugAndroidTestResources UP-TO-DATE
+> Task :source:api:dexBuilderDebugAndroidTest UP-TO-DATE
+> Task :source:api:mergeProjectDexDebugAndroidTest UP-TO-DATE
+> Task :source:api:configureCMakeDebug[arm64-v8a]
+> Task :source:api:buildCMakeDebug[arm64-v8a]
+> Task :source:api:configureCMakeDebug[armeabi-v7a]
+> Task :source:api:buildCMakeDebug[armeabi-v7a]
+> Task :source:api:configureCMakeDebug[x86_64]
+> Task :source:api:buildCMakeDebug[x86_64]
+> Task :source:api:mergeDebugJniLibFolders UP-TO-DATE
+> Task :source:api:mergeDebugNativeLibs UP-TO-DATE
+> Task :source:api:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :source:api:mergeDebugAndroidTestJniLibFolders UP-TO-DATE
+> Task :source:api:mergeDebugAndroidTestNativeLibs UP-TO-DATE
+> Task :source:api:stripDebugAndroidTestDebugSymbols UP-TO-DATE
+> Task :source:api:validateSigningDebugAndroidTest UP-TO-DATE
+> Task :source:api:writeDebugAndroidTestSigningConfigVersions UP-TO-DATE
+> Task :source:api:packageDebugAndroidTest UP-TO-DATE
+> Task :source:api:createDebugAndroidTestApkListingFileRedirect UP-TO-DATE
+
+> Task :source:api:connectedDebugAndroidTest
+Running tests on devices: Pixel_9_Pro(AVD) - 16
+
+[Incubating] Problems report is available at: file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/clerk-android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+63 actionable tasks: 7 executed, 56 up-to-date

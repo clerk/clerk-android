@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.api.AndroidPasskeyHostTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-09-10T22:12:36.234Z" hostname="mac.lan" time="5.941">
+  <properties/>
+  <testcase name="platformCancellationIsReportedAsUserCancelled[28]" classname="com.clerk.api.AndroidPasskeyHostTest" time="1.635"/>
+  <testcase name="credentialTypeMismatchFailsWithoutRetrying[28]" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.049"/>
+  <testcase name="requestsPreserveWebAuthnOptionsAndReturnPublicKeyResponses[28]" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.036"/>
+  <testcase name="callerCancellationCancelsSystemRequestAndIgnoresLateReply[28]" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.039"/>
+  <testcase name="unsupportedOptionsFailBeforeCredentialRequest[28]" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.035"/>
+  <testcase name="missingAndFinishedActivitiesFailBeforeCredentialRequest[28]" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.035"/>
+  <testcase name="providerFailuresPropagateWithoutRetry[28]" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.034"/>
+  <testcase name="platformCancellationIsReportedAsUserCancelled" classname="com.clerk.api.AndroidPasskeyHostTest" time="3.767"/>
+  <testcase name="credentialTypeMismatchFailsWithoutRetrying" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.05"/>
+  <testcase name="requestsPreserveWebAuthnOptionsAndReturnPublicKeyResponses" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.038"/>
+  <testcase name="callerCancellationCancelsSystemRequestAndIgnoresLateReply" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.042"/>
+  <testcase name="unsupportedOptionsFailBeforeCredentialRequest" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.035"/>
+  <testcase name="missingAndFinishedActivitiesFailBeforeCredentialRequest" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.037"/>
+  <testcase name="providerFailuresPropagateWithoutRetry" classname="com.clerk.api.AndroidPasskeyHostTest" time="0.036"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

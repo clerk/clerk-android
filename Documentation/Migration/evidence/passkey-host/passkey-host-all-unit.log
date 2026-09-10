@@ -1,0 +1,51 @@
+Configuration on demand is an incubating feature.
+Type-safe project accessors is an incubating feature.
+> Task :source:api:preBuild UP-TO-DATE
+> Task :source:api:preDebugBuild UP-TO-DATE
+> Task :source:api:generateDebugBuildConfig UP-TO-DATE
+> Task :source:api:generateDebugResources UP-TO-DATE
+> Task :source:api:packageDebugResources UP-TO-DATE
+> Task :source:api:processDebugNavigationResources UP-TO-DATE
+> Task :source:api:parseDebugLocalResources UP-TO-DATE
+> Task :source:api:generateDebugRFile UP-TO-DATE
+> Task :source:api:compileDebugKotlin UP-TO-DATE
+> Task :source:api:javaPreCompileDebug UP-TO-DATE
+> Task :source:api:compileDebugJavaWithJavac UP-TO-DATE
+> Task :source:api:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :source:api:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :source:api:preDebugUnitTestBuild UP-TO-DATE
+> Task :source:api:writeDebugAarMetadata UP-TO-DATE
+> Task :source:api:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :source:api:mapDebugSourceSetPaths UP-TO-DATE
+> Task :source:api:compileDebugLibraryResources UP-TO-DATE
+> Task :source:api:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :source:api:generateDebugUnitTestResources UP-TO-DATE
+> Task :source:api:mergeDebugUnitTestResources UP-TO-DATE
+> Task :source:api:extractDeepLinksDebug UP-TO-DATE
+> Task :source:api:processDebugManifest UP-TO-DATE
+> Task :source:api:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :source:api:processDebugUnitTestManifest UP-TO-DATE
+> Task :source:api:processDebugUnitTestResources UP-TO-DATE
+> Task :source:api:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :source:api:generateDebugUnitTestAssets UP-TO-DATE
+> Task :source:api:generateDebugAssets UP-TO-DATE
+> Task :source:api:mergeDebugAssets UP-TO-DATE
+> Task :source:api:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :source:api:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :source:api:generateDebugUnitTestConfig UP-TO-DATE
+> Task :source:api:processDebugJavaRes UP-TO-DATE
+> Task :source:api:compileDebugUnitTestKotlin
+> Task :source:api:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :source:api:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :source:api:testDebugUnitTest
+
+[Incubating] Problems report is available at: file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/clerk-android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 14s
+32 actionable tasks: 2 executed, 30 up-to-date
