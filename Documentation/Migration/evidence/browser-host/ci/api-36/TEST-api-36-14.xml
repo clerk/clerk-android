@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="1" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T20:38:53" hostname="localhost">
+  <testsuite name="com.clerk.ui.auth.AuthViewJourneyTest" tests="1" failures="0" errors="0" skipped="0" time="8.397" timestamp="2026-09-10T20:38:53" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="emailCodeErrorCanBeRetriedAndPrebuiltFlowFinalizesExactlyOnce" classname="com.clerk.ui.auth.AuthViewJourneyTest" time="8.397" />
+  </testsuite>
+</testsuites>

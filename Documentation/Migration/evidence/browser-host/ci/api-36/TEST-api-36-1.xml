@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="5" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T20:37:29" hostname="localhost">
+  <testsuite name="com.clerk.api.BrowserCallbackContractTest" tests="5" failures="0" errors="0" skipped="0" time="1.204" timestamp="2026-09-10T20:37:29" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="nativeCallbackFailurePreservesErrorAndReconciledState" classname="com.clerk.api.BrowserCallbackContractTest" time="0.278" />
+    <testcase name="providerQueryErrorDoesNotReplaceServerState" classname="com.clerk.api.BrowserCallbackContractTest" time="0.245" />
+    <testcase name="missingSuccessMarkerReloadsRemainingServerRequirements" classname="com.clerk.api.BrowserCallbackContractTest" time="0.208" />
+    <testcase name="transferMarkerAloneCannotCreateSignUp" classname="com.clerk.api.BrowserCallbackContractTest" time="0.273" />
+    <testcase name="signInPreparationPreservesStructuredFailure" classname="com.clerk.api.BrowserCallbackContractTest" time="0.200" />
+  </testsuite>
+</testsuites>
