@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 plugins {
   alias(libs.plugins.android.library)
   alias(libs.plugins.dokka)
@@ -11,21 +13,59 @@ extensions.configure<com.android.build.api.dsl.LibraryExtension> {
   ndkVersion = "27.1.12297006"
   sourceSets.getByName("main").apply {
     java.directories.clear()
-    kotlin.directories.apply { clear(); add("../../NativeCore") }
-    assets.directories.apply { clear(); add("../../NativeCore/Resources") }
+    kotlin.directories.apply {
+      clear()
+      add("../../NativeCore")
+    }
+    assets.directories.apply {
+      clear()
+      add("../../NativeCore/Resources")
+    }
     res.directories.clear()
     manifest.srcFile("../../NativeCore/Android/AndroidManifest.xml")
   }
-  sourceSets.getByName("test").kotlin.directories.apply { clear(); add("../../NativeCoreTests/Unit"); add("../../NativeCoreTests/Common") }
-  sourceSets.getByName("androidTest").kotlin.directories.apply { clear(); add("../../NativeCoreTests/Android"); add("../../NativeCoreTests/Common") }
+  sourceSets.getByName("test").kotlin.directories.apply {
+    clear()
+    add("../../NativeCoreTests/Unit")
+    add("../../NativeCoreTests/Common")
+  }
+  sourceSets.getByName("androidTest").kotlin.directories.apply {
+    clear()
+    add("../../NativeCoreTests/Android")
+    add("../../NativeCoreTests/Common")
+  }
   sourceSets.getByName("androidTest").assets.directories.add("../../NativeCoreTests/Fixtures")
-  externalNativeBuild { cmake { path = file("../../NativeCore/cpp/CMakeLists.txt"); version = "3.22.1" } }
+  externalNativeBuild {
+    cmake {
+      path = file("../../NativeCore/cpp/CMakeLists.txt")
+      version = "3.22.1"
+    }
+  }
   compileOptions { isCoreLibraryDesugaringEnabled = true }
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
     ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    val integrationKey =
+      providers.environmentVariable("CLERK_INTEGRATION_TEST_PK").orNull?.takeIf { it.isNotBlank() }
+        ?: rootProject
+          .file(".keys.json")
+          .takeIf { it.isFile }
+          ?.let { file ->
+            runCatching {
+                val keys = JsonSlurper().parse(file) as? Map<*, *>
+                (keys?.get("with-email-codes") as? Map<*, *>)?.get("pk") as? String
+              }
+              .getOrElse {
+                throw GradleException("Unable to parse live integration key configuration")
+              }
+          }
+    if (!integrationKey.isNullOrBlank()) {
+      testInstrumentationRunnerArguments["clerkIntegrationPublishableKey"] = integrationKey.trim()
+    }
+    testInstrumentationRunnerArguments["clerkIntegrationRequired"] =
+      providers.gradleProperty("clerkIntegrationRequired").getOrElse("false")
     buildConfigField("String", "SDK_VERSION", "\"${property("CLERK_API_VERSION")}\"")
     consumerProguardFiles("consumer-rules.pro")
   }

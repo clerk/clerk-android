@@ -25,15 +25,44 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Write .keys.json
-        if: env.CLERK_INTEGRATION_TEST_PK != ''
+      - name: Compile packaged integration tests
+        run: ./gradlew :source:api:assembleDebugAndroidTest --build-cache
+
+      - name: Check live integration configuration
+        id: integration-key
         env:
           CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}
         run: |
-          echo '{"with-email-codes":{"pk":"'"$CLERK_INTEGRATION_TEST_PK"'"}}' > .keys.json
+          if [ -n "$CLERK_INTEGRATION_TEST_PK" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Live integration did not run: CLERK_INTEGRATION_TEST_PK is unavailable."
+            echo "Live integration **not run**: development-instance configuration is unavailable. Compilation alone passed." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
-      - name: Run integration tests
-        run: ./gradlew :source:api:testDebugUnitTest --tests "com.clerk.api.integration.*" --build-cache
+      - name: Enable KVM
+        if: steps.integration-key.outputs.available == 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run live integration through packaged QuickJS
+        if: steps.integration-key.outputs.available == 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          CLERK_INTEGRATION_TEST_PK: ${{ secrets.CLERK_INTEGRATION_TEST_PK }}
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -no-audio -no-snapshot -gpu swiftshader_indirect
+          script: ./gradlew :source:api:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.package=com.clerk.api.integration -PclerkIntegrationRequired=true --build-cache
+
+      - name: Require executed live integration scenarios
+        if: steps.integration-key.outputs.available == 'true'
+        run: python3 scripts/verify-live-integration-results.py
 
       - name: Upload test results
         if: always()
@@ -43,4 +72,6 @@ jobs:
           path: |
             source/api/build/test-results/**
             source/api/build/reports/tests/**
+            source/api/build/outputs/androidTest-results/**
+            source/api/build/reports/androidTests/**
           if-no-files-found: warn

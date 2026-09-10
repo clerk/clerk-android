@@ -8,7 +8,7 @@ The [biometric persistence audit](biometric-persistence.md) records eight packag
 
 Baseline: `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. This is a file-level ownership and migration audit of the old native API suite, with exact test declarations retained in [legacy-tests.json](legacy-tests.json). Parameterized cases are not expanded; declarations and helper functions are not a coverage percentage.
 
-The old tests are still retained while assertion-level platform and coverage migration is incomplete. No file in this inventory is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The lists below identify where that decision belongs and explicitly preserve unresolved gates.
+The two live integration scenarios and their helper have been migrated to packaged QuickJS instrumentation; see [the integration audit](integration-test-audit.md). The other 102 old test/helper files are retained while assertion-level platform and coverage migration is incomplete. No file in this inventory is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The lists below identify where that decision belongs and explicitly preserve unresolved gates.
 
 The [packaged contact deletion regression](contact-resource-regression.md) records the shared deletion-receipt projection fix and its Kotlin/QuickJS verification. This does not retire unaudited Android legacy contact tests.
 
@@ -23,7 +23,7 @@ encoding and the reproduced first-write Keystore race, with passing replacements
 The [HTTP host audit](http-test-audit.md) records reproduced response-body
 cancellation and UTF-8 defects and separates the old header/logging assertions.
 The [lifecycle/connectivity audit](lifecycle-test-audit.md) records packaged-core
-recovery tests and the unimplemented automatic connectivity-restoration behavior.
+recovery, connectivity restoration and owner-collection cleanup checks.
 
 ## Configuration validation
 
@@ -84,7 +84,7 @@ Keep credential redaction and package resource checks. The new core does not ret
 
 ## Live service integration
 
-Replacement owner / evidence: Native released-app upgrade and device test plan.
+Replacement owner / evidence: `NativeCoreTests/Android/integration/` and the [integration migration audit](integration-test-audit.md). Compilation and configuration guards are verified; live-service execution and released-app upgrades remain unverified.
 
 Retain as a required live-service proof. Fixture servers do not establish production behavior, real credentials, callback registration or account continuity.
 

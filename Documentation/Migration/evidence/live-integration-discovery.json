@@ -1,0 +1,60 @@
+{
+  "kind": "Test discovery and configuration guard evidence; no live service execution",
+  "device": "Android 16 arm64 emulator-5554",
+  "oldWorkflowResult": "No tests found for given includes: com.clerk.api.integration.*",
+  "compile": "assembleDebugAndroidTest passed",
+  "optionalMissing": {
+    "gradleExit": 0,
+    "discovered": 2,
+    "assumptionOutcomes": 2,
+    "xmlFailureElements": 2,
+    "liveResultVerifierAccepted": false
+  },
+  "requiredMissing": {
+    "gradleExit": 1,
+    "discovered": 2,
+    "expectedConfigurationFailures": 2
+  },
+  "productionPrefixRejected": {
+    "gradleExit": 1,
+    "discovered": 2,
+    "expectedConfigurationFailures": 2
+  },
+  "explicitEmptyArgumentProbe": {
+    "gradleExit": 0,
+    "discovered": 0,
+    "diagnostic": "Invalid userId -2",
+    "liveResultVerifierAccepted": false
+  },
+  "liveServiceExecuted": false,
+  "validatorChecks": [
+    {
+      "syntheticXMLScenario": "passed",
+      "accepted": true
+    },
+    {
+      "syntheticXMLScenario": "empty",
+      "accepted": false
+    },
+    {
+      "syntheticXMLScenario": "missing",
+      "accepted": false
+    },
+    {
+      "syntheticXMLScenario": "duplicate",
+      "accepted": false
+    },
+    {
+      "syntheticXMLScenario": "skipped",
+      "accepted": false
+    },
+    {
+      "syntheticXMLScenario": "failure",
+      "accepted": false
+    },
+    {
+      "syntheticXMLScenario": "error",
+      "accepted": false
+    }
+  ]
+}
