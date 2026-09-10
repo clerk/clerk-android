@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="2" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T23:47:07" hostname="localhost">
+  <testsuite name="com.clerk.api.SessionPasskeyVerificationTest" tests="2" failures="0" errors="0" skipped="0" time="0.382" timestamp="2026-09-10T23:47:07" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="generatedPasskeyVerificationSubmitsTheHostCredential" classname="com.clerk.api.SessionPasskeyVerificationTest" time="0.230" />
+    <testcase name="cancelledPasskeyVerificationDoesNotSubmitAnAttempt" classname="com.clerk.api.SessionPasskeyVerificationTest" time="0.152" />
+  </testsuite>
+</testsuites>

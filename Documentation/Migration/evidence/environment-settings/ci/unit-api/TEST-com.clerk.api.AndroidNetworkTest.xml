@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.api.AndroidNetworkTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-09-10T23:43:21.223Z" hostname="ip-172-31-64-123" time="5.977">
+  <properties/>
+  <testcase name="subscriptionsHaveIndependentCallbacksAndCleanup[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.792"/>
+  <testcase name="registrationFailureLeavesRequestsEligibleInsteadOfPermanentlyOffline[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.027"/>
+  <testcase name="olderAndroidAvailabilityRestoresEligibilityWithoutCapabilityChange[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.018"/>
+  <testcase name="handoverIgnoresLateEventsFromTheReplacedDefaultNetwork[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.014"/>
+  <testcase name="initialStateRequiresBothInternetAndValidation[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.014"/>
+  <testcase name="currentNetworkCapabilityChangesUseTheDeliveredCapabilities[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.021"/>
+  <testcase name="subscriptionsHaveIndependentCallbacksAndCleanup" classname="com.clerk.api.AndroidNetworkTest" time="2.129"/>
+  <testcase name="registrationFailureLeavesRequestsEligibleInsteadOfPermanentlyOffline" classname="com.clerk.api.AndroidNetworkTest" time="0.02"/>
+  <testcase name="handoverIgnoresLateEventsFromTheReplacedDefaultNetwork" classname="com.clerk.api.AndroidNetworkTest" time="0.021"/>
+  <testcase name="initialStateRequiresBothInternetAndValidation" classname="com.clerk.api.AndroidNetworkTest" time="0.021"/>
+  <testcase name="currentNetworkCapabilityChangesUseTheDeliveredCapabilities" classname="com.clerk.api.AndroidNetworkTest" time="0.021"/>
+  <testcase name="initiallyOfflineWaitsForValidatedAvailabilityAndReportsLoss" classname="com.clerk.api.AndroidNetworkTest" time="0.019"/>
+  <testcase name="olderAndroidAvailabilityRestoresEligibilityWithoutCapabilityChange" classname="com.clerk.api.AndroidNetworkTest" time="0.609"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

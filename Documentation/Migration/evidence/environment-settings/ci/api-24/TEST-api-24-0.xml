@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="1" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T23:45:32" hostname="localhost">
+  <testsuite name="com.clerk.api.PackagedCoreTest" tests="1" failures="0" errors="0" skipped="0" time="0.914" timestamp="2026-09-10T23:45:32" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="generatedApiUsesPackagedCore" classname="com.clerk.api.PackagedCoreTest" time="0.914" />
+  </testsuite>
+</testsuites>

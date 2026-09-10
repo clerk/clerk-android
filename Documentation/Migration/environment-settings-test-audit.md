@@ -16,6 +16,12 @@ The shared runtime settings suite now has 27 passing cases. Added cases cover nu
 
 No native DTO hydration or environment domain helper is restored. The generated attribute properties retain TypeScript meanings. The one production change is the Compose presentation gate. The shared core bundle and generated public API are unchanged.
 
+## CI verification
+
+Commit `c2d19b7a58ca5e5184f6ffd80b7fb903c1bad505` passes all four jobs in [Android test CI](https://github.com/clerk/clerk-android/actions/runs/34543351500). Downloaded XML verifies 566 unit cases (39 API and 527 UI), two API 24 emulator cases, and 140 API 36 emulator cases without failures or skips. The API 36 results include all fourteen environment cases and all three rendered authentication journeys. The five availability unit cases match the local regression suite by name. [CI evidence](evidence/environment-settings/ci/proof.json) records 25 canonical instrumentation reports, unit-report hashes and the three inspected disabled-passkey journey screenshots; identical backup XML is not counted twice.
+
+All three jobs in [build and packaging CI](https://github.com/clerk/clerk-android/actions/runs/34543353377) also pass on that commit. Independent inspection of both downloaded release AARs confirms identical bytes, SHA-256 `833e066b3c76432e180621bff174241bee0d98caf23e6e6e3749df42f184623e`, and the expected core bundle `406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d`.
+
 ## Every legacy declaration
 
 | Old file / declaration | Current disposition |

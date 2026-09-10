@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.ui.auth.PasskeyAvailabilityTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-10T23:45:42.342Z" hostname="ip-172-31-64-123" time="0.082">
+  <properties/>
+  <testcase name="registrationOnlyPasskeyDoesNotStartAuthentication" classname="com.clerk.ui.auth.PasskeyAvailabilityTest" time="0.067"/>
+  <testcase name="missingPasskeyDoesNotStartAuthentication" classname="com.clerk.ui.auth.PasskeyAvailabilityTest" time="0.004"/>
+  <testcase name="disabledAutofillDoesNotStartAutomaticPasskey" classname="com.clerk.ui.auth.PasskeyAvailabilityTest" time="0.003"/>
+  <testcase name="disabledPasskeyDoesNotStartAuthentication" classname="com.clerk.ui.auth.PasskeyAvailabilityTest" time="0.003"/>
+  <testcase name="enabledFirstFactorPermitsAutomaticPasskey" classname="com.clerk.ui.auth.PasskeyAvailabilityTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
