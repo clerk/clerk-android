@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="8" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T20:19:06" hostname="localhost">
+  <testsuite name="com.clerk.api.SessionSelectionContractTest" tests="8" failures="0" errors="0" skipped="0" time="1.339" timestamp="2026-09-10T20:19:06" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="laterEmptyRefreshClearsSelectedSession" classname="com.clerk.api.SessionSelectionContractTest" time="0.253" />
+    <testcase name="explicitSelectionOverridesStaleClientSelection" classname="com.clerk.api.SessionSelectionContractTest" time="0.175" />
+    <testcase name="emptyTouchClientDoesNotRestoreSession" classname="com.clerk.api.SessionSelectionContractTest" time="0.152" />
+    <testcase name="selectsExistingSessionWithoutFollowupRefresh" classname="com.clerk.api.SessionSelectionContractTest" time="0.165" />
+    <testcase name="returnedOrganizationStateOverridesRequestedOrganization" classname="com.clerk.api.SessionSelectionContractTest" time="0.153" />
+    <testcase name="selectedSessionSignoutLeavesRemainingSessionUnselected" classname="com.clerk.api.SessionSelectionContractTest" time="0.156" />
+    <testcase name="omittedOrganizationStillSelectsSessionWhenOrganizationsAreForced" classname="com.clerk.api.SessionSelectionContractTest" time="0.150" />
+    <testcase name="forcedPersonalSelectionKeepsCurrentSession" classname="com.clerk.api.SessionSelectionContractTest" time="0.135" />
+  </testsuite>
+</testsuites>
