@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.ui.auth.AuthStartViewHelperTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-09-10T23:40:00.420Z" hostname="mac.lan" time="0.801">
+  <properties/>
+  <testcase name="automaticPasskeySignInIsDisabledWhenInitialIdentifierIsLocked" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.747"/>
+  <testcase name="automaticPasskeySignInIsEnabledForUnlockedSignInWhenPasskeyAutofillIsEnabled" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.002"/>
+  <testcase name="identifierContentTypeReturnsEmailAndUsernameWhenBothAreEnabled" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.002"/>
+  <testcase name="automaticPasskeySignInIsDisabledForSignUp" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.003"/>
+  <testcase name="shouldStartOnPhoneNumberReturnsTrueWhenPhoneIsOnlyIdentifierMethod" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.002"/>
+  <testcase name="authenticatableSocialProvidersPreserveCustomStrategy" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.035"/>
+  <testcase name="shouldStartOnPhoneNumberReturnsTrueWhenPhoneWasAlreadyEntered" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.001"/>
+  <testcase name="identifierContentTypeReturnsEmailAddressWhenOnlyEmailIsEnabled" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.002"/>
+  <testcase name="shouldStartOnPhoneNumberReturnsFalseWhenIdentifierWasAlreadyEntered" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.001"/>
+  <testcase name="automaticPasskeySignInIsDisabledWhenPasskeyAutofillIsDisabled" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.002"/>
+  <testcase name="shouldStartOnPhoneNumberReturnsFalseWhenIdentifierMethodsAreEnabled" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.001"/>
+  <testcase name="identifierContentTypeReturnsUsernameWhenOnlyUsernameIsEnabled" classname="com.clerk.ui.auth.AuthStartViewHelperTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/Users/mikepitre/.gradle/caches/9.7.1/transforms/3fe64f7182d8271eecc87e0bd81add2b/transformed/byte-buddy-agent-1.18.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

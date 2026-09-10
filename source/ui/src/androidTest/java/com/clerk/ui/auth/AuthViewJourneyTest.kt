@@ -33,7 +33,9 @@ class AuthViewJourneyTest {
   @Test
   fun automaticPasskeyPreparationFailureIsVisibleAndEmailSignInCompletes() = emailCodeJourney(true)
 
-  private fun emailCodeJourney(rejectAutomaticPasskey: Boolean) {
+  @Test fun disabledPasskeyDoesNotPrepareAndEmailSignInCompletes() = emailCodeJourney(false, true)
+
+  private fun emailCodeJourney(rejectAutomaticPasskey: Boolean, disabledPasskey: Boolean = false) {
     val instrumentation = InstrumentationRegistry.getInstrumentation()
     val context = instrumentation.targetContext
     val fixtures =
@@ -41,8 +43,9 @@ class AuthViewJourneyTest {
           instrumentation.context.assets.open("fapi.json").bufferedReader().use { it.readText() }
         )
         .jsonObject
-    val host = EmailCodeJourneyHost(fixtures, rejectAutomaticPasskey)
-    val prefix = if (rejectAutomaticPasskey) "passkey-" else ""
+    val host = EmailCodeJourneyHost(fixtures, rejectAutomaticPasskey, disabledPasskey)
+    val prefix =
+      if (disabledPasskey) "disabled-passkey-" else if (rejectAutomaticPasskey) "passkey-" else ""
     val key =
       "pk_test_" +
         Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
@@ -149,10 +152,11 @@ class AuthViewJourneyTest {
 private class EmailCodeJourneyHost(
   private val fixtures: JsonObject,
   private val rejectAutomaticPasskey: Boolean,
+  private val disabledPasskey: Boolean,
 ) : NativeCapabilities {
   override val supported =
     setOf("http", "storage", "timer", "random") +
-      if (rejectAutomaticPasskey) setOf("passkeys") else emptySet()
+      if (rejectAutomaticPasskey || disabledPasskey) setOf("passkeys") else emptySet()
   private var credential: JsonElement = JsonNull
   private var signIn: JsonElement = JsonNull
   private var complete = false
@@ -182,13 +186,13 @@ private class EmailCodeJourneyHost(
     val enabledAttributes =
       attributes.toMutableMap().apply {
         put("email_address", email)
-        if (rejectAutomaticPasskey)
+        if (rejectAutomaticPasskey || disabledPasskey)
           put(
             "passkey",
             JsonObject(
               attributes.getValue("passkey").jsonObject +
                 mapOf(
-                  "enabled" to JsonPrimitive(true),
+                  "enabled" to JsonPrimitive(!disabledPasskey),
                   "used_for_first_factor" to JsonPrimitive(true),
                 )
             ),
@@ -197,7 +201,7 @@ private class EmailCodeJourneyHost(
     val enabledSettings =
       settings.toMutableMap().apply {
         put("attributes", JsonObject(enabledAttributes))
-        if (rejectAutomaticPasskey)
+        if (rejectAutomaticPasskey || disabledPasskey)
           put(
             "passkey_settings",
             JsonObject(
@@ -295,8 +299,8 @@ private class EmailCodeJourneyHost(
         path.endsWith("/client") -> buildJsonObject { put("response", client()) }
         path.endsWith("/client/sign_ins") -> {
           if (form.getQueryParameter("strategy") == "passkey") {
-            check(rejectAutomaticPasskey)
             passkeyPreparations++
+            check(rejectAutomaticPasskey)
             status = 422
             buildJsonObject {
               put(

@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="14" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T23:36:05" hostname="localhost">
+  <testsuite name="com.clerk.api.EnvironmentSettingsTest" tests="14" failures="0" errors="0" skipped="0" time="2.048" timestamp="2026-09-10T23:36:05" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="organizationNullChildrenUseDefaults" classname="com.clerk.api.EnvironmentSettingsTest" time="0.190" />
+    <testcase name="firstFactorPasskeyPreserved" classname="com.clerk.api.EnvironmentSettingsTest" time="0.146" />
+    <testcase name="sessionMinterEnabled" classname="com.clerk.api.EnvironmentSettingsTest" time="0.145" />
+    <testcase name="organizationDefaults" classname="com.clerk.api.EnvironmentSettingsTest" time="0.141" />
+    <testcase name="immutableFalsePreservesFactorSettings" classname="com.clerk.api.EnvironmentSettingsTest" time="0.143" />
+    <testcase name="immutableTruePreservesFactorSettings" classname="com.clerk.api.EnvironmentSettingsTest" time="0.148" />
+    <testcase name="sessionMinterOmittedDefaultsFalse" classname="com.clerk.api.EnvironmentSettingsTest" time="0.144" />
+    <testcase name="completeOrganizationSettings" classname="com.clerk.api.EnvironmentSettingsTest" time="0.140" />
+    <testcase name="immutableOmittedPreservesFactorSettings" classname="com.clerk.api.EnvironmentSettingsTest" time="0.141" />
+    <testcase name="registrationOnlyPasskeyPreserved" classname="com.clerk.api.EnvironmentSettingsTest" time="0.144" />
+    <testcase name="developmentWarningOmittedDefaultsFalse" classname="com.clerk.api.EnvironmentSettingsTest" time="0.140" />
+    <testcase name="supportEmailPreserved" classname="com.clerk.api.EnvironmentSettingsTest" time="0.140" />
+    <testcase name="disabledPasskeyPreserved" classname="com.clerk.api.EnvironmentSettingsTest" time="0.146" />
+    <testcase name="developmentWarningEnabled" classname="com.clerk.api.EnvironmentSettingsTest" time="0.140" />
+  </testsuite>
+</testsuites>

@@ -18,6 +18,13 @@ run_suite() {
     "source/api/build/auth-entry-test-results/${suite}/"
 }
 
+run_suite EnvironmentSettingsTest \
+  sessionMinterEnabled sessionMinterOmittedDefaultsFalse \
+  developmentWarningEnabled developmentWarningOmittedDefaultsFalse supportEmailPreserved \
+  organizationDefaults organizationNullChildrenUseDefaults completeOrganizationSettings \
+  immutableTruePreservesFactorSettings immutableFalsePreservesFactorSettings immutableOmittedPreservesFactorSettings \
+  firstFactorPasskeyPreserved registrationOnlyPasskeyPreserved disabledPasskeyPreserved
+
 run_suite GoogleIdentityContractTest \
   existingAccountRequiresFinalization missingAccountCreatesSignupWithMetadata \
   signInOnlyDoesNotCreateAccount rejectedIdentityDoesNotOpenBrowser \

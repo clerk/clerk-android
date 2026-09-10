@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.api.AndroidTimerCapabilityTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-10T23:39:09.998Z" hostname="mac.lan" time="0.005">
+  <properties/>
+  <testcase name="fractionalTimerCompletes" classname="com.clerk.api.AndroidTimerCapabilityTest" time="0.004"/>
+  <testcase name="fractionalTimerCanBeCancelled" classname="com.clerk.api.AndroidTimerCapabilityTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -73,7 +73,9 @@ internal class AuthStartViewHelper(private val clerk: Clerk) {
   val passkeySignInConfigIsEnabled: Boolean
     get() =
       (testPasskeyIsEnabled
-        ?: (clerk.environment.userSettings.attributes["passkey"]?.usedForFirstFactor == true)) &&
+        ?: (clerk.environment.userSettings.attributes["passkey"]?.let {
+          it.enabled && it.usedForFirstFactor
+        } == true)) &&
         (testPasskeyAutofillIsEnabled
           ?: clerk.environment.userSettings.passkeySettings.allowAutofill)
 
