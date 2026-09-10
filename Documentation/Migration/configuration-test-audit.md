@@ -2,7 +2,7 @@
 
 This review covers all assertion bodies in the old
 `sdk/PublishableKeyHelperTest.kt` and `sso/RedirectConfigurationTest.kt` under
-`source/api/src/test/java/com/clerk/api`. The foreground-policy suites are audited below; other configuration-switch tests remain part of the state/ownership audit.
+`source/api/src/test/java/com/clerk/api`. The foreground-policy suites are audited below; configuration-switch and device-token tests are covered by the [owner-isolation audit](configuration-ownership-test-audit.md).
 
 | Old test | Current disposition |
 | --- | --- |
@@ -18,7 +18,7 @@ This review covers all assertion bodies in the old
 `NativeCoreTests/Unit/ClerkConfigurationTest.kt` also verifies surrounding key
 whitespace, malformed base64 and origins, callback scheme/credentials/fragment
 validation, preservation of a configured route/query, and HTTPS callback acceptance.
-All four test methods pass. The publishable-key and redirect files remain retained while the broader audit is in progress. The separate foreground assertion dispositions are recorded below; configuration-switch assertions remain unresolved.
+All four test methods pass. The publishable-key and redirect files remain retained while the broader audit is in progress. The separate foreground assertion dispositions are recorded below; configuration-switch assertions are mapped in the separate [owner-isolation audit](configuration-ownership-test-audit.md).
 
 ## Foreground policy and pending authentication
 
@@ -36,4 +36,4 @@ The following eight declarations were read in full at baseline
 | `foreground refresh is skipped when disabled via withForegroundRefreshDisabled` | The old framework-integration option is removed. Attached Expo UI uses its existing core owner and does not install a second embedded recovery owner. Standalone configuration has no disable-refresh option. |
 | `withCustomHeaders preserves a disabled foreground refresh` | The old chained option builder and arbitrary custom-header configuration are removed. This private configuration assertion is intentionally retired, not approximated with a new native policy. |
 
-`ConfigurationManagerAuthRaceTest.kt` and `ConfigurationManagerForegroundRefreshTest.kt` are retired after this audit and the packaged regression proof. The publishable-key, redirect, connectivity, and configuration-switch suites remain retained for their own audits. No old pending-service polling or native token-refresh implementation is restored.
+`ConfigurationManagerAuthRaceTest.kt` and `ConfigurationManagerForegroundRefreshTest.kt` are retired after this audit and the packaged regression proof. The publishable-key, redirect, and connectivity suites remain retained for their own audits; the configuration-switch suite is retired by the [owner-isolation audit](configuration-ownership-test-audit.md). No old pending-service polling or native token-refresh implementation is restored.
