@@ -1,0 +1,93 @@
+{
+  "sourceRevision": "e29045f95e59954df18d376a6a7a8a5ecaeb12e8",
+  "host": "Linux-6.6.141-x86_64-with-glibc2.39",
+  "builds": [
+    {
+      "aar": "api-release-1.aar",
+      "sha256": "833e066b3c76432e180621bff174241bee0d98caf23e6e6e3749df42f184623e",
+      "minSdk": 24,
+      "requiredPermissions": [
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.INTERNET",
+        "android.permission.USE_BIOMETRIC"
+      ],
+      "libraries": {
+        "arm64-v8a": {
+          "bytes": 1013256,
+          "sha256": "af47c9112f120686c99b1fbfe48661f4c99a845b205acaae9990c01855d14485",
+          "loadSegmentAlignments": [
+            16384,
+            16384,
+            16384
+          ]
+        },
+        "armeabi-v7a": {
+          "bytes": 713888,
+          "sha256": "4d1f7889b6b42434d525607fb8bff7203fb3938a079de10e975c45407c288d95",
+          "loadSegmentAlignments": [
+            16384,
+            16384,
+            16384
+          ]
+        },
+        "x86_64": {
+          "bytes": 1090576,
+          "sha256": "55d42265fd2a8c3c84227b9211415c2dd78ee3001ad938fe6f1a3c35b9261acb",
+          "loadSegmentAlignments": [
+            16384,
+            16384,
+            16384
+          ]
+        }
+      },
+      "coreRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+      "bundleSHA256": "406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d"
+    },
+    {
+      "aar": "api-release-2.aar",
+      "sha256": "833e066b3c76432e180621bff174241bee0d98caf23e6e6e3749df42f184623e",
+      "minSdk": 24,
+      "requiredPermissions": [
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.INTERNET",
+        "android.permission.USE_BIOMETRIC"
+      ],
+      "libraries": {
+        "arm64-v8a": {
+          "bytes": 1013256,
+          "sha256": "af47c9112f120686c99b1fbfe48661f4c99a845b205acaae9990c01855d14485",
+          "loadSegmentAlignments": [
+            16384,
+            16384,
+            16384
+          ]
+        },
+        "armeabi-v7a": {
+          "bytes": 713888,
+          "sha256": "4d1f7889b6b42434d525607fb8bff7203fb3938a079de10e975c45407c288d95",
+          "loadSegmentAlignments": [
+            16384,
+            16384,
+            16384
+          ]
+        },
+        "x86_64": {
+          "bytes": 1090576,
+          "sha256": "55d42265fd2a8c3c84227b9211415c2dd78ee3001ad938fe6f1a3c35b9261acb",
+          "loadSegmentAlignments": [
+            16384,
+            16384,
+            16384
+          ]
+        }
+      },
+      "coreRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+      "bundleSHA256": "406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d"
+    }
+  ],
+  "method": "Two git archives in different fresh paths; task and configuration caches disabled",
+  "sourceArchiveSHA256": "cf83d6756b2a7ec418ad59a1acba2a1051702d020d17f026e8653ebc18066d4c",
+  "gradleVersion": "------------------------------------------------------------\nGradle 9.7.1\n------------------------------------------------------------\n\nBuild time:    2026-08-19 14:16:09 UTC\nRevision:      92f0512e7f06d84621afba191f75e265363890cf\n\nKotlin:        2.4.0\nGroovy:        4.0.32\nAnt:           Apache Ant(TM) version 1.10.17 compiled on April 6 2026\nLauncher JVM:  21.0.12 (Azul Systems, Inc. 21.0.12+8-LTS)\nDaemon JVM:    /opt/hostedtoolcache/Java_Zulu_jdk/21.0.12-8/x64 (no Daemon JVM specified, using current Java home)\nOS:            Linux 6.6.141 amd64",
+  "differentEntries": [],
+  "identical": true
+}

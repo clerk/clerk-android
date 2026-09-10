@@ -1,0 +1,25 @@
+{
+  "sourceRevision": "e29045f95e59954df18d376a6a7a8a5ecaeb12e8",
+  "locallyVerified": {
+    "aarByteEquality": true,
+    "packagingContract": "Both downloaded AARs independently passed verify-native-core-aar.py",
+    "receiverExported": true,
+    "receiverTaskAffinity": "",
+    "previousRuntimeRevision": "c5a8631bc8123d7fc588f8ffb5f7dca0f6192301",
+    "changedAarEntriesFromPreviousRuntime": [
+      "classes.jar"
+    ],
+    "changedClassEntriesFromPreviousRuntime": [
+      "com/clerk/api/AndroidNetworkKt$subscribeNetworkConnectivity$callback$1.class",
+      "com/clerk/api/AndroidNetworkKt.class"
+    ]
+  },
+  "artifacts": {
+    "api-release-1.aar": "833e066b3c76432e180621bff174241bee0d98caf23e6e6e3749df42f184623e",
+    "api-release-2.aar": "833e066b3c76432e180621bff174241bee0d98caf23e6e6e3749df42f184623e",
+    "build-1.log": "21fc6829dd2b98bd3329dc277d480565ea77a3908765c255d9e0bfbbefd6dc43",
+    "build-2.log": "ee6908344e25303905f60f84f6fc91c2d9812193af3a5ef711b9d71a13f57f58",
+    "report.json": "829f5a15f9ac21e460f00c9bf02a5a86ee6bdb3966470b7777c4c30e6c972326",
+    "workflow.json": "1fdb3f282e7bdb0d523e3f83e406123532cd4bcac636359d506a71a8a20ee404"
+  }
+}
