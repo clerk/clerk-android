@@ -1,0 +1,37 @@
+(node:14592) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ generated passkey registration stops at creation-rejected (24.947667ms)
+✔ generated passkey registration stops at verification-rejected (6.683916ms)
+✔ generated passkey registration stops at provider-failed (6.263333ms)
+✔ generated passkey registration stops at invalid-credential (6.143625ms)
+✔ generated passkey registration stops at missing-options (5.295541ms)
+✔ generated passkey registration stops at unsupported (5.534167ms)
+(node:14593) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ generated passkey registration supports rename and deletion receipts (30.777833ms)
+✔ generated passkey registration stops after native cancellation (6.528375ms)
+(node:14594) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ future passkey forwards native autofill presentation and binary options (26.950292ms)
+✔ future passkey forwards native discoverable presentation and binary options (7.439792ms)
+✔ future passkey prepares and attempts the active second factor without recreating sign-in (8.841375ms)
+✔ passkey failure retains source stage and error: preparingFirstFactor (5.955958ms)
+✔ passkey failure retains source stage and error: requestingAuthorization (7.35975ms)
+✔ passkey failure retains source stage and error: attemptingFirstFactor (8.083ms)
+✔ second-factor passkey reports preparingSecondFactor without replacing its attempt (7.305083ms)
+✔ second-factor passkey reports attemptingSecondFactor without replacing its attempt (8.443333ms)
+✔ unknown passkey provider failure retains the attempt without submitting a credential (6.753291ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 154.068334

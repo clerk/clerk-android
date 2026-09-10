@@ -8,7 +8,7 @@ The [biometric persistence audit](biometric-persistence.md) records eight packag
 
 Baseline: `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. This is a file-level ownership and migration audit of the old native API suite, with exact test declarations retained in [legacy-tests.json](legacy-tests.json). Parameterized cases are not expanded; declarations and helper functions are not a coverage percentage.
 
-The inventory contains 105 old test/helper files. Three have been migrated, 46 have been retired after assertion review, and 56 remain while platform and coverage migration is incomplete.
+The inventory contains 105 old test/helper files. Three have been migrated, 48 have been retired after assertion review, and 54 remain while platform and coverage migration is incomplete.
 
 | Reviewed group | File disposition | Evidence |
 | --- | --- | --- |
@@ -35,6 +35,7 @@ The inventory contains 105 old test/helper files. Three have been migrated, 46 h
 | Browser manager activity | One retired | [All thirteen declarations and current presentation/core ownership](browser-manager-test-audit.md) |
 | Connectivity monitor | One retired | [All ten declarations and API 24/25 availability regression](lifecycle-test-audit.md) |
 | Passkey manager and helper | Two retired | [All ten declarations and native Credential Manager callback checks](passkey-host-test-audit.md) |
+| Passkey registration and service facade | Two retired | [All nineteen declarations and core failure boundaries](passkey-service-test-audit.md) |
 
 No retained file is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The baseline lists below preserve the full inventory and unresolved gates.
 

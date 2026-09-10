@@ -15,11 +15,14 @@ class SignInCredentialContractTest {
 
   @Test fun cancelledPasskeyDoesNotSubmitCredential() = passkey("requestingAuthorization")
 
+  @Test
+  fun passkeyProviderFailureDoesNotSubmitCredential() = passkey("requestingAuthorization", true)
+
   @Test fun passkeyPreparationPreservesFailureStage() = passkey("preparingFirstFactor")
 
   @Test fun passkeySubmissionPreservesFailureStage() = passkey("attemptingFirstFactor")
 
-  private fun passkey(failedStage: String?) = runBlocking {
+  private fun passkey(failedStage: String?, unknownProviderFailure: Boolean = false) = runBlocking {
     withTimeout(15000) {
       withContext(Dispatchers.Main.immediate) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -79,6 +82,7 @@ class SignInCredentialContractTest {
                     .getValue("id")
                     .jsonObject["base64url"] == JsonPrimitive("Y3JlZGVudGlhbA")
                 )
+                if (unknownProviderFailure) throw IllegalStateException("private provider detail")
                 if (failedStage == "requestingAuthorization") throw CoreException("user_cancelled")
                 return credential
               }
@@ -103,7 +107,7 @@ class SignInCredentialContractTest {
                   val payload =
                     if (rejected)
                       Json.parseToJsonElement(
-                        """{"errors":[{"code":"passkey_verification_failed","message":"Credential rejected"}]}"""
+                        """{"clerk_trace_id":"passkey-signin-trace","errors":[{"code":"passkey_verification_failed","message":"Credential rejected","long_message":"Try another passkey."}]}"""
                       )
                     else
                       buildJsonObject {
@@ -151,11 +155,16 @@ class SignInCredentialContractTest {
             check(error is CoreException && error.passkeyStage == failedStage) {
               "Unexpected failure: $error"
             }
-            if (failedStage == "requestingAuthorization") check(error.code == "user_cancelled")
-            else
+            if (failedStage == "requestingAuthorization") {
+              check(error.code == if (unknownProviderFailure) "host_failure" else "user_cancelled")
+              check(!error.message.contains("private provider detail"))
+            } else {
               check(
                 error.status == 400 && error.errors.single().code == "passkey_verification_failed"
               )
+              check(error.clerkTraceId == "passkey-signin-trace")
+              check(error.errors.single().longMessage == "Try another passkey.")
+            }
           }
           check(clerk.session == null && clerk.user == null)
           check(presentations == if (failedStage == "preparingFirstFactor") 0 else 1)

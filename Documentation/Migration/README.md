@@ -62,6 +62,8 @@ Builders and static resource factories become generated parameter objects on the
 | `auth.revokeSession`, `Session.revoke` | Find the generated `SessionWithActivities` in `user.getSessions()` and call `revoke()` |
 | `Session.delete` | `session.remove()` for a client session; distinct from account-session revocation |
 
+Passkey sign-in follows `SignInFuturePasskeyParams`: it supports flow selection and the native immediate-credential preference, but not the old caller-supplied `allowedCredentialIds` override. The core forwards the server's WebAuthn credential list. See the [passkey service audit](passkey-service-test-audit.md) for the removed facade and verified failure boundaries.
+
 Token failures throw `CoreException`; they are not converted to null. `GetTokenOptions` supports `template`, `skipCache` and `organizationId`; the old `expirationBuffer` option is removed because the shared cache owns expiration. After a 401, the refreshed client determines session selection. Pending sessions retain their tasks and use the canonical method/server outcome instead of the old Kotlin null shortcut. See the [token request migration](token-request-test-audit.md) for executed examples and intentional behavior changes.
 
 Browser SSO uses the callback configured on the retained owner. There is no public method for replaying a prepared verification URL: OAuth retries replace a pending redirect, and enterprise SSO refreshes preparation on the current attempt. A resolved SSO call can still have remaining requirements. See [browser SSO behavior and migration evidence](browser-sso-test-audit.md).
@@ -115,6 +117,8 @@ After finalization, inspect the session status and current task. Compose `AuthVi
 
 For methods retaining their names, inspect `NativeCore/public-api.txt`: parameter objects, result unions, capitalization and pagination can still change. Kotlin types now consistently belong to `com.clerk.api`. Theme/presentation utilities belong to the UI module. Resource method completions apply state before returning or throwing; observing a copied old DTO does not reproduce this contract.
 
+The selected TypeScript `Session.verifyWithPasskey()` contract has no level parameter and its implementation uses first-factor verification. The old native second-factor passkey convenience is not available through that generated method. The separate second-factor verification primitives remain, but this does not establish an equivalent complete native passkey flow; that migration gap remains open.
+
 Session selection follows the shared core. Signing out the selected session leaves other sessions available but unselected. An empty server client clears selection; the old native wrapper's session-restoration fallback is removed. `setActive` with an omitted organization selects the session without requesting an organization change; `Field.Null` explicitly requests a personal workspace and remains a no-op when organization selection is forced. Returned organization state is not overwritten with the requested ID. See the [authentication entry-point audit](auth-entry-test-audit.md) for exact old/new behavior and execution evidence.
 
 ## Credential continuity and unavailable surfaces
@@ -137,7 +141,7 @@ Before general release, validate a signed-in old-major app upgraded in place; re
 
 The replaced native domain source tree has been deleted from this major. The linked baseline and hashed source inventory preserve its public declarations for migration review. The generated `NativeCore` target is the implementation; no old native authentication fallback is packaged.
 
-Of the 105 old JVM test/helper files, three have been migrated, 46 have been retired after assertion review, and 56 remain for the unfinished audit. The [test audit](test-audit.md) links the replacement evidence and intentional API changes. Retained files are not claimed to run against the generated API.
+Of the 105 old JVM test/helper files, three have been migrated, 48 have been retired after assertion review, and 54 remain for the unfinished audit. The [test audit](test-audit.md) links the replacement evidence and intentional API changes. Retained files are not claimed to run against the generated API.
 
 For Expo consumers, see the [D8/R8 compiler compatibility proof](../Measurements/expo-compiler-build.md). Kotlin source compiler compatibility alone does not establish that the app can process the SDK's Kotlin metadata.
 

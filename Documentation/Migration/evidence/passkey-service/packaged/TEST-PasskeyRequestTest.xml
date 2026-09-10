@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="3" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T22:39:39" hostname="localhost">
+  <testsuite name="com.clerk.api.PasskeyRequestTest" tests="3" failures="0" errors="0" skipped="0" time="0.001" timestamp="2026-09-10T22:39:39" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="malformedCredentialIDsFailBeforeCredentialManagerPresentation" classname="com.clerk.api.PasskeyRequestTest" time="0.001" />
+    <testcase name="assertionRequestUsesCredentialManagerWebAuthnEncodingAndPromptPreference" classname="com.clerk.api.PasskeyRequestTest" time="0.000" />
+    <testcase name="registrationRequestEncodesUserHandleAndExcludedCredentialsForAndroid" classname="com.clerk.api.PasskeyRequestTest" time="0.000" />
+  </testsuite>
+</testsuites>
