@@ -24,6 +24,11 @@ jobs:
         run: chmod +x gradlew
       - name: Assemble ${{ matrix.module }}
         run: ./gradlew ${{ matrix.module }}:assembleDebug --build-cache --parallel
+      - name: Verify API release packaging
+        if: matrix.module == ':source:api'
+        run: |
+          ./gradlew :source:api:lintRelease :source:api:assembleRelease --build-cache
+          python3 scripts/verify-native-core-aar.py source/api/build/outputs/aar/api-release.aar
 
   # Optional: a final step that depends on both module builds
   verify:

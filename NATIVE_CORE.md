@@ -14,6 +14,8 @@ if (clerk.signIn.status.rawValue == "complete") clerk.signIn.finalize()
 
 Import `com.clerk.api.connect`. Consumers need no JavaScript toolchain. Enable core library desugaring in the Android application; the SDK retains minSdk 24 and packages arm64-v8a, armeabi-v7a and x86_64 libraries with 16 KB page support. The default manifest callback is `${applicationId}.clerk://oauth/callback`; register the same redirect with Clerk. A different callback requires a corresponding manifest intent filter. Browser and passkey presentation need the current Activity provider.
 
+Passkeys require API 28 or later. The SDK manifest supplies the biometric permission. [Release packaging verification](Documentation/Migration/android-release-packaging.md) records the merged AAR checks, API guards, and remaining device-validation requirements.
+
 Generated suspending methods publish state before completion and expose structured `CoreException` failures. A successful verification may leave additional requirements. Explicit finalization can produce a pending session; render its task. Old attempt/group handles become invalidated on reset. Cancellation does not roll back server work. Observe a resource's `changes` flow to read updated state.
 
 One owner should be retained for the application. Process lifecycle events suspend proactive token requests in background and reload the core on foreground. `CoreRuntime.lastLifecycleError` exposes recoverable reload failures. Call `clerk.close()` when permanently discarding the owner. Browser continuation state is intentionally in-memory; process death requires a fresh attempt instead of replaying an unsolicited callback.

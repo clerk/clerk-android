@@ -1,5 +1,6 @@
 package com.clerk.api
 
+import android.os.Build
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
@@ -7,10 +8,13 @@ import kotlinx.serialization.json.*
 
 /** Converts bridge binary values to the WebAuthn JSON accepted by Credential Manager. */
 internal object AndroidPasskeyRequests {
-  fun create(arguments: JsonElement): CreatePublicKeyCredentialRequest =
-    CreatePublicKeyCredentialRequest(webAuthnJSON(arguments))
+  fun create(arguments: JsonElement): CreatePublicKeyCredentialRequest {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) throw CoreException("capability_unavailable")
+    return CreatePublicKeyCredentialRequest(webAuthnJSON(arguments))
+  }
 
   fun get(arguments: JsonElement): GetCredentialRequest {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) throw CoreException("capability_unavailable")
     val options = arguments.jsonObject
     if (options["conditionalUI"]?.jsonPrimitive?.booleanOrNull == true) throw CoreException("capability_unavailable")
     return GetCredentialRequest(

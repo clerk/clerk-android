@@ -2,12 +2,14 @@ package com.clerk.api
 
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.SdkSuppress
 import kotlinx.serialization.json.*
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
+@SdkSuppress(minSdkVersion = 28)
 class PasskeyRequestTest {
   @Test fun malformedCredentialIDsFailBeforeCredentialManagerPresentation() {
     for (encoded in listOf("", "!!!")) {

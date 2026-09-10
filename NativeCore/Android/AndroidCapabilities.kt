@@ -1,6 +1,7 @@
 package com.clerk.api
 
 import android.app.Activity
+import android.os.Build
 import androidx.credentials.CreatePublicKeyCredentialResponse
 import androidx.credentials.CustomCredential
 import androidx.credentials.exceptions.NoCredentialException
@@ -62,7 +63,8 @@ public class AndroidCapabilities internal constructor(
     OkHttpClient.Builder().cookieJar(CookieJar.NO_COOKIES).cache(null)
       .followRedirects(false).followSslRedirects(false).build())
   override val supported: Set<String> get() = setOf("http", "storage", "timer", "random", "crypto.sha256") + (if (biometrics != null) setOf("biometrics") else emptySet()) + (if (magicLinkAttestation != null) setOf("magicLink.attestation") else emptySet()) + (if (authStorage != null) setOf("authStorage") else emptySet()) +
-    (if (browser != null) setOf("browser") else emptySet()) + (if (activity != null) setOf("passkeys", "googleIdentity") else emptySet())
+    (if (browser != null) setOf("browser") else emptySet()) + (if (activity != null) setOf("googleIdentity") else emptySet()) +
+    (if (activity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) setOf("passkeys") else emptySet())
 
   override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
     if (capability.startsWith("biometrics.")) return biometrics?.perform(capability, arguments) ?: throw CoreException("capability_unavailable")
@@ -112,6 +114,7 @@ public class AndroidCapabilities internal constructor(
   }
 
   private suspend fun passkey(capability: String, arguments: JsonElement): JsonElement = withContext(Dispatchers.Main.immediate) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) throw CoreException("capability_unavailable")
     val context = activity?.invoke()?.takeUnless { it.isFinishing || it.isDestroyed } ?: throw CoreException("presentation_unavailable")
     val manager = CredentialManager.create(context)
     try {

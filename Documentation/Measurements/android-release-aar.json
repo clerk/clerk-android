@@ -1,0 +1,41 @@
+{
+  "aar": "source/api/build/outputs/aar/api-release.aar",
+  "sha256": "94918f7bab3b63c9da25b75aeb7bc9c28ed59b5c76c53696fe71e0c4b8ba1701",
+  "minSdk": 24,
+  "requiredPermissions": [
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.INTERNET",
+    "android.permission.USE_BIOMETRIC"
+  ],
+  "libraries": {
+    "arm64-v8a": {
+      "bytes": 1013440,
+      "sha256": "6a0ee2a98c0a8a965a67734c7f07533d042844440b7e29bd3a9db931f96c7dab",
+      "loadSegmentAlignments": [
+        16384,
+        16384,
+        16384
+      ]
+    },
+    "armeabi-v7a": {
+      "bytes": 714072,
+      "sha256": "9ffadfdd6b3628ce2141633a661cee422e3526d390c338c836827cc4508d9888",
+      "loadSegmentAlignments": [
+        16384,
+        16384,
+        16384
+      ]
+    },
+    "x86_64": {
+      "bytes": 1090576,
+      "sha256": "e78de506fc63912e00a8ad96269eeb9c7677c5acd3ad3875b12ad969e890eb5d",
+      "loadSegmentAlignments": [
+        16384,
+        16384,
+        16384
+      ]
+    }
+  },
+  "coreRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+  "bundleSHA256": "406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d"
+}

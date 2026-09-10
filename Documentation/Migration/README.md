@@ -123,6 +123,8 @@ Apps depending on these surfaces must remain on the previous major until their m
 
 Before general release, validate a signed-in old-major app upgraded in place; real browser/passkey/biometric prompts; minSdk and all packaged ABIs; both directions of Expo/native state changes; and startup, memory, artifact size and call overhead against agreed budgets. Publish a supported-profile decision and bounded previous-major maintenance policy with the prerelease.
 
+[Android release packaging verification](android-release-packaging.md) now checks merged permissions, all three native libraries, ELF alignment, and core asset integrity in CI. Passkeys require API 28. Device execution across the supported platform matrix remains open.
+
 ## Removed implementation
 
 The replaced native domain source tree has been deleted from this major. The linked baseline and hashed source inventory preserve its public declarations for migration review. The generated `NativeCore` target is the implementation; no old native authentication fallback is packaged.

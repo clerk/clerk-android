@@ -2,6 +2,7 @@ package com.clerk.api
 
 import android.content.Context
 import android.hardware.biometrics.BiometricPrompt
+import android.hardware.biometrics.BiometricManager as PlatformBiometricManager
 import android.os.Build
 import android.os.CancellationSignal
 import android.security.keystore.KeyGenParameterSpec
@@ -300,12 +301,12 @@ internal class AndroidBiometricKeyManager(private val context: Context, private 
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
         if (allowsDeviceCredential) {
           builder.setAllowedAuthenticators(
-            BiometricManager.Authenticators.BIOMETRIC_STRONG or
-              BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            PlatformBiometricManager.Authenticators.BIOMETRIC_STRONG or
+              PlatformBiometricManager.Authenticators.DEVICE_CREDENTIAL
           )
         } else {
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            builder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+            builder.setAllowedAuthenticators(PlatformBiometricManager.Authenticators.BIOMETRIC_STRONG)
           }
           builder.setNegativeButton(
             activity.getString(android.R.string.cancel),
