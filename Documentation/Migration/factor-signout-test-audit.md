@@ -37,3 +37,7 @@ The first test fixture placed `clerk_trace_id` in a header and used an empty aut
 Seven packaged sign-out cases, seven UI factor cases and one real-Keystore preservation case pass without skips. Four existing shared embedded sign-out/cache-policy cases also pass. Source hashes, exact declarations and reports are retained in [the proof](evidence/factor-signout/proof.json).
 
 `bash scripts/run-auth-entry-contract.sh` now requires 47 named cases across seven classes, including the sign-out suite. It checks every class separately and preserves its XML. The UI factor suite runs in the existing UI unit-test job. This audit leaves live backend, system presentation and released-app upgrade gates open.
+
+## Exact-revision CI
+
+Commit `057e3a10a628d1d1100b299e4e11c3327a0c8466` passes [Android test CI](https://github.com/clerk/clerk-android/actions/runs/34521409703). Downloaded reports independently confirm 12 API unit tests, 508 UI unit tests across 98 suites, two API 24 cases and 62 API 36 cases, all without skips. API 36 includes the 47-case authentication gate, twelve token cases, core/platform checks and the rendered authentication journey. Thirteen canonical instrumentation XML files, unit-report hashes and the completed workflow record are retained in [CI evidence](evidence/factor-signout/ci/proof.json). Identical current-output and preserved-output XML is recorded without double-counting cases.
