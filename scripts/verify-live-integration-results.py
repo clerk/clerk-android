@@ -3,6 +3,7 @@
 import argparse
 from pathlib import Path
 import xml.etree.ElementTree as ET
+from android_test_results import verify as verify_cases
 
 
 EXPECTED = {
@@ -12,17 +13,7 @@ EXPECTED = {
 
 
 def verify(directory):
-    cases = []
-    for report in sorted(directory.rglob("TEST-*.xml")):
-        for case in ET.parse(report).iter("testcase"):
-            if case.get("classname", "").startswith("com.clerk.api.integration."):
-                cases.append(case)
-    found = {(case.get("classname"), case.get("name")) for case in cases}
-    if len(cases) != len(EXPECTED) or found != EXPECTED:
-        raise ValueError(f"Expected both live integration scenarios exactly once; found {len(cases)} cases")
-    for case in cases:
-        if any(case.find(tag) is not None for tag in ("skipped", "failure", "error")):
-            raise ValueError(f"Live scenario did not pass: {case.get('classname')}.{case.get('name')}")
+    verify_cases(directory, EXPECTED)
 
 
 def main():

@@ -36,6 +36,10 @@ jobs:
       - name: Run unit tests for ${{ matrix.module }}
         run: ./gradlew ${{ matrix.module }}:testDebugUnitTest --build-cache --parallel
 
+      - name: Verify instrumentation result gates
+        if: matrix.module == ':source:api'
+        run: python3 -B scripts/test_android_test_results.py
+
       - name: Upload test results (${{ matrix.label }})
         if: always()
         uses: actions/upload-artifact@v7
@@ -44,4 +48,57 @@ jobs:
           path: |
             ${{ matrix.path }}/build/test-results/**
             ${{ matrix.path }}/build/reports/tests/**
+          if-no-files-found: warn
+
+  packaged-core-platforms:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - api-level: 24
+            platform-case: unsupportedPasskeysAreNotAdvertisedAndFailBeforePresentation
+          - api-level: 36
+            platform-case: supportedPlatformAdvertisesPasskeysAndPackagesBiometricPermission
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: 'zulu'
+          cache: gradle
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Compile packaged core tests
+        run: ./gradlew :source:api:assembleDebugAndroidTest --build-cache
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Verify packaged core and platform capabilities
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -no-audio -no-snapshot -gpu swiftshader_indirect
+          script: |
+            test "$(adb shell getprop ro.build.version.sdk | tr -d '\r')" = "${{ matrix.api-level }}"
+            ./gradlew :source:api:connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=com.clerk.api.PackagedCoreTest#generatedApiUsesPackagedCore' --build-cache
+            python3 scripts/android_test_results.py --expected 'com.clerk.api.PackagedCoreTest#generatedApiUsesPackagedCore'
+            mkdir -p source/api/build/platform-test-results
+            cp -R source/api/build/outputs/androidTest-results/connected/debug source/api/build/platform-test-results/core
+            ./gradlew :source:api:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.clerk.api.PlatformCapabilityTest --build-cache
+            python3 scripts/android_test_results.py --expected 'com.clerk.api.PlatformCapabilityTest#${{ matrix.platform-case }}'
+      - name: Upload platform test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: packaged-core-api-${{ matrix.api-level }}-x86_64
+          path: |
+            source/api/build/platform-test-results/**
+            source/api/build/outputs/androidTest-results/**
+            source/api/build/reports/androidTests/**
           if-no-files-found: warn

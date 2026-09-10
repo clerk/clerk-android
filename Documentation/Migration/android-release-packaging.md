@@ -15,6 +15,17 @@ python3 scripts/verify-native-core-aar.py source/api/build/outputs/aar/api-relea
 
 The Android build workflow now runs both commands for the API module. The AAR verifier checks the merged minSdk 24 declaration, required permissions, exactly the three selected QuickJS libraries, their ELF classes and architectures, all load segments' 16 KB alignment, and the bundled core and notice hashes. It also requires the QuickJS license. The check examines the distributed AAR rather than assuming the source manifest or linker settings reached it.
 
+## Platform execution gate
+
+The `packaged-core-platforms` job in the Android test workflow runs independently of live-service keys on API 24 and API 36 x86_64 Google APIs emulators. Both images were confirmed in [Google's SDK repository](https://dl.google.com/android/repository/sys-img/google_apis/sys-img2-3.xml). The job checks the actual emulator API level before running two probes separately:
+
+1. `PackagedCoreTest.generatedApiUsesPackagedCore`: the actual JNI runtime and packaged JavaScript execute generated authentication, callback, reset, stale-group, finalization, token, resource and sign-out operations against deterministic host fixtures. Fixture browser and biometric results do not exercise OS prompts.
+2. `PlatformCapabilityTest`: API 24 must reject passkeys before presentation; API 36 must advertise passkeys and have the biometric permission granted in the installed target.
+
+Each probe requires the exact expected named XML case with no failure, error or skip. Missing, duplicate, unexpected and malformed results fail the shared checker. The core probe's report is copied before the second instrumentation run replaces the output directory. CI retains both reports. The live integration checker uses the same strict case verification.
+
+The equivalent two probes passed separately on the available API 36 arm64 emulator, and their XML passed the new checker. Five result-checker unit tests passed, including rejection variants for absent, incomplete, duplicate, unexpected, failed, errored, skipped and malformed reports. `actionlint` passed for the changed build/test workflows with the repository's custom Blacksmith label declared; ShellCheck was unavailable. **The new x86_64 CI matrix has not executed**, so API 24 and x86_64 runtime support remain unverified. These probes use debug instrumentation and do not replace release-mode device validation.
+
 ## Local evidence, September 10, 2026
 
 - Release lint and assembly passed: zero errors, seven warnings. Six warnings concern Kotlin URI helpers and Gradle version-catalog conventions. The remaining package-visibility warning is on callback `resolveActivity`; the current code restricts that intent to the application's own package. This change does not suppress that warning. Gradle also reports deprecated features incompatible with Gradle 10.
