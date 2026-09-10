@@ -1,0 +1,79 @@
+{
+  "date": "2026-09-10",
+  "kind": "release-build-validation",
+  "configuration": "Release; R8 enabled; arm64-v8a only",
+  "javascriptRevision": "0b97ed0a260429dda4f230e32bb7e94fde3097f4",
+  "androidImplementationRevision": "5ac6305b4a29bc6ba72896613790741af8c00ffe",
+  "versions": {
+    "expo": "57.0.21",
+    "reactNative": "0.86.0",
+    "clerkExpo": "4.6.5",
+    "clerkJS": "6.31.0",
+    "clerkShared": "4.31.0",
+    "r8": "9.1.43"
+  },
+  "contractHash": "0f8387f260072ba6f894442b73d50afa6bda5f1205ed3c9209f5d6b1cfba16ce",
+  "nativeBundleSHA256": "86d665dd87bc188352594cf80a5c0c5927348d84d9de6382e927d4da8abc9cd3",
+  "hermesBytecode": {
+    "bytes": 2695816,
+    "sha256": "0c4351b805d1441bf0abc6deac20543fa2dd33991f2e9edc3bbeb18515ce3534",
+    "magic": "c61fbc03c103191f",
+    "containsCurrentContract": true,
+    "containsPreviousContract": false
+  },
+  "apk": {
+    "bytes": 28931940,
+    "sha256": "bc8286ab709c39edd9239e662191853579373b7fd4947d4effc018b96cf3ce99"
+  },
+  "localPackages": {
+    "clerk-shared-4.31.0.tgz": {
+      "bytes": 904037,
+      "sha256": "62e1cfb35b20838856a79df766f9318f74fa85affdcde79501b6b8fe5fb6210f"
+    },
+    "clerk-expo-4.6.5.tgz": {
+      "bytes": 243791,
+      "sha256": "556121eb88729f56b22a5bca2f9ca2e20557cce369604eac826e5538016ccff3"
+    },
+    "clerk-clerk-js-6.31.0.tgz": {
+      "bytes": 3647137,
+      "sha256": "f09c6f87142a5d17953e25816740d85853d884b0135957a41710cf0acfa7464e"
+    }
+  },
+  "nativeAARs": {
+    "clerk-android-api": {
+      "bytes": 4358204,
+      "sha256": "f98dd28d0bd4f984a66bfec2739e8d658465c544fc97fb8554ed13452c72e82c"
+    },
+    "clerk-android-ui": {
+      "bytes": 3741103,
+      "sha256": "1a581c300e40b503b6a9996e68f54bbbd0cd48e153d461f26668b1691bd8593c"
+    }
+  },
+  "fixtureFiles": {
+    "ProofApp.tsx": "d1053bd2e42d4f71b4776d9103f9a4f659d895c6b7c60b597faf89ad79c13c4c",
+    "index.js": "7799ca761e362619deeba2300d6a64513b8dad15100a2360c3be07526997c990",
+    "proof-network.js": "c07943483e618b069d835f9342ee42621ab945a5266831a6fdfc94c8e7dfe83b",
+    "proof-fixtures.json": "95cd2b2d8344feeafd289a9c5edadb094d839ed062e006b934b76053f3cbc719",
+    "package.json": "9bcf64dd28a5950180067c8a89cd9131214458273955d04a44b0a5ae18e6ac61",
+    "android/settings.gradle": "9fd859c10896317bf318ce784eb61aa608a26cbc33dab74232a2f878c4cc8693"
+  },
+  "staleBuildObservation": {
+    "source": "Verification before the forced bundle task; old APK hash was not captured",
+    "hermesBytes": 2692892,
+    "nativeCoreRevision": "0b97ed0a260429dda4f230e32bb7e94fde3097f4",
+    "nativeContractHash": "0f8387f260072ba6f894442b73d50afa6bda5f1205ed3c9209f5d6b1cfba16ce",
+    "oldJSContract": "d0e44f4d5307614738d237be8326540031290579f49e2b098be85596ced06d98",
+    "containsOldJSContract": true,
+    "containsCurrentJSContract": false,
+    "bundleTask": "UP-TO-DATE",
+    "log": "expo-readiness-android-release.log"
+  },
+  "limitations": [
+    "Build and packaged-byte validation only; no app launch or interaction in this run.",
+    "No Hermes latency, memory, UI responsiveness or single-owner runtime measurement.",
+    "Synthetic HTTP and user fixtures; no live account or released-app upgrade.",
+    "Full APK size is not a matched incremental SDK download estimate.",
+    "Bundled native libraries do not prove engine instantiation."
+  ],
+  "installedExpoAttachedModuleSHA256": "4c8500a60815c03885a9b3af8289f1aec8874861c530ade33bcca01d72e6d870"
+}
