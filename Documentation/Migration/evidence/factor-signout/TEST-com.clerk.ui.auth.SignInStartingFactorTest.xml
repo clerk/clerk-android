@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.ui.auth.SignInStartingFactorTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-10T19:27:22.642Z" hostname="mac.lan" time="3.886">
+  <properties/>
+  <testcase name="startingFirstFactor chooses matching email_link when preferred password is unavailable" classname="com.clerk.ui.auth.SignInStartingFactorTest" time="3.781"/>
+  <testcase name="startingFirstFactor prefers email_link for email identifier when otp is preferred" classname="com.clerk.ui.auth.SignInStartingFactorTest" time="0.018"/>
+  <testcase name="startingFirstFactor matches prepared factor by identifier when strategies repeat" classname="com.clerk.ui.auth.SignInStartingFactorTest" time="0.028"/>
+  <testcase name="startingFirstFactor prefers password for email identifier when password is preferred" classname="com.clerk.ui.auth.SignInStartingFactorTest" time="0.014"/>
+  <testcase name="startingFirstFactor does not force email_link for non-email identifiers" classname="com.clerk.ui.auth.SignInStartingFactorTest" time="0.012"/>
+  <testcase name="startingFirstFactor does not use unrelated email_link for username sign-ins" classname="com.clerk.ui.auth.SignInStartingFactorTest" time="0.01"/>
+  <testcase name="startingFirstFactor uses preferred password over prepared email_code" classname="com.clerk.ui.auth.SignInStartingFactorTest" time="0.014"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/Users/mikepitre/.gradle/caches/9.7.1/transforms/3fe64f7182d8271eecc87e0bd81add2b/transformed/byte-buddy-agent-1.18.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

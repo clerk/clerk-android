@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="16" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T19:35:06" hostname="localhost">
+  <testsuite name="com.clerk.api.GoogleIdentityContractTest" tests="16" failures="0" errors="0" skipped="0" time="3.051" timestamp="2026-09-10T19:35:06" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="unavailableNativeProviderDoesNotFallback" classname="com.clerk.api.GoogleIdentityContractTest" time="0.198" />
+    <testcase name="emptyPickerFallsBackToBrowser" classname="com.clerk.api.GoogleIdentityContractTest" time="0.276" />
+    <testcase name="blankIdentityTokenDoesNotAuthenticate" classname="com.clerk.api.GoogleIdentityContractTest" time="0.144" />
+    <testcase name="missingAccountCreatesSignupWithMetadata" classname="com.clerk.api.GoogleIdentityContractTest" time="0.243" />
+    <testcase name="signupEntryTransfersExistingAccountToSignIn" classname="com.clerk.api.GoogleIdentityContractTest" time="0.265" />
+    <testcase name="resetIgnoresLateIdentityToken" classname="com.clerk.api.GoogleIdentityContractTest" time="0.176" />
+    <testcase name="existingAccountRequiresFinalization" classname="com.clerk.api.GoogleIdentityContractTest" time="0.229" />
+    <testcase name="unknownNativeCredentialFailureDoesNotFallback" classname="com.clerk.api.GoogleIdentityContractTest" time="0.150" />
+    <testcase name="failedSignupPreservesStructuredError" classname="com.clerk.api.GoogleIdentityContractTest" time="0.171" />
+    <testcase name="transferableStatusWithoutAccountExistsErrorDoesNotTransfer" classname="com.clerk.api.GoogleIdentityContractTest" time="0.176" />
+    <testcase name="cancelledPickerDoesNotOpenBrowser" classname="com.clerk.api.GoogleIdentityContractTest" time="0.153" />
+    <testcase name="unsupportedNativeCredentialDoesNotAuthenticate" classname="com.clerk.api.GoogleIdentityContractTest" time="0.153" />
+    <testcase name="malformedNativeCredentialDoesNotAuthenticate" classname="com.clerk.api.GoogleIdentityContractTest" time="0.150" />
+    <testcase name="rejectedIdentityDoesNotOpenBrowser" classname="com.clerk.api.GoogleIdentityContractTest" time="0.150" />
+    <testcase name="transferableSignupReturnsToSignInWithOneIdentityPrompt" classname="com.clerk.api.GoogleIdentityContractTest" time="0.267" />
+    <testcase name="signInOnlyDoesNotCreateAccount" classname="com.clerk.api.GoogleIdentityContractTest" time="0.150" />
+  </testsuite>
+</testsuites>

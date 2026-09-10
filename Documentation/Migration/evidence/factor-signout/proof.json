@@ -1,0 +1,221 @@
+{
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "sourceBase": "1a22746031ff9b4f352735226be7d6a6f044a0e4",
+  "runtimeChanged": false,
+  "retired": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signin/SignInExtensionsTest.kt",
+      "sha256": "8b2acd39bf52f873ed156418469b6bae8e8c8ba48462c3a6c1b90f8e7801e85f",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "startingFirstFactor prefers password for email identifier when password is preferred",
+          "line": 38
+        },
+        {
+          "name": "startingFirstFactor prefers email_link for email identifier when otp is preferred",
+          "line": 58
+        },
+        {
+          "name": "startingFirstFactor does not force email_link for non-email identifiers",
+          "line": 77
+        },
+        {
+          "name": "startingFirstFactor chooses matching email_link when preferred password is unavailable",
+          "line": 96
+        },
+        {
+          "name": "startingFirstFactor does not use unrelated email_link for username sign-ins",
+          "line": 121
+        },
+        {
+          "name": "startingFirstFactor matches prepared factor by identifier when strategies repeat",
+          "line": 140
+        },
+        {
+          "name": "startingFirstFactor uses preferred password over prepared email_code",
+          "line": 169
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signout/SignOutServiceTest.kt",
+      "sha256": "c93b53bf8803e5ca554194c845faf04539bb8333a173f771cb5eb24d332b217c",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signOut clears device token on successful server sign-out",
+          "line": 115
+        },
+        {
+          "name": "signOut clears device token even when server sign-out fails",
+          "line": 139
+        },
+        {
+          "name": "signOut clears session and user state on successful sign-out",
+          "line": 166
+        },
+        {
+          "name": "signOut clears session and user state even when server sign-out fails",
+          "line": 189
+        },
+        {
+          "name": "signOut succeeds when no session exists",
+          "line": 211
+        },
+        {
+          "name": "signOut preserves device ID while clearing device token",
+          "line": 235
+        },
+        {
+          "name": "signOut refreshes client after local sign-out cleanup",
+          "line": 257
+        },
+        {
+          "name": "signOut tolerates client refresh failure",
+          "line": 269
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "NativeCoreTests/Android/SignOutContractTest.kt": "a80edbf6e11ce4061e05045a2b9a810e4a9cb750294df97530f74c39db9d0d3e",
+    "NativeCoreTests/Android/CredentialStorageIntegrityTest.kt": "82a3b68b2cd55504b1d4b5b3c60fc45844286f116172f3dc6201198adbcd0dc3",
+    "source/ui/src/test/java/com/clerk/ui/auth/SignInStartingFactorTest.kt": "82dc9adcd39a5d11980c129a687bef3bfa7524c5e744cac9256ad3ec33c0c253"
+  },
+  "reports": [
+    {
+      "file": "TEST-CredentialStorageIntegrityTest.xml",
+      "sha256": "56b3b53aeaeb51795bb532d10b13e916abbf96e85de0efa7155abf5e1d0f56dd",
+      "cases": [
+        {
+          "name": "plaintextLegacyImportUpdateAndClearPreserveTheOriginalPreferences",
+          "classname": "com.clerk.api.CredentialStorageIntegrityTest",
+          "time": "0.013"
+        }
+      ]
+    },
+    {
+      "file": "TEST-SignOutContractTest.xml",
+      "sha256": "0c738c9d96690e156c152b858f04c210a01ed380f5f6a6cfe241f0b5c64ccbea",
+      "cases": [
+        {
+          "name": "blankBearerAuthorizationClearsStoredClientCredential",
+          "classname": "com.clerk.api.SignOutContractTest",
+          "time": "0.349"
+        },
+        {
+          "name": "networkFailureIsNotReplayedOrReportedAsSuccess",
+          "classname": "com.clerk.api.SignOutContractTest",
+          "time": "0.244"
+        },
+        {
+          "name": "scopedSignOutPreservesOtherSelectedSession",
+          "classname": "com.clerk.api.SignOutContractTest",
+          "time": "0.235"
+        },
+        {
+          "name": "rejectedSignOutClearsSelectionButPreservesKnownServerSessions",
+          "classname": "com.clerk.api.SignOutContractTest",
+          "time": "0.259"
+        },
+        {
+          "name": "noSessionSignOutDoesNotRequestOrEraseClientCredential",
+          "classname": "com.clerk.api.SignOutContractTest",
+          "time": "0.211"
+        },
+        {
+          "name": "scopedRejectionPreservesOtherSelectedSession",
+          "classname": "com.clerk.api.SignOutContractTest",
+          "time": "0.237"
+        },
+        {
+          "name": "successfulSignOutUsesServerClientWithoutRefresh",
+          "classname": "com.clerk.api.SignOutContractTest",
+          "time": "0.275"
+        }
+      ]
+    },
+    {
+      "file": "TEST-com.clerk.ui.auth.SignInStartingFactorTest.xml",
+      "sha256": "1d773a78e907dffc52d40dc9b7ba498df96cb8f741dc1849caa1fb9d8ad6ed22",
+      "cases": [
+        {
+          "name": "startingFirstFactor chooses matching email_link when preferred password is unavailable",
+          "classname": "com.clerk.ui.auth.SignInStartingFactorTest",
+          "time": "3.781"
+        },
+        {
+          "name": "startingFirstFactor prefers email_link for email identifier when otp is preferred",
+          "classname": "com.clerk.ui.auth.SignInStartingFactorTest",
+          "time": "0.018"
+        },
+        {
+          "name": "startingFirstFactor matches prepared factor by identifier when strategies repeat",
+          "classname": "com.clerk.ui.auth.SignInStartingFactorTest",
+          "time": "0.028"
+        },
+        {
+          "name": "startingFirstFactor prefers password for email identifier when password is preferred",
+          "classname": "com.clerk.ui.auth.SignInStartingFactorTest",
+          "time": "0.014"
+        },
+        {
+          "name": "startingFirstFactor does not force email_link for non-email identifiers",
+          "classname": "com.clerk.ui.auth.SignInStartingFactorTest",
+          "time": "0.012"
+        },
+        {
+          "name": "startingFirstFactor does not use unrelated email_link for username sign-ins",
+          "classname": "com.clerk.ui.auth.SignInStartingFactorTest",
+          "time": "0.01"
+        },
+        {
+          "name": "startingFirstFactor uses preferred password over prepared email_code",
+          "classname": "com.clerk.ui.auth.SignInStartingFactorTest",
+          "time": "0.014"
+        }
+      ]
+    }
+  ],
+  "sharedJavaScriptRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+  "sharedReport": {
+    "file": "shared-signout.log",
+    "passed": 4,
+    "sha256": "6d660cdafb0f21ad724a7dc92afb0a7501caa9d2397e90586159f43dd914f147"
+  },
+  "authenticationGate": {
+    "cases": 47,
+    "scriptSha256": "19f08f8fb61de79be7a23ec94a51f4fe4b894445ff6ea09d56ebeedaf3f01cec",
+    "reports": [
+      {
+        "file": "gate/AuthEntryPointTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "23be74b1d48b183399b3c1d69570071c0d1ea598c042d0d9cf320fb369e3fb53"
+      },
+      {
+        "file": "gate/GoogleIdentityContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "135d258b1aea13af81bdaffcdc1765adcf5c353a3209ce58469c835150341808"
+      },
+      {
+        "file": "gate/GoogleIdentityRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "3bcdc26864bc92018fce6a600d86ca3e5faefc8711ca88edb4f10559bd1835b7"
+      },
+      {
+        "file": "gate/SessionSelectionContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "6b61931265d723ce88686a50f0d6c00373a22300884b50db73d138c49de4db2b"
+      },
+      {
+        "file": "gate/SignInCredentialContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "2dc63ad633d6d33b769cc673dfe42394fa2d1ea3b4b852d3201940f3b97d0cb0"
+      },
+      {
+        "file": "gate/SignOutContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "4c7eae8045ad1ba1147ac7c94d767e0796612c20ea084f35a7f2547bb1e68ca0"
+      },
+      {
+        "file": "gate/SignUpVerificationRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "1ad5cffa414de0123bd8434c397b7764caadecabdc5c542cf9b734c955f0bdd4"
+      }
+    ]
+  }
+}
