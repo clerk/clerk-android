@@ -132,3 +132,5 @@ For Expo consumers, see the [D8/R8 compiler compatibility proof](../Measurements
 The [user resource results](user-resource-results.md) record profile clearing, image deletion receipts, metadata replacement, collection filters and explicit enrollment results with packaged QuickJS evidence.
 
 The [biometric persistence audit](biometric-persistence.md) records raw metadata preservation, key replacement, nonfatal cleanup and initiating-session rollback with generated QuickJS evidence.
+
+The [Apple SSO verification errors](apple-auth-errors.md) records generated Apple transfer and restriction behavior, the shared verification-error serializer correction, and packaged-engine evidence.

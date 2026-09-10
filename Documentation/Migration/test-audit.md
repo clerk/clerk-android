@@ -230,3 +230,5 @@ Hosted portal authentication, live shared-session/watch replication, proxy confi
 | [source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncProviderTest.kt](https://github.com/clerk/clerk-android/blob/1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f/source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncProviderTest.kt) | 2 |
 | [source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncPublicApiTest.kt](https://github.com/clerk/clerk-android/blob/1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f/source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncPublicApiTest.kt) | 2 |
 | [source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncSnapshotTest.kt](https://github.com/clerk/clerk-android/blob/1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f/source/api/src/test/java/com/clerk/api/sharedsession/SharedSessionSyncSnapshotTest.kt) | 7 |
+
+The [Apple SSO verification errors](apple-auth-errors.md) records generated Apple transfer and restriction behavior, the shared verification-error serializer correction, and packaged-engine evidence.

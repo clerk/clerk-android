@@ -1,0 +1,13 @@
+# Apple SSO verification error details
+
+Generated `Clerk.authenticateWithSSO` now preserves a single source `ClerkAPIError` rejected by a verification resource. Previously the bridge retained its code but omitted structured details, so native consumers lost the message, long message and metadata. The shared TypeScript serializer maps this error through the existing metadata allowlist, retains the rejection category, and does not invent an HTTP status. The Expo attached transport uses the same correction.
+
+`NativeCoreTests/Android/AppleSSOErrorTest.kt` exercises six actual packaged QuickJS scenarios: existing-account waitlist fallback, blocked new-account waitlist fallback, verification failure after account transfer, HTTP failure during transfer, unrelated sign-up failure, and restricted explicit sign-up. It checks generated resource identity, one credential request, token reuse, transfer request parameters, decoded messages/metadata, and explicit finalization. A fixture Apple identity host tests the portable domain contract; it does not add or claim native Android Apple credential presentation.
+
+The shared `mobile-sso.test.mjs` also covers profile/unsafe-metadata preservation, both restriction codes, transfer disabled, complete OAuth browser roundtrip, reset cancellation and token exclusion from observed state. The iOS `apple-auth-test-audit.md` maps all seven old Apple auth declarations; no Android legacy files are retired by this change.
+
+Before the fix, the transfer-verification scenario failed on both JavaScriptCore and QuickJS because the error detail list was empty; the other five new scenarios passed. After the fix, all 489 shared embedded tests passed, including all 14 mobile SSO cases. Full packaged-core runs passed: 102 tests on macOS, 99 on iOS Simulator and 103 on Android. TypeScript checking, generated-contract checking (342 types, 1,551 members, zero unsupported shapes), and reproducibility checks passed, including the Expo attached transport. The initial native fixtures were corrected to preserve the complete verification shape and canonical transfer error before recording this before/after comparison.
+
+Packaged JavaScript revision: `80f7c947db8f3908a85665e268f1195dc59c2ec6`. Contract SHA-256: `0f8387f260072ba6f894442b73d50afa6bda5f1205ed3c9209f5d6b1cfba16ce`. Bundle SHA-256: `b1769222a872e1fad4ce4f34cd089ac46c0ea902b8dc2a1b9327b5e6f3656cfe`. Both native manifests are byte-identical and each installed bundle matches its manifest.
+
+Live OS authentication, complete UI journeys, released-app credential upgrades and physical performance remain separate release gates.
