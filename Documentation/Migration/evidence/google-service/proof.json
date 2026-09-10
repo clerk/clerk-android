@@ -1,0 +1,169 @@
+{
+  "android_base_commit": "1d7d8410839b229cb69726126539a304be9580b8",
+  "javascript_commit": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "change": "Extract existing Android Google option/credential/error adapter; shared authentication and generated API unchanged.",
+  "retired_legacy_files": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signup/SignUpCreateParamsTest.kt",
+      "sha256": "f4a4f60311cb79693ca4a389a5ba10868580139f1c270d445d1ecfc6e1289223",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "standard create params include unsafe metadata when provided",
+          "line": 10
+        },
+        {
+          "name": "standard create params exclude unsafe metadata when omitted",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/GoogleSignInServiceTest.kt",
+      "sha256": "67a94b61697bc707ec241b33a2f8a05296b77d1c5cd7aba9d015bab82be987a2",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signInWithGoogle succeeds when authentication is successful",
+          "line": 86
+        },
+        {
+          "name": "signInWithGoogle creates account when external_account_not_found error occurs",
+          "line": 114
+        },
+        {
+          "name": "signInWithGoogle transfers created sign-up back to sign-in when external account exists",
+          "line": 151
+        },
+        {
+          "name": "signInWithGoogle returns error when authentication fails with other error",
+          "line": 197
+        },
+        {
+          "name": "signInWithGoogle returns error when credential type is unsupported",
+          "line": 230
+        },
+        {
+          "name": "signInWithGoogle returns error when GetCredentialException is thrown",
+          "line": 250
+        },
+        {
+          "name": "signInWithGoogle classifies missing Google account",
+          "line": 266
+        },
+        {
+          "name": "signInWithGoogle classifies user cancellation",
+          "line": 278
+        },
+        {
+          "name": "signInWithGoogle verifies correct SignUp CreateParams are used",
+          "line": 290
+        },
+        {
+          "name": "signUpWithGoogle transfers existing external account to sign-in",
+          "line": 323
+        }
+      ]
+    }
+  ],
+  "packaged_execution": {
+    "device": "Pixel_9_Pro API 36 arm64 emulator",
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "suites": [
+      {
+        "class": "com.clerk.api.GoogleIdentityContractTest",
+        "cases": [
+          "existingAccountRequiresFinalization",
+          "missingAccountCreatesSignupWithMetadata",
+          "signInOnlyDoesNotCreateAccount",
+          "rejectedIdentityDoesNotOpenBrowser",
+          "failedSignupPreservesStructuredError",
+          "emptyPickerFallsBackToBrowser",
+          "cancelledPickerDoesNotOpenBrowser",
+          "blankIdentityTokenDoesNotAuthenticate",
+          "resetIgnoresLateIdentityToken",
+          "transferableSignupReturnsToSignInWithOneIdentityPrompt",
+          "signupEntryTransfersExistingAccountToSignIn",
+          "transferableStatusWithoutAccountExistsErrorDoesNotTransfer",
+          "unsupportedNativeCredentialDoesNotAuthenticate",
+          "malformedNativeCredentialDoesNotAuthenticate",
+          "unknownNativeCredentialFailureDoesNotFallback",
+          "unavailableNativeProviderDoesNotFallback"
+        ],
+        "source": "NativeCoreTests/Android/GoogleIdentityContractTest.kt",
+        "source_sha256": "01ddd0ffb1a4ec71c3bcc5502fb861c6e8327c105f96407c59e65b5982b289c6",
+        "report": "TEST-GoogleIdentityContractTest.xml",
+        "report_sha256": "c893fb3cc2b883383ab2b68e2062e2b28dbd452397ce64e77242ca8fb12aea59"
+      },
+      {
+        "class": "com.clerk.api.GoogleIdentityRequestTest",
+        "cases": [
+          "requestsFreshNonceAndReturnsDecodedIdentityToken",
+          "blankClientIdentifierFailsBeforeCredentialRequest",
+          "missingActivityDoesNotAdvertiseOrPresentGoogleIdentity"
+        ],
+        "source": "NativeCoreTests/Android/GoogleIdentityRequestTest.kt",
+        "source_sha256": "fb03f166de2a9a55536842ab7be71106ed4c138cf418512bbc41e72c0305aff1",
+        "report": "TEST-GoogleIdentityRequestTest.xml",
+        "report_sha256": "6ceaba00fa80e5ec4b5a8771946752002e6b4c7a7c9da081ed7bec9030d452af"
+      },
+      {
+        "class": "com.clerk.api.AuthEntryPointTest",
+        "cases": [
+          "emailCodeUsesExplicitPreparation",
+          "phoneCodeUsesExplicitPreparation",
+          "signupPreservesNestedMetadata",
+          "signupOmitsUnspecifiedMetadata",
+          "unrelatedAndOAuthCallbacksAreNotRedeemedAsEmailLinks"
+        ],
+        "source": "NativeCoreTests/Android/AuthEntryPointTest.kt",
+        "source_sha256": "64dce4afe06655864c3d336851f9c8fec9cc1bf9d3a07a2601f3eede5849cc75",
+        "report": "TEST-AuthEntryPointTest.xml",
+        "report_sha256": "0990c3999835bc39d17ee62545216db2dd119fb1944d6681b73bcb7b76f30c76"
+      },
+      {
+        "class": "com.clerk.api.SessionSelectionContractTest",
+        "cases": [
+          "selectsExistingSessionWithoutFollowupRefresh",
+          "explicitSelectionOverridesStaleClientSelection",
+          "emptyTouchClientDoesNotRestoreSession",
+          "laterEmptyRefreshClearsSelectedSession",
+          "forcedPersonalSelectionKeepsCurrentSession",
+          "omittedOrganizationStillSelectsSessionWhenOrganizationsAreForced",
+          "returnedOrganizationStateOverridesRequestedOrganization",
+          "selectedSessionSignoutLeavesRemainingSessionUnselected"
+        ],
+        "source": "NativeCoreTests/Android/SessionSelectionContractTest.kt",
+        "source_sha256": "ecb99aaa1259fcd3c7b97bfacf0d9fa79a4d34e2b9c1f9497d2f4ef8fa5b3399",
+        "report": "TEST-SessionSelectionContractTest.xml",
+        "report_sha256": "05f49e5d9cdcdf94aa65f03280b87975aa09b240652ec00693913e7fd93e8299"
+      }
+    ]
+  },
+  "embedded_execution": {
+    "passed": 39,
+    "failed": 0,
+    "skipped": 0,
+    "command": "node --no-opt --test packages/mobile-runtime/test/{mobile-identifier-google,mobile-sso,sso}.test.mjs",
+    "log": "embedded.log"
+  },
+  "source_sha256": {
+    "NativeCore/Android/AndroidGoogleIdentity.kt": "2a13d3b103c03412b4b4a30a9dca79b776b2f890a3f22fbbc260fbfe1aa9a7dc",
+    "NativeCore/Android/AndroidCapabilities.kt": "39de628895928fd3118ce37ba697ac740d4c75166b939d740342389541dce425",
+    "NativeCore/GeneratedAPI.kt": "9da5ea1fd2a525da8584459a24ead878d6e125d10381628871615b60cf4c650f",
+    "NativeCore/BundledCore.kt": "26a8cb150c3261a488bb80ef5839236159b5060cb01e52bb5facc43f9e0de2b8",
+    "scripts/run-auth-entry-contract.sh": "73767a48fbd30215d5881491e5152035629898b1759dcb9f338ecc6b9b05c4d8"
+  },
+  "log_sha256": {
+    "native-gate.log": "562241764818db12da76dcb8a3e1beb204beac73e7f127ecaec84271214fdca7",
+    "embedded.log": "7c37546cdcd7451f3c9a593a859630b703fb34130482c158bf04de6a73d5a324"
+  },
+  "limits": [
+    "Synthetic Google identity JWT is not signed by Google and is never submitted to a real server.",
+    "Provider responses and exceptions are native objects; Credential Manager presentation is replaced by a deterministic callback.",
+    "Physical prompt, live authentication and signed-in upgrade gates remain open."
+  ]
+}

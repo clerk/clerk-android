@@ -1,0 +1,59 @@
+(node:97161) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ shared Google credential flow: existing (30.391333ms)
+✔ shared Google credential flow: new (9.674583ms)
+✔ shared Google credential flow: sign-in-only (7.070708ms)
+✔ shared Google credential flow: rejected (7.031666ms)
+✔ shared Google credential flow: empty-picker (11.104125ms)
+✔ shared Google credential flow: cancelled (9.460667ms)
+✔ identifier screen signIn, missing=true (11.200083ms)
+✔ identifier screen signIn, missing=false (8.972459ms)
+✔ identifier screen signUp, missing=true (8.522792ms)
+✔ identifier screen signUp, missing=false (8.096584ms)
+✔ identifier screen signInOrUp, missing=true (11.456917ms)
+✔ identifier screen signInOrUp, missing=false (9.135041ms)
+✔ reset cancels the Google picker before a late token can authenticate (11.014708ms)
+(node:97162) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ prebuilt Apple SSO preserves terminal errors and restriction boundaries: waitlist-existing (33.267917ms)
+✔ prebuilt Apple SSO preserves terminal errors and restriction boundaries: waitlist-new (10.270291ms)
+✔ prebuilt Apple SSO preserves terminal errors and restriction boundaries: transfer-verification-error (9.583125ms)
+✔ prebuilt Apple SSO preserves terminal errors and restriction boundaries: transfer-request-error (9.974417ms)
+✔ prebuilt Apple SSO preserves terminal errors and restriction boundaries: unrelated-signup-error (10.6795ms)
+✔ prebuilt Apple SSO preserves terminal errors and restriction boundaries: signup-only-restricted (10.33025ms)
+✔ prebuilt Apple SSO preserves one credential and explicit finalize: new-user (9.335291ms)
+✔ prebuilt Apple SSO preserves one credential and explicit finalize: existing-user (10.911375ms)
+✔ prebuilt Apple SSO preserves one credential and explicit finalize: restricted-existing (10.010166ms)
+✔ prebuilt Apple SSO preserves one credential and explicit finalize: restricted-new (9.119375ms)
+✔ prebuilt Apple SSO preserves one credential and explicit finalize: sign-in-only (8.445ms)
+✔ prebuilt OAuth completes the future SSO browser roundtrip before optional transfer: true (13.259292ms)
+✔ prebuilt OAuth completes the future SSO browser roundtrip before optional transfer: false (10.070875ms)
+✔ reset cancels a prebuilt Apple prompt without beginning authentication (10.755458ms)
+(node:97163) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ signIn.sso runs the generated operation on the real future facade without a browser global or implicit finalization (27.935291ms)
+✔ signIn.sso preserves remaining requirements (6.980833ms)
+✔ signIn.sso returns native cancellation through its error envelope without reconciling or activating (5.643667ms)
+✔ signIn.sso rejects an unrelated callback before sending a nonce (6.213791ms)
+✔ signUp.sso runs the generated operation on the real future facade without a browser global or implicit finalization (6.487167ms)
+✔ signUp.sso preserves remaining requirements (6.557042ms)
+✔ signUp.sso returns native cancellation through its error envelope without reconciling or activating (5.491917ms)
+✔ signUp.sso rejects an unrelated callback before sending a nonce (6.954709ms)
+✔ signIn.sso preserves native query nonce semantics (35.250292ms)
+✔ signUp.sso preserves native query nonce semantics (37.091708ms)
+✔ signIn.sso preserves the caller's raw OIDC prompt string (54.118459ms)
+✔ signUp.sso preserves the caller's raw OIDC prompt string (54.792292ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 364.497209

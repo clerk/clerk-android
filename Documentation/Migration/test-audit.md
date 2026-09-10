@@ -8,7 +8,7 @@ The [biometric persistence audit](biometric-persistence.md) records eight packag
 
 Baseline: `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. This is a file-level ownership and migration audit of the old native API suite, with exact test declarations retained in [legacy-tests.json](legacy-tests.json). Parameterized cases are not expanded; declarations and helper functions are not a coverage percentage.
 
-The inventory contains 105 old test/helper files. Three have been migrated, 21 have been retired after assertion review, and 81 remain while platform and coverage migration is incomplete.
+The inventory contains 105 old test/helper files. Three have been migrated, 23 have been retired after assertion review, and 79 remain while platform and coverage migration is incomplete.
 
 | Reviewed group | File disposition | Evidence |
 | --- | --- | --- |
@@ -24,6 +24,7 @@ The inventory contains 105 old test/helper files. Three have been migrated, 21 h
 | Private token freshness/cache policy | One retired | [All ten declarations and packaged response ordering](token-freshness-test-audit.md) |
 | Token fetching | One retired | [All 25 declarations and the late host-reply fix](token-request-test-audit.md) |
 | Authentication entry points | Four retired | [All 23 declarations and 21 new packaged contract cases](auth-entry-test-audit.md) |
+| Google service and sign-up parameter mapping | Two retired | [All twelve declarations and native credential/transfer checks](google-service-test-audit.md) |
 
 No retained file is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The baseline lists below preserve the full inventory and unresolved gates.
 

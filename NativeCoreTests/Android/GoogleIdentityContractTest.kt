@@ -1,14 +1,32 @@
 package com.clerk.api
 
 import android.net.Uri
+import android.os.Bundle
+import androidx.credentials.CustomCredential
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
+import androidx.credentials.exceptions.GetCredentialUnknownException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import java.net.URI
 import java.util.Base64
+import java.util.UUID
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import org.junit.Test
 import org.junit.runner.RunWith
+
+internal val googleIdentityTokenFixture =
+  listOf(
+      """{"alg":"none"}""",
+      """{"sub":"google_fixture_user","email":"user@example.com","aud":"configured_google_client"}""",
+    )
+    .joinToString(".") {
+      Base64.getUrlEncoder().withoutPadding().encodeToString(it.toByteArray())
+    } + ".fixture"
 
 @RunWith(AndroidJUnit4::class)
 class GoogleIdentityContractTest {
@@ -30,12 +48,29 @@ class GoogleIdentityContractTest {
 
   @Test fun resetIgnoresLateIdentityToken() = verify("reset")
 
+  @Test fun transferableSignupReturnsToSignInWithOneIdentityPrompt() = verify("transfer")
+
+  @Test fun signupEntryTransfersExistingAccountToSignIn() = verify("signup-transfer")
+
+  @Test
+  fun transferableStatusWithoutAccountExistsErrorDoesNotTransfer() = verify("unconfirmed-transfer")
+
+  @Test fun unsupportedNativeCredentialDoesNotAuthenticate() = verify("native-type")
+
+  @Test fun malformedNativeCredentialDoesNotAuthenticate() = verify("native-malformed")
+
+  @Test fun unknownNativeCredentialFailureDoesNotFallback() = verify("native-unknown")
+
+  @Test fun unavailableNativeProviderDoesNotFallback() = verify("native-provider")
+
   private fun verify(scenario: String) = runBlocking {
     withTimeout(15000) {
       withContext(Dispatchers.Main.immediate) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val base = PackagedFixtures(instrumentation.context)
         val host = GoogleIdentityHost(base, scenario)
+        val transferred = scenario in listOf("transfer", "signup-transfer")
+        val signupResult = scenario in listOf("new", "unconfirmed-transfer")
         val key =
           "pk_test_" +
             Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
@@ -52,7 +87,9 @@ class GoogleIdentityContractTest {
         val params =
           MobileSSOParams(
             strategy = SignInSSOParamsStrategy.OauthGoogle,
-            start = MobileSSOParamsStart.SignIn,
+            start =
+              if (scenario == "signup-transfer") MobileSSOParamsStart.SignUp
+              else MobileSSOParamsStart.SignIn,
             transferable = scenario != "sign-in-only",
             preferGoogleOneTap = true,
             unsafeMetadata = metadata,
@@ -82,11 +119,16 @@ class GoogleIdentityContractTest {
               "signup-rejected" -> "sign_up_mode_restricted"
               "cancelled" -> "user_cancelled"
               "blank-token" -> "invalid_credential_result"
+              "native-type" -> "invalid_credential_response"
+              "native-malformed",
+              "native-unknown" -> "host_failure"
+              "native-provider" -> "credential_provider_unavailable"
               else -> null
             }
           if (expectedCode != null) {
             check(error is CoreException) { "Expected structured failure for $scenario: $error" }
-            if (scenario in listOf("cancelled", "blank-token")) check(error.code == expectedCode)
+            if (scenario in listOf("cancelled", "blank-token") || scenario.startsWith("native-"))
+              check(error.code == expectedCode)
             else {
               check(error.status == 422 && error.errors.single().code == expectedCode)
               check(error.errors.single().longMessage == "Choose another sign-in method")
@@ -95,9 +137,14 @@ class GoogleIdentityContractTest {
           } else {
             check(error == null) { "Unexpected $scenario failure: $error" }
             val auth = result.getOrThrow()
-            if (scenario == "new") {
+            if (signupResult) {
               check(auth is MobileAuthenticationResult.Case2 && auth.value.signUp === clerk.signUp)
-              check(clerk.signUp.status.rawValue == "complete")
+              check(
+                clerk.signUp.status.rawValue ==
+                  if (scenario == "new") "complete" else "missing_requirements"
+              )
+              if (scenario == "unconfirmed-transfer")
+                check(!clerk.signUp.isTransferable && clerk.signUp.createdSessionId == null)
             } else {
               check(auth is MobileAuthenticationResult.Case1 && auth.value.signIn === clerk.signIn)
               check(clerk.signIn.status.rawValue == "complete")
@@ -106,10 +153,13 @@ class GoogleIdentityContractTest {
           check(clerk.session == null && clerk.user == null)
           check(host.prompts == 1 && host.browsers == if (scenario == "empty-picker") 1 else 0)
           val signups = host.requests.filter { host.path(it).contains("/sign_ups") }
-          check(signups.size == if (scenario in listOf("new", "signup-rejected")) 1 else 0)
+          check(
+            signups.size ==
+              if (signupResult || transferred || scenario == "signup-rejected") 1 else 0
+          )
           if (signups.isNotEmpty()) {
             val body = host.body(signups.single())
-            check(body.getQueryParameter("token") == "google-fixture-token")
+            check(body.getQueryParameter("token") == googleIdentityTokenFixture)
             check(body.getQueryParameter("strategy") == "google_one_tap")
             check(
               Json.parseToJsonElement(checkNotNull(body.getQueryParameter("unsafe_metadata"))) ==
@@ -120,19 +170,28 @@ class GoogleIdentityContractTest {
                 body.getQueryParameter("legal_accepted") == "true"
             )
           }
-          if (scenario in listOf("cancelled", "blank-token")) check(host.requests.isEmpty())
+          if (scenario in listOf("cancelled", "blank-token") || scenario.startsWith("native-"))
+            check(host.requests.isEmpty())
           else if (scenario != "empty-picker") {
             val body = host.body(host.requests.first())
             check(body.getQueryParameter("strategy") == "google_one_tap")
-            check(body.getQueryParameter("token") == "google-fixture-token")
-            check(host.requests.size == if (signups.isEmpty()) 1 else 2)
+            check(body.getQueryParameter("token") == googleIdentityTokenFixture)
+            check(host.requests.size == if (transferred) 3 else if (signups.isEmpty()) 1 else 2)
+            if (transferred) {
+              val transfer = host.body(host.requests.last())
+              check(transfer.getQueryParameter("transfer") == "true")
+              check(
+                transfer.getQueryParameter("token") == null &&
+                  transfer.getQueryParameter("strategy") == null
+              )
+            }
           } else {
             check(host.requests.none { host.body(it).getQueryParameter("token") != null })
             check(
               host.requests.any { host.body(it).getQueryParameter("strategy") == "oauth_google" }
             )
           }
-          if (expectedCode == null) {
+          if (expectedCode == null && scenario != "unconfirmed-transfer") {
             if (scenario == "new") clerk.signUp.finalize() else clerk.signIn.finalize()
             check(clerk.session?.id == "sess_native" && clerk.user?.id == "user_native")
             check(base.requests.count { host.path(it).endsWith("/touch") } == 1)
@@ -177,16 +236,31 @@ private class GoogleIdentityHost(val base: PackagedFixtures, val scenario: Strin
   override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
     if (capability == "googleIdentity") {
       prompts++
-      check(arguments.jsonObject["clientId"] == JsonPrimitive("configured_google_client"))
       opened.complete(Unit)
-      if (scenario == "reset") {
-        withContext(NonCancellable) { release.await() }
-        replied.complete(Unit)
-      }
-      if (scenario == "cancelled") throw CoreException("user_cancelled")
-      if (scenario == "empty-picker") throw CoreException("google_account_unavailable")
-      return buildJsonObject {
-        put("token", if (scenario == "blank-token") "  " else "google-fixture-token")
+      if (scenario == "blank-token") return buildJsonObject { put("token", "  ") }
+      return AndroidGoogleIdentity.get(arguments.jsonObject) { request ->
+        val option = request.credentialOptions.single() as GetGoogleIdOption
+        check(option.serverClientId == "configured_google_client")
+        check(!option.filterByAuthorizedAccounts && option.autoSelectEnabled)
+        UUID.fromString(checkNotNull(option.nonce))
+        if (scenario == "reset") {
+          withContext(NonCancellable) { release.await() }
+          replied.complete(Unit)
+        }
+        when (scenario) {
+          "cancelled" -> throw GetCredentialCancellationException()
+          "empty-picker" -> throw NoCredentialException()
+          "native-type" -> CustomCredential("unsupported_type", Bundle())
+          "native-malformed" ->
+            CustomCredential(GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL, Bundle())
+          "native-unknown" -> throw GetCredentialUnknownException("Fixture provider failure")
+          "native-provider" -> throw GetCredentialProviderConfigurationException()
+          else ->
+            GoogleIdTokenCredential.Builder()
+              .setId("user@example.com")
+              .setIdToken(googleIdentityTokenFixture)
+              .build()
+        }
       }
     }
     if (capability == "browser") browsers++
@@ -201,8 +275,17 @@ private class GoogleIdentityHost(val base: PackagedFixtures, val scenario: Strin
     val code =
       when {
         signup && scenario == "signup-rejected" -> "sign_up_mode_restricted"
-        !signup && scenario in listOf("new", "sign-in-only", "signup-rejected") ->
-          "external_account_not_found"
+        !signup &&
+          body(args).getQueryParameter("transfer") != "true" &&
+          scenario in
+            listOf(
+              "new",
+              "sign-in-only",
+              "signup-rejected",
+              "transfer",
+              "signup-transfer",
+              "unconfirmed-transfer",
+            ) -> "external_account_not_found"
         !signup && scenario == "rejected" -> "verification_failed"
         else -> null
       }
@@ -222,7 +305,7 @@ private class GoogleIdentityHost(val base: PackagedFixtures, val scenario: Strin
         }
       else
         buildJsonObject {
-          val resource =
+          var resource =
             JsonObject(
               base.fixtures.getValue(if (signup) "signUp" else "signIn").jsonObject +
                 mapOf(
@@ -230,8 +313,39 @@ private class GoogleIdentityHost(val base: PackagedFixtures, val scenario: Strin
                   "created_session_id" to JsonPrimitive("sess_native"),
                 )
             )
+          if (signup && scenario in listOf("transfer", "signup-transfer", "unconfirmed-transfer")) {
+            val verifications = resource.getValue("verifications").jsonObject
+            val external = verifications.getValue("external_account").jsonObject
+            resource =
+              JsonObject(
+                resource +
+                  mapOf(
+                    "status" to JsonPrimitive("missing_requirements"),
+                    "created_session_id" to JsonNull,
+                    "verifications" to
+                      JsonObject(
+                        verifications +
+                          ("external_account" to
+                            JsonObject(
+                              external +
+                                mapOf(
+                                  "status" to JsonPrimitive("transferable"),
+                                  "strategy" to JsonPrimitive("google_one_tap"),
+                                  "error" to
+                                    if (scenario == "unconfirmed-transfer") JsonNull
+                                    else
+                                      buildJsonObject {
+                                        put("code", "external_account_exists")
+                                        put("message", "Account exists")
+                                      },
+                                )
+                            ))
+                      ),
+                  )
+              )
+          }
           put("response", resource)
-          if (signup)
+          if (signup && scenario == "new")
             put(
               "client",
               JsonObject(

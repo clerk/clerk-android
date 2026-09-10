@@ -89,6 +89,16 @@ class AuthEntryPointTest {
   }
 
   @Test
+  fun signupOmitsUnspecifiedMetadata() = fixture { clerk, base ->
+    clerk.signUp.create(SignUpCreateParams(emailAddress = "user@example.com"))
+    val request = authRequests(base).single()
+    check(path(request).endsWith("/sign_ups"))
+    check(body(request).getQueryParameter("email_address") == "user@example.com")
+    check(body(request).getQueryParameter("unsafe_metadata") == null)
+    check(clerk.session == null)
+  }
+
+  @Test
   fun unrelatedAndOAuthCallbacksAreNotRedeemedAsEmailLinks() = fixture { clerk, base ->
     val before = base.requests.size
     for (url in

@@ -3,14 +3,7 @@ package com.clerk.api
 import android.app.Activity
 import android.os.Build
 import androidx.credentials.CreatePublicKeyCredentialResponse
-import androidx.credentials.CustomCredential
-import androidx.credentials.exceptions.NoCredentialException
-import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import java.util.UUID
 import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.CreateCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialCancellationException
@@ -100,17 +93,9 @@ public class AndroidCapabilities internal constructor(
 
   private suspend fun googleIdentity(arguments: JsonObject): JsonElement = withContext(Dispatchers.Main.immediate) {
     val context = activity?.invoke()?.takeUnless { it.isFinishing || it.isDestroyed } ?: throw CoreException("presentation_unavailable")
-    val clientId = arguments.getValue("clientId").requireString().takeIf { it.isNotBlank() } ?: throw CoreException("invalid_credential_options")
-    val option = GetGoogleIdOption.Builder().setFilterByAuthorizedAccounts(false).setAutoSelectEnabled(true)
-      .setNonce(UUID.randomUUID().toString()).setServerClientId(clientId).build()
-    try {
-      val credential = CredentialManager.create(context).getCredential(context, GetCredentialRequest(listOf(option))).credential
-      if (credential !is CustomCredential || credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) throw CoreException("invalid_credential_response")
-      val token = GoogleIdTokenCredential.createFrom(credential.data).idToken
-      buildJsonObject { put("token", token) }
-    } catch (_: GetCredentialCancellationException) { throw CoreException("user_cancelled") }
-    catch (_: NoCredentialException) { throw CoreException("google_account_unavailable") }
-    catch (_: GetCredentialProviderConfigurationException) { throw CoreException("credential_provider_unavailable") }
+    AndroidGoogleIdentity.get(arguments) { request ->
+      CredentialManager.create(context).getCredential(context, request).credential
+    }
   }
 
   private suspend fun passkey(capability: String, arguments: JsonElement): JsonElement = withContext(Dispatchers.Main.immediate) {

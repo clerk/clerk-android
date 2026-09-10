@@ -1,0 +1,38 @@
+# Google credential service migration
+
+All ten declarations and complete fixture/mock bodies in baseline `GoogleSignInServiceTest.kt`, plus both declarations in `SignUpCreateParamsTest.kt`, have been reviewed and retired. Their exact names and hashes remain in [legacy-tests.json](legacy-tests.json), at baseline `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. The baseline `GoogleSignInService`, `GoogleCredentialManager` and shared future-style transfer implementation were also inspected.
+
+The sixteen-case `GoogleIdentityContractTest` now sends actual Google credential objects and Android Credential Manager exceptions through the production decoding/error adapter, packaged QuickJS and generated Kotlin API. Google account creation and transfer remain in `authenticateWithMobileSSO`; no Kotlin authentication state machine is reintroduced.
+
+`AndroidGoogleIdentity` contains the existing option construction, credential decoding and provider-error mapping extracted from `AndroidCapabilities`. The production host still checks the current Activity on the main dispatcher and calls `CredentialManager.getCredential`. Tests replace only that system request with deterministic credential results. Options retain the configured server client ID, a fresh UUID nonce, automatic selection and unrestricted authorized-account filtering. This is a platform-adapter extraction, not a change to shared token or authentication policy.
+
+## Assertion dispositions
+
+| Legacy declaration | Current disposition and evidence |
+| --- | --- |
+| `signInWithGoogle succeeds when authentication is successful` | `existingAccountRequiresFinalization` decodes a real GoogleIdTokenCredential, submits its token using `google_one_tap`, returns the owner's generated sign-in resource, and selects its session only after explicit finalization. The old OAuthResult/ResultType wrappers are removed. |
+| `signInWithGoogle creates account when external_account_not_found error occurs` | `missingAccountCreatesSignupWithMetadata` verifies the initial sign-in error, one sign-up request using the same decoded token, nested metadata/locale/legal acceptance and explicit sign-up finalization. |
+| `signInWithGoogle transfers created sign-up back to sign-in when external account exists` | `transferableSignupReturnsToSignInWithOneIdentityPrompt` verifies three requests: Google sign-in, Google sign-up, then `transfer=true` sign-in without resubmitting the identity token. Only one provider request is made. The returned resource is the owner's sign-in; it is complete but unselected until finalization. |
+| `signInWithGoogle returns error when authentication fails with other error` | `rejectedIdentityDoesNotOpenBrowser` checks the structured server status, code, long message and trace. It neither creates an account nor opens a browser. |
+| `signInWithGoogle returns error when credential type is unsupported` | `unsupportedNativeCredentialDoesNotAuthenticate` gives the production adapter an actual CustomCredential with an unsupported type. The generated caller receives `invalid_credential_response`, with no authentication HTTP or browser request. The old IllegalStateException text and ClerkResult.ErrorType are not compatibility contracts. |
+| `signInWithGoogle returns error when GetCredentialException is thrown` | `unknownNativeCredentialFailureDoesNotFallback` throws the actual GetCredentialUnknownException from the provider request. It becomes the bridge's safe `host_failure` and issues no authentication HTTP. Provider configuration failure has a separate `credential_provider_unavailable` case. |
+| `signInWithGoogle classifies missing Google account` | `emptyPickerFallsBackToBrowser` throws an actual NoCredentialException. The adapter maps it to `google_account_unavailable`; the shared public entry flow then performs browser OAuth. The old private service's NoGoogleAccount throwable is replaced by this supported public flow behavior. |
+| `signInWithGoogle classifies user cancellation` | `cancelledPickerDoesNotOpenBrowser` throws an actual GetCredentialCancellationException and checks `user_cancelled`, no fallback and no authentication HTTP. `resetIgnoresLateIdentityToken` separately verifies cancellation while a provider operation returns late. |
+| `signInWithGoogle verifies correct SignUp CreateParams are used` | The new-account and transfer tests inspect the actual form body and require the same decoded identity token on the Google sign-up request. They exercise generated dispatch rather than mocking a SignUp companion. |
+| `signUpWithGoogle transfers existing external account to sign-in` | `signupEntryTransfersExistingAccountToSignIn` uses the generated SignUp start mode and Google preference. The shared Google entry first tries sign-in, then creates/returns to sign-in when transfer is confirmed; it is not the old direct-sign-up-only service sequence. The test requires one prompt, the exact three-request sequence and explicit finalization. |
+| `standard create params include unsafe metadata when provided` | `AuthEntryPointTest.signupPreservesNestedMetadata` verifies the actual sign-up request's email and nested JSON Boolean, beyond the old parameter-map string check. |
+| `standard create params exclude unsafe metadata when omitted` | `AuthEntryPointTest.signupOmitsUnspecifiedMetadata` verifies the generated create call sends the email and omits `unsafe_metadata`. |
+
+## Transfer and native boundary details
+
+The old transfer mocks supplied only `status=transferable`. The current future sign-up facade requires both that status and the external-account-exists error before `isTransferable` becomes true. The new `transferableStatusWithoutAccountExistsErrorDoesNotTransfer` case documents this distinction: it returns the incomplete sign-up, makes no transfer request and leaves the session unselected. The confirmed transfer fixtures supply both fields. Kotlin does not infer a transfer from status alone.
+
+`GoogleIdentityRequestTest` adds three native checks: two requests use distinct valid UUID nonces and decode the provider token; blank client IDs fail before a provider request; and a host without an Activity neither advertises Google identity nor attempts presentation. A malformed real credential bundle is also exercised through the packaged core and safely fails before HTTP.
+
+An initial fixture used the old opaque `google-fixture-token` placeholder. The installed Google identity library parses token claims, so its builder rejected that fixture before authentication. The fixture now uses a synthetic three-part JWT with a `sub` claim. It is not a signed Google credential and is never sent to a real server. The tests use the installed library's builder and `createFrom`, not a mocked token decoder.
+
+## Verification
+
+`bash scripts/run-auth-entry-contract.sh` now requires 32 named packaged cases: sixteen Google flows, three native Google request checks, five identifier/metadata/callback checks and eight session-selection checks. Each class is run separately, its exact declarations must all pass with no skips, and XML is preserved before the next run. Focused shared embedded Google/SSO tests also pass 39 cases on the unchanged JavaScript revision. Reports, source hashes and all twelve retired declaration names are retained in [the proof](evidence/google-service/proof.json).
+
+The extraction leaves the generated public API and embedded TypeScript bundle unchanged. Native Credential Manager presentation, Google account authentication against a live backend and physical-device upgrade/performance gates remain unproven by these deterministic results.

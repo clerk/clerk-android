@@ -6,7 +6,7 @@ The replacement is not an API-compatible wrapper. Calls return generated resourc
 
 ## Google identity and identifier methods
 
-`GoogleIdentityContractTest` executes nine scenarios through the public Kotlin API, packaged QuickJS, generated dispatch and the shared Google flow. It checks existing accounts, account creation with nested metadata, sign-in-only mode, rejected identity, rejected sign-up, empty-picker browser fallback, cancellation, blank tokens and reset while a late identity result is pending. Successful cases check no selected session before finalization and the selected session/user afterward. Failures preserve server status, code, long message and trace; cancellation and invalid identity results do not issue authentication HTTP requests.
+The initial `GoogleIdentityContractTest` checkpoint executes nine scenarios through the public Kotlin API, packaged QuickJS, generated dispatch and the shared Google flow. It checks existing accounts, account creation with nested metadata, sign-in-only mode, rejected identity, rejected sign-up, empty-picker browser fallback, cancellation, blank tokens and reset while a late identity result is pending. Successful cases check no selected session before finalization and the selected session/user afterward. Failures preserve server status, code, long message and trace; cancellation and invalid identity results do not issue authentication HTTP requests. The [Google service follow-up](google-service-test-audit.md) expands this suite to sixteen cases and exercises the native credential adapter.
 
 Only `google_account_unavailable` falls back to browser OAuth. Cancellation, provider rejection and sign-up restriction stay terminal. The fixture supplies the identity token; these checks do not exercise a real Credential Manager picker or verify a Google account against a live backend.
 
@@ -42,7 +42,7 @@ Only `google_account_unavailable` falls back to browser OAuth. Cancellation, pro
 
 ## Verification
 
-`bash scripts/run-auth-entry-contract.sh` runs the three new packaged suites separately and requires all 21 exact case names, with no missing, duplicate, failed or skipped cases. Running from outside the repository is supported. Each suite's report is retained before the next instrumentation run replaces the output directory. CI runs this gate on API 36 and preserves the preceding token reports.
+At checkpoint `786893d2`, `bash scripts/run-auth-entry-contract.sh` runs three packaged suites separately and requires all 21 exact case names, with no missing, duplicate, failed or skipped cases. The [Google service follow-up](google-service-test-audit.md) expands the current gate to four suites and 32 cases. Running from outside the repository is supported. Each suite's report is retained before the next instrumentation run replaces the output directory. CI runs this gate on API 36 and preserves the preceding token reports.
 
 The audit also uses eleven existing `PackagedCoreTest` cases, six `SessionActivationTest` cases and eight `EmailLinkCompletionTest` cases. Focused generated embedded checks cover 77 cases across Google/identifier, session activation/sign-out, magic links and browser SSO. Exact source hashes, executed case names and reports are retained in [the proof](evidence/auth-entry-points/proof.json).
 
