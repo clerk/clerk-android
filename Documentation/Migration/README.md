@@ -62,6 +62,8 @@ Builders and static resource factories become generated parameter objects on the
 | `auth.revokeSession`, `Session.revoke` | Find the generated `SessionWithActivities` in `user.getSessions()` and call `revoke()` |
 | `Session.delete` | `session.remove()` for a client session; distinct from account-session revocation |
 
+Token failures throw `CoreException`; they are not converted to null. `GetTokenOptions` supports `template`, `skipCache` and `organizationId`; the old `expirationBuffer` option is removed because the shared cache owns expiration. After a 401, the refreshed client determines session selection. Pending sessions retain their tasks and use the canonical method/server outcome instead of the old Kotlin null shortcut. See the [token request migration](token-request-test-audit.md) for executed examples and intentional behavior changes.
+
 Custom flow completion remains explicit:
 
 ```kotlin

@@ -433,8 +433,7 @@
   "fixtureCorrection": "Accelerated retry timers must not expire a recovered token immediately; only retry-sized timers in the rejecting phase are accelerated.",
   "limits": [
     "Deterministic host HTTP; no live server validation or physical-device proof",
-    "Shared TypeScript and generated API unchanged",
-    "CI dispatch proof will be added after remote completion"
+    "Shared TypeScript and generated API unchanged"
   ],
   "sourceHashes": {
     "NativeCore/QuickJSTransport.kt": "5237770edd3516b5ac57513fcb4d126806df4f3d05c25fc01ee76c7197cd886c",
@@ -445,6 +444,13 @@
   },
   "evidenceHashes": {
     "before/TEST-late-reply.xml": "a70489af99056e189d2067c913490c8cc185da0d46a279311e1c88f29c9d16e2",
+    "ci/api-24/TEST-api-24-0.xml": "622b7849a4780275f7eab8d32caa11d202d335281dc7ec61b26a9d1a6210a64c",
+    "ci/api-24/TEST-api-24-1.xml": "62da9ef04cf4b5e330fb724fadcf988f9b5ef23b70ec8d8edfa649cb7b8d08bb",
+    "ci/api-36/TEST-api-36-0.xml": "a3321cf6ae72d3156aa14a09fe52d3327a1a39906ccf9675ed63b7b4ad91fbbc",
+    "ci/api-36/TEST-api-36-1.xml": "76d342c80207512e6c08746f90d586f7f2ff4c2ce5629ebff2415b32b43b627f",
+    "ci/api-36/TEST-api-36-2.xml": "3841d8d7db66d4ca4de8e5b29cb10057f5dda9d6c6256a7865772f0125683b18",
+    "ci/api-36/TEST-api-36-3.xml": "67e6aba396708617c43423cec245a7faa422c93eca7606f74e415bc9c1c6397a",
+    "ci/proof.json": "3111de4467885b17431b5e2d053e3071daa2b18faba279d7565b8c6a95a70050",
     "embedded.log": "0c524ff155f3eff7d4ac0cd14dfb9efd2dae7a763079c6694560b0d4df3010ff",
     "native/TEST-TokenCancellationTest.xml": "4d994ab9c6f301cc7217a3969ef37063cadfcf2dcf58e8ea4862ee5a03b14fec",
     "native/TEST-TokenFreshnessContractTest.xml": "bc4f18b1fd38fd5238ed2bbdd06d0a06a803695d91d0fd1a7fce1436d9c0c4e9",
@@ -455,5 +461,6 @@
     "unit/TEST-com.clerk.api.AndroidHTTPCapabilityTest.xml": "262721bdbc6f2d0ba48a82ae30ceb16aa4ef2e14d4ba3b697aeeff0ebe6afb6f",
     "unit/TEST-com.clerk.api.AndroidTimerCapabilityTest.xml": "1c63b030a8263bf96cccf67e90f0b4c246bd5f21669aa5500aef025a07553c61",
     "unit/TEST-com.clerk.api.ClerkConfigurationTest.xml": "aee4e1573091a569d0b74172291465fee532b513e8498de4ddbb769fcc67c530"
-  }
+  },
+  "ciProof": "ci/proof.json"
 }

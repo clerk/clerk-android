@@ -1,0 +1,1037 @@
+{
+  "revision": "5017fe97f688b638affe370cf04fa61218b6f2f6",
+  "workflows": {
+    "test": {
+      "conclusion": "success",
+      "createdAt": "2026-09-10T18:01:32Z",
+      "databaseId": 34511778032,
+      "headSha": "5017fe97f688b638affe370cf04fa61218b6f2f6",
+      "jobs": [
+        {
+          "completedAt": "2026-09-10T18:02:56Z",
+          "conclusion": "success",
+          "databaseId": 102987408500,
+          "name": "test-module (:source:api, source/api, source-api)",
+          "startedAt": "2026-09-10T18:01:47Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-10T18:01:51Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-10T18:01:47Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:51Z",
+              "conclusion": "success",
+              "name": "Set up runner",
+              "number": 2,
+              "startedAt": "2026-09-10T18:01:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:52Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 3,
+              "startedAt": "2026-09-10T18:01:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:04Z",
+              "conclusion": "success",
+              "name": "set up JDK 21",
+              "number": 4,
+              "startedAt": "2026-09-10T18:01:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:04Z",
+              "conclusion": "success",
+              "name": "Setup Gradle",
+              "number": 5,
+              "startedAt": "2026-09-10T18:02:04Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:04Z",
+              "conclusion": "success",
+              "name": "Grant execute permission for gradlew",
+              "number": 6,
+              "startedAt": "2026-09-10T18:02:04Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:51Z",
+              "conclusion": "success",
+              "name": "Run unit tests for :source:api",
+              "number": 7,
+              "startedAt": "2026-09-10T18:02:04Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:51Z",
+              "conclusion": "success",
+              "name": "Verify instrumentation result gates",
+              "number": 8,
+              "startedAt": "2026-09-10T18:02:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:53Z",
+              "conclusion": "success",
+              "name": "Upload test results (source-api)",
+              "number": 9,
+              "startedAt": "2026-09-10T18:02:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:53Z",
+              "conclusion": "success",
+              "name": "Post Setup Gradle",
+              "number": 15,
+              "startedAt": "2026-09-10T18:02:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:53Z",
+              "conclusion": "success",
+              "name": "Post set up JDK 21",
+              "number": 16,
+              "startedAt": "2026-09-10T18:02:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:53Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 17,
+              "startedAt": "2026-09-10T18:02:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:53Z",
+              "conclusion": "success",
+              "name": "Complete runner",
+              "number": 18,
+              "startedAt": "2026-09-10T18:02:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:53Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 19,
+              "startedAt": "2026-09-10T18:02:53Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/clerk/clerk-android/actions/runs/34511778032/job/102987408500"
+        },
+        {
+          "completedAt": "2026-09-10T18:05:25Z",
+          "conclusion": "success",
+          "databaseId": 102987408799,
+          "name": "packaged-core-platforms (24, unsupportedPasskeysAreNotAdvertisedAndFailBeforePresentation)",
+          "startedAt": "2026-09-10T18:01:47Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-10T18:01:52Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-10T18:01:47Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:52Z",
+              "conclusion": "success",
+              "name": "Set up runner",
+              "number": 2,
+              "startedAt": "2026-09-10T18:01:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:53Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 3,
+              "startedAt": "2026-09-10T18:01:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:00Z",
+              "conclusion": "success",
+              "name": "Set up JDK 21",
+              "number": 4,
+              "startedAt": "2026-09-10T18:01:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:01Z",
+              "conclusion": "success",
+              "name": "Run gradle/actions/setup-gradle@v6",
+              "number": 5,
+              "startedAt": "2026-09-10T18:02:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:24Z",
+              "conclusion": "success",
+              "name": "Compile packaged core tests",
+              "number": 6,
+              "startedAt": "2026-09-10T18:02:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:24Z",
+              "conclusion": "success",
+              "name": "Enable KVM",
+              "number": 7,
+              "startedAt": "2026-09-10T18:03:24Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:05:20Z",
+              "conclusion": "success",
+              "name": "Verify packaged core and platform capabilities",
+              "number": 8,
+              "startedAt": "2026-09-10T18:03:24Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:05:22Z",
+              "conclusion": "success",
+              "name": "Upload platform test results",
+              "number": 9,
+              "startedAt": "2026-09-10T18:05:20Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:05:22Z",
+              "conclusion": "success",
+              "name": "Post Run gradle/actions/setup-gradle@v6",
+              "number": 15,
+              "startedAt": "2026-09-10T18:05:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:05:22Z",
+              "conclusion": "success",
+              "name": "Post Set up JDK 21",
+              "number": 16,
+              "startedAt": "2026-09-10T18:05:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:05:22Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 17,
+              "startedAt": "2026-09-10T18:05:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:05:22Z",
+              "conclusion": "success",
+              "name": "Complete runner",
+              "number": 18,
+              "startedAt": "2026-09-10T18:05:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:05:22Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 19,
+              "startedAt": "2026-09-10T18:05:22Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/clerk/clerk-android/actions/runs/34511778032/job/102987408799"
+        },
+        {
+          "completedAt": "2026-09-10T18:08:48Z",
+          "conclusion": "success",
+          "databaseId": 102987408897,
+          "name": "test-module (:source:ui, source/ui, source-ui)",
+          "startedAt": "2026-09-10T18:01:47Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-10T18:01:51Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-10T18:01:47Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:51Z",
+              "conclusion": "success",
+              "name": "Set up runner",
+              "number": 2,
+              "startedAt": "2026-09-10T18:01:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:53Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 3,
+              "startedAt": "2026-09-10T18:01:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:03Z",
+              "conclusion": "success",
+              "name": "set up JDK 21",
+              "number": 4,
+              "startedAt": "2026-09-10T18:01:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:05Z",
+              "conclusion": "success",
+              "name": "Setup Gradle",
+              "number": 5,
+              "startedAt": "2026-09-10T18:02:03Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:05Z",
+              "conclusion": "success",
+              "name": "Grant execute permission for gradlew",
+              "number": 6,
+              "startedAt": "2026-09-10T18:02:05Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:43Z",
+              "conclusion": "success",
+              "name": "Run unit tests for :source:ui",
+              "number": 7,
+              "startedAt": "2026-09-10T18:02:05Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:43Z",
+              "conclusion": "skipped",
+              "name": "Verify instrumentation result gates",
+              "number": 8,
+              "startedAt": "2026-09-10T18:08:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:44Z",
+              "conclusion": "success",
+              "name": "Upload test results (source-ui)",
+              "number": 9,
+              "startedAt": "2026-09-10T18:08:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:45Z",
+              "conclusion": "success",
+              "name": "Post Setup Gradle",
+              "number": 15,
+              "startedAt": "2026-09-10T18:08:44Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:45Z",
+              "conclusion": "success",
+              "name": "Post set up JDK 21",
+              "number": 16,
+              "startedAt": "2026-09-10T18:08:45Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:45Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 17,
+              "startedAt": "2026-09-10T18:08:45Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:45Z",
+              "conclusion": "success",
+              "name": "Complete runner",
+              "number": 18,
+              "startedAt": "2026-09-10T18:08:45Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:45Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 19,
+              "startedAt": "2026-09-10T18:08:45Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/clerk/clerk-android/actions/runs/34511778032/job/102987408897"
+        },
+        {
+          "completedAt": "2026-09-10T18:08:48Z",
+          "conclusion": "success",
+          "databaseId": 102987408944,
+          "name": "packaged-core-platforms (36, supportedPlatformAdvertisesPasskeysAndPackagesBiometricPermission)",
+          "startedAt": "2026-09-10T18:01:47Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-10T18:01:52Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-10T18:01:48Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:52Z",
+              "conclusion": "success",
+              "name": "Set up runner",
+              "number": 2,
+              "startedAt": "2026-09-10T18:01:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:56Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 3,
+              "startedAt": "2026-09-10T18:01:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:11Z",
+              "conclusion": "success",
+              "name": "Set up JDK 21",
+              "number": 4,
+              "startedAt": "2026-09-10T18:01:56Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:12Z",
+              "conclusion": "success",
+              "name": "Run gradle/actions/setup-gradle@v6",
+              "number": 5,
+              "startedAt": "2026-09-10T18:02:11Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:51Z",
+              "conclusion": "success",
+              "name": "Compile packaged core tests",
+              "number": 6,
+              "startedAt": "2026-09-10T18:02:12Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:51Z",
+              "conclusion": "success",
+              "name": "Enable KVM",
+              "number": 7,
+              "startedAt": "2026-09-10T18:03:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:42Z",
+              "conclusion": "success",
+              "name": "Verify packaged core and platform capabilities",
+              "number": 8,
+              "startedAt": "2026-09-10T18:03:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:43Z",
+              "conclusion": "success",
+              "name": "Upload platform test results",
+              "number": 9,
+              "startedAt": "2026-09-10T18:08:42Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:44Z",
+              "conclusion": "success",
+              "name": "Post Run gradle/actions/setup-gradle@v6",
+              "number": 15,
+              "startedAt": "2026-09-10T18:08:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:44Z",
+              "conclusion": "success",
+              "name": "Post Set up JDK 21",
+              "number": 16,
+              "startedAt": "2026-09-10T18:08:44Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:44Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 17,
+              "startedAt": "2026-09-10T18:08:44Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:44Z",
+              "conclusion": "success",
+              "name": "Complete runner",
+              "number": 18,
+              "startedAt": "2026-09-10T18:08:44Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:44Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 19,
+              "startedAt": "2026-09-10T18:08:44Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/clerk/clerk-android/actions/runs/34511778032/job/102987408944"
+        }
+      ],
+      "status": "completed",
+      "updatedAt": "2026-09-10T18:08:50Z",
+      "url": "https://github.com/clerk/clerk-android/actions/runs/34511778032"
+    },
+    "build": {
+      "conclusion": "success",
+      "createdAt": "2026-09-10T18:01:36Z",
+      "databaseId": 34511785278,
+      "headSha": "5017fe97f688b638affe370cf04fa61218b6f2f6",
+      "jobs": [
+        {
+          "completedAt": "2026-09-10T18:07:59Z",
+          "conclusion": "success",
+          "databaseId": 102987434218,
+          "name": "build-module (:source:api)",
+          "startedAt": "2026-09-10T18:01:47Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-10T18:01:50Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-10T18:01:48Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:51Z",
+              "conclusion": "success",
+              "name": "Set up runner",
+              "number": 2,
+              "startedAt": "2026-09-10T18:01:50Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:52Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 3,
+              "startedAt": "2026-09-10T18:01:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:01Z",
+              "conclusion": "success",
+              "name": "Set up JDK 21",
+              "number": 4,
+              "startedAt": "2026-09-10T18:01:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:01Z",
+              "conclusion": "success",
+              "name": "Grant execute permission for gradlew",
+              "number": 5,
+              "startedAt": "2026-09-10T18:02:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:46Z",
+              "conclusion": "success",
+              "name": "Assemble :source:api",
+              "number": 6,
+              "startedAt": "2026-09-10T18:02:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:04:50Z",
+              "conclusion": "success",
+              "name": "Verify API release packaging",
+              "number": 7,
+              "startedAt": "2026-09-10T18:03:46Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:07:54Z",
+              "conclusion": "success",
+              "name": "Verify clean release reproducibility",
+              "number": 8,
+              "startedAt": "2026-09-10T18:04:50Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:07:56Z",
+              "conclusion": "success",
+              "name": "Upload release reproducibility evidence",
+              "number": 9,
+              "startedAt": "2026-09-10T18:07:54Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:07:56Z",
+              "conclusion": "success",
+              "name": "Post Set up JDK 21",
+              "number": 16,
+              "startedAt": "2026-09-10T18:07:56Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:07:56Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 17,
+              "startedAt": "2026-09-10T18:07:56Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:07:56Z",
+              "conclusion": "success",
+              "name": "Complete runner",
+              "number": 18,
+              "startedAt": "2026-09-10T18:07:56Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:07:56Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 19,
+              "startedAt": "2026-09-10T18:07:56Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/clerk/clerk-android/actions/runs/34511785278/job/102987434218"
+        },
+        {
+          "completedAt": "2026-09-10T18:03:46Z",
+          "conclusion": "success",
+          "databaseId": 102987434656,
+          "name": "build-module (:source:ui)",
+          "startedAt": "2026-09-10T18:01:48Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-10T18:01:52Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-10T18:01:49Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:52Z",
+              "conclusion": "success",
+              "name": "Set up runner",
+              "number": 2,
+              "startedAt": "2026-09-10T18:01:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:01:54Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@v7",
+              "number": 3,
+              "startedAt": "2026-09-10T18:01:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:01Z",
+              "conclusion": "success",
+              "name": "Set up JDK 21",
+              "number": 4,
+              "startedAt": "2026-09-10T18:01:54Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:02:01Z",
+              "conclusion": "success",
+              "name": "Grant execute permission for gradlew",
+              "number": 5,
+              "startedAt": "2026-09-10T18:02:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:43Z",
+              "conclusion": "success",
+              "name": "Assemble :source:ui",
+              "number": 6,
+              "startedAt": "2026-09-10T18:02:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:43Z",
+              "conclusion": "skipped",
+              "name": "Verify API release packaging",
+              "number": 7,
+              "startedAt": "2026-09-10T18:03:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:43Z",
+              "conclusion": "skipped",
+              "name": "Verify clean release reproducibility",
+              "number": 8,
+              "startedAt": "2026-09-10T18:03:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:43Z",
+              "conclusion": "skipped",
+              "name": "Upload release reproducibility evidence",
+              "number": 9,
+              "startedAt": "2026-09-10T18:03:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:43Z",
+              "conclusion": "success",
+              "name": "Post Set up JDK 21",
+              "number": 16,
+              "startedAt": "2026-09-10T18:03:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:43Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@v7",
+              "number": 17,
+              "startedAt": "2026-09-10T18:03:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:43Z",
+              "conclusion": "success",
+              "name": "Complete runner",
+              "number": 18,
+              "startedAt": "2026-09-10T18:03:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:03:43Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 19,
+              "startedAt": "2026-09-10T18:03:43Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/clerk/clerk-android/actions/runs/34511785278/job/102987434656"
+        },
+        {
+          "completedAt": "2026-09-10T18:08:07Z",
+          "conclusion": "success",
+          "databaseId": 102989611313,
+          "name": "verify",
+          "startedAt": "2026-09-10T18:08:04Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-10T18:08:05Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-10T18:08:05Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:05Z",
+              "conclusion": "success",
+              "name": "Run echo \"All module builds finished.\"",
+              "number": 2,
+              "startedAt": "2026-09-10T18:08:05Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-10T18:08:05Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 3,
+              "startedAt": "2026-09-10T18:08:05Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/clerk/clerk-android/actions/runs/34511785278/job/102989611313"
+        }
+      ],
+      "status": "completed",
+      "updatedAt": "2026-09-10T18:08:07Z",
+      "url": "https://github.com/clerk/clerk-android/actions/runs/34511785278"
+    }
+  },
+  "instrumentation": {
+    "24": {
+      "passed": 2,
+      "reports": [
+        {
+          "artifactPath": "api/build/outputs/androidTest-results/connected/debug/TEST-test(AVD) - 7.0.xml",
+          "file": "api-24/TEST-api-24-0.xml",
+          "sha256": "622b7849a4780275f7eab8d32caa11d202d335281dc7ec61b26a9d1a6210a64c"
+        },
+        {
+          "artifactPath": "api/build/platform-test-results/core/TEST-test(AVD) - 7.0.xml",
+          "file": "api-24/TEST-api-24-1.xml",
+          "sha256": "62da9ef04cf4b5e330fb724fadcf988f9b5ef23b70ec8d8edfa649cb7b8d08bb"
+        }
+      ],
+      "identicalArtifactCopies": [
+        {
+          "copy": "api/build/platform-test-results/platform/TEST-test(AVD) - 7.0.xml",
+          "original": "api/build/outputs/androidTest-results/connected/debug/TEST-test(AVD) - 7.0.xml",
+          "sha256": "622b7849a4780275f7eab8d32caa11d202d335281dc7ec61b26a9d1a6210a64c"
+        }
+      ]
+    },
+    "36": {
+      "passed": 15,
+      "reports": [
+        {
+          "artifactPath": "api/build/outputs/androidTest-results/connected/debug/TEST-test(AVD) - 16.xml",
+          "file": "api-36/TEST-api-36-0.xml",
+          "sha256": "a3321cf6ae72d3156aa14a09fe52d3327a1a39906ccf9675ed63b7b4ad91fbbc"
+        },
+        {
+          "artifactPath": "api/build/platform-test-results/core/TEST-test(AVD) - 16.xml",
+          "file": "api-36/TEST-api-36-1.xml",
+          "sha256": "76d342c80207512e6c08746f90d586f7f2ff4c2ce5629ebff2415b32b43b627f"
+        },
+        {
+          "artifactPath": "api/build/platform-test-results/platform/TEST-test(AVD) - 16.xml",
+          "file": "api-36/TEST-api-36-2.xml",
+          "sha256": "3841d8d7db66d4ca4de8e5b29cb10057f5dda9d6c6256a7865772f0125683b18"
+        },
+        {
+          "artifactPath": "ui/build/outputs/androidTest-results/connected/debug/TEST-test(AVD) - 16.xml",
+          "file": "api-36/TEST-api-36-3.xml",
+          "sha256": "67e6aba396708617c43423cec245a7faa422c93eca7606f74e415bc9c1c6397a"
+        }
+      ],
+      "identicalArtifactCopies": []
+    }
+  },
+  "unit": {
+    "api": {
+      "passed": 12,
+      "reports": {
+        "test-results/testDebugUnitTest/TEST-com.clerk.api.AndroidHTTPCapabilityTest.xml": "33ff8141c27e87d168c75c98cdd47a7245f2266ced8916e78539a7f3138aa514",
+        "test-results/testDebugUnitTest/TEST-com.clerk.api.AndroidTimerCapabilityTest.xml": "df4fbddc85fa1dac3dc8785fc3d94711887fc84e30ae404b9170726b153f1778",
+        "test-results/testDebugUnitTest/TEST-com.clerk.api.ClerkConfigurationTest.xml": "8472e65cd6a835b825cfd06e67c1ce9e147fc3adeed39907bc12ff5ec8d79493"
+      }
+    },
+    "ui": {
+      "passed": 491,
+      "reports": {
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.appbar.ClerkTopAppBarSnapshotTest.xml": "be609954be223a37fcdffdf73e5d1ea90844177a005c3ffaa615569aef40f588",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.auth.AuthStartViewSnapshotTest.xml": "a2d81a89d5c8cf102dd03b0b4b0e7fbc7f9ecf72de026e9f855394c1ebd5ebf1",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.badge.BadgeSnapshotTest.xml": "a0b60b83fb2344d5c020c07170977d8270df2b8a21cd0098a8fa2595fb5893b1",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.button.ClerkStandardButtonSnapshotTest.xml": "fa3ab53ec12d4cfa90101e82935ae93ac4a39ea181ac4ed388de1038f2e13971",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.button.SocialButtonSnapshotTest.xml": "cd1bc584246a4c663decbecae19900cdb0c032bfcacc592708e5955154f00da2",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.input.ClerkCodeInputFieldSnapshotTest.xml": "0d0760160d1ece3b25dd24a7a37c451329a91a56eb0e48ebbfc50cad989a2e44",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.input.ClerkPhoneNumberFieldSnapshotTest.xml": "a851285a12cef6802d38be1e170c792da83b4fd2e555fa6220b108449638b1dc",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.input.ClerkTextFieldSnapshotTest.xml": "8a4ebe7e55e399e8983c15ebfbfa9af74d5183dfb20ec845cd43589506c6e7b3",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.organizationlist.OrganizationListSnapshotTest.xml": "32334e74f427fae5e29f9aaf701057334e40dae0355ddf39271590f125ce5925",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.organizationprofile.OrganizationProfileSnapshotTest.xml": "33a431a911bcdbb758851dfdaeeb68a717dff42cfd99e09eae9189d9d12ac27c",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.organizationswitcher.OrganizationSwitcherSnapshotTest.xml": "ecfab44d92b8b0eb2ce0fb813140bb363e08726e39a6b5a2afc89136f274b00a",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.signin.SignInGetHelpViewSnapshotTest.xml": "a779af023af50331f21a394a6e72b36870e745cecebbbe1cc0884e5fc439f103",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.userprofile.CustomRowSnapshotTest.xml": "911e70cdd73f31856deadd585691066b55f76f37d3520a4662448eed7386fbe3",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.userprofile.UserProfileBackupCodeDestinationSnapshotTest.xml": "3ad87222929f3c977b09557e05ae130e6c2f3c0795f1c3b31c2668d1ae292db9",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.userprofile.UserProfileBiometricCredentialsSectionSnapshotTest.xml": "26120fe6a6f38daf356af57d82cef2612cc396fdb7dab494e8eefd249319b4e4",
+        "test-results/testDebugUnitTest/TEST-com.clerk.snapshot.userprofile.UserProfilePasswordSectionSnapshotTest.xml": "1e8f15e6337c59c6c5e9b95339ce8b1ebba0668bd1a9b880dad3e087779f0dca",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthStartViewHelperTest.xml": "925f6f9ae33b3aa9cf1f33dd38c1051eb357dd593158da83dcc87e2a187104d9",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthStateConfigurationTest.xml": "ec5c64e66c7e2e215e5c98fa16c543b30326bd4bbd70adbde07547e34bc2760d",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthStateCredentialResetTest.xml": "b072ae5c0eb623f8d4bd1541e0ff86c1371f9884c96af0f2597d7add215591e6",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthStateEffectsTest.xml": "e311704449e4cc83562e50c6e335658f4a10d52fd9f3872a662aaa2a80dc9861",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthStateForceMfaTest.xml": "e09fd396eea53b22d35d00aeb53e82927235828367688d7286b1a7d4dbe71a69",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthStateSessionTaskRoutingTest.xml": "367cd207e189793c800d542740fb2fd157231c67b845dfbdee66010721d46d22",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthStateSignUpRoutingTest.xml": "ea0874471e7e81f6452d6360b8836b968cfd6ba9b6908bbee54fad9eee2a74f7",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthViewDismissibleTest.xml": "991858e3cbda67455a48e3609f0c8cecb093e81847cfaa8bbd2e1e87c6a68531",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthViewForceMfaRoutingTest.xml": "5980c3801dc903be04e73ee708926448d72bc00f702c216d5e83e5450b9b4101",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthViewModelTest.xml": "2d51d5c04c637c19dd792e756f6bebac990af232b1f5a19e1bb366bd7f1a9a2a",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.AuthViewRestoredNavigationTest.xml": "c72daaf3986be8e3457ab045815dac37cd178fc93d00352c6c5a28925d5f3d0f",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.BiometricFactorRoutingTest.xml": "1a621d6803a9ed8dd56ddd2c032d8b7abecd09ba0b09d1cc6bba4a1e6e5d4bc1",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.auth.LastUsedAuthTest.xml": "fee3403241758c0e346c079006bec763c7da30f0871264e9b3475b2817363668",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.core.appbar.ClerkTopAppBarTest.xml": "d4272cd9ec346398bef7ffa2a0831085ed40812d16b8e0dc4c14be355b275265",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.core.button.social.SocialButtonLayoutTest.xml": "8270e3627963c0179f56236f9c5fe91b7f0057ab79704461474ab7649d835626",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.core.extensions.LogoUrlExtensionsTest.xml": "c5a93f3cef4e3f7745d670bafe82f2379fd923fb3163917915f8ca5d5174e96e",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.core.input.ClerkCodeInputFieldTest.xml": "f2c3913e6388ea3ac194d34130d038c2d8f01adfbd49974debd1e2c8dffda1a4",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.core.input.ResendTimerStateTest.xml": "68da7f284e0734bdd30b817da61452416944b2a93a6c668423e3247fa972554e",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.core.scaffold.LogoVisibilityTest.xml": "a45ea651235a61992b9730aaaffcfda0b17d9a60b1a45757fa9576bdf7dbfd45",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.input.CountryInfoTest.xml": "f6d11c44cd3b99880296102169be0505640b30b64a5587570326c53c7ab215de",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.input.PhoneInputUtilsTest.xml": "3708f6e0f105a44ab5293a9f6d688cf4f0e3a4c0464a0a0ff712d095c652111c",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationlist.OrganizationAccountListViewModelTest.xml": "d80d3a66309ef01ec12e23007adb5d6bee6db6ffc0119a4d309a6c205b7bba46",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationprofile.OrganizationProfileViewDismissibleTest.xml": "1a69c6eada7d6f402f926bdabedf43184eefd1316dd84f2a0945aa9f03ea4615",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationViewModelTest.xml": "e5c27c67602b2b4f201b34bb636461285a7d2c7dc49ba87e284b90de89092ed5",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRouteNavKeyTest.xml": "a147a7122567433a512c52c826bd7b48fd5ae08620a075d55ed48a7ee9b02c01",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationprofile.custom.OrganizationProfileRowOrderingTest.xml": "0baaec94e075b7358e196adcbdf393568f0b3d3e566157b2b3d1d8b3083e6fb5",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationprofile.domains.OrganizationVerifiedDomainsViewModelTest.xml": "b5ab96f1aa44cc753bb7721e5bbab6c900b08dff77e6b3575e98a6f69612eb4c",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersViewModelTest.xml": "1cf1ac9a8750f5f7689f1522ed4a5dcc9c26d29071b637da786004e34e993cc7",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersViewTest.xml": "ae252fda90d5e1c108f3b342c9ce0dab39fca562fe4b812622286a05c89ecc4a",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationprofile.members.OrganizationMembersViewModelTest.xml": "be33f351e249347d7d413f71bcb00d99011bd67c83dc03eab04fc8d695951fce",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationprofile.root.OrganizationProfileRowsTest.xml": "0bcf2ec8b0cbfb836b5414cad36c4d6a7173a099a86e19a5716acb0e542b1186",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationprofile.update.OrganizationProfileUpdateViewModelTest.xml": "bba55cd97c49f58a03cb484f36fb10e8b489d8afa6047d4b9399e4c8229b759e",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.organizationswitcher.OrganizationSwitcherBehaviorTest.xml": "c8528fb2d9adf04fd62f45099e43b891b601787048dba60481e62b212f0fc885",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.sessiontask.organization.OrganizationSessionTaskUtilsTest.xml": "0ec64dfecfdd084c7532eabe2411f75bf08b6aee896033985294d6be43db40ff",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.SignInFactorCodeHelperTest.xml": "c5b33203e650d254f2acbfdf56b18c9df8851cd161b5c660b1b219dffd6aabeb",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.SignInFactorOneViewTest.xml": "c7076109f966aad4efd748245cafdb2fdce7a5be149569b8c02e3f8913a0392d",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.SignInRedirectTest.xml": "71b3ef159ec96b24a1f3d5fe191fc3ed687054bf4eb4bdd22d334b31ea43e2ab",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.alternativemethods.AlternativeMethodsViewModelTest.xml": "702f8c7ac3315a128efe3addb691c3e2d64ad4f62954753d62d85b6785f375a6",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.code.SignInAttemptHandlerTest.xml": "ed0f66ef5c61eee36f82190a8a05b2b97e713517ea6dce9e3c4fa83b02b7d9cd",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.code.SignInFactorCodeViewModelTest.xml": "4d5b315b81a50bed9220d5b0306c0db24ac5c78a5291e1cab8c4e955f9296535",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.code.SignInPrepareHandlerTest.xml": "7e535b04f1592d7f58072aaea1abacc9f9f91547a246ca311e9aae09add93a4b",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.emaillink.SignInFactorOneEmailLinkViewModelTest.xml": "1cbd6265916ce1ef94802532870e8ea4edf1b6241bbc0c5bcc53bc1796421d69",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.help.SignInGetHelpViewTest.xml": "7be3ce69eb71de9eaed894286d1879db0f3b3dbd863c404873782348378d6a12",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.passkey.PasskeyViewModelTest.xml": "0d4d3dfff33db4ce9a82c69c21cd55e38e881800c06e4d6cc385fd81e962043e",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signin.password.forgot.ForgotPasswordViewModelTest.xml": "7f5400bcea3bb7bacaa4e184fc2b33bf39801b9023a63d71af4e3785f543495c",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signup.collectfield.CollectFieldHelperTest.xml": "3b5d200b97fd998419ea19d9b65ef0b53f29689d6a74e424a9c52ca6006332b6",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signup.completeprofile.CompleteProfileViewModelTest.xml": "40641bd71b899a5e6eb218420de122c48f2199f4e41583406db4efa955153470",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.signup.emaillink.SignUpEmailLinkViewModelTest.xml": "9bc1c2f4ac891d32d0ad6e1a7640c03c2b4cc22d727419f7cc22db05f9d68a4f",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.theme.ClerkThemeProviderTest.xml": "8b6698a3d838775fced76d0b8596fe97d1916a5b681bf396be06c38dfb1fd51a",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.theme.ClerkThemeSnapshotTest.xml": "a5e354d655d99df23b63ef8324802fe0cdc144f56e06c12b4c0389d88a8dac15",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userbutton.UserButtonBehaviorTest.xml": "a2f257ff8f30bb5c6b7b47c552a4c451de56d82ea9120e7b1faf363d08a65597",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.UserProfileNavigationTest.xml": "251ed773b9f536120d681f2678a0a9d67142b578461ba4e2d182b5724760fd4a",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.UserProfileViewDismissibleTest.xml": "41acec685c83aae2bce6c2ec504ed69416ec9153c345c3e09df8db1976978a97",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.account.UserProfileAccountViewModelTest.xml": "65465315d3be9e8dcd552022ec69ac12df28d4c387947f69466f0ce5f80a58bc",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.account.UserProfileAccountViewTest.xml": "5a16a35321a24546bbafd7847e894b2814716b28014d964473ac7497a82c4d98",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.account.UserProfileDismissButtonTest.xml": "a50a2c758fe916f9d7a5783a5d52001356aa80ed4f36e77d3944fdb7eb9fc4ed",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.connectedaccount.AddConnectedAccountViewModelTest.xml": "675fe0d482477064552855388765c6650927b5b3d16b193fad2856fca6c885b7",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.connectedaccount.UserProfileAddConnectedAccountViewTest.xml": "148fbf3b48162114477c07a46b292a105d368c01faa92b471c5c6fe059811f68",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.connectedaccount.UserProfileExternalAccountSectionTest.xml": "da14df238c78152a96a07227169626ffc6480b1f952efbcc753e0eaf506f01b9",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.custom.CustomRouteNavKeyTest.xml": "b635cfb9f5b7feff2c8f095edf74c52e548b32db5c476bdba49b646086370014",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.custom.CustomRowGatingTest.xml": "3972c078872be139b8d4fe5de6b25013b6f671c26367c707ccf69c4902893a78",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.custom.UserProfileRowOrderingTest.xml": "951b6c8f00d4a4542c075f7c222a53a3822f829da8305db857c2d8be9b063563",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.email.AddEmailViewModelTest.xml": "b17f99245956281e3acdac06e270278e28fd0600adf9e10f3ca92f0e55911661",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.email.EmailViewModelTest.xml": "e5c1c14cc877cff922d28c2bd748ef88bda9a004cf300f3c81af40f0835c7324",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.email.UserProfileEmailRowTest.xml": "09e40981eb6e1431fd5b7f16a47d8e23b27ac4659058734a0bd5bfde6969dd6f",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.mfa.MfaAddSmsViewModelTest.xml": "fd6e745d228099bb0861e058019e84b0da66c87cd12fc28daf8a84bd996a6119",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.security.UserProfileSecurityViewModelTest.xml": "f198314dbeeb937fa6e2cd4540b5cfa4b19109f2aff835d9312235abe97da1b8",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.security.biometriccredential.UserProfileBiometricCredentialViewModelTest.xml": "54dfe2f9533fbe68e4fdec8a9a823450483c764b102d92755e84a8bb5500f45b",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.security.delete.DeleteAccountViewModelTest.xml": "13d290844dcb9b91c519de0ef1f2f348a6c8ccbc40ff4095fb473e4ddfb7b683",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.security.device.AllDevicesViewModelTest.xml": "53b5558db1810c26cb3e1159a732b5fe95e45e5e2c3fa19abc100bd8e2dcf034",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.security.device.DeviceViewModelTest.xml": "45405a8f21c5ec0ac596550c30fa0c1580541417f5bdf9d817cd0a218b1b1623",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.security.mfa.UserProfileMfaViewModelTest.xml": "3f654d8d2506a8e7afb6aa575f9da433c8dfb3f78b006ce72d923c2affa5025c",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.security.passkey.UserProfilePasskeyViewModelTest.xml": "2e53611560242cdd6667af35b4d7b810d5a18203e05c3998696813416716a885",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameViewModelTest.xml": "4afba6fa7c15fb909f1b5f952524888c94d76f608263ba40eb48a5d2bf31924c",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameViewTest.xml": "60a317bcc47d63e51c3cfdee9473e8616f0ca4ffd7d91bfd8acf2f914ebe9a67",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.security.password.UserProfileChangePasswordViewModelTest.xml": "41dee8738c9a5fb5a40e1b1add21c80e02fd989764432f434142811c741bb16d",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.totp.UserProfileMfaTotpViewModelTest.xml": "0b0baf95a45c94450ef6dbd3115f3c82684658fb5c75d0694b41c08eea82ef64",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.update.UpdateProfileViewModelTest.xml": "b4681d8805e332647fe4217168d5f7e1eea24198f1d451c8e1f65560879ce30f",
+        "test-results/testDebugUnitTest/TEST-com.clerk.ui.userprofile.verify.UserProfileVerifyViewModelTest.xml": "0d73293cb4481c5ae5d9c74b8798a0021ce89538eaef8e95cf2f430cdad98847"
+      }
+    }
+  },
+  "releaseReproducibility": {
+    "sourceRevision": "5017fe97f688b638affe370cf04fa61218b6f2f6",
+    "host": "Linux-6.6.141-x86_64-with-glibc2.39",
+    "builds": [
+      {
+        "aar": "api-release-1.aar",
+        "sha256": "eceacdba13c4cfb7131b26ce7f3be2083e0dfd55571be25ce97588ff44014c25",
+        "minSdk": 24,
+        "requiredPermissions": [
+          "android.permission.ACCESS_NETWORK_STATE",
+          "android.permission.INTERNET",
+          "android.permission.USE_BIOMETRIC"
+        ],
+        "libraries": {
+          "arm64-v8a": {
+            "bytes": 1013256,
+            "sha256": "af47c9112f120686c99b1fbfe48661f4c99a845b205acaae9990c01855d14485",
+            "loadSegmentAlignments": [
+              16384,
+              16384,
+              16384
+            ]
+          },
+          "armeabi-v7a": {
+            "bytes": 713888,
+            "sha256": "4d1f7889b6b42434d525607fb8bff7203fb3938a079de10e975c45407c288d95",
+            "loadSegmentAlignments": [
+              16384,
+              16384,
+              16384
+            ]
+          },
+          "x86_64": {
+            "bytes": 1090576,
+            "sha256": "55d42265fd2a8c3c84227b9211415c2dd78ee3001ad938fe6f1a3c35b9261acb",
+            "loadSegmentAlignments": [
+              16384,
+              16384,
+              16384
+            ]
+          }
+        },
+        "coreRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+        "bundleSHA256": "406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d"
+      },
+      {
+        "aar": "api-release-2.aar",
+        "sha256": "eceacdba13c4cfb7131b26ce7f3be2083e0dfd55571be25ce97588ff44014c25",
+        "minSdk": 24,
+        "requiredPermissions": [
+          "android.permission.ACCESS_NETWORK_STATE",
+          "android.permission.INTERNET",
+          "android.permission.USE_BIOMETRIC"
+        ],
+        "libraries": {
+          "arm64-v8a": {
+            "bytes": 1013256,
+            "sha256": "af47c9112f120686c99b1fbfe48661f4c99a845b205acaae9990c01855d14485",
+            "loadSegmentAlignments": [
+              16384,
+              16384,
+              16384
+            ]
+          },
+          "armeabi-v7a": {
+            "bytes": 713888,
+            "sha256": "4d1f7889b6b42434d525607fb8bff7203fb3938a079de10e975c45407c288d95",
+            "loadSegmentAlignments": [
+              16384,
+              16384,
+              16384
+            ]
+          },
+          "x86_64": {
+            "bytes": 1090576,
+            "sha256": "55d42265fd2a8c3c84227b9211415c2dd78ee3001ad938fe6f1a3c35b9261acb",
+            "loadSegmentAlignments": [
+              16384,
+              16384,
+              16384
+            ]
+          }
+        },
+        "coreRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+        "bundleSHA256": "406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d"
+      }
+    ],
+    "method": "Two git archives in different fresh paths; task and configuration caches disabled",
+    "sourceArchiveSHA256": "0724ea022bf49b4f43f91285970b9f40d7ebde794876c2f8732154ee8cdb3dd2",
+    "gradleVersion": "------------------------------------------------------------\nGradle 9.7.1\n------------------------------------------------------------\n\nBuild time:    2026-08-19 14:16:09 UTC\nRevision:      92f0512e7f06d84621afba191f75e265363890cf\n\nKotlin:        2.4.0\nGroovy:        4.0.32\nAnt:           Apache Ant(TM) version 1.10.17 compiled on April 6 2026\nLauncher JVM:  21.0.12 (Azul Systems, Inc. 21.0.12+8-LTS)\nDaemon JVM:    /opt/hostedtoolcache/Java_Zulu_jdk/21.0.12-8/x64 (no Daemon JVM specified, using current Java home)\nOS:            Linux 6.6.141 amd64",
+    "differentEntries": [],
+    "identical": true
+  }
+}
