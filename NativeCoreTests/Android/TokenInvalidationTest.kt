@@ -34,7 +34,7 @@ class TokenInvalidationTest {
         override val supported = base.supported
         override suspend fun perform(capability: String, arguments: JsonElement): JsonElement {
           val args = arguments.jsonObject
-          if (!fired && capability == "timer" && args.getValue("milliseconds").jsonPrimitive.long in 42000L..44000L) {
+          if (!fired && capability == "timer" && args.getValue("milliseconds").jsonPrimitive.double in 42000.0..44000.0) {
             fired = true
             return JsonNull
           }

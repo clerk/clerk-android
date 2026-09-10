@@ -19,7 +19,7 @@ private class FixtureCapabilities(path: String) : NativeCapabilities {
       "storage.read" -> return credential?.let(::JsonPrimitive) ?: JsonNull
       "storage.write" -> { credential = args.getValue("value").requireString(); return JsonNull }
       "storage.remove" -> { credential = null; return JsonNull }
-      "timer" -> { delay(args.getValue("milliseconds").jsonPrimitive.long); return JsonNull }
+      "timer" -> { delay(args.getValue("milliseconds").jsonPrimitive.double.toLong()); return JsonNull }
       "browser" -> {
         browserCount++
         check(args["url"] == JsonPrimitive("https://provider.example/authorize"))

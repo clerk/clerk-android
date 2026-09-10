@@ -98,7 +98,7 @@ private class OrganizationListHost(private val fixtures: JsonObject, count: Int)
         return JsonNull
       }
       "timer" -> {
-        delay(args.getValue("milliseconds").jsonPrimitive.long)
+        delay(args.getValue("milliseconds").jsonPrimitive.double.toLong())
         return JsonNull
       }
     }

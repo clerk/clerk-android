@@ -54,7 +54,7 @@ internal class PackagedFixtures(context: Context) : NativeCapabilities {
       "storage.read" -> return credential?.let(::JsonPrimitive) ?: JsonNull
       "storage.write" -> { credential = args.getValue("value").requireString(); return JsonNull }
       "storage.remove" -> { credential = null; return JsonNull }
-      "timer" -> { delay(args.getValue("milliseconds").jsonPrimitive.long); return JsonNull }
+      "timer" -> { delay(args.getValue("milliseconds").jsonPrimitive.double.toLong()); return JsonNull }
       "browser" -> return buildJsonObject { put("callbackUrl", "clerk-test://sso-callback?rotating_token_nonce=native_nonce") }
     }
     check(capability == "http")

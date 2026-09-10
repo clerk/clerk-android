@@ -68,7 +68,7 @@ public class AndroidCapabilities internal constructor(
     if (capability.startsWith("biometrics.")) return biometrics?.perform(capability, arguments) ?: throw CoreException("capability_unavailable")
     val args = arguments.jsonObject
     if (capability == "magicLink.attestation") return (magicLinkAttestation ?: throw CoreException("capability_unavailable"))()?.let(::JsonPrimitive) ?: JsonNull
-    if (capability == "timer") { delay(args.getValue("milliseconds").jsonPrimitive.long.coerceIn(0, Int.MAX_VALUE.toLong())); return JsonNull }
+    if (capability == "timer") { delay(args.getValue("milliseconds").jsonPrimitive.double.coerceIn(0.0, Int.MAX_VALUE.toDouble()).toLong()); return JsonNull }
     if (capability == "browser") return browser?.open(args.getValue("url").requireString(), args.getValue("callbackUrl").requireString()) ?: throw CoreException("capability_unavailable")
     if (capability == "googleIdentity") return googleIdentity(args)
     if (capability.startsWith("passkeys.")) return passkey(capability, arguments)
