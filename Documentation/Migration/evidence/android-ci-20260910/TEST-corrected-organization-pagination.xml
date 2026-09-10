@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.ui.organizationlist.OrganizationAccountListViewModelTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-10T16:56:50.994Z" hostname="ip-172-31-64-123" time="1.936">
+  <properties/>
+  <testcase name="acceptSuggestion replaces suggestion with accepted result" classname="com.clerk.ui.organizationlist.OrganizationAccountListViewModelTest" time="1.478"/>
+  <testcase name="empty loaded resources without create enabled can show empty help" classname="com.clerk.ui.organizationlist.OrganizationAccountListViewModelTest" time="0.17"/>
+  <testcase name="load failure marks initial load as failed" classname="com.clerk.ui.organizationlist.OrganizationAccountListViewModelTest" time="0.014"/>
+  <testcase name="acceptInvitation replaces invitation and marks organization selectable" classname="com.clerk.ui.organizationlist.OrganizationAccountListViewModelTest" time="0.104"/>
+  <testcase name="accepted invitation does not count toward next pending invitation offset" classname="com.clerk.ui.organizationlist.OrganizationAccountListViewModelTest" time="0.013"/>
+  <testcase name="load populates memberships invitations suggestions and creation defaults" classname="com.clerk.ui.organizationlist.OrganizationAccountListViewModelTest" time="0.132"/>
+  <testcase name="loadMore appends and deduplicates overlapping whole pages" classname="com.clerk.ui.organizationlist.OrganizationAccountListViewModelTest" time="0.02"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/home/runner/.gradle/caches/9.7.1/transforms/3fe64f7182d8271eecc87e0bd81add2b/transformed/byte-buddy-agent-1.18.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>
