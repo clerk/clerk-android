@@ -1,6 +1,6 @@
 # TypeScript core prerelease
 
-The API module now builds generated Kotlin resources from `NativeCore`, using the bundled QuickJS runtime and JavaScript asset. The authentication roots derive from `SignInFutureResource` and `SignUpFutureResource`. The former native domain implementation is excluded from the API module. The complete Compose UI module now compiles against generated resources, including authentication, profile, organizations, account controls and session tasks. The prebuilt sample retains one connected core, and the UI test target uses generated resources. Remaining sample migrations and live device UI journeys are verification gates.
+The API module now builds generated Kotlin resources from `NativeCore`, using the bundled QuickJS runtime and JavaScript asset. The authentication roots derive from `SignInFutureResource` and `SignUpFutureResource`. The former native domain implementation is excluded from the API module. The complete Compose UI module now compiles against generated resources, including authentication, profile, organizations, account controls and session tasks. Quickstart, custom flows, Linear clone, prebuilt UI, workbench and the e2e app have migrated to retained generated owners; all six debug APK builds passed together on September 10. Live device UI journeys remain verification gates.
 
 ```kotlin
 val clerk = Clerk.connect(
@@ -15,6 +15,8 @@ if (clerk.signIn.status.rawValue == "complete") clerk.signIn.finalize()
 Import `com.clerk.api.connect`. Consumers need no JavaScript toolchain. Enable core library desugaring in the Android application; the SDK retains minSdk 24 and packages arm64-v8a, armeabi-v7a and x86_64 libraries with 16 KB page support. The default manifest callback is `${applicationId}.clerk://oauth/callback`; register the same redirect with Clerk. A different callback requires a corresponding manifest intent filter. Browser and passkey presentation need the current Activity provider.
 
 Passkeys require API 28 or later. The SDK manifest supplies the biometric permission. [Release packaging verification](Documentation/Migration/android-release-packaging.md) records the merged AAR checks, API guards, and remaining device-validation requirements.
+
+[The rendered authentication journey](Documentation/Migration/rendered-auth-journey.md) verifies invalid-code retry and prebuilt finalization through actual Compose input and the packaged core. It includes screenshots and a repeatable test entrypoint.
 
 Generated suspending methods publish state before completion and expose structured `CoreException` failures. A successful verification may leave additional requirements. Explicit finalization can produce a pending session; render its task. Old attempt/group handles become invalidated on reset. Cancellation does not roll back server work. Observe a resource's `changes` flow to read updated state.
 

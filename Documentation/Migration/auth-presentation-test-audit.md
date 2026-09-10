@@ -1,5 +1,7 @@
 # Compose authentication completion audit
 
+[The rendered authentication journey](rendered-auth-journey.md) adds actual `AuthView` input, invalid-code retry, generated finalization and completion-gate evidence with screenshots. It complements the state-level assertions below.
+
 The nine declarations and complete helper/assertion bodies in the old `sdk/ClerkAuthFlowTest.kt` were reviewed alongside the two old `ClerkClientFlowTest.kt` declarations. Both files are now retired after the assertion mapping below. Their private singleton setters, mocked Client fetches, and AuthEvent completion payloads are removed implementation seams; retained presentation behavior is checked through generated resources.
 
 ## Reproduced completion defects

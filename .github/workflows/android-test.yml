@@ -92,6 +92,7 @@ jobs:
             cp -R source/api/build/outputs/androidTest-results/connected/debug source/api/build/platform-test-results/core
             ./gradlew :source:api:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.clerk.api.PlatformCapabilityTest --build-cache
             python3 scripts/android_test_results.py --expected 'com.clerk.api.PlatformCapabilityTest#${{ matrix.platform-case }}'
+            if [ "${{ matrix.api-level }}" = "36" ]; then bash scripts/run-auth-view-journey.sh; fi
       - name: Upload platform test results
         if: always()
         uses: actions/upload-artifact@v7
@@ -101,4 +102,7 @@ jobs:
             source/api/build/platform-test-results/**
             source/api/build/outputs/androidTest-results/**
             source/api/build/reports/androidTests/**
+            source/ui/build/outputs/androidTest-results/**
+            source/ui/build/outputs/connected_android_test_additional_output/**
+            source/ui/build/reports/androidTests/**
           if-no-files-found: warn

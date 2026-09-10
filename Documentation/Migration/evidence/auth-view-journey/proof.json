@@ -1,0 +1,34 @@
+{
+  "nativeBaseRevision": "fb7118d520c954c9fa631f902603dfa70d53b292",
+  "testSourceSHA256": "cd7ced7bc186920df8b1fc383945f42cbdd17b14ceb6ac202d439eabb9ae7064",
+  "typescriptCoreRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+  "bundleSHA256": "406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d",
+  "device": "Pixel 9 Pro AVD",
+  "apiLevel": 36,
+  "abi": "arm64-v8a",
+  "build": "debug instrumentation",
+  "results": {
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "timestamp": "2026-09-10T16:34:25"
+  },
+  "screenshots": {
+    "01-identifier.png": "96e95b8e87d55f6f022ad87083e38f9b1521951a44a9cee3d586bb9b6b2eaef0",
+    "02-invalid-code.png": "b724a4a00f2450d35d7d630776c53e2bedcf7181693eaf993191d482d0eacf94",
+    "03-completed.png": "865c9fed9168de7ac7b03dc7920739af5d754215d2970aa20ea8398cf959c032"
+  },
+  "limits": [
+    "Deterministic HTTP and in-memory credential storage",
+    "No live account or OS authentication prompt",
+    "No physical-device, release-mode or old-major upgrade claim"
+  ],
+  "fullUiResults": {
+    "tests": "14",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "timestamp": "2026-09-10T16:36:03"
+  }
+}

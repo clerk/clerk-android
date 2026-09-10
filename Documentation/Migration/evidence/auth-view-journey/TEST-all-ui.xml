@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="14" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T16:36:03" hostname="localhost">
+  <testsuite name="com.clerk.ui.auth.AuthViewJourneyTest" tests="1" failures="0" errors="0" skipped="0" time="3.017" timestamp="2026-09-10T16:36:03" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="emailCodeErrorCanBeRetriedAndPrebuiltFlowFinalizesExactlyOnce" classname="com.clerk.ui.auth.AuthViewJourneyTest" time="3.017" />
+  </testsuite>
+  <testsuite name="com.clerk.ui.core.composition.AuthPresentationCoreTest" tests="9" failures="0" errors="0" skipped="0" time="2.911" timestamp="2026-09-10T16:36:03" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="pendingSessionCannotBeMarkedCompleteBeforeItsTaskFinishes" classname="com.clerk.ui.core.composition.AuthPresentationCoreTest" time="0.181" />
+    <testcase name="registrationDoesNotHoldAnExistingActiveUser" classname="com.clerk.ui.core.composition.AuthPresentationCoreTest" time="0.143" />
+    <testcase name="taskKeysPreserveCanonicalSpellingAndPreventPrematureCompletion" classname="com.clerk.ui.core.composition.AuthPresentationCoreTest" time="0.721" />
+    <testcase name="aNewPendingRegistrationCannotReuseThePreviousCompletion" classname="com.clerk.ui.core.composition.AuthPresentationCoreTest" time="0.211" />
+    <testcase name="activeSnapshotWithoutUserCannotCompletePresentation" classname="com.clerk.ui.core.composition.AuthPresentationCoreTest" time="0.008" />
+    <testcase name="releasingAnOlderRegistrationDoesNotReleaseTheRemainingHold" classname="com.clerk.ui.core.composition.AuthPresentationCoreTest" time="0.166" />
+    <testcase name="orderedTasksDriveRoutingUntilTheLastRequirementClears" classname="com.clerk.ui.core.composition.AuthPresentationCoreTest" time="0.283" />
+    <testcase name="foregroundRefreshPublishesSessionsWithoutImplicitlyCompletingAuthentication" classname="com.clerk.ui.core.composition.AuthPresentationCoreTest" time="0.225" />
+    <testcase name="prebuiltCompletionFinalizesExactlyOnceAndWaitsForPendingTasks" classname="com.clerk.ui.core.composition.AuthPresentationCoreTest" time="0.973" />
+  </testsuite>
+  <testsuite name="com.clerk.ui.core.composition.ClerkModelLifetimeTest" tests="2" failures="0" errors="0" skipped="0" time="8.291" timestamp="2026-09-10T16:36:03" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="removingAScreenCancelsItsPendingCoreRequest" classname="com.clerk.ui.core.composition.ClerkModelLifetimeTest" time="2.864" />
+    <testcase name="changingCoreCancelsOldRequestsButRecompositionKeepsCurrentWork" classname="com.clerk.ui.core.composition.ClerkModelLifetimeTest" time="5.427" />
+  </testsuite>
+  <testsuite name="com.clerk.ui.organizationlist.OrganizationAccountListCoreTest" tests="2" failures="0" errors="0" skipped="0" time="0.571" timestamp="2026-09-10T16:36:03" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="acceptingAnInvitationDoesNotSkipOrDuplicateAPendingRow" classname="com.clerk.ui.organizationlist.OrganizationAccountListCoreTest" time="0.220" />
+    <testcase name="acceptingInvitationsNeverSendsAFractionalOffset" classname="com.clerk.ui.organizationlist.OrganizationAccountListCoreTest" time="0.351" />
+  </testsuite>
+</testsuites>
