@@ -7,15 +7,26 @@ import com.clerk.api.user.User
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import kotlinx.serialization.json.JsonObject
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class SessionAuthorizationTest {
+  @Before
+  fun clearTokenCacheBefore() {
+    SessionTokensCache.clear()
+  }
+
+  @After
+  fun clearTokenCacheAfter() {
+    SessionTokensCache.clear()
+  }
   @Test
   fun `checkAuthorization and has share one implementation`() {
     val session =
@@ -358,6 +369,94 @@ class SessionAuthorizationTest {
   }
 
   @Test
+  fun `fails org-scoped feature when snapshot token belongs to another organization`() {
+    val session =
+      session(
+        orgId = "org_b",
+        orgRole = "org:admin",
+        orgPermissions = listOf("org:read"),
+        features = "o:feature_b",
+      )
+        .copy(
+          lastActiveToken =
+            TokenResource(
+              jwt =
+                jwtWithClaims(
+                  fea = "o:feature_a",
+                  pla = null,
+                  orgId = "org_a",
+                )
+            )
+        )
+
+    assertFalse(session.has(feature = "o:feature_a"))
+    assertFalse(session.has(feature = "o:feature_b"))
+  }
+
+  @Test
+  fun `uses freshest matching cache token after an organization switch`() {
+    val session =
+      session(
+        orgId = "org_b",
+        orgRole = "org:admin",
+        orgPermissions = listOf("org:read"),
+      )
+        .copy(
+          lastActiveToken =
+            TokenResource(
+              jwt =
+                jwtWithClaims(
+                  fea = "o:feature_a",
+                  pla = null,
+                  orgId = "org_a",
+                  issuedAtSeconds = System.currentTimeMillis() / 1_000 - 120,
+                )
+            )
+        )
+    SessionTokensCache.storeIfFresher(
+      session.tokenCacheKey(null),
+      TokenResource(
+        jwt =
+          jwtWithClaims(
+            fea = "o:feature_b",
+            pla = null,
+            orgId = "org_b",
+            issuedAtSeconds = System.currentTimeMillis() / 1_000,
+          )
+      ),
+    )
+
+    assertTrue(session.has(feature = "o:feature_b"))
+    assertFalse(session.has(feature = "o:feature_a"))
+  }
+
+  @Test
+  fun `fails Strict when matching token fva ages past ten minutes without a Client refresh`() {
+    val session =
+      session(
+        orgId = "org_123",
+        orgRole = "org:admin",
+        orgPermissions = listOf("org:sys_memberships:read"),
+        factorVerificationAge = listOf(0, 0),
+      )
+        .copy(
+          lastActiveToken =
+            TokenResource(
+              jwt =
+                jwtWithClaims(
+                  fea = null,
+                  pla = null,
+                  orgId = "org_123",
+                  fva = listOf(0, 0),
+                  issuedAtSeconds = System.currentTimeMillis() / 1_000 - 11 * 60,
+                )
+            )
+        )
+
+    assertFalse(session.has(reverification = ReverificationConfig.Strict))
+  }
+
+  @Test
   fun `has on a cached token stays under one millisecond`() {
     val session =
       session(
@@ -402,7 +501,7 @@ private fun session(
     updatedAt = 0L,
     lastActiveToken =
       if (features != null || plans != null) {
-        TokenResource(jwt = jwtWithClaims(fea = features, pla = plans))
+        TokenResource(jwt = jwtWithClaims(fea = features, pla = plans, orgId = orgId))
       } else {
         null
       },
@@ -466,11 +565,23 @@ private fun organization(id: String): Organization {
   )
 }
 
-private fun jwtWithClaims(fea: String?, pla: String?): String {
+private fun jwtWithClaims(
+  fea: String?,
+  pla: String?,
+  sid: String = "sess_123",
+  orgId: String? = null,
+  fva: List<Int>? = null,
+  issuedAtSeconds: Long? = null,
+): String {
   val payload =
     buildList {
+        add("\"sid\":\"$sid\"")
+        orgId?.let { add("\"org_id\":\"$it\"") }
         fea?.let { add("\"fea\":\"$it\"") }
         pla?.let { add("\"pla\":\"$it\"") }
+        fva?.let { add("\"fva\":[${it.joinToString(",")}]") }
+        issuedAtSeconds?.let { add("\"iat\":$it") }
+        add("\"exp\":4000000000")
       }
       .joinToString(",")
   return "${encode("{\"alg\":\"none\",\"typ\":\"JWT\"}")}.${encode("{$payload}")}.sig"

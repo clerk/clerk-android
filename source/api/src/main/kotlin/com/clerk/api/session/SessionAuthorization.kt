@@ -40,7 +40,9 @@ internal object SessionAuthorization {
       session.user?.organizationMemberships?.firstOrNull {
         it.organization.id == session.lastActiveOrganizationId
       }
-    val jwt = session.lastActiveToken?.jwt
+    val token = authorizationToken(session)
+    val jwt = token?.jwt
+    val tokenFva = jwt?.let { jwtManager.factorVerificationAgeClaim(it) }
     return evaluate(
       AuthorizationContext(
         userId = session.user?.id,
@@ -55,7 +57,11 @@ internal object SessionAuthorization {
             features = jwt?.let { jwtManager.featuresClaim(it) }.orEmpty(),
             plans = jwt?.let { jwtManager.plansClaim(it) }.orEmpty(),
           ),
-        factorVerificationAge = session.factorVerificationAge,
+        factorVerificationAge =
+          tokenFva?.let {
+            ageFactorVerification(it, jwtManager.issuedAtMillis(jwt), System.currentTimeMillis())
+          }
+            ?: session.factorVerificationAge,
       ),
       params,
     )
