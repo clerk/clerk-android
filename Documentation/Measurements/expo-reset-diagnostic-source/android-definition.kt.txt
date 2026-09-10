@@ -1,0 +1,65 @@
+    AsyncFunction("measureFixtureNativeResets") { promise: Promise ->
+      run(promise) {
+        withTimeout(60_000) {
+          val owner = projectedOwner ?: error("fixture_owner_unavailable")
+          val active = connection ?: error("fixture_connection_unavailable")
+          check(owner.loaded && !owner.isInvalidated)
+          check(owner.session?.id == "sess_native" && owner.user?.id == "user_native")
+          val session = owner.session
+          val user = owner.user
+          val samples = mutableListOf<Double>()
+          val frameGaps = mutableListOf<Double>()
+          val choreographer = android.view.Choreographer.getInstance()
+          var lastFrame = 0L
+          var measuring = false
+          val callback = object : android.view.Choreographer.FrameCallback {
+            override fun doFrame(time: Long) {
+              if (measuring && lastFrame != 0L) frameGaps += (time - lastFrame) / 1e6
+              lastFrame = time
+              choreographer.postFrameCallback(this)
+            }
+          }
+          fun memory(): Map<String, Any> {
+            val info = android.os.Debug.MemoryInfo()
+            android.os.Debug.getMemoryInfo(info)
+            return mapOf("totalPssKiB" to info.totalPss,
+              "nativeHeapAllocatedBytes" to android.os.Debug.getNativeHeapAllocatedSize())
+          }
+          val beforeMemory = memory()
+          choreographer.postFrameCallback(callback)
+          try {
+            repeat(10) { owner.signIn.reset() }
+            delay(100)
+            lastFrame = 0L
+            measuring = true
+            repeat(300) {
+              check(projectedOwner === owner && connection === active)
+              val child = owner.signIn.emailCode
+              val revision = active.runtime.revision
+              val started = android.os.SystemClock.elapsedRealtimeNanos()
+              owner.signIn.reset()
+              val elapsed = (android.os.SystemClock.elapsedRealtimeNanos() - started) / 1e6
+              check(child.isInvalidated && active.runtime.revision > revision)
+              check(owner.session === session && owner.user === user)
+              samples += elapsed
+            }
+            // Include the frame delivered after the final operation, outside operation timings.
+            delay(50)
+            measuring = false
+            mapOf("schemaVersion" to 1, "sampleCount" to samples.size,
+              "operation" to "generated native signIn.reset through existing Expo/Hermes owner",
+              "warmupCount" to 10, "nativeResetMilliseconds" to samples,
+              "authenticatedAtReady" to true, "forcedCollection" to false,
+              "mainThreadFrameGapsMilliseconds" to frameGaps,
+              "memoryBefore" to beforeMemory, "memoryAfter" to memory(),
+              "device" to "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}",
+              "apiLevel" to android.os.Build.VERSION.SDK_INT,
+              "nativeCoreRevision" to com.clerk.api.BundledCore.coreRevision,
+              "nativeBundleSHA256" to com.clerk.api.BundledCore.sha256,
+              "nativeRevisionAfter" to active.runtime.revision,
+              "sameNativeOwner" to (projectedOwner === owner && connection === active))
+          } finally { choreographer.removeFrameCallback(callback) }
+        }
+      }
+    }
+

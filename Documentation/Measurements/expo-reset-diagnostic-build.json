@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 2,
+  "platform": "android",
+  "artifactPath": "/Users/mikepitre/Documents/Codex/2026-09-08/i/work/expo-native-proof/android/app/build/outputs/apk/release/app-release.apk",
+  "kind": "Diagnostic fixture compilation and packaging evidence",
+  "executionStatus": "not run",
+  "latencySamples": null,
+  "frameSamples": null,
+  "memorySamples": null,
+  "abis": [
+    "arm64-v8a"
+  ],
+  "apkSHA256": "74347ee41b1e0e2dc89f599c2d18b5a1a13f803fd78c2160a6099aad4a7986c2",
+  "apkBytes": 28935912,
+  "coreRevision": "0b97ed0a260429dda4f230e32bb7e94fde3097f4",
+  "coreSHA256": "86d665dd87bc188352594cf80a5c0c5927348d84d9de6382e927d4da8abc9cd3",
+  "contractHash": "0f8387f260072ba6f894442b73d50afa6bda5f1205ed3c9209f5d6b1cfba16ce",
+  "hermesSHA256": "d3b92f72ce948afab129a2182966a65026f35643b870f6032ce1e42cd15acb66",
+  "hermesBytes": 2699788,
+  "hermesValidation": "hermesc -b -dump-bytecode succeeded",
+  "nativeDiagnosticMarkersVerified": true,
+  "preparation": {
+    "schemaVersion": 1,
+    "kind": "fixture-only diagnostic patch; SDK repositories unchanged",
+    "sourceSHA256": "c1d5225cd0ed664fe6afaa1044857a26f646f5ebb1942ff87cd29ad6273b41cf",
+    "patchedSHA256": "d310ef14156c9122ca01bdabb1eae66e95a85a97325401c71988fe3fa8f84b89",
+    "installedPath": "/Users/mikepitre/Documents/Codex/2026-09-08/i/work/expo-native-proof/node_modules/.pnpm/@clerk+expo@file+..+expo-pack-readiness+clerk-expo-4.6.5.tgz_b6f168b26eefe79b9cd2ee8f74191ecb/node_modules/@clerk/expo/android/src/main/java/expo/modules/clerk/ClerkExpoModule.kt",
+    "sampleCount": 300,
+    "warmupCount": 10,
+    "executionStatus": "not run"
+  },
+  "fixtureInputs": {
+    "ProofApp.tsx": "afec5f9dcd4be55de56ed218bc25681e32fe8cff0f32e4dc919633e2178b5129",
+    "proof-network.js": "c07943483e618b069d835f9342ee42621ab945a5266831a6fdfc94c8e7dfe83b",
+    "proof-fixtures.json": "95cd2b2d8344feeafd289a9c5edadb094d839ed062e006b934b76053f3cbc719",
+    "measurement/run.ts": "8cc4e26e5a0117aaa8c5709f561ae81c0547fa4a7ebd5cec4265d38fc2227449",
+    "measurement/android-definition.kt.txt": "0254688359ac2fcee10d9ffe25edc7b7217260b0401fa0b8c9014f4ada053f43",
+    "measurement/prepare-android.py": "450d94d45654fc77e4a985bbaaf342bf62ceeee22741c93101816cb9b9e4a000",
+    "index.js": "7799ca761e362619deeba2300d6a64513b8dad15100a2360c3be07526997c990"
+  },
+  "installation": {
+    "target": "Android emulator-5554",
+    "result": "succeeded",
+    "launchStatus": "not launched; desktop UI is locked"
+  },
+  "nativeWorktreeRevisionAtBuild": "fd7e8dfe71f405915ab3317310327eaf7d1bfa38",
+  "javascriptWorktreeRevisionAtBuild": "0b97ed0a260429dda4f230e32bb7e94fde3097f4",
+  "diagnosticSourceSnapshots": {
+    "expo-reset-diagnostic-source/run.ts": "8cc4e26e5a0117aaa8c5709f561ae81c0547fa4a7ebd5cec4265d38fc2227449",
+    "expo-reset-diagnostic-source/android-definition.kt.txt": "0254688359ac2fcee10d9ffe25edc7b7217260b0401fa0b8c9014f4ada053f43"
+  }
+}
