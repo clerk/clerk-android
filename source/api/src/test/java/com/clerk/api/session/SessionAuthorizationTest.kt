@@ -431,6 +431,31 @@ class SessionAuthorizationTest {
   }
 
   @Test
+  fun `fails Strict when matching token without fva ages the session snapshot`() {
+    val session =
+      session(
+        orgId = "org_123",
+        orgRole = "org:admin",
+        orgPermissions = listOf("org:sys_memberships:read"),
+        factorVerificationAge = listOf(0, 0),
+      )
+        .copy(
+          lastActiveToken =
+            TokenResource(
+              jwt =
+                jwtWithClaims(
+                  fea = null,
+                  pla = null,
+                  orgId = "org_123",
+                  issuedAtSeconds = System.currentTimeMillis() / 1_000 - 11 * 60,
+                )
+            )
+        )
+
+    assertFalse(session.has(reverification = ReverificationConfig.Strict))
+  }
+
+  @Test
   fun `fails Strict when matching token fva ages past ten minutes without a Client refresh`() {
     val session =
       session(

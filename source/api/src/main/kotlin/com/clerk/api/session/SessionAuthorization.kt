@@ -42,7 +42,11 @@ internal object SessionAuthorization {
       }
     val token = authorizationToken(session)
     val jwt = token?.jwt
-    val tokenFva = jwt?.let { jwtManager.factorVerificationAgeClaim(it) }
+    val nowMillis = System.currentTimeMillis()
+    val issuedAtMillis = jwt?.let { jwtManager.issuedAtMillis(it) }
+    val factorVerificationAge =
+      (jwt?.let { jwtManager.factorVerificationAgeClaim(it) } ?: session.factorVerificationAge)
+        ?.let { ageFactorVerification(it, issuedAtMillis, nowMillis) }
     return evaluate(
       AuthorizationContext(
         userId = session.user?.id,
@@ -57,11 +61,7 @@ internal object SessionAuthorization {
             features = jwt?.let { jwtManager.featuresClaim(it) }.orEmpty(),
             plans = jwt?.let { jwtManager.plansClaim(it) }.orEmpty(),
           ),
-        factorVerificationAge =
-          tokenFva?.let {
-            ageFactorVerification(it, jwtManager.issuedAtMillis(jwt), System.currentTimeMillis())
-          }
-            ?: session.factorVerificationAge,
+        factorVerificationAge = factorVerificationAge,
       ),
       params,
     )
