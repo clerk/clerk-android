@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="3" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T19:12:39" hostname="localhost">
+  <testsuite name="com.clerk.api.GoogleIdentityRequestTest" tests="3" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T19:12:39" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="missingActivityDoesNotAdvertiseOrPresentGoogleIdentity" classname="com.clerk.api.GoogleIdentityRequestTest" time="0.000" />
+    <testcase name="requestsFreshNonceAndReturnsDecodedIdentityToken" classname="com.clerk.api.GoogleIdentityRequestTest" time="0.000" />
+    <testcase name="blankClientIdentifierFailsBeforeCredentialRequest" classname="com.clerk.api.GoogleIdentityRequestTest" time="0.000" />
+  </testsuite>
+</testsuites>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.ui.signup.code.SignUpCodeViewModelTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-10T19:11:12.192Z" hostname="mac.lan" time="1.112">
+  <properties/>
+  <testcase name="phoneCodeIgnoresEmailLinkPreference" classname="com.clerk.ui.signup.code.SignUpCodeViewModelTest" time="1.094"/>
+  <testcase name="emailLinkRoutesToLinkScreenWithoutSendingCode" classname="com.clerk.ui.signup.code.SignUpCodeViewModelTest" time="0.01"/>
+  <testcase name="emailCodeCallsCurrentSignUpVerificationGroup" classname="com.clerk.ui.signup.code.SignUpCodeViewModelTest" time="0.007"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/Users/mikepitre/.gradle/caches/9.7.1/transforms/3fe64f7182d8271eecc87e0bd81add2b/transformed/byte-buddy-agent-1.18.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

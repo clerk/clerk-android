@@ -1,0 +1,224 @@
+{
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "sourceBase": "418f97c7a592efe9cf3d33d91c1a16bc20db8b41",
+  "runtimeChanged": false,
+  "retired": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signin/SignInCreateTest.kt",
+      "sha256": "c700a3da564b156713002fa08144cc78d1ed365b6c7b5d3a5c878d64cf102ac4",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "create with passkey strategy delegates to PasskeyService",
+          "line": 24
+        },
+        {
+          "name": "passkey strategy preserves legacy jvm constructor and copy signatures",
+          "line": 51
+        },
+        {
+          "name": "create with biometric credential strategy forwards prompt configuration",
+          "line": 59
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signup/SignUpEmailVerificationStrategyTest.kt",
+      "sha256": "717397e660d35ded93d8bdbcc44776db61ffeb6a36cdc50af1b8097bdbab91e1",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "emailVerificationStrategyUsesActiveVerificationStrategyWhenPresent",
+          "line": 61
+        },
+        {
+          "name": "emailVerificationStrategyFallsBackToEnvironmentStrategiesWhenNoActiveStrategyExists",
+          "line": 79
+        },
+        {
+          "name": "prepareVerificationMapsNativeEmailLinkPkceFields",
+          "line": 101
+        },
+        {
+          "name": "sendCodeUsesEmailLinkWhenEmailLinkVerificationIsSupported",
+          "line": 122
+        },
+        {
+          "name": "sendCodeFallsBackToEmailCodeWhenEmailLinkVerificationIsNotSupported",
+          "line": 142
+        },
+        {
+          "name": "sendCodeUsesPhoneCodeForPhoneVerification",
+          "line": 158
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/signup/SignUpFieldCollectionTest.kt",
+      "sha256": "8c436fe977b9691465f1ffe5c17c6a396c26b0c3b7b9a0e703ee46e5543fc880",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "firstFieldToCollect ignores optional missing fields",
+          "line": 10
+        },
+        {
+          "name": "firstFieldToCollect returns null when only optional fields are missing",
+          "line": 22
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "NativeCoreTests/Android/SignInCredentialContractTest.kt": "56fa70820983fda80044bb430882c38b7e35d91fe025baa8774cd3f3d1db932b",
+    "NativeCoreTests/Android/SignUpVerificationRequestTest.kt": "5d50a2805a625e31fe2325ebd77d569cc3cea9deb0747d733efbf69613990bc2",
+    "source/ui/src/test/java/com/clerk/ui/auth/SignUpPresentationTest.kt": "d8dc964d3ddd665e135cbcbebc66887a9097aefb8ce73c7b068e0f746e291e78",
+    "source/ui/src/test/java/com/clerk/ui/signup/code/SignUpCodeViewModelTest.kt": "493d8178d628d1a8e0ba92a9269385660d773fecbd8f908305de859d0dfc3476"
+  },
+  "reports": [
+    {
+      "file": "TEST-SignInCredentialContractTest.xml",
+      "sha256": "f62327534af866055fff74dd703035d2d1700db79cb4bc703abaa0a0a0941a5f",
+      "cases": [
+        {
+          "name": "passkeyPreparationPreservesFailureStage",
+          "classname": "com.clerk.api.SignInCredentialContractTest",
+          "time": "0.187"
+        },
+        {
+          "name": "cancelledPasskeyDoesNotSubmitCredential",
+          "classname": "com.clerk.api.SignInCredentialContractTest",
+          "time": "0.166"
+        },
+        {
+          "name": "biometricSignInForwardsSelectionAndPrompt",
+          "classname": "com.clerk.api.SignInCredentialContractTest",
+          "time": "0.241"
+        },
+        {
+          "name": "passkeySubmissionPreservesFailureStage",
+          "classname": "com.clerk.api.SignInCredentialContractTest",
+          "time": "0.163"
+        },
+        {
+          "name": "passkeyForwardsOptionsAndRequiresFinalization",
+          "classname": "com.clerk.api.SignInCredentialContractTest",
+          "time": "0.177"
+        }
+      ]
+    },
+    {
+      "file": "TEST-SignUpVerificationRequestTest.xml",
+      "sha256": "e864a2eeb4b59cbb05cbc4ae6fbd4ede8ac00cc40e1793cd70e288010cdab7dc",
+      "cases": [
+        {
+          "name": "phoneCodeUsesExplicitVerificationStrategy",
+          "classname": "com.clerk.api.SignUpVerificationRequestTest",
+          "time": "0.260"
+        },
+        {
+          "name": "emailCodeUsesExplicitVerificationStrategy",
+          "classname": "com.clerk.api.SignUpVerificationRequestTest",
+          "time": "0.215"
+        },
+        {
+          "name": "emailLinkSendsConfiguredCallbackAndMatchingPkceChallenge",
+          "classname": "com.clerk.api.SignUpVerificationRequestTest",
+          "time": "0.207"
+        }
+      ]
+    },
+    {
+      "file": "TEST-com.clerk.ui.auth.SignUpPresentationTest.xml",
+      "sha256": "8942bc1f1d008997ac52ce396ac4090ea6ca66c3c177c4aa8f6332e7d3f02a08",
+      "cases": [
+        {
+          "name": "missingActiveStrategyUsesEnvironmentEmailLink",
+          "classname": "com.clerk.ui.auth.SignUpPresentationTest",
+          "time": "0.094"
+        },
+        {
+          "name": "optionalMissingFieldsDoNotBlockRequiredPassword",
+          "classname": "com.clerk.ui.auth.SignUpPresentationTest",
+          "time": "0.004"
+        },
+        {
+          "name": "requiredFieldsFollowPresentationOrder",
+          "classname": "com.clerk.ui.auth.SignUpPresentationTest",
+          "time": "0.003"
+        },
+        {
+          "name": "missingEmailLinkConfigurationUsesEmailCode",
+          "classname": "com.clerk.ui.auth.SignUpPresentationTest",
+          "time": "0.002"
+        },
+        {
+          "name": "activeEmailCodeOverridesEnvironmentEmailLink",
+          "classname": "com.clerk.ui.auth.SignUpPresentationTest",
+          "time": "0.002"
+        },
+        {
+          "name": "activeEmailLinkOverridesEnvironmentEmailCode",
+          "classname": "com.clerk.ui.auth.SignUpPresentationTest",
+          "time": "0.002"
+        },
+        {
+          "name": "onlyOptionalMissingFieldsDoNotBlockCompletion",
+          "classname": "com.clerk.ui.auth.SignUpPresentationTest",
+          "time": "0.002"
+        }
+      ]
+    },
+    {
+      "file": "TEST-com.clerk.ui.signup.code.SignUpCodeViewModelTest.xml",
+      "sha256": "af975717d707314c32dfc6d87070a5c4a8d2483ef093f9a6724ad9ebcfeefe41",
+      "cases": [
+        {
+          "name": "phoneCodeIgnoresEmailLinkPreference",
+          "classname": "com.clerk.ui.signup.code.SignUpCodeViewModelTest",
+          "time": "1.094"
+        },
+        {
+          "name": "emailLinkRoutesToLinkScreenWithoutSendingCode",
+          "classname": "com.clerk.ui.signup.code.SignUpCodeViewModelTest",
+          "time": "0.01"
+        },
+        {
+          "name": "emailCodeCallsCurrentSignUpVerificationGroup",
+          "classname": "com.clerk.ui.signup.code.SignUpCodeViewModelTest",
+          "time": "0.007"
+        }
+      ]
+    }
+  ],
+  "authenticationGate": {
+    "cases": 40,
+    "scriptSha256": "6d57d9b7ba08be368427c8288e2685a31ba8d58858a88954eb97fd54a63c8081",
+    "reports": [
+      {
+        "file": "gate/AuthEntryPointTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "f0a95048b7926606b2b95eee249aa3ef84b28d81d59acbad5ec4f01e80e4c0eb"
+      },
+      {
+        "file": "gate/GoogleIdentityContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "9d128a6eef1ef656d3f2834a5afe56d13afa52af5564bdc30736bb14a51e4021"
+      },
+      {
+        "file": "gate/GoogleIdentityRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "291e17e10172c8a7ab1848727217a70af6e16041d1a5aa0df240e44e0678318d"
+      },
+      {
+        "file": "gate/SessionSelectionContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "bc6fd9d4e2ee388d70dcd2bd7c9c96272491e2cde2486afe080fe65507a30893"
+      },
+      {
+        "file": "gate/SignInCredentialContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "280ceb57312c24003b52698cbf61e4f6e617a337d46bc210a0bd25fc1fdc6405"
+      },
+      {
+        "file": "gate/SignUpVerificationRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+        "sha256": "1f2a8640b32bf5d5ef4d39c3bab00d9ef290dde7849e07ef94c6a7b99e2e0c8f"
+      }
+    ]
+  }
+}

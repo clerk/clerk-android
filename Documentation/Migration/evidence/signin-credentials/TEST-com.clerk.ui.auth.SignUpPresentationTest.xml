@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.ui.auth.SignUpPresentationTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-10T19:10:12.077Z" hostname="mac.lan" time="0.112">
+  <properties/>
+  <testcase name="missingActiveStrategyUsesEnvironmentEmailLink" classname="com.clerk.ui.auth.SignUpPresentationTest" time="0.094"/>
+  <testcase name="optionalMissingFieldsDoNotBlockRequiredPassword" classname="com.clerk.ui.auth.SignUpPresentationTest" time="0.004"/>
+  <testcase name="requiredFieldsFollowPresentationOrder" classname="com.clerk.ui.auth.SignUpPresentationTest" time="0.003"/>
+  <testcase name="missingEmailLinkConfigurationUsesEmailCode" classname="com.clerk.ui.auth.SignUpPresentationTest" time="0.002"/>
+  <testcase name="activeEmailCodeOverridesEnvironmentEmailLink" classname="com.clerk.ui.auth.SignUpPresentationTest" time="0.002"/>
+  <testcase name="activeEmailLinkOverridesEnvironmentEmailCode" classname="com.clerk.ui.auth.SignUpPresentationTest" time="0.002"/>
+  <testcase name="onlyOptionalMissingFieldsDoNotBlockCompletion" classname="com.clerk.ui.auth.SignUpPresentationTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
