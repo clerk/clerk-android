@@ -1,35 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-KEYS_FILE=".keys.json"
-MAX_ATTEMPTS=3
-BACKOFF_SECONDS=5
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-if [ ! -f "$KEYS_FILE" ]; then
-  echo "Warning: $KEYS_FILE not found at project root."
-  echo "Integration tests will be skipped (Assume.assumeNotNull)."
-  echo "To run integration tests, create $KEYS_FILE with your Clerk test instance key."
-fi
+# Gradle reads CLERK_INTEGRATION_TEST_PK or .keys.json. Required mode fails
+# before connecting when the development key is absent or invalid.
+# Do not retry live mutations automatically: preserve the first failure and
+# let the account-owning test perform its bounded cleanup.
+./gradlew :source:api:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.package=com.clerk.api.integration \
+  -PclerkIntegrationRequired=true \
+  --build-cache
 
-attempt=1
-while [ $attempt -le $MAX_ATTEMPTS ]; do
-  echo "=== Attempt $attempt of $MAX_ATTEMPTS ==="
-
-  if ./gradlew :source:api:testDebugUnitTest \
-    --tests "com.clerk.api.integration.*" \
-    --no-daemon; then
-    echo "Integration tests passed."
-    exit 0
-  fi
-
-  if [ $attempt -lt $MAX_ATTEMPTS ]; then
-    sleep_time=$((BACKOFF_SECONDS * attempt))
-    echo "Tests failed. Retrying in ${sleep_time}s..."
-    sleep $sleep_time
-  fi
-
-  attempt=$((attempt + 1))
-done
-
-echo "Integration tests failed after $MAX_ATTEMPTS attempts."
-exit 1
+# This runner can exit successfully after discovering no tests or reporting
+# assumption failures. Require both expected scenarios to have passed.
+python3 scripts/verify-live-integration-results.py

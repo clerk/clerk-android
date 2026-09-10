@@ -33,10 +33,7 @@ account. No live key was configured for the verification recorded below.
 
 ```sh
 # Configure .keys.json or CLERK_INTEGRATION_TEST_PK without printing its contents.
-./gradlew :source:api:connectedDebugAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.package=com.clerk.api.integration \
-  -PclerkIntegrationRequired=true
-python3 scripts/verify-live-integration-results.py
+bash scripts/run-integration-tests.sh
 ```
 
 The workflow first compiles the packaged tests. When its development-key secret
@@ -45,6 +42,13 @@ the package on an Android emulator, enables the required-configuration guard and
 checks the resulting XML. Both named scenarios must appear exactly once without
 skip/failure/error outcomes. Merely receiving Gradle exit code zero is insufficient.
 The existing GET-only `LiveStartupTest` remains a separate opt-in smoke test.
+
+The local script and configured workflow now use the same entrypoint. It resolves
+the repository from its own location, runs the packaged tests once in required
+mode, and checks their XML. Automatic retries of live account mutations were
+removed. A September 10 run from outside the repository, with no key configured,
+discovered both scenarios and exited with failure; each XML case reported
+`Required live integration publishable key is missing` before connection.
 
 ## Verified evidence
 
@@ -66,7 +70,7 @@ local checks on the Android 16 arm64 emulator:
   result. This is a retained runner diagnostic, not a claimed SDK auth defect.
 - Workflow lint passes with the existing Blacksmith runner label configured.
   The XML validator accepts a synthetic complete/pass report and rejects empty,
-  incomplete, duplicate, skipped, failed and errored reports. Those parser checks
+incomplete, duplicate, skipped, failed and errored reports. Those parser checks
   are not live-service execution.
 
 Raw Gradle logs and XML are retained in `work/android-live-integration-gates/`;

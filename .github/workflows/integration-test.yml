@@ -58,11 +58,7 @@ jobs:
           target: google_apis
           arch: x86_64
           emulator-options: -no-window -no-audio -no-snapshot -gpu swiftshader_indirect
-          script: ./gradlew :source:api:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.package=com.clerk.api.integration -PclerkIntegrationRequired=true --build-cache
-
-      - name: Require executed live integration scenarios
-        if: steps.integration-key.outputs.available == 'true'
-        run: python3 scripts/verify-live-integration-results.py
+          script: bash scripts/run-integration-tests.sh
 
       - name: Upload test results
         if: always()
