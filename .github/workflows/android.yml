@@ -29,6 +29,16 @@ jobs:
         run: |
           ./gradlew :source:api:lintRelease :source:api:assembleRelease --build-cache
           python3 scripts/verify-native-core-aar.py source/api/build/outputs/aar/api-release.aar
+      - name: Verify clean release reproducibility
+        if: matrix.module == ':source:api'
+        run: python3 -B scripts/verify-reproducible-aar.py --output build/reproducible-core
+      - name: Upload release reproducibility evidence
+        if: always() && matrix.module == ':source:api'
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-release-reproducibility
+          path: build/reproducible-core
+          if-no-files-found: error
 
   # Optional: a final step that depends on both module builds
   verify:
