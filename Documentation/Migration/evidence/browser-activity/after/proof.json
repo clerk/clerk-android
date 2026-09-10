@@ -1,0 +1,57 @@
+{
+  "runtimeSha256": "6c14388c991621e967fc6bd3b3df490e8dd7e2a1f48788e498c1dbe55dcae01d",
+  "testSourceSha256": "bcc5b057f13054b7fff8c7e0171db1d64969df7d89f1b08121b3bec2a86b670e",
+  "passed": 82,
+  "suites": 12,
+  "device": "emulator-5554 API 36 arm64",
+  "reports": [
+    {
+      "file": "TEST-GoogleIdentityContractTest.xml",
+      "sha256": "78690dcb6f5007124bebb68d473aa25cd36c417beb042467943bcc821fe6ead6"
+    },
+    {
+      "file": "TEST-GoogleIdentityRequestTest.xml",
+      "sha256": "8225279483924fd76e7e89f4ca105a6c8f49a5f9d6d270e1898f6db36081fbc4"
+    },
+    {
+      "file": "TEST-AuthEntryPointTest.xml",
+      "sha256": "57ba73498cf1c20a559eca272f6f08f6bba214a6f9b3d4fbc55abe34d93168b9"
+    },
+    {
+      "file": "TEST-SessionSelectionContractTest.xml",
+      "sha256": "322c4b139741de166f6090b93f7fe503dca42edcd4e84cd42a7dcd5da49e62f1"
+    },
+    {
+      "file": "TEST-SignInCredentialContractTest.xml",
+      "sha256": "c7cb4a00ad4823b24e41d290dffb8e4ccc75e494ff756860c1745bb517bf4dc2"
+    },
+    {
+      "file": "TEST-SignUpVerificationRequestTest.xml",
+      "sha256": "808d0fcfcaad899ef908cfe014d8c05ca8ff7fae2ffba0e571499ef764c1da58"
+    },
+    {
+      "file": "TEST-SignOutContractTest.xml",
+      "sha256": "1ef4ad17975584d128556548fad266b0028429f678a91e68d16d0d3af25ff7b4"
+    },
+    {
+      "file": "TEST-BrowserSSOContractTest.xml",
+      "sha256": "d8323bfbd168dcb106a771a9fc2c182cb9c4d685d4bc783ef520f89aeef9305b"
+    },
+    {
+      "file": "TEST-OAuthProviderRequestTest.xml",
+      "sha256": "2195cf0701a661dac0a026b39f7af32892be5ef464aeedc601c6ab5c8cdc3456"
+    },
+    {
+      "file": "TEST-BrowserHostTest.xml",
+      "sha256": "fc7d2ad8d64fecee7dec55356e691487125b5713733b12cc453b376e11871781"
+    },
+    {
+      "file": "TEST-BrowserCallbackContractTest.xml",
+      "sha256": "014d8189eb06a5021312d0f099fafab93e00cf1aa12fb73f7ef55492688c20e0"
+    },
+    {
+      "file": "TEST-BrowserActivityLifecycleTest.xml",
+      "sha256": "19f403b83f9dd71c521418cf7fcab0f19c225b70bda0b8a025d7e1277d862eee"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "revision": "f2cb7be9bd7b1b118a46fcb45cc9cbcb3eb53bf3",
+  "runtimeSha256": "193b24d00a31e5ae56252f0227925791a89e59438093a479cc984a76403504fc",
+  "testSourceSha256": "bcc5b057f13054b7fff8c7e0171db1d64969df7d89f1b08121b3bec2a86b670e",
+  "tests": 4,
+  "failures": [
+    "immediateSecondAuthorizationIsPresentedAfterFirstCallback",
+    "browserCallbackSurvivesDeviceRotation"
+  ],
+  "device": "emulator-5554 API 36 arm64",
+  "browserStandIn": "Android Settings; callback delivered to actual SDK receiver through am start",
+  "xmlSha256": "aadb61a4996a54e0e6cbf96a2e53aef036cd2225e917b01894da78a3a512f84c"
+}

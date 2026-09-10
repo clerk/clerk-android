@@ -38,7 +38,7 @@ public class BrowserAuthentication(private val activity: () -> Activity?) {
 }
 
 internal object BrowserRequests {
-  data class Pending(val id: String, val callback: Uri, val continuation: CancellableContinuation<JsonElement>, var activity: WeakReference<Activity>? = null)
+  data class Pending(val id: String, val callback: Uri, val continuation: CancellableContinuation<JsonElement>, var activity: WeakReference<Activity>? = null, var returnedCallback: Uri? = null)
   var pending: Pending? = null
   fun matches(uri: Uri): Boolean {
     val expected = pending?.callback ?: return false
@@ -72,9 +72,11 @@ public class CoreBrowserActivity : Activity() {
     super.onResume()
     val id = request ?: return
     if (BrowserRequests.pending?.id != id) { finish(); return }
-    val callback = intent.data
+    val callback = BrowserRequests.pending?.returnedCallback ?: intent.data
     if (callback != null && BrowserRequests.matches(callback)) {
-      BrowserRequests.finish(id, callback); finish(); return
+      // Resuming the caller can immediately open another browser. Retire this activity first
+      // so Android does not deliver that new request to the singleTask activity being closed.
+      finish(); BrowserRequests.finish(id, callback); return
     }
     if (started) { BrowserRequests.cancel(id); finish(); return }
     val url = intent.getStringExtra("url") ?: run { BrowserRequests.cancel(id, "invalid_browser_url"); return }
@@ -94,6 +96,9 @@ public class CoreBrowserCallbackActivity : Activity() {
     super.onCreate(savedInstanceState)
     val callback = intent?.data
     if (callback != null && BrowserRequests.matches(callback)) {
+      // Android can recreate the stopped manager before delivering its new intent.
+      // Keep the received URI with the pending operation until that manager resumes.
+      BrowserRequests.pending?.returnedCallback = callback
       startActivity(Intent(this, CoreBrowserActivity::class.java).setData(callback)
         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP))
     } else if (callback != null && callback.scheme == "$packageName.clerk" &&

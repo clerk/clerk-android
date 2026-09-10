@@ -1,0 +1,255 @@
+package com.clerk.api
+
+import android.accessibilityservice.AccessibilityService
+import android.app.Activity
+import android.app.Instrumentation
+import android.app.UiAutomation
+import android.content.Context
+import android.content.Intent
+import android.hardware.display.DisplayManager
+import android.os.ParcelFileDescriptor
+import android.provider.Settings
+import android.view.Display
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleCallback
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
+import java.util.concurrent.CopyOnWriteArrayList
+import kotlinx.coroutines.*
+import kotlinx.serialization.json.*
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class BrowserActivityLifecycleTest {
+  @Test
+  fun actualReceiverDeliversCallbackToTheRunningManager() = fixture {
+    val pending = scope.async { runCatching { host.open(firstUrl, callback) } }
+    val manager = awaitManager()
+    check(opened.single().data.toString() == firstUrl)
+    val returned = "$callback?rotating_token_nonce=activity_nonce"
+    deliver(returned)
+    val result = pending.await()
+    check(result.isSuccess) {
+      "Callback failed: ${(result.exceptionOrNull() as? CoreException)?.code}; $events"
+    }
+    check(result.getOrThrow().jsonObject["callbackUrl"] == JsonPrimitive(returned))
+    instrumentation.waitForIdleSync()
+    check(manager.isFinishing && BrowserRequests.pending == null)
+  }
+
+  @Test
+  fun resumedManagerTreatsBrowserDismissalAsCancellation() = fixture {
+    val pending = scope.async { runCatching { host.open(firstUrl, callback) } }
+    val manager = awaitManager()
+    check(instrumentation.uiAutomation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK))
+    check((pending.await().exceptionOrNull() as? CoreException)?.code == "user_cancelled")
+    check(opened.size == 1 && BrowserRequests.pending == null && manager.isFinishing)
+  }
+
+  @Test
+  fun immediateSecondAuthorizationIsPresentedAfterFirstCallback() = fixture {
+    val first = CompletableDeferred<Result<JsonElement>>()
+    val pending = scope.async {
+      runCatching {
+        val result = runCatching { host.open(firstUrl, callback) }
+        first.complete(result)
+        result.getOrThrow()
+        host.open(secondUrl, callback)
+      }
+    }
+    awaitManager()
+    val firstCallback = "$callback?rotating_token_nonce=first_nonce"
+    deliver(firstCallback)
+    check(first.await().getOrThrow().jsonObject["callbackUrl"] == JsonPrimitive(firstCallback))
+    withTimeout(5000) { while (opened.size < 2 && !pending.isCompleted) delay(10) }
+    check(opened.map { it.data.toString() } == listOf(firstUrl, secondUrl)) {
+      "Second authorization was not presented: ${opened.map { it.data.toString() }}, completed=${pending.isCompleted}"
+    }
+    val secondManager =
+      withContext(Dispatchers.Main.immediate) {
+        checkNotNull(BrowserRequests.pending?.activity?.get())
+      }
+    awaitBackground(secondManager)
+    val secondCallback = "$callback?rotating_token_nonce=second_nonce"
+    deliver(secondCallback)
+    check(pending.await().getOrThrow().jsonObject["callbackUrl"] == JsonPrimitive(secondCallback))
+    check(BrowserRequests.pending == null)
+  }
+
+  @Test
+  fun browserCallbackSurvivesDeviceRotation() = fixture {
+    val pending = scope.async { runCatching { host.open(firstUrl, callback) } }
+    val original = awaitManager()
+    val initialRotation =
+      instrumentation.targetContext
+        .getSystemService(DisplayManager::class.java)
+        .getDisplay(Display.DEFAULT_DISPLAY)
+        .rotation
+    val target =
+      if (initialRotation == UiAutomation.ROTATION_FREEZE_90) UiAutomation.ROTATION_FREEZE_0
+      else UiAutomation.ROTATION_FREEZE_90
+    try {
+      check(instrumentation.uiAutomation.setRotation(target))
+      withTimeout(5000) {
+        while (
+          instrumentation.targetContext
+            .getSystemService(DisplayManager::class.java)
+            .getDisplay(Display.DEFAULT_DISPLAY)
+            .rotation != target ||
+            instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString() !=
+              "com.android.settings"
+        ) delay(10)
+      }
+      val returned = "$callback?rotating_token_nonce=recreated_nonce"
+      deliver(returned)
+      check(pending.await().getOrThrow().jsonObject["callbackUrl"] == JsonPrimitive(returned))
+      check(managers.size >= 2 && managers.last() !== original)
+      check(BrowserRequests.pending == null && opened.size == 1)
+    } finally {
+      events +=
+        "rotation actual=${instrumentation.targetContext.getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY).rotation} target=$target foreground=${instrumentation.uiAutomation.rootInActiveWindow?.packageName}"
+      instrumentation.uiAutomation.setRotation(initialRotation)
+      instrumentation.uiAutomation.setRotation(UiAutomation.ROTATION_UNFREEZE)
+    }
+  }
+
+  private fun fixture(verify: suspend ActivityFixture.() -> Unit) = runBlocking {
+    withTimeout(20000) {
+      val fixture = ActivityFixture()
+      try {
+        fixture.verify()
+      } catch (error: Throwable) {
+        throw AssertionError("Activity sequence: ${fixture.events}", error)
+      } finally {
+        withContext(NonCancellable) { fixture.close() }
+      }
+    }
+  }
+}
+
+private class ActivityFixture {
+  val instrumentation = InstrumentationRegistry.getInstrumentation()
+  private val context = instrumentation.targetContext
+  val callback = "${context.packageName}.clerk://oauth/callback"
+  val firstUrl = "https://provider.example/first"
+  val secondUrl = "https://provider.example/second"
+  val opened = CopyOnWriteArrayList<Intent>()
+  val events = CopyOnWriteArrayList<String>()
+  val managers = CopyOnWriteArrayList<Activity>()
+  private val lifecycle = ActivityLifecycleCallback { activity, stage ->
+    if (activity is CoreBrowserActivity || activity is CoreBrowserCallbackActivity)
+      events +=
+        "${activity.javaClass.simpleName}:$stage data=${activity.intent?.data} pending=${BrowserRequests.pending?.id}"
+    if (activity is CoreBrowserActivity && stage == Stage.CREATED) managers += activity
+  }
+  val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+  private val managerMonitor =
+    instrumentation.addMonitor(CoreBrowserActivity::class.java.name, null, false)
+  private val browserMonitor =
+    object : Instrumentation.ActivityMonitor() {
+      override fun onStartActivity(intent: Intent): Instrumentation.ActivityResult? {
+        events += "start ${intent.component?.className} ${intent.data}"
+        if (intent.action == Intent.ACTION_VIEW && intent.data?.host == "provider.example") {
+          opened += Intent(intent)
+          // A real foreground activity preserves Android's pause/resume ordering without contacting
+          // a provider.
+          intent.action = Settings.ACTION_SETTINGS
+          intent.data = null
+        }
+        return null
+      }
+    }
+  private lateinit var presenter: Activity
+  val host: BrowserAuthentication
+
+  init {
+    instrumentation.addMonitor(browserMonitor)
+    instrumentation.runOnMainSync {
+      check(BrowserRequests.pending == null)
+      ActivityLifecycleMonitorRegistry.getInstance().addLifecycleCallback(lifecycle)
+      presenter = LifecyclePresenter(context)
+    }
+    host = BrowserAuthentication { presenter }
+  }
+
+  suspend fun awaitManager(): Activity {
+    val activity =
+      checkNotNull(instrumentation.waitForMonitorWithTimeout(managerMonitor, 5000)) {
+        "Manager activity was not created"
+      }
+    instrumentation.waitForIdleSync()
+    check(
+      withTimeoutOrNull(5000) {
+        while (opened.isEmpty()) delay(10)
+        true
+      } == true
+    ) {
+      "Manager was created but did not launch the browser; finishing=${activity.isFinishing}"
+    }
+    awaitBackground(activity)
+    check(!activity.isFinishing && BrowserRequests.pending != null) {
+      "Manager closed before browser return: $events"
+    }
+    return activity
+  }
+
+  suspend fun awaitBackground(activity: Activity) =
+    withTimeout(5000) {
+      while (true) {
+        val stopped =
+          withContext(Dispatchers.Main.immediate) {
+            ActivityLifecycleMonitorRegistry.getInstance().getLifecycleStageOf(activity) ==
+              Stage.STOPPED
+          }
+        if (
+          stopped &&
+            instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString() ==
+              "com.android.settings"
+        )
+          break
+        delay(10)
+      }
+    }
+
+  fun deliver(url: String) {
+    events += "deliver $url"
+    // Launch externally, as the foreground browser would. The app itself is backgrounded here.
+    check(url.matches(Regex("[A-Za-z0-9._:/?=&-]+")))
+    val command =
+      "am start -n ${context.packageName}/${CoreBrowserCallbackActivity::class.java.name} -a android.intent.action.VIEW -d $url"
+    val output =
+      ParcelFileDescriptor.AutoCloseInputStream(
+          instrumentation.uiAutomation.executeShellCommand(command)
+        )
+        .bufferedReader()
+        .use { it.readText() }
+    events += output.replace('\n', ' ')
+    check(!output.contains("Error")) { output }
+  }
+
+  suspend fun close() {
+    scope.cancel()
+    withContext(Dispatchers.Main.immediate) {
+      BrowserRequests.pending?.let { BrowserRequests.cancel(it.id) }
+      managers.forEach { it.finish() }
+      ActivityLifecycleMonitorRegistry.getInstance().removeLifecycleCallback(lifecycle)
+    }
+    instrumentation.waitForIdleSync()
+    instrumentation.removeMonitor(browserMonitor)
+    instrumentation.removeMonitor(managerMonitor)
+  }
+}
+
+// Start the SDK's real manager/receiver activities. Only the external browser launch is
+// intercepted.
+private class LifecyclePresenter(context: Context) : Activity() {
+  init {
+    attachBaseContext(context)
+  }
+
+  override fun startActivity(intent: Intent) {
+    baseContext.startActivity(Intent(intent).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+  }
+}

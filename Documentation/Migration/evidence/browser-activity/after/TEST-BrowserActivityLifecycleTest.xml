@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="4" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T21:11:14" hostname="localhost">
+  <testsuite name="com.clerk.api.BrowserActivityLifecycleTest" tests="4" failures="0" errors="0" skipped="0" time="1.335" timestamp="2026-09-10T21:11:14" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="immediateSecondAuthorizationIsPresentedAfterFirstCallback" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.341" />
+    <testcase name="resumedManagerTreatsBrowserDismissalAsCancellation" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.164" />
+    <testcase name="actualReceiverDeliversCallbackToTheRunningManager" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.645" />
+    <testcase name="browserCallbackSurvivesDeviceRotation" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.185" />
+  </testsuite>
+</testsuites>
