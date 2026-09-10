@@ -130,3 +130,5 @@ The replaced native domain source tree has been deleted from this major. The lin
 For Expo consumers, see the [D8/R8 compiler compatibility proof](../Measurements/expo-compiler-build.md). Kotlin source compiler compatibility alone does not establish that the app can process the SDK's Kotlin metadata.
 
 The [user resource results](user-resource-results.md) record profile clearing, image deletion receipts, metadata replacement, collection filters and explicit enrollment results with packaged QuickJS evidence.
+
+The [biometric persistence audit](biometric-persistence.md) records raw metadata preservation, key replacement, nonfatal cleanup and initiating-session rollback with generated QuickJS evidence.
