@@ -22,7 +22,7 @@ internal class UserProfilePasskeyRenameViewModel(private val clerk: Clerk) : Vie
           val passkey =
             user.passkeys.find { it.id == passkeyId }
               ?: throw CoreException("passkey_not_found", "This passkey is no longer available.")
-          passkey.update(Partialtype(name = Field.Value(newName)))
+          passkey.update(UpdatePasskeyParams(name = Field.Value(newName)))
         }
         .onSuccess { _state.value = State.Success }
         .onFailure { _state.value = State.Error("Failed to rename passkey: ${it.displayMessage}") }

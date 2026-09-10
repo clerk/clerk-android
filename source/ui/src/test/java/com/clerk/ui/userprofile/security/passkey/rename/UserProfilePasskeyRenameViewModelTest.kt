@@ -3,8 +3,8 @@ package com.clerk.ui.userprofile.security.passkey.rename
 import app.cash.turbine.test
 import com.clerk.api.Clerk
 import com.clerk.api.Field
-import com.clerk.api.Partialtype
 import com.clerk.api.Passkey
+import com.clerk.api.UpdatePasskeyParams
 import com.clerk.api.User
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
@@ -39,7 +39,8 @@ class UserProfilePasskeyRenameViewModelTest {
     every { passkey.id } returns "passkey_123"
     every { user.passkeys } returns listOf(passkey)
     every { clerk.user } returns user
-    coEvery { passkey.update(Partialtype(name = Field.Value("Work laptop"))) } returns passkey
+    coEvery { passkey.update(UpdatePasskeyParams(name = Field.Value("Work laptop"))) } returns
+      passkey
 
     val viewModel = UserProfilePasskeyRenameViewModel(clerk)
     viewModel.state.test {

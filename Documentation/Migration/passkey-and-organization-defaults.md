@@ -1,0 +1,9 @@
+# Passkey parameters and organization defaults
+
+The regenerated API now uses the exported `UpdatePasskeyParams` name in `Passkey.update`. The generator previously counted the same alias through multiple barrel exports and fell back to `Partialtype`. A failing compiler fixture reproduces the naming error; deduplicating symbols fixes both Swift and Kotlin. The Compose rename caller and its test reference the corrected type. Presence semantics are unchanged: `Field.Value`, `Field.Null`, and `Field.Omitted` remain distinct.
+
+`PasskeyRegistrationTest` runs generated user registration, credential submission, rename and deletion on QuickJS, plus native cancellation before submission. It checks the host's relying party and binary data, returned resource identity, updated name and deletion receipt. It uses a deterministic credential host, not a live system enrollment.
+
+`OrganizationDefaultsTest` covers null form, missing slug, and advisory without severity. The missing-severity response failed before the shared fix, matching the backend serializer's actual `code`/`meta` shape. TypeScript now normalizes an absent severity to `warning` and exposes the existing canonical empty form/slug values. No Kotlin domain workaround is added.
+
+All 78 deterministic Android cases pass in a direct `adb shell am instrument` run. Gradle applied only the first comma-separated class filter, so its one-test run is not the full-suite evidence. Only live startup and benchmark opt-ins were excluded from the direct run. The full Apple suites pass 84 macOS and 81 iOS Simulator tests. The bundle SHA-256 is `fb59f237d749c72fffc1d8fde3b48458091b43bf4610e3d0b35f443d8cb87bbf`, source pin `e7e04dc7237f2bd4badf6f6b756942530bf219f9`, and contract `0f8387f260072ba6f894442b73d50afa6bda5f1205ed3c9209f5d6b1cfba16ce`; both native packages are byte-identical. Live credential operations, signed-in app upgrades and physical-device budgets remain release gates.
