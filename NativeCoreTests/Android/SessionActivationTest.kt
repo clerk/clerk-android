@@ -16,12 +16,15 @@ class SessionActivationTest {
   @Test fun personalAccount() = verify("personal")
   @Test fun omittedOrganization() = verify("omitted")
   @Test fun rejectedOrganization() = verify("rejected")
+  @Test fun unauthorizedOrganization() = verify("unauthorized")
   @Test fun pendingRejectionCannotOverwriteAcceptedSelection() = verify("race")
 
   private fun verify(scenario: String) = runBlocking {
     withContext(Dispatchers.Main.immediate) {
       val instrumentation = InstrumentationRegistry.getInstrumentation()
       val base = PackagedFixtures(instrumentation.context)
+      val rejectionStatus = if (scenario == "unauthorized") 401 else 403
+      val rejectionCode = if (scenario == "unauthorized") "unauthorized_organization" else "not_a_member_in_organization"
       val client = base.fixtures.getValue("authenticatedClient").jsonObject.toMutableMap()
       val sessionJson = client.getValue("sessions").jsonArray[0].jsonObject.toMutableMap()
       val user = sessionJson.getValue("user").jsonObject.toMutableMap()
@@ -55,7 +58,7 @@ class SessionActivationTest {
             if (requested == "org_rejected") {
               began.complete(Unit)
               if (scenario == "race") release.await()
-              return buildJsonObject { put("status", 403); put("headers", buildJsonObject {}); put("body", """{"errors":[{"code":"not_a_member_in_organization","message":"Unable to switch"}]}""") }
+              return buildJsonObject { put("status", rejectionStatus); put("headers", buildJsonObject {}); put("body", """{"errors":[{"code":"$rejectionCode","message":"Unable to switch"}]}""") }
             }
             sessionJson["last_active_organization_id"] = if (requested.isEmpty()) JsonNull else JsonPrimitive(requested)
             client["sessions"] = JsonArray(listOf(JsonObject(sessionJson)))
@@ -80,9 +83,9 @@ class SessionActivationTest {
           val failure = rejected.await().exceptionOrNull()
           check(failure is CoreException && failure.status == 403)
           check(clerk.session?.lastActiveOrganizationId == "org_next" && clerk.organization?.id == "org_next")
-        } else if (scenario == "rejected") {
+        } else if (scenario == "rejected" || scenario == "unauthorized") {
           val failure = runCatching { clerk.setActive(selection("org_rejected")) }.exceptionOrNull()
-          check(failure is CoreException && failure.status == 403 && failure.errors.first().code == "not_a_member_in_organization")
+          check(failure is CoreException && failure.status == rejectionStatus && failure.errors.first().code == rejectionCode)
           check(clerk.session?.lastActiveOrganizationId == "org_previous" && clerk.organization?.id == "org_previous")
         } else {
           val params = when (scenario) { "omitted" -> MobileSetActiveParams(); "personal" -> MobileSetActiveParams(organization = Field.Null); else -> selection(scenario) }
