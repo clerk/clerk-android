@@ -136,3 +136,5 @@ The [biometric persistence audit](biometric-persistence.md) records raw metadata
 The [Apple SSO verification errors](apple-auth-errors.md) records generated Apple transfer and restriction behavior, the shared verification-error serializer correction, and packaged-engine evidence.
 
 The [email-link completion audit](email-link-completion.md) records legacy flow-kind migration, incomplete callback results, cleanup/ownership checks, and generated authentication parameter coverage.
+
+The [token-only credential upgrade](token-only-credential-upgrade.md) preserves prior credentials awaiting canonical refresh while retaining explicit-clear and instance-scoping protections.

@@ -102,9 +102,9 @@ public class AndroidCredentialStorage(
       val value = Json.parseToJsonElement(snapshot).jsonObject
       // ClerkApi.json used SnakeCase and omitted fields holding their defaults.
       if ((value["schema_version"] ?: JsonPrimitive(1)) != JsonPrimitive(1) || value["instance_id"] != JsonPrimitive(hash)) return null
-      val auth = value["auth"]?.takeUnless { it == JsonNull }?.jsonObject
       val device = value["device_token"]?.takeUnless { it == JsonNull }?.jsonObject
-      if (auth?.get("state") == JsonPrimitive("cleared") || device?.get("state") == JsonPrimitive("cleared")) return null
+      // The previous major cleared client projections independently of the device credential.
+      if (device?.get("state") == JsonPrimitive("cleared")) return null
       if (device?.get("state") == JsonPrimitive("set")) return device["value"]?.takeUnless { it == JsonNull }?.requireString()
       return null
     }

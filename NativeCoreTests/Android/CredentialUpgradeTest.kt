@@ -234,6 +234,29 @@ class CredentialUpgradeTest {
     preferences.edit().clear().commit()
     Unit
   }
+
+  @Test fun clearedClientSnapshotRetainsItsIndependentDeviceCredentialForRefresh() = runBlocking {
+    val key = "fixture-token-only-" + UUID.randomUUID()
+    try {
+      val snapshot = buildJsonObject {
+        put("instance_id", instanceHash(key))
+        put("auth", buildJsonObject { put("state", "cleared"); put("version", "empty-client") })
+        put("device_token", buildJsonObject {
+          put("state", "set"); put("version", "retained-token"); put("changed_at_millis", 1700000000000)
+          put("value", "retained-credential")
+        })
+      }
+      val bytes = encrypted(snapshot.toString())
+      preferences.edit().clear().putString("SHARED_SESSION_SYNC_SNAPSHOT", bytes)
+        .putString("DEVICE_TOKEN", encrypted("older-credential")).commit()
+      check(AndroidCredentialStorage(context, key).read() == "retained-credential")
+      check(AndroidCredentialStorage(context, key).read() == "retained-credential")
+      check(preferences.getString("SHARED_SESSION_SYNC_SNAPSHOT", null) == bytes)
+      AndroidCredentialStorage(context, key).remove()
+      check(AndroidCredentialStorage(context, key).read() == null)
+    } finally { cleanup(key); preferences.edit().clear().commit() }
+    Unit
+  }
 }
 
 @Serializable
