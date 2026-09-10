@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="8" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T18:26:56" hostname="localhost">
+  <testsuite name="com.clerk.api.EmailLinkCompletionTest" tests="8" failures="0" errors="0" skipped="0" time="1.523" timestamp="2026-09-10T18:26:56" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="incompleteSignInPublishesContinuation" classname="com.clerk.api.EmailLinkCompletionTest" time="0.293" />
+    <testcase name="nullLegacyIOSKindStillSignsIn" classname="com.clerk.api.EmailLinkCompletionTest" time="0.179" />
+    <testcase name="signUpCannotConsumeSignInTicket" classname="com.clerk.api.EmailLinkCompletionTest" time="0.191" />
+    <testcase name="validAndroidSignInStateStillSignsIn" classname="com.clerk.api.EmailLinkCompletionTest" time="0.179" />
+    <testcase name="incompleteSignUpPublishesContinuation" classname="com.clerk.api.EmailLinkCompletionTest" time="0.198" />
+    <testcase name="nullAndroidStateCannotRedeemVerifier" classname="com.clerk.api.EmailLinkCompletionTest" time="0.149" />
+    <testcase name="unknownAndroidStateCannotRedeemVerifier" classname="com.clerk.api.EmailLinkCompletionTest" time="0.154" />
+    <testcase name="missingLegacyIOSKindStillSignsIn" classname="com.clerk.api.EmailLinkCompletionTest" time="0.180" />
+  </testsuite>
+</testsuites>

@@ -1,0 +1,105 @@
+(node:62534) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ signIn email-link storage failure preserves the persistence-before-request boundary (26.716833ms)
+✔ signIn email-link prepare failure preserves the persistence-before-request boundary (7.901541ms)
+✔ signUp email-link storage failure preserves the persistence-before-request boundary (6.462291ms)
+✔ signUp email-link prepare failure preserves the persistence-before-request boundary (6.711833ms)
+✔ native signIn email link stores PKCE and returns the canonical resource without activation (11.182917ms)
+✔ native signUp email link stores PKCE and returns the canonical resource without activation (11.922584ms)
+✔ email-link callbacks survive restart and reject a different route or flow before HTTP (14.13975ms)
+✔ concurrent callbacks share one completion request (10.309042ms)
+✔ email link approval_token_expired clears its saved verifier (8.797916ms)
+✔ email link temporarily_unavailable preserves its saved verifier (7.175542ms)
+✔ reset during a secure-storage write clears the eventual record and does not prepare the factor (6.858625ms)
+✔ imports a saved ios email-link record through the same source validation (5.938458ms)
+✔ imports a saved android email-link record through the same source validation (7.03675ms)
+✔ expired email-link records are removed before any completion request (4.926291ms)
+✔ reset fences a delayed completion response and its credential write (7.941709ms)
+✔ preserves the previous native email-link route form clerk-test://sso-callback#flow_id=sia_native&approval_token=fixture_approval (9.00125ms)
+✔ preserves the previous native email-link route form clerk-test://sso-callback/?flow_id=sia_native&approval_token=fixture_approval (10.02775ms)
+✔ preserves the previous native email-link route form CLERK-TEST://SSO-CALLBACK/#flow_id=sia_native&approval_token=fixture_approval (7.306416ms)
+✔ email-link route mismatches and incomplete callbacks do not consume stored credentials (9.511625ms)
+✔ email-link query values take precedence over fragment values (7.08175ms)
+✔ invalid Android email-link state is discarded before redemption: "UNSUPPORTED" (5.198333ms)
+✔ invalid Android email-link state is discarded before redemption: "" (4.993833ms)
+✔ invalid Android email-link state is discarded before redemption: null (5.304542ms)
+✔ invalid Android email-link state is discarded before redemption: 7 (6.818125ms)
+✔ legacy iOS absent email-link kind remains a sign-in record: undefined (6.360333ms)
+✔ legacy iOS absent email-link kind remains a sign-in record: null (6.27725ms)
+✔ incomplete signIn email-link completion publishes remaining requirements without activation (7.934625ms)
+✔ incomplete signUp email-link completion publishes remaining requirements without activation (6.829208ms)
+✔ sign-up email-link rejects ticket completion and consumes its verifier (7.069084ms)
+✔ sign-up email-link rejects wrong-signup completion and consumes its verifier (7.01175ms)
+✔ sign-up email-link rejects null completion and consumes its verifier (7.06625ms)
+✔ starting a newer email link fences an old completion and preserves the new verifier (10.152584ms)
+✔ email-link error approval_token_consumed/422 preserves the canonical cleanup policy (6.706417ms)
+✔ email-link error approval_token_invalid/422 preserves the canonical cleanup policy (6.937792ms)
+✔ email-link error pkce_verification_failed/422 preserves the canonical cleanup policy (7.419459ms)
+✔ email-link error flow_not_approved/422 preserves the canonical cleanup policy (7.214333ms)
+✔ email-link error form_param_value_invalid/flow_id preserves the canonical cleanup policy (7.111084ms)
+✔ email-link error form_param_value_invalid/identifier preserves the canonical cleanup policy (9.798666ms)
+✔ email-link error server_error/500 preserves the canonical cleanup policy (6.585125ms)
+✔ email-link error too_many_requests/429 preserves the canonical cleanup policy (6.612042ms)
+(node:62535) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ shared Google credential flow: existing (26.148917ms)
+✔ shared Google credential flow: new (8.405166ms)
+✔ shared Google credential flow: sign-in-only (6.582583ms)
+✔ shared Google credential flow: rejected (5.616083ms)
+✔ shared Google credential flow: empty-picker (9.839541ms)
+✔ shared Google credential flow: cancelled (7.224666ms)
+✔ identifier screen signIn, missing=true (6.155584ms)
+✔ identifier screen signIn, missing=false (6.56075ms)
+✔ identifier screen signUp, missing=true (7.182208ms)
+✔ identifier screen signUp, missing=false (9.496083ms)
+✔ identifier screen signInOrUp, missing=true (7.965083ms)
+✔ identifier screen signInOrUp, missing=false (7.715333ms)
+✔ reset cancels the Google picker before a late token can authenticate (8.116917ms)
+(node:62536) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ rejected organization activation preserves session organization and cached token: 401 (30.123ms)
+✔ rejected organization activation preserves session organization and cached token: 403 (7.669042ms)
+✔ forced organization selection rejects personal selection without a request (5.886333ms)
+✔ a retained session reads a fresh template token after accepted organization activation (13.591667ms)
+✔ accepted organization activation preserves canonical option meaning: org_next (9.663292ms)
+✔ accepted organization activation preserves canonical option meaning: null (7.179084ms)
+✔ accepted organization activation preserves canonical option meaning: undefined (7.977583ms)
+✔ a pending rejected switch cannot publish its target or overwrite a newer accepted switch (11.305667ms)
+(node:62537) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ generated sign-out request and cache policy: scoped=false, rejected=false (31.479459ms)
+✔ generated sign-out request and cache policy: scoped=false, rejected=true (10.050166ms)
+✔ generated sign-out request and cache policy: scoped=true, rejected=false (10.028875ms)
+✔ generated sign-out request and cache policy: scoped=true, rejected=true (12.305125ms)
+(node:62538) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ signIn.sso runs the generated operation on the real future facade without a browser global or implicit finalization (25.047125ms)
+✔ signIn.sso preserves remaining requirements (5.397375ms)
+✔ signIn.sso returns native cancellation through its error envelope without reconciling or activating (4.432666ms)
+✔ signIn.sso rejects an unrelated callback before sending a nonce (5.642958ms)
+✔ signUp.sso runs the generated operation on the real future facade without a browser global or implicit finalization (4.890042ms)
+✔ signUp.sso preserves remaining requirements (5.329125ms)
+✔ signUp.sso returns native cancellation through its error envelope without reconciling or activating (4.649208ms)
+✔ signUp.sso rejects an unrelated callback before sending a nonce (5.3475ms)
+✔ signIn.sso preserves native query nonce semantics (27.97625ms)
+✔ signUp.sso preserves native query nonce semantics (26.881042ms)
+✔ signIn.sso preserves the caller's raw OIDC prompt string (39.42375ms)
+✔ signUp.sso preserves the caller's raw OIDC prompt string (40.799208ms)
+ℹ tests 77
+ℹ suites 0
+ℹ pass 77
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 445.850875

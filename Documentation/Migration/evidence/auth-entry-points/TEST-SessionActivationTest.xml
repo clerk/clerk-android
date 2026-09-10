@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="6" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T18:26:51" hostname="localhost">
+  <testsuite name="com.clerk.api.SessionActivationTest" tests="6" failures="0" errors="0" skipped="0" time="1.171" timestamp="2026-09-10T18:26:51" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="pendingRejectionCannotOverwriteAcceptedSelection" classname="com.clerk.api.SessionActivationTest" time="0.267" />
+    <testcase name="personalAccount" classname="com.clerk.api.SessionActivationTest" time="0.188" />
+    <testcase name="rejectedOrganization" classname="com.clerk.api.SessionActivationTest" time="0.164" />
+    <testcase name="acceptedOrganization" classname="com.clerk.api.SessionActivationTest" time="0.183" />
+    <testcase name="unauthorizedOrganization" classname="com.clerk.api.SessionActivationTest" time="0.182" />
+    <testcase name="omittedOrganization" classname="com.clerk.api.SessionActivationTest" time="0.187" />
+  </testsuite>
+</testsuites>

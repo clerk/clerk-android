@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="4" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T18:24:57" hostname="localhost">
+  <testsuite name="com.clerk.api.AuthEntryPointTest" tests="4" failures="0" errors="0" skipped="0" time="0.819" timestamp="2026-09-10T18:24:57" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="phoneCodeUsesExplicitPreparation" classname="com.clerk.api.AuthEntryPointTest" time="0.253" />
+    <testcase name="emailCodeUsesExplicitPreparation" classname="com.clerk.api.AuthEntryPointTest" time="0.209" />
+    <testcase name="unrelatedAndOAuthCallbacksAreNotRedeemedAsEmailLinks" classname="com.clerk.api.AuthEntryPointTest" time="0.182" />
+    <testcase name="signupPreservesNestedMetadata" classname="com.clerk.api.AuthEntryPointTest" time="0.175" />
+  </testsuite>
+</testsuites>

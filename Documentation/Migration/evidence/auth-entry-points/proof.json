@@ -1,0 +1,256 @@
+{
+  "android_base_commit": "7b267f651fd347037e67dca11a263a904aa886e2",
+  "javascript_commit": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+  "runtime_changes": false,
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "retired_legacy_files": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/auth/AuthHandleTest.kt",
+      "sha256": "7d8f7f6f782b7ffc7752a265456d5a9f5f287eeb654702f1d5a2df32ad2d2f79",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "handle completes native magic link callback without SSO fallback",
+          "line": 45
+        },
+        {
+          "name": "handle completes SSO callback when URI is Clerk scheme and not magic link",
+          "line": 60
+        },
+        {
+          "name": "handle completes hosted auth callback before SSO fallback",
+          "line": 76
+        },
+        {
+          "name": "handle returns false for non Clerk URIs",
+          "line": 92
+        },
+        {
+          "name": "handle returns false for null URI",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/auth/AuthOtpTest.kt",
+      "sha256": "c4ffcc0b7a89c507348408167cd30c3b8f4a8069de909f93450247ce709e1bd0",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signInWithOtp for email creates email code flow instead of native email link",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/auth/AuthStartHostedAuthTest.kt",
+      "sha256": "01352fa6258f397c190ba7126b0f17377d4b121a2e1a2eb3a1184f4fbe6a426f",
+      "category": "unavailable-feature",
+      "cases": [
+        {
+          "name": "startHostedAuth activates the created session via setActive",
+          "line": 43
+        },
+        {
+          "name": "startHostedAuth succeeds under forced organization selection using the applied session",
+          "line": 64
+        },
+        {
+          "name": "startHostedAuth propagates hosted auth failures without activation",
+          "line": 82
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/auth/AuthTest.kt",
+      "sha256": "9374564829f8a4dc5326499de5a4a8c7cd74d045a91f64c35a87a99b4e5bacf4",
+      "category": "source-domain",
+      "cases": [
+        {
+          "name": "signUpWithGoogleOneTap delegates to transferable Google One Tap flow",
+          "line": 65
+        },
+        {
+          "name": "signUpWithOAuth delegates to sign-up redirect flow",
+          "line": 79
+        },
+        {
+          "name": "signUp forwards unsafe metadata",
+          "line": 109
+        },
+        {
+          "name": "signUpWithGoogleOneTap emits auth error event on failure",
+          "line": 138
+        },
+        {
+          "name": "signInWithOtp email creates sign in with strategy without preparing first factor",
+          "line": 174
+        },
+        {
+          "name": "signInWithOtp phone creates sign in with strategy without preparing first factor",
+          "line": 196
+        },
+        {
+          "name": "sessions exposes all sessions on the current client",
+          "line": 218
+        },
+        {
+          "name": "signOut with session ID removes only that session locally",
+          "line": 233
+        },
+        {
+          "name": "setActive updates the active session locally",
+          "line": 262
+        },
+        {
+          "name": "setActive sends select org intent with active organization id",
+          "line": 291
+        },
+        {
+          "name": "setActive no-ops personal account selection when organization selection is forced",
+          "line": 320
+        },
+        {
+          "name": "setActive restores active session when response client sync clears local sessions",
+          "line": 346
+        },
+        {
+          "name": "setActive keeps active session when follow-up client refresh omits it",
+          "line": 380
+        },
+        {
+          "name": "setActive keeps active session when follow-up refresh returns stale lastActiveSessionId",
+          "line": 407
+        }
+      ]
+    }
+  ],
+  "packaged_execution": {
+    "device": "Pixel_9_Pro API 36 arm64 emulator",
+    "passed": 46,
+    "failed": 0,
+    "skipped": 0,
+    "suites": [
+      {
+        "class": "com.clerk.api.GoogleIdentityContractTest",
+        "cases": [
+          "existingAccountRequiresFinalization",
+          "missingAccountCreatesSignupWithMetadata",
+          "signInOnlyDoesNotCreateAccount",
+          "rejectedIdentityDoesNotOpenBrowser",
+          "failedSignupPreservesStructuredError",
+          "emptyPickerFallsBackToBrowser",
+          "cancelledPickerDoesNotOpenBrowser",
+          "blankIdentityTokenDoesNotAuthenticate",
+          "resetIgnoresLateIdentityToken"
+        ],
+        "source": "NativeCoreTests/Android/GoogleIdentityContractTest.kt",
+        "source_sha256": "b8a6fe22e51a54f5b3f8853ce2a7a8bbc523a327fb47b9557c2350be1cf08584",
+        "report": "TEST-GoogleIdentityContractTest.xml",
+        "report_sha256": "432d08c4bb3fe77129033e3876eda24ba8add69c90f5779ecba4337eec021938"
+      },
+      {
+        "class": "com.clerk.api.AuthEntryPointTest",
+        "cases": [
+          "emailCodeUsesExplicitPreparation",
+          "phoneCodeUsesExplicitPreparation",
+          "signupPreservesNestedMetadata",
+          "unrelatedAndOAuthCallbacksAreNotRedeemedAsEmailLinks"
+        ],
+        "source": "NativeCoreTests/Android/AuthEntryPointTest.kt",
+        "source_sha256": "e331d037380b7fa91aead0eea38f1caf9216c0494f242c2fc1c4de51bee94c98",
+        "report": "TEST-AuthEntryPointTest.xml",
+        "report_sha256": "391cf88c82fa6efe4e12de05b1f37f6ea3b01e4974fd42707dfab8f3dd2ca1db"
+      },
+      {
+        "class": "com.clerk.api.SessionSelectionContractTest",
+        "cases": [
+          "selectsExistingSessionWithoutFollowupRefresh",
+          "explicitSelectionOverridesStaleClientSelection",
+          "emptyTouchClientDoesNotRestoreSession",
+          "laterEmptyRefreshClearsSelectedSession",
+          "forcedPersonalSelectionKeepsCurrentSession",
+          "omittedOrganizationStillSelectsSessionWhenOrganizationsAreForced",
+          "returnedOrganizationStateOverridesRequestedOrganization",
+          "selectedSessionSignoutLeavesRemainingSessionUnselected"
+        ],
+        "source": "NativeCoreTests/Android/SessionSelectionContractTest.kt",
+        "source_sha256": "ecb99aaa1259fcd3c7b97bfacf0d9fa79a4d34e2b9c1f9497d2f4ef8fa5b3399",
+        "report": "TEST-SessionSelectionContractTest.xml",
+        "report_sha256": "e65c4e6edbd01b4627682f4ee7a2a84da5d34244334c4b776960745b64e7a6a6"
+      },
+      {
+        "class": "com.clerk.api.PackagedCoreTest",
+        "cases": [
+          "completedSignInSurvivesClientRefreshUntilExplicitFinalization",
+          "credentialRotationRejectsResponsesIssuedWithThePreviousCredential",
+          "canonicalClientRequiresANewOrRestoredCredential",
+          "previousNativeEmailLinkCallbackFormsCompleteWithoutActivation",
+          "authRequestsUseDeviceLocaleAndAllowExplicitSignUpLocale",
+          "structuredErrorsPreserveServerStatusRetryAndTrace",
+          "factorDiscriminantsPreserveDeviceAndRecoveryFields",
+          "olderClientResponseCannotRemoveANewerPendingTaskOrCredential",
+          "sessionReloadReturnsReadableStateAfterTheOwnerStopsSelectingIt",
+          "missingAndPartialOrganizationSettingsDoNotPreventStartup",
+          "generatedApiUsesPackagedCore"
+        ],
+        "source": "NativeCoreTests/Android/PackagedCoreTest.kt",
+        "source_sha256": "6d681b2321e1a53f2435102756b4b20672432e49e15430716e35e4def89346f6",
+        "report": "TEST-PackagedCoreTest.xml",
+        "report_sha256": "5a5b9d8c78d189e0c106e0fcbc9a9a3f9571b0c0744d454a5a069599d54d15f7"
+      },
+      {
+        "class": "com.clerk.api.SessionActivationTest",
+        "cases": [
+          "acceptedOrganization",
+          "personalAccount",
+          "omittedOrganization",
+          "rejectedOrganization",
+          "unauthorizedOrganization",
+          "pendingRejectionCannotOverwriteAcceptedSelection"
+        ],
+        "source": "NativeCoreTests/Android/SessionActivationTest.kt",
+        "source_sha256": "8ffbbedac50b02666911cdac90b0ee6ec1fd17ebbd4af7cfc5c22fa8eff27da3",
+        "report": "TEST-SessionActivationTest.xml",
+        "report_sha256": "ed95c68a8bdfa5e443fa0ddba88b6c1a2a61174a3fcd227f1f955f2bb3fa4019"
+      },
+      {
+        "class": "com.clerk.api.EmailLinkCompletionTest",
+        "cases": [
+          "unknownAndroidStateCannotRedeemVerifier",
+          "nullAndroidStateCannotRedeemVerifier",
+          "missingLegacyIOSKindStillSignsIn",
+          "nullLegacyIOSKindStillSignsIn",
+          "validAndroidSignInStateStillSignsIn",
+          "incompleteSignInPublishesContinuation",
+          "incompleteSignUpPublishesContinuation",
+          "signUpCannotConsumeSignInTicket"
+        ],
+        "source": "NativeCoreTests/Android/EmailLinkCompletionTest.kt",
+        "source_sha256": "ca11a29a8752f1d38d3a781b2debe4fcdec7a17a5ed3e3128323baeca602126c",
+        "report": "TEST-EmailLinkCompletionTest.xml",
+        "report_sha256": "fd5703f30c41e27155d947b8392bd492d0e5fcdb8fd20bb1bd450af00ef9092d"
+      }
+    ]
+  },
+  "embedded_execution": {
+    "passed": 77,
+    "failed": 0,
+    "skipped": 0,
+    "command": "node --no-opt --test packages/mobile-runtime/test/{mobile-identifier-google,session-activation,session-sign-out,magic-link,sso}.test.mjs",
+    "log": "embedded.log"
+  },
+  "files": {
+    "scripts/run-auth-entry-contract.sh": "06ab5365d91994e828e27de26cc8cd65bf3e79f178d21e480f518dd9d94e99be",
+    ".github/workflows/android-test.yml": "f1a17e729484bcb03c0e7d4d097b5dedd5eb42f499171be5d439ebd95d28d7b6",
+    "NativeCore/GeneratedAPI.kt": "9da5ea1fd2a525da8584459a24ead878d6e125d10381628871615b60cf4c650f",
+    "NativeCore/BundledCore.kt": "26a8cb150c3261a488bb80ef5839236159b5060cb01e52bb5facc43f9e0de2b8",
+    "Documentation/Migration/evidence/auth-entry-points/embedded.log": "42483b5e9aeb27119e361d80621c8c42ac477dbfc8ce6e054c48dc86ff7e1265",
+    "Documentation/Migration/evidence/auth-entry-points/native-gate.log": "831396812d49cb92b02da5ecb6271ac132520929be8d54e8644d80a8ccc716a2"
+  },
+  "limits": [
+    "Identity and HTTP responses are fixtures; no real Google picker or live authentication.",
+    "Hosted-portal protocol remains unsupported.",
+    "Live upgrade, physical prompt and performance release gates remain open."
+  ]
+}

@@ -111,6 +111,8 @@ After finalization, inspect the session status and current task. Compose `AuthVi
 
 For methods retaining their names, inspect `NativeCore/public-api.txt`: parameter objects, result unions, capitalization and pagination can still change. Kotlin types now consistently belong to `com.clerk.api`. Theme/presentation utilities belong to the UI module. Resource method completions apply state before returning or throwing; observing a copied old DTO does not reproduce this contract.
 
+Session selection follows the shared core. Signing out the selected session leaves other sessions available but unselected. An empty server client clears selection; the old native wrapper's session-restoration fallback is removed. `setActive` with an omitted organization selects the session without requesting an organization change; `Field.Null` explicitly requests a personal workspace and remains a no-op when organization selection is forced. Returned organization state is not overwritten with the requested ID. See the [authentication entry-point audit](auth-entry-test-audit.md) for exact old/new behavior and execution evidence.
+
 ## Credential continuity and unavailable surfaces
 
 The new secure store uses an app-private non-backed-up encrypted record. It imports only matching prior-format identities and preserves durable clears. The previous cached publishable key or explicit `legacyPublishableKey` establishes instance scope; a token from another instance is not adopted. See [credential continuity](../../NATIVE_CORE.md#credential-continuity).
