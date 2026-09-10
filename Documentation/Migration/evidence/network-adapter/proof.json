@@ -1,0 +1,161 @@
+{
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "retired": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/configuration/connectivity/NetworkConnectivityMonitorTest.kt",
+      "sha256": "d6ebc1c536e39467720b43b329507f77cd134224edc63a68b92873366815860e",
+      "category": "core-lifecycle",
+      "cases": [
+        {
+          "name": "initial connectivity state is true by default",
+          "line": 51
+        },
+        {
+          "name": "configure sets up connectivity monitoring and checks initial state",
+          "line": 67
+        },
+        {
+          "name": "configure detects initial offline state correctly",
+          "line": 106
+        },
+        {
+          "name": "isCurrentlyConnected checks latest connectivity",
+          "line": 127
+        },
+        {
+          "name": "stop unregisters network callback and cleans up resources",
+          "line": 148
+        },
+        {
+          "name": "callback is invoked when connectivity is restored after being offline",
+          "line": 173
+        },
+        {
+          "name": "callback is not invoked when network is lost but still has other connection",
+          "line": 215
+        },
+        {
+          "name": "multiple configure calls only update callback without re-registering",
+          "line": 257
+        },
+        {
+          "name": "resetForTesting resets all state",
+          "line": 288
+        },
+        {
+          "name": "network capabilities change triggers state update",
+          "line": 313
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "NativeCore/Android/AndroidNetwork.kt": "d501619127e68ed0789a9a84c59a5ad875296d6ce44b29f0a9ff6b178c025463",
+    "NativeCoreTests/Unit/AndroidNetworkTest.kt": "38a018c857858ff3e5e7f14b27e3f2ad4b7e69653eaafb93e0fd6ec2a2b51396",
+    "NativeCoreTests/Android/LifecycleContractTest.kt": "93b5a52a733bc7edaf1f4ac72c0c6ac8601dde6c59f3c827d495f4fbc9623c8d",
+    "source/api/build.gradle.kts": "6b47369e8b00f470c6ca905039762a7f4750c6852c0ef32e40542cdb01370909"
+  },
+  "unit": {
+    "passed": 25,
+    "reports": {
+      "TEST-com.clerk.api.AndroidTimerCapabilityTest.xml": {
+        "passed": 2,
+        "sha256": "fbb307f007322ceaf5ca632d2c9ad1bd4d29602091e64276754d68944cee482a",
+        "methods": [
+          "fractionalTimerCompletes",
+          "fractionalTimerCanBeCancelled"
+        ]
+      },
+      "TEST-com.clerk.api.ClerkConfigurationTest.xml": {
+        "passed": 4,
+        "sha256": "55914f60d6f8ac4069df1a25e82be2b6978ec6fbda1bd32afd1c706aade15cbd",
+        "methods": [
+          "validKeysNormalizeWhitespaceAndPreserveTheConfiguredCallback",
+          "invalidPublishableKeysAlwaysProduceStructuredErrors",
+          "invalidCallbackRoutesAlwaysProduceStructuredErrors",
+          "httpsCallbacksAreAcceptedForPlatformsSupportingVerifiedLinks"
+        ]
+      },
+      "TEST-com.clerk.api.AndroidHTTPCapabilityTest.xml": {
+        "passed": 6,
+        "sha256": "656acfdfdc6911a770f5f9dccd4e0ab17fb64a054d8a7b5f8d477d6039c72726",
+        "methods": [
+          "cancellationRemainsConnectedWhileReadingResponseBody",
+          "invalidUTF8DoesNotSilentlyBecomeReplacementCharacters",
+          "rejectsUntrustedOriginsAndRedirectsBeforeForwardingCredentials",
+          "preservesMethodsQueryBodiesAndErrorResponse",
+          "filtersCookieAndHostOverridesWhileKeepingCoreIdentityHeaders",
+          "failuresBeforeAndAfterHeadersUseTheSameStructuredNetworkError"
+        ]
+      },
+      "TEST-com.clerk.api.AndroidNetworkTest.xml": {
+        "passed": 13,
+        "sha256": "09e1140980349416b8e080de5a3dedc4a7e551edaa5000a02e74ac4ac543b87c",
+        "methods": [
+          "subscriptionsHaveIndependentCallbacksAndCleanup[24]",
+          "registrationFailureLeavesRequestsEligibleInsteadOfPermanentlyOffline[24]",
+          "olderAndroidAvailabilityRestoresEligibilityWithoutCapabilityChange[24]",
+          "handoverIgnoresLateEventsFromTheReplacedDefaultNetwork[24]",
+          "initialStateRequiresBothInternetAndValidation[24]",
+          "currentNetworkCapabilityChangesUseTheDeliveredCapabilities[24]",
+          "subscriptionsHaveIndependentCallbacksAndCleanup",
+          "registrationFailureLeavesRequestsEligibleInsteadOfPermanentlyOffline",
+          "handoverIgnoresLateEventsFromTheReplacedDefaultNetwork",
+          "initialStateRequiresBothInternetAndValidation",
+          "currentNetworkCapabilityChangesUseTheDeliveredCapabilities",
+          "initiallyOfflineWaitsForValidatedAvailabilityAndReportsLoss",
+          "olderAndroidAvailabilityRestoresEligibilityWithoutCapabilityChange"
+        ]
+      }
+    }
+  },
+  "lifecycle": {
+    "passed": 5,
+    "file": "TEST-LifecycleContractTest.xml",
+    "sha256": "3142bc975c34b5ddbb88d09fae177acede7d67a0598e82d34bfde17d6a8d75d5",
+    "methods": [
+      "releasingTheLastOwnerUnsubscribesLifecycleAndConnectivity",
+      "lifecycleEventsRefreshResourcesAndStopAfterClose",
+      "networkRestorationRefreshesTheOwnerAndStopsAfterClose",
+      "failedForegroundReloadDoesNotDisableTheOwnerAndCanRecover",
+      "foregroundDuringOAuthRedemptionWaitsForAuthentication"
+    ],
+    "device": "API 36 arm64 emulator-5554"
+  },
+  "shared": {
+    "passed": 4,
+    "file": "shared-connectivity.log",
+    "sha256": "e60088a390bf608647adb47c19fd8fbfcbf5ceb3e7bd2803757d379913e85fc2",
+    "javascriptRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+    "testSourceSHA256": "c50d7ae01fafd630ef831fc0107c48d9275d8ecc1777e75421bde5b3fdb4895e",
+    "bundleSHA256": "406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d",
+    "warning": "Existing MODULE_TYPELESS_PACKAGE_JSON warning for clerk-js/src/test/fixtures.ts; no JavaScript package configuration changed."
+  },
+  "androidSourceEvidence": [
+    {
+      "url": "https://android.googlesource.com/platform/frameworks/base/+/android-7.0.0_r1/services/core/java/com/android/server/ConnectivityService.java",
+      "sha256": "5dae02d46355da4fcea3931ed32137608c846e14fe40b7912e7b8ea1290ee9a9",
+      "symbol": "notifyNetworkCallback",
+      "observation": "Availability notification does not synthesize a capabilities callback"
+    },
+    {
+      "url": "https://android.googlesource.com/platform/frameworks/base/+/android-7.0.0_r1/core/java/android/net/ConnectivityManager.java",
+      "sha256": "d2a9bb478ce43e9ffbb259ae808a354433605803133a421aabe5ec6f6ae83bed",
+      "symbol": "CallbackHandler.handleMessage CALLBACK_AVAILABLE",
+      "observation": "Availability notification does not synthesize a capabilities callback"
+    },
+    {
+      "url": "https://android.googlesource.com/platform/frameworks/base/+/android-7.1.0_r1/services/core/java/com/android/server/ConnectivityService.java",
+      "sha256": "f56050431096fd008d5a86388de8b5758e82fdd32e3fcba66596ef06aaa67b4e",
+      "symbol": "notifyNetworkCallback",
+      "observation": "Availability notification does not synthesize a capabilities callback"
+    },
+    {
+      "url": "https://android.googlesource.com/platform/frameworks/base/+/android-7.1.0_r1/core/java/android/net/ConnectivityManager.java",
+      "sha256": "0003a7ff83412a0a456dbeb5156d54a9f2857dfb9914dac1d7b342c25fd14d73",
+      "symbol": "CallbackHandler.handleMessage CALLBACK_AVAILABLE",
+      "observation": "Availability notification does not synthesize a capabilities callback"
+    }
+  ],
+  "callbackReference": "https://developer.android.com/reference/android/net/ConnectivityManager.NetworkCallback"
+}

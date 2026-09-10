@@ -146,6 +146,7 @@ dependencies {
   implementation(libs.androidx.lifecycle.process)
   implementation(libs.okhttp)
   testImplementation(libs.junit)
+  testImplementation(libs.robolectric)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation("androidx.test:runner:1.7.0")

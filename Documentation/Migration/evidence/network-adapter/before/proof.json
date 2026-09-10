@@ -1,0 +1,12 @@
+{
+  "revision": "7b8a7411062dcec8d58e185e7d64bdb91d3289b3",
+  "runtimeSHA256": "d14fe80bf39ac254d0e9d0ba9ffbd37234de60268dafeb8fddea728f8109a469",
+  "testSourceSHA256": "38a018c857858ff3e5e7f14b27e3f2ad4b7e69653eaafb93e0fd6ec2a2b51396",
+  "tests": 13,
+  "failures": [
+    "olderAndroidAvailabilityRestoresEligibilityWithoutCapabilityChange[24]",
+    "olderAndroidAvailabilityRestoresEligibilityWithoutCapabilityChange"
+  ],
+  "reportSHA256": "6a05852c260e75936f5255a1749e83328e33f8b8d203c2b84796d34ec39c3540",
+  "runtime": "Robolectric 4.16.1; API 24, 25 and 36 as selected by test annotations"
+}

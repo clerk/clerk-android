@@ -1,51 +1,46 @@
 # Lifecycle and connectivity assertion audit
 
-This audit reviews all ten assertions/tests in the old `configuration/connectivity/NetworkConnectivityMonitorTest.kt` and tests the new lifecycle adapter through the packaged QuickJS core. It does not retire the old connectivity tests or claim complete feature equivalence.
+All ten declarations and complete bodies in `source/api/src/test/java/com/clerk/api/configuration/connectivity/NetworkConnectivityMonitorTest.kt` were reviewed and hash-checked against baseline `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. The old private singleton suite is retired. [The proof](evidence/network-adapter/proof.json) retains its original hash and declarations, current source hashes, unit reports and packaged lifecycle results.
 
-## Current lifecycle proof
+## Android adapter and API 24/25 recovery
 
-`NativeCoreTests/Android/LifecycleContractTest.kt` drives a real AndroidX `LifecycleRegistry` through CREATED/STARTED/RESUMED/DESTROYED. The production lifecycle adapter receives that owner instead of the process owner; its default remains `ProcessLifecycleOwner`. Requests execute the packaged core, and tests assert generated resources:
+`NativeCoreTests/Unit/AndroidNetworkTest.kt` exercises the production adapter through Robolectric's ConnectivityManager. Seven source methods produce thirteen cases across their selected API 24, 25 and 36 configurations. They check initial Internet/validated capabilities, offline availability, delivered capability changes, replacement-default event isolation, separate subscriptions and unregistration, and registration failure. The API module uses the same test-only Robolectric version already in the repository's catalog and UI test target.
 
-- STARTED refreshes available sessions; RESUMED does not trigger another foreground reload.
-- Refreshing the session list leaves session adoption explicit. A listed session does not silently become the active session.
-- Closing the runtime removes the observer; later lifecycle transitions cause no further client reads.
-- A failed foreground reload exposes `lastLifecycleError` while the runtime remains available. A generated reset succeeds and a later activation can recover the available-session list.
+The audit found an API 24/25 recovery defect. The adapter waited for a capabilities event after every availability event. Android only guarantees immediate capabilities delivery from API 26 onward. In the Android 7.0 and 7.1 implementations, the service's initial/default availability notification sends an availability message; the app-side dispatcher invokes only `onAvailable` for it. Capability changes are a separate event. A previously offline adapter could therefore remain ineligible for HTTP after availability returned without a capability change. See the [callback contract](https://developer.android.com/reference/android/net/ConnectivityManager.NetworkCallback), [Android 7.0 service](https://android.googlesource.com/platform/frameworks/base/+/android-7.0.0_r1/services/core/java/com/android/server/ConnectivityService.java), and [Android 7.1 dispatcher](https://android.googlesource.com/platform/frameworks/base/+/android-7.1.0_r1/core/java/android/net/ConnectivityManager.java).
 
-The lifecycle suite now has five tests, including connectivity restoration,
-last-owner collection, and [foreground during OAuth callback redemption](foreground-auth-recovery.md), and passes on an Android 16 emulator. The failure test
-awaits `lastLifecycleError.value`, rather than checking the non-null StateFlow
-container. These are synthetic lifecycle events with fixture HTTP, not proof of
-real process suspension/death, network reconnection, or a signed-in app upgrade.
-The separate JavaScript `Session.test.ts` and `tokenCache.test.ts` run passes 166
-tests, including native background suppression and subsequent foreground token
-recovery. No Kotlin polling/backoff implementation is recreated.
+On API 24/25, availability now treats the incomplete observation as eligible to attempt HTTP. A later capabilities or loss event updates that eligibility. API 26 and later continue waiting for validated Internet capabilities. This does not assert server reachability or suppress HTTP errors; TypeScript still owns recovery and authentication behavior. No native polling, retry loop or synchronous query inside a network callback is added.
 
-`releasingTheLastOwnerUnsubscribesLifecycleAndConnectivity` first waits for a weak
-runtime reference to clear, then checks that the AndroidX lifecycle registry has
-no observer and the network unsubscribe callback has run. A subsequent lifecycle
-transition causes no HTTP. Before the fix, collection succeeded but unsubscribe
-never happened. The cleanup record now retains teardown actions independently
-of the runtime and dispatches them on the owner's dispatcher, including after
-collection. Explicit close uses the same once-only cleanup and removes its
-record from the collection queue's retained set. A failing teardown action does
-not prevent remaining actions or transport closure.
+The same test source fails both API 24 and API 25 regression cases before the fix and passes afterward. [Before evidence](evidence/network-adapter/before/proof.json) records those two failures among thirteen cases. All 25 API unit cases pass with the change. The deprecated NetworkInfo APIs used solely to configure Robolectric's network fixture are locally suppressed in that helper; the production adapter uses Network and NetworkCapabilities.
 
-The initial test attempt accidentally retained the weak-reference result while
-requesting GC from a coroutine frame. The final test reads the reference in a
-separate non-suspending helper; its reproduced failure was after confirmed
-collection, at the unsubscribe checks. GC timing is not a public guarantee.
+## Packaged core and lifecycle proof
 
-## Old connectivity assertions
+`LifecycleContractTest` drives AndroidX LifecycleRegistry and the actual native runtime with the bundled QuickJS core and deterministic HTTP. All five current cases pass:
 
-| Old assertion | Current disposition |
+- Foreground activation refreshes available sessions while leaving session adoption explicit; resuming an already-started owner does not refresh again.
+- Failed foreground reload exposes `lastLifecycleError` while the owner remains usable and can recover on a later activation.
+- Offline-to-online restoration refreshes the owner; repeated online events and events after close do not add requests.
+- Closing or collecting the owner removes its lifecycle/connectivity subscriptions. The collection test waits for the weak reference to clear before checking cleanup.
+- Foreground recovery waits for an in-flight OAuth redemption, then performs one queued refresh without invalidating that authentication result.
+
+The four shared `connectivity.test.mjs` cases also pass against a bundle byte-identical to the packaged asset. They verify no extra refresh from initial online state, foreground/background and offline deferral, duplicate recovery coalescing, structured invalid-event errors, disposal, and recovery after an in-flight reload fails. These current checks replace earlier historical suite totals as the evidence for this audit.
+
+The owner-collection case originally exposed a cleanup defect: the runtime was collected but its subscription remained. The cleanup record now retains teardown actions independently and dispatches them on the owner dispatcher. Explicit close uses the same once-only cleanup. Collection timing remains nondeterministic, so explicit close is the deterministic replacement-owner operation.
+
+## Every old assertion
+
+| Old test declaration | Current disposition |
 | --- | --- |
-| Initial state is online; reset restores online | The removed private connectivity singleton/test reset is not retained. The embedded core treats unknown connectivity as eligible to attempt HTTP. |
-| Configure registers a network callback, checks initial capabilities and does not call recovery initially | The host subscribes to the OS default network after successful connection; initial online state does not cause another refresh. See [connectivity](connectivity.md). |
-| Configure detects initial offline; querying connectivity uses current active network | No exposed native singleton status API is retained. OS state updates the shared core network environment; shared tests verify offline recovery deferral. |
-| Stop unregisters callback | Connection-owned lifecycle and connectivity subscriptions are removed on explicit runtime close; the new connectivity test checks cleanup and no HTTP after later injected events. |
-| Offline-to-online invokes recovery callback | Online restoration now triggers the shared core recovery while active, checked through both real packaged engines. A failed initial connect still returns failure and has no persistent owner to recover. |
-| Losing one network while another exists does not invoke restoration | The default-network adapter ignores loss callbacks for a network already replaced by another default. This OS boundary rule does not duplicate Clerk recovery policy. |
-| Repeated configure replaces callback without registering again | Removed private singleton mutation API. A connection has its own runtime/observer; it is closed explicitly by the application. |
-| Capability changes update connected state | Default-network capability changes report eligibility to the core; no independent public connectivity StateFlow is introduced. |
+| `initial connectivity state is true by default` | The private singleton and its native StateFlow are removed. The core begins eligible to attempt HTTP; the shared initial-online check verifies that an unchanged online event does not add a refresh. Registration failure remains eligible rather than trapping the core offline. |
+| `configure sets up connectivity monitoring and checks initial state` | `initialStateRequiresBothInternetAndValidation` checks all four capability combinations, the initial observation, one registered callback and removal. Shared initial-online evidence verifies no extra core recovery from that initial online observation. |
+| `configure detects initial offline state correctly` | The modern availability and API 24/25 availability cases both require the initial no-network observation to be offline. They then exercise their respective availability rules. |
+| `isCurrentlyConnected checks latest connectivity` | The synchronous private getter is removed. Current-network updates use delivered callback capabilities, as checked with an intentionally unchanged active-network snapshot. There is no public native singleton status API to poll. |
+| `stop unregisters network callback and cleans up resources` | The independent-subscription test requires stopping one registration to remove only that callback. Every adapter test verifies no callbacks remain after cleanup. Packaged lifecycle tests verify owner-close/collection cleanup and no later HTTP. |
+| `callback is invoked when connectivity is restored after being offline` | Adapter checks verify restoration eligibility, including the corrected API 24/25 path. Packaged and shared-core cases verify the resulting refresh, current resource state and explicit session adoption. |
+| `callback is not invoked when network is lost but still has other connection` | The old monitor registered for matching networks and synchronously queried another active network in a loss callback. The current adapter observes only the default network. Its test announces a replacement default and verifies late loss/capability events for the previous one are ignored. This follows the default-callback contract; it does not retain the old synchronous requery. |
+| `multiple configure calls only update callback without re-registering` | The mutable singleton reconfiguration API is removed. Separate core owners have independent subscriptions; the test requires two registrations and confirms stopping one leaves the other's updates intact. Applications should retain one owner per intended connection. |
+| `resetForTesting resets all state` | The old singleton test-reset API is removed. Each test/owner controls its own subscription lifetime; no production network reset is introduced. |
+| `network capabilities change triggers state update` | `currentNetworkCapabilityChangesUseTheDeliveredCapabilities` verifies loss and restoration using the capabilities supplied by the callback, rather than a possibly stale synchronous snapshot. |
 
-Keep the old suite as migration evidence for its removed private singleton and startup retry behavior. Current restoration covers an initialized owner; failed-connect retry policy remains distinct. Applications should retain one owner and explicitly close it when replacing it for deterministic cleanup. Collection cleanup is a fallback and is now tested, but does not replace token freshness, client response ordering, storage continuity, or live shared-session synchronization audits.
+The platform recommends using callback-supplied capabilities and warns against synchronous ConnectivityManager queries from callbacks because they can race. Its default callback describes the current best network, unlike a listener for every matching network. [Android callback reference](https://developer.android.com/reference/android/net/ConnectivityManager.NetworkCallback).
+
+Robolectric supplies deterministic framework observations; the packaged tests inject lifecycle/connectivity signals and fixture HTTP. Neither claims real Wi-Fi transitions, live server reachability, failed-connect automatic retry, process death, shared-session synchronization or a signed-in old-major upgrade. Those remain distinct release/product checks.

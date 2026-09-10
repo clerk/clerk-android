@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.os.Build
 import java.lang.ref.WeakReference
 
 internal fun observeNetworkConnectivity(
@@ -23,7 +24,12 @@ internal fun subscribeNetworkConnectivity(context: Context, receive: (Boolean) -
     var current = manager.activeNetwork
     receive(current?.let(manager::getNetworkCapabilities).permitsInternet())
     val callback = object : ConnectivityManager.NetworkCallback() {
-      override fun onAvailable(network: Network) { current = network }
+      override fun onAvailable(network: Network) {
+        current = network
+        // API 24/25 may announce availability without a capabilities update. Treat that
+        // unknown state as eligible for HTTP until capabilities or loss provide more evidence.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) receive(true)
+      }
       override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
         if (current == network) receive(capabilities.permitsInternet())
       }

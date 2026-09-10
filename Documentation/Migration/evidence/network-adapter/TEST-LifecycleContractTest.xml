@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="5" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T21:51:26" hostname="localhost">
+  <testsuite name="com.clerk.api.LifecycleContractTest" tests="5" failures="0" errors="0" skipped="0" time="2.455" timestamp="2026-09-10T21:51:26" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="networkRestorationRefreshesTheOwnerAndStopsAfterClose" classname="com.clerk.api.LifecycleContractTest" time="0.720" />
+    <testcase name="failedForegroundReloadDoesNotDisableTheOwnerAndCanRecover" classname="com.clerk.api.LifecycleContractTest" time="0.415" />
+    <testcase name="releasingTheLastOwnerUnsubscribesLifecycleAndConnectivity" classname="com.clerk.api.LifecycleContractTest" time="0.386" />
+    <testcase name="foregroundDuringOAuthRedemptionWaitsForAuthentication" classname="com.clerk.api.LifecycleContractTest" time="0.469" />
+    <testcase name="lifecycleEventsRefreshResourcesAndStopAfterClose" classname="com.clerk.api.LifecycleContractTest" time="0.465" />
+  </testsuite>
+</testsuites>

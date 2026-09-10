@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.api.AndroidNetworkTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-09-10T21:50:15.957Z" hostname="mac.lan" time="3.558">
+  <properties/>
+  <testcase name="subscriptionsHaveIndependentCallbacksAndCleanup[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.668"/>
+  <testcase name="registrationFailureLeavesRequestsEligibleInsteadOfPermanentlyOffline[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.009"/>
+  <testcase name="olderAndroidAvailabilityRestoresEligibilityWithoutCapabilityChange[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.007"/>
+  <testcase name="handoverIgnoresLateEventsFromTheReplacedDefaultNetwork[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.006"/>
+  <testcase name="initialStateRequiresBothInternetAndValidation[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.012"/>
+  <testcase name="currentNetworkCapabilityChangesUseTheDeliveredCapabilities[24]" classname="com.clerk.api.AndroidNetworkTest" time="0.006"/>
+  <testcase name="subscriptionsHaveIndependentCallbacksAndCleanup" classname="com.clerk.api.AndroidNetworkTest" time="2.311"/>
+  <testcase name="registrationFailureLeavesRequestsEligibleInsteadOfPermanentlyOffline" classname="com.clerk.api.AndroidNetworkTest" time="0.008"/>
+  <testcase name="handoverIgnoresLateEventsFromTheReplacedDefaultNetwork" classname="com.clerk.api.AndroidNetworkTest" time="0.007"/>
+  <testcase name="initialStateRequiresBothInternetAndValidation" classname="com.clerk.api.AndroidNetworkTest" time="0.006"/>
+  <testcase name="currentNetworkCapabilityChangesUseTheDeliveredCapabilities" classname="com.clerk.api.AndroidNetworkTest" time="0.006"/>
+  <testcase name="initiallyOfflineWaitsForValidatedAvailabilityAndReportsLoss" classname="com.clerk.api.AndroidNetworkTest" time="0.005"/>
+  <testcase name="olderAndroidAvailabilityRestoresEligibilityWithoutCapabilityChange" classname="com.clerk.api.AndroidNetworkTest" time="0.348"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
