@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="7" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T21:28:25" hostname="localhost">
+  <testsuite name="com.clerk.api.BrowserActivityLifecycleTest" tests="7" failures="0" errors="0" skipped="0" time="1.744" timestamp="2026-09-10T21:28:25" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="immediateSecondAuthorizationIsPresentedAfterFirstCallback" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.345" />
+    <testcase name="unrelatedCallbackCannotCompleteOrCancelPendingAuthorization" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.246" />
+    <testcase name="resumedManagerTreatsBrowserDismissalAsCancellation" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.190" />
+    <testcase name="actualReceiverDeliversCallbackToTheRunningManager" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.647" />
+    <testcase name="browserCallbackSurvivesDeviceRotation" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.288" />
+    <testcase name="manifestExposesOnlyTheCurrentDefaultCallbackRoute" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.002" />
+    <testcase name="unrelatedCallbackCannotCreateAnIdleBrowserPresentation" classname="com.clerk.api.BrowserActivityLifecycleTest" time="0.026" />
+  </testsuite>
+</testsuites>

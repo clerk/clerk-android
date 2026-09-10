@@ -1,0 +1,21 @@
+# Callback receiver assertion audit
+
+All five declaration bodies in `SSOReceiverActivityTest.kt` and `SSOReceiverActivityManifestTest.kt` were reviewed and hash-checked against baseline `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. Both files are retired after the dispositions below. [The proof](evidence/callback-receiver/proof.json) retains their original hashes and declaration names together with the two configuration helper files' eleven declarations. `SSOManagerActivityTest.kt` remains pending its separate, complete audit.
+
+| Old test declaration | Current disposition |
+| --- | --- |
+| `invalidHostedAuthCallbackIsNotForwarded` | The old hosted-portal protocol and its native state verifier are unavailable in this selected major. The baseline mocks `HostedAuthService.isForgedCallback` and verifies its use; it does not exercise that verifier. That mock-call assertion is removed. The actual current receiver checks separately prove that an unrecognized explicit URL creates no idle presentation and cannot cancel or complete a pending authorization. They do not claim hosted-portal state validation. |
+| `validHostedAuthCallbackIsForwardedToManager` | Current browser callback forwarding is tested by `actualReceiverDeliversCallbackToTheRunningManager`: the real receiver resumes the real SDK manager and returns the exact URI once. The old hosted-portal callback format and mock verifier are removed. |
+| `unrecognizedExplicitIntentIsNotForwardedToManager` | `unrelatedCallbackCannotCreateAnIdleBrowserPresentation` sends the same unrecognized HTTPS shape to the actual exported receiver, waits for its destruction and requires no manager, browser launch or pending operation. `unrelatedCallbackCannotCompleteOrCancelPendingAuthorization` additionally preserves an already-open attempt and proves that its later valid callback succeeds. |
+| `canonicalHostedAuthCallbackResolvesToSsoReceiverActivity` | The old canonical route is intentionally removed. `manifestExposesOnlyTheCurrentDefaultCallbackRoute` checks Android PackageManager resolution of the current default route to the exported receiver and absence of the old `.callback` route. |
+| `legacyOauthHostResolvesToSsoReceiverActivity` | The old `.oauth` alias is intentionally removed and verified absent by the same merged-manifest test. Applications must register and configure the current callback route. |
+
+## Reproduced task cancellation
+
+The pending-authorization check found a platform defect at `46879cf5abea347d8b1964626a7453f09112b8b6`: Android placed the externally launched receiver in the authentication task. Although its code ignored the unrelated URL, finishing that receiver resumed the underlying manager, which interpreted the resume as browser dismissal and cancelled the sign-in. The lifecycle trace shows the receiver receiving the unrelated URL, followed by manager restart/resume and pending-request cancellation.
+
+The receiver now declares an empty task affinity. An external launch using `FLAG_ACTIVITY_NEW_TASK` no longer brings the authentication task forward. The receiver can finish without cancelling the pending operation; a recognized callback still explicitly routes to the manager. This is native task placement, with provider interpretation and session adoption still owned by TypeScript.
+
+The [before proof](evidence/callback-receiver/before/proof.json) records seven cases with only pending-authorization preservation failing. The same test source passes after the manifest fix. The full authentication gate now requires 85 named cases across twelve suites, including all seven activity lifecycle cases. Configuration verification remains four public unit methods. [After proof](evidence/callback-receiver/proof.json) records exact reports and hashes.
+
+The instrumentation uses the actual merged manifest, manager and receiver on an API 36 emulator. Android Settings is an opaque foreground stand-in for the external browser; callback delivery uses external `am start`, including the unrecognized explicit intent. This is framework lifecycle evidence. Live provider authorization, actual Chrome/custom-tab integration and process-death restoration remain separate release gates.

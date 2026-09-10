@@ -1,0 +1,189 @@
+{
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "retired": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/PublishableKeyHelperTest.kt",
+      "sha256": "e18efd193e1bc84c4b3ec0c8f186334fad9ec3917957503f345c6f1e1d2117c9",
+      "category": "configuration",
+      "cases": [
+        {
+          "name": "extractApiUrl with valid test key returns correct URL",
+          "line": 26
+        },
+        {
+          "name": "extractApiUrl with valid live key returns correct URL",
+          "line": 40
+        },
+        {
+          "name": "extractApiUrl with empty decoded string throws ClerkClientError",
+          "line": 54
+        },
+        {
+          "name": "extractApiUrl with no prefix still works correctly",
+          "line": 68
+        },
+        {
+          "name": "extractApiUrl with single character domain returns https prefix only",
+          "line": 81
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/RedirectConfigurationTest.kt",
+      "sha256": "9592286edb2df7dc36bc793cdc39c1741f0d615af636502ab1614e5a28bd1dc2",
+      "category": "configuration",
+      "cases": [
+        {
+          "name": "defaultRedirectUrl_usesCallbackHost",
+          "line": 17
+        },
+        {
+          "name": "legacyRedirectUrl_keepsOauthHost",
+          "line": 24
+        },
+        {
+          "name": "redirectUrlsReflectTheCurrentApplicationId",
+          "line": 31
+        },
+        {
+          "name": "defaultRedirectUrl_doesNotThrowWhenApplicationIdIsUnset",
+          "line": 40
+        },
+        {
+          "name": "emailLinkRedirectUrl_usesProxyPortWhenConfigured",
+          "line": 47
+        },
+        {
+          "name": "emailLinkRedirectUrl_omitsStandardHttpsPort",
+          "line": 58
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOReceiverActivityTest.kt",
+      "sha256": "2045422e6139df84fb325d3bb08f549ab1b0785e00b7aabf0a62911f7c575ca8",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "invalidHostedAuthCallbackIsNotForwarded",
+          "line": 30
+        },
+        {
+          "name": "validHostedAuthCallbackIsForwardedToManager",
+          "line": 43
+        },
+        {
+          "name": "unrecognizedExplicitIntentIsNotForwardedToManager",
+          "line": 56
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/SSOReceiverActivityManifestTest.kt",
+      "sha256": "ad42a61a1399e8504ed29ec86356abbf5b1ffdd9c4bc43db8225394a6d111668",
+      "category": "platform-capability",
+      "cases": [
+        {
+          "name": "canonicalHostedAuthCallbackResolvesToSsoReceiverActivity",
+          "line": 16
+        },
+        {
+          "name": "legacyOauthHostResolvesToSsoReceiverActivity",
+          "line": 28
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "NativeCoreTests/Android/BrowserActivityLifecycleTest.kt": "87712ad2ae7d35373a311adaeb38e00478baac3db73a3411bcd6986168bcb200",
+    "NativeCoreTests/Unit/ClerkConfigurationTest.kt": "c222b8016e83bfa9f0f045e7b5ee469ff2cd242fc218058fbfe356f7e3f683fd",
+    "NativeCore/Android/AndroidManifest.xml": "50c0900e86200839d42cd6cf829142c1eec715e0a51b9964bba1c6f29c57d338",
+    "NativeCore/Android/ClerkConnection.kt": "8652595a04c00e870cdc8c1271d7fff47512e306dd448c334cf9647973c6870a"
+  },
+  "gate": {
+    "passed": 85,
+    "suites": 12,
+    "reports": {
+      "GoogleIdentityContractTest": {
+        "passed": 16,
+        "file": "gate/TEST-GoogleIdentityContractTest.xml",
+        "sha256": "b64fef6fd25beb707b58acbbb19aaf95cae84ca2891316c2588ed18c54205a15"
+      },
+      "GoogleIdentityRequestTest": {
+        "passed": 3,
+        "file": "gate/TEST-GoogleIdentityRequestTest.xml",
+        "sha256": "cfd6e6055507fcf7612557fe54f728c1391bf3f327620bcafb2246df5198c745"
+      },
+      "AuthEntryPointTest": {
+        "passed": 5,
+        "file": "gate/TEST-AuthEntryPointTest.xml",
+        "sha256": "790f9c2f0f6f6f4ad97f1a973a1e40e50f7fdb80ee08c152a45f6577d8ed1a03"
+      },
+      "SessionSelectionContractTest": {
+        "passed": 8,
+        "file": "gate/TEST-SessionSelectionContractTest.xml",
+        "sha256": "1dc4d072f712eea96157a11908df86e3219da2bb3ac76ef5b22608898c96ab47"
+      },
+      "SignInCredentialContractTest": {
+        "passed": 5,
+        "file": "gate/TEST-SignInCredentialContractTest.xml",
+        "sha256": "4dac21a3772e4ba6a5991d1b2c59f44cc0f3c026641306956a11ce56ced5b922"
+      },
+      "SignUpVerificationRequestTest": {
+        "passed": 3,
+        "file": "gate/TEST-SignUpVerificationRequestTest.xml",
+        "sha256": "91c8ba0ed4a2486794e0c8c449e346039559d6385247ccb09400fd73ca6cafac"
+      },
+      "SignOutContractTest": {
+        "passed": 7,
+        "file": "gate/TEST-SignOutContractTest.xml",
+        "sha256": "5862e82f03f091581237004b32201c28ae2b71e604894b04ffdc90369175e92b"
+      },
+      "BrowserSSOContractTest": {
+        "passed": 16,
+        "file": "gate/TEST-BrowserSSOContractTest.xml",
+        "sha256": "779d42327e95d861cafd0bb20ea51df3df4c41d79401ca4965dc499445172257"
+      },
+      "OAuthProviderRequestTest": {
+        "passed": 2,
+        "file": "gate/TEST-OAuthProviderRequestTest.xml",
+        "sha256": "4114b1c45f86b3621acde72212350d652244dc67da9c1be0334267f6c4201be3"
+      },
+      "BrowserHostTest": {
+        "passed": 8,
+        "file": "gate/TEST-BrowserHostTest.xml",
+        "sha256": "6d68e460b1d841658f059f79ac3cfc9c847b4b7284ce1d686a23a4ec87cc346e"
+      },
+      "BrowserCallbackContractTest": {
+        "passed": 5,
+        "file": "gate/TEST-BrowserCallbackContractTest.xml",
+        "sha256": "6fc0f67c299f3a958ab7b23fe2644a7d2124256c58bd0e1a5bad62fdff7af439"
+      },
+      "BrowserActivityLifecycleTest": {
+        "passed": 7,
+        "file": "gate/TEST-BrowserActivityLifecycleTest.xml",
+        "sha256": "212526c2e2c5c65ca904eaf5691ff7c933ad551178c74bffae6a03dc558d7971"
+      }
+    }
+  },
+  "configurationUnit": {
+    "passed": 4,
+    "file": "TEST-com.clerk.api.ClerkConfigurationTest.xml",
+    "sha256": "9074f6698daf303f0de45791aa00ceaf998e14caa3585c3041047ae240d7620d",
+    "methods": [
+      "validKeysNormalizeWhitespaceAndPreserveTheConfiguredCallback",
+      "invalidPublishableKeysAlwaysProduceStructuredErrors",
+      "invalidCallbackRoutesAlwaysProduceStructuredErrors",
+      "httpsCallbacksAreAcceptedForPlatformsSupportingVerifiedLinks"
+    ]
+  },
+  "allApiUnit": {
+    "passed": 12,
+    "reports": {
+      "TEST-com.clerk.api.AndroidTimerCapabilityTest.xml": "1cbc14a5dcd439915b6cab8acfde0f74e7066758d21d2c59c1d2d7918d69da61",
+      "TEST-com.clerk.api.ClerkConfigurationTest.xml": "9074f6698daf303f0de45791aa00ceaf998e14caa3585c3041047ae240d7620d",
+      "TEST-com.clerk.api.AndroidHTTPCapabilityTest.xml": "9f573ee45482757a9bdaab446d4eac41c9e667fa155e46364d9ab4e083d4607f"
+    }
+  },
+  "device": "API 36 arm64 emulator-5554"
+}

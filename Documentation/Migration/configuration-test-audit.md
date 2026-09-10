@@ -1,24 +1,22 @@
 # Configuration helper assertion audit
 
-This review covers all assertion bodies in the old
-`sdk/PublishableKeyHelperTest.kt` and `sso/RedirectConfigurationTest.kt` under
-`source/api/src/test/java/com/clerk/api`. The foreground-policy suites are audited below; configuration-switch and device-token tests are covered by the [owner-isolation audit](configuration-ownership-test-audit.md).
+All eleven declarations and complete assertion bodies in `sdk/PublishableKeyHelperTest.kt` and `sso/RedirectConfigurationTest.kt` under `source/api/src/test/java/com/clerk/api` were checked against baseline `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. Both files are retired; their original source hashes and declaration names are retained in [the inventory](legacy-tests.json) and [retirement proof](evidence/callback-receiver/proof.json). The foreground-policy suites are audited below; configuration-switch and device-token tests are covered by the [owner-isolation audit](configuration-ownership-test-audit.md).
 
-| Old test | Current disposition |
+| Old test declaration | Current disposition |
 | --- | --- |
-| `extractApiUrl with valid test key returns correct URL` and the live-key variant | Both modes are tested through the public `ClerkConfiguration` and yield the exact HTTPS origin. The old fixture's final `x` is intentionally no longer accepted; publishable-key payloads must end in `$`. |
-| `extractApiUrl with empty decoded string throws ClerkClientError` | Rejected by the public configuration test with `CoreException.code == invalid_publishable_key`. The old exception type is not preserved. |
-| `extractApiUrl with no prefix still works correctly` | Intentionally changed: prefixless input is rejected. A configuration must identify the test/live key type. |
-| `extractApiUrl with single character domain returns https prefix only` | Intentionally changed: a decoded `x` is rejected rather than producing a hostless origin. The new tests cover this exact value. |
-| `defaultRedirectUrl_usesCallbackHost`, `legacyRedirectUrl_keepsOauthHost` | The application now supplies one full callback URL. There are no implicit default/legacy routes; migration documentation and each sample register their explicit routes. |
-| `redirectUrlsReflectTheCurrentApplicationId` | No mutable process-global application ID participates in configuration. A core owner retains its explicit callback URL. |
-| `defaultRedirectUrl_doesNotThrowWhenApplicationIdIsUnset` | The old `clerk://null.callback` fallback is absent. Missing application configuration must not silently construct this route. |
-| `emailLinkRedirectUrl_usesProxyPortWhenConfigured` and `emailLinkRedirectUrl_omitsStandardHttpsPort` | Proxy configuration is unavailable in this prerelease. Callback URLs are explicit; those old proxy-derived defaults are not replacement coverage. |
+| `extractApiUrl with valid test key returns correct URL` | `validKeysNormalizeWhitespaceAndPreserveTheConfiguredCallback` tests the public `ClerkConfiguration` with a test key and exact HTTPS origin. The old fixture's trailing `x` is intentionally rejected; a canonical payload ends in `$`. |
+| `extractApiUrl with valid live key returns correct URL` | The same public configuration test separately checks a live key. `invalidPublishableKeysAlwaysProduceStructuredErrors` rejects the old `clerk.example.comx` payload. |
+| `extractApiUrl with empty decoded string throws ClerkClientError` | The malformed-key test requires `CoreException.code == invalid_publishable_key` for the exact empty payload. The old exception type is removed. |
+| `extractApiUrl with no prefix still works correctly` | Intentionally changed: the exact prefixless base64 input is rejected. Configuration must identify a test or live publishable key. |
+| `extractApiUrl with single character domain returns https prefix only` | The exact decoded `x` is rejected instead of yielding a hostless origin. |
+| `defaultRedirectUrl_usesCallbackHost` | `ClerkConfiguration` requires an explicit URL. The SDK manifest supplies the current `${applicationId}.clerk://oauth/callback` route; `manifestExposesOnlyTheCurrentDefaultCallbackRoute` resolves it to the exported SDK receiver through Android PackageManager. The old `clerk://${applicationId}.callback` route is absent. |
+| `legacyRedirectUrl_keepsOauthHost` | The old `clerk://${applicationId}.oauth` alias is removed. The same merged-manifest test explicitly requires that alias not to resolve in the SDK test application. Consumers must update their callback configuration. |
+| `redirectUrlsReflectTheCurrentApplicationId` | The mutable global application ID API is removed. Configuration holds the caller's explicit URL in an immutable property; the public test checks exact route and query preservation. It does not derive a URL from another owner's application ID. |
+| `defaultRedirectUrl_doesNotThrowWhenApplicationIdIsUnset` | The automatic `clerk://null.callback` fallback is removed. The constructor requires a URL; it does not synthesize a callback from a missing global application ID. This does not claim that a caller-provided host named `null.callback` is rejected. |
+| `emailLinkRedirectUrl_usesProxyPortWhenConfigured` | Proxy configuration and automatic proxy-derived callback construction are unavailable. There is no retained helper that derives port 8443 from a proxy. Explicit custom routes require matching application manifest configuration. |
+| `emailLinkRedirectUrl_omitsStandardHttpsPort` | The old proxy port-normalization helper is removed with proxy configuration. This is an intentional API removal, not passing coverage for a supported proxy feature. |
 
-`NativeCoreTests/Unit/ClerkConfigurationTest.kt` also verifies surrounding key
-whitespace, malformed base64 and origins, callback scheme/credentials/fragment
-validation, preservation of a configured route/query, and HTTPS callback acceptance.
-All four test methods pass. The publishable-key and redirect files remain retained while the broader audit is in progress. The separate foreground assertion dispositions are recorded below; configuration-switch assertions are mapped in the separate [owner-isolation audit](configuration-ownership-test-audit.md).
+`NativeCoreTests/Unit/ClerkConfigurationTest.kt` also checks surrounding key whitespace, malformed base64 and origins, callback scheme/credentials/fragment validation, and HTTPS callback acceptance. All four methods pass. [Receiver lifecycle evidence](callback-receiver-test-audit.md) verifies manifest resolution and actual callback delivery without contacting a provider. The SDK's default manifest route and the constructor's required explicit URL are separate configuration responsibilities.
 
 ## Foreground policy and pending authentication
 
@@ -36,4 +34,4 @@ The following eight declarations were read in full at baseline
 | `foreground refresh is skipped when disabled via withForegroundRefreshDisabled` | The old framework-integration option is removed. Attached Expo UI uses its existing core owner and does not install a second embedded recovery owner. Standalone configuration has no disable-refresh option. |
 | `withCustomHeaders preserves a disabled foreground refresh` | The old chained option builder and arbitrary custom-header configuration are removed. This private configuration assertion is intentionally retired, not approximated with a new native policy. |
 
-`ConfigurationManagerAuthRaceTest.kt` and `ConfigurationManagerForegroundRefreshTest.kt` are retired after this audit and the packaged regression proof. The publishable-key, redirect, and connectivity suites remain retained for their own audits; the configuration-switch suite is retired by the [owner-isolation audit](configuration-ownership-test-audit.md). No old pending-service polling or native token-refresh implementation is restored.
+`ConfigurationManagerAuthRaceTest.kt` and `ConfigurationManagerForegroundRefreshTest.kt` are retired after this audit and the packaged regression proof. The publishable-key and redirect suites are retired by the audit above; the connectivity suite remains retained for its own audit; the configuration-switch suite is retired by the [owner-isolation audit](configuration-ownership-test-audit.md). No old pending-service polling or native token-refresh implementation is restored.

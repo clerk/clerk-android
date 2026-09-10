@@ -7,8 +7,9 @@
         <activity android:name="com.clerk.api.CoreBrowserActivity"
             android:exported="false" android:launchMode="singleTask"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <!-- Unrelated external callbacks must not foreground and cancel the authentication task. -->
         <activity android:name="com.clerk.api.CoreBrowserCallbackActivity"
-            android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            android:exported="true" android:taskAffinity="" android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

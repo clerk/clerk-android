@@ -1,0 +1,11 @@
+{
+  "revision": "46879cf5abea347d8b1964626a7453f09112b8b6",
+  "manifestSHA256": "bfeb8c53f63607d1cb1f9f28389f23a6bc96b2c6190352fa354186bd9f7b2852",
+  "testSourceSHA256": "87712ad2ae7d35373a311adaeb38e00478baac3db73a3411bcd6986168bcb200",
+  "tests": 7,
+  "failures": [
+    "unrelatedCallbackCannotCompleteOrCancelPendingAuthorization"
+  ],
+  "xmlSHA256": "f442b7ecf44602a0f0f874c65220c283b6a77f829f15dc99774e9f7f363cb175",
+  "device": "API 36 arm64 emulator-5554"
+}
