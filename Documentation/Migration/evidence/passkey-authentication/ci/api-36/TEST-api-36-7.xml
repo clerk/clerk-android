@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="2" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T23:21:30" hostname="localhost">
+  <testsuite name="com.clerk.api.OAuthProviderRequestTest" tests="2" failures="0" errors="0" skipped="0" time="0.396" timestamp="2026-09-10T23:21:30" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="customExternalAccountPreservesStrategyThroughBrowserAndReload" classname="com.clerk.api.OAuthProviderRequestTest" time="0.223" />
+    <testcase name="googleExternalAccountUsesCanonicalStrategyAndReturnedResource" classname="com.clerk.api.OAuthProviderRequestTest" time="0.173" />
+  </testsuite>
+</testsuites>

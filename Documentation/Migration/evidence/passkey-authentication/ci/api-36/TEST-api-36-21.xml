@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="2" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T23:23:25" hostname="localhost">
+  <testsuite name="com.clerk.ui.auth.AuthViewJourneyTest" tests="2" failures="0" errors="0" skipped="0" time="5.614" timestamp="2026-09-10T23:23:25" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="automaticPasskeyPreparationFailureIsVisibleAndEmailSignInCompletes" classname="com.clerk.ui.auth.AuthViewJourneyTest" time="3.704" />
+    <testcase name="emailCodeErrorCanBeRetriedAndPrebuiltFlowFinalizesExactlyOnce" classname="com.clerk.ui.auth.AuthViewJourneyTest" time="1.910" />
+  </testsuite>
+</testsuites>

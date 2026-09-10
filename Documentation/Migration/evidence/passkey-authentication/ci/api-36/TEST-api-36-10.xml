@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="2" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T23:21:55" hostname="localhost">
+  <testsuite name="com.clerk.api.PasskeyRegistrationTest" tests="2" failures="0" errors="0" skipped="0" time="0.421" timestamp="2026-09-10T23:21:55" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="cancellationDoesNotSubmitCredential" classname="com.clerk.api.PasskeyRegistrationTest" time="0.232" />
+    <testcase name="registrationSupportsRenameAndDeletionReceipt" classname="com.clerk.api.PasskeyRegistrationTest" time="0.189" />
+  </testsuite>
+</testsuites>

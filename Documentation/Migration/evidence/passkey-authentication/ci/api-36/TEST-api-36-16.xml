@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="7" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T23:21:20" hostname="localhost">
+  <testsuite name="com.clerk.api.SignOutContractTest" tests="7" failures="0" errors="0" skipped="0" time="1.241" timestamp="2026-09-10T23:21:20" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="blankBearerAuthorizationClearsStoredClientCredential" classname="com.clerk.api.SignOutContractTest" time="0.233" />
+    <testcase name="networkFailureIsNotReplayedOrReportedAsSuccess" classname="com.clerk.api.SignOutContractTest" time="0.184" />
+    <testcase name="scopedSignOutPreservesOtherSelectedSession" classname="com.clerk.api.SignOutContractTest" time="0.175" />
+    <testcase name="rejectedSignOutClearsSelectionButPreservesKnownServerSessions" classname="com.clerk.api.SignOutContractTest" time="0.166" />
+    <testcase name="noSessionSignOutDoesNotRequestOrEraseClientCredential" classname="com.clerk.api.SignOutContractTest" time="0.142" />
+    <testcase name="scopedRejectionPreservesOtherSelectedSession" classname="com.clerk.api.SignOutContractTest" time="0.159" />
+    <testcase name="successfulSignOutUsesServerClientWithoutRefresh" classname="com.clerk.api.SignOutContractTest" time="0.182" />
+  </testsuite>
+</testsuites>
