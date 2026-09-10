@@ -35,8 +35,45 @@ build logs, the source revision/archive hash, Gradle and Java version informatio
 per-ABI hashes and any differing entries. Temporary source/build trees are removed.
 
 The Android build workflow now runs the same gate on Linux and uploads its output.
-Its execution on the committed fix is still pending. This gate compares two builds
+The [September 10 Linux run](https://github.com/clerk/clerk-android/actions/runs/34508121416) passed this gate at the committed fix. This gate compares two builds
 on the same pinned toolchain host; it does not promise identical output across
-macOS and Linux NDK distributions. The earlier cross-host native-library difference
-remains a separate issue to characterize. This packaging check does not replace
+macOS and Linux NDK distributions. The observed cross-host native-library difference is characterized below. This packaging check does not replace
 runtime execution, live authentication, actual app upgrades or physical-device gates.
+
+## Committed-source local evidence
+
+The complete gate passed locally at `00df8158482467e9a0b5ea3171c32b8c9e4559e7`,
+with two fresh source archives and 36 executed tasks in each build. Both artifacts
+have the same `273f800b…` hash recorded above. [The macOS report](evidence/android-reproducibility/macos-report.json)
+records the exact source, toolchain, AAR and per-ABI identities.
+[The original failing comparison](evidence/android-reproducibility/before.json)
+records the differing AARs and build-ID-only section differences.
+[The normalized section report](evidence/android-reproducibility/normalized-sections.json)
+confirms that all three libraries retain nonempty build IDs and that the fix changed
+only those build-ID sections in the inspected stripped libraries; their executable
+code and other sections are identical to the prior build.
+
+## Linux CI and cross-host comparison
+
+[The successful build workflow](https://github.com/clerk/clerk-android/actions/runs/34508121416)
+ran the same gate at `00df8158482467e9a0b5ea3171c32b8c9e4559e7`. Both downloaded Linux
+AARs match SHA-256 `fa35a3411bc8522ebcbb50caf50bce47abc8bda0c513665a6f74d6a7ee0f57fa`.
+[The Linux report](evidence/android-reproducibility/linux-report.json) and
+[workflow record](evidence/android-reproducibility/build-workflow.json) preserve
+the source revision, toolchain, per-library identities and completed jobs.
+
+Comparing the normalized macOS and Linux artifacts found differences only in their
+three native libraries. Within each library, the `.comment` and `.note.gnu.build-id`
+sections differed; every other file-backed ELF section, including `.text`, matched.
+The macOS compiler comments identify `-bolt`/`-mlgo`, while Linux identifies
+`+bolt`/`+mlgo`; ARM outputs also include a shared prebuilt compiler comment.
+[The comparison report](evidence/android-reproducibility/cross-host-sections.json)
+records these strings and code hashes. This supports reproducibility within each
+recorded host toolchain. Cross-host byte identity remains outside that guarantee.
+
+[The runtime test workflow](https://github.com/clerk/clerk-android/actions/runs/34508124478)
+also passed all four jobs at the same source revision: 12 API and 491 UI JVM cases,
+the packaged-core and capability probes on API 24 and API 36 x86_64, and the rendered
+API 36 authentication journey. Downloaded XML contains no failures, errors or skips.
+[The test record](evidence/android-reproducibility/test-workflow.json) retains the
+exact case reports, individual job URLs and unit-report hashes.

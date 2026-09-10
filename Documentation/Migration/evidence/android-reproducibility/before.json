@@ -1,0 +1,29 @@
+{
+  "sourceRevision": "c3f0bfaffed80554c086cf282bc7079ae72bb4bb",
+  "aars": [
+    {
+      "path": "work/android-repro-probe/first/source/api/build/outputs/aar/api-release.aar",
+      "sha256": "f77c44b93f780e6bd8709661f198d798d23472ee19880d2aa716d0c8b7f89f83"
+    },
+    {
+      "path": "work/android-repro-probe/second-longer-path/source/api/build/outputs/aar/api-release.aar",
+      "sha256": "6641ae7d8d5f84a50a0e7dfd3400defca227cc8d1403c6de6933c0830cb46466"
+    }
+  ],
+  "differentEntries": [
+    "jni/armeabi-v7a/libclerk_quickjs.so",
+    "jni/arm64-v8a/libclerk_quickjs.so",
+    "jni/x86_64/libclerk_quickjs.so"
+  ],
+  "differentELFSections": {
+    "arm64-v8a": [
+      ".note.gnu.build-id"
+    ],
+    "armeabi-v7a": [
+      ".note.gnu.build-id"
+    ],
+    "x86_64": [
+      ".note.gnu.build-id"
+    ]
+  }
+}

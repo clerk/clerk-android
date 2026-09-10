@@ -1,0 +1,79 @@
+{
+  "aars": [
+    {
+      "sha256": "273f800bfb170ec89eb4d636f0305369ce7f42c970ed7d32851e9199c232bccc"
+    },
+    {
+      "sha256": "fa35a3411bc8522ebcbb50caf50bce47abc8bda0c513665a6f74d6a7ee0f57fa"
+    }
+  ],
+  "abis": {
+    "arm64-v8a": {
+      "differentSections": [
+        ".comment",
+        ".note.gnu.build-id"
+      ],
+      "textSHA256": [
+        "1f8732d45060271ba0d393c970be672d99a65595f02ab5fb21a5a66c4021479b",
+        "1f8732d45060271ba0d393c970be672d99a65595f02ab5fb21a5a66c4021479b"
+      ],
+      "compilerComments": [
+        [
+          "Android (12285214, +pgo, -bolt, +lto, -mlgo, based on r522817b) clang version 18.0.2 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+          "Android (12285214, +pgo, +bolt, +lto, +mlgo, based on r522817b) clang version 18.0.2 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+          "Linker: LLD 18.0.2"
+        ],
+        [
+          "Android (12285214, +pgo, +bolt, +lto, +mlgo, based on r522817b) clang version 18.0.2 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+          "Linker: LLD 18.0.2"
+        ]
+      ]
+    },
+    "armeabi-v7a": {
+      "differentSections": [
+        ".comment",
+        ".note.gnu.build-id"
+      ],
+      "textSHA256": [
+        "c5f001fa4e6c9611414239774835f99c04e01e0466bac5c736e5a61c5fc9dc3e",
+        "c5f001fa4e6c9611414239774835f99c04e01e0466bac5c736e5a61c5fc9dc3e"
+      ],
+      "compilerComments": [
+        [
+          "Android (12285214, +pgo, -bolt, +lto, -mlgo, based on r522817b) clang version 18.0.2 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+          "Android (12285214, +pgo, +bolt, +lto, +mlgo, based on r522817b) clang version 18.0.2 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+          "Linker: LLD 18.0.2"
+        ],
+        [
+          "Android (12285214, +pgo, +bolt, +lto, +mlgo, based on r522817b) clang version 18.0.2 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+          "Linker: LLD 18.0.2"
+        ]
+      ]
+    },
+    "x86_64": {
+      "differentSections": [
+        ".comment",
+        ".note.gnu.build-id"
+      ],
+      "textSHA256": [
+        "603ca09138cbcdb5cf43eda58e807fd689b937ca14babeb201ad6bbfc403ccfd",
+        "603ca09138cbcdb5cf43eda58e807fd689b937ca14babeb201ad6bbfc403ccfd"
+      ],
+      "compilerComments": [
+        [
+          "Android (12285214, +pgo, -bolt, +lto, -mlgo, based on r522817b) clang version 18.0.2 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+          "Linker: LLD 18.0.2"
+        ],
+        [
+          "Android (12285214, +pgo, +bolt, +lto, +mlgo, based on r522817b) clang version 18.0.2 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+          "Linker: LLD 18.0.2"
+        ]
+      ]
+    }
+  },
+  "differentAAREntries": [
+    "jni/arm64-v8a/libclerk_quickjs.so",
+    "jni/armeabi-v7a/libclerk_quickjs.so",
+    "jni/x86_64/libclerk_quickjs.so"
+  ]
+}

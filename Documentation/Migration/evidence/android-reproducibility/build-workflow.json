@@ -1,0 +1,23 @@
+{
+  "headSha": "00df8158482467e9a0b5ea3171c32b8c9e4559e7",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/clerk/clerk-android/actions/runs/34508121416",
+  "jobs": [
+    {
+      "name": "build-module (:source:ui)",
+      "conclusion": "success",
+      "url": "https://github.com/clerk/clerk-android/actions/runs/34508121416/job/102975218490"
+    },
+    {
+      "name": "build-module (:source:api)",
+      "conclusion": "success",
+      "url": "https://github.com/clerk/clerk-android/actions/runs/34508121416/job/102975218826"
+    },
+    {
+      "name": "verify",
+      "conclusion": "success",
+      "url": "https://github.com/clerk/clerk-android/actions/runs/34508121416/job/102976673385"
+    }
+  ]
+}

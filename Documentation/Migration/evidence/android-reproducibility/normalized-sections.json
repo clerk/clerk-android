@@ -1,0 +1,27 @@
+{
+  "sourceBefore": "c3f0bfaffed80554c086cf282bc7079ae72bb4bb",
+  "sourceAfter": "00df8158482467e9a0b5ea3171c32b8c9e4559e7",
+  "abis": {
+    "arm64-v8a": {
+      "changedSections": [
+        ".note.gnu.build-id"
+      ],
+      "buildId": "3989e7f389f31756176cc7ec23cb254bf993a18f",
+      "textSHA256": "1f8732d45060271ba0d393c970be672d99a65595f02ab5fb21a5a66c4021479b"
+    },
+    "armeabi-v7a": {
+      "changedSections": [
+        ".note.gnu.build-id"
+      ],
+      "buildId": "f86518db78705c5555664c8f3275c07fda0597de",
+      "textSHA256": "c5f001fa4e6c9611414239774835f99c04e01e0466bac5c736e5a61c5fc9dc3e"
+    },
+    "x86_64": {
+      "changedSections": [
+        ".note.gnu.build-id"
+      ],
+      "buildId": "c12263d2262ca0b67cdf796c36a92102fc26eba1",
+      "textSHA256": "603ca09138cbcdb5cf43eda58e807fd689b937ca14babeb201ad6bbfc403ccfd"
+    }
+  }
+}
