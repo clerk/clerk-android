@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="3" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T17:41:04" hostname="localhost">
+  <testsuite name="com.clerk.api.TokenFreshnessContractTest" tests="3" failures="0" errors="0" skipped="0" time="0.763" timestamp="2026-09-10T17:41:04" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="staleResponseBeforeFreshKeepsCanonicalToken" classname="com.clerk.api.TokenFreshnessContractTest" time="0.312" />
+    <testcase name="freshResponseBeforeStaleKeepsCanonicalToken" classname="com.clerk.api.TokenFreshnessContractTest" time="0.229" />
+    <testcase name="equalOriginUsesIssuedAtDespiteResponseOrder" classname="com.clerk.api.TokenFreshnessContractTest" time="0.222" />
+  </testsuite>
+</testsuites>

@@ -1,0 +1,302 @@
+{
+  "androidBase": "7ec48186fd0ecb7e7fd43e693153785591400c06",
+  "javascriptRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+  "coreManifest": {
+    "protocolVersion": 1,
+    "hostCapabilityVersion": 1,
+    "contractHash": "0f8387f260072ba6f894442b73d50afa6bda5f1205ed3c9209f5d6b1cfba16ce",
+    "roots": {
+      "clerk": {
+        "kind": "ref",
+        "name": "Clerk"
+      },
+      "signIn": {
+        "kind": "ref",
+        "name": "SignIn"
+      },
+      "signUp": {
+        "kind": "ref",
+        "name": "SignUp"
+      },
+      "session": {
+        "kind": "ref",
+        "name": "Session"
+      },
+      "user": {
+        "kind": "ref",
+        "name": "User"
+      },
+      "organization": {
+        "kind": "ref",
+        "name": "Organization"
+      }
+    },
+    "namingPolicy": "Remove Future and trailing Resource; fail collisions.",
+    "errorPolicy": "Approved authentication error-only envelopes throw after state is applied.",
+    "coreRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+    "bundleSHA256": "406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d",
+    "bundleBytes": 1317757,
+    "thirdPartyNoticesSHA256": "e4223a282e22ea86b1215013d7e6c5f4e6f02be8d14ca2ce357ed14ba319e1e9",
+    "bundledDependencies": [
+      {
+        "name": "@clerk/clerk-js",
+        "version": "6.31.0",
+        "license": "MIT",
+        "noticeSHA256": "67ad6d13f0d5c1d8cea4143041a6498e24b9bb5a3a931dd4e4da830473935c72"
+      },
+      {
+        "name": "@clerk/mobile-runtime",
+        "version": "0.0.0",
+        "license": "MIT",
+        "noticeSHA256": "bb582cd9530e388e0c8ec87df05756e867197116a9fa2e3bb48db12785776092"
+      },
+      {
+        "name": "@clerk/native-bindings",
+        "version": "0.0.0",
+        "license": "MIT",
+        "noticeSHA256": "bb582cd9530e388e0c8ec87df05756e867197116a9fa2e3bb48db12785776092"
+      },
+      {
+        "name": "@clerk/shared",
+        "version": "4.31.0",
+        "license": "MIT",
+        "noticeSHA256": "bb582cd9530e388e0c8ec87df05756e867197116a9fa2e3bb48db12785776092"
+      },
+      {
+        "name": "@stripe/stripe-js",
+        "version": "5.6.0",
+        "license": "MIT",
+        "noticeSHA256": "6c91cb98ce48d38c68373279e439f230532fb311b321a37ce080c89e2018cc39"
+      },
+      {
+        "name": "@tanstack/query-core",
+        "version": "5.102.8",
+        "license": "MIT",
+        "noticeSHA256": "277d2a8e459713d6c596bab89ef857cb8b2433223fa9edb49ccc403a6ceb08ee"
+      },
+      {
+        "name": "@wallet-standard/app",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/base",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/core",
+        "version": "1.1.1",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/errors",
+        "version": "0.1.1",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/features",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/wallet",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "alien-signals",
+        "version": "2.0.6",
+        "license": "MIT",
+        "noticeSHA256": "906251009c3633dc7ad932e279642ef6d376924ef6bbfb1f4e562211b50c7c67"
+      },
+      {
+        "name": "browser-tabs-lock",
+        "version": "1.3.0",
+        "license": "MIT",
+        "noticeSHA256": "d9f86d92023122397b859a28e4d10b626395c1431c00e1d6734d9cd814766004"
+      },
+      {
+        "name": "core-js",
+        "version": "3.47.0",
+        "license": "MIT",
+        "noticeSHA256": "f622755d31e11722cc78d911d1d5828593b6ae013d7738e08f16ee10d5200980"
+      },
+      {
+        "name": "crypto-js",
+        "version": "4.2.0",
+        "license": "MIT",
+        "noticeSHA256": "3bae8eb6da93d9a4e2a218341cedf58b057efc339566421261f89ab03c9ed25d"
+      },
+      {
+        "name": "dequal",
+        "version": "2.0.3",
+        "license": "MIT",
+        "noticeSHA256": "d0a8e5996a99e9ea88093954e45ab673905d5fdc2d243e45622bc5ff1cf35f36"
+      },
+      {
+        "name": "glob-to-regexp",
+        "version": "0.4.1",
+        "license": "BSD-2-Clause",
+        "noticeSHA256": "91c0ac7870145461be8962b9b5ad7c103b52978a5566edfdccdb3680c4818f3f"
+      },
+      {
+        "name": "js-cookie",
+        "version": "3.0.8",
+        "license": "MIT",
+        "noticeSHA256": "c44e6a5c3e88cfd23795e66a27f1bec24cd8ab81b28425ccaaac1bc15eae32a8"
+      }
+    ],
+    "runtime": {
+      "apple": "JavaScriptCore (system)",
+      "android": "quickjs-ng v0.15.1 fd0a0210b7be00957751871e7e01b8291268fc29"
+    }
+  },
+  "legacy": {
+    "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+    "path": "source/api/src/test/java/com/clerk/api/session/TokenFreshnessTest.kt",
+    "sha256": "13e0b2117d9f1dc2b4cae0feeb766a1b9e3fbe26fa97ffdbd1c15b54eaf9d4b9",
+    "category": "core-lifecycle",
+    "cases": [
+      {
+        "name": "keeps token with higher origin issued at",
+        "line": 25
+      },
+      {
+        "name": "uses issued at to break equal origin issued at",
+        "line": 35
+      },
+      {
+        "name": "replaces an expired existing token",
+        "line": 45
+      },
+      {
+        "name": "accepts incoming token when organization changes",
+        "line": 55
+      },
+      {
+        "name": "keeps decodable existing token when incoming cannot be decoded",
+        "line": 65
+      },
+      {
+        "name": "malformed token does not match session context",
+        "line": 75
+      },
+      {
+        "name": "token without session id does not match session context",
+        "line": 80
+      },
+      {
+        "name": "cache cannot be rolled back by a stale response",
+        "line": 87
+      },
+      {
+        "name": "out of order cache writes retain the freshest response",
+        "line": 103
+      },
+      {
+        "name": "hydration preserves canonical token on a timestamp tie",
+        "line": 121
+      }
+    ]
+  },
+  "expectedCases": {
+    "com.clerk.api.TokenFreshnessContractTest": [
+      "freshResponseBeforeStaleKeepsCanonicalToken",
+      "staleResponseBeforeFreshKeepsCanonicalToken",
+      "equalOriginUsesIssuedAtDespiteResponseOrder"
+    ],
+    "com.clerk.api.TokenSnapshotTest": [
+      "initialSnapshotAvoidsMinting",
+      "clearingCacheRequiresANewMint",
+      "mintedTimestampTieRemainsCached",
+      "staleSnapshotDoesNotReplaceMintedToken",
+      "freshSnapshotReplacesMintedToken",
+      "timestampTieAcceptsIncomingSnapshot",
+      "expiredSnapshotPreservesFresherMintInput"
+    ]
+  },
+  "executedCases": [
+    {
+      "name": "staleResponseBeforeFreshKeepsCanonicalToken",
+      "classname": "com.clerk.api.TokenFreshnessContractTest",
+      "time": "0.312"
+    },
+    {
+      "name": "freshResponseBeforeStaleKeepsCanonicalToken",
+      "classname": "com.clerk.api.TokenFreshnessContractTest",
+      "time": "0.229"
+    },
+    {
+      "name": "equalOriginUsesIssuedAtDespiteResponseOrder",
+      "classname": "com.clerk.api.TokenFreshnessContractTest",
+      "time": "0.222"
+    },
+    {
+      "name": "staleSnapshotDoesNotReplaceMintedToken",
+      "classname": "com.clerk.api.TokenSnapshotTest",
+      "time": "0.443"
+    },
+    {
+      "name": "initialSnapshotAvoidsMinting",
+      "classname": "com.clerk.api.TokenSnapshotTest",
+      "time": "0.209"
+    },
+    {
+      "name": "expiredSnapshotPreservesFresherMintInput",
+      "classname": "com.clerk.api.TokenSnapshotTest",
+      "time": "0.287"
+    },
+    {
+      "name": "timestampTieAcceptsIncomingSnapshot",
+      "classname": "com.clerk.api.TokenSnapshotTest",
+      "time": "0.263"
+    },
+    {
+      "name": "mintedTimestampTieRemainsCached",
+      "classname": "com.clerk.api.TokenSnapshotTest",
+      "time": "0.238"
+    },
+    {
+      "name": "clearingCacheRequiresANewMint",
+      "classname": "com.clerk.api.TokenSnapshotTest",
+      "time": "0.243"
+    },
+    {
+      "name": "freshSnapshotReplacesMintedToken",
+      "classname": "com.clerk.api.TokenSnapshotTest",
+      "time": "0.272"
+    }
+  ],
+  "sourceTests": {
+    "files": 3,
+    "passed": 200,
+    "command": "pnpm --filter @clerk/clerk-js test src/core/__tests__/tokenFreshness.test.ts src/core/__tests__/tokenCache.test.ts src/core/resources/__tests__/Session.test.ts"
+  },
+  "embeddedTests": {
+    "passed": 26,
+    "command": "node --no-opt --test test/token-snapshot.test.mjs test/token-decoding.test.mjs test/session-token-policy.test.mjs test/token-invalidation.test.mjs test/token-cancellation.test.mjs"
+  },
+  "limits": [
+    "Fixture HTTP; no live server validation or physical-device behavior",
+    "Initial combined Android class selector ran only first class; snapshot class executed separately",
+    "No runtime or generated API changes"
+  ],
+  "sha256": {
+    "TEST-token-freshness.xml": "e765d72ef52f161041eabd8b3d70cdbd742c9ff2664847ee76df2c8798cfb8a5",
+    "TEST-token-snapshot.xml": "098db9bbba2d64665503c3729e4c80cc866f1c86ef80d066300b14e2ced59084",
+    "embedded.log": "0c5cff3df8aa4e4d8f7ec6d5c2614a1188f4387e1f0090e55b75a823a59e1638",
+    "source.log": "37692c95640b7f95012dcab2f7cf3cad350447b5fea8e9419bb69aacd2752b08"
+  },
+  "sourceHashes": {
+    "NativeCoreTests/Android/TokenFreshnessContractTest.kt": "eb03e2fbc93bbc063b0de0db409f144e8c3c8b3f82b9e9cd35e85538ac9967ac",
+    "NativeCoreTests/Android/TokenSnapshotTest.kt": "fb98099710a3f02a1f0697865868bf6671b715e2c25651bf31a4cb8c0e97717a",
+    "scripts/android_test_results.py": "4c1a20a1a3a249e5dd685a56666bef4c653ccb75dde6ddd1502e56b437c86e57"
+  }
+}

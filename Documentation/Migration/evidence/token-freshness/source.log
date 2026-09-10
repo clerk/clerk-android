@@ -1,0 +1,23 @@
+.../electron-passkeys/npm/darwin-x64     |  WARN  Unsupported platform: wanted: {"cpu":["x64"],"os":["darwin"],"libc":["any"]} (current: {"os":"darwin","cpu":"arm64","libc":"unknown"})
+.../npm/win32-arm64-msvc                 |  WARN  Unsupported platform: wanted: {"cpu":["arm64"],"os":["win32"],"libc":["any"]} (current: {"os":"darwin","cpu":"arm64","libc":"unknown"})
+.../electron-passkeys/npm/win32-x64-msvc |  WARN  Unsupported platform: wanted: {"cpu":["x64"],"os":["win32"],"libc":["any"]} (current: {"os":"darwin","cpu":"arm64","libc":"unknown"})
+
+> @clerk/clerk-js@6.31.0 test /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js
+> vitest --watch=false src/core/__tests__/tokenFreshness.test.ts src/core/__tests__/tokenCache.test.ts src/core/resources/__tests__/Session.test.ts
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.mts:63:53). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+1:40:51 PM [vite] warning: `esbuild` option was specified by "vite:react-babel" plugin. This option is deprecated, please use `oxc` instead.
+`optimizeDeps.rollupOptions` / `ssr.optimizeDeps.rollupOptions` is deprecated. Use `optimizeDeps.rolldownOptions` instead. Note that this option may be set by a plugin. Set VITE_DEPRECATION_TRACE=1 to see where it is called.
+Both esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored. The following esbuild options were set: `{ jsx: 'automatic', jsxImportSource: '@emotion/react' }`
+[vite:react-babel] We recommend switching to `@vitejs/plugin-react-oxc` for improved performance. More information at https://vite.dev/rolldown
+
+ RUN  v5.0.0 /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js
+
+
+ Test Files  3 passed (3)
+      Tests  200 passed (200)
+   Start at  13:40:51
+   Duration  1.15s (environment 47%, transform 28%, setup 19%, import 4%, tests 2%)
+
