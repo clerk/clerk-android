@@ -28,7 +28,12 @@ class AuthViewJourneyTest {
   @get:Rule val compose = createComposeRule()
 
   @Test
-  fun emailCodeErrorCanBeRetriedAndPrebuiltFlowFinalizesExactlyOnce() {
+  fun emailCodeErrorCanBeRetriedAndPrebuiltFlowFinalizesExactlyOnce() = emailCodeJourney(false)
+
+  @Test
+  fun automaticPasskeyPreparationFailureIsVisibleAndEmailSignInCompletes() = emailCodeJourney(true)
+
+  private fun emailCodeJourney(rejectAutomaticPasskey: Boolean) {
     val instrumentation = InstrumentationRegistry.getInstrumentation()
     val context = instrumentation.targetContext
     val fixtures =
@@ -36,7 +41,8 @@ class AuthViewJourneyTest {
           instrumentation.context.assets.open("fapi.json").bufferedReader().use { it.readText() }
         )
         .jsonObject
-    val host = EmailCodeJourneyHost(fixtures)
+    val host = EmailCodeJourneyHost(fixtures, rejectAutomaticPasskey)
+    val prefix = if (rejectAutomaticPasskey) "passkey-" else ""
     val key =
       "pk_test_" +
         Base64.getEncoder().encodeToString("native-core.clerk.accounts.dev$".toByteArray())
@@ -63,8 +69,17 @@ class AuthViewJourneyTest {
           }
         }
       }
+      if (rejectAutomaticPasskey) {
+        waitForText(EmailCodeJourneyHost.PASSKEY_PREPARATION_MESSAGE)
+        compose.runOnIdle {
+          assertEquals(1, host.passkeyPreparations)
+          assertNull(clerk.session)
+          assertEquals(0, completions)
+        }
+        capture("${prefix}00-preparation-error")
+      }
       compose.onNode(hasSetTextAction()).performTextInput("test@example.com")
-      capture("01-identifier")
+      capture("${prefix}01-identifier")
       compose.onNodeWithText(context.getString(R.string.continue_text)).performClick()
       waitForText(context.getString(R.string.check_your_email))
       compose.runOnIdle {
@@ -80,7 +95,7 @@ class AuthViewJourneyTest {
         assertEquals(0, completions)
         assertEquals(0, host.touches)
       }
-      capture("02-invalid-code")
+      capture("${prefix}02-invalid-code")
       compose.onNode(hasSetTextAction()).performTextReplacement("424242")
       waitForText("Signed in through the core")
       compose.runOnIdle {
@@ -89,14 +104,15 @@ class AuthViewJourneyTest {
         assertEquals(1, completions)
         assertEquals(1, host.touches)
         assertEquals(listOf("000000", "424242"), host.attemptedCodes)
+        assertEquals(if (rejectAutomaticPasskey) 1 else 0, host.passkeyPreparations)
       }
-      capture("03-completed")
+      capture("${prefix}03-completed")
     } catch (error: Throwable) {
       println(
         "Auth journey attempted codes: ${host.attemptedCodes}; touches: ${host.touches}; requests: ${host.requests}"
       )
       println(compose.onRoot().printToString())
-      runCatching { capture("failure") }
+      runCatching { capture("${prefix}failure") }
       throw error
     } finally {
       compose.runOnIdle { mounted.value = false }
@@ -130,8 +146,13 @@ class AuthViewJourneyTest {
   }
 }
 
-private class EmailCodeJourneyHost(private val fixtures: JsonObject) : NativeCapabilities {
-  override val supported = setOf("http", "storage", "timer", "random")
+private class EmailCodeJourneyHost(
+  private val fixtures: JsonObject,
+  private val rejectAutomaticPasskey: Boolean,
+) : NativeCapabilities {
+  override val supported =
+    setOf("http", "storage", "timer", "random") +
+      if (rejectAutomaticPasskey) setOf("passkeys") else emptySet()
   private var credential: JsonElement = JsonNull
   private var signIn: JsonElement = JsonNull
   private var complete = false
@@ -139,6 +160,9 @@ private class EmailCodeJourneyHost(private val fixtures: JsonObject) : NativeCap
   val attemptedCodes = mutableListOf<String>()
   val requests = mutableListOf<String>()
   var touches = 0
+    private set
+
+  var passkeyPreparations = 0
     private set
 
   private val environment: JsonObject = run {
@@ -155,13 +179,34 @@ private class EmailCodeJourneyHost(private val fixtures: JsonObject) : NativeCap
             "verifications" to JsonArray(listOf(JsonPrimitive("email_code"))),
           )
       )
-    JsonObject(
-      original +
-        ("user_settings" to
-          JsonObject(
-            settings + ("attributes" to JsonObject(attributes + ("email_address" to email)))
-          ))
-    )
+    val enabledAttributes =
+      attributes.toMutableMap().apply {
+        put("email_address", email)
+        if (rejectAutomaticPasskey)
+          put(
+            "passkey",
+            JsonObject(
+              attributes.getValue("passkey").jsonObject +
+                mapOf(
+                  "enabled" to JsonPrimitive(true),
+                  "used_for_first_factor" to JsonPrimitive(true),
+                )
+            ),
+          )
+      }
+    val enabledSettings =
+      settings.toMutableMap().apply {
+        put("attributes", JsonObject(enabledAttributes))
+        if (rejectAutomaticPasskey)
+          put(
+            "passkey_settings",
+            JsonObject(
+              settings.getValue("passkey_settings").jsonObject +
+                ("allow_autofill" to JsonPrimitive(true))
+            ),
+          )
+      }
+    JsonObject(original + ("user_settings" to JsonObject(enabledSettings)))
   }
 
   private fun session() =
@@ -249,11 +294,31 @@ private class EmailCodeJourneyHost(private val fixtures: JsonObject) : NativeCap
         path.endsWith("/environment") -> buildJsonObject { put("response", environment) }
         path.endsWith("/client") -> buildJsonObject { put("response", client()) }
         path.endsWith("/client/sign_ins") -> {
-          check(form.getQueryParameter("identifier") == "test@example.com")
-          updateSignIn()
-          buildJsonObject {
-            put("response", signIn)
-            put("client", client())
+          if (form.getQueryParameter("strategy") == "passkey") {
+            check(rejectAutomaticPasskey)
+            passkeyPreparations++
+            status = 422
+            buildJsonObject {
+              put(
+                "errors",
+                buildJsonArray {
+                  add(
+                    buildJsonObject {
+                      put("code", "passkey_preparation_failed")
+                      put("message", "Passkey preparation failed")
+                      put("long_message", PASSKEY_PREPARATION_MESSAGE)
+                    }
+                  )
+                },
+              )
+            }
+          } else {
+            check(form.getQueryParameter("identifier") == "test@example.com")
+            updateSignIn()
+            buildJsonObject {
+              put("response", signIn)
+              put("client", client())
+            }
           }
         }
         path.endsWith("/prepare_first_factor") -> {
@@ -335,5 +400,6 @@ private class EmailCodeJourneyHost(private val fixtures: JsonObject) : NativeCap
 
   companion object {
     const val INVALID_CODE_MESSAGE = "That code is incorrect. Try again."
+    const val PASSKEY_PREPARATION_MESSAGE = "Passkey sign-in could not start. Try email instead."
   }
 }

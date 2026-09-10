@@ -172,17 +172,23 @@ class AndroidPasskeyHostTest {
   fun providerFailuresPropagateWithoutRetry() = runTest {
     val createFailure =
       CreateCredentialProviderConfigurationException("Fixture provider unavailable")
-    val getFailure = NoCredentialException("Fixture has no credential")
     provider.create = { _, callback -> callback.onError(createFailure) }
-    provider.get = { _, callback -> callback.onError(getFailure) }
     check(
       runCatching { host().perform("passkeys.create", createOptions) }.exceptionOrNull() ===
         createFailure
     )
-    check(
-      runCatching { host().perform("passkeys.get", getOptions) }.exceptionOrNull() === getFailure
-    )
-    check(provider.calls == listOf("create", "get"))
+    for (getFailure in
+      listOf(
+        NoCredentialException("Fixture has no credential"),
+        GetCredentialProviderConfigurationException("Fixture provider unavailable"),
+        GetCredentialUnknownException("Fixture ceremony failed"),
+      )) {
+      provider.get = { _, callback -> callback.onError(getFailure) }
+      check(
+        runCatching { host().perform("passkeys.get", getOptions) }.exceptionOrNull() === getFailure
+      )
+    }
+    check(provider.calls == listOf("create", "get", "get", "get"))
   }
 
   @Test

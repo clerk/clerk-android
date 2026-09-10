@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="4" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T23:01:44" hostname="localhost">
+  <testsuite name="com.clerk.api.PasskeyRecoveryTest" tests="4" failures="0" errors="0" skipped="0" time="0.877" timestamp="2026-09-10T23:01:44" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="emailSignInFollowsInvalidCredential" classname="com.clerk.api.PasskeyRecoveryTest" time="0.264" />
+    <testcase name="emailSignInFollowsProviderFailure" classname="com.clerk.api.PasskeyRecoveryTest" time="0.208" />
+    <testcase name="emailSignInFollowsCancelledPasskey" classname="com.clerk.api.PasskeyRecoveryTest" time="0.205" />
+    <testcase name="emailSignInFollowsMissingPresentation" classname="com.clerk.api.PasskeyRecoveryTest" time="0.200" />
+  </testsuite>
+</testsuites>

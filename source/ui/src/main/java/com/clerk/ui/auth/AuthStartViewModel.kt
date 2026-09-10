@@ -39,13 +39,17 @@ internal class AuthStartViewModel(private val clerk: Clerk) : ViewModel() {
               if (isActive) _state.value = AuthState.Success.SignInSuccess(clerk.signIn)
             }
             .onFailure { error ->
-              if (
-                isActive &&
-                  !error.isSSOCancellation &&
-                  (error as? CoreException)?.passkeyStage in
-                    setOf("attemptingFirstFactor", "attemptingSecondFactor")
-              )
-                _state.value = AuthState.Error(error.displayMessage)
+              val failure = error as? CoreException
+              val suppressError =
+                error.isSSOCancellation ||
+                  failure?.passkeyStage == "requestingAuthorization" ||
+                  failure?.code in
+                    setOf(
+                      "passkey_not_supported",
+                      "capability_unavailable",
+                      "presentation_unavailable",
+                    )
+              if (isActive && !suppressError) _state.value = AuthState.Error(error.displayMessage)
             }
         } finally {
           if (automaticPasskeySignInJob === coroutineContext[Job]) automaticPasskeySignInJob = null

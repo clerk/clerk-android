@@ -12,4 +12,5 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 python3 -B scripts/android_test_results.py \
   --results source/ui/build/outputs/androidTest-results/connected/debug \
-  --expected 'com.clerk.ui.auth.AuthViewJourneyTest#emailCodeErrorCanBeRetriedAndPrebuiltFlowFinalizesExactlyOnce'
+  --expected 'com.clerk.ui.auth.AuthViewJourneyTest#emailCodeErrorCanBeRetriedAndPrebuiltFlowFinalizesExactlyOnce' \
+  --expected 'com.clerk.ui.auth.AuthViewJourneyTest#automaticPasskeyPreparationFailureIsVisibleAndEmailSignInCompletes'

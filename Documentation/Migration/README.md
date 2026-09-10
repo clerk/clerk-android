@@ -141,7 +141,7 @@ Before general release, validate a signed-in old-major app upgraded in place; re
 
 The replaced native domain source tree has been deleted from this major. The linked baseline and hashed source inventory preserve its public declarations for migration review. The generated `NativeCore` target is the implementation; no old native authentication fallback is packaged.
 
-Of the 105 old JVM test/helper files, three have been migrated, 48 have been retired after assertion review, and 54 remain for the unfinished audit. The [test audit](test-audit.md) links the replacement evidence and intentional API changes. Retained files are not claimed to run against the generated API.
+Of the 105 old JVM test/helper files, three have been migrated, 49 have been retired after assertion review, and 53 remain for the unfinished audit. The [test audit](test-audit.md) links the replacement evidence and intentional API changes. Retained files are not claimed to run against the generated API.
 
 For Expo consumers, see the [D8/R8 compiler compatibility proof](../Measurements/expo-compiler-build.md). Kotlin source compiler compatibility alone does not establish that the app can process the SDK's Kotlin metadata.
 

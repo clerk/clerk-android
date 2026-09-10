@@ -112,12 +112,39 @@ class AuthViewModelTest {
   }
 
   @Test
-  fun automaticPasskeySignInSuppressesNoSavedCredentialError() {
+  fun automaticPasskeySignInSuppressesProviderFailure() {
     coEvery { signIn.passkey(any()) } throws
-      CoreException("no_saved_credential", passkeyStage = "gettingCredential")
+      CoreException("host_failure", passkeyStage = "requestingAuthorization")
     viewModel.startAutomaticPasskeySignIn()
     finish()
     assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
+    start()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), viewModel.state.value)
+  }
+
+  @Test
+  fun automaticPasskeySignInAllowsManualEntryAfterMissingPresentation() {
+    coEvery { signIn.passkey(any()) } throws
+      CoreException("presentation_unavailable", passkeyStage = "requestingAuthorization")
+    viewModel.startAutomaticPasskeySignIn()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
+    start()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), viewModel.state.value)
+  }
+
+  @Test
+  fun automaticPasskeySignInAllowsManualEntryAfterInvalidCredential() {
+    coEvery { signIn.passkey(any()) } throws
+      CoreException("invalid_credential_response", passkeyStage = "requestingAuthorization")
+    viewModel.startAutomaticPasskeySignIn()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
+    start()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Success.SignInSuccess(signIn), viewModel.state.value)
   }
 
   @Test
@@ -136,6 +163,31 @@ class AuthViewModelTest {
     viewModel.startAutomaticPasskeySignIn()
     finish()
     assertEquals(AuthStartViewModel.AuthState.Error("Passkey failed"), viewModel.state.value)
+  }
+
+  @Test
+  fun automaticPasskeySignInSurfacesPreparationApiErrors() {
+    coEvery { signIn.passkey(any()) } throws
+      CoreException("request_failed", "Preparation failed", passkeyStage = "preparingFirstFactor")
+    viewModel.startAutomaticPasskeySignIn()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Error("Preparation failed"), viewModel.state.value)
+  }
+
+  @Test
+  fun automaticPasskeySignInSurfacesUnexpectedFailure() {
+    coEvery { signIn.passkey(any()) } throws IllegalStateException("Serialization failed")
+    viewModel.startAutomaticPasskeySignIn()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Error("Serialization failed"), viewModel.state.value)
+  }
+
+  @Test
+  fun automaticPasskeySignInSuppressesUnsupportedCapabilities() {
+    coEvery { signIn.passkey(any()) } throws CoreException("passkey_not_supported")
+    viewModel.startAutomaticPasskeySignIn()
+    finish()
+    assertEquals(AuthStartViewModel.AuthState.Idle, viewModel.state.value)
   }
 
   @Test

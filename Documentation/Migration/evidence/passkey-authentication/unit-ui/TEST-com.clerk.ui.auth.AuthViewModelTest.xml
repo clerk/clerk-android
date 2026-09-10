@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.ui.auth.AuthViewModelTest" tests="35" skipped="0" failures="0" errors="0" timestamp="2026-09-10T23:05:03.192Z" hostname="mac.lan" time="0.977">
+  <properties/>
+  <testcase name="automaticPasskeySignInAllowsManualEntryAfterInvalidCredential" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.865"/>
+  <testcase name="automaticPasskeySignInSuppressesUserCancelledError" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.004"/>
+  <testcase name="socialOAuthCancellationReturnsToIdle" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.008"/>
+  <testcase name="googleSocialAuthPassesOneTapPreferenceToCore" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.006"/>
+  <testcase name="startAuthWithSignInOrUpModeShouldInitiateSignInOrUpFlow" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.004"/>
+  <testcase name="signUpParamsShouldBeCreatedCorrectlyBasedOnInputType" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="automaticPasskeySignInAllowsManualEntryAfterMissingPresentation" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.004"/>
+  <testcase name="automaticPasskeySignInSurfacesPreparationApiErrors" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.004"/>
+  <testcase name="identifierResolutionShouldUseEmailWhenPhoneInactive" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="startAuthWithSignUpPassesUnsafeMetadataToCore" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.005"/>
+  <testcase name="socialOAuthSignUpPassesUnsafeMetadata" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="oauthResultWithSignInResultTypeShouldSetCorrectSuccessState" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="automaticPasskeySignInUsesPasskeyStrategy" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="automaticPasskeySignInDoesNotDuplicatePendingRequest" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.01"/>
+  <testcase name="automaticPasskeySignInSuppressesProviderFailure" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="googleSocialAuthAcceptsCoreBrowserFallbackResult" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="emailInputClassificationShouldWorkCorrectly" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.007"/>
+  <testcase name="startAuthWithSignInModeShouldSurfaceUnknownFailure" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="startAuthWithSignInModeShouldSurfaceApiFailure" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="customSocialAuthPreservesProviderStrategy" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="automaticPasskeySignInSurfacesUnexpectedFailure" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="automaticPasskeySignInSuppressesUnsupportedCapabilities" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="enterpriseSSOCancellationReturnsToIdle" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.006"/>
+  <testcase name="automaticPasskeySignInSurfacesApiErrors" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="explicitAuthenticationCancelsAutomaticPasskey" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="signInOrUpFallbackPreservesMetadataAndPhoneSelection" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="enterpriseSSODetectionShouldStartCoreBrowserFlow" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="googleSocialAuthUsesBrowserRedirectWhenOneTapIsNotPreferred" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.001"/>
+  <testcase name="socialOAuthCanStartWithSignUp" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="authModeEnumShouldHaveCorrectValues" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="oauthProviderShouldHaveExpectedValues" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.001"/>
+  <testcase name="oauthResultWithSignUpResultTypeShouldSetCorrectSuccessState" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="authModeTransferabilityShouldMatchFlowMode" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.001"/>
+  <testcase name="invalidOAuthResultShouldSetErrorState" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.001"/>
+  <testcase name="initialStateShouldBeIdle" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/Users/mikepitre/.gradle/caches/9.7.1/transforms/3fe64f7182d8271eecc87e0bd81add2b/transformed/byte-buddy-agent-1.18.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.ui.auth.AuthViewModelTest" tests="35" skipped="0" failures="2" errors="0" timestamp="2026-09-10T23:04:00.091Z" hostname="mac.lan" time="0.983">
+  <properties/>
+  <testcase name="automaticPasskeySignInAllowsManualEntryAfterInvalidCredential" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.865"/>
+  <testcase name="automaticPasskeySignInSuppressesUserCancelledError" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.004"/>
+  <testcase name="socialOAuthCancellationReturnsToIdle" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.008"/>
+  <testcase name="googleSocialAuthPassesOneTapPreferenceToCore" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.006"/>
+  <testcase name="startAuthWithSignInOrUpModeShouldInitiateSignInOrUpFlow" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.005"/>
+  <testcase name="signUpParamsShouldBeCreatedCorrectlyBasedOnInputType" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="automaticPasskeySignInAllowsManualEntryAfterMissingPresentation" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.004"/>
+  <testcase name="automaticPasskeySignInSurfacesPreparationApiErrors" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.006">
+    <failure message="java.lang.AssertionError: expected:&lt;Error(message=Preparation failed)&gt; but was:&lt;com.clerk.ui.auth.AuthStartViewModel$AuthState$Idle@b808af5&gt;" type="java.lang.AssertionError">java.lang.AssertionError: expected:&lt;Error(message=Preparation failed)&gt; but was:&lt;com.clerk.ui.auth.AuthStartViewModel$AuthState$Idle@b808af5&gt;
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at com.clerk.ui.auth.AuthViewModelTest.automaticPasskeySignInSurfacesPreparationApiErrors(AuthViewModelTest.kt:174)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:115)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestExecutor.runRequest(JUnitTestExecutor.java:174)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestExecutor.accept(JUnitTestExecutor.java:84)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestExecutor.accept(JUnitTestExecutor.java:47)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestDefinitionProcessor.processTestDefinition(AbstractJUnitTestDefinitionProcessor.java:65)
+	at org.gradle.api.internal.tasks.testing.SuiteTestDefinitionProcessor.processTestDefinition(SuiteTestDefinitionProcessor.java:53)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestDefinition(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:178)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+</failure>
+  </testcase>
+  <testcase name="identifierResolutionShouldUseEmailWhenPhoneInactive" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="startAuthWithSignUpPassesUnsafeMetadataToCore" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.005"/>
+  <testcase name="socialOAuthSignUpPassesUnsafeMetadata" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="oauthResultWithSignInResultTypeShouldSetCorrectSuccessState" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="automaticPasskeySignInUsesPasskeyStrategy" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.004"/>
+  <testcase name="automaticPasskeySignInDoesNotDuplicatePendingRequest" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.01"/>
+  <testcase name="automaticPasskeySignInSuppressesProviderFailure" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="googleSocialAuthAcceptsCoreBrowserFallbackResult" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="emailInputClassificationShouldWorkCorrectly" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.008"/>
+  <testcase name="startAuthWithSignInModeShouldSurfaceUnknownFailure" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="startAuthWithSignInModeShouldSurfaceApiFailure" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="customSocialAuthPreservesProviderStrategy" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.001"/>
+  <testcase name="automaticPasskeySignInSurfacesUnexpectedFailure" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003">
+    <failure message="java.lang.AssertionError: expected:&lt;Error(message=Serialization failed)&gt; but was:&lt;com.clerk.ui.auth.AuthStartViewModel$AuthState$Idle@b808af5&gt;" type="java.lang.AssertionError">java.lang.AssertionError: expected:&lt;Error(message=Serialization failed)&gt; but was:&lt;com.clerk.ui.auth.AuthStartViewModel$AuthState$Idle@b808af5&gt;
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at com.clerk.ui.auth.AuthViewModelTest.automaticPasskeySignInSurfacesUnexpectedFailure(AuthViewModelTest.kt:182)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:115)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestExecutor.runRequest(JUnitTestExecutor.java:174)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestExecutor.accept(JUnitTestExecutor.java:84)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestExecutor.accept(JUnitTestExecutor.java:47)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestDefinitionProcessor.processTestDefinition(AbstractJUnitTestDefinitionProcessor.java:65)
+	at org.gradle.api.internal.tasks.testing.SuiteTestDefinitionProcessor.processTestDefinition(SuiteTestDefinitionProcessor.java:53)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestDefinition(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:178)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+</failure>
+  </testcase>
+  <testcase name="automaticPasskeySignInSuppressesUnsupportedCapabilities" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="enterpriseSSOCancellationReturnsToIdle" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.007"/>
+  <testcase name="automaticPasskeySignInSurfacesApiErrors" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="explicitAuthenticationCancelsAutomaticPasskey" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="signInOrUpFallbackPreservesMetadataAndPhoneSelection" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="enterpriseSSODetectionShouldStartCoreBrowserFlow" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="googleSocialAuthUsesBrowserRedirectWhenOneTapIsNotPreferred" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="socialOAuthCanStartWithSignUp" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="authModeEnumShouldHaveCorrectValues" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="oauthProviderShouldHaveExpectedValues" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.001"/>
+  <testcase name="oauthResultWithSignUpResultTypeShouldSetCorrectSuccessState" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="authModeTransferabilityShouldMatchFlowMode" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.001"/>
+  <testcase name="invalidOAuthResultShouldSetErrorState" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.002"/>
+  <testcase name="initialStateShouldBeIdle" classname="com.clerk.ui.auth.AuthViewModelTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/Users/mikepitre/.gradle/caches/9.7.1/transforms/3fe64f7182d8271eecc87e0bd81add2b/transformed/byte-buddy-agent-1.18.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>
