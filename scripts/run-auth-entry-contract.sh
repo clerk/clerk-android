@@ -65,3 +65,7 @@ run_suite BrowserSSOContractTest \
   unrelatedCallbackDoesNotSubmitNonce rejectedPreparationPreservesStructuredError \
   browserTransferCreatesSignUpWithMetadataWithoutSecondPrompt disabledBrowserTransferDoesNotCreateSignUp \
   signInTransportFailureDoesNotBecomeSuccess signUpTransportFailureDoesNotBecomeSuccess
+
+run_suite OAuthProviderRequestTest \
+  customExternalAccountPreservesStrategyThroughBrowserAndReload \
+  googleExternalAccountUsesCanonicalStrategyAndReturnedResource

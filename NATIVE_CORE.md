@@ -32,7 +32,7 @@ Profile and organization actions call generated resources directly and catch str
 
 ## UI verification
 
-Run `./gradlew :source:ui:testDebugUnitTest` with JDK 21. The migrated target retains all test files and passes 508 behavior tests across 98 suites, including assertions that execute after snapshot rendering. `:source:ui:connectedDebugAndroidTest` also verifies that removing a screen or replacing its core cancels the screen-owned model work.
+Run `./gradlew :source:ui:testDebugUnitTest` with JDK 21. The migrated target retains all test files and passes 517 behavior tests across 99 suites, including assertions that execute after snapshot rendering. `:source:ui:connectedDebugAndroidTest` also verifies that removing a screen or replacing its core cancels the screen-owned model work.
 
 `./gradlew :source:ui:verifyPaparazziDebug` currently reports 21 existing golden-image failures. An isolated, unchanged checkout of `main` at `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f` reproduces the same 21 failures; all 21 actual rendered PNG files match that baseline byte for byte. No golden files were replaced. This baseline comparison distinguishes preserved rendering from the repository's outstanding golden updates; the golden verification task itself is not green.
 

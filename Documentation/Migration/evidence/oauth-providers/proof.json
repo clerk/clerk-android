@@ -1,0 +1,262 @@
+{
+  "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+  "retired": [
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sdk/ToOAuthProvidersListTest.kt",
+      "sha256": "7edc3f49d65e0e810d3f5d920ea2f22f9e9f098c33beace7bb002e140a8247e6",
+      "category": "presentation-and-values",
+      "cases": [
+        {
+          "name": "returns only enabled and authenticatable providers",
+          "line": 28
+        },
+        {
+          "name": "returns empty list when no providers are enabled and authenticatable",
+          "line": 44
+        },
+        {
+          "name": "returns empty list for empty map",
+          "line": 57
+        },
+        {
+          "name": "returns all providers when all are enabled and authenticatable",
+          "line": 66
+        },
+        {
+          "name": "preserves distinct custom provider strategies",
+          "line": 81
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/sso/OAuthProviderTest.kt",
+      "sha256": "88329430e6e6465b8235c35785540a51c8c3e91b5a09cd5bfca99e676e33c069",
+      "category": "presentation-and-values",
+      "cases": [
+        {
+          "name": "fromStrategy preserves a custom OAuth strategy",
+          "line": 24
+        },
+        {
+          "name": "custom providers with different keys remain distinct",
+          "line": 33
+        },
+        {
+          "name": "custom provider reads configured name and logo by exact strategy",
+          "line": 41
+        },
+        {
+          "name": "serialization preserves built-in format and custom strategy",
+          "line": 50
+        }
+      ]
+    },
+    {
+      "path": "source/api/src/test/java/com/clerk/api/user/UserOAuthProviderTest.kt",
+      "sha256": "dc38219d6ffa0d39dcb3f20a1105f46bb6b77e44bd4d0e1ac5683b37f4d1dcac",
+      "category": "presentation-and-values",
+      "cases": [
+        {
+          "name": "create external account params preserve custom strategy",
+          "line": 24
+        },
+        {
+          "name": "connecting one custom provider does not hide another",
+          "line": 32
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "NativeCoreTests/Android/OAuthProviderRequestTest.kt": "bd4cb71d5f1f1859d020468892120f2e2e691899f8233f2dddb79eb94ac4ff9e",
+    "source/ui/src/test/java/com/clerk/ui/auth/OAuthProviderPresentationTest.kt": "2f659120f91acd0d33779126905272bdca6b8f9a9ce40d330cfc5eb0471268ed"
+  },
+  "reports": {
+    "TEST-OAuthProviderRequestTest.xml": {
+      "passed": 2,
+      "sha256": "fc1ba12efb164ede642b670150c979ae51883c40cf231e1da826e2a50f0d8928",
+      "tests": [
+        "customExternalAccountPreservesStrategyThroughBrowserAndReload",
+        "googleExternalAccountUsesCanonicalStrategyAndReturnedResource"
+      ]
+    },
+    "TEST-OAuthProviderPresentationTest.xml": {
+      "passed": 9,
+      "sha256": "5774c9d45babf0eb8356e9fe781190257b0b41c1b759c1edf1b7e2874a6c8d68",
+      "tests": [
+        "signInRequiresEnabledAndAuthenticatable",
+        "signInHasNoChoicesWhenNoProviderQualifies",
+        "emptyConfigurationHasNoChoices",
+        "allEligibleBuiltInProvidersArePreserved",
+        "distinctCustomProvidersRetainOrderAndRawKeys",
+        "generatedProviderSerializationUsesCanonicalValues",
+        "generatedStrategySerializationPreservesCustomPrefix",
+        "connectedCustomProviderDoesNotHideAnotherOrRequireSignInEligibility",
+        "configuredDisplayNameAndLogoUseExactCustomStrategy"
+      ]
+    }
+  },
+  "gate": {
+    "GoogleIdentityContractTest": {
+      "passed": 16,
+      "file": "gate/GoogleIdentityContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "0aa87e01c5c5daf2280476c44473c929590f82309d0a63efd778ebfa98e53df6"
+    },
+    "GoogleIdentityRequestTest": {
+      "passed": 3,
+      "file": "gate/GoogleIdentityRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "6057c96a158eb091fa280410b4777c0a022dc78c90c89a7b4b1ca0a7e37a95f8"
+    },
+    "AuthEntryPointTest": {
+      "passed": 5,
+      "file": "gate/AuthEntryPointTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "b43850e7617d189ae4aa4b158602098d9f0d6cdc666ad08714e97c1507e85ab9"
+    },
+    "SessionSelectionContractTest": {
+      "passed": 8,
+      "file": "gate/SessionSelectionContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "477e813cbad8fb197b235910d0aff24fa1be4ab8cd0cfdb91fbf5a500b29b2c5"
+    },
+    "SignInCredentialContractTest": {
+      "passed": 5,
+      "file": "gate/SignInCredentialContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "4f0c8bcbc475a933361e8ce140b380f88c49ed4e120b497c66cfec30593304c4"
+    },
+    "SignUpVerificationRequestTest": {
+      "passed": 3,
+      "file": "gate/SignUpVerificationRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "76e70ff6b1e665207ec3c0c8a57ff1ad84e56f7a117f96dc05421170b0a981a7"
+    },
+    "SignOutContractTest": {
+      "passed": 7,
+      "file": "gate/SignOutContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "de86e2eea82e7b65775b328ae2ef53b9cfe806c324aeb7f3c0ba4c2929caa249"
+    },
+    "BrowserSSOContractTest": {
+      "passed": 16,
+      "file": "gate/BrowserSSOContractTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "239667223ac9d6e0f9d856d993eb86f1bc612620d93b994ce505f7f788b6d300"
+    },
+    "OAuthProviderRequestTest": {
+      "passed": 2,
+      "file": "gate/OAuthProviderRequestTest/TEST-Pixel_9_Pro(AVD) - 16.xml",
+      "sha256": "dbb4c2fad2d9c15d141ca53eb968861cbb3010b4eb7ed70ed9b5ec3a9b1fbd4e"
+    }
+  },
+  "unit": {
+    "api": {
+      "passed": 12,
+      "suites": 3,
+      "reports": {
+        "TEST-com.clerk.api.AndroidHTTPCapabilityTest.xml": "362c7f76661c28ce659c6f7be93beb87436e253dfbafce364314a3a8d72c55c6",
+        "TEST-com.clerk.api.AndroidTimerCapabilityTest.xml": "1b6d422c6a7cf30112527a40e5abda44db8891cdeb93c0c4477ed142a3481426",
+        "TEST-com.clerk.api.ClerkConfigurationTest.xml": "28b15efd5135eb62ebe46cd82ff1e7389ea723552490237bdd94e628bad37de4"
+      }
+    },
+    "ui": {
+      "passed": 517,
+      "suites": 99,
+      "reports": {
+        "TEST-com.clerk.snapshot.appbar.ClerkTopAppBarSnapshotTest.xml": "61c43981fb7414a401bddfdbfa66eb4c76dc36ae8f3a81f7d43126fbe3b1d902",
+        "TEST-com.clerk.snapshot.auth.AuthStartViewSnapshotTest.xml": "8f59ecea9fbcb1edf8db97ae8ada16205456ac0e69e2b596c5678dc4eef59ace",
+        "TEST-com.clerk.snapshot.badge.BadgeSnapshotTest.xml": "c81f3922a20b6877fecdd4584b71a977c602b044a774437e79f455e88c59da83",
+        "TEST-com.clerk.snapshot.button.ClerkStandardButtonSnapshotTest.xml": "d1722b42c773f00383e7a74886ac24f28b4ea2beefb3cc073fbb636cd9061484",
+        "TEST-com.clerk.snapshot.button.SocialButtonSnapshotTest.xml": "009d9ec23e9e5545d3efe7b4a68f582a3ec31384d0026811a0a0a996e968a1b8",
+        "TEST-com.clerk.snapshot.input.ClerkCodeInputFieldSnapshotTest.xml": "49532a8301ba22e4d3b5b75ee63f166d53ada30fe17d8a4183ee7f22a2749174",
+        "TEST-com.clerk.snapshot.input.ClerkPhoneNumberFieldSnapshotTest.xml": "c02d4ca3e8759ad9177fb594a3cb6e12a8639abbc3412f868d824418374157d2",
+        "TEST-com.clerk.snapshot.input.ClerkTextFieldSnapshotTest.xml": "31bd450194cb9ba0c9f3768e0daf5f6e1041d7c4fe778c172bcc06ce69895f0b",
+        "TEST-com.clerk.snapshot.organizationlist.OrganizationListSnapshotTest.xml": "cfdeda0deaa5a9383cf12d5ab44ce2a12a98eaf211c42823144199664bb7ae82",
+        "TEST-com.clerk.snapshot.organizationprofile.OrganizationProfileSnapshotTest.xml": "67eca5ce201359de9c4584d58d1fc33af8ff1cfc59a6ebc369f2dc539c6e02ab",
+        "TEST-com.clerk.snapshot.organizationswitcher.OrganizationSwitcherSnapshotTest.xml": "88fdbabaadf5ecd9a2a198b5dcf62eb46f86c85d55781b7ba8ffa3cece813e3e",
+        "TEST-com.clerk.snapshot.signin.SignInGetHelpViewSnapshotTest.xml": "cf76ee645eac5ded9c9e820a5daea9281ab16e0d107aafcd14f7f60c35509f3a",
+        "TEST-com.clerk.snapshot.userprofile.CustomRowSnapshotTest.xml": "385e7660f89b1ed80e951f255d5fcb4faab0fac14927868868adda099a36cb04",
+        "TEST-com.clerk.snapshot.userprofile.UserProfileBackupCodeDestinationSnapshotTest.xml": "52a5bf032d75c2645b2525b6a2bfc55dfc8cccf5f42cfb3a105deae9c35c0bd2",
+        "TEST-com.clerk.snapshot.userprofile.UserProfileBiometricCredentialsSectionSnapshotTest.xml": "655ec677e785e6749b5bd0aaa51f732fc803e1845d96974a09af73aa9f386144",
+        "TEST-com.clerk.snapshot.userprofile.UserProfilePasswordSectionSnapshotTest.xml": "ee71946e3335f38c189c5e172828ed5bbb0f2dac3679a5fb5b338b056139d242",
+        "TEST-com.clerk.ui.auth.AuthStartViewHelperTest.xml": "e5d8ebc2fa0b715cd4cc190ba8385b778eda0298738f302904b6e6f4ab74600a",
+        "TEST-com.clerk.ui.auth.AuthStateConfigurationTest.xml": "489d7910df9937dd1e4b388153eb60e46a0aab345f9fd59f3c1b0b48d959ffca",
+        "TEST-com.clerk.ui.auth.AuthStateCredentialResetTest.xml": "7df8c965989fe7ae481ef7be4d6949ab4d6d4e727a69e538735aa6e37809d4e4",
+        "TEST-com.clerk.ui.auth.AuthStateEffectsTest.xml": "0b3bbd710e36c82372bdfeec04b904063afc7b15ec5666dbd4f3656d26df1f51",
+        "TEST-com.clerk.ui.auth.AuthStateForceMfaTest.xml": "e53beadc3d487304eccf24d9d2a96a441af6822b74eeb6d573eef8a6857cf92a",
+        "TEST-com.clerk.ui.auth.AuthStateSessionTaskRoutingTest.xml": "7390c506dcf50b76341f095b342fffe6ac7e32ab23d3b434b77590dfb78aa856",
+        "TEST-com.clerk.ui.auth.AuthStateSignUpRoutingTest.xml": "db58b3d2b308456743380200b0653d8aec27a21412eefb0ee07a7d1ca6421487",
+        "TEST-com.clerk.ui.auth.AuthViewDismissibleTest.xml": "858024584764af669c2d736f772aebafbc3f4ce1c92a3c2789ff464266ff4cf9",
+        "TEST-com.clerk.ui.auth.AuthViewForceMfaRoutingTest.xml": "78872e22697199d95be712c282e4859f2132dde1a3817e61a72096ae70987dcc",
+        "TEST-com.clerk.ui.auth.AuthViewModelTest.xml": "49ad027036734998ecef19497dda1780104512c54ae218516b05dd17328fd488",
+        "TEST-com.clerk.ui.auth.AuthViewRestoredNavigationTest.xml": "c0cf0ff2210076d15147532966b682a7d2af1cc621f3b2b466f987b0bbc8e7cd",
+        "TEST-com.clerk.ui.auth.BiometricFactorRoutingTest.xml": "c092b8d8182857eeccd0a15de5422cc8caa86a1821ef8d9c5baea49b3b8a554f",
+        "TEST-com.clerk.ui.auth.LastUsedAuthTest.xml": "1696054a5cd9f27493f423c6189ca6247d6ebe5618898d943debec0a8987a534",
+        "TEST-com.clerk.ui.auth.OAuthProviderPresentationTest.xml": "c03678efb6ac6a2f48836ab57d586453f43bbb08caecfef0ce35dd1d584e99e7",
+        "TEST-com.clerk.ui.auth.SignInStartingFactorTest.xml": "faec570b28868a2b968a0d2bd06cc3fb04c5ab94c1c638782bcd275606a75c06",
+        "TEST-com.clerk.ui.auth.SignUpPresentationTest.xml": "95023b2b9ec621ab5289fcd576d19a173e48584e157191981fa7916c72fe3fc0",
+        "TEST-com.clerk.ui.core.appbar.ClerkTopAppBarTest.xml": "50470434a9f37e0478dc8f24a2750a0e08d69d52d20888dc97057f2b5037810a",
+        "TEST-com.clerk.ui.core.button.social.SocialButtonLayoutTest.xml": "56e7d48a887ee44f680547836f92cf187c18e6d1e9e5044229c2ba79123694cb",
+        "TEST-com.clerk.ui.core.extensions.LogoUrlExtensionsTest.xml": "a34b8c4c428055b1da86fa6a675bc36cb214db6cd12f64ffc65a9f849349071a",
+        "TEST-com.clerk.ui.core.input.ClerkCodeInputFieldTest.xml": "8e3a929e83752187884d9d82ffc7b8cf814f9af026d02822b8f2fb1b6cc2b249",
+        "TEST-com.clerk.ui.core.input.ResendTimerStateTest.xml": "4d61c9128dceb937e6ed2cb740a43ef3de46a7cbab7d25d15f6c9f080b9e7886",
+        "TEST-com.clerk.ui.core.scaffold.LogoVisibilityTest.xml": "5ec8c3579fc0839c08ffd889d12ffca595fea34ed11aabb379e977b729b6f196",
+        "TEST-com.clerk.ui.input.CountryInfoTest.xml": "18a5a704910969d19d28d80d0192c7973d16b9e0e67db3c463d8ee6cd5589288",
+        "TEST-com.clerk.ui.input.PhoneInputUtilsTest.xml": "16eb0b4339cd9f69b0718701cd1f3c3204b536dc4d1657313ef70a62392e41a3",
+        "TEST-com.clerk.ui.organizationlist.OrganizationAccountListViewModelTest.xml": "2fa10c98418cf29ed3be69428b802ff22bc723646962695f1c3d9ea0e02b7427",
+        "TEST-com.clerk.ui.organizationprofile.OrganizationProfileViewDismissibleTest.xml": "c983fdf615a3979533d04ff210cdc61577a1ff4230a441cb467fae51ec5a6787",
+        "TEST-com.clerk.ui.organizationprofile.actions.OrganizationProfileActionConfirmationViewModelTest.xml": "1f8e07f8c0fb244e19115a0aa32b2606a9d275858c9a31f90a0675a0db6224ad",
+        "TEST-com.clerk.ui.organizationprofile.custom.OrganizationProfileCustomRouteNavKeyTest.xml": "8029f403bbcc90767515626fc62b136effbacfb1874550964594333370916603",
+        "TEST-com.clerk.ui.organizationprofile.custom.OrganizationProfileRowOrderingTest.xml": "d5383c8f6045ab187d2776206684e5fcc20430ad81dd99d06f402b40735245cb",
+        "TEST-com.clerk.ui.organizationprofile.domains.OrganizationVerifiedDomainsViewModelTest.xml": "6d48769b1ff7e5fade9d71d457327cad84f3516cae0c616d7a264ce890c807eb",
+        "TEST-com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersViewModelTest.xml": "549694b22ddc525e076b667b956f5eac3e1dd152548e3cf4d7a645b06dc9f2d3",
+        "TEST-com.clerk.ui.organizationprofile.invite.OrganizationInviteMembersViewTest.xml": "93803b4c70a45a4da8063911de1093070bed22abf85e6e1a4db964df63c817c9",
+        "TEST-com.clerk.ui.organizationprofile.members.OrganizationMembersViewModelTest.xml": "354f5d1337eb6fa2fdf293cf973d6db31c77751c2d3ef1dc79fb9092874fe589",
+        "TEST-com.clerk.ui.organizationprofile.root.OrganizationProfileRowsTest.xml": "b527e481a547dea2866e22ff1c4919d55947e0e5ee9a9983cbf5002018ba42ba",
+        "TEST-com.clerk.ui.organizationprofile.update.OrganizationProfileUpdateViewModelTest.xml": "950751a041a9e6b8364af8b4f9eb0e338bf1d855c1fd45c6e316ce4eab6bcf70",
+        "TEST-com.clerk.ui.organizationswitcher.OrganizationSwitcherBehaviorTest.xml": "3ffede7e52c7684db14d907ea9816b024cdfb41ea351df2a4e33ecdb992584ec",
+        "TEST-com.clerk.ui.sessiontask.organization.OrganizationSessionTaskUtilsTest.xml": "fd8ea58ca817619ff2fc7f75bea92753f7f3b17bb2789b24102793cfda67ae24",
+        "TEST-com.clerk.ui.signin.SignInFactorCodeHelperTest.xml": "79753507b44015f6904f4cd338cf1c4cfff6f6c8ee0e4f78d542b61389200f9e",
+        "TEST-com.clerk.ui.signin.SignInFactorOneViewTest.xml": "3c533d4907df96a151d7d0295299467d45b9ae7aa44f5aef0b081052ab66e65a",
+        "TEST-com.clerk.ui.signin.SignInRedirectTest.xml": "c3e76ed7e9fb0ddf3e5031639c8123199ddaa113535358991c4778a260f2a7e1",
+        "TEST-com.clerk.ui.signin.alternativemethods.AlternativeMethodsViewModelTest.xml": "38ed1231a483914878d86910737e80af99d666f2f4f9e527b21344295e4e515a",
+        "TEST-com.clerk.ui.signin.code.SignInAttemptHandlerTest.xml": "8b12c27f5824afe78bdf3b648bd6cefcb4aa7d5652dcfade91710d31d5cf4fb2",
+        "TEST-com.clerk.ui.signin.code.SignInFactorCodeViewModelTest.xml": "a05a69682a8542345bfe632dd486d837b207f750b23aeb47fa808504686e7d4a",
+        "TEST-com.clerk.ui.signin.code.SignInPrepareHandlerTest.xml": "9a1cdad19beac20d8dfc006020ce1c9b60adc0a5db26baf0499f83daefc27ede",
+        "TEST-com.clerk.ui.signin.emaillink.SignInFactorOneEmailLinkViewModelTest.xml": "77fc02fa9266aadc7f1e2905f08bf93da8ce24eaba1325fe2b1004c4f9b1d7df",
+        "TEST-com.clerk.ui.signin.help.SignInGetHelpViewTest.xml": "b1efaef922d54542e8775cb30b968aa0da32eb1efd3475de920e3426629d9d34",
+        "TEST-com.clerk.ui.signin.passkey.PasskeyViewModelTest.xml": "2774a60142683dd4fca7aaa87bf65abcbe5580092f07333f02b203206e1fc639",
+        "TEST-com.clerk.ui.signin.password.forgot.ForgotPasswordViewModelTest.xml": "084be41898c52b2d9f0d3ffc11ecefae4e6795f47cbcf9573884fb655fc0eed9",
+        "TEST-com.clerk.ui.signup.code.SignUpCodeViewModelTest.xml": "30783643e420c6755c5e9e2e9cbf43b7f31dbf873e3daf6cd8b7a9c30809632f",
+        "TEST-com.clerk.ui.signup.collectfield.CollectFieldHelperTest.xml": "550ae9b16da36b9d2afe14bcb03dd10763d78d7f9ad91865fb971c481286d0a7",
+        "TEST-com.clerk.ui.signup.completeprofile.CompleteProfileViewModelTest.xml": "b56a0b9ad0edfc5c1b0c2e0c0ed38afa654d7e1840d7cf823f4e226db1fdd3fc",
+        "TEST-com.clerk.ui.signup.emaillink.SignUpEmailLinkViewModelTest.xml": "06679aec34fad8f8a3d0b354a71af35aa836003e347d97cc453e0513b33ca89b",
+        "TEST-com.clerk.ui.theme.ClerkThemeProviderTest.xml": "94c5ea598e8c70a63cd63aec9fa4e9dd8d7ee797de5bdfeec9581156a321c957",
+        "TEST-com.clerk.ui.theme.ClerkThemeSnapshotTest.xml": "d0ad1bc2f79ba09934b4469d7ab68af5bf636adb8c8997e7a259e4ee1417b21b",
+        "TEST-com.clerk.ui.userbutton.UserButtonBehaviorTest.xml": "b38641a7e36ed991bcb4ce09e0752956cf4f5e5a261d5cd5b149f493b26db670",
+        "TEST-com.clerk.ui.userprofile.UserProfileNavigationTest.xml": "ac9b96164d7a37c4ebf57fbca82c9dc498b0a37fded903a0c59f730f6b823bf3",
+        "TEST-com.clerk.ui.userprofile.UserProfileViewDismissibleTest.xml": "0397dc9534006fabcfb0fb999c8d6d9475be5d80efa24fa1f49bb625292e05ab",
+        "TEST-com.clerk.ui.userprofile.account.UserProfileAccountViewModelTest.xml": "b859c267b02851200e51cf85c0c08ae48c68d4535fd239671a509f97e1444234",
+        "TEST-com.clerk.ui.userprofile.account.UserProfileAccountViewTest.xml": "fc5ff646a1c7cca236d276a2c648127739c25ce44454e3475de85308948632eb",
+        "TEST-com.clerk.ui.userprofile.account.UserProfileDismissButtonTest.xml": "8301fb29083e966157f963a5bfb6733806c21660a1e7f7bc6215c2dae81491f0",
+        "TEST-com.clerk.ui.userprofile.connectedaccount.AddConnectedAccountViewModelTest.xml": "8ea254bff249719880cf79758d09c4f07e007280fc7d4aa108ff50535cc5db50",
+        "TEST-com.clerk.ui.userprofile.connectedaccount.UserProfileAddConnectedAccountViewTest.xml": "8bf557463b8b746280a2ef1819768656c5cfb34c08cd1c068fc44550edb17b36",
+        "TEST-com.clerk.ui.userprofile.connectedaccount.UserProfileExternalAccountSectionTest.xml": "27857d4f4746f9c41ab9defcd0e1c9b4d5cb75a3e0ca3fdc613c121c323a4331",
+        "TEST-com.clerk.ui.userprofile.custom.CustomRouteNavKeyTest.xml": "cd60a5aaf94e4b43e16ef5cfd710ba78e914933483fb0e4f03d68f0cfe779d4f",
+        "TEST-com.clerk.ui.userprofile.custom.CustomRowGatingTest.xml": "b4aba90bf3163560fad779d00cdcba78067f11d0fc999ced501f5821da7351c9",
+        "TEST-com.clerk.ui.userprofile.custom.UserProfileRowOrderingTest.xml": "b4a6248faf1c4440c901a127779db8a15e86ea7728ccd6dbe87cb41215bbc2bd",
+        "TEST-com.clerk.ui.userprofile.email.AddEmailViewModelTest.xml": "937f958ad3b727e4d277a7b47f62a33d1b4b24c4667fe8759064f4f2cae96028",
+        "TEST-com.clerk.ui.userprofile.email.EmailViewModelTest.xml": "3ba39d86d343941ab55cd076e4366e3e3ec621f0a40a26cf02168b3ff3eb8fbe",
+        "TEST-com.clerk.ui.userprofile.email.UserProfileEmailRowTest.xml": "35621d5b5ed7bb862bd778452a9dfc275298037f6a0f5bae92e7fbce10e06a52",
+        "TEST-com.clerk.ui.userprofile.mfa.MfaAddSmsViewModelTest.xml": "02b57463c740905d32660230e8583cff47c4a2f36b5e8adefe478c4a45c92917",
+        "TEST-com.clerk.ui.userprofile.security.UserProfileSecurityViewModelTest.xml": "5a3e364ecce56c73beaf680531d7e436071439bfbb9fc9f65e17a513f1f59c66",
+        "TEST-com.clerk.ui.userprofile.security.biometriccredential.UserProfileBiometricCredentialViewModelTest.xml": "01c3fcaef6cef8cb31899873a022065ce705ccbba9675a646337c85491b24834",
+        "TEST-com.clerk.ui.userprofile.security.delete.DeleteAccountViewModelTest.xml": "5047bb2db2ec3e1154fd997764dbeee941885ac30f358cf4ac42bc5abfe0bac3",
+        "TEST-com.clerk.ui.userprofile.security.device.AllDevicesViewModelTest.xml": "b0ea996e71c4a30b28c08688e673c4936ed91e1f817eeb0757bd379af26770be",
+        "TEST-com.clerk.ui.userprofile.security.device.DeviceViewModelTest.xml": "8deb91ead9e0cd69d07758fcce3b59f889b2764c0b9b236f8852fac5cfb2b316",
+        "TEST-com.clerk.ui.userprofile.security.mfa.UserProfileMfaViewModelTest.xml": "3ca72caccfbc45aa1d8976dfbef966a86d5a6fd61a5d75cb52505909c87920f8",
+        "TEST-com.clerk.ui.userprofile.security.passkey.UserProfilePasskeyViewModelTest.xml": "22e2e2aa44ddc6bb1829b29233fee324ebb0025709db0642931b86a962d088bf",
+        "TEST-com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameViewModelTest.xml": "77c22fb28409fc4c93a8ce23c6271bd5777fb470a5c102dd09df31a1bc07cfa3",
+        "TEST-com.clerk.ui.userprofile.security.passkey.rename.UserProfilePasskeyRenameViewTest.xml": "2dcbda0abfa28f6a9f2e551b6a5484bb467dfb622729252da3b7bcc6580063b5",
+        "TEST-com.clerk.ui.userprofile.security.password.UserProfileChangePasswordViewModelTest.xml": "5258974df108359028ae68ebfa109f35c0d91ade192f09140cabf4e3a0512df6",
+        "TEST-com.clerk.ui.userprofile.totp.UserProfileMfaTotpViewModelTest.xml": "5d3baffb901e92a15163bf8fd60309776012df235715e736c09b54c0cc8b1da4",
+        "TEST-com.clerk.ui.userprofile.update.UpdateProfileViewModelTest.xml": "955c6220980224ca1e85ba8eac12c1a3bb2c288c1f9f1bee307350eca2749bd5",
+        "TEST-com.clerk.ui.userprofile.verify.UserProfileVerifyViewModelTest.xml": "30ae3e650777071b9caee7119b0ed032258b21a4522c74aa59d1b02db2d84634"
+      }
+    }
+  }
+}

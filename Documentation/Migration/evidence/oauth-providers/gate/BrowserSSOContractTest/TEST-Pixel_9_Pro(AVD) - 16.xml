@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="16" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T20:09:31" hostname="localhost">
+  <testsuite name="com.clerk.api.BrowserSSOContractTest" tests="16" failures="0" errors="0" skipped="0" time="2.884" timestamp="2026-09-10T20:09:31" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="signInUsesGoogleBrowserStrategyAndConfiguredCallback" classname="com.clerk.api.BrowserSSOContractTest" time="0.234" />
+    <testcase name="rejectedPreparationPreservesStructuredError" classname="com.clerk.api.BrowserSSOContractTest" time="0.164" />
+    <testcase name="disabledBrowserTransferDoesNotCreateSignUp" classname="com.clerk.api.BrowserSSOContractTest" time="0.180" />
+    <testcase name="cancelledSignUpDoesNotReconcileOrActivate" classname="com.clerk.api.BrowserSSOContractTest" time="0.176" />
+    <testcase name="signUpPreservesMetadataAndBrowserStrategy" classname="com.clerk.api.BrowserSSOContractTest" time="0.175" />
+    <testcase name="enterpriseSignInPreparesConnectionBeforeOpeningBrowser" classname="com.clerk.api.BrowserSSOContractTest" time="0.187" />
+    <testcase name="unrelatedCallbackDoesNotSubmitNonce" classname="com.clerk.api.BrowserSSOContractTest" time="0.164" />
+    <testcase name="signUpTransportFailureDoesNotBecomeSuccess" classname="com.clerk.api.BrowserSSOContractTest" time="0.157" />
+    <testcase name="enterpriseSignInRefreshesPreparedRedirectOnExistingAttempt" classname="com.clerk.api.BrowserSSOContractTest" time="0.205" />
+    <testcase name="oauthRetryDoesNotReplayStalePreparedRedirect" classname="com.clerk.api.BrowserSSOContractTest" time="0.206" />
+    <testcase name="cancelledSignInDoesNotReconcileOrActivate" classname="com.clerk.api.BrowserSSOContractTest" time="0.161" />
+    <testcase name="signInTransportFailureDoesNotBecomeSuccess" classname="com.clerk.api.BrowserSSOContractTest" time="0.160" />
+    <testcase name="signUpPreservesCustomProviderStrategy" classname="com.clerk.api.BrowserSSOContractTest" time="0.183" />
+    <testcase name="signInPreservesCustomProviderStrategy" classname="com.clerk.api.BrowserSSOContractTest" time="0.174" />
+    <testcase name="missingRedirectLeavesAnIncompleteAttemptWithoutOpeningBrowser" classname="com.clerk.api.BrowserSSOContractTest" time="0.161" />
+    <testcase name="browserTransferCreatesSignUpWithMetadataWithoutSecondPrompt" classname="com.clerk.api.BrowserSSOContractTest" time="0.197" />
+  </testsuite>
+</testsuites>

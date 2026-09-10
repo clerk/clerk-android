@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.ui.auth.OAuthProviderPresentationTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-09-10T20:07:08.832Z" hostname="mac.lan" time="8.35">
+  <properties/>
+  <testcase name="generatedStrategySerializationPreservesCustomPrefix" classname="com.clerk.ui.auth.OAuthProviderPresentationTest" time="7.226"/>
+  <testcase name="connectedCustomProviderDoesNotHideAnotherOrRequireSignInEligibility" classname="com.clerk.ui.auth.OAuthProviderPresentationTest" time="0.215"/>
+  <testcase name="signInHasNoChoicesWhenNoProviderQualifies" classname="com.clerk.ui.auth.OAuthProviderPresentationTest" time="0.04"/>
+  <testcase name="signInRequiresEnabledAndAuthenticatable" classname="com.clerk.ui.auth.OAuthProviderPresentationTest" time="0.038"/>
+  <testcase name="configuredDisplayNameAndLogoUseExactCustomStrategy" classname="com.clerk.ui.auth.OAuthProviderPresentationTest" time="0.405"/>
+  <testcase name="generatedProviderSerializationUsesCanonicalValues" classname="com.clerk.ui.auth.OAuthProviderPresentationTest" time="0.029"/>
+  <testcase name="distinctCustomProvidersRetainOrderAndRawKeys" classname="com.clerk.ui.auth.OAuthProviderPresentationTest" time="0.032"/>
+  <testcase name="emptyConfigurationHasNoChoices" classname="com.clerk.ui.auth.OAuthProviderPresentationTest" time="0.036"/>
+  <testcase name="allEligibleBuiltInProvidersArePreserved" classname="com.clerk.ui.auth.OAuthProviderPresentationTest" time="0.034"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/Users/mikepitre/.gradle/caches/9.7.1/transforms/3fe64f7182d8271eecc87e0bd81add2b/transformed/byte-buddy-agent-1.18.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>
