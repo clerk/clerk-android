@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="5" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T17:58:14" hostname="localhost">
+  <testsuite name="com.clerk.api.TokenCancellationTest" tests="5" failures="0" errors="0" skipped="0" time="1.088" timestamp="2026-09-10T17:58:14" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="cancellingFirstCallerPreservesSecond" classname="com.clerk.api.TokenCancellationTest" time="0.253" />
+    <testcase name="sharedFailureRecoversAfterFirstCallerCancels" classname="com.clerk.api.TokenCancellationTest" time="0.212" />
+    <testcase name="sharedFailureRecoversAfterSecondCallerCancels" classname="com.clerk.api.TokenCancellationTest" time="0.217" />
+    <testcase name="cancellingSecondCallerPreservesFirst" classname="com.clerk.api.TokenCancellationTest" time="0.208" />
+    <testcase name="cancellingBothCallersAllowsLaterCachedRead" classname="com.clerk.api.TokenCancellationTest" time="0.198" />
+  </testsuite>
+</testsuites>

@@ -91,7 +91,7 @@ public class QuickJSTransport(private val capabilities: NativeCapabilities, disp
             buildJsonObject { put("kind", "hostReply"); put("id", id); put("error", buildJsonObject { put("code", (error as? CoreException)?.code ?: "host_failure") }) }
           }
           jobs.remove(id)
-          send(reply)
+          if (isActive && !closing.get()) send(reply)
         }
         jobs[id] = job
         job.start()

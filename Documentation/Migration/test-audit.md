@@ -8,7 +8,7 @@ The [biometric persistence audit](biometric-persistence.md) records eight packag
 
 Baseline: `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. This is a file-level ownership and migration audit of the old native API suite, with exact test declarations retained in [legacy-tests.json](legacy-tests.json). Parameterized cases are not expanded; declarations and helper functions are not a coverage percentage.
 
-The inventory contains 105 old test/helper files. Three have been migrated, 16 have been retired after assertion review, and 86 remain while platform and coverage migration is incomplete.
+The inventory contains 105 old test/helper files. Three have been migrated, 17 have been retired after assertion review, and 85 remain while platform and coverage migration is incomplete.
 
 | Reviewed group | File disposition | Evidence |
 | --- | --- | --- |
@@ -22,6 +22,7 @@ The inventory contains 105 old test/helper files. Three have been migrated, 16 h
 | Outgoing HTTP middleware | Two retired | [All six declarations and native transport checks](http-test-audit.md#outgoing-middleware-retirement) |
 | Incoming response middleware | Two retired | [All 13 declarations and packaged response/completion checks](incoming-response-test-audit.md) |
 | Private token freshness/cache policy | One retired | [All ten declarations and packaged response ordering](token-freshness-test-audit.md) |
+| Token fetching | One retired | [All 25 declarations and the late host-reply fix](token-request-test-audit.md) |
 
 No retained file is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The baseline lists below preserve the full inventory and unresolved gates.
 
@@ -57,7 +58,7 @@ Valid test/live keys, whitespace, malformed keys, invalid callback routes, and s
 
 ## Core lifecycle and token policy
 
-The [token cache invalidation regression](token-cache-invalidation.md) records the reproduced cache-clear race and generated QuickJS checks. The [freshness audit](token-freshness-test-audit.md) retires the ten-declaration freshness suite; the separate token fetcher suite remains retained.
+The [token cache invalidation regression](token-cache-invalidation.md) records the reproduced cache-clear race and generated QuickJS checks. The [freshness audit](token-freshness-test-audit.md) and [request audit](token-request-test-audit.md) retire both legacy token suites after reviewing all 35 declarations.
 
 Replacement owner / evidence: JavaScript packages/mobile-runtime/test/protocol.test.mjs; clerk-js SessionTokenCache/Session tests; native lifecycle adapters.
 

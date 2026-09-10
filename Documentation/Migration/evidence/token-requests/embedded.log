@@ -1,0 +1,75 @@
+(node:24845) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ initial core selection: missing selection falls back to the first signed-in session (24.11975ms)
+✔ initial core selection: unmatched selection falls back to the first signed-in session (5.321625ms)
+✔ initial core selection: selected pending session is retained (4.838333ms)
+✔ initial core selection: selected active session is retained (5.314083ms)
+✔ initial core selection: selection wins across multiple sessions (6.162042ms)
+✔ initial core selection: inactive sessions are excluded from initial selection (4.968708ms)
+✔ session reload publishes unchanged state before completing (7.562583ms)
+✔ session reload publishes timestamp state before completing (7.885666ms)
+✔ session reload publishes pending state before completing (6.293667ms)
+✔ session reload publishes expired state before completing (7.870209ms)
+✔ session reload publishes removed state before completing (7.934167ms)
+✔ session reload publishes replaced state before completing (6.521667ms)
+✔ the active organization is derived from session membership: org_one (5.13325ms)
+✔ the active organization is derived from session membership: null (4.777875ms)
+✔ the active organization is derived from session membership: org_missing (4.512917ms)
+✔ session reload publishes the changed organization before completion: org_two (5.808958ms)
+✔ session reload publishes the changed organization before completion: null (5.615833ms)
+(node:24846) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ generated token request preserves shared policy: first mint (27.536791ms)
+✔ generated token request preserves shared policy: forced first mint (6.96125ms)
+✔ generated token request preserves shared policy: previous token and forced origin (7.11425ms)
+✔ generated token request preserves shared policy: disabled minter (6.606417ms)
+✔ generated token request preserves shared policy: template ignores mint parameters (6.700667ms)
+✔ a nonselected available session coalesces token requests without changing selection (9.44725ms)
+(node:24847) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ coalesced token callers cancel independently: 0 (30.114208ms)
+✔ coalesced token callers cancel independently: 1 (7.570292ms)
+✔ coalesced token callers cancel independently: 0,1 (8.837334ms)
+✔ a shared token failure reaches the surviving caller and permits recovery: cancelled=0 (11.122125ms)
+✔ a shared token failure reaches the surviving caller and permits recovery: cancelled=1 (8.464042ms)
+(node:24848) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Session.getToken handles valid raw token (26.589166ms)
+✔ Session.getToken handles missing JWT segment (22.19525ms)
+✔ Session.getToken handles invalid base64 header (18.657834ms)
+✔ Session.getToken handles invalid JSON payload (18.857542ms)
+(node:24849) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cache clear ignores a pending proactive refresh with replacement=false (31.139958ms)
+✔ cache clear ignores a pending proactive refresh with replacement=true (8.428583ms)
+✔ clearing the token cache fences earlier requests when old reply arrives first=false (8.092916ms)
+✔ clearing the token cache fences earlier requests when old reply arrives first=true (7.777ms)
+(node:24850) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ generated token calls preserve canonical snapshot policy: initial (26.371042ms)
+✔ generated token calls preserve canonical snapshot policy: clear (8.209041ms)
+✔ generated token calls preserve canonical snapshot policy: mintTie (7.97025ms)
+✔ generated token calls preserve canonical snapshot policy: stale (9.96275ms)
+✔ generated token calls preserve canonical snapshot policy: fresh (9.261042ms)
+✔ generated token calls preserve canonical snapshot policy: tie (9.851ms)
+✔ generated token calls preserve canonical snapshot policy: expired (8.622ms)
+ℹ tests 43
+ℹ suites 0
+ℹ pass 43
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 216.777541

@@ -1,6 +1,6 @@
 # Android token freshness assertion audit
 
-All ten declarations, the JWT builder and teardown in `TokenFreshnessTest.kt` were reviewed against baseline `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`, together with the removed `TokenFreshness` and `SessionTokensCache` implementations. That legacy test file is retired. The separate 25-declaration `SessionTokenFetcherTest.kt` remains pending its full audit.
+All ten declarations, the JWT builder and teardown in `TokenFreshnessTest.kt` were reviewed against baseline `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`, together with the removed `TokenFreshness` and `SessionTokensCache` implementations. That legacy test file is retired. The separate 25-declaration `SessionTokenFetcherTest.kt` is covered by the [token request audit](token-request-test-audit.md).
 
 Token ordering belongs to `packages/clerk-js/src/core/tokenFreshness.ts`, `tokenCache.ts` and `resources/Session.ts`. The native generated methods delegate to those owners. The new major does not preserve the old private cache API or its different expiration and hydration rules.
 

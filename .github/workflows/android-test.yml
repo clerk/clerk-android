@@ -92,6 +92,8 @@ jobs:
             cp -R source/api/build/outputs/androidTest-results/connected/debug source/api/build/platform-test-results/core
             ./gradlew :source:api:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.clerk.api.PlatformCapabilityTest --build-cache
             python3 scripts/android_test_results.py --expected 'com.clerk.api.PlatformCapabilityTest#${{ matrix.platform-case }}'
+            cp -R source/api/build/outputs/androidTest-results/connected/debug source/api/build/platform-test-results/platform
+            if [ "${{ matrix.api-level }}" = "36" ]; then bash scripts/run-token-request-contract.sh; fi
             if [ "${{ matrix.api-level }}" = "36" ]; then bash scripts/run-auth-view-journey.sh; fi
       - name: Upload platform test results
         if: always()

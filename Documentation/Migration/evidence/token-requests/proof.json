@@ -1,0 +1,459 @@
+{
+  "androidBase": "f906b444273477be4523a98004361285bc6684ef",
+  "javascriptRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+  "coreManifest": {
+    "protocolVersion": 1,
+    "hostCapabilityVersion": 1,
+    "contractHash": "0f8387f260072ba6f894442b73d50afa6bda5f1205ed3c9209f5d6b1cfba16ce",
+    "roots": {
+      "clerk": {
+        "kind": "ref",
+        "name": "Clerk"
+      },
+      "signIn": {
+        "kind": "ref",
+        "name": "SignIn"
+      },
+      "signUp": {
+        "kind": "ref",
+        "name": "SignUp"
+      },
+      "session": {
+        "kind": "ref",
+        "name": "Session"
+      },
+      "user": {
+        "kind": "ref",
+        "name": "User"
+      },
+      "organization": {
+        "kind": "ref",
+        "name": "Organization"
+      }
+    },
+    "namingPolicy": "Remove Future and trailing Resource; fail collisions.",
+    "errorPolicy": "Approved authentication error-only envelopes throw after state is applied.",
+    "coreRevision": "1c0d6fd280885b10b96854ec842c1e8f72067e48",
+    "bundleSHA256": "406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d",
+    "bundleBytes": 1317757,
+    "thirdPartyNoticesSHA256": "e4223a282e22ea86b1215013d7e6c5f4e6f02be8d14ca2ce357ed14ba319e1e9",
+    "bundledDependencies": [
+      {
+        "name": "@clerk/clerk-js",
+        "version": "6.31.0",
+        "license": "MIT",
+        "noticeSHA256": "67ad6d13f0d5c1d8cea4143041a6498e24b9bb5a3a931dd4e4da830473935c72"
+      },
+      {
+        "name": "@clerk/mobile-runtime",
+        "version": "0.0.0",
+        "license": "MIT",
+        "noticeSHA256": "bb582cd9530e388e0c8ec87df05756e867197116a9fa2e3bb48db12785776092"
+      },
+      {
+        "name": "@clerk/native-bindings",
+        "version": "0.0.0",
+        "license": "MIT",
+        "noticeSHA256": "bb582cd9530e388e0c8ec87df05756e867197116a9fa2e3bb48db12785776092"
+      },
+      {
+        "name": "@clerk/shared",
+        "version": "4.31.0",
+        "license": "MIT",
+        "noticeSHA256": "bb582cd9530e388e0c8ec87df05756e867197116a9fa2e3bb48db12785776092"
+      },
+      {
+        "name": "@stripe/stripe-js",
+        "version": "5.6.0",
+        "license": "MIT",
+        "noticeSHA256": "6c91cb98ce48d38c68373279e439f230532fb311b321a37ce080c89e2018cc39"
+      },
+      {
+        "name": "@tanstack/query-core",
+        "version": "5.102.8",
+        "license": "MIT",
+        "noticeSHA256": "277d2a8e459713d6c596bab89ef857cb8b2433223fa9edb49ccc403a6ceb08ee"
+      },
+      {
+        "name": "@wallet-standard/app",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/base",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/core",
+        "version": "1.1.1",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/errors",
+        "version": "0.1.1",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/features",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "@wallet-standard/wallet",
+        "version": "1.1.0",
+        "license": "Apache-2.0",
+        "noticeSHA256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "alien-signals",
+        "version": "2.0.6",
+        "license": "MIT",
+        "noticeSHA256": "906251009c3633dc7ad932e279642ef6d376924ef6bbfb1f4e562211b50c7c67"
+      },
+      {
+        "name": "browser-tabs-lock",
+        "version": "1.3.0",
+        "license": "MIT",
+        "noticeSHA256": "d9f86d92023122397b859a28e4d10b626395c1431c00e1d6734d9cd814766004"
+      },
+      {
+        "name": "core-js",
+        "version": "3.47.0",
+        "license": "MIT",
+        "noticeSHA256": "f622755d31e11722cc78d911d1d5828593b6ae013d7738e08f16ee10d5200980"
+      },
+      {
+        "name": "crypto-js",
+        "version": "4.2.0",
+        "license": "MIT",
+        "noticeSHA256": "3bae8eb6da93d9a4e2a218341cedf58b057efc339566421261f89ab03c9ed25d"
+      },
+      {
+        "name": "dequal",
+        "version": "2.0.3",
+        "license": "MIT",
+        "noticeSHA256": "d0a8e5996a99e9ea88093954e45ab673905d5fdc2d243e45622bc5ff1cf35f36"
+      },
+      {
+        "name": "glob-to-regexp",
+        "version": "0.4.1",
+        "license": "BSD-2-Clause",
+        "noticeSHA256": "91c0ac7870145461be8962b9b5ad7c103b52978a5566edfdccdb3680c4818f3f"
+      },
+      {
+        "name": "js-cookie",
+        "version": "3.0.8",
+        "license": "MIT",
+        "noticeSHA256": "c44e6a5c3e88cfd23795e66a27f1bec24cd8ab81b28425ccaaac1bc15eae32a8"
+      }
+    ],
+    "runtime": {
+      "apple": "JavaScriptCore (system)",
+      "android": "quickjs-ng v0.15.1 fd0a0210b7be00957751871e7e01b8291268fc29"
+    }
+  },
+  "legacy": {
+    "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+    "path": "source/api/src/test/java/com/clerk/api/session/SessionTokenFetcherTest.kt",
+    "sha256": "8636f4eec0593bf9d0069d5d7786e45471daf0c8eace21c7a576c1a41eb6c490",
+    "category": "core-lifecycle",
+    "cases": [
+      {
+        "name": "getToken returns cached token if valid and cache not skipped",
+        "line": 90
+      },
+      {
+        "name": "getToken fetches from network if cache is empty",
+        "line": 109
+      },
+      {
+        "name": "getToken fetches from network if cached token is expired",
+        "line": 132
+      },
+      {
+        "name": "getToken uses template in API call when provided",
+        "line": 156
+      },
+      {
+        "name": "getToken bypasses cached result when skipCache is true",
+        "line": 178
+      },
+      {
+        "name": "session minter passes previous token and forces origin for forced refresh",
+        "line": 200
+      },
+      {
+        "name": "getToken returns null when API call fails",
+        "line": 239
+      },
+      {
+        "name": "getToken clears local session state when token endpoint returns unauthorized",
+        "line": 264
+      },
+      {
+        "name": "getToken clears local session state when token endpoint returns authentication invalid",
+        "line": 282
+      },
+      {
+        "name": "getToken does not clear local session state for non-session unauthorized errors",
+        "line": 301
+      },
+      {
+        "name": "getToken uses custom expiration buffer",
+        "line": 320
+      },
+      {
+        "name": "getToken handles JWT parsing exception gracefully",
+        "line": 346
+      },
+      {
+        "name": "getToken handles concurrent requests properly",
+        "line": 368
+      },
+      {
+        "name": "concurrent waiters share a null token result without retrying",
+        "line": 400
+      },
+      {
+        "name": "forced refreshes return their own responses while cache retains canonical token",
+        "line": 427
+      },
+      {
+        "name": "reset fences a late forced refresh response from the previous runtime",
+        "line": 476
+      },
+      {
+        "name": "reset releases shared token waiters with null",
+        "line": 503
+      },
+      {
+        "name": "getToken handles API exception gracefully",
+        "line": 531
+      },
+      {
+        "name": "tokenCacheKey generates correct key without template",
+        "line": 546
+      },
+      {
+        "name": "tokenCacheKey generates correct key with template",
+        "line": 558
+      },
+      {
+        "name": "different sessions get different cache keys",
+        "line": 571
+      },
+      {
+        "name": "getToken returns null for pending session",
+        "line": 606
+      },
+      {
+        "name": "getToken uses pending status from current client snapshot",
+        "line": 620
+      },
+      {
+        "name": "getToken uses active status from current client snapshot",
+        "line": 636
+      },
+      {
+        "name": "getToken proceeds normally for active session",
+        "line": 658
+      }
+    ]
+  },
+  "nativeCases": [
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "authRequestsUseDeviceLocaleAndAllowExplicitSignUpLocale"
+    },
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "canonicalClientRequiresANewOrRestoredCredential"
+    },
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "completedSignInSurvivesClientRefreshUntilExplicitFinalization"
+    },
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "credentialRotationRejectsResponsesIssuedWithThePreviousCredential"
+    },
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "factorDiscriminantsPreserveDeviceAndRecoveryFields"
+    },
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "generatedApiUsesPackagedCore"
+    },
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "missingAndPartialOrganizationSettingsDoNotPreventStartup"
+    },
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "olderClientResponseCannotRemoveANewerPendingTaskOrCredential"
+    },
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "previousNativeEmailLinkCallbackFormsCompleteWithoutActivation"
+    },
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "sessionReloadReturnsReadableStateAfterTheOwnerStopsSelectingIt"
+    },
+    {
+      "class": "com.clerk.api.PackagedCoreTest",
+      "method": "structuredErrorsPreserveServerStatusRetryAndTrace"
+    },
+    {
+      "class": "com.clerk.api.TokenCancellationTest",
+      "method": "cancellingBothCallersAllowsLaterCachedRead"
+    },
+    {
+      "class": "com.clerk.api.TokenCancellationTest",
+      "method": "cancellingFirstCallerPreservesSecond"
+    },
+    {
+      "class": "com.clerk.api.TokenCancellationTest",
+      "method": "cancellingSecondCallerPreservesFirst"
+    },
+    {
+      "class": "com.clerk.api.TokenCancellationTest",
+      "method": "sharedFailureRecoversAfterFirstCallerCancels"
+    },
+    {
+      "class": "com.clerk.api.TokenCancellationTest",
+      "method": "sharedFailureRecoversAfterSecondCallerCancels"
+    },
+    {
+      "class": "com.clerk.api.TokenFreshnessContractTest",
+      "method": "equalOriginUsesIssuedAtDespiteResponseOrder"
+    },
+    {
+      "class": "com.clerk.api.TokenFreshnessContractTest",
+      "method": "freshResponseBeforeStaleKeepsCanonicalToken"
+    },
+    {
+      "class": "com.clerk.api.TokenFreshnessContractTest",
+      "method": "staleResponseBeforeFreshKeepsCanonicalToken"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "cacheSeparatesSessionsTemplatesAndOrganizations"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "closingOwnerRejectsForcedTokenAndIgnoresLateCredential"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "closingOwnerReleasesSharedTokenWaiters"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "exhaustedNetworkFailureThrowsAndLaterCallRecovers"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "invalidAuthenticationUsesRefreshedClientState"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "pendingSessionUsesCurrentCoreStateAndServerOutcome"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "rejectedTokenKeepsSession"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "revokedTokenClearsSessionWhenRecoveryRemovesIt"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "revokedTokenUsesRefreshedClientState"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "sharedFailureReachesBothCallersAndNextCallRecovers"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "sharedSuccessReachesBothCallersAndRemainsCached"
+    },
+    {
+      "class": "com.clerk.api.TokenRequestContractTest",
+      "method": "unauthorizedTokenRefreshesCurrentSession"
+    },
+    {
+      "class": "com.clerk.api.TokenSnapshotTest",
+      "method": "clearingCacheRequiresANewMint"
+    },
+    {
+      "class": "com.clerk.api.TokenSnapshotTest",
+      "method": "expiredSnapshotPreservesFresherMintInput"
+    },
+    {
+      "class": "com.clerk.api.TokenSnapshotTest",
+      "method": "freshSnapshotReplacesMintedToken"
+    },
+    {
+      "class": "com.clerk.api.TokenSnapshotTest",
+      "method": "initialSnapshotAvoidsMinting"
+    },
+    {
+      "class": "com.clerk.api.TokenSnapshotTest",
+      "method": "mintedTimestampTieRemainsCached"
+    },
+    {
+      "class": "com.clerk.api.TokenSnapshotTest",
+      "method": "staleSnapshotDoesNotReplaceMintedToken"
+    },
+    {
+      "class": "com.clerk.api.TokenSnapshotTest",
+      "method": "timestampTieAcceptsIncomingSnapshot"
+    }
+  ],
+  "nativePassed": 38,
+  "unitPassed": 12,
+  "embeddedPassed": 43,
+  "sourceTestsReference": "../token-freshness/proof.json",
+  "before": {
+    "executed": 9,
+    "failed": 1,
+    "requested": 11,
+    "failure": "Uncaught CoreException from QuickJSTransport.send after a noncancellable host response finished following close"
+  },
+  "fixtureCorrection": "Accelerated retry timers must not expire a recovered token immediately; only retry-sized timers in the rejecting phase are accelerated.",
+  "limits": [
+    "Deterministic host HTTP; no live server validation or physical-device proof",
+    "Shared TypeScript and generated API unchanged",
+    "CI dispatch proof will be added after remote completion"
+  ],
+  "sourceHashes": {
+    "NativeCore/QuickJSTransport.kt": "5237770edd3516b5ac57513fcb4d126806df4f3d05c25fc01ee76c7197cd886c",
+    "NativeCoreTests/Android/TokenRequestContractTest.kt": "ff9fee7ca68b04d3b52bb4081cbe55e8c14c8721189c4ccf600f304ec9aae716",
+    "NativeCoreTests/Fixtures/fapi.json": "171fec9df9f9aea3bbc0c3887a94802bad0caa0a96a03bd50efb0c92315a1e2d",
+    "scripts/run-token-request-contract.sh": "5592ffc1cd5763b8b269939b156ccf87a30cf78da5b4aaf55f4f98f5c9fb1bf3",
+    ".github/workflows/android-test.yml": "e22fb926bec07c6090d122ab261b42551f293cd78aa2b1a71ec2ae8471f78474"
+  },
+  "evidenceHashes": {
+    "before/TEST-late-reply.xml": "a70489af99056e189d2067c913490c8cc185da0d46a279311e1c88f29c9d16e2",
+    "embedded.log": "0c524ff155f3eff7d4ac0cd14dfb9efd2dae7a763079c6694560b0d4df3010ff",
+    "native/TEST-TokenCancellationTest.xml": "4d994ab9c6f301cc7217a3969ef37063cadfcf2dcf58e8ea4862ee5a03b14fec",
+    "native/TEST-TokenFreshnessContractTest.xml": "bc4f18b1fd38fd5238ed2bbdd06d0a06a803695d91d0fd1a7fce1436d9c0c4e9",
+    "native/TEST-TokenSnapshotTest.xml": "5b4ceded42aca2e251c2bd592bb78e5f7f34dd6090ca1d895f570b5913831f3d",
+    "native/TEST-packaged-core.xml": "dcd0ea754b8823cb3b894183e1cd7485638d888bb9ab29c443845d45c06679bf",
+    "native/TEST-token-request.xml": "14494d8c2bcc6bdea1a42e34b82487e31f7f5dd36404e052394dcea61fde4b0a",
+    "native-gate.log": "913e960dbce34225268e4bbffe715a6581fcb19d65c4eb8f89f1557ebc4ff5bf",
+    "unit/TEST-com.clerk.api.AndroidHTTPCapabilityTest.xml": "262721bdbc6f2d0ba48a82ae30ceb16aa4ef2e14d4ba3b697aeeff0ebe6afb6f",
+    "unit/TEST-com.clerk.api.AndroidTimerCapabilityTest.xml": "1c63b030a8263bf96cccf67e90f0b4c246bd5f21669aa5500aef025a07553c61",
+    "unit/TEST-com.clerk.api.ClerkConfigurationTest.xml": "aee4e1573091a569d0b74172291465fee532b513e8498de4ddbb769fcc67c530"
+  }
+}

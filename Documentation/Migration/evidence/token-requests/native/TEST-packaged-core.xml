@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="11" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T17:57:36" hostname="localhost">
+  <testsuite name="com.clerk.api.PackagedCoreTest" tests="11" failures="0" errors="0" skipped="0" time="3.345" timestamp="2026-09-10T17:57:36" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="completedSignInSurvivesClientRefreshUntilExplicitFinalization" classname="com.clerk.api.PackagedCoreTest" time="0.270" />
+    <testcase name="generatedApiUsesPackagedCore" classname="com.clerk.api.PackagedCoreTest" time="0.685" />
+    <testcase name="factorDiscriminantsPreserveDeviceAndRecoveryFields" classname="com.clerk.api.PackagedCoreTest" time="0.164" />
+    <testcase name="authRequestsUseDeviceLocaleAndAllowExplicitSignUpLocale" classname="com.clerk.api.PackagedCoreTest" time="0.214" />
+    <testcase name="olderClientResponseCannotRemoveANewerPendingTaskOrCredential" classname="com.clerk.api.PackagedCoreTest" time="0.183" />
+    <testcase name="credentialRotationRejectsResponsesIssuedWithThePreviousCredential" classname="com.clerk.api.PackagedCoreTest" time="0.186" />
+    <testcase name="structuredErrorsPreserveServerStatusRetryAndTrace" classname="com.clerk.api.PackagedCoreTest" time="0.154" />
+    <testcase name="sessionReloadReturnsReadableStateAfterTheOwnerStopsSelectingIt" classname="com.clerk.api.PackagedCoreTest" time="0.460" />
+    <testcase name="missingAndPartialOrganizationSettingsDoNotPreventStartup" classname="com.clerk.api.PackagedCoreTest" time="0.563" />
+    <testcase name="previousNativeEmailLinkCallbackFormsCompleteWithoutActivation" classname="com.clerk.api.PackagedCoreTest" time="0.211" />
+    <testcase name="canonicalClientRequiresANewOrRestoredCredential" classname="com.clerk.api.PackagedCoreTest" time="0.255" />
+  </testsuite>
+</testsuites>

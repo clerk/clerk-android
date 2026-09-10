@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="7" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T17:58:18" hostname="localhost">
+  <testsuite name="com.clerk.api.TokenSnapshotTest" tests="7" failures="0" errors="0" skipped="0" time="1.360" timestamp="2026-09-10T17:58:18" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="staleSnapshotDoesNotReplaceMintedToken" classname="com.clerk.api.TokenSnapshotTest" time="0.293" />
+    <testcase name="initialSnapshotAvoidsMinting" classname="com.clerk.api.TokenSnapshotTest" time="0.142" />
+    <testcase name="expiredSnapshotPreservesFresherMintInput" classname="com.clerk.api.TokenSnapshotTest" time="0.207" />
+    <testcase name="timestampTieAcceptsIncomingSnapshot" classname="com.clerk.api.TokenSnapshotTest" time="0.192" />
+    <testcase name="mintedTimestampTieRemainsCached" classname="com.clerk.api.TokenSnapshotTest" time="0.169" />
+    <testcase name="clearingCacheRequiresANewMint" classname="com.clerk.api.TokenSnapshotTest" time="0.168" />
+    <testcase name="freshSnapshotReplacesMintedToken" classname="com.clerk.api.TokenSnapshotTest" time="0.189" />
+  </testsuite>
+</testsuites>

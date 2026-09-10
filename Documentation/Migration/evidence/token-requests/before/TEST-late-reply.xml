@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="9" failures="1" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T17:51:02" hostname="localhost">
+  <testsuite name="com.clerk.api.TokenRequestContractTest" tests="9" failures="1" errors="0" skipped="0" time="1.744" timestamp="2026-09-10T17:51:02" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="revokedTokenClearsSessionWhenRecoveryRemovesIt" classname="com.clerk.api.TokenRequestContractTest" time="0.212" />
+    <testcase name="pendingSessionUsesCurrentCoreStateAndServerOutcome" classname="com.clerk.api.TokenRequestContractTest" time="0.228" />
+    <testcase name="unauthorizedTokenRefreshesCurrentSession" classname="com.clerk.api.TokenRequestContractTest" time="0.179" />
+    <testcase name="revokedTokenUsesRefreshedClientState" classname="com.clerk.api.TokenRequestContractTest" time="0.175" />
+    <testcase name="invalidAuthenticationUsesRefreshedClientState" classname="com.clerk.api.TokenRequestContractTest" time="0.177" />
+    <testcase name="cacheSeparatesSessionsTemplatesAndOrganizations" classname="com.clerk.api.TokenRequestContractTest" time="0.273" />
+    <testcase name="sharedFailureReachesBothCallersAndNextCallRecovers" classname="com.clerk.api.TokenRequestContractTest" time="0.183" />
+    <testcase name="rejectedTokenKeepsSession" classname="com.clerk.api.TokenRequestContractTest" time="0.155" />
+    <testcase name="closingOwnerRejectsForcedTokenAndIgnoresLateCredential" classname="com.clerk.api.TokenRequestContractTest" time="0.162">
+      <failure>com.clerk.api.CoreException: The operation could not be completed.
+	at com.clerk.api.QuickJSTransport.send(QuickJSTransport.kt:73)
+	at com.clerk.api.QuickJSTransport$route$job$1.invokeSuspend(QuickJSTransport.kt:94)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.UndispatchedCoroutine.afterResume(CoroutineContext.kt:278)
+	at kotlinx.coroutines.AbstractCoroutine.resumeWith(AbstractCoroutine.kt:101)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:47)
+	at kotlinx.coroutines.DispatchedTaskKt.resume(DispatchedTask.kt:233)
+	at kotlinx.coroutines.DispatchedTaskKt.resumeUnconfined(DispatchedTask.kt:175)
+	at kotlinx.coroutines.DispatchedTaskKt.dispatch(DispatchedTask.kt:147)
+	at kotlinx.coroutines.CancellableContinuationImpl.dispatchResume(CancellableContinuationImpl.kt:470)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$kotlinx_coroutines_core(CancellableContinuationImpl.kt:504)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$kotlinx_coroutines_core$default(CancellableContinuationImpl.kt:493)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeWith(CancellableContinuationImpl.kt:359)
+	at kotlinx.coroutines.ResumeAwaitOnCompletion.invoke(JobSupport.kt:1557)
+	at kotlinx.coroutines.JobSupport.completeStateFinalization(JobSupport.kt:311)
+	at kotlinx.coroutines.JobSupport.tryFinalizeSimpleState(JobSupport.kt:288)
+	at kotlinx.coroutines.JobSupport.tryMakeCompleting(JobSupport.kt:887)
+	at kotlinx.coroutines.JobSupport.makeCompleting$kotlinx_coroutines_core(JobSupport.kt:837)
+	at kotlinx.coroutines.CompletableDeferredImpl.complete(CompletableDeferred.kt:118)
+	at com.clerk.api.TokenRequestContractTest$closingOwner$2.invokeSuspend(TokenRequestContractTest.kt:101)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTaskKt.resume(DispatchedTask.kt:233)
+	at kotlinx.coroutines.DispatchedTaskKt.dispatch(DispatchedTask.kt:152)
+	at kotlinx.coroutines.CancellableContinuationImpl.dispatchResume(CancellableContinuationImpl.kt:470)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$kotlinx_coroutines_core(CancellableContinuationImpl.kt:504)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeImpl$kotlinx_coroutines_core$default(CancellableContinuationImpl.kt:493)
+	at kotlinx.coroutines.CancellableContinuationImpl.resumeUndispatched(CancellableContinuationImpl.kt:596)
+	at kotlinx.coroutines.android.HandlerContext.scheduleResumeAfterDelay$lambda$0(HandlerDispatcher.kt:141)
+	at kotlinx.coroutines.android.HandlerContext$$ExternalSyntheticLambda1.run(D8$$SyntheticClass:0)
+	at android.os.Handler.handleCallback(Handler.java:995)
+	at android.os.Handler.dispatchMessage(Handler.java:103)
+	at android.os.Looper.loopOnce(Looper.java:248)
+	at android.os.Looper.loop(Looper.java:338)
+	at android.app.ActivityThread.main(ActivityThread.java:9067)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:593)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:932)
+	Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [LazyStandaloneCoroutine{Cancelling}@6d4424a, Dispatchers.Main.immediate]
+</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
