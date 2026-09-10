@@ -82,7 +82,8 @@ data class Session(
    *
    * Shares one implementation with [has]. Returns `false` when the user is missing or any requested
    * dimension fails. Org role and permission come from the active organization membership. Feature
-   * and plan come from the last active session token `fea` / `pla` claims.
+   * and plan come from the `fea` / `pla` claims of the freshest token that matches this session and
+   * organization, from the snapshot or the token cache.
    */
   fun checkAuthorization(
     role: String? = null,
