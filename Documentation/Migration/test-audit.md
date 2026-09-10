@@ -8,7 +8,16 @@ The [biometric persistence audit](biometric-persistence.md) records eight packag
 
 Baseline: `1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`. This is a file-level ownership and migration audit of the old native API suite, with exact test declarations retained in [legacy-tests.json](legacy-tests.json). Parameterized cases are not expanded; declarations and helper functions are not a coverage percentage.
 
-The two live integration scenarios and their helper have been migrated to packaged QuickJS instrumentation; see [the integration audit](integration-test-audit.md). The two private foreground-policy suites are retired after [assertion-level review and a reproduced race fix](configuration-test-audit.md#foreground-policy-and-pending-authentication). The two configuration/device-token suites are also retired after [their complete assertion review](configuration-ownership-test-audit.md). The other 98 old test/helper files are retained while assertion-level platform and coverage migration is incomplete. No file in this inventory is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The lists below identify where that decision belongs and explicitly preserve unresolved gates.
+The inventory contains 105 old test/helper files. Three have been migrated, five have been retired after assertion review, and 97 remain while platform and coverage migration is incomplete.
+
+| Reviewed group | File disposition | Evidence |
+| --- | --- | --- |
+| Live integration scenarios and helper | Three migrated to packaged QuickJS instrumentation | [Integration audit](integration-test-audit.md) |
+| Private foreground-policy suites | Two retired | [Foreground assertions and reproduced race](configuration-test-audit.md#foreground-policy-and-pending-authentication) |
+| Configuration switch and device-token suites | Two retired | [Owner-isolation audit](configuration-ownership-test-audit.md) |
+| Clerk singleton suite | One retired | [All 41 declarations and packaged projection checks](clerk-projection-test-audit.md) |
+
+No retained file is claimed to pass unchanged against the new API. Do not remove tests merely because the generated API compiles. Domain tests that only assert calls into a deleted native service should be retired with that service; retained public behavior must be checked through its current owner. The baseline lists below preserve the full inventory and unresolved gates.
 
 The [packaged contact deletion regression](contact-resource-regression.md) records the shared deletion-receipt projection fix and its Kotlin/QuickJS verification. This does not retire unaudited Android legacy contact tests.
 

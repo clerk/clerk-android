@@ -9,8 +9,8 @@ exercise the packaged QuickJS SDK and still called deleted singleton/domain APIs
 All three old integration files were read in full and checked against their
 hashed baseline inventory (`1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f`). Their two
 live scenarios and helper are now migrated to
-`NativeCoreTests/Android/integration/`. The other 102 legacy test/helper files
-remain retained for their separate assertion audits.
+`NativeCoreTests/Android/integration/`. The [test audit](test-audit.md) tracks
+the separate assertion reviews and current disposition of the remaining files.
 
 | Old assertion or responsibility | Migrated behavior |
 | --- | --- |
