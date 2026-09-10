@@ -25,8 +25,8 @@ sortDependencies = "0.21.0"
 spotless = "8.10.2"
 turbineVersion = "1.2.1"
 uiToolingPreviewAndroid = "1.12.1"
-kotlinStdlib = "2.4.10"
-kotlinTest = "2.4.10"
+kotlinStdlib = "2.4.20"
+kotlinTest = "2.4.20"
 paparazziPlugin = "2.0.0-alpha05"
 
 # Build Versions -- Do not delete
