@@ -26,6 +26,12 @@ The ten shared `passkey.test.mjs` and `passkey-registration.test.mjs` cases also
 
 A combined Gradle class-filter invocation returned success but its XML contained only the three PasskeyRequestTest cases. The exact-case verifier rejected that as incomplete. The other suites were then run individually and their two, two and five named cases verified before preserving the reports. Gradle's existing deprecation summary and Node's existing `MODULE_TYPELESS_PACKAGE_JSON` warning remain recorded in the evidence logs.
 
+## CI verification
+
+All four jobs in [Android test run 34536809434](https://github.com/clerk/clerk-android/actions/runs/34536809434) passed at commit `9e6512d96b5725a9458476e4555512c62ae30eb0`. The downloaded XML contains 39 API and 517 UI unit cases, plus two API 24 and 100 API 36 emulator cases, with no failures, errors or skips. [The CI proof](evidence/passkey-host/ci/proof.json) retains the exact workflow revision, report hashes and named instrumentation cases; duplicate copies of the final reports were checked for byte equality and counted once.
+
+The fourteen passkey host case names match the local proof exactly, including the selected SDK configurations. All five API unit reports are retained. The twelve targeted local packaged cases above remain separate evidence; the CI emulator total includes the wider authentication/browser suite. This commit changes tests, audit documents and retired legacy files only, so the previously verified production release remains unchanged.
+
 ## Every retired declaration
 
 | Old declaration | Current disposition |

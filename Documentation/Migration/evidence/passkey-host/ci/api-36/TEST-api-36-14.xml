@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="12" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T22:23:43" hostname="localhost">
+  <testsuite name="com.clerk.api.TokenRequestContractTest" tests="12" failures="0" errors="0" skipped="0" time="12.903" timestamp="2026-09-10T22:23:43" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="revokedTokenClearsSessionWhenRecoveryRemovesIt" classname="com.clerk.api.TokenRequestContractTest" time="0.819" />
+    <testcase name="pendingSessionUsesCurrentCoreStateAndServerOutcome" classname="com.clerk.api.TokenRequestContractTest" time="0.970" />
+    <testcase name="unauthorizedTokenRefreshesCurrentSession" classname="com.clerk.api.TokenRequestContractTest" time="0.582" />
+    <testcase name="sharedSuccessReachesBothCallersAndRemainsCached" classname="com.clerk.api.TokenRequestContractTest" time="0.394" />
+    <testcase name="revokedTokenUsesRefreshedClientState" classname="com.clerk.api.TokenRequestContractTest" time="0.933" />
+    <testcase name="invalidAuthenticationUsesRefreshedClientState" classname="com.clerk.api.TokenRequestContractTest" time="1.357" />
+    <testcase name="cacheSeparatesSessionsTemplatesAndOrganizations" classname="com.clerk.api.TokenRequestContractTest" time="2.459" />
+    <testcase name="sharedFailureReachesBothCallersAndNextCallRecovers" classname="com.clerk.api.TokenRequestContractTest" time="1.149" />
+    <testcase name="rejectedTokenKeepsSession" classname="com.clerk.api.TokenRequestContractTest" time="0.478" />
+    <testcase name="closingOwnerRejectsForcedTokenAndIgnoresLateCredential" classname="com.clerk.api.TokenRequestContractTest" time="0.963" />
+    <testcase name="closingOwnerReleasesSharedTokenWaiters" classname="com.clerk.api.TokenRequestContractTest" time="0.963" />
+    <testcase name="exhaustedNetworkFailureThrowsAndLaterCallRecovers" classname="com.clerk.api.TokenRequestContractTest" time="1.836" />
+  </testsuite>
+</testsuites>
