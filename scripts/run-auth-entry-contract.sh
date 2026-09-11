@@ -133,3 +133,8 @@ run_suite SignInStateContractTest \
   serverUpdatesReplaceUnknownStatusOnTheSameResource \
   resetEmailCodeSendsSelectedIdentifierAndStrategy resetPhoneCodeSendsSelectedIdentifierAndStrategy \
   browserSsoStartsFromNeedsIdentifierWithoutAnEmail
+
+run_suite OrganizationPublicDataTest \
+  invitationPreservesPresentBranding invitationDefaultsNullBranding invitationDefaultsOmittedBranding \
+  invitationDefaultsNullImageAndOmittedSlug suggestionPreservesPresentBranding \
+  suggestionDefaultsNullBranding suggestionDefaultsOmittedBranding suggestionDefaultsNullImageAndOmittedSlug
