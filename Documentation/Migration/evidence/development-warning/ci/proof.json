@@ -801,6 +801,279 @@
       "sha256": "008d025a3c086e91c9c9e7b6672fe5733c111f55874fac1253854e36b88eda45"
     }
   ],
+  "buildWorkflow": {
+    "conclusion": "success",
+    "headSha": "e0b283d329664d659c2ef0901154e5b045312a50",
+    "jobs": [
+      {
+        "completedAt": "2026-09-11T00:06:04Z",
+        "conclusion": "success",
+        "databaseId": 103094894471,
+        "name": "build-module (:source:api)",
+        "startedAt": "2026-09-11T00:02:46Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-09-11T00:02:50Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-09-11T00:02:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:02:50Z",
+            "conclusion": "success",
+            "name": "Set up runner",
+            "number": 2,
+            "startedAt": "2026-09-11T00:02:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:02:51Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 3,
+            "startedAt": "2026-09-11T00:02:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:02:57Z",
+            "conclusion": "success",
+            "name": "Set up JDK 21",
+            "number": 4,
+            "startedAt": "2026-09-11T00:02:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:02:57Z",
+            "conclusion": "success",
+            "name": "Grant execute permission for gradlew",
+            "number": 5,
+            "startedAt": "2026-09-11T00:02:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:03:22Z",
+            "conclusion": "success",
+            "name": "Assemble :source:api",
+            "number": 6,
+            "startedAt": "2026-09-11T00:02:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:04:14Z",
+            "conclusion": "success",
+            "name": "Verify API release packaging",
+            "number": 7,
+            "startedAt": "2026-09-11T00:03:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:05:59Z",
+            "conclusion": "success",
+            "name": "Verify clean release reproducibility",
+            "number": 8,
+            "startedAt": "2026-09-11T00:04:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:06:01Z",
+            "conclusion": "success",
+            "name": "Upload release reproducibility evidence",
+            "number": 9,
+            "startedAt": "2026-09-11T00:05:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:06:01Z",
+            "conclusion": "success",
+            "name": "Post Set up JDK 21",
+            "number": 16,
+            "startedAt": "2026-09-11T00:06:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:06:01Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 17,
+            "startedAt": "2026-09-11T00:06:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:06:01Z",
+            "conclusion": "success",
+            "name": "Complete runner",
+            "number": 18,
+            "startedAt": "2026-09-11T00:06:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:06:01Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-09-11T00:06:01Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/clerk/clerk-android/actions/runs/34544766538/job/103094894471"
+      },
+      {
+        "completedAt": "2026-09-11T00:13:47Z",
+        "conclusion": "success",
+        "databaseId": 103094894548,
+        "name": "build-module (:source:ui)",
+        "startedAt": "2026-09-11T00:02:46Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-09-11T00:02:49Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-09-11T00:02:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:02:50Z",
+            "conclusion": "success",
+            "name": "Set up runner",
+            "number": 2,
+            "startedAt": "2026-09-11T00:02:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:02:51Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 3,
+            "startedAt": "2026-09-11T00:02:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:12:52Z",
+            "conclusion": "success",
+            "name": "Set up JDK 21",
+            "number": 4,
+            "startedAt": "2026-09-11T00:02:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:12:52Z",
+            "conclusion": "success",
+            "name": "Grant execute permission for gradlew",
+            "number": 5,
+            "startedAt": "2026-09-11T00:12:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:13:44Z",
+            "conclusion": "success",
+            "name": "Assemble :source:ui",
+            "number": 6,
+            "startedAt": "2026-09-11T00:12:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:13:44Z",
+            "conclusion": "skipped",
+            "name": "Verify API release packaging",
+            "number": 7,
+            "startedAt": "2026-09-11T00:13:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:13:44Z",
+            "conclusion": "skipped",
+            "name": "Verify clean release reproducibility",
+            "number": 8,
+            "startedAt": "2026-09-11T00:13:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:13:44Z",
+            "conclusion": "skipped",
+            "name": "Upload release reproducibility evidence",
+            "number": 9,
+            "startedAt": "2026-09-11T00:13:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:13:45Z",
+            "conclusion": "success",
+            "name": "Post Set up JDK 21",
+            "number": 16,
+            "startedAt": "2026-09-11T00:13:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:13:45Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 17,
+            "startedAt": "2026-09-11T00:13:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:13:45Z",
+            "conclusion": "success",
+            "name": "Complete runner",
+            "number": 18,
+            "startedAt": "2026-09-11T00:13:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:13:45Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-09-11T00:13:45Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/clerk/clerk-android/actions/runs/34544766538/job/103094894548"
+      },
+      {
+        "completedAt": "2026-09-11T00:13:55Z",
+        "conclusion": "success",
+        "databaseId": 103097370522,
+        "name": "verify",
+        "startedAt": "2026-09-11T00:13:53Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-09-11T00:13:52Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-09-11T00:13:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:13:52Z",
+            "conclusion": "success",
+            "name": "Run echo \"All module builds finished.\"",
+            "number": 2,
+            "startedAt": "2026-09-11T00:13:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-11T00:13:53Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 3,
+            "startedAt": "2026-09-11T00:13:53Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/clerk/clerk-android/actions/runs/34544766538/job/103097370522"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/clerk/clerk-android/actions/runs/34544766538"
+  },
   "releaseReproducibility": {
     "sourceRevision": "e0b283d329664d659c2ef0901154e5b045312a50",
     "host": "Linux-6.6.141-x86_64-with-glibc2.39",
@@ -893,13 +1166,5 @@
     "gradleVersion": "------------------------------------------------------------\nGradle 9.7.1\n------------------------------------------------------------\n\nBuild time:    2026-08-19 14:16:09 UTC\nRevision:      92f0512e7f06d84621afba191f75e265363890cf\n\nKotlin:        2.4.0\nGroovy:        4.0.32\nAnt:           Apache Ant(TM) version 1.10.17 compiled on April 6 2026\nLauncher JVM:  21.0.12 (Azul Systems, Inc. 21.0.12+8-LTS)\nDaemon JVM:    /opt/hostedtoolcache/Java_Zulu_jdk/21.0.12-8/x64 (no Daemon JVM specified, using current Java home)\nOS:            Linux 6.6.141 amd64",
     "differentEntries": [],
     "identical": true
-  },
-  "buildWorkflowPending": {
-    "url": "https://github.com/clerk/clerk-android/actions/runs/34544766538",
-    "jobId": 103094894548,
-    "step": "Set up JDK 21",
-    "observedAt": "2026-09-11T00:11:48Z",
-    "apiBuildJob": "success",
-    "uiBuildJob": "in_progress"
   }
 }
