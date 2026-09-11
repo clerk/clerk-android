@@ -27,3 +27,9 @@ The obsolete singleton setter, DTO constructors and computed property are remove
 The first test fixture did not compile because it called an API-internal JSON helper; using the JSON primitive accessor fixed compilation. Its first runtime response then omitted the client authorization credential and failed startup with `missing_client_credential`. The corrected fixture preserves that response credential in memory. Neither setup failure is counted as the reproduced presentation regression.
 
 These rendered fixture checks do not establish live-service behavior, physical-device performance, or released-app upgrade continuity. Those broader migration gates remain open.
+
+## CI evidence
+
+Commit `e0b283d329664d659c2ef0901154e5b045312a50` passes all four jobs in [Android test CI](https://github.com/clerk/clerk-android/actions/runs/34544765216). Downloaded XML verifies 566 unit cases (39 API and 527 UI), two API 24 emulator cases, and 144 API 36 emulator cases without failures or skips. Those results include all four footer cases and all three authentication journeys. [The CI proof](evidence/development-warning/ci/proof.json) records 26 canonical instrumentation reports, unit-report hashes and six footer screenshots. The production and reload screenshots show normal branding without development labels; the enabled development case retains both tested warning components.
+
+The API job in [build CI](https://github.com/clerk/clerk-android/actions/runs/34544766538) passed. Independent inspection of its two downloaded release AARs confirms identical bytes, SHA-256 `833e066b3c76432e180621bff174241bee0d98caf23e6e6e3749df42f184623e`, and the unchanged core bundle `406af90fdb32effc6fb3c1b35b52ceea639a68ceb3874b4d1390fd958a339f7d`. As of September 11, 2026, 00:11:48 UTC, the separate UI build job remains in JDK setup; completion of that workflow is not yet claimed.

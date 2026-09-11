@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="6" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-11T00:07:04" hostname="localhost">
+  <testsuite name="com.clerk.api.PasskeyRegistrationFailureTest" tests="6" failures="0" errors="0" skipped="0" time="0.933" timestamp="2026-09-11T00:07:04" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="creationFailurePreservesAPIErrorWithoutPresentingCredential" classname="com.clerk.api.PasskeyRegistrationFailureTest" time="0.230" />
+    <testcase name="unsupportedPasskeysDoNotCreateServerResource" classname="com.clerk.api.PasskeyRegistrationFailureTest" time="0.132" />
+    <testcase name="providerFailureDoesNotSubmitCredentialOrExposePrivateDetails" classname="com.clerk.api.PasskeyRegistrationFailureTest" time="0.135" />
+    <testcase name="invalidCredentialDoesNotSubmitVerification" classname="com.clerk.api.PasskeyRegistrationFailureTest" time="0.145" />
+    <testcase name="missingOptionsFailBeforeCredentialPresentation" classname="com.clerk.api.PasskeyRegistrationFailureTest" time="0.138" />
+    <testcase name="verificationFailurePreservesAPIErrorWithoutRetryingCredential" classname="com.clerk.api.PasskeyRegistrationFailureTest" time="0.153" />
+  </testsuite>
+</testsuites>
