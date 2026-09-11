@@ -24,3 +24,9 @@ The shared runtime adds three status checks and runs the existing thirteen selec
 | `oauth first factor can be prepared from needs identifier status` | The removed raw `prepareFirstFactor` helper is replaced by the selected `signIn.sso` flow. `browserSsoStartsFromNeedsIdentifierWithoutAnEmail` checks the initial status, one OAuth creation request with the configured redirect and no identifier, callback reconciliation, stable resource identity, and no implicit activation. It does not claim the old private prepare endpoint is still public. |
 
 This audit adds verification and retires obsolete tests. It changes no production implementation, generated bindings, or packaged core bytes. The tested bundle remains `25001603e9c152c6aaa2f8bad982bbab2a7da122efd6774df89518c809b131a5`, built from JavaScript revision `cba4fd161f0b1d80f48a9128d47a85c9a4ca0521`. Fixture browser callbacks and HTTP establish the SDK contract, not a live provider journey.
+
+## Published-commit CI
+
+All four jobs in [test CI](https://github.com/clerk/clerk-android/actions/runs/34547848881) passed for revision `6ebec9ab4318f3532fa0aae0dc1d0d967009c452`. Independent XML verification confirms 39 API unit tests, 527 UI unit tests, two API 24 emulator cases and 158 API 36 emulator cases. The latter includes all six new sign-in cases with the exact names recorded locally. [CI proof](evidence/signin-state/ci/proof.json) records the reports, hashes and expected-case verification.
+
+The diff from release-build revision `dc62ed84b77db84e0fe90ef921d6f2ec319b206e` contains only tests, documentation and test selection. Production sources and bundled assets are unchanged, so the previously verified [release reproducibility build](https://github.com/clerk/clerk-android/actions/runs/34547005227) remains the packaging evidence; no new release-build result is claimed for this test-only commit.

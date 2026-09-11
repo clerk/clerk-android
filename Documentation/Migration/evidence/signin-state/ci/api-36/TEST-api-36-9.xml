@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="8" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-11T00:50:27" hostname="localhost">
+  <testsuite name="com.clerk.api.PasskeyOptionsTest" tests="8" failures="0" errors="0" skipped="0" time="1.291" timestamp="2026-09-11T00:50:27" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="nonStringRelyingPartyFailsBeforePresentation" classname="com.clerk.api.PasskeyOptionsTest" time="0.226" />
+    <testcase name="serverOptionsPreserveRelyingPartyAndCredentials" classname="com.clerk.api.PasskeyOptionsTest" time="0.164" />
+    <testcase name="whitespaceRelyingPartyFailsBeforePresentation" classname="com.clerk.api.PasskeyOptionsTest" time="0.159" />
+    <testcase name="nestedRelyingPartyFailsBeforePresentation" classname="com.clerk.api.PasskeyOptionsTest" time="0.146" />
+    <testcase name="emptyRelyingPartyFailsBeforePresentation" classname="com.clerk.api.PasskeyOptionsTest" time="0.156" />
+    <testcase name="missingRelyingPartyFailsBeforePresentation" classname="com.clerk.api.PasskeyOptionsTest" time="0.149" />
+    <testcase name="missingCredentialIdRejectsServerList" classname="com.clerk.api.PasskeyOptionsTest" time="0.148" />
+    <testcase name="invalidCredentialIdRejectsServerList" classname="com.clerk.api.PasskeyOptionsTest" time="0.143" />
+  </testsuite>
+</testsuites>
