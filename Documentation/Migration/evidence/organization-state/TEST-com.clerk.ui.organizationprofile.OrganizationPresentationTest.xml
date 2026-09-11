@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.clerk.ui.organizationprofile.OrganizationPresentationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-11T01:27:29.774Z" hostname="mac.lan" time="0.893">
+  <properties/>
+  <testcase name="only verified domain status counts as verified" classname="com.clerk.ui.organizationprofile.OrganizationPresentationTest" time="0.722"/>
+  <testcase name="each organization action requires its own permission" classname="com.clerk.ui.organizationprofile.OrganizationPresentationTest" time="0.163"/>
+  <testcase name="empty permissions hide all organization actions" classname="com.clerk.ui.organizationprofile.OrganizationPresentationTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/Users/mikepitre/.gradle/caches/9.7.1/transforms/3fe64f7182d8271eecc87e0bd81add2b/transformed/byte-buddy-agent-1.18.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

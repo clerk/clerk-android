@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="11" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-11T01:21:46" hostname="localhost">
+  <testsuite name="com.clerk.api.OrganizationStateContractTest" tests="11" failures="0" errors="0" skipped="0" time="1.646" timestamp="2026-09-11T01:21:46" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="automaticInvitationDomainPreservesUnverifiedStatus" classname="com.clerk.api.OrganizationStateContractTest" time="0.216" />
+    <testcase name="automaticSuggestionDomainPreservesAbsentVerification" classname="com.clerk.api.OrganizationStateContractTest" time="0.157" />
+    <testcase name="manualDomainPreservesVerifiedStatus" classname="com.clerk.api.OrganizationStateContractTest" time="0.153" />
+    <testcase name="domainPreservesUnknownModeAndVerificationStatus" classname="com.clerk.api.OrganizationStateContractTest" time="0.155" />
+    <testcase name="nullMembershipPermissionsBecomeEmpty" classname="com.clerk.api.OrganizationStateContractTest" time="0.136" />
+    <testcase name="unknownActiveOrganizationDoesNotSelectAnotherMembership" classname="com.clerk.api.OrganizationStateContractTest" time="0.134" />
+    <testcase name="noActiveOrganizationPreservesMemberships" classname="com.clerk.api.OrganizationStateContractTest" time="0.136" />
+    <testcase name="membershipPreservesAllPermissionKeys" classname="com.clerk.api.OrganizationStateContractTest" time="0.133" />
+    <testcase name="activeOrganizationSelectsMatchingMembership" classname="com.clerk.api.OrganizationStateContractTest" time="0.136" />
+    <testcase name="enterpriseDomainPreservesExpiredStatus" classname="com.clerk.api.OrganizationStateContractTest" time="0.150" />
+    <testcase name="omittedMembershipPermissionsBecomeEmpty" classname="com.clerk.api.OrganizationStateContractTest" time="0.140" />
+  </testsuite>
+</testsuites>

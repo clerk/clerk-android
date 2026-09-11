@@ -39,6 +39,18 @@ class OrganizationSwitcherBehaviorTest {
   }
 
   @Test
+  fun `activeOrganizationMembership uses matching user membership when pages have not loaded`() {
+    val acme = membership(id = "mem_acme", organizationId = "org_acme", name = "Acme")
+    val beta = membership(id = "mem_beta", organizationId = "org_beta", name = "Beta")
+    val user = mockk<com.clerk.api.User>()
+    every { user.organizationMemberships } returns listOf(acme, beta)
+    assertEquals(
+      beta,
+      activeOrganizationMembership(user, session(activeOrganizationId = "org_beta"), emptyList()),
+    )
+  }
+
+  @Test
   fun `shouldShowOrganizationSwitcher requires user session and enabled organizations`() {
     assertTrue(
       shouldShowOrganizationSwitcher(hasUser = true, hasSession = true, organizationsEnabled = true)

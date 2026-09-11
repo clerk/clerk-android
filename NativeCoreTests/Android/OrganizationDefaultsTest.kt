@@ -17,6 +17,8 @@ class OrganizationDefaultsTest {
 
   @Test fun absentSlugUsesCanonicalEmptyString() = verify("no-slug")
 
+  @Test fun partialBrandingPreservesLogoAndAdvisory() = verify("partial-branding")
+
   private fun verify(scenario: String) = runBlocking {
     withContext(Dispatchers.Main.immediate) {
       val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -24,6 +26,7 @@ class OrganizationDefaultsTest {
       base.clientResponse = base.fixtures.getValue("authenticatedClient")
       val payload =
         when (scenario) {
+          "partial-branding" -> """{"advisory":{"code":"organization_already_exists","meta":{"organization_domain":"acme.test","organization_name":"Acme"}},"form":{"name":"Acme","logo":"https://img.clerk.com/acme.png"}}"""
           "no-form" -> """{"advisory":null,"form":null}"""
           "no-severity" ->
             """{"advisory":{"code":"organization_already_exists","meta":{"organization_domain":"clerk.dev","organization_name":"Clerk"}},"form":{"name":"My Organization","slug":"my-organization","logo":null,"blur_hash":null}}"""
@@ -66,13 +69,15 @@ class OrganizationDefaultsTest {
       try {
         val defaults = checkNotNull(clerk.user).getOrganizationCreationDefaults()
         check(reads == 1)
-        check(defaults.form.name == if (scenario == "no-form") "" else "My Organization")
+        check(defaults.form.name == when (scenario) { "no-form" -> ""; "partial-branding" -> "Acme"; else -> "My Organization" })
         check(defaults.form.slug == if (scenario == "no-severity") "my-organization" else "")
-        check(defaults.form.logo == null && defaults.form.blurHash == null)
-        if (scenario == "no-severity") {
+        check(defaults.form.logo == if (scenario == "partial-branding") "https://img.clerk.com/acme.png" else null)
+        check(defaults.form.blurHash == null)
+        if (scenario == "no-severity" || scenario == "partial-branding") {
           check(defaults.advisory?.code == "organization_already_exists")
           check(defaults.advisory?.severity == "warning")
-          check(defaults.advisory?.meta?.get("organization_domain") == "clerk.dev")
+          check(defaults.advisory?.meta?.get("organization_domain") == if (scenario == "partial-branding") "acme.test" else "clerk.dev")
+          check(defaults.advisory?.meta?.get("organization_name") == if (scenario == "partial-branding") "Acme" else "Clerk")
         } else check(defaults.advisory == null)
       } finally {
         clerk.close()

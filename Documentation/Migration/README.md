@@ -164,3 +164,5 @@ Passkey assertion requests use the server's top-level `rpId`, credential list, t
 [Organization invitation and suggestion projection](organization-public-data.md) documents normalization of missing image/slug fields and the remaining legacy timestamp difference.
 
 [Organization request routing](organization-routing-test-audit.md) maps all 17 removed Retrofit mutations to shared resource requests and retires the old annotation suite.
+
+[Organization state and presentation](organization-state-test-audit.md) documents canonical defaults, permission lists, domain enum values and active-organization membership traversal.

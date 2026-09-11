@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="4" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-11T01:22:38" hostname="localhost">
+  <testsuite name="com.clerk.api.OrganizationDefaultsTest" tests="4" failures="0" errors="0" skipped="0" time="0.661" timestamp="2026-09-11T01:22:38" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="absentSeverityDefaultsToWarning" classname="com.clerk.api.OrganizationDefaultsTest" time="0.205" />
+    <testcase name="absentSlugUsesCanonicalEmptyString" classname="com.clerk.api.OrganizationDefaultsTest" time="0.157" />
+    <testcase name="partialBrandingPreservesLogoAndAdvisory" classname="com.clerk.api.OrganizationDefaultsTest" time="0.149" />
+    <testcase name="absentFormUsesCanonicalEmptyDefaults" classname="com.clerk.api.OrganizationDefaultsTest" time="0.150" />
+  </testsuite>
+</testsuites>
