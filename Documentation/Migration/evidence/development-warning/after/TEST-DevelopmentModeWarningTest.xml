@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="4" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T23:58:09" hostname="localhost">
+  <testsuite name="com.clerk.ui.core.footer.DevelopmentModeWarningTest" tests="4" failures="0" errors="0" skipped="0" time="6.241" timestamp="2026-09-10T23:58:09" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="developmentShowsRequestedWarning" classname="com.clerk.ui.core.footer.DevelopmentModeWarningTest" time="1.341" />
+    <testcase name="environmentReloadSwitchesWarningAndRestoresBranding" classname="com.clerk.ui.core.footer.DevelopmentModeWarningTest" time="1.596" />
+    <testcase name="disabledWarningPreservesNormalBranding" classname="com.clerk.ui.core.footer.DevelopmentModeWarningTest" time="1.636" />
+    <testcase name="productionNeverShowsDevelopmentWarning" classname="com.clerk.ui.core.footer.DevelopmentModeWarningTest" time="1.668" />
+  </testsuite>
+</testsuites>

@@ -226,9 +226,12 @@ private fun DevelopmentModeBranding(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun shouldShowDevelopmentModeWarning(): Boolean {
-  val isInitialized = LocalClerk.current.loaded
-  return isInitialized && LocalClerk.current.environment.displayConfig.showDevModeWarning
+internal fun shouldShowDevelopmentModeWarning(): Boolean {
+  val clerk = LocalClerk.current
+  val display = clerk.environment.displayConfig
+  return clerk.loaded &&
+    display.showDevModeWarning &&
+    display.instanceEnvironmentType != "production"
 }
 
 @Composable

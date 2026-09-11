@@ -24,11 +24,8 @@ internal fun SecuredByClerkView(
   modifier: Modifier = Modifier,
   hideWhenDevelopmentModeWarning: Boolean = true,
 ) {
-  val isInitialized = LocalClerk.current.loaded
   val shouldHideForDevelopmentMode =
-    hideWhenDevelopmentModeWarning &&
-      isInitialized &&
-      LocalClerk.current.environment.displayConfig.showDevModeWarning
+    hideWhenDevelopmentModeWarning && shouldShowDevelopmentModeWarning()
 
   if (LocalClerk.current.environment.displayConfig.branded && !shouldHideForDevelopmentMode) {
     ClerkMaterialTheme {

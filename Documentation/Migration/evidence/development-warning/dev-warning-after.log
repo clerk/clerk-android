@@ -1,0 +1,106 @@
+Configuration on demand is an incubating feature.
+Type-safe project accessors is an incubating feature.
+> Task :source:api:preBuild UP-TO-DATE
+> Task :source:api:preDebugBuild UP-TO-DATE
+> Task :source:api:generateDebugBuildConfig UP-TO-DATE
+> Task :source:api:generateDebugResources UP-TO-DATE
+> Task :source:ui:preBuild UP-TO-DATE
+> Task :source:ui:preDebugBuild UP-TO-DATE
+> Task :source:api:packageDebugResources UP-TO-DATE
+> Task :source:ui:generateDebugResources UP-TO-DATE
+> Task :source:api:processDebugNavigationResources UP-TO-DATE
+> Task :source:ui:packageDebugResources UP-TO-DATE
+> Task :source:ui:processDebugNavigationResources UP-TO-DATE
+> Task :source:ui:parseDebugLocalResources UP-TO-DATE
+> Task :source:api:parseDebugLocalResources UP-TO-DATE
+> Task :source:ui:generateDebugRFile UP-TO-DATE
+> Task :source:api:generateDebugRFile UP-TO-DATE
+> Task :source:ui:javaPreCompileDebug UP-TO-DATE
+> Task :source:ui:preDebugAndroidTestBuild UP-TO-DATE
+> Task :source:ui:generateDebugAndroidTestResources UP-TO-DATE
+> Task :source:ui:packageDebugAndroidTestResources UP-TO-DATE
+> Task :source:ui:processDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :source:ui:parseDebugAndroidTestLocalResources UP-TO-DATE
+> Task :source:ui:generateDebugAndroidTestRFile UP-TO-DATE
+> Task :source:ui:javaPreCompileDebugAndroidTest UP-TO-DATE
+> Task :source:ui:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :source:ui:generateDebugAssets UP-TO-DATE
+> Task :source:ui:mergeDebugAssets UP-TO-DATE
+> Task :source:ui:generateDebugAndroidTestGlobalSynthetics UP-TO-DATE
+> Task :source:ui:l8DexDesugarLibDebugAndroidTest UP-TO-DATE
+> Task :source:api:compileDebugKotlin UP-TO-DATE
+> Task :source:api:javaPreCompileDebug UP-TO-DATE
+> Task :source:api:compileDebugJavaWithJavac UP-TO-DATE
+> Task :source:api:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :source:api:generateDebugAssets UP-TO-DATE
+> Task :source:api:mergeDebugAssets UP-TO-DATE
+> Task :source:api:processDebugJavaRes UP-TO-DATE
+> Task :source:api:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :source:api:mapDebugSourceSetPaths UP-TO-DATE
+> Task :source:api:compileDebugLibraryResources UP-TO-DATE
+> Task :source:api:writeDebugAarMetadata UP-TO-DATE
+> Task :source:api:extractDeepLinksDebug UP-TO-DATE
+> Task :source:api:processDebugManifest UP-TO-DATE
+> Task :source:api:configureCMakeDebug[arm64-v8a]
+> Task :source:api:buildCMakeDebug[arm64-v8a]
+> Task :source:ui:checkDebugAndroidTestDuplicateClasses UP-TO-DATE
+> Task :source:api:configureCMakeDebug[armeabi-v7a]
+> Task :source:api:buildCMakeDebug[armeabi-v7a]
+> Task :source:api:configureCMakeDebug[x86_64]
+> Task :source:api:buildCMakeDebug[x86_64]
+> Task :source:api:mergeDebugJniLibFolders UP-TO-DATE
+> Task :source:api:mergeDebugNativeLibs UP-TO-DATE
+> Task :source:api:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :source:ui:compileDebugKotlin UP-TO-DATE
+> Task :source:ui:compileDebugJavaWithJavac NO-SOURCE
+> Task :source:ui:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :source:ui:compileDebugAndroidTestKotlin UP-TO-DATE
+> Task :source:ui:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :source:ui:mergeDebugAndroidTestAssets UP-TO-DATE
+> Task :source:ui:compressDebugAndroidTestAssets UP-TO-DATE
+> Task :source:ui:processDebugAndroidTestJavaRes UP-TO-DATE
+> Task :source:ui:processDebugJavaRes UP-TO-DATE
+> Task :source:ui:mergeDebugAndroidTestJavaResource UP-TO-DATE
+> Task :source:ui:desugarDebugAndroidTestFileDependencies UP-TO-DATE
+> Task :source:ui:mergeExtDexDebugAndroidTest UP-TO-DATE
+> Task :source:ui:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :source:ui:writeDebugAarMetadata UP-TO-DATE
+> Task :source:ui:checkDebugAndroidTestAarMetadata UP-TO-DATE
+> Task :source:ui:mergeLibDexDebugAndroidTest UP-TO-DATE
+> Task :source:ui:mapDebugAndroidTestSourceSetPaths UP-TO-DATE
+> Task :source:ui:compileDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :source:ui:mapDebugSourceSetPaths UP-TO-DATE
+> Task :source:ui:compileDebugLibraryResources UP-TO-DATE
+> Task :source:ui:mergeDebugAndroidTestResources UP-TO-DATE
+> Task :source:ui:extractDeepLinksDebug UP-TO-DATE
+> Task :source:ui:processDebugManifest UP-TO-DATE
+> Task :source:ui:mergeDebugAndroidTestManifest UP-TO-DATE
+> Task :source:ui:processDebugAndroidTestManifest UP-TO-DATE
+> Task :source:ui:processDebugAndroidTestResources UP-TO-DATE
+> Task :source:ui:dexBuilderDebugAndroidTest UP-TO-DATE
+> Task :source:ui:mergeProjectDexDebugAndroidTest UP-TO-DATE
+> Task :source:ui:mergeDebugJniLibFolders UP-TO-DATE
+> Task :source:ui:mergeDebugNativeLibs NO-SOURCE
+> Task :source:ui:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :source:ui:mergeDebugAndroidTestJniLibFolders UP-TO-DATE
+> Task :source:ui:mergeDebugAndroidTestNativeLibs UP-TO-DATE
+> Task :source:ui:stripDebugAndroidTestDebugSymbols UP-TO-DATE
+> Task :source:ui:validateSigningDebugAndroidTest UP-TO-DATE
+> Task :source:ui:writeDebugAndroidTestSigningConfigVersions UP-TO-DATE
+> Task :source:ui:packageDebugAndroidTest UP-TO-DATE
+> Task :source:ui:createDebugAndroidTestApkListingFileRedirect UP-TO-DATE
+
+> Task :source:ui:connectedDebugAndroidTest
+Running tests on devices: Pixel_9_Pro(AVD) - 16
+
+[Incubating] Problems report is available at: file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/clerk-android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 11s
+79 actionable tasks: 7 executed, 72 up-to-date
+All expected Android instrumentation scenarios executed and passed.

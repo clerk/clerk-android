@@ -1,0 +1,74 @@
+Configuration on demand is an incubating feature.
+Type-safe project accessors is an incubating feature.
+> Task :source:api:preBuild UP-TO-DATE
+> Task :source:api:preDebugBuild UP-TO-DATE
+> Task :source:api:generateDebugBuildConfig UP-TO-DATE
+> Task :source:api:generateDebugResources UP-TO-DATE
+> Task :source:api:packageDebugResources UP-TO-DATE
+> Task :source:api:processDebugNavigationResources UP-TO-DATE
+> Task :source:api:parseDebugLocalResources UP-TO-DATE
+> Task :source:api:generateDebugRFile UP-TO-DATE
+> Task :source:api:compileDebugKotlin UP-TO-DATE
+> Task :source:api:javaPreCompileDebug UP-TO-DATE
+> Task :source:api:compileDebugJavaWithJavac UP-TO-DATE
+> Task :source:api:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :source:api:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :source:api:generateDebugAssets UP-TO-DATE
+> Task :source:api:mergeDebugAssets UP-TO-DATE
+> Task :source:api:processDebugJavaRes UP-TO-DATE
+> Task :source:api:mapDebugSourceSetPaths UP-TO-DATE
+> Task :source:api:compileDebugLibraryResources UP-TO-DATE
+> Task :source:api:writeDebugAarMetadata UP-TO-DATE
+> Task :source:api:extractDeepLinksDebug UP-TO-DATE
+> Task :source:api:processDebugManifest UP-TO-DATE
+> Task :source:ui:preBuild UP-TO-DATE
+> Task :source:ui:preDebugBuild UP-TO-DATE
+> Task :source:ui:generateDebugResources UP-TO-DATE
+> Task :source:ui:packageDebugResources UP-TO-DATE
+> Task :source:ui:processDebugNavigationResources UP-TO-DATE
+> Task :source:ui:parseDebugLocalResources UP-TO-DATE
+> Task :source:ui:generateDebugRFile UP-TO-DATE
+> Task :source:ui:javaPreCompileDebug UP-TO-DATE
+> Task :source:ui:generateDebugUnitTestAssets UP-TO-DATE
+> Task :source:ui:generateDebugAssets UP-TO-DATE
+> Task :source:ui:mergeDebugAssets UP-TO-DATE
+> Task :source:ui:preDebugUnitTestBuild UP-TO-DATE
+> Task :source:ui:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :source:ui:writeDebugAarMetadata UP-TO-DATE
+> Task :source:ui:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :source:ui:mapDebugSourceSetPaths UP-TO-DATE
+> Task :source:ui:compileDebugLibraryResources UP-TO-DATE
+> Task :source:ui:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :source:ui:generateDebugUnitTestResources UP-TO-DATE
+> Task :source:ui:mergeDebugUnitTestResources UP-TO-DATE
+> Task :source:ui:extractDeepLinksDebug UP-TO-DATE
+> Task :source:ui:processDebugManifest UP-TO-DATE
+> Task :source:ui:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :source:ui:processDebugUnitTestManifest UP-TO-DATE
+> Task :source:ui:processDebugUnitTestResources UP-TO-DATE
+> Task :source:ui:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :source:ui:generateDebugUnitTestConfig UP-TO-DATE
+> Task :source:ui:preparePaparazziDebugResources UP-TO-DATE
+> Task :source:ui:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :source:ui:compileDebugKotlin
+> Task :source:ui:compileDebugJavaWithJavac NO-SOURCE
+> Task :source:ui:processDebugJavaRes UP-TO-DATE
+> Task :source:ui:bundleLibRuntimeToJarDebug
+> Task :source:ui:bundleLibCompileToJarDebug
+> Task :source:ui:compileDebugUnitTestKotlin
+> Task :source:ui:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :source:ui:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :source:ui:transformDebugUnitTestClassesWithAsm
+> Task :source:ui:testDebugUnitTest
+See the Paparazzi report at: file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/clerk-android/source/ui/build/reports/paparazzi/debug/index.html
+
+[Incubating] Problems report is available at: file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/clerk-android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 2m 44s
+50 actionable tasks: 6 executed, 44 up-to-date

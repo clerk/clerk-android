@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="4" failures="2" errors="0" skipped="0" time="0.000" timestamp="2026-09-10T23:55:56" hostname="localhost">
+  <testsuite name="com.clerk.ui.core.footer.DevelopmentModeWarningTest" tests="4" failures="2" errors="0" skipped="0" time="6.440" timestamp="2026-09-10T23:55:56" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="developmentShowsRequestedWarning" classname="com.clerk.ui.core.footer.DevelopmentModeWarningTest" time="1.856" />
+    <testcase name="environmentReloadSwitchesWarningAndRestoresBranding" classname="com.clerk.ui.core.footer.DevelopmentModeWarningTest" time="1.913">
+      <failure>java.lang.AssertionError: Failed to assert count of nodes.
+Reason: Did not expect any node but found '2' nodes that satisfy: (Text + InputText + EditableText contains 'Development mode' (ignoreCase: false))
+Nodes found:
+1) Node #23 at (l=420.0, t=544.0, r=861.0, b=603.0)px
+Text = '[Development mode]'
+Actions = [ClearTextSubstitution, GetTextLayoutResult, SetTextSubstitution, ShowTextSubstitution]
+Has 3 siblings
+2) Node #27 at (l=420.0, t=898.0, r=861.0, b=957.0)px
+Text = '[Development mode]'
+Actions = [ClearTextSubstitution, GetTextLayoutResult, SetTextSubstitution, ShowTextSubstitution]
+Has 3 siblings
+
+	at androidx.compose.ui.test.AssertionsKt.assertCountEquals(Assertions.kt:282)
+	at com.clerk.ui.core.footer.DevelopmentModeWarningTest.verify(DevelopmentModeWarningTest.kt:156)
+	at com.clerk.ui.core.footer.DevelopmentModeWarningTest.environmentReloadSwitchesWarningAndRestoresBranding(DevelopmentModeWarningTest.kt:39)
+</failure>
+    </testcase>
+    <testcase name="disabledWarningPreservesNormalBranding" classname="com.clerk.ui.core.footer.DevelopmentModeWarningTest" time="1.614" />
+    <testcase name="productionNeverShowsDevelopmentWarning" classname="com.clerk.ui.core.footer.DevelopmentModeWarningTest" time="1.057">
+      <failure>java.lang.AssertionError: Failed to assert count of nodes.
+Reason: Did not expect any node but found '2' nodes that satisfy: (Text + InputText + EditableText contains 'Development mode' (ignoreCase: false))
+Nodes found:
+1) Node #46 at (l=420.0, t=544.0, r=861.0, b=603.0)px
+Text = '[Development mode]'
+Actions = [ClearTextSubstitution, GetTextLayoutResult, SetTextSubstitution, ShowTextSubstitution]
+Has 3 siblings
+2) Node #50 at (l=420.0, t=898.0, r=861.0, b=957.0)px
+Text = '[Development mode]'
+Actions = [ClearTextSubstitution, GetTextLayoutResult, SetTextSubstitution, ShowTextSubstitution]
+Has 3 siblings
+
+	at androidx.compose.ui.test.AssertionsKt.assertCountEquals(Assertions.kt:282)
+	at com.clerk.ui.core.footer.DevelopmentModeWarningTest.verify(DevelopmentModeWarningTest.kt:156)
+	at com.clerk.ui.core.footer.DevelopmentModeWarningTest.productionNeverShowsDevelopmentWarning(DevelopmentModeWarningTest.kt:33)
+</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
