@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="8" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-11T01:09:16" hostname="localhost">
+  <testsuite name="com.clerk.api.OrganizationPublicDataTest" tests="8" failures="0" errors="0" skipped="0" time="1.206" timestamp="2026-09-11T01:09:16" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="invitationDefaultsNullImageAndOmittedSlug" classname="com.clerk.api.OrganizationPublicDataTest" time="0.190" />
+    <testcase name="suggestionPreservesPresentBranding" classname="com.clerk.api.OrganizationPublicDataTest" time="0.156" />
+    <testcase name="suggestionDefaultsOmittedBranding" classname="com.clerk.api.OrganizationPublicDataTest" time="0.147" />
+    <testcase name="suggestionDefaultsNullBranding" classname="com.clerk.api.OrganizationPublicDataTest" time="0.142" />
+    <testcase name="invitationDefaultsOmittedBranding" classname="com.clerk.api.OrganizationPublicDataTest" time="0.143" />
+    <testcase name="invitationDefaultsNullBranding" classname="com.clerk.api.OrganizationPublicDataTest" time="0.137" />
+    <testcase name="suggestionDefaultsNullImageAndOmittedSlug" classname="com.clerk.api.OrganizationPublicDataTest" time="0.145" />
+    <testcase name="invitationPreservesPresentBranding" classname="com.clerk.api.OrganizationPublicDataTest" time="0.146" />
+  </testsuite>
+</testsuites>

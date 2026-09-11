@@ -1,0 +1,296 @@
+TAP version 13
+# (node:53689) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/src/test/fixtures.ts is not specified and it doesn't parse as CommonJS.
+# Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+# To eliminate this warning, add "type": "module" to /Users/mikepitre/Documents/Codex/2026-09-08/i/work/trees/javascript/packages/clerk-js/package.json.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: generated organization getRoles preserves filters {}
+ok 1 - generated organization getRoles preserves filters {}
+  ---
+  duration_ms: 27.782334
+  type: 'test'
+  ...
+# Subtest: generated organization getMemberships preserves filters {"paginated":["true"]}
+ok 2 - generated organization getMemberships preserves filters {"paginated":["true"]}
+  ---
+  duration_ms: 5.822167
+  type: 'test'
+  ...
+# Subtest: generated organization getMemberships preserves filters {"query":["test"],"paginated":["true"]}
+ok 3 - generated organization getMemberships preserves filters {"query":["test"],"paginated":["true"]}
+  ---
+  duration_ms: 6.084583
+  type: 'test'
+  ...
+# Subtest: generated organization getMemberships preserves filters {"role":["org:admin","org:member"],"paginated":["true"]}
+ok 4 - generated organization getMemberships preserves filters {"role":["org:admin","org:member"],"paginated":["true"]}
+  ---
+  duration_ms: 6.341833
+  type: 'test'
+  ...
+# Subtest: generated organization getInvitations preserves filters {"status":[]}
+ok 5 - generated organization getInvitations preserves filters {"status":[]}
+  ---
+  duration_ms: 6.268833
+  type: 'test'
+  ...
+# Subtest: generated organization getInvitations preserves filters {"status":["pending"]}
+ok 6 - generated organization getInvitations preserves filters {"status":["pending"]}
+  ---
+  duration_ms: 5.506709
+  type: 'test'
+  ...
+# Subtest: generated organization getInvitations preserves filters {"status":["pending","accepted"]}
+ok 7 - generated organization getInvitations preserves filters {"status":["pending","accepted"]}
+  ---
+  duration_ms: 5.634666
+  type: 'test'
+  ...
+# Subtest: generated organization getDomains preserves filters {}
+ok 8 - generated organization getDomains preserves filters {}
+  ---
+  duration_ms: 7.764084
+  type: 'test'
+  ...
+# Subtest: generated organization getDomains preserves filters {"enrollment_mode":["automatic_invitation"]}
+ok 9 - generated organization getDomains preserves filters {"enrollment_mode":["automatic_invitation"]}
+  ---
+  duration_ms: 5.78025
+  type: 'test'
+  ...
+# Subtest: generated organization getDomains preserves filters {"enrollment_mode":["automatic_suggestion"]}
+ok 10 - generated organization getDomains preserves filters {"enrollment_mode":["automatic_suggestion"]}
+  ---
+  duration_ms: 5.7535
+  type: 'test'
+  ...
+# Subtest: generated organization getMembershipRequests preserves filters {}
+ok 11 - generated organization getMembershipRequests preserves filters {}
+  ---
+  duration_ms: 5.742583
+  type: 'test'
+  ...
+# Subtest: generated organization getMembershipRequests preserves filters {"status":["pending"]}
+ok 12 - generated organization getMembershipRequests preserves filters {"status":["pending"]}
+  ---
+  duration_ms: 6.216083
+  type: 'test'
+  ...
+# Subtest: generated logo removal returns a usable organization: receipt
+ok 13 - generated logo removal returns a usable organization: receipt
+  ---
+  duration_ms: 6.052583
+  type: 'test'
+  ...
+# Subtest: generated logo removal returns a usable organization: resource
+ok 14 - generated logo removal returns a usable organization: resource
+  ---
+  duration_ms: 6.848584
+  type: 'test'
+  ...
+# Subtest: generated logo removal returns a usable organization: rejected
+ok 15 - generated logo removal returns a usable organization: rejected
+  ---
+  duration_ms: 5.621666
+  type: 'test'
+  ...
+# Subtest: a separately fetched organization does not alias an older active root
+ok 16 - a separately fetched organization does not alias an older active root
+  ---
+  duration_ms: 6.492959
+  type: 'test'
+  ...
+# Subtest: organization enrollment modes preserve future output values but reject unknown query input
+ok 17 - organization enrollment modes preserve future output values but reject unknown query input
+  ---
+  duration_ms: 5.927292
+  type: 'test'
+  ...
+# Subtest: generated Organization.update preserves its request and result [{"name":"Renamed"}]
+ok 18 - generated Organization.update preserves its request and result [{"name":"Renamed"}]
+  ---
+  duration_ms: 5.7925
+  type: 'test'
+  ...
+# Subtest: generated Organization.update preserves its request and result [{"name":"Renamed","slug":"new-slug"}]
+ok 19 - generated Organization.update preserves its request and result [{"name":"Renamed","slug":"new-slug"}]
+  ---
+  duration_ms: 6.797541
+  type: 'test'
+  ...
+# Subtest: generated Organization.destroy preserves its request and result []
+ok 20 - generated Organization.destroy preserves its request and result []
+  ---
+  duration_ms: 5.616625
+  type: 'test'
+  ...
+# Subtest: generated Clerk.createOrganization preserves its request and result [{"name":"New organization"}]
+ok 21 - generated Clerk.createOrganization preserves its request and result [{"name":"New organization"}]
+  ---
+  duration_ms: 5.572292
+  type: 'test'
+  ...
+# Subtest: generated Clerk.createOrganization preserves its request and result [{"name":"New organization","slug":"new-slug"}]
+ok 22 - generated Clerk.createOrganization preserves its request and result [{"name":"New organization","slug":"new-slug"}]
+  ---
+  duration_ms: 5.457834
+  type: 'test'
+  ...
+# Subtest: generated Organization.addMember preserves its request and result [{"userId":"user_123","role":"org:member"}]
+ok 23 - generated Organization.addMember preserves its request and result [{"userId":"user_123","role":"org:member"}]
+  ---
+  duration_ms: 5.476708
+  type: 'test'
+  ...
+# Subtest: generated Organization.updateMember preserves its request and result [{"userId":"user_123","role":"org:admin"}]
+ok 24 - generated Organization.updateMember preserves its request and result [{"userId":"user_123","role":"org:admin"}]
+  ---
+  duration_ms: 7.27275
+  type: 'test'
+  ...
+# Subtest: generated Organization.removeMember preserves its request and result ["user_123"]
+ok 25 - generated Organization.removeMember preserves its request and result ["user_123"]
+  ---
+  duration_ms: 5.445041
+  type: 'test'
+  ...
+# Subtest: generated Organization.inviteMember preserves its request and result [{"emailAddress":"invitee@example.com","role":"org:member"}]
+ok 26 - generated Organization.inviteMember preserves its request and result [{"emailAddress":"invitee@example.com","role":"org:member"}]
+  ---
+  duration_ms: 5.410958
+  type: 'test'
+  ...
+# Subtest: generated Organization.inviteMembers preserves its request and result [{"emailAddresses":["invitee@example.com","second@example.com"],"role":"org:member"}]
+ok 27 - generated Organization.inviteMembers preserves its request and result [{"emailAddresses":["invitee@example.com","second@example.com"],"role":"org:member"}]
+  ---
+  duration_ms: 5.536625
+  type: 'test'
+  ...
+# Subtest: generated Organization.createDomain preserves its request and result ["example.com"]
+ok 28 - generated Organization.createDomain preserves its request and result ["example.com"]
+  ---
+  duration_ms: 5.365958
+  type: 'test'
+  ...
+# Subtest: generated Organization.getDomain preserves its request and result [{"domainId":"orgdom_contract"}]
+ok 29 - generated Organization.getDomain preserves its request and result [{"domainId":"orgdom_contract"}]
+  ---
+  duration_ms: 8.057792
+  type: 'test'
+  ...
+# Subtest: generated OrganizationDomain.prepareAffiliationVerification preserves its request and result [{"affiliationEmailAddress":"user@example.com"}]
+ok 30 - generated OrganizationDomain.prepareAffiliationVerification preserves its request and result [{"affiliationEmailAddress":"user@example.com"}]
+  ---
+  duration_ms: 5.9665
+  type: 'test'
+  ...
+# Subtest: generated OrganizationDomain.attemptAffiliationVerification preserves its request and result [{"code":"123456"}]
+ok 31 - generated OrganizationDomain.attemptAffiliationVerification preserves its request and result [{"code":"123456"}]
+  ---
+  duration_ms: 5.934084
+  type: 'test'
+  ...
+# Subtest: generated OrganizationDomain.updateEnrollmentMode preserves its request and result [{"enrollmentMode":"automatic_invitation"}]
+ok 32 - generated OrganizationDomain.updateEnrollmentMode preserves its request and result [{"enrollmentMode":"automatic_invitation"}]
+  ---
+  duration_ms: 5.980292
+  type: 'test'
+  ...
+# Subtest: generated OrganizationDomain.updateEnrollmentMode preserves its request and result [{"enrollmentMode":"automatic_invitation","deletePending":true}]
+ok 33 - generated OrganizationDomain.updateEnrollmentMode preserves its request and result [{"enrollmentMode":"automatic_invitation","deletePending":true}]
+  ---
+  duration_ms: 6.025958
+  type: 'test'
+  ...
+# Subtest: generated OrganizationDomain.updateEnrollmentMode preserves its request and result [{"enrollmentMode":"automatic_invitation","deletePending":false}]
+ok 34 - generated OrganizationDomain.updateEnrollmentMode preserves its request and result [{"enrollmentMode":"automatic_invitation","deletePending":false}]
+  ---
+  duration_ms: 5.998583
+  type: 'test'
+  ...
+# Subtest: generated OrganizationDomain.delete preserves its request and result []
+ok 35 - generated OrganizationDomain.delete preserves its request and result []
+  ---
+  duration_ms: 6.530084
+  type: 'test'
+  ...
+# Subtest: generated OrganizationMembership.update preserves its request and result [{"role":"org:admin"}]
+ok 36 - generated OrganizationMembership.update preserves its request and result [{"role":"org:admin"}]
+  ---
+  duration_ms: 6.308458
+  type: 'test'
+  ...
+# Subtest: generated OrganizationInvitation.revoke preserves its request and result []
+ok 37 - generated OrganizationInvitation.revoke preserves its request and result []
+  ---
+  duration_ms: 6.117125
+  type: 'test'
+  ...
+# Subtest: generated OrganizationMembershipRequest.accept preserves its request and result []
+ok 38 - generated OrganizationMembershipRequest.accept preserves its request and result []
+  ---
+  duration_ms: 6.609917
+  type: 'test'
+  ...
+# Subtest: generated OrganizationMembershipRequest.reject preserves its request and result []
+ok 39 - generated OrganizationMembershipRequest.reject preserves its request and result []
+  ---
+  duration_ms: 8.84275
+  type: 'test'
+  ...
+# Subtest: generated Organization.update preserves API error detail
+ok 40 - generated Organization.update preserves API error detail
+  ---
+  duration_ms: 5.371042
+  type: 'test'
+  ...
+# Subtest: generated Organization.createDomain preserves API error detail
+ok 41 - generated Organization.createDomain preserves API error detail
+  ---
+  duration_ms: 5.478708
+  type: 'test'
+  ...
+# Subtest: generated OrganizationDomain.prepareAffiliationVerification preserves API error detail
+ok 42 - generated OrganizationDomain.prepareAffiliationVerification preserves API error detail
+  ---
+  duration_ms: 5.999
+  type: 'test'
+  ...
+# Subtest: generated OrganizationDomain.attemptAffiliationVerification preserves API error detail
+ok 43 - generated OrganizationDomain.attemptAffiliationVerification preserves API error detail
+  ---
+  duration_ms: 6.170667
+  type: 'test'
+  ...
+# Subtest: generated OrganizationDomain.updateEnrollmentMode preserves API error detail
+ok 44 - generated OrganizationDomain.updateEnrollmentMode preserves API error detail
+  ---
+  duration_ms: 6.423083
+  type: 'test'
+  ...
+# Subtest: generated OrganizationDomain.delete preserves API error detail
+ok 45 - generated OrganizationDomain.delete preserves API error detail
+  ---
+  duration_ms: 6.39875
+  type: 'test'
+  ...
+# Subtest: generated organization logo upload preserves binary data
+ok 46 - generated organization logo upload preserves binary data
+  ---
+  duration_ms: 5.782958
+  type: 'test'
+  ...
+# Subtest: generated organization logo upload preserves string data
+ok 47 - generated organization logo upload preserves string data
+  ---
+  duration_ms: 5.442708
+  type: 'test'
+  ...
+1..47
+# tests 47
+# suites 0
+# pass 47
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 428.590542

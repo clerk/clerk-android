@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="6" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-09-11T01:09:11" hostname="localhost">
+  <testsuite name="com.clerk.api.SignInStateContractTest" tests="6" failures="0" errors="0" skipped="0" time="0.992" timestamp="2026-09-11T01:09:11" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="nestedSignInPreservesClientTrustStatus" classname="com.clerk.api.SignInStateContractTest" time="0.172" />
+    <testcase name="resetPhoneCodeSendsSelectedIdentifierAndStrategy" classname="com.clerk.api.SignInStateContractTest" time="0.175" />
+    <testcase name="serverUpdatesReplaceUnknownStatusOnTheSameResource" classname="com.clerk.api.SignInStateContractTest" time="0.199" />
+    <testcase name="resetEmailCodeSendsSelectedIdentifierAndStrategy" classname="com.clerk.api.SignInStateContractTest" time="0.155" />
+    <testcase name="nestedSignInPreservesUnknownStatus" classname="com.clerk.api.SignInStateContractTest" time="0.123" />
+    <testcase name="browserSsoStartsFromNeedsIdentifierWithoutAnEmail" classname="com.clerk.api.SignInStateContractTest" time="0.168" />
+  </testsuite>
+</testsuites>

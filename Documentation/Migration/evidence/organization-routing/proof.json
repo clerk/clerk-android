@@ -1,0 +1,40 @@
+{
+  "legacy": {
+    "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+    "path": "source/api/src/test/java/com/clerk/api/network/api/OrganizationApiTest.kt",
+    "sha256": "180b3bed7023fc17b75fbd45faa24c8cc71b3c87efb08f62a95a804c5970b04d",
+    "declarations": [
+      "revokeOrganizationInvitation uses invitation revoke route",
+      "getMembershipRequests uses membership requests route",
+      "organization mutating endpoints include clerk session id query"
+    ],
+    "mutatingEndpoints": {
+      "updateOrganization": "Organization.update",
+      "deleteOrganization": "Organization.destroy",
+      "updateOrganizationLogo": "Organization.setLogo(file)",
+      "deleteOrganizationLogo": "Organization.setLogo(null)",
+      "createOrganizationDomain": "Organization.createDomain",
+      "deleteOrganizationDomain": "OrganizationDomain.delete",
+      "updateEnrollmentMode": "OrganizationDomain.updateEnrollmentMode",
+      "prepareAffiliationVerification": "OrganizationDomain.prepareAffiliationVerification",
+      "attemptAffiliationVerification": "OrganizationDomain.attemptAffiliationVerification",
+      "createMembership": "Organization.addMember",
+      "updateMembership": "Organization.updateMember",
+      "removeMember": "Organization.removeMember",
+      "createInvitation": "Organization.inviteMember",
+      "bulkCreateInvitations": "Organization.inviteMembers",
+      "revokeOrganizationInvitation": "OrganizationInvitation.revoke",
+      "acceptMembershipRequest": "OrganizationMembershipRequest.accept",
+      "rejectMembershipRequest": "OrganizationMembershipRequest.reject"
+    }
+  },
+  "sharedTests": 47,
+  "sharedSourceSHA256": "8f001fac30f55d64fd33fbdd3908451d1ba36403dd485f3b48764df2ee0d1171",
+  "sharedLogSHA256": "1351be610a339ed0fafcea20ab7bfb0e0aa01150f64089ef401c47774878d28a",
+  "scope": "The generated dispatcher and actual TypeScript resources are executed with fixture HTTP. No live backend or new platform operation is claimed.",
+  "noProductionChanges": true,
+  "retainedLegacyFiles": 42,
+  "sharedTestRevision": "39f2043f0c51131a6ed7ad699b9680863a1bdb6d",
+  "packagedCoreRevision": "4c7c77f5b7e5d52b0c4e65ce8b59b8854e956972",
+  "bundleSHA256": "d0142b55cfa80ef2e7d5769ae95e460b9c798fa451b9f3fc5eef78d63652a6bd"
+}

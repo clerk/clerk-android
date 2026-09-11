@@ -162,3 +162,5 @@ Passkey assertion requests use the server's top-level `rpId`, credential list, t
 [Sign-in state and preparation](signin-state-test-audit.md) documents unknown-status preservation and migration from DTO copies and raw preparation helpers to the generated resource API.
 
 [Organization invitation and suggestion projection](organization-public-data.md) documents normalization of missing image/slug fields and the remaining legacy timestamp difference.
+
+[Organization request routing](organization-routing-test-audit.md) maps all 17 removed Retrofit mutations to shared resource requests and retires the old annotation suite.
