@@ -38,6 +38,8 @@ android {
 }
 
 tasks.withType<Test>().configureEach {
+  // Robolectric accesses FileDescriptor internals when initializing Android shared memory.
+  jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
   javaLauncher.set(
     project.extensions.getByType<JavaToolchainService>().launcherFor {
       languageVersion.set(JavaLanguageVersion.of(21))
