@@ -35,6 +35,8 @@ import com.clerk.ui.core.footer.DevelopmentModeWarningBackground
 import com.clerk.ui.core.footer.DevelopmentModeWarningBox
 import com.clerk.ui.navigation.clerkNavigationForwardTransition
 import com.clerk.ui.navigation.clerkNavigationPopTransition
+import com.clerk.ui.protect.ProtectCheckFlow
+import com.clerk.ui.protect.ProtectCheckView
 import com.clerk.ui.sessiontask.mfa.SessionTaskMfaView
 import com.clerk.ui.sessiontask.organization.SessionTaskChooseOrganizationView
 import com.clerk.ui.sessiontask.organization.SessionTaskCreateOrganizationView
@@ -331,6 +333,9 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
     entry<AuthDestination.SignInClientTrust> {
       SignInClientTrustView(factor = it.factor, onAuthComplete = options.onAuthComplete)
     }
+    entry<AuthDestination.SignInProtectCheck> {
+      ProtectCheckView(flow = ProtectCheckFlow.SignIn, onAuthComplete = options.onAuthComplete)
+    }
     entry<AuthDestination.SignUpCollectField> {
       SignUpCollectFieldView(field = it.field, onAuthComplete = options.onAuthComplete)
     }
@@ -342,6 +347,9 @@ private fun authEntryProvider(backStack: NavBackStack<NavKey>, options: AuthNavO
     }
     entry<AuthDestination.SignUpCompleteProfile> {
       SignUpCompleteProfileView(onAuthComplete = options.onAuthComplete)
+    }
+    entry<AuthDestination.SignUpProtectCheck> {
+      ProtectCheckView(flow = ProtectCheckFlow.SignUp, onAuthComplete = options.onAuthComplete)
     }
     entry<AuthDestination.BiometricCredentialEnrollment> {
       BiometricCredentialEnrollmentView(onAuthComplete = options.onAuthComplete)
@@ -436,6 +444,8 @@ internal object AuthDestination {
 
   @Serializable data class SignInClientTrust(val factor: Factor) : NavKey
 
+  @Serializable data object SignInProtectCheck : NavKey
+
   @Serializable data class SignUpCollectField(val field: CollectField) : NavKey
 
   @Serializable data class SignUpCode(val field: SignUpCodeField) : NavKey
@@ -443,6 +453,8 @@ internal object AuthDestination {
   @Serializable data class SignUpEmailLink(val emailAddress: String) : NavKey
 
   @Serializable data class SignUpCompleteProfile(val progress: Int) : NavKey
+
+  @Serializable data object SignUpProtectCheck : NavKey
 
   @Serializable data object BiometricCredentialEnrollment : NavKey
 }

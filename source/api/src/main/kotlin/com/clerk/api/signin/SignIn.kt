@@ -23,6 +23,7 @@ import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.passkeys.GoogleCredentialAuthenticationService
 import com.clerk.api.passkeys.PasskeyService
+import com.clerk.api.protect.ProtectCheckResource
 import com.clerk.api.sso.GoogleSignInService
 import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.sso.OAuthResult
@@ -83,6 +84,7 @@ import kotlinx.serialization.encoding.Encoder
  * @property userData An object containing information about the user of the current sign-in.
  * @property createdSessionId The identifier of the session that was created upon completion of the
  *   current sign-in.
+ * @property protectCheck Opaque Protect challenge data when this sign-in requires a Protect check.
  */
 @Serializable(with = SignInSerializer::class)
 @ConsistentCopyVisibility
@@ -147,6 +149,9 @@ private constructor(
    */
   @SerialName("created_session_id") val createdSessionId: String? = null,
 
+  /** Opaque Protect challenge data when this sign-in requires a Protect check. */
+  @SerialName("protect_check") val protectCheck: ProtectCheckResource? = null,
+
   /** The status value exactly as returned by the Clerk API. */
   val statusRawValue: String,
 ) {
@@ -162,6 +167,7 @@ private constructor(
     secondFactorVerification: Verification? = null,
     userData: UserData? = null,
     createdSessionId: String? = null,
+    protectCheck: ProtectCheckResource? = null,
   ) : this(
     id = id,
     status = status,
@@ -173,6 +179,7 @@ private constructor(
     secondFactorVerification = secondFactorVerification,
     userData = userData,
     createdSessionId = createdSessionId,
+    protectCheck = protectCheck,
     statusRawValue = status.serializedValue,
   )
 
@@ -187,6 +194,7 @@ private constructor(
     secondFactorVerification: Verification? = this.secondFactorVerification,
     userData: UserData? = this.userData,
     createdSessionId: String? = this.createdSessionId,
+    protectCheck: ProtectCheckResource? = this.protectCheck,
   ): SignIn =
     SignIn(
       id = id,
@@ -199,6 +207,7 @@ private constructor(
       secondFactorVerification = secondFactorVerification,
       userData = userData,
       createdSessionId = createdSessionId,
+      protectCheck = protectCheck,
       statusRawValue = if (status == this.status) statusRawValue else status.serializedValue,
     )
 
@@ -254,6 +263,9 @@ private constructor(
 
     /** Device trust verification is required. */
     @SerialName("needs_client_trust") NEEDS_CLIENT_TRUST("needs_client_trust"),
+
+    /** A Protect challenge must be completed before the sign-in can continue. */
+    @SerialName("needs_protect_check") NEEDS_PROTECT_CHECK("needs_protect_check"),
 
     /** The sign-in process is in an unknown state. */
     UNKNOWN("unknown");
@@ -741,6 +753,7 @@ private constructor(
         secondFactorVerification = payload.secondFactorVerification,
         userData = payload.userData,
         createdSessionId = payload.createdSessionId,
+        protectCheck = payload.protectCheck,
         statusRawValue = payload.status,
       )
 
@@ -885,6 +898,7 @@ internal data class SignInPayload(
   @SerialName("second_factor_verification") val secondFactorVerification: Verification? = null,
   @SerialName("user_data") val userData: SignIn.UserData? = null,
   @SerialName("created_session_id") val createdSessionId: String? = null,
+  @SerialName("protect_check") val protectCheck: ProtectCheckResource? = null,
 )
 
 internal object SignInSerializer : KSerializer<SignIn> {
@@ -905,6 +919,7 @@ internal object SignInSerializer : KSerializer<SignIn> {
         secondFactorVerification = value.secondFactorVerification,
         userData = value.userData,
         createdSessionId = value.createdSessionId,
+        protectCheck = value.protectCheck,
       ),
     )
   }

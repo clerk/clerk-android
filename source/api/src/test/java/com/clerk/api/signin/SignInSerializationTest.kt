@@ -23,6 +23,36 @@ class SignInSerializationTest {
   }
 
   @Test
+  fun `sign in decodes protect status and preserves the opaque challenge`() {
+    val signIn =
+      ClerkApi.json.decodeFromString<SignIn>(
+        """
+        {
+          "id": "sia_123",
+          "status": "needs_protect_check",
+          "protect_check": {
+            "status": "pending",
+            "token": "challenge-token",
+            "sdk_url": "https://example.com/protect.js",
+            "future_field": {"nested": true}
+          }
+        }
+        """
+          .trimIndent()
+      )
+
+    assertEquals(SignIn.Status.NEEDS_PROTECT_CHECK, signIn.status)
+    assertEquals("needs_protect_check", signIn.statusRawValue)
+
+    val copied = signIn.copy(identifier = "user@example.com")
+    val encoded = ClerkApi.json.encodeToString(SignIn.serializer(), copied)
+    val decoded = ClerkApi.json.decodeFromString<SignIn>(encoded)
+
+    assertEquals(signIn.protectCheck, decoded.protectCheck)
+    assertEquals("user@example.com", decoded.identifier)
+  }
+
+  @Test
   fun `sign in preserves unknown status values`() {
     val json =
       """

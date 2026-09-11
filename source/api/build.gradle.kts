@@ -100,6 +100,7 @@ dependencies {
   implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.playServicesAuth)
   implementation(libs.clerk.automap.annotations)
+  implementation(libs.clerk.protect)
   implementation(libs.google.identity)
   implementation(libs.google.playIntegrity)
   implementation(libs.jwt.decode)

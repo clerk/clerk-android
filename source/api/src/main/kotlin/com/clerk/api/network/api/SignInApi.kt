@@ -9,6 +9,7 @@ import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -47,6 +48,13 @@ internal interface SignInApi {
   suspend fun fetchSignIn(
     @Path(ApiParams.ID) id: String,
     @Query("rotating_token_nonce") rotatingTokenNonce: String? = null,
+  ): ClerkResult<SignIn, ClerkErrorResponse>
+
+  @FormUrlEncoded
+  @PATCH(ApiPaths.Client.SignIn.PROTECT_CHECK)
+  suspend fun submitProtectCheck(
+    @Path(ApiParams.ID) id: String,
+    @Field(ApiParams.PROOF_TOKEN) proofToken: String,
   ): ClerkResult<SignIn, ClerkErrorResponse>
 
   @FormUrlEncoded

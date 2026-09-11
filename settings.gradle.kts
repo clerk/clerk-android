@@ -17,6 +17,12 @@ pluginManagement {
 dependencyResolutionManagement {
   repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
   repositories {
+    // Protect is developed in its private monorepo and currently publishes only
+    // to Maven local. Opt in explicitly while integrating it so a developer's
+    // local artifact can never shadow a released dependency by default.
+    if (providers.gradleProperty("clerkProtectMavenLocal").orNull == "true") {
+      mavenLocal { content { includeGroup("com.clerk.protect") } }
+    }
     google()
     mavenCentral()
   }

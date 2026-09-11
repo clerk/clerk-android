@@ -22,6 +22,17 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.sso.OAuthResult
 import com.clerk.api.sso.SSOService
 
+/**
+ * Submits the proof produced by Protect for this sign-in.
+ *
+ * @param proofToken The proof token returned after completing the Protect challenge.
+ * @return A [ClerkResult] containing the updated [SignIn] object on success, or a
+ *   [ClerkErrorResponse] on failure.
+ */
+suspend fun SignIn.submitProtectCheck(proofToken: String): ClerkResult<SignIn, ClerkErrorResponse> {
+  return ClerkApi.signIn.submitProtectCheck(id = id, proofToken = proofToken)
+}
+
 // region Factor Selection Extensions
 
 /**
