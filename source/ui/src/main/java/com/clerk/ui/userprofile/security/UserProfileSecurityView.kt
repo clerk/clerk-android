@@ -197,9 +197,9 @@ private fun UserProfileSecurityMainContent(
             currentSheetType = BottomSheetType.AddPhoneNumber
             showBottomSheet = true
           },
-          onNavigateToBackupCodes = {
+          onNavigateToBackupCodes = { codes, mfaType ->
             showBottomSheet = false
-            currentSheetType = BottomSheetType.BackupCodes(it)
+            currentSheetType = BottomSheetType.BackupCodes(codes, mfaType)
             showBottomSheet = true
           },
           onVerify = {

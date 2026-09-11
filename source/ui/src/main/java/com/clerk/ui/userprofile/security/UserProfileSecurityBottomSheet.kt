@@ -27,7 +27,8 @@ internal sealed interface BottomSheetType {
 
   data class AddMfa(val viewType: ViewType) : BottomSheetType
 
-  data class BackupCodes(val codes: List<String>) : BottomSheetType
+  data class BackupCodes(val codes: List<String>, val mfaType: MfaType = MfaType.BackupCodes) :
+    BottomSheetType
 
   data object AddPhoneNumber : BottomSheetType
 
@@ -55,7 +56,9 @@ internal fun AddMfaSheet(type: BottomSheetType.AddMfa, callbacks: BottomSheetCal
     callbacks =
       com.clerk.ui.userprofile.mfa.AddMfaCallbacks(
         onDismiss = callbacks.onDismiss,
-        onNavigateToBackupCodes = callbacks.onNavigateToBackupCodes,
+        onNavigateToBackupCodes = { codes ->
+          callbacks.onNavigateToBackupCodes(codes, MfaType.PhoneCode)
+        },
         onError = { message -> callbacks.onError(message) },
         onAddPhoneNumber = callbacks.onAddPhoneNumber,
         onVerify = callbacks.onVerify,
@@ -107,7 +110,11 @@ internal fun NewPasswordSheet(type: BottomSheetType.NewPassword, callbacks: Bott
 
 @Composable
 internal fun BackupCodesSheet(type: BottomSheetType.BackupCodes, callbacks: BottomSheetCallbacks) {
-  BackupCodesView(codes = type.codes.toImmutableList(), onDismiss = callbacks.onDismiss)
+  BackupCodesView(
+    codes = type.codes.toImmutableList(),
+    mfaType = type.mfaType,
+    onDismiss = callbacks.onDismiss,
+  )
 }
 
 @Composable
@@ -123,7 +130,14 @@ internal fun VerifySheet(type: BottomSheetType.Verify, callbacks: BottomSheetCal
       if (codes.isNullOrEmpty()) {
         callbacks.onDismiss()
       } else {
-        callbacks.onNavigateToBackupCodes(codes)
+        callbacks.onNavigateToBackupCodes(
+          codes,
+          when (type.mode) {
+            is Mode.Phone -> MfaType.PhoneCode
+            Mode.Totp -> MfaType.AuthenticatorApp
+            is Mode.Email -> MfaType.BackupCodes
+          },
+        )
       }
     },
     onDismiss = callbacks.onDismiss,
@@ -144,6 +158,6 @@ internal data class BottomSheetCallbacks(
   val onDismiss: () -> Unit,
   val onError: (String?) -> Unit,
   val onAddPhoneNumber: () -> Unit,
-  val onNavigateToBackupCodes: (List<String>) -> Unit,
+  val onNavigateToBackupCodes: (List<String>, MfaType) -> Unit,
   val onVerify: (Mode) -> Unit,
 )
