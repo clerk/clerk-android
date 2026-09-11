@@ -121,3 +121,9 @@ run_suite SessionPasskeyFailureTest \
 run_suite PasskeyRecoveryTest \
   emailSignInFollowsCancelledPasskey emailSignInFollowsProviderFailure \
   emailSignInFollowsMissingPresentation emailSignInFollowsInvalidCredential
+
+run_suite PasskeyOptionsTest \
+  serverOptionsPreserveRelyingPartyAndCredentials missingRelyingPartyFailsBeforePresentation \
+  nestedRelyingPartyFailsBeforePresentation emptyRelyingPartyFailsBeforePresentation \
+  whitespaceRelyingPartyFailsBeforePresentation nonStringRelyingPartyFailsBeforePresentation \
+  missingCredentialIdRejectsServerList invalidCredentialIdRejectsServerList
