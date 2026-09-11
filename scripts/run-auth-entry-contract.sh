@@ -127,3 +127,9 @@ run_suite PasskeyOptionsTest \
   nestedRelyingPartyFailsBeforePresentation emptyRelyingPartyFailsBeforePresentation \
   whitespaceRelyingPartyFailsBeforePresentation nonStringRelyingPartyFailsBeforePresentation \
   missingCredentialIdRejectsServerList invalidCredentialIdRejectsServerList
+
+run_suite SignInStateContractTest \
+  nestedSignInPreservesClientTrustStatus nestedSignInPreservesUnknownStatus \
+  serverUpdatesReplaceUnknownStatusOnTheSameResource \
+  resetEmailCodeSendsSelectedIdentifierAndStrategy resetPhoneCodeSendsSelectedIdentifierAndStrategy \
+  browserSsoStartsFromNeedsIdentifierWithoutAnEmail

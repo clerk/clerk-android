@@ -1,0 +1,59 @@
+{
+  "legacy": {
+    "baseline": "1ea9f97250e9e3b266b7fbcfe37d9373e4fc393f",
+    "files": [
+      {
+        "path": "source/api/src/test/java/com/clerk/api/signin/SignInPrepareFirstFactorParamsMapTest.kt",
+        "sha256": "b0adcc87f71ebcda3a1607992be51a03d0b9077eb7f971bc435b51b7b54c867c",
+        "declarations": [
+          "reset password email code maps email address id using snake case",
+          "reset password phone code maps phone number id using snake case"
+        ]
+      },
+      {
+        "path": "source/api/src/test/java/com/clerk/api/signin/SignInPrepareFirstFactorTest.kt",
+        "sha256": "0b12bbcfe542a03fff127d43ac5a55778cce280fb993a1dc12a82082b535a546",
+        "declarations": [
+          "oauth first factor can be prepared from needs identifier status"
+        ]
+      },
+      {
+        "path": "source/api/src/test/java/com/clerk/api/signin/SignInSerializationTest.kt",
+        "sha256": "342d61b9779662d83b43f5450403882e5ccad318b808aacce779f3f7e27eb9c6",
+        "declarations": [
+          "serializer preserves the public descriptor name",
+          "sign in decodes known status values",
+          "sign in preserves unknown status values",
+          "client preserves an unknown nested sign in status",
+          "copying with a different status uses its serialized value"
+        ]
+      }
+    ]
+  },
+  "retainedLegacyFiles": 43,
+  "packagedCases": [
+    "nestedSignInPreservesClientTrustStatus",
+    "nestedSignInPreservesUnknownStatus",
+    "serverUpdatesReplaceUnknownStatusOnTheSameResource",
+    "resetEmailCodeSendsSelectedIdentifierAndStrategy",
+    "resetPhoneCodeSendsSelectedIdentifierAndStrategy",
+    "browserSsoStartsFromNeedsIdentifierWithoutAnEmail"
+  ],
+  "focusedSharedTests": 16,
+  "sharedRuntimeTests": 588,
+  "ciSelectedAuthenticationCases": 137,
+  "coreRevision": "cba4fd161f0b1d80f48a9128d47a85c9a4ca0521",
+  "bundleSHA256": "25001603e9c152c6aaa2f8bad982bbab2a7da122efd6774df89518c809b131a5",
+  "noProductionChanges": true,
+  "sourceHashes": {
+    "NativeCoreTests/Android/SignInStateContractTest.kt": "6eb20b785c0d2b2cbd30aeb74863e5592b393374242372ceeaaaf1377b134a2d",
+    "scripts/run-auth-entry-contract.sh": "390dd7ecc532bf2c1935323c09b6c09ee342fba68e6d41274b9c4dc25165c582",
+    "javascript/packages/mobile-runtime/test/signin-status.test.mjs": "35858b9c94df59b7ed05bf4fa649e0accffb5f900cb488c079e81731d2a54794"
+  },
+  "evidenceHashes": {
+    "signin-state-shared.log": "43c7a2787276771ee2bcb9d135049ca692eb4cf25ca811fd6adb348d1ba4d474",
+    "TEST-SignInStateContractTest.xml": "ea98bb738042fae104afbf2b370cd43c5687014aabf6ee97af72b1263cccf5b2",
+    "signin-state-runtime-all.log": "648487ffc5f2eae9c496f63f5078d5f06bbc79bb94485ad83d03258440d17187",
+    "signin-state-android.log": "7eb7a0c85d7a539cadb1a402d4a516f72afd51570e045400a2f61ff64a1f5510"
+  }
+}

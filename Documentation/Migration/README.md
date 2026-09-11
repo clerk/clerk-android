@@ -141,7 +141,7 @@ Before general release, validate a signed-in old-major app upgraded in place; re
 
 The replaced native domain source tree has been deleted from this major. The linked baseline and hashed source inventory preserve its public declarations for migration review. The generated `NativeCore` target is the implementation; no old native authentication fallback is packaged.
 
-Of the 105 old JVM test/helper files, three have been migrated, 56 have been retired after assertion review, and 46 remain for the unfinished audit. The [test audit](test-audit.md) links the replacement evidence and intentional API changes. Retained files are not claimed to run against the generated API.
+Of the 105 old JVM test/helper files, three have been migrated, 59 have been retired after assertion review, and 43 remain for the unfinished audit. The [test audit](test-audit.md) links the replacement evidence and intentional API changes. Retained files are not claimed to run against the generated API.
 
 For Expo consumers, see the [D8/R8 compiler compatibility proof](../Measurements/expo-compiler-build.md). Kotlin source compiler compatibility alone does not establish that the app can process the SDK's Kotlin metadata.
 
@@ -158,3 +158,5 @@ The [token-only credential upgrade](token-only-credential-upgrade.md) preserves 
 [Compose completion-gate verification](auth-presentation-test-audit.md) records active-user registration, pending-task completion, and prebuilt generated finalization checks.
 
 Passkey assertion requests use the server's top-level `rpId`, credential list, timeout and verification policy. The shared core rejects missing or blank relying-party IDs before native presentation. The old domain fallback and credential-list override are removed; see the [assertion options audit](passkey-options-test-audit.md).
+
+[Sign-in state and preparation](signin-state-test-audit.md) documents unknown-status preservation and migration from DTO copies and raw preparation helpers to the generated resource API.
