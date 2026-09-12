@@ -1,6 +1,9 @@
 package com.clerk.api.network.serialization
 
+import com.clerk.api.billing.BillingPayment
+import com.clerk.api.billing.BillingPlan
 import com.clerk.api.log.ClerkLog
+import com.clerk.api.network.ClerkPaginatedResponse
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.response.ClientPiggybackedResponse
 import com.clerk.api.network.model.token.TokenResource
@@ -63,10 +66,32 @@ internal object ClerkApiResultConverterFactory : Converter.Factory() {
   }
 
   private fun shouldWrapInClientPiggybackedResponse(successType: Type): Boolean {
+    if (isRawBillingEnvelope(successType)) {
+      return false
+    }
     val rawType = getRawType(successType)
 
     // Don't wrap the Environment type
     return rawType.name !in getExcludedTypeNames()
+  }
+
+  /**
+   * clerk-js reads these billing GETs from the raw JSON body (`getPlans`, `getPlan`,
+   * `getPaymentAttempts`, `getPaymentAttempt`). The other billing GETs stay in
+   * [ClientPiggybackedResponse].
+   */
+  private fun isRawBillingEnvelope(successType: Type): Boolean {
+    val rawType = getRawType(successType)
+    val paginatedItemType =
+      if (rawType == ClerkPaginatedResponse::class.java && successType is ParameterizedType) {
+        getRawType(successType.actualTypeArguments.single())
+      } else {
+        null
+      }
+    return rawType == BillingPlan::class.java ||
+      rawType == BillingPayment::class.java ||
+      paginatedItemType == BillingPlan::class.java ||
+      paginatedItemType == BillingPayment::class.java
   }
 
   private fun createParameterizedType(rawType: Class<*>, typeArgument: Type): ParameterizedType {
