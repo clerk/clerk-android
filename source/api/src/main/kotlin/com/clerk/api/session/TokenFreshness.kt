@@ -122,3 +122,25 @@ internal object TokenFreshness {
     getClaim("org_id").asString()
       ?: runCatching { getClaim("o").asObject(Map::class.java)?.get("id") as? String }.getOrNull()
 }
+
+internal fun authorizationToken(
+  session: Session,
+  nowMillis: Long = System.currentTimeMillis(),
+): TokenResource? {
+  val snapshot = session.lastActiveToken
+  val cached = SessionTokensCache.getToken(session.tokenCacheKey(null))
+  val matching =
+    listOfNotNull(snapshot, cached).filter { token ->
+      TokenFreshness.matches(token, session.id, session.lastActiveOrganizationId)
+    }
+  return when (matching.size) {
+    0 -> null
+    1 -> matching.first()
+    else ->
+      TokenFreshness.pickFreshest(
+        existing = matching[0],
+        incoming = matching[1],
+        nowMillis = nowMillis,
+      )
+  }
+}
