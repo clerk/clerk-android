@@ -37,4 +37,7 @@ internal object ApiParams {
   // Query parameters
   internal const val LIMIT = "limit"
   internal const val OFFSET = "offset"
+  internal const val PAYER_TYPE = "payer_type"
+  internal const val ORG_ID = "org_id"
+  internal const val MIN_SEATS = "min_seats"
 }
