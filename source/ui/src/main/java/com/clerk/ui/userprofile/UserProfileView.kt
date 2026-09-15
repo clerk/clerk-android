@@ -49,6 +49,7 @@ import com.clerk.ui.userprofile.account.UserProfileAccountView
 import com.clerk.ui.userprofile.account.UserProfileAction
 import com.clerk.ui.userprofile.custom.CustomRouteNavKey
 import com.clerk.ui.userprofile.custom.LocalUserProfileCustomNavigator
+import com.clerk.ui.userprofile.custom.UserProfileCustomDestination
 import com.clerk.ui.userprofile.custom.UserProfileCustomNavigator
 import com.clerk.ui.userprofile.custom.UserProfileCustomRow
 import com.clerk.ui.userprofile.custom.effectiveCustomRows
@@ -84,7 +85,9 @@ internal fun UserProfileStateProvider(
  * Custom rows are inserted into the account screen based on their
  * [UserProfileCustomRowPlacement][com.clerk.ui.userprofile.custom.UserProfileCustomRowPlacement].
  * When tapped, the matching [customDestination] composable is rendered. Custom destinations
- * participate in the navigation back stack and survive activity recreation (e.g. rotation).
+ * participate in the navigation back stack and survive activity recreation (e.g. rotation). The SDK
+ * provides a back-navigation header above custom destination content, using the matching custom
+ * row's title. Routes without a matching row display only the back button.
  *
  * @param clerkTheme Optional theme customization for the user profile UI.
  * @param customRows Custom rows to display on the profile account screen.
@@ -306,7 +309,12 @@ internal fun EntryProviderScope<NavKey>.userProfileEntries(
           )
         }
       CompositionLocalProvider(LocalUserProfileCustomNavigator provides navigator) {
-        customDestination(key.routeKey)
+        UserProfileCustomDestination(
+          onBackPressed = navigator::navigateBack,
+          title = customRows.firstOrNull { it.routeKey == key.routeKey }?.title,
+        ) {
+          customDestination(key.routeKey)
+        }
       }
     } else {
       LaunchedEffect(Unit) { backStack.removeLastOrNull() }
