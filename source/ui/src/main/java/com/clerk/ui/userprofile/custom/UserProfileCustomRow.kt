@@ -52,7 +52,7 @@ sealed interface UserProfileCustomRowPlacement {
  *
  * @param routeKey A string key that identifies the destination to navigate to when tapped. The same
  *   key is passed to the `customDestination` composable so it can render the appropriate screen.
- * @param title The row title text.
+ * @param title The title shown in the row and in its destination's navigation header.
  * @param icon The row icon.
  * @param placement Where to insert relative to built-in rows. Defaults to the end of the profile
  *   section.
