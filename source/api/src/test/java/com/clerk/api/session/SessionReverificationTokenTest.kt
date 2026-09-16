@@ -8,6 +8,7 @@ import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.user.User
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -19,6 +20,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,11 +29,12 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class SessionReverificationTokenTest {
-  private val fetcher = SessionTokenFetcher()
+  private val fetcher = SessionTokenFetcher.shared
   private val session =
     Session(
       id = "session_123",
       status = Session.SessionStatus.ACTIVE,
+      user = mockk<User>(relaxed = true) { every { id } returns "user_123" },
       lastActiveOrganizationId = "org_123",
       expireAt = 4_000_000_000_000,
       lastActiveAt = 0,
@@ -42,6 +46,7 @@ class SessionReverificationTokenTest {
 
   @Before
   fun setup() {
+    fetcher.reset()
     SessionTokensCache.clear()
     mockkObject(Clerk, ClerkApi)
     every { Clerk.clientFlow } returns client
@@ -54,6 +59,7 @@ class SessionReverificationTokenTest {
 
   @After
   fun tearDown() {
+    fetcher.reset()
     unmockkAll()
     SessionTokensCache.clear()
   }
@@ -83,8 +89,11 @@ class SessionReverificationTokenTest {
     fetcher.invalidateSession(session.id)
     assertEquals(verifiedToken, fetcher.getToken(session))
 
-    updateSnapshot(updatedToken)
+    val updatedSession = updateSnapshot(updatedToken)
 
+    assertTrue(updatedSession.has(feature = "write"))
+    assertTrue(updatedSession.checkAuthorization(feature = "write"))
+    assertFalse(updatedSession.has(feature = "read"))
     assertEquals(updatedToken, fetcher.getToken(session))
     assertEquals(updatedToken, SessionTokensCache.getToken(session.tokenCacheKey(null)))
     coVerify(exactly = 1) { api.tokens(session.id, "org_123", any(), any()) }
@@ -193,8 +202,101 @@ class SessionReverificationTokenTest {
       coVerify(exactly = 1) { api.tokens(session.id, "org_123", laterSnapshot.jwt, "true") }
     }
 
-  private fun updateSnapshot(token: TokenResource) {
-    client.value = Client(sessions = listOf(session.copy(lastActiveToken = token)))
+  @Test
+  fun `authorization uses verified claims instead of rejected snapshots`() = runTest {
+    val now = System.currentTimeMillis() / 1_000
+    val verifiedToken = token(now)
+    coEvery { api.tokens(session.id, "org_123", any(), any()) } returns
+      ClerkResult.success(verifiedToken)
+    fetcher.invalidateSession(session.id)
+    assertEquals(verifiedToken, fetcher.getToken(session))
+
+    for (originIssuedAt in listOf(now - 1, now, null)) {
+      val snapshot =
+        updateSnapshot(
+          token(
+            now + 1,
+            originIssuedAt = originIssuedAt,
+            permission = "stale",
+            factorAges = "[20,20]",
+          )
+        )
+      assertEquals(verifiedToken, fetcher.getToken(snapshot))
+      assertTrue(snapshot.has(reverification = ReverificationConfig.Strict))
+      assertTrue(snapshot.checkAuthorization(reverification = ReverificationConfig.StrictMfa))
+      assertTrue(snapshot.has(feature = "read"))
+      assertFalse(snapshot.has(feature = "stale"))
+    }
+    coVerify(exactly = 1) { api.tokens(session.id, "org_123", any(), any()) }
+  }
+
+  @Test
+  fun `authorization rejects origin snapshot after verification with a headerless token`() =
+    runTest {
+      val now = System.currentTimeMillis() / 1_000
+      val verifiedToken = token(now, originIssuedAt = null)
+      coEvery { api.tokens(session.id, "org_123", any(), any()) } returns
+        ClerkResult.success(verifiedToken)
+      fetcher.invalidateSession(session.id)
+      assertEquals(verifiedToken, fetcher.getToken(session))
+
+      val snapshot = updateSnapshot(token(now + 1, permission = "stale", factorAges = "[20,20]"))
+      assertEquals(verifiedToken, fetcher.getToken(snapshot))
+      assertTrue(snapshot.has(reverification = ReverificationConfig.Strict))
+      assertTrue(snapshot.checkAuthorization(feature = "read"))
+      assertFalse(snapshot.has(feature = "stale"))
+    }
+
+  @Test
+  fun `authorization rejects snapshots until a post-verification token is fetched`() = runTest {
+    val now = System.currentTimeMillis() / 1_000
+    val snapshot = updateSnapshot(token(now - 20 * 60)).copy(factorVerificationAge = listOf(0, 0))
+    assertFalse(snapshot.has(reverification = ReverificationConfig.Strict))
+    fetcher.invalidateSession(session.id)
+
+    assertFalse(snapshot.has(reverification = ReverificationConfig.Strict))
+    assertFalse(snapshot.checkAuthorization(feature = "read"))
+    coVerify(exactly = 0) { api.tokens(session.id, "org_123", any(), any()) }
+
+    val verifiedToken = token(now + 1)
+    coEvery { api.tokens(session.id, "org_123", any(), any()) } returns
+      ClerkResult.success(verifiedToken)
+    assertEquals(verifiedToken, fetcher.getToken(snapshot))
+    assertTrue(snapshot.has(reverification = ReverificationConfig.Strict))
+    assertTrue(snapshot.checkAuthorization(feature = "read"))
+  }
+
+  @Test
+  fun `authorization requires verified token factor ages after reverification`() = runTest {
+    val now = System.currentTimeMillis() / 1_000
+    val snapshot = session.copy(factorVerificationAge = listOf(0, 0))
+    val verifiedToken = token(now, factorAges = "null")
+    coEvery { api.tokens(session.id, "org_123", any(), any()) } returns
+      ClerkResult.success(verifiedToken)
+    fetcher.invalidateSession(session.id)
+    assertEquals(verifiedToken, fetcher.getToken(snapshot))
+
+    assertFalse(snapshot.has(reverification = ReverificationConfig.Strict))
+    assertFalse(snapshot.checkAuthorization(reverification = ReverificationConfig.StrictMfa))
+    assertTrue(snapshot.has(feature = "read"))
+  }
+
+  @Test
+  fun `reset restores authorization from session snapshots`() {
+    val snapshot = updateSnapshot(token(System.currentTimeMillis() / 1_000))
+    fetcher.invalidateSession(session.id)
+    assertFalse(snapshot.has(feature = "read"))
+
+    fetcher.reset()
+
+    assertTrue(snapshot.has(feature = "read"))
+    assertTrue(snapshot.checkAuthorization(reverification = ReverificationConfig.Strict))
+  }
+
+  private fun updateSnapshot(token: TokenResource): Session {
+    val updatedSession = session.copy(lastActiveToken = token)
+    client.value = Client(sessions = listOf(updatedSession))
+    return updatedSession
   }
 
   private fun token(
@@ -202,10 +304,15 @@ class SessionReverificationTokenTest {
     originIssuedAt: Long? = issuedAt,
     expiresAt: Long = 4_000_000_000,
     permission: String = "read",
+    factorAges: String = "[0,0]",
   ): TokenResource {
     val header = originIssuedAt?.let { """{"alg":"none","oiat":$it}""" } ?: """{"alg":"none"}"""
     val payload =
-      """{"sid":"session_123","org_id":"org_123","iat":$issuedAt,"exp":$expiresAt,"org_permissions":["$permission"]}"""
+      """
+      {"sid":"session_123","org_id":"org_123","iat":$issuedAt,"exp":$expiresAt,
+       "org_permissions":["$permission"],"fea":"u:$permission","fva":$factorAges}
+      """
+        .trimIndent()
     return TokenResource("${encode(header)}.${encode(payload)}.")
   }
 

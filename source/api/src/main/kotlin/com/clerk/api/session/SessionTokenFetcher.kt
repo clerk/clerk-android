@@ -49,6 +49,11 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     val sessionGeneration: Long,
   )
 
+  internal data class AuthorizationTokenSelection(
+    val token: TokenResource?,
+    val fallbackFactorVerificationAge: List<Int>?,
+  )
+
   /** Map of cache keys to deferred token fetch tasks for request deduplication */
   private val tokenTasks = ConcurrentHashMap<String, CompletableDeferred<TokenResource?>>()
   private val runtimeLock = Any()
@@ -84,6 +89,42 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     tasksToRelease.forEach { it.complete(null) }
   }
 
+  /** Selects an authorization token using the same snapshot eligibility rule as [getToken]. */
+  internal fun authorizationTokenSelection(
+    session: Session,
+    nowMillis: Long = System.currentTimeMillis(),
+  ): AuthorizationTokenSelection =
+    synchronized(runtimeLock) {
+      val requiresNewerOrigin = (sessionGenerations[session.id] ?: 0L) > 0L
+      val cached =
+        SessionTokensCache.getToken(session.tokenCacheKey(null))?.takeIf {
+          TokenFreshness.matches(it, session.id, session.lastActiveOrganizationId)
+        }
+      val snapshot =
+        TokenFreshness.eligibleSnapshot(
+          session = session,
+          cached = cached,
+          requiresNewerOrigin = requiresNewerOrigin,
+        )
+      val token =
+        if (snapshot == null) {
+          cached
+        } else {
+          TokenFreshness.pickFreshest(
+            existing = cached,
+            incoming = snapshot,
+            nowMillis = nowMillis,
+            tieBreaker = TokenFreshness.TieBreaker.EXISTING,
+          )
+        }
+      AuthorizationTokenSelection(
+        token = token,
+        // After invalidation, only an eligible token can supply verification ages.
+        fallbackFactorVerificationAge =
+          session.factorVerificationAge.takeUnless { requiresNewerOrigin },
+      )
+    }
+
   /**
    * Retrieves a token for the specified session with the given options.
    *
@@ -102,7 +143,18 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     session: Session,
     options: GetTokenOptions = GetTokenOptions(),
   ): TokenResource? {
-    val context = makeFetchContext(session, options.template)
+    val currentSession =
+      Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id } ?: session
+    val context =
+      synchronized(runtimeLock) {
+        FetchContext(
+          session = currentSession,
+          cacheKey = currentSession.tokenCacheKey(options.template),
+          sessionMinterEnabled = Clerk.environment?.authConfig?.sessionMinter == true,
+          runtimeGeneration = runtimeGeneration,
+          sessionGeneration = sessionGenerations[session.id] ?: 0L,
+        )
+      }
     return when {
       context.session.status == Session.SessionStatus.PENDING -> {
         ClerkLog.w(
@@ -151,20 +203,6 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     }
   }
 
-  private fun makeFetchContext(session: Session, template: String?): FetchContext {
-    val currentSession =
-      Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id } ?: session
-    return synchronized(runtimeLock) {
-      FetchContext(
-        session = currentSession,
-        cacheKey = currentSession.tokenCacheKey(template),
-        sessionMinterEnabled = Clerk.environment?.authConfig?.sessionMinter == true,
-        runtimeGeneration = runtimeGeneration,
-        sessionGeneration = sessionGenerations[session.id] ?: 0L,
-      )
-    }
-  }
-
   private fun isCurrentRuntime(context: FetchContext): Boolean =
     synchronized(runtimeLock) {
       context.runtimeGeneration == runtimeGeneration &&
@@ -190,13 +228,11 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
       if (options.template == null) {
         synchronized(runtimeLock) {
           if (isCurrentRuntime(context)) {
-            val session = context.session
-            session.lastActiveToken
-              ?.takeIf { TokenFreshness.matches(it, session.id, session.lastActiveOrganizationId) }
-              ?.takeIf {
-                context.sessionGeneration == 0L ||
-                  TokenFreshness.hasNewerOrigin(SessionTokensCache.getToken(context.cacheKey), it)
-              }
+            TokenFreshness.eligibleSnapshot(
+                session = context.session,
+                cached = SessionTokensCache.getToken(context.cacheKey),
+                requiresNewerOrigin = context.sessionGeneration > 0L,
+              )
               ?.let { SessionTokensCache.hydrate(context.cacheKey, it) }
           }
         }

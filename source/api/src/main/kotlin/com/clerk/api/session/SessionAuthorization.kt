@@ -40,12 +40,13 @@ internal object SessionAuthorization {
       session.user?.organizationMemberships?.firstOrNull {
         it.organization.id == session.lastActiveOrganizationId
       }
-    val token = authorizationToken(session)
-    val jwt = token?.jwt
+    val tokenSelection = SessionTokenFetcher.shared.authorizationTokenSelection(session)
+    val jwt = tokenSelection.token?.jwt
     val nowMillis = System.currentTimeMillis()
     val issuedAtMillis = jwt?.let { jwtManager.issuedAtMillis(it) }
     val factorVerificationAge =
-      (jwt?.let { jwtManager.factorVerificationAgeClaim(it) } ?: session.factorVerificationAge)
+      (jwt?.let { jwtManager.factorVerificationAgeClaim(it) }
+          ?: tokenSelection.fallbackFactorVerificationAge)
         ?.let { ageFactorVerification(it, issuedAtMillis, nowMillis) }
     return evaluate(
       AuthorizationContext(
