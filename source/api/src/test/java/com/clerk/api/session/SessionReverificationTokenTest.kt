@@ -125,6 +125,54 @@ class SessionReverificationTokenTest {
     }
 
   @Test
+  fun `verified token with origin header rejects a snapshot without one`() = runTest {
+    verifyMixedOriginSnapshot(verifiedHasOrigin = true, expired = false)
+  }
+
+  @Test
+  fun `verified token without origin header rejects a snapshot with one`() = runTest {
+    verifyMixedOriginSnapshot(verifiedHasOrigin = false, expired = false)
+  }
+
+  @Test
+  fun `expired verified token with origin header is renewed instead of adopting a snapshot without one`() =
+    runTest {
+      verifyMixedOriginSnapshot(verifiedHasOrigin = true, expired = true)
+    }
+
+  @Test
+  fun `expired verified token without origin header is renewed instead of adopting a snapshot with one`() =
+    runTest {
+      verifyMixedOriginSnapshot(verifiedHasOrigin = false, expired = true)
+    }
+
+  private suspend fun verifyMixedOriginSnapshot(verifiedHasOrigin: Boolean, expired: Boolean) {
+    val verifiedToken =
+      token(
+        200,
+        originIssuedAt = 200L.takeIf { verifiedHasOrigin },
+        expiresAt = if (expired) 300 else 4_000_000_000,
+      )
+    coEvery { api.tokens(session.id, "org_123", null, "true") } returns
+      ClerkResult.success(verifiedToken)
+    fetcher.invalidateSession(session.id)
+    assertEquals(verifiedToken, fetcher.getToken(session))
+
+    updateSnapshot(token(300, originIssuedAt = 300L.takeUnless { verifiedHasOrigin }))
+    val renewedToken = token(400, originIssuedAt = 400L.takeIf { verifiedHasOrigin })
+    coEvery { api.tokens(session.id, "org_123", verifiedToken.jwt, null) } returns
+      ClerkResult.success(renewedToken)
+
+    val expectedToken = if (expired) renewedToken else verifiedToken
+    assertEquals(expectedToken, fetcher.getToken(session))
+    assertEquals(expectedToken, SessionTokensCache.getToken(session.tokenCacheKey(null)))
+    coVerify(exactly = 1) { api.tokens(session.id, "org_123", null, "true") }
+    coVerify(exactly = if (expired) 1 else 0) {
+      api.tokens(session.id, "org_123", verifiedToken.jwt, null)
+    }
+  }
+
+  @Test
   fun `repeated reverification requires a new origin response before trusting snapshots`() =
     runTest {
       val firstVerifiedToken = token(200)

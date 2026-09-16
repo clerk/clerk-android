@@ -2,7 +2,6 @@ package com.clerk.api.session
 
 import com.auth0.android.jwt.JWT
 import com.clerk.api.network.model.token.TokenResource
-import java.util.concurrent.TimeUnit
 
 /** Chooses the canonical token when session minter responses arrive out of order. */
 internal object TokenFreshness {
@@ -48,6 +47,7 @@ internal object TokenFreshness {
 
   /**
    * Requires a later origin mint, even if an older token was renewed at the edge or is unexpired.
+   * Falls back to issuance time only when neither token has an origin timestamp.
    */
   internal fun hasNewerOrigin(existing: TokenResource?, incoming: TokenResource): Boolean {
     val existingJwt = existing?.let { decode(it.jwt) }
@@ -57,13 +57,20 @@ internal object TokenFreshness {
     ) {
       false
     } else {
-      val existingIssuedAt =
-        existingJwt.originIssuedAt()
-          ?: existingJwt.issuedAt?.time?.let { TimeUnit.MILLISECONDS.toSeconds(it) }
-      val incomingIssuedAt =
-        incomingJwt.originIssuedAt()
-          ?: incomingJwt.issuedAt?.time?.let { TimeUnit.MILLISECONDS.toSeconds(it) }
-      existingIssuedAt != null && incomingIssuedAt != null && incomingIssuedAt > existingIssuedAt
+      val existingOriginIssuedAt = existingJwt.originIssuedAt()
+      val incomingOriginIssuedAt = incomingJwt.originIssuedAt()
+      when {
+        existingOriginIssuedAt != null && incomingOriginIssuedAt != null ->
+          incomingOriginIssuedAt > existingOriginIssuedAt
+        existingOriginIssuedAt == null && incomingOriginIssuedAt == null -> {
+          val existingIssuedAt = existingJwt.issuedAt?.time
+          val incomingIssuedAt = incomingJwt.issuedAt?.time
+          existingIssuedAt != null &&
+            incomingIssuedAt != null &&
+            incomingIssuedAt > existingIssuedAt
+        }
+        else -> false
+      }
     }
   }
 
