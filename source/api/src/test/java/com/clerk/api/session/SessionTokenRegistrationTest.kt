@@ -13,6 +13,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import java.lang.management.ManagementFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -72,6 +73,64 @@ class SessionTokenRegistrationTest {
   @Test
   fun `request after reset cannot join a late stale registration`() {
     verifyLateRegistration { it.reset() }
+  }
+
+  @Test
+  fun `session lookup and runtime generation cannot straddle a reset`() = runBlocking {
+    val fetcher = SessionTokenFetcher()
+    val oldSession = session.copy(lastActiveOrganizationId = "org_old")
+    val currentSession = session.copy(lastActiveOrganizationId = "org_current")
+    val client = MutableStateFlow(Client(sessions = listOf(oldSession)))
+    every { Clerk.clientFlow } returns client
+    coEvery { api.tokens(session.id, "org_old", null, null) } returns
+      ClerkResult.success(TokenResource("stale.token.value"))
+    coEvery { api.tokens(session.id, "org_current", null, null) } returns
+      ClerkResult.success(freshToken)
+    val runtimeLock =
+      SessionTokenFetcher::class.java.getDeclaredField("runtimeLock").let {
+        it.isAccessible = true
+        it.get(fetcher)
+      }
+    val callerThread = AtomicReference<Thread>()
+    val callerStarted = CountDownLatch(1)
+
+    Executors.newSingleThreadExecutor().asCoroutineDispatcher().use { dispatcher ->
+      val request =
+        synchronized(runtimeLock) {
+          val request =
+            async(dispatcher) {
+              callerThread.set(Thread.currentThread())
+              callerStarted.countDown()
+              fetcher.getToken(session)
+            }
+          assertTrue(callerStarted.await(5, TimeUnit.SECONDS))
+          awaitBlockedOn(callerThread.get(), runtimeLock)
+
+          // Reset while context creation is blocked, replacing the session's organization.
+          client.value = Client(sessions = listOf(currentSession))
+          fetcher.reset()
+          request
+        }
+
+      assertEquals(freshToken, withTimeout(5_000) { request.await() })
+      assertEquals(freshToken, SessionTokensCache.getToken(currentSession.tokenCacheKey(null)))
+      assertNull(SessionTokensCache.getToken(oldSession.tokenCacheKey(null)))
+      coVerify(exactly = 0) { api.tokens(session.id, "org_old", null, null) }
+      coVerify(exactly = 1) { api.tokens(session.id, "org_current", null, null) }
+    }
+  }
+
+  private fun awaitBlockedOn(thread: Thread, lock: Any) {
+    val threads = ManagementFactory.getThreadMXBean()
+    val lockId = System.identityHashCode(lock)
+    val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+    while (
+      threads.getThreadInfo(thread.id)?.lockInfo?.identityHashCode != lockId &&
+        System.nanoTime() < deadline
+    ) {
+      Thread.yield()
+    }
+    assertEquals(lockId, threads.getThreadInfo(thread.id)?.lockInfo?.identityHashCode)
   }
 
   private fun verifyLateRegistration(invalidate: (SessionTokenFetcher) -> Unit) = runBlocking {

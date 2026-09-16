@@ -143,10 +143,10 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     session: Session,
     options: GetTokenOptions = GetTokenOptions(),
   ): TokenResource? {
-    val currentSession =
-      Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id } ?: session
     val context =
       synchronized(runtimeLock) {
+        val currentSession =
+          Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id } ?: session
         FetchContext(
           session = currentSession,
           cacheKey = currentSession.tokenCacheKey(options.template),
