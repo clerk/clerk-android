@@ -473,6 +473,89 @@ class SessionTokenFetcherTest {
     }
 
   @Test
+  fun `reverification ignores old snapshots and forces origin until refresh succeeds`() = runTest {
+    val cacheKey = "session_123-organization-org_123"
+    val claims = """{"sid":"session_123","org_id":"org_123","exp":4102444800,"fva":[20,20]}"""
+    val payload =
+      java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(claims.toByteArray())
+    val oldToken = TokenResource("eyJhbGciOiJub25lIn0.$payload.")
+    val freshClaims = claims.replace("[20,20]", "[0,0]")
+    val freshPayload =
+      java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(freshClaims.toByteArray())
+    val freshToken = TokenResource("eyJhbGciOiJub25lIn0.$freshPayload.")
+    val environment = mockk<Environment>()
+    every { environment.authConfig } returns
+      AuthConfig(singleSessionMode = false, sessionMinter = true)
+    every { Clerk.environment } returns environment
+    every { mockSession.lastActiveOrganizationId } returns "org_123"
+    every { mockSession.lastActiveToken } returns oldToken
+    every { SessionTokensCache.getToken(cacheKey) } returns null
+    coEvery {
+      mockClerkApiService.tokens("session_123", "org_123", oldToken.jwt, "true")
+    } returnsMany listOf(ClerkResult.httpFailure(500), ClerkResult.success(freshToken))
+    every { SessionTokensCache.storeIfFresher(cacheKey, freshToken, any()) } returns
+      SessionTokensCache.StoreResult(freshToken, true)
+
+    sessionTokenFetcher.invalidateSession("session_123")
+
+    assertNull(sessionTokenFetcher.getToken(mockSession))
+    assertEquals(freshToken, sessionTokenFetcher.getToken(mockSession))
+    assertEquals(listOf(0, 0), JWTManagerImpl().factorVerificationAgeClaim(freshToken.jwt))
+    every { SessionTokensCache.getToken(cacheKey) } returns freshToken
+    every { mockJWT.expiresAt } returns Date(System.currentTimeMillis() + 120000)
+    assertEquals(freshToken, sessionTokenFetcher.getToken(mockSession))
+    verify(exactly = 0) { SessionTokensCache.hydrate(any(), any()) }
+    coVerify(exactly = 2) {
+      mockClerkApiService.tokens("session_123", "org_123", oldToken.jwt, "true")
+    }
+  }
+
+  @Test
+  fun `reverification releases waiters and rejects pre-verification responses`() = runTest {
+    val requestStarted = CompletableDeferred<Unit>()
+    val releaseResponse = CompletableDeferred<Unit>()
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } coAnswers
+      {
+        requestStarted.complete(Unit)
+        withContext(NonCancellable) { releaseResponse.await() }
+        ClerkResult.success(mockTokenResource)
+      }
+    val owner = async { sessionTokenFetcher.getToken(mockSession) }
+    requestStarted.await()
+    val waiter = async { sessionTokenFetcher.getToken(mockSession) }
+    yield()
+
+    sessionTokenFetcher.invalidateSession("session_123")
+    assertNull(waiter.await())
+    val freshToken = TokenResource("fresh.token.value")
+    coEvery { mockClerkApiService.tokens("session_123") } returns ClerkResult.success(freshToken)
+    assertEquals(freshToken, sessionTokenFetcher.getToken(mockSession))
+    releaseResponse.complete(Unit)
+
+    assertNull(owner.await())
+    coVerify(exactly = 0) { SessionTokensCache.storeIfFresher(any(), mockTokenResource, any()) }
+  }
+
+  @Test
+  fun `reverification does not invalidate another sessions in flight request`() = runTest {
+    val requestStarted = CompletableDeferred<Unit>()
+    val releaseResponse = CompletableDeferred<Unit>()
+    coEvery { SessionTokensCache.getToken(any()) } returns null
+    coEvery { mockClerkApiService.tokens("session_123") } coAnswers
+      {
+        requestStarted.complete(Unit)
+        releaseResponse.await()
+        ClerkResult.success(mockTokenResource)
+      }
+    val request = async { sessionTokenFetcher.getToken(mockSession) }
+    requestStarted.await()
+    sessionTokenFetcher.invalidateSession("session_other")
+    releaseResponse.complete(Unit)
+    assertEquals(mockTokenResource, request.await())
+  }
+
+  @Test
   fun `reset fences a late forced refresh response from the previous runtime`() = runTest {
     // Given
     val requestStarted = CompletableDeferred<Unit>()

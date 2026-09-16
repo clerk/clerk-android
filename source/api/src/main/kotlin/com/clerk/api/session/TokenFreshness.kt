@@ -2,6 +2,7 @@ package com.clerk.api.session
 
 import com.auth0.android.jwt.JWT
 import com.clerk.api.network.model.token.TokenResource
+import java.util.concurrent.TimeUnit
 
 /** Chooses the canonical token when session minter responses arrive out of order. */
 internal object TokenFreshness {
@@ -42,6 +43,27 @@ internal object TokenFreshness {
       false
     } else {
       tokenSessionId == sessionId && jwt.organizationId().orEmpty() == organizationId.orEmpty()
+    }
+  }
+
+  /**
+   * Requires a later origin mint, even if an older token was renewed at the edge or is unexpired.
+   */
+  internal fun hasNewerOrigin(existing: TokenResource?, incoming: TokenResource): Boolean {
+    val existingJwt = existing?.let { decode(it.jwt) }
+    val incomingJwt = decode(incoming.jwt)
+    return if (
+      existingJwt == null || incomingJwt == null || !haveMatchingContext(existingJwt, incomingJwt)
+    ) {
+      false
+    } else {
+      val existingIssuedAt =
+        existingJwt.originIssuedAt()
+          ?: existingJwt.issuedAt?.time?.let { TimeUnit.MILLISECONDS.toSeconds(it) }
+      val incomingIssuedAt =
+        incomingJwt.originIssuedAt()
+          ?: incomingJwt.issuedAt?.time?.let { TimeUnit.MILLISECONDS.toSeconds(it) }
+      existingIssuedAt != null && incomingIssuedAt != null && incomingIssuedAt > existingIssuedAt
     }
   }
 
@@ -115,13 +137,13 @@ internal object TokenFreshness {
     } catch (_: Exception) {
       null
     }
-
-  private fun JWT.originIssuedAt(): Long? = header["oiat"]?.toLongOrNull()
-
-  private fun JWT.organizationId(): String? =
-    getClaim("org_id").asString()
-      ?: runCatching { getClaim("o").asObject(Map::class.java)?.get("id") as? String }.getOrNull()
 }
+
+private fun JWT.originIssuedAt(): Long? = header["oiat"]?.toLongOrNull()
+
+private fun JWT.organizationId(): String? =
+  getClaim("org_id").asString()
+    ?: runCatching { getClaim("o").asObject(Map::class.java)?.get("id") as? String }.getOrNull()
 
 internal fun authorizationToken(
   session: Session,

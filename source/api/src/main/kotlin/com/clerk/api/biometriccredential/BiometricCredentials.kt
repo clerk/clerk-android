@@ -11,6 +11,8 @@ import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -299,7 +301,8 @@ object BiometricCredentials {
     val signIn =
       when (createResult) {
         is ClerkResult.Success -> createResult.value
-        is ClerkResult.Failure -> return handleBiometricSignInError(createResult, localCredential)
+        is ClerkResult.Failure ->
+          return handleBiometricCredentialError(createResult, localCredential)
       }
 
     val challenge =
@@ -339,7 +342,49 @@ object BiometricCredentials {
       )
     return when (attemptResult) {
       is ClerkResult.Success -> attemptResult
-      is ClerkResult.Failure -> handleBiometricSignInError(attemptResult, localCredential)
+      is ClerkResult.Failure -> handleBiometricCredentialError(attemptResult, localCredential)
+    }
+  }
+
+  /** Selects a supported local credential owned by the specified session user. */
+  internal fun localCredentialForUser(
+    userId: String
+  ): ClerkResult<BiometricCredentialLocalRecord, ClerkErrorResponse> =
+    when (val candidates = localCredentialCandidates(null, null, userId)) {
+      is LocalCredentialsResult.Available -> ClerkResult.success(candidates.credentials.first())
+      is LocalCredentialsResult.Unavailable ->
+        clientFailure("Biometric reverification is unavailable for this session.")
+    }
+
+  /** Signs the exact server challenge with the selected credential's existing key. */
+  internal suspend fun signChallenge(
+    challenge: BiometricCredentialChallenge,
+    credential: BiometricCredentialLocalRecord,
+    promptTitle: String?,
+    promptSubtitle: String?,
+  ): ClerkResult<BiometricCredentialKeySignature, ClerkErrorResponse> {
+    if (challenge.biometricCredentialId != credential.id) {
+      return clientFailure("Biometric reverification did not return a matching challenge.")
+    }
+    currentCoroutineContext().ensureActive()
+    return try {
+      ClerkResult.success(
+        keyManager.sign(
+          clientData = challenge.clientData,
+          localKeyId = credential.localKeyId,
+          policy = credential.policy,
+          promptTitle = promptTitle ?: "Verify your identity",
+          promptSubtitle = promptSubtitle,
+        )
+      )
+    } catch (e: BiometricCredentialKeyManagerException) {
+      if (
+        e.code == BiometricCredentialKeyManagerException.Code.KEY_INVALIDATED ||
+          e.code == BiometricCredentialKeyManagerException.Code.KEY_NOT_FOUND
+      ) {
+        deleteLocalCredential(credential)
+      }
+      ClerkResult.unknownFailure(e)
     }
   }
 
@@ -676,7 +721,7 @@ object BiometricCredentials {
     return clientFailure(message)
   }
 
-  private fun <T : Any> handleBiometricSignInError(
+  internal fun <T : Any> handleBiometricCredentialError(
     failure: ClerkResult.Failure<ClerkErrorResponse>,
     localCredential: BiometricCredentialLocalRecord,
   ): ClerkResult<T, ClerkErrorResponse> {
@@ -690,7 +735,7 @@ object BiometricCredentials {
     )
   }
 
-  private fun clientFailure(message: String): ClerkResult.Failure<ClerkErrorResponse> {
+  internal fun clientFailure(message: String): ClerkResult.Failure<ClerkErrorResponse> {
     return ClerkResult.apiFailure(
       ClerkErrorResponse(
         errors =
