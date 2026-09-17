@@ -186,7 +186,8 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           tokenTasks.putIfAbsent(context.cacheKey, deferred)
         }
       if (existingTask != null) {
-        existingTask.await()
+        // Invalidation can happen after completion but before this waiter resumes.
+        existingTask.await()?.takeIf { isCurrentRuntime(context) }
       } else {
         try {
           fetchToken(context, options).also { deferred.complete(it) }

@@ -16,11 +16,16 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import java.util.Base64
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -291,6 +296,30 @@ class SessionReverificationTokenTest {
 
     assertTrue(snapshot.has(feature = "read"))
     assertTrue(snapshot.checkAuthorization(reverification = ReverificationConfig.Strict))
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun `reverification fences a completed shared request before its waiter resumes`() = runTest {
+    val oldToken = token(System.currentTimeMillis() / 1_000, factorAges = "[20,20]")
+    val response = CompletableDeferred<TokenResource>()
+    coEvery { api.tokens(session.id, "org_123", any(), any()) } coAnswers
+      {
+        ClerkResult.success(response.await())
+      }
+    val owner = async(UnconfinedTestDispatcher(testScheduler)) { fetcher.getToken(session) }
+    val waiter = async { fetcher.getToken(session) }
+    testScheduler.runCurrent()
+
+    // Complete the owner immediately, leaving the waiter's continuation queued.
+    response.complete(oldToken)
+    assertTrue(owner.isCompleted)
+    assertEquals(oldToken, owner.await())
+    assertFalse(waiter.isCompleted)
+    fetcher.invalidateSession(session.id)
+
+    assertNull(waiter.await())
+    coVerify(exactly = 1) { api.tokens(session.id, "org_123", any(), any()) }
   }
 
   private fun updateSnapshot(token: TokenResource): Session {
