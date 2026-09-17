@@ -7,6 +7,7 @@ import com.clerk.api.Constants.Strategy.EMAIL_CODE
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
 import com.clerk.api.Constants.Strategy.PHONE_CODE
 import com.clerk.api.Constants.Strategy.TOTP
+import com.clerk.api.biometriccredential.BiometricCredentialPolicy
 import com.clerk.api.biometriccredential.BiometricSessionVerificationService
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
@@ -105,6 +106,12 @@ suspend fun Session.verifyWithPasskey(
  * verification can also satisfy an existing second-factor requirement. To request multi-factor
  * reverification, start with [SessionVerification.Level.MULTI_FACTOR], then verify the required
  * stage. This method only accepts FIRST_FACTOR or SECOND_FACTOR, like [verifyWithPasskey].
+ *
+ * The credential must have been enrolled with [BiometricCredentialPolicy.BIOMETRY_CURRENT_SET]:
+ * strong biometrics without device credential fallback, invalidated when new biometrics are added.
+ * Other policies return `biometric_credential_policy_incompatible`; offer another reverification
+ * method in that case. Existing credentials remain usable for sign-in and are not replaced or
+ * upgraded by this method.
  *
  * Reverification shares the native biometric sign-in settings; disabling biometric sign-in also
  * disables reverification for enrolled credentials. On completion, this session's cached tokens are

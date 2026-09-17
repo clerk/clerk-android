@@ -91,7 +91,7 @@ internal object BiometricSessionVerificationService {
         BiometricCredentials.clientFailure(
           "Biometric reverification requires an active or pending session with a user."
         )
-      else -> BiometricCredentials.localCredentialForUser(userId)
+      else -> BiometricCredentials.localCredentialForReverification(userId)
     }
   }
 

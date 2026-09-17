@@ -10,6 +10,7 @@ import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import androidx.annotation.RequiresApi
+import androidx.annotation.VisibleForTesting
 import androidx.biometric.BiometricManager
 import androidx.core.content.ContextCompat
 import com.clerk.api.Clerk
@@ -32,7 +33,7 @@ internal data class BiometricCredentialLocalKey(
   val localKeyId: String,
   val publicKeyJwk: String,
   val algorithm: String = BiometricCredential.ES256_ALGORITHM,
-  val policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
+  val policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_CURRENT_SET,
 )
 
 /** A signed biometric-credential challenge payload ready to send to Clerk. */
@@ -370,7 +371,8 @@ internal object DefaultBiometricCredentialKeyManager : BiometricCredentialKeyMan
   }
 
   @RequiresApi(Build.VERSION_CODES.P)
-  private fun keyGenParameterSpec(
+  @VisibleForTesting
+  internal fun keyGenParameterSpec(
     localKeyId: String,
     policy: BiometricCredentialPolicy,
   ): KeyGenParameterSpec {

@@ -65,6 +65,7 @@ class BiometricReverificationTest {
       localKeyId = "key_123",
       userId = "user_123",
       appIdentifier = "com.clerk.example",
+      policy = BiometricCredentialPolicy.BIOMETRY_CURRENT_SET,
       createdAt = 1,
       updatedAt = 1,
     )
@@ -232,6 +233,66 @@ class BiometricReverificationTest {
     coVerify(exactly = 1) { api.prepareSecondFactorVerification(session.id, prepareParams()) }
     coVerify(exactly = 1) { api.attemptSecondFactorVerification(session.id, attemptParams()) }
   }
+
+  @Test
+  fun `weaker policies cannot reverify either factor and are preserved for sign in`() = runTest {
+    SessionTokensCache.setToken("sess_123-organization-", TokenResource(jwt = "cached"))
+    for (policy in
+      listOf(
+        BiometricCredentialPolicy.BIOMETRY_ANY,
+        BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
+      )) {
+      every { store.all() } returns listOf(credential.copy(policy = policy))
+      for (level in
+        listOf(SessionVerification.Level.FIRST_FACTOR, SessionVerification.Level.SECOND_FACTOR)) {
+        val result =
+          assertIs<ClerkResult.Failure<ClerkErrorResponse>>(
+            session.verifyWithBiometrics(level = level)
+          )
+        assertEquals(
+          "biometric_credential_policy_incompatible",
+          result.error?.errors?.single()?.code,
+        )
+      }
+    }
+
+    assertTrue(calls.isEmpty())
+    assertEquals("cached", SessionTokensCache.getToken("sess_123-organization-")?.jwt)
+    verify(exactly = 0) { store.delete(any()) }
+    verify(exactly = 0) { store.save(any()) }
+    verify(exactly = 0) { keyManager.deleteKey(any()) }
+    verify(exactly = 0) { keyManager.createKey(any()) }
+    coVerify(exactly = 0) { signInApi.createSignIn(any()) }
+  }
+
+  @Test
+  fun `reverification selects an older strict credential over a newer weaker credential`() =
+    runTest {
+      every { store.all() } returns
+        listOf(
+          credential.copy(
+            id = "td_weaker",
+            localKeyId = "key_weaker",
+            policy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
+            createdAt = credential.createdAt + 1,
+          ),
+          credential,
+        )
+
+      assertIs<ClerkResult.Success<SessionVerification>>(session.verifyWithBiometrics())
+
+      coVerify(exactly = 1) { api.prepareFirstFactorVerification(session.id, prepareParams()) }
+      coVerify(exactly = 1) {
+        keyManager.sign(
+          challenge.clientData,
+          credential.localKeyId,
+          BiometricCredentialPolicy.BIOMETRY_CURRENT_SET,
+          any(),
+          any(),
+        )
+      }
+      verify(exactly = 0) { store.delete(any()) }
+    }
 
   @Test
   fun `missing matching user never falls back to active account`() = runTest {

@@ -134,8 +134,9 @@ object BiometricCredentials {
    * @param name A human-readable name stored with the biometric credential.
    * @param identifierHint A local-only user identifier hint for selecting this credential later.
    * @param policy The local authentication policy used to protect the generated private key.
-   *   Defaults to requiring biometric availability while allowing device credential fallback during
-   *   authentication.
+   *   Defaults to requiring a strong biometric from the currently enrolled set, without device
+   *   credential fallback. Adding a new biometric invalidates the key. Other policies can be used
+   *   for sign-in, but cannot be used for session reverification.
    * @param promptTitle The title shown in the system biometric prompt.
    * @param promptSubtitle The subtitle shown in the system biometric prompt.
    * @return A [ClerkResult] containing the enrolled [BiometricCredential] on success, or a
@@ -144,7 +145,7 @@ object BiometricCredentials {
   suspend fun enroll(
     name: String? = null,
     identifierHint: String? = null,
-    policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
+    policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_CURRENT_SET,
     promptTitle: String? = null,
     promptSubtitle: String? = null,
   ): ClerkResult<BiometricCredential, ClerkErrorResponse> {
@@ -346,12 +347,20 @@ object BiometricCredentials {
     }
   }
 
-  /** Selects a supported local credential owned by the specified session user. */
-  internal fun localCredentialForUser(
+  /** Selects a credential bound to the enrolled biometric set for the specified session user. */
+  internal fun localCredentialForReverification(
     userId: String
   ): ClerkResult<BiometricCredentialLocalRecord, ClerkErrorResponse> =
     when (val candidates = localCredentialCandidates(null, null, userId)) {
-      is LocalCredentialsResult.Available -> ClerkResult.success(candidates.credentials.first())
+      is LocalCredentialsResult.Available ->
+        candidates.credentials
+          .firstOrNull { it.policy == BiometricCredentialPolicy.BIOMETRY_CURRENT_SET }
+          ?.let { ClerkResult.success(it) }
+          ?: clientFailure(
+            "This biometric credential cannot be used for reverification. " +
+              "Verify your identity using another method.",
+            code = "biometric_credential_policy_incompatible",
+          )
       is LocalCredentialsResult.Unavailable ->
         clientFailure("Biometric reverification is unavailable for this session.")
     }
@@ -442,9 +451,9 @@ object BiometricCredentials {
     }
   }
 
-  /** Whether biometric-gated keys can be created and used on this device. */
+  /** Whether keys protected by the default biometric-only enrollment policy can be used. */
   val deviceSupportsBiometricAuthentication: Boolean
-    get() = keyManager.isSupported(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE)
+    get() = keyManager.isSupported(BiometricCredentialPolicy.BIOMETRY_CURRENT_SET)
 
   // region Private helpers
 
@@ -735,7 +744,10 @@ object BiometricCredentials {
     )
   }
 
-  internal fun clientFailure(message: String): ClerkResult.Failure<ClerkErrorResponse> {
+  internal fun clientFailure(
+    message: String,
+    code: String = "biometric_credential_client_error",
+  ): ClerkResult.Failure<ClerkErrorResponse> {
     return ClerkResult.apiFailure(
       ClerkErrorResponse(
         errors =
@@ -743,7 +755,7 @@ object BiometricCredentials {
             Error(
               message = message,
               longMessage = message,
-              code = "biometric_credential_client_error",
+              code = code,
             )
           )
       )
