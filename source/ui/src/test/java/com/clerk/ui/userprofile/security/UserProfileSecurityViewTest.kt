@@ -1,13 +1,17 @@
 package com.clerk.ui.userprofile.security
 
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.isToggleable
-import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.clerk.api.Clerk
 import com.clerk.api.biometriccredential.BiometricCredentialAvailability
 import com.clerk.api.biometriccredential.BiometricCredentials
@@ -16,6 +20,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.user.User
 import com.clerk.api.user.activeSessions
 import com.clerk.ui.userprofile.LocalUserProfileState
+import com.clerk.ui.userprofile.security.biometriccredential.UserProfileBiometricCredentialViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -24,6 +29,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.Dispatchers
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -34,7 +40,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class UserProfileSecurityViewTest {
 
-  @get:Rule val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   private val hasCredential = AtomicBoolean(false)
 
@@ -59,10 +65,22 @@ class UserProfileSecurityViewTest {
         hasCredential.set(false)
         ClerkResult.success(Unit)
       }
+    composeTestRule.runOnIdle {
+      // Keep mocked availability work on the main thread so Compose can wait for it to finish.
+      val factory = viewModelFactory {
+        initializer {
+          UserProfileBiometricCredentialViewModel(workDispatcher = Dispatchers.Main.immediate)
+        }
+      }
+      ViewModelProvider(composeTestRule.activity, factory)
+        .get(UserProfileBiometricCredentialViewModel::class.java)
+    }
   }
 
   @After
   fun tearDown() {
+    // Dispose the composition and cancel ViewModel work before removing the singleton mocks.
+    composeTestRule.activityRule.scenario.close()
     unmockkAll()
   }
 
