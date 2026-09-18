@@ -6,6 +6,7 @@ com.clerk.api
 com.clerk.api.auth
 com.clerk.api.auth.builders
 com.clerk.api.auth.types
+com.clerk.api.billing
 com.clerk.api.biometriccredential
 com.clerk.api.credentials
 com.clerk.api.emailaddress
@@ -32,6 +33,7 @@ com.clerk.api.network.serialization
 com.clerk.api.organizations
 com.clerk.api.passkeys
 com.clerk.api.phonenumber
+com.clerk.api.restorecredentials
 com.clerk.api.session
 com.clerk.api.signin
 com.clerk.api.signup

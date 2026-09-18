@@ -1,0 +1,341 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>BillingTotals</title>
+<link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../../styles/style.css" rel="Stylesheet">
+<link href="../../../../styles/main.css" rel="Stylesheet">
+<link href="../../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../../styles/multimodule.css" rel="Stylesheet"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../../index.html" tabindex="1">
+                    Clerk
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":source:api/release">release</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":source:api/release" data-filter=":source:api/release">
+                                <span class="checkbox--icon"></span>
+                                release
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Clerk
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="Clerk Android API::com.clerk.api.billing/BillingTotals///PointingToDeclaration//-1784893667">
+  <div class="breadcrumbs"><a href="../../index.html">Clerk Android API</a><span class="delimiter">/</span><a href="../index.html">com.clerk.api.billing</a><span class="delimiter">/</span><span class="current">BillingTotals</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Billing</span><wbr><span><span>Totals</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">BillingTotals</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>subtotal<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>baseFee<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>taxTotal<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>grandTotal<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>totalDueAfterFreeTrial<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>credit<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>credits<span class="token operator">: </span><a href="../-billing-credits/index.html">BillingCredits</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>discounts<span class="token operator">: </span><a href="../-billing-discounts/index.html">BillingDiscounts</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>pastDue<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>totalDueNow<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>perUnitTotals<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-billing-per-unit-total/index.html">BillingPerUnitTotal</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>totalsDuePerPeriod<span class="token operator">: </span><a href="../-billing-period-totals/index.html">BillingPeriodTotals</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>totalDuePerPeriod<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><p class="paragraph">A granular breakdown of the total amount that will be charged, either during checkout or at renewal.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="674709163%2FConstructors%2F-1784893667" anchor-label="BillingTotals" id="674709163%2FConstructors%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-billing-totals.html"><span>Billing</span><wbr><span><span>Totals</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="674709163%2FConstructors%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">subtotal<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token punctuation">, </span></span><span class="parameter ">baseFee<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">taxTotal<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token punctuation">, </span></span><span class="parameter ">grandTotal<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token punctuation">, </span></span><span class="parameter ">totalDueAfterFreeTrial<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">credit<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">credits<span class="token operator">: </span><a href="../-billing-credits/index.html">BillingCredits</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">discounts<span class="token operator">: </span><a href="../-billing-discounts/index.html">BillingDiscounts</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">pastDue<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">totalDueNow<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">perUnitTotals<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-billing-per-unit-total/index.html">BillingPerUnitTotal</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">totalsDuePerPeriod<span class="token operator">: </span><a href="../-billing-period-totals/index.html">BillingPeriodTotals</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">totalDuePerPeriod<span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="-567356325%2FProperties%2F-1784893667" anchor-label="baseFee" id="-567356325%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="base-fee.html"><span>base</span><wbr><span><span>Fee</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-567356325%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="base-fee.html">baseFee</a><span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Base fee component before per-unit charges and adjustments.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1469863569%2FProperties%2F-1784893667" anchor-label="credit" id="1469863569%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="credit.html"><span><span>credit</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1469863569%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="credit.html">credit</a><span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Legacy credit amount.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-112614826%2FProperties%2F-1784893667" anchor-label="credits" id="-112614826%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="credits.html"><span><span>credits</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-112614826%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="credits.html">credits</a><span class="token operator">: </span><a href="../-billing-credits/index.html">BillingCredits</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Unified credits breakdown.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1504440798%2FProperties%2F-1784893667" anchor-label="discounts" id="1504440798%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="discounts.html"><span><span>discounts</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1504440798%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="discounts.html">discounts</a><span class="token operator">: </span><a href="../-billing-discounts/index.html">BillingDiscounts</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Information about the discounts applied to the payment.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1390030254%2FProperties%2F-1784893667" anchor-label="grandTotal" id="-1390030254%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="grand-total.html"><span>grand</span><wbr><span><span>Total</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1390030254%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="grand-total.html">grandTotal</a><span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a></div><div class="brief "><p class="paragraph">Grand total amount.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1877980014%2FProperties%2F-1784893667" anchor-label="pastDue" id="1877980014%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="past-due.html"><span>past</span><wbr><span><span>Due</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1877980014%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="past-due.html">pastDue</a><span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Past due amount.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="840974368%2FProperties%2F-1784893667" anchor-label="perUnitTotals" id="840974368%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="per-unit-totals.html"><span>per</span><wbr><span>Unit</span><wbr><span><span>Totals</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="840974368%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="per-unit-totals.html">perUnitTotals</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-billing-per-unit-total/index.html">BillingPerUnitTotal</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Per-unit total breakdown (for example, seats).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1298294874%2FProperties%2F-1784893667" anchor-label="subtotal" id="-1298294874%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subtotal.html"><span><span>subtotal</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1298294874%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="subtotal.html">subtotal</a><span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a></div><div class="brief "><p class="paragraph">Subtotal before adjustments.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1125914609%2FProperties%2F-1784893667" anchor-label="taxTotal" id="1125914609%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="tax-total.html"><span>tax</span><wbr><span><span>Total</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1125914609%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="tax-total.html">taxTotal</a><span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a></div><div class="brief "><p class="paragraph">Total tax amount.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1854278292%2FProperties%2F-1784893667" anchor-label="totalDueAfterFreeTrial" id="-1854278292%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="total-due-after-free-trial.html"><span>total</span><wbr><span>Due</span><wbr><span>After</span><wbr><span>Free</span><wbr><span><span>Trial</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1854278292%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="total-due-after-free-trial.html">totalDueAfterFreeTrial</a><span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Total amount due after a free trial ends.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1943384502%2FProperties%2F-1784893667" anchor-label="totalDueNow" id="-1943384502%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="total-due-now.html"><span>total</span><wbr><span>Due</span><wbr><span><span>Now</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1943384502%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="total-due-now.html">totalDueNow</a><span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Total amount due now.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2129342114%2FProperties%2F-1784893667" anchor-label="totalDuePerPeriod" id="2129342114%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="total-due-per-period.html"><span>total</span><wbr><span>Due</span><wbr><span>Per</span><wbr><span><span>Period</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2129342114%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="total-due-per-period.html">totalDuePerPeriod</a><span class="token operator">: </span><a href="../-billing-money-amount/index.html">BillingMoneyAmount</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The expected total payment for each future billing period.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1556038383%2FProperties%2F-1784893667" anchor-label="totalsDuePerPeriod" id="-1556038383%2FProperties%2F-1784893667" data-filterable-set=":source:api/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":source:api/release" data-filterable-set=":source:api/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="totals-due-per-period.html"><span>totals</span><wbr><span>Due</span><wbr><span>Per</span><wbr><span><span>Period</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1556038383%2FProperties%2F-1784893667"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":source:api/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="totals-due-per-period.html">totalsDuePerPeriod</a><span class="token operator">: </span><a href="../-billing-period-totals/index.html">BillingPeriodTotals</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Per-period renewal totals.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
