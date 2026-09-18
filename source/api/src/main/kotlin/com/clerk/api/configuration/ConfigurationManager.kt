@@ -5,8 +5,6 @@ import com.clerk.api.Clerk
 import com.clerk.api.ClerkConfigurationOptions
 import com.clerk.api.Constants.Config.API_TIMEOUT_SECONDS
 import com.clerk.api.Constants.Config.BACKOFF_BASE_DELAY_SECONDS
-import com.clerk.api.Constants.Config.EXPONENTIAL_BACKOFF_SHIFT
-import com.clerk.api.Constants.Config.MAX_INITIALIZATION_RETRIES
 import com.clerk.api.Constants.Config.REFRESH_TOKEN_INTERVAL
 import com.clerk.api.Constants.Config.TIMEOUT_MULTIPLIER
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
@@ -34,10 +32,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,19 +58,15 @@ import kotlinx.coroutines.withTimeout
  * - Application lifecycle monitoring for state refresh
  * - Context memory leak prevention through weak references
  */
-internal class ConfigurationManager {
+internal class ConfigurationManager(
+  private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+) {
   private companion object {
+    const val MAX_INITIALIZATION_RETRY_DELAY_SECONDS = 60L
     const val LIFECYCLE_REFRESH_DEFER_STEP_MS = 100L
     const val LIFECYCLE_REFRESH_MAX_DEFER_MS = 5_000L
   }
 
-  /**
-   * Coroutine scope with SupervisorJob for parallel API requests.
-   *
-   * Uses SupervisorJob to ensure that if one coroutine fails, others continue running. This is
-   * essential for handling concurrent client and environment requests independently.
-   */
-  private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
   private val refreshMutex = Mutex()
 
   /** Weak reference to application context to prevent memory leaks. */
@@ -126,6 +123,9 @@ internal class ConfigurationManager {
   /** Internal job reference for ongoing initialization operations. */
   private var initializationJob: Job? = null
 
+  /** Pending retry, replaced when another refresh starts. */
+  private var initializationRetryJob: Job? = null
+
   /** Monotonic token used to ignore stale refreshes from an older configuration. */
   @Volatile private var configurationVersion = 0
 
@@ -139,10 +139,17 @@ internal class ConfigurationManager {
 
   private data class RefreshAttempt(
     val options: ClerkConfigurationOptions?,
-    val retryCount: Int,
+    val retryDelaySeconds: Long,
     val expectedConfigurationVersion: Int,
   ) {
-    fun nextRetry(): RefreshAttempt = copy(retryCount = retryCount + 1)
+    fun nextRetry(): RefreshAttempt =
+      copy(
+        retryDelaySeconds =
+          (retryDelaySeconds * 2).coerceIn(
+            BACKOFF_BASE_DELAY_SECONDS,
+            MAX_INITIALIZATION_RETRY_DELAY_SECONDS,
+          )
+      )
   }
 
   /** Ensures storage is initialized when needed. */
@@ -273,7 +280,7 @@ internal class ConfigurationManager {
     val attempt =
       RefreshAttempt(
         options = options,
-        retryCount = 0,
+        retryDelaySeconds = 0,
         expectedConfigurationVersion = configuredVersion,
       )
     Clerk.biometricCredentials.retryPendingLocalCredentialCleanup()
@@ -310,6 +317,7 @@ internal class ConfigurationManager {
     initializationJob?.cancel()
     refreshJob?.cancel()
     initializationJob = null
+    initializationRetryJob = null
     refreshJob = null
     context = null
     storageInitialized = false
@@ -406,17 +414,14 @@ internal class ConfigurationManager {
    * - Updates Clerk state when both requests succeed
    * - Sets initialization status based on operation success
    * - Starts token refresh as soon as client data is available
-   * - Retries with exponential backoff on failure (up to MAX_INITIALIZATION_RETRIES)
+   * - Retries with exponential backoff on failure, capped at one minute between attempts
    *
    * The method is safe to call multiple times and will not interfere with ongoing requests.
-   *
-   * @param options Configuration options for the SDK.
-   * @param retryCount Current retry attempt number (0 for initial attempt).
    */
   private fun currentRefreshAttempt(): RefreshAttempt =
     RefreshAttempt(
       options = storedOptions,
-      retryCount = 0,
+      retryDelaySeconds = 0,
       expectedConfigurationVersion = configurationVersion,
     )
 
@@ -489,16 +494,27 @@ internal class ConfigurationManager {
       val lockedFailure = validateRefreshPreconditions(mode, attempt.expectedConfigurationVersion)
       if (lockedFailure != null) return@withLock lockedFailure
 
+      if (mode == RefreshMode.INITIALIZATION) {
+        initializationRetryJob?.cancel()
+        initializationRetryJob = null
+      }
+
       try {
         if (Clerk.debugMode) {
-          ClerkLog.d("Starting client and environment refresh (attempt ${attempt.retryCount + 1})")
+          ClerkLog.d("Starting client and environment refresh")
         }
 
-        if (attempt.retryCount == 0 && mode == RefreshMode.INITIALIZATION) {
+        if (attempt.retryDelaySeconds == 0L && mode == RefreshMode.INITIALIZATION) {
           _initializationError.value = null
         }
 
         executeRefresh(attempt = attempt, mode = mode, skipClientId = skipClientId)
+      } catch (e: TimeoutCancellationException) {
+        currentCoroutineContext().ensureActive()
+        if (mode == RefreshMode.INITIALIZATION) {
+          handleInitializationFailure(error = e, attempt = attempt)
+        }
+        ClerkResult.unknownFailure(e)
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
@@ -602,6 +618,8 @@ internal class ConfigurationManager {
     client: Client,
     environment: Environment,
   ): ClerkResult<Unit, ClerkErrorResponse> {
+    initializationRetryJob?.cancel()
+    initializationRetryJob = null
     updateClerkState(client, environment)
     _isInitialized.value = true
     _initializationError.value = null
@@ -669,13 +687,7 @@ internal class ConfigurationManager {
     }
   }
 
-  /**
-   * Handles initialization failure by setting error state and scheduling retry if within limits.
-   *
-   * @param error The exception that caused the failure.
-   * @param options Configuration options for retry.
-   * @param retryCount Current retry attempt number.
-   */
+  /** Handles initialization failure by setting error state and scheduling another retry. */
   private fun handleInitializationFailure(error: Throwable, attempt: RefreshAttempt) {
     if (!hasConfigured || attempt.expectedConfigurationVersion != configurationVersion) {
       return
@@ -689,29 +701,14 @@ internal class ConfigurationManager {
       ClerkLog.w("Initialization refresh failed; continuing with cached Clerk state")
     }
 
-    if (attempt.retryCount < MAX_INITIALIZATION_RETRIES) {
-      scope.launch { retryInitialization(attempt.nextRetry()) }
-    } else {
-      ClerkLog.e(
-        "Max initialization retries ($MAX_INITIALIZATION_RETRIES) reached. " +
-          "Initialization failed permanently. Call Clerk.reinitialize() to retry manually."
-      )
-    }
+    initializationRetryJob = scope.launch { retryInitialization(attempt.nextRetry()) }
   }
 
-  /**
-   * Retries initialization after a delay with exponential backoff.
-   *
-   * @param options Configuration options for the SDK.
-   * @param retryCount Current retry attempt number.
-   */
+  /** Retries initialization with exponential backoff, capped at one minute between attempts. */
   private suspend fun retryInitialization(attempt: RefreshAttempt) {
-    // Exponential backoff: 5s, 10s, 20s
-    val delaySeconds =
-      BACKOFF_BASE_DELAY_SECONDS * (EXPONENTIAL_BACKOFF_SHIFT shl (attempt.retryCount - 1))
-    ClerkLog.d("Retrying initialization in ${delaySeconds}s (attempt ${attempt.retryCount})")
+    ClerkLog.d("Retrying initialization in ${attempt.retryDelaySeconds}s")
 
-    delay(delaySeconds.seconds)
+    delay(attempt.retryDelaySeconds.seconds)
 
     if (attempt.expectedConfigurationVersion != configurationVersion) {
       return

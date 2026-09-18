@@ -979,8 +979,8 @@ object Clerk {
    * This method is useful when initialization has failed (e.g., due to network issues when the app
    * was cold-started by a push notification) and you want to retry after conditions have improved.
    *
-   * The SDK will automatically retry initialization up to 3 times with exponential backoff, but
-   * this method allows manual retries after those automatic attempts have been exhausted.
+   * The SDK automatically retries initialization with exponential backoff, capped at one minute
+   * between attempts, and retries when connectivity returns. This method starts an immediate retry.
    *
    * Example usage:
    * ```kotlin
