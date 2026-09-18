@@ -4,14 +4,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * A server challenge for biometric-credential enrollment or sign-in.
+ * A server challenge for biometric-credential enrollment, sign-in, or session reverification.
  *
  * The [clientData] string must be signed with the local biometric-credential private key and
  * returned to the server exactly as received.
  *
  * @property challenge The challenge value.
  * @property challengeId The unique identifier of the challenge.
- * @property biometricCredentialId The biometric credential ID for sign-in challenges.
+ * @property biometricCredentialId The biometric credential ID for sign-in or reverification
+ *   challenges.
  * @property clientData The exact client data string that must be signed.
  * @property expiresAt The time when the challenge expires, in milliseconds since epoch.
  * @property algorithm The signature algorithm required for the challenge.
@@ -24,7 +25,7 @@ data class BiometricCredentialChallenge(
   /** The unique identifier of the challenge. */
   @SerialName("challenge_id") val challengeId: String,
 
-  /** The biometric credential ID for sign-in challenges. */
+  /** The biometric credential ID for sign-in or reverification challenges. */
   @SerialName("trusted_device_id") val biometricCredentialId: String? = null,
 
   /** The exact client data string that must be signed. */

@@ -3,6 +3,7 @@ package com.clerk.api.session
 import com.clerk.api.Clerk
 import com.clerk.api.Constants.Strategy.PASSKEY
 import com.clerk.api.Constants.Strategy.PASSWORD
+import com.clerk.api.Constants.Strategy.TRUSTED_DEVICE
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.model.token.TokenResource
@@ -134,6 +135,7 @@ data class Session(
     @SerialName("phone_number_id") val phoneNumberId: String? = null,
     @SerialName("enterprise_connection_id") val enterpriseConnectionId: String? = null,
     @SerialName("redirect_url") val redirectUrl: String? = null,
+    @SerialName("trusted_device_id") val biometricCredentialId: String? = null,
   )
 
   /** Parameters for attempting a first factor in an in-session reverification flow. */
@@ -155,6 +157,16 @@ data class Session(
     @Serializable
     @AutoMap
     data class Code(val code: String, override val strategy: String) : AttemptFirstFactorParams
+
+    @Serializable
+    @AutoMap
+    data class BiometricCredential(
+      @SerialName("trusted_device_id") val biometricCredentialId: String,
+      @SerialName("client_data") val clientData: String,
+      val signature: String,
+      val algorithm: String,
+      override val strategy: String = TRUSTED_DEVICE,
+    ) : AttemptFirstFactorParams
   }
 
   /** Parameters for preparing a second factor in an in-session reverification flow. */
@@ -163,6 +175,7 @@ data class Session(
   internal data class PrepareSecondFactorParams(
     val strategy: String,
     @SerialName("phone_number_id") val phoneNumberId: String? = null,
+    @SerialName("trusted_device_id") val biometricCredentialId: String? = null,
   )
 
   /** Parameters for attempting a second factor in an in-session reverification flow. */
@@ -178,6 +191,16 @@ data class Session(
     data class Passkey(
       @SerialName("public_key_credential") val publicKeyCredential: String,
       override val strategy: String = PASSKEY,
+    ) : AttemptSecondFactorParams
+
+    @Serializable
+    @AutoMap
+    data class BiometricCredential(
+      @SerialName("trusted_device_id") val biometricCredentialId: String,
+      @SerialName("client_data") val clientData: String,
+      val signature: String,
+      val algorithm: String,
+      override val strategy: String = TRUSTED_DEVICE,
     ) : AttemptSecondFactorParams
   }
 }

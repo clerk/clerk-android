@@ -43,6 +43,38 @@ class BiometricCredentialLocalStoreTest {
   }
 
   @Test
+  fun `legacy records without a policy remain PIN capable`() {
+    StorageHelper.saveValue(
+      StorageKey.TRUSTED_DEVICE_CREDENTIALS,
+      """[{
+        "id":"td_legacy","local_key_id":"key_legacy","user_id":"user_1",
+        "app_identifier":"com.example.app","created_at":1,"updated_at":2
+      }]""",
+    )
+
+    val legacy = checkNotNull(store.credential("td_legacy"))
+
+    assertEquals(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE, legacy.policy)
+    store.save(legacy)
+    assertEquals(legacy, store.credential("td_legacy"))
+  }
+
+  @Test
+  fun `strict policy is persisted explicitly alongside legacy credentials`() {
+    val legacy = credential(id = "td_legacy")
+    val strict =
+      credential(id = "td_strict").copy(policy = BiometricCredentialPolicy.BIOMETRY_CURRENT_SET)
+    store.save(legacy)
+    store.save(strict)
+
+    assertTrue(
+      checkNotNull(StorageHelper.loadValue(StorageKey.TRUSTED_DEVICE_CREDENTIALS))
+        .contains("\"policy\":\"biometry_current_set\"")
+    )
+    assertEquals(listOf(legacy, strict), store.all())
+  }
+
+  @Test
   fun `save replaces an existing credential with the same id`() {
     store.save(credential(id = "td_1", userId = "user_1"))
     store.save(credential(id = "td_1", userId = "user_2"))

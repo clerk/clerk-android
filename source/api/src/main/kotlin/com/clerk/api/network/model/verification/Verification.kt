@@ -22,7 +22,7 @@ data class Verification(
   val externalVerificationRedirectUrl: String? = null,
   /** The nonce pertaining to the verification. */
   val nonce: String? = null,
-  /** The challenge payload for biometric sign-in verifications. */
+  /** The challenge payload for biometric sign-in or session reverification. */
   @SerialName("trusted_device_challenge")
   val biometricCredentialChallenge: BiometricCredentialChallenge? = null,
 ) {

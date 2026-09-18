@@ -51,6 +51,11 @@ internal object SessionTokensCache {
   /** Removes a session token for the given cache key. */
   internal fun removeToken(cacheKey: String): TokenResource? = cache.remove(cacheKey)
 
+  /** Removes every organization and template token for a session. */
+  internal fun removeTokens(sessionId: String) {
+    cache.keys.removeAll { it.belongsToSession(sessionId) }
+  }
+
   /** Clears all cached tokens. */
   internal fun clear() = cache.clear()
 
@@ -61,3 +66,6 @@ internal object SessionTokensCache {
   /** Checks if a token exists for the given cache key. */
   internal fun containsKey(cacheKey: String): Boolean = cache.containsKey(cacheKey)
 }
+
+internal fun String.belongsToSession(sessionId: String): Boolean =
+  startsWith("$sessionId-organization-") || startsWith("$sessionId-template-")

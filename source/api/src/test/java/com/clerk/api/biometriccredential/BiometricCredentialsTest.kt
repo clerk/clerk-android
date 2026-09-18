@@ -4,14 +4,17 @@ import android.util.Base64
 import com.clerk.api.Clerk
 import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.network.ClerkApi
+import com.clerk.api.network.api.BiometricCredentialApi
 import com.clerk.api.network.api.SignInApi
 import com.clerk.api.network.model.environment.AuthConfig
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.verification.Verification
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.session.Session
 import com.clerk.api.signin.SignIn
 import com.clerk.api.storage.StorageCipher
 import com.clerk.api.storage.StorageHelper
+import com.clerk.api.user.User
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -21,6 +24,7 @@ import io.mockk.unmockkAll
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -80,6 +84,25 @@ class BiometricCredentialsTest {
 
     assertEquals(setOf("td_keep", "td_other"), credentialStore.credentials.map { it.id }.toSet())
     assertEquals(listOf("tdlk_td_old"), keyManager.deletedKeyIds)
+  }
+
+  @Test
+  fun `enrollment defaults to a strict key and persists that policy`() = runTest {
+    verifyEnrollmentPolicy(requestedPolicy = null)
+  }
+
+  @Test
+  fun `explicit PIN capable enrollment remains available for sign in`() = runTest {
+    verifyEnrollmentPolicy(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE)
+  }
+
+  @Test
+  fun `default enrollment availability requires strong biometrics`() {
+    keyManager.supportedPolicies = setOf(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE)
+    assertFalse(BiometricCredentials.deviceSupportsBiometricAuthentication)
+
+    keyManager.supportedPolicies = setOf(BiometricCredentialPolicy.BIOMETRY_CURRENT_SET)
+    assertTrue(BiometricCredentials.deviceSupportsBiometricAuthentication)
   }
 
   @Test
@@ -169,6 +192,55 @@ class BiometricCredentialsTest {
 
     assertTrue(result is ClerkResult.Success)
     assertEquals(LocaleProvider.locale.value.orEmpty(), createParams.captured["locale"])
+    assertEquals(
+      listOf(BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE),
+      keyManager.signingPolicies,
+    )
+  }
+
+  private suspend fun verifyEnrollmentPolicy(requestedPolicy: BiometricCredentialPolicy?) {
+    val api = mockk<BiometricCredentialApi>()
+    val session =
+      mockk<Session> {
+        every { id } returns "sess_1"
+        every { status } returns Session.SessionStatus.ACTIVE
+      }
+    mockkObject(Clerk, ClerkApi)
+    every { Clerk.session } returns session
+    every { Clerk.user } returns mockk<User> { every { id } returns "user_1" }
+    every { Clerk.applicationId } returns APP_IDENTIFIER
+    every { Clerk.environment } returns
+      mockk<Environment> {
+        every { authConfig } returns
+          AuthConfig(
+            singleSessionMode = false,
+            nativeSettings =
+              AuthConfig.NativeSettings(apiEnabled = true, biometricSignInEnabled = true),
+          )
+      }
+    every { ClerkApi.biometricCredential } returns api
+    coEvery { api.prepareEnrollment(any(), any(), any(), any(), any(), any()) } returns
+      ClerkResult.success(
+        BiometricCredentialChallenge(
+          challenge = "challenge",
+          challengeId = "challenge_1",
+          clientData = "client-data",
+          expiresAt = 1_000,
+        )
+      )
+    coEvery {
+      api.attemptEnrollment(any(), any(), any(), any(), any(), any(), any(), any())
+    } returns ClerkResult.success(biometricCredential("td_1"))
+
+    val result =
+      if (requestedPolicy == null) BiometricCredentials.enroll()
+      else BiometricCredentials.enroll(policy = requestedPolicy)
+
+    val expectedPolicy = requestedPolicy ?: BiometricCredentialPolicy.BIOMETRY_CURRENT_SET
+    assertTrue(result is ClerkResult.Success)
+    assertEquals(listOf(expectedPolicy), keyManager.creationPolicies)
+    assertEquals(listOf(expectedPolicy), keyManager.signingPolicies)
+    assertEquals(expectedPolicy, credentialStore.credentials.single().policy)
   }
 
   private fun credential(id: String, userId: String) =
@@ -208,12 +280,18 @@ class BiometricCredentialsTest {
   private class FakeKeyManager : BiometricCredentialKeyManager {
     val deletedKeyIds = mutableListOf<String>()
     val deleteAttempts = mutableListOf<String>()
+    val creationPolicies = mutableListOf<BiometricCredentialPolicy>()
+    val signingPolicies = mutableListOf<BiometricCredentialPolicy>()
+    var supportedPolicies = BiometricCredentialPolicy.entries.toSet()
     var deleteFailuresRemaining = 0
 
-    override fun isSupported(policy: BiometricCredentialPolicy): Boolean = true
+    override fun isSupported(policy: BiometricCredentialPolicy): Boolean =
+      policy in supportedPolicies
 
-    override fun createKey(policy: BiometricCredentialPolicy): BiometricCredentialLocalKey =
-      error("Not used")
+    override fun createKey(policy: BiometricCredentialPolicy): BiometricCredentialLocalKey {
+      creationPolicies += policy
+      return BiometricCredentialLocalKey("key_1", "public-key", policy = policy)
+    }
 
     override suspend fun sign(
       clientData: String,
@@ -221,8 +299,10 @@ class BiometricCredentialsTest {
       policy: BiometricCredentialPolicy,
       promptTitle: String,
       promptSubtitle: String?,
-    ): BiometricCredentialKeySignature =
-      BiometricCredentialKeySignature(clientData = clientData, signature = "signature")
+    ): BiometricCredentialKeySignature {
+      signingPolicies += policy
+      return BiometricCredentialKeySignature(clientData = clientData, signature = "signature")
+    }
 
     override fun hasKey(localKeyId: String): Boolean = true
 

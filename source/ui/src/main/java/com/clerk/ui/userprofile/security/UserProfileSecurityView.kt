@@ -58,9 +58,7 @@ internal fun UserProfileSecurityView() {
     isPasskeyEnabled = Clerk.passkeyIsEnabled,
     isMfaEnabled = Clerk.mfaIsEnabled,
     isDeleteSelfEnabled = Clerk.deleteSelfIsEnabled,
-    isBiometricCredentialEnabled =
-      Clerk.biometricSignInIsEnabled &&
-        Clerk.biometricCredentials.deviceSupportsBiometricAuthentication,
+    isBiometricCredentialEnabled = Clerk.biometricSignInIsEnabled,
   )
 }
 
@@ -239,7 +237,6 @@ private fun UserProfileSecurityContent(
     }
     if (configuration.isBiometricCredentialEnabled) {
       UserProfileBiometricCredentialsSection(onError = onError)
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if (configuration.isPasskeyEnabled) {
       UserProfilePasskeySection(onError = onError)
