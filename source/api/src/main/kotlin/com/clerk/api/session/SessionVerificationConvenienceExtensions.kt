@@ -7,6 +7,8 @@ import com.clerk.api.Constants.Strategy.EMAIL_CODE
 import com.clerk.api.Constants.Strategy.ENTERPRISE_SSO
 import com.clerk.api.Constants.Strategy.PHONE_CODE
 import com.clerk.api.Constants.Strategy.TOTP
+import com.clerk.api.biometriccredential.BiometricCredentialPolicy
+import com.clerk.api.biometriccredential.BiometricSessionVerificationService
 import com.clerk.api.network.model.error.ClerkErrorResponse
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.passkeys.PasskeyService
@@ -95,4 +97,35 @@ suspend fun Session.verifyWithPasskey(
   level: SessionVerification.Level = SessionVerification.Level.FIRST_FACTOR,
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return PasskeyService.verifySessionWithPasskey(this, allowedCredentialIds, level)
+}
+
+/**
+ * Verifies this session with a biometric credential enrolled on this app installation.
+ *
+ * Start with [startVerification] and follow the returned status. A first-factor biometric
+ * verification can also satisfy an existing second-factor requirement. To request multi-factor
+ * reverification, start with [SessionVerification.Level.MULTI_FACTOR], then verify the required
+ * stage. This method only accepts FIRST_FACTOR or SECOND_FACTOR, like [verifyWithPasskey].
+ *
+ * The credential must have been enrolled with [BiometricCredentialPolicy.BIOMETRY_CURRENT_SET]:
+ * strong biometrics without device credential fallback, invalidated when new biometrics are added.
+ * Other policies return `biometric_credential_policy_incompatible`; offer another reverification
+ * method in that case. Existing credentials remain usable for sign-in and are not replaced or
+ * upgraded by this method.
+ *
+ * Reverification shares the native biometric sign-in settings; disabling biometric sign-in also
+ * disables reverification for enrolled credentials. On completion, this session's cached tokens are
+ * invalidated so the next token request obtains updated factor verification ages.
+ *
+ * @param promptTitle The title shown in the system biometric prompt.
+ * @param promptSubtitle The optional subtitle shown in the system biometric prompt.
+ * @param level The factor stage to verify. Defaults to FIRST_FACTOR.
+ * @return The resulting verification, or an API or local biometric failure.
+ */
+suspend fun Session.verifyWithBiometrics(
+  promptTitle: String? = null,
+  promptSubtitle: String? = null,
+  level: SessionVerification.Level = SessionVerification.Level.FIRST_FACTOR,
+): ClerkResult<SessionVerification, ClerkErrorResponse> {
+  return BiometricSessionVerificationService.verifySession(this, promptTitle, promptSubtitle, level)
 }

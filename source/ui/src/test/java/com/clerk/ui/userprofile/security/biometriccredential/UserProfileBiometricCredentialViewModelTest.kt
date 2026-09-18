@@ -5,6 +5,7 @@ import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.ui.userprofile.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
@@ -34,6 +35,7 @@ class UserProfileBiometricCredentialViewModelTest {
       val staleRefreshResult = CompletableDeferred<BiometricCredentialAvailability>()
       var availabilityRequestCount = 0
       mockkObject(BiometricCredentials)
+      every { BiometricCredentials.deviceSupportsBiometricAuthentication } returns false
       every { BiometricCredentials.currentUserLocalAvailability() } returns
         BiometricCredentialAvailability.Available
       coEvery { BiometricCredentials.currentUserAvailability() } coAnswers
@@ -61,5 +63,23 @@ class UserProfileBiometricCredentialViewModelTest {
       staleRefreshResult.complete(BiometricCredentialAvailability.Available)
 
       assertFalse(viewModel.state.value.isEnabled)
+    }
+
+  @Test
+  fun `enrollment is blocked when strong biometrics are unavailable`() =
+    runTest(dispatcher) {
+      mockkObject(BiometricCredentials)
+      every { BiometricCredentials.deviceSupportsBiometricAuthentication } returns false
+      val viewModel = UserProfileBiometricCredentialViewModel(workDispatcher = dispatcher)
+
+      viewModel.setBiometricSignInEnabled(
+        enabled = true,
+        promptTitle = "Enable biometric sign-in",
+        promptSubtitle = null,
+      )
+
+      assertFalse(viewModel.state.value.isEnabled)
+      assertFalse(viewModel.state.value.isLoading)
+      coVerify(exactly = 0) { BiometricCredentials.enroll(any(), any(), any(), any(), any()) }
     }
 }

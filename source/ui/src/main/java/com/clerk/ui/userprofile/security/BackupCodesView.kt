@@ -53,10 +53,7 @@ internal fun BackupCodesView(
   onDismiss: () -> Unit,
 ) {
   Column(modifier = Modifier.fillMaxWidth().padding(bottom = dp24)) {
-    BottomSheetTopBar(
-      title = stringResource(R.string.add_authenticator_application),
-      onClosePressed = onDismiss,
-    )
+    BottomSheetTopBar(title = mfaType.title(), onClosePressed = onDismiss)
     Column(
       modifier = Modifier.fillMaxWidth().padding(horizontal = dp24).then(modifier),
       verticalArrangement = Arrangement.spacedBy(dp24, alignment = Alignment.Top),
@@ -197,6 +194,14 @@ internal enum class Origin {
   AuthenticatorApp,
   BackupCodes,
 }
+
+@Composable
+private fun MfaType.title() =
+  when (this) {
+    MfaType.PhoneCode -> stringResource(R.string.add_sms_code_verification)
+    MfaType.AuthenticatorApp -> stringResource(R.string.add_authenticator_application)
+    MfaType.BackupCodes -> stringResource(R.string.backup_codes)
+  }
 
 @Composable
 private fun MfaType.instructions() =

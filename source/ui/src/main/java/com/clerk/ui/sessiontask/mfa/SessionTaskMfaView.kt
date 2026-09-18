@@ -111,6 +111,7 @@ private fun ChooseMethodStep(modifier: Modifier = Modifier, onFlowStepChange: (F
           .choose_which_method_you_prefer_to_protect_your_account_with_an_extra_layer_of_security
       ),
     hasLogo = false,
+    hasBackButton = false,
   ) {
     SessionTaskMfaMethodButtons(
       mfaPhoneCodeIsEnabled = Clerk.mfaPhoneCodeIsEnabled,

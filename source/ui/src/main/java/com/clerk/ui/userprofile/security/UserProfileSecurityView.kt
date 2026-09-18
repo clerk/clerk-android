@@ -58,9 +58,7 @@ internal fun UserProfileSecurityView() {
     isPasskeyEnabled = Clerk.passkeyIsEnabled,
     isMfaEnabled = Clerk.mfaIsEnabled,
     isDeleteSelfEnabled = Clerk.deleteSelfIsEnabled,
-    isBiometricCredentialEnabled =
-      Clerk.biometricSignInIsEnabled &&
-        Clerk.biometricCredentials.deviceSupportsBiometricAuthentication,
+    isBiometricCredentialEnabled = Clerk.biometricSignInIsEnabled,
   )
 }
 
@@ -197,9 +195,9 @@ private fun UserProfileSecurityMainContent(
             currentSheetType = BottomSheetType.AddPhoneNumber
             showBottomSheet = true
           },
-          onNavigateToBackupCodes = {
+          onNavigateToBackupCodes = { codes, mfaType ->
             showBottomSheet = false
-            currentSheetType = BottomSheetType.BackupCodes(it)
+            currentSheetType = BottomSheetType.BackupCodes(codes, mfaType)
             showBottomSheet = true
           },
           onVerify = {
@@ -239,7 +237,6 @@ private fun UserProfileSecurityContent(
     }
     if (configuration.isBiometricCredentialEnabled) {
       UserProfileBiometricCredentialsSection(onError = onError)
-      HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
     }
     if (configuration.isPasskeyEnabled) {
       UserProfilePasskeySection(onError = onError)

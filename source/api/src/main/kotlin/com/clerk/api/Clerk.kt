@@ -14,6 +14,7 @@ import com.clerk.api.Clerk.user
 import com.clerk.api.attestation.DeviceAttestationHelper
 import com.clerk.api.auth.Auth
 import com.clerk.api.auth.AuthEvent
+import com.clerk.api.billing.Billing
 import com.clerk.api.biometriccredential.BiometricCredentials
 import com.clerk.api.configuration.CachedClerkState
 import com.clerk.api.configuration.ConfigurationManager
@@ -24,6 +25,7 @@ import com.clerk.api.locale.LocaleProvider
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.ClerkApi
 import com.clerk.api.network.model.client.Client
+import com.clerk.api.network.model.environment.CommerceSettings
 import com.clerk.api.network.model.environment.Environment
 import com.clerk.api.network.model.environment.InstanceEnvironmentType
 import com.clerk.api.network.model.environment.UserSettings
@@ -403,6 +405,28 @@ object Clerk {
 
   val organizationDefaultRoleKey: String?
     get() = environment?.organizationSettings?.domains?.defaultRole
+
+  /**
+   * Billing flags from `/v1/environment`.
+   *
+   * Defaults to disabled billing when the SDK has not fetched environment yet, or when the payload
+   * omits `commerce_settings`.
+   */
+  val commerceSettings: CommerceSettings
+    get() = environment?.commerceSettings ?: CommerceSettings()
+
+  /**
+   * Billing GET APIs for plans, subscriptions, statements, payments, and credits.
+   *
+   * This is an experimental public-beta API and is subject to change. Pin the SDK version to avoid
+   * breaking changes.
+   *
+   * Apps call methods such as `Clerk.billing.getPlans(...)`. Payment methods live on
+   * [com.clerk.api.user.User.getPaymentMethods] and
+   * [com.clerk.api.organizations.Organization.getPaymentMethods].
+   */
+  val billing: Billing
+    get() = Billing
 
   private val _organizationLogoUrlFlow = MutableStateFlow<String?>(null)
 

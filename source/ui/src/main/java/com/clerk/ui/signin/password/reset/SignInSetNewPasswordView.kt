@@ -168,7 +168,7 @@ private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean, onSubm
     onValueChange = { authState.signInNewPassword = it },
     visualTransformation = PasswordVisualTransformation(),
     label = stringResource(R.string.new_password),
-    inputContentType = ContentType.Password,
+    inputContentType = ContentType.NewPassword,
     keyboardOptions =
       KeyboardOptions(
         keyboardType = KeyboardType.Password,
@@ -184,7 +184,7 @@ private fun PasswordInputs(authState: AuthState, passwordsMatch: Boolean, onSubm
     onValueChange = { authState.signInConfirmNewPassword = it },
     label = stringResource(R.string.confirm_password),
     visualTransformation = PasswordVisualTransformation(),
-    inputContentType = ContentType.Password,
+    inputContentType = ContentType.NewPassword,
     isError = showPasswordMismatchError,
     supportingText =
       if (showPasswordMismatchError) stringResource(R.string.passwords_dont_match) else null,

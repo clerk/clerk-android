@@ -71,10 +71,18 @@ internal suspend fun Session.prepareSecondFactorVerification(
   strategy: String,
   phoneNumberId: String? = null,
 ): ClerkResult<SessionVerification, ClerkErrorResponse> {
+  return prepareSecondFactorVerification(
+    Session.PrepareSecondFactorParams(strategy = strategy, phoneNumberId = phoneNumberId)
+  )
+}
+
+/** Prepares the second factor of an in-session reverification flow. */
+internal suspend fun Session.prepareSecondFactorVerification(
+  params: Session.PrepareSecondFactorParams
+): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return ClerkApi.session.prepareSecondFactorVerification(
     sessionId = id,
-    params =
-      Session.PrepareSecondFactorParams(strategy = strategy, phoneNumberId = phoneNumberId).toMap(),
+    params = params.toMap(),
   )
 }
 
@@ -92,5 +100,12 @@ internal suspend fun Session.attemptSecondFactorVerification(
       else -> error("One of code or publicKeyCredential is required")
     }
 
+  return attemptSecondFactorVerification(params)
+}
+
+/** Attempts the second factor of an in-session reverification flow. */
+internal suspend fun Session.attemptSecondFactorVerification(
+  params: Session.AttemptSecondFactorParams
+): ClerkResult<SessionVerification, ClerkErrorResponse> {
   return ClerkApi.session.attemptSecondFactorVerification(sessionId = id, params = params.toMap())
 }

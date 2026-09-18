@@ -32,6 +32,8 @@ internal data class BiometricCredentialLocalRecord(
   @SerialName("userId") val userId: String,
   @SerialName("appIdentifier") val appIdentifier: String,
   @SerialName("identifierHint") val identifierHint: String? = null,
+  // Older SDKs omitted this field for the former enrollment default. Keep decoding those keys as
+  // PIN-capable; changing metadata cannot strengthen an existing Android Keystore key.
   val policy: BiometricCredentialPolicy = BiometricCredentialPolicy.BIOMETRY_OR_DEVICE_PASSCODE,
   @SerialName("createdAt") val createdAt: Long,
   @SerialName("updatedAt") val updatedAt: Long,

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -23,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.clerk.api.Clerk
 import com.clerk.ui.R
+import com.clerk.ui.core.dimens.dp1
 import com.clerk.ui.core.dimens.dp16
 import com.clerk.ui.core.dimens.dp24
 import com.clerk.ui.core.extensions.withMediumWeight
@@ -46,6 +48,9 @@ internal fun UserProfileBiometricCredentialsSection(
     }
   }
 
+  // Existing PIN-capable credentials can still be disabled when strict enrollment is unavailable.
+  if (!state.isEnabled && !state.canEnroll && !state.isLoading) return
+
   val promptTitle = stringResource(R.string.sign_in_with_biometrics)
   val promptSubtitle =
     Clerk.applicationName?.let { stringResource(R.string.app_uses_biometrics_to_sign_you_in, it) }
@@ -63,6 +68,7 @@ internal fun UserProfileBiometricCredentialsSection(
       )
     },
   )
+  HorizontalDivider(thickness = dp1, color = ClerkMaterialTheme.computedColors.border)
 }
 
 @Composable

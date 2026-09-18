@@ -46,12 +46,19 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     val cacheKey: String,
     val sessionMinterEnabled: Boolean,
     val runtimeGeneration: Long,
+    val sessionGeneration: Long,
+  )
+
+  internal data class AuthorizationTokenSelection(
+    val token: TokenResource?,
+    val fallbackFactorVerificationAge: List<Int>?,
   )
 
   /** Map of cache keys to deferred token fetch tasks for request deduplication */
   private val tokenTasks = ConcurrentHashMap<String, CompletableDeferred<TokenResource?>>()
   private val runtimeLock = Any()
   private var runtimeGeneration = 0L
+  private val sessionGenerations = mutableMapOf<String, Long>()
 
   /**
    * Releases deduplicated waiters with a null result and removes requests registered by the
@@ -61,10 +68,62 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     val tasksToRelease =
       synchronized(runtimeLock) {
         runtimeGeneration += 1
+        sessionGenerations.clear()
         tokenTasks.values.toList().also { tokenTasks.clear() }
       }
     tasksToRelease.forEach { it.complete(null) }
   }
+
+  /**
+   * Invalidates pre-reverification tokens and fences requests already in flight for this session.
+   */
+  internal fun invalidateSession(sessionId: String) {
+    val tasksToRelease =
+      synchronized(runtimeLock) {
+        sessionGenerations[sessionId] = (sessionGenerations[sessionId] ?: 0L) + 1
+        SessionTokensCache.removeTokens(sessionId)
+        tokenTasks.keys
+          .filter { it.belongsToSession(sessionId) }
+          .mapNotNull { tokenTasks.remove(it) }
+      }
+    tasksToRelease.forEach { it.complete(null) }
+  }
+
+  /** Selects an authorization token using the same snapshot eligibility rule as [getToken]. */
+  internal fun authorizationTokenSelection(
+    session: Session,
+    nowMillis: Long = System.currentTimeMillis(),
+  ): AuthorizationTokenSelection =
+    synchronized(runtimeLock) {
+      val requiresNewerOrigin = (sessionGenerations[session.id] ?: 0L) > 0L
+      val cached =
+        SessionTokensCache.getToken(session.tokenCacheKey(null))?.takeIf {
+          TokenFreshness.matches(it, session.id, session.lastActiveOrganizationId)
+        }
+      val snapshot =
+        TokenFreshness.eligibleSnapshot(
+          session = session,
+          cached = cached,
+          requiresNewerOrigin = requiresNewerOrigin,
+        )
+      val token =
+        if (snapshot == null) {
+          cached
+        } else {
+          TokenFreshness.pickFreshest(
+            existing = cached,
+            incoming = snapshot,
+            nowMillis = nowMillis,
+            tieBreaker = TokenFreshness.TieBreaker.EXISTING,
+          )
+        }
+      AuthorizationTokenSelection(
+        token = token,
+        // After invalidation, only an eligible token can supply verification ages.
+        fallbackFactorVerificationAge =
+          session.factorVerificationAge.takeUnless { requiresNewerOrigin },
+      )
+    }
 
   /**
    * Retrieves a token for the specified session with the given options.
@@ -84,7 +143,18 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     session: Session,
     options: GetTokenOptions = GetTokenOptions(),
   ): TokenResource? {
-    val context = makeFetchContext(session, options.template)
+    val context =
+      synchronized(runtimeLock) {
+        val currentSession =
+          Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id } ?: session
+        FetchContext(
+          session = currentSession,
+          cacheKey = currentSession.tokenCacheKey(options.template),
+          sessionMinterEnabled = Clerk.environment?.authConfig?.sessionMinter == true,
+          runtimeGeneration = runtimeGeneration,
+          sessionGeneration = sessionGenerations[session.id] ?: 0L,
+        )
+      }
     return when {
       context.session.status == Session.SessionStatus.PENDING -> {
         ClerkLog.w(
@@ -106,42 +176,39 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
         context.cacheKey
     )
 
-    if (options.skipCache) {
-      return fetchToken(context, options)
-    }
-
-    val deferred = CompletableDeferred<TokenResource?>()
-    val existingTask = tokenTasks.putIfAbsent(context.cacheKey, deferred)
-    return if (existingTask != null) {
-      existingTask.await()
+    return if (options.skipCache) {
+      fetchToken(context, options)
     } else {
-      try {
-        fetchToken(context, options).also { deferred.complete(it) }
-      } catch (e: CancellationException) {
-        deferred.cancel(e)
-        throw e
-      } catch (t: Throwable) {
-        deferred.completeExceptionally(t)
-        throw t
-      } finally {
-        tokenTasks.remove(context.cacheKey, deferred)
+      val deferred = CompletableDeferred<TokenResource?>()
+      val existingTask =
+        synchronized(runtimeLock) {
+          if (!isCurrentRuntime(context)) return null
+          tokenTasks.putIfAbsent(context.cacheKey, deferred)
+        }
+      if (existingTask != null) {
+        // Invalidation can happen after completion but before this waiter resumes.
+        existingTask.await()?.takeIf { isCurrentRuntime(context) }
+      } else {
+        try {
+          fetchToken(context, options).also { deferred.complete(it) }
+        } catch (e: CancellationException) {
+          deferred.cancel(e)
+          throw e
+        } catch (t: Throwable) {
+          deferred.completeExceptionally(t)
+          throw t
+        } finally {
+          tokenTasks.remove(context.cacheKey, deferred)
+        }
       }
     }
   }
 
-  private fun makeFetchContext(session: Session, template: String?): FetchContext {
-    val currentSession =
-      Clerk.clientFlow.value?.sessions?.firstOrNull { it.id == session.id } ?: session
-    return FetchContext(
-      session = currentSession,
-      cacheKey = currentSession.tokenCacheKey(template),
-      sessionMinterEnabled = Clerk.environment?.authConfig?.sessionMinter == true,
-      runtimeGeneration = synchronized(runtimeLock) { runtimeGeneration },
-    )
-  }
-
   private fun isCurrentRuntime(context: FetchContext): Boolean =
-    synchronized(runtimeLock) { context.runtimeGeneration == runtimeGeneration }
+    synchronized(runtimeLock) {
+      context.runtimeGeneration == runtimeGeneration &&
+        context.sessionGeneration == (sessionGenerations[context.session.id] ?: 0L)
+    }
 
   /**
    * Internal method to fetch a token from cache or network.
@@ -158,12 +225,15 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     return if (!isCurrentRuntime(context)) {
       null
     } else {
+      // After reverification, snapshots must be newer than a token fetched in this generation.
       if (options.template == null) {
         synchronized(runtimeLock) {
-          if (context.runtimeGeneration == runtimeGeneration) {
-            val session = context.session
-            session.lastActiveToken
-              ?.takeIf { TokenFreshness.matches(it, session.id, session.lastActiveOrganizationId) }
+          if (isCurrentRuntime(context)) {
+            TokenFreshness.eligibleSnapshot(
+                session = context.session,
+                cached = SessionTokensCache.getToken(context.cacheKey),
+                requiresNewerOrigin = context.sessionGeneration > 0L,
+              )
               ?.let { SessionTokensCache.hydrate(context.cacheKey, it) }
           }
         }
@@ -208,14 +278,23 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     } else {
       val cachedToken = SessionTokensCache.getToken(context.cacheKey)
       val previousToken =
-        cachedToken?.let {
-          TokenFreshness.pickFreshest(existing = session.lastActiveToken, incoming = it)
-        } ?: session.lastActiveToken
+        if (context.sessionGeneration > 0L) {
+          cachedToken ?: session.lastActiveToken
+        } else {
+          cachedToken?.let {
+            TokenFreshness.pickFreshest(existing = session.lastActiveToken, incoming = it)
+          } ?: session.lastActiveToken
+        }
       ClerkApi.session.tokens(
         sessionId = session.id,
         organizationId = session.lastActiveOrganizationId.orEmpty(),
         token = previousToken?.jwt.takeIf { context.sessionMinterEnabled },
-        forceOrigin = "true".takeIf { context.sessionMinterEnabled && options.skipCache },
+        forceOrigin =
+          "true"
+            .takeIf {
+              context.sessionMinterEnabled &&
+                (options.skipCache || (context.sessionGeneration > 0L && cachedToken == null))
+            },
       )
     }
   }
@@ -225,7 +304,7 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
     tokensRequest: ClerkResult<TokenResource, ClerkErrorResponse>,
   ): TokenResource? =
     synchronized(runtimeLock) {
-      if (context.runtimeGeneration != runtimeGeneration) return@synchronized null
+      if (!isCurrentRuntime(context)) return@synchronized null
 
       when (tokensRequest) {
         is ClerkResult.Success -> {
@@ -235,32 +314,20 @@ internal class SessionTokenFetcher(private val jwtManager: JWTManager = JWTManag
           tokensRequest.value
         }
         is ClerkResult.Failure -> {
-          handleSessionInvalidationOnFailure(context.session, tokensRequest)
+          val invalidSession =
+            tokensRequest.error?.errors.orEmpty().any {
+              it.code?.lowercase() in sessionInvalidationErrorCodes
+            }
+          if (invalidSession && Clerk.session?.id == context.session.id) {
+            ClerkLog.w(
+              "Session ${context.session.id} can no longer issue tokens. Clearing local session and user state."
+            )
+            Clerk.clearSessionAndUserState()
+          }
           null
         }
       }
     }
-
-  private fun handleSessionInvalidationOnFailure(
-    session: Session,
-    failure: ClerkResult.Failure<ClerkErrorResponse>,
-  ) {
-    val shouldClearSessionState =
-      failure.error
-        ?.errors
-        .orEmpty()
-        .mapNotNull { it.code?.lowercase() }
-        .any { it in sessionInvalidationErrorCodes }
-
-    if (!shouldClearSessionState) return
-
-    if (Clerk.session?.id == session.id) {
-      ClerkLog.w(
-        "Session ${session.id} can no longer issue tokens. Clearing local session and user state."
-      )
-      Clerk.clearSessionAndUserState()
-    }
-  }
 
   /**
    * Validates whether a token is still valid based on its expiration time.

@@ -22,5 +22,9 @@ class EnvironmentIntegrationTests {
       Clerk.applicationName,
     )
     assertTrue("applicationName should not be blank", Clerk.applicationName!!.isNotBlank())
+    assertNotNull(
+      "commerceSettings should be present after environment is fetched",
+      Clerk.commerceSettings,
+    )
   }
 }
