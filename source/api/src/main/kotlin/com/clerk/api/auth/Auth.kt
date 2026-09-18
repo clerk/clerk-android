@@ -30,6 +30,7 @@ import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.passkeys.PasskeyService
+import com.clerk.api.restorecredentials.RestoreCredentials
 import com.clerk.api.session.GetTokenOptions
 import com.clerk.api.session.Session
 import com.clerk.api.session.fetchToken
@@ -364,6 +365,18 @@ class Auth internal constructor() {
   }
 
   /**
+   * Silently signs in with a Google Play restore credential transferred from another device.
+   *
+   * When no restore credential is available, the returned failure can be ignored and the app can
+   * continue with its normal sign-in experience.
+   */
+  suspend fun signInWithRestoreCredential(): ClerkResult<SignIn, ClerkErrorResponse> {
+    val result = RestoreCredentials.signIn()
+    result.onFailure { emitAuthError(it) }
+    return result
+  }
+
+  /**
    * Signs in with a locally enrolled biometric credential.
    *
    * The biometric-credential domain owns local credential selection, key access, challenge signing,
@@ -677,6 +690,7 @@ class Auth internal constructor() {
         when (val result = ClerkApi.session.removeSession(sessionId)) {
           is ClerkResult.Success -> {
             removeSessionLocally(sessionId)
+            RestoreCredentials.clearSilently()
             refreshClientAfterSessionMutation()
             ClerkResult.success(Unit)
           }
