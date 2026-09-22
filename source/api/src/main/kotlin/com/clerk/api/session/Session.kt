@@ -45,7 +45,7 @@ data class Session(
   val status: SessionStatus = SessionStatus.UNKNOWN,
   @SerialName("expire_at") val expireAt: Long,
 
-  // Can be null if session wasn’t abandoned
+  // Zero means no abandonment deadline; null is supported for older responses.
   @SerialName("abandon_at") val abandonAt: Long? = null,
   @SerialName("last_active_at") val lastActiveAt: Long,
   @SerialName("latest_activity") val latestActivity: SessionActivity? = null,
@@ -64,6 +64,10 @@ data class Session(
   val tasks: List<SessionTask> = emptyList(),
   @SerialName("last_active_token") val lastActiveToken: TokenResource? = null,
 ) {
+  /** Whether the session has a maximum lifetime. A zero [expireAt] means no expiry deadline. */
+  val hasMaximumLifetime: Boolean
+    get() = expireAt > 0
+
   @Serializable
   enum class SessionStatus {
     @SerialName("abandoned") ABANDONED,
