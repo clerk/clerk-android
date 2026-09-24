@@ -11,6 +11,7 @@ import com.clerk.api.hostedauth.HOSTED_AUTH_CANCELLED_BY_NEW_FLOW
 import com.clerk.api.hostedauth.HostedAuthService
 import com.clerk.api.log.ClerkLog
 import com.clerk.api.network.model.error.ClerkErrorResponse
+import com.clerk.api.network.model.error.Error
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
 import com.clerk.api.signin.SignIn
@@ -281,7 +282,18 @@ internal object SSOService {
           } else if (uri.isTransferCallbackFor(RedirectFlow.SIGN_IN)) {
             ClerkLog.d("Sign-up transfer blocked: transferable is false")
             currentPendingAuth?.complete(
-              ClerkResult.unknownFailure(Exception("external_account_not_found"))
+              ClerkResult.apiFailure(
+                ClerkErrorResponse(
+                  errors =
+                    listOf(
+                      Error(
+                        code = EXTERNAL_ACCOUNT_NOT_FOUND,
+                        message = "The External Account was not found.",
+                        longMessage = "The External Account was not found.",
+                      )
+                    )
+                )
+              )
             )
             clearCurrentAuth()
           } else {

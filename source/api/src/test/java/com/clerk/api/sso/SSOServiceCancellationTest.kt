@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.clerk.api.Clerk
 import com.clerk.api.network.serialization.ClerkResult
+import com.clerk.api.network.serialization.errorMessage
+import com.clerk.api.network.serialization.shortErrorMessageOrNull
 import com.clerk.api.signup.SignUp
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -17,6 +19,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -87,6 +90,30 @@ class SSOServiceCancellationTest {
     assertTrue(failure.throwable is SSOCancellationException)
     coVerify(exactly = 0) { SignUp.create(any<SignUp.CreateParams>()) }
   }
+
+  @Test
+  fun `external account not found returns readable API error when transfer is disabled`() =
+    runTest {
+      mockkObject(SignUp.Companion)
+      val pendingResult =
+        async(start = CoroutineStart.UNDISPATCHED) {
+          SSOService.authenticateWithPreparedRedirect(AUTHORIZATION_URL, transferable = false)
+        }
+
+      SSOService.completeAuthenticateWithRedirect(
+        Uri.parse(
+          "$CALLBACK_URL?__clerk_status=failed&__clerk_error_code=external_account_not_found"
+        )
+      )
+
+      val failure = pendingResult.await() as ClerkResult.Failure
+      assertEquals(ClerkResult.Failure.ErrorType.API, failure.errorType)
+      assertEquals("external_account_not_found", failure.error?.errors?.single()?.code)
+      assertEquals("The External Account was not found.", failure.errorMessage)
+      assertEquals("The External Account was not found.", failure.shortErrorMessageOrNull())
+      assertFalse(SSOService.hasPendingAuthentication())
+      coVerify(exactly = 0) { SignUp.create(any<SignUp.CreateParams>()) }
+    }
 
   @Test
   fun `explicit external account not found marker still transfers to sign up`() = runTest {
