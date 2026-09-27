@@ -48,33 +48,71 @@ internal object StorageHelper {
     }
   }
 
+  /** Guards device-token read-compare-write sequences; listeners are notified outside it. */
+  private val deviceTokenLock = Any()
+
   /** Save value of string type to [secureStorage] */
   internal fun saveValue(key: StorageKey, value: String) {
+    if (key != StorageKey.DEVICE_TOKEN) {
+      writeValue(key, value)
+      return
+    }
+    val previousValue: String?
+    val saved: Boolean
+    synchronized(deviceTokenLock) {
+      previousValue = loadValue(key)
+      saved = writeValue(key, value)
+    }
+    if (saved) notifyDeviceTokenChange(previousValue, value)
+  }
+
+  /**
+   * Atomically replaces the device token with [value] (deleting it when null) only if the stored
+   * token equals [expected]. Returns true when the stored token equals [value] after this call.
+   */
+  internal fun compareAndSetDeviceToken(expected: String?, value: String?): Boolean {
+    val key = StorageKey.DEVICE_TOKEN
+    val previousValue: String?
+    val swapped: Boolean
+    synchronized(deviceTokenLock) {
+      previousValue = loadValue(key)
+      swapped =
+        when {
+          previousValue != expected -> false
+          previousValue == value -> true
+          value == null -> removeValue(key)
+          else -> writeValue(key, value)
+        }
+    }
+    if (swapped) notifyDeviceTokenChange(previousValue, value)
+    return swapped
+  }
+
+  private fun writeValue(key: StorageKey, value: String): Boolean {
     val prefs = secureStorage
     val cipher = storageCipher
-    val previousValue = if (key == StorageKey.DEVICE_TOKEN) loadValue(key) else null
 
-    when {
+    return when {
       prefs == null -> {
         ClerkLog.w(
           "StorageHelper.saveValue called before initialization, ignoring save for key: ${key.name}"
         )
+        false
       }
-      value.isEmpty() -> Unit
+      value.isEmpty() -> false
       cipher == null -> {
         ClerkLog.w("Encrypted storage is unavailable, ignoring save for key: ${key.name}")
+        false
       }
       else -> {
         runCatching { ENCRYPTED_VALUE_PREFIX + cipher.encrypt(value) }
           .onSuccess { encryptedValue ->
             prefs.edit(commit = true) { putString(key.name, encryptedValue) }
-            if (key == StorageKey.DEVICE_TOKEN && previousValue != value) {
-              valueChangeListener?.invoke(key, previousValue, value)
-            }
           }
           .onFailure { error ->
             ClerkLog.w("Failed to encrypt value for key ${key.name}: ${error.message}")
           }
+          .isSuccess
       }
     }
   }
@@ -114,17 +152,34 @@ internal object StorageHelper {
 
   /** Delete value of string type from [secureStorage] */
   internal fun deleteValue(key: StorageKey) {
+    if (key != StorageKey.DEVICE_TOKEN) {
+      removeValue(key)
+      return
+    }
+    val previousValue: String?
+    val removed: Boolean
+    synchronized(deviceTokenLock) {
+      previousValue = loadValue(key)
+      removed = removeValue(key)
+    }
+    if (removed) notifyDeviceTokenChange(previousValue, null)
+  }
+
+  private fun removeValue(key: StorageKey): Boolean {
     val prefs = secureStorage
     if (prefs == null) {
       ClerkLog.w(
         "StorageHelper.deleteValue called before initialization, ignoring delete for key: ${key.name}"
       )
-      return
+      return false
     }
-    val previousValue = if (key == StorageKey.DEVICE_TOKEN) loadValue(key) else null
     prefs.edit(commit = true) { remove(key.name) }
-    if (key == StorageKey.DEVICE_TOKEN && previousValue != null) {
-      valueChangeListener?.invoke(key, previousValue, null)
+    return true
+  }
+
+  private fun notifyDeviceTokenChange(previousValue: String?, value: String?) {
+    if (previousValue != value) {
+      valueChangeListener?.invoke(StorageKey.DEVICE_TOKEN, previousValue, value)
     }
   }
 

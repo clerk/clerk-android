@@ -2,6 +2,7 @@ package com.clerk.api.sdk
 
 import android.content.Context
 import com.clerk.api.Clerk
+import com.clerk.api.FrameworkIntegrationApi
 import com.clerk.api.configuration.ConfigurationManager
 import com.clerk.api.configuration.connectivity.NetworkConnectivityMonitor
 import com.clerk.api.network.model.client.Client
@@ -30,6 +31,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -37,6 +39,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
+@OptIn(FrameworkIntegrationApi::class)
 @RunWith(RobolectricTestRunner::class)
 class ClerkDeviceTokenUpdateTest {
   private lateinit var context: Context
@@ -174,6 +177,98 @@ class ClerkDeviceTokenUpdateTest {
     }
 
   @Test
+  fun `setDeviceToken stores token when expected matches stored token`() {
+    configureClerkForDeviceTokenUpdate()
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_old")
+
+    val result = Clerk.setDeviceToken(token = "device_token_new", expected = "device_token_old")
+
+    assertTrue(result)
+    assertEquals("device_token_new", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `setDeviceToken leaves stored token unchanged when expected does not match`() {
+    configureClerkForDeviceTokenUpdate()
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_newer")
+
+    val result = Clerk.setDeviceToken(token = "device_token_stale", expected = "device_token_old")
+
+    assertFalse(result)
+    assertEquals("device_token_newer", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `setDeviceToken with null expected stores token only when none is stored`() {
+    configureClerkForDeviceTokenUpdate()
+
+    assertTrue(Clerk.setDeviceToken(token = "device_token_first", expected = null))
+    assertEquals("device_token_first", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+
+    assertFalse(Clerk.setDeviceToken(token = "device_token_second", expected = null))
+    assertEquals("device_token_first", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `setDeviceToken with null token clears the stored token`() {
+    configureClerkForDeviceTokenUpdate()
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
+
+    val result = Clerk.setDeviceToken(token = null, expected = "device_token_123")
+
+    assertTrue(result)
+    assertNull(StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `setDeviceToken does not refresh client or environment`() {
+    configureClerkForDeviceTokenUpdate()
+    val client = Client(id = "client_current")
+    Clerk.updateClient(client)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_old")
+
+    Clerk.setDeviceToken(token = "device_token_new", expected = "device_token_old")
+    Clerk.setDeviceToken(token = null, expected = "device_token_new")
+
+    assertEquals(client, Clerk.client)
+    coVerify(exactly = 0) { Client.get() }
+    coVerify(exactly = 0) { Client.getSkippingClientId() }
+    coVerify(exactly = 0) { Environment.get() }
+  }
+
+  @Test
+  fun `setDeviceToken fences in-flight client responses only when the token changes`() {
+    configureClerkForDeviceTokenUpdate()
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_old")
+    val initialFence = deviceTokenFenceGeneration()
+
+    Clerk.setDeviceToken(token = "device_token_stale", expected = "device_token_other")
+    Clerk.setDeviceToken(token = "device_token_old", expected = "device_token_old")
+    assertEquals(initialFence, deviceTokenFenceGeneration())
+
+    Clerk.setDeviceToken(token = "device_token_new", expected = "device_token_old")
+    assertEquals(initialFence + 1, deviceTokenFenceGeneration())
+  }
+
+  @Test
+  fun `setDeviceToken rejects blank tokens`() {
+    configureClerkForDeviceTokenUpdate()
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "device_token_123")
+
+    assertThrows(IllegalArgumentException::class.java) {
+      Clerk.setDeviceToken(token = "   ", expected = "device_token_123")
+    }
+    assertEquals("device_token_123", StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `setDeviceToken fails when Clerk has not been initialized`() {
+    assertThrows(IllegalStateException::class.java) {
+      Clerk.setDeviceToken(token = "device_token_123", expected = null)
+    }
+  }
+
+  @Test
   fun `reinitialize remains a no-op when Clerk is already initialized`() {
     configureClerkForDeviceTokenUpdate(isInitialized = true)
 
@@ -188,6 +283,13 @@ class ClerkDeviceTokenUpdateTest {
     setField(configurationManager, "storageInitialized", false)
     mutableStateFlow<Boolean>(configurationManager, "_isInitialized").value = isInitialized
     mutableStateFlow<Throwable?>(configurationManager, "_initializationError").value = null
+  }
+
+  private fun deviceTokenFenceGeneration(): Int {
+    val field =
+      ConfigurationManager::class.java.getDeclaredField("sharedDeviceTokenFenceGeneration")
+    field.isAccessible = true
+    return field.getInt(configurationManager())
   }
 
   private fun configurationManager(): ConfigurationManager {

@@ -384,6 +384,20 @@ internal class ConfigurationManager(
     )
   }
 
+  fun setDeviceToken(deviceToken: String?, expectedDeviceToken: String?): Boolean {
+    require(deviceToken == null || deviceToken.isNotBlank()) { "Device token must not be blank" }
+    check(hasConfigured) { "Clerk must be initialized before setting the device token" }
+
+    ensureStorageInitialized()
+    val swapped =
+      StorageHelper.compareAndSetDeviceToken(expected = expectedDeviceToken, value = deviceToken)
+    // An out-of-band token change must discard in-flight refreshes, like a sibling-app change does.
+    if (swapped && deviceToken != expectedDeviceToken) {
+      fenceClientResponsesAfterSharedDeviceTokenChange()
+    }
+    return swapped
+  }
+
   suspend fun clearDeviceToken(): ClerkResult<Unit, ClerkErrorResponse> {
     val validationError = validateDeviceTokenClear()
     if (validationError != null) return validationError

@@ -293,4 +293,53 @@ class StorageHelperTest {
     // Then
     assertTrue("No exceptions should occur", exceptions.isEmpty())
   }
+
+  @Test
+  fun `compareAndSetDeviceToken lets exactly one concurrent writer replace the expected token`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-initial")
+    val executor = Executors.newFixedThreadPool(CONCURRENCY_TEST_THREAD_COUNT)
+    val latch = CountDownLatch(CONCURRENCY_TEST_THREAD_COUNT)
+    val winners = mutableListOf<String>()
+
+    // When
+    repeat(CONCURRENCY_TEST_THREAD_COUNT) { index ->
+      executor.submit {
+        try {
+          val token = "token-$index"
+          if (StorageHelper.compareAndSetDeviceToken(expected = "token-initial", value = token)) {
+            synchronized(winners) { winners.add(token) }
+          }
+        } finally {
+          latch.countDown()
+        }
+      }
+    }
+
+    latch.await()
+    executor.shutdown()
+
+    // Then
+    assertEquals(1, winners.size)
+    assertEquals(winners.single(), StorageHelper.loadValue(StorageKey.DEVICE_TOKEN))
+  }
+
+  @Test
+  fun `compareAndSetDeviceToken notifies the change listener only when the token changes`() {
+    // Given
+    StorageHelper.initialize(context)
+    StorageHelper.saveValue(StorageKey.DEVICE_TOKEN, "token-a")
+    val changes = mutableListOf<Pair<String?, String?>>()
+    StorageHelper.valueChangeListener = { _, previous, value -> changes.add(previous to value) }
+
+    // When
+    StorageHelper.compareAndSetDeviceToken(expected = "token-stale", value = "token-x")
+    StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = "token-a")
+    StorageHelper.compareAndSetDeviceToken(expected = "token-a", value = "token-b")
+    StorageHelper.compareAndSetDeviceToken(expected = "token-b", value = null)
+
+    // Then
+    assertEquals(listOf("token-a" to "token-b", "token-b" to null), changes)
+  }
 }

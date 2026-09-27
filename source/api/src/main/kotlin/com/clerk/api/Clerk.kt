@@ -1033,6 +1033,25 @@ object Clerk {
   fun getDeviceToken(): String? =
     com.clerk.api.storage.StorageHelper.loadValue(com.clerk.api.storage.StorageKey.DEVICE_TOKEN)
 
+  /**
+   * Stores [token] as the device token only if the stored token still equals [expected].
+   *
+   * Intended for framework integrations whose own runtime shares this client: pass the token the
+   * integration's request was sent with as [expected] so a stale response cannot overwrite a newer
+   * token. A null [expected] means no token is stored, and a null [token] deletes the stored token.
+   * Unlike [updateDeviceToken], this makes no network request and does not refresh client state.
+   *
+   * @param token The non-blank device token to store, or null to delete the stored token.
+   * @param expected The device token the caller expects to be stored, or null for none.
+   * @return true if the stored token matched [expected] and now equals [token]; false otherwise, in
+   *   which case the stored token is left unchanged.
+   * @throws IllegalArgumentException if [token] is blank.
+   * @throws IllegalStateException if Clerk has not been initialized.
+   */
+  @FrameworkIntegrationApi
+  fun setDeviceToken(token: String?, expected: String?): Boolean =
+    configurationManager.setDeviceToken(deviceToken = token, expectedDeviceToken = expected)
+
   // endregion
 
   // region Internal Methods
