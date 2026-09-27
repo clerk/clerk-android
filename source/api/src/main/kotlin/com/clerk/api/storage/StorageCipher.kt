@@ -20,6 +20,7 @@ internal interface StorageCipher {
 }
 
 internal object StorageCipherFactory {
+  // Shared with other Clerk SDKs; see source/api/docs/biometric-credential-storage-contract.md.
   fun create(keyAlias: String = "$CLERK_PREFERENCES_FILE_NAME.master_key"): StorageCipher {
     return try {
       AndroidKeystoreStorageCipher(keyAlias)

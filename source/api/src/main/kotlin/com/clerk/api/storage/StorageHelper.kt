@@ -12,6 +12,7 @@ import com.clerk.api.log.ClerkLog
  * backend, while values are encrypted before they are written to disk.
  */
 internal object StorageHelper {
+  // Shared with other Clerk SDKs; see source/api/docs/biometric-credential-storage-contract.md.
   private const val ENCRYPTED_VALUE_PREFIX = "clerk:v1:"
 
   @Volatile private var secureStorage: SharedPreferences? = null
@@ -172,6 +173,7 @@ internal enum class StorageKey {
   PENDING_NATIVE_MAGIC_LINK_FLOW,
   SHARED_SESSION_SYNC_SNAPSHOT,
   CACHED_CLERK_STATE,
+  // Shared with other Clerk SDKs; see source/api/docs/biometric-credential-storage-contract.md.
   TRUSTED_DEVICE_CREDENTIALS,
   PENDING_TRUSTED_DEVICE_CREDENTIAL_CLEANUP,
 }
